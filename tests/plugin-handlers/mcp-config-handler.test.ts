@@ -63,7 +63,7 @@ describe("applyMcpConfig", () => {
   test("applies disabled_mcps to MCPs from all sources", async () => {
     //#given
     buildBuiltinMcpEntriesSpy.mockReturnValue({
-      entries: { websearch: { type: "remote", url: "https://mcp.exa.ai/mcp", enabled: true } },
+      entries: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
       failures: [],
     })
 
@@ -86,7 +86,7 @@ describe("applyMcpConfig", () => {
     //#then
     const mergedMcp = config.mcp as Record<string, Record<string, unknown>>
     expect(mergedMcp).not.toHaveProperty("playwright")
-    expect(mergedMcp).toHaveProperty("websearch")
+    expect(mergedMcp).toHaveProperty("context7")
     expect(mergedMcp).toHaveProperty("plugin:custom")
   })
 
@@ -136,7 +136,7 @@ describe("applyMcpConfig", () => {
     //#given
     buildBuiltinMcpEntriesSpy.mockReturnValue({
       entries: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
-      failures: [{ name: "websearch", error: "TAVILY_API_KEY missing" }],
+      failures: [{ name: "document_reader", error: "uvx not found" }],
     })
 
     const config: Record<string, unknown> = { mcp: {} }
@@ -150,6 +150,6 @@ describe("applyMcpConfig", () => {
     expect(logSpy).toHaveBeenCalled()
     const logged = logSpy.mock.calls.map((c) => c[0]).join(" ")
     expect(logged).toContain("MCP")
-    expect(logged).toContain("websearch")
+    expect(logged).toContain("document_reader")
   })
 })

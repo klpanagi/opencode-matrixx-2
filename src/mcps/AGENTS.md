@@ -2,10 +2,10 @@
 
 ## OVERVIEW
 
-Tier 1 of two-tier MCP system: 3 built-in MCPs (2 remote HTTP + 1 local stdio).
+Tier 1 of two-tier MCP system: 2 built-in MCPs (1 remote HTTP + 1 local stdio).
 
 **Two-Tier System**:
-1. **Built-in** (this directory): websearch, context7, document_reader
+1. **Built-in** (this directory): context7, document_reader
 2. **Plugin-config / user-configured**: MCPs defined in plugin configuration
 
 ## STRUCTURE
@@ -13,7 +13,6 @@ Tier 1 of two-tier MCP system: 3 built-in MCPs (2 remote HTTP + 1 local stdio).
 mcp/
 ├── index.ts           # createBuiltinMcps() factory
 ├── index.test.ts      # Tests
-├── websearch.ts       # Exa AI / Tavily web search
 ├── context7.ts        # Library documentation
 ├── document-reader.ts # Microsoft MarkItDown (PDF, DOCX, XLSX, PPTX, images)
 └── types.ts           # McpNameSchema
@@ -23,7 +22,6 @@ mcp/
 
 | Name | Transport | Auth | Purpose |
 |------|-----------|------|---------|
-| websearch | remote HTTP | EXA_API_KEY (optional) / TAVILY_API_KEY (required) | Real-time web search |
 | context7 | remote HTTP | CONTEXT7_API_KEY (optional) | Library docs lookup |
 | document_reader | local stdio (`uvx`) | None | Read PDF/DOCX/XLSX/PPTX/images → Markdown |
 
@@ -68,13 +66,9 @@ export const mcp_name = {
 ## NOTES
 
 - **Disable**: Set `disabled_mcps: ["name"]` in config
-- **Exa**: Default websearch provider, works without API key
-- **Tavily**: Requires `TAVILY_API_KEY` env var
 - **document_reader**: Requires `uvx` (uv) installed on the system
 
-## LAZY INITIALIZATION (v2.0.0+)
+## NOTES ON REMOVED WEBSEARCH MCP
 
-The `websearch` MCP uses deferred config construction (P1 optimization). `createWebsearchConfig(config?.websearch)` is wrapped in an `Object.defineProperty` getter on the returned `mcps` record (see `index.ts` ~line 28-40). Env vars (`EXA_API_KEY`, `TAVILY_API_KEY`) and provider selection only resolve when the consumer first reads `mcps.websearch`.
-
-The other two MCPs (context7, document_reader) are static configs assigned eagerly.
+The custom `websearch` MCP (Exa AI / Tavily) was removed; web search is now provided by the native `websearch` tool. Both remaining MCPs (context7, document_reader) are static configs assigned eagerly. See `docs/websearch-migration.md` for the provider mapping and migration notes.
 

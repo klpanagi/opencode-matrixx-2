@@ -238,10 +238,10 @@ https://github.com/tanstack/query/blob/abc123def/packages/react-query/src/useQue
 | Purpose | Tool | Command/Usage |
 |---------|------|---------------|
 | **Official Docs** | context7 | \`context7_resolve-library-id\` → \`context7_query-docs\` |
-| **Find Docs URL** | websearch_exa | \`websearch_exa_web_search_exa("library official documentation")\` |
+| **Find Docs URL** | websearch | \`websearch("library official documentation")\` |
 | **Sitemap Discovery** | webfetch | \`webfetch(docs_url + "/sitemap.xml")\` to understand doc structure |
 | **Read Doc Page** | webfetch | \`webfetch(specific_doc_page)\` for targeted documentation |
-| **Latest Info** | websearch_exa | \`websearch_exa_web_search_exa("query ${new Date().getFullYear()}")\` |
+| **Latest Info** | websearch | \`websearch("query ${new Date().getFullYear()}")\` |
 | **Fast Code Search** | github_search | \`github_search(query, language, repo, limit)\` |
 | **Deep Code Search** | gh CLI | \`gh search code "query" --repo owner/repo\` |
 | **Clone Repo** | gh CLI | \`gh repo clone owner/repo \${TMPDIR:-/tmp}/name -- --depth 1\` |

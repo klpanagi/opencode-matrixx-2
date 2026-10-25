@@ -12,7 +12,7 @@ export const TARGET_TOOLS = new Set([
   "glob",
   "safe_glob",
   "webfetch",
-  "websearch_web_search_exa",
+  "websearch",
   "github_search",
 ]);
 

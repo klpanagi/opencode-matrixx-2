@@ -8,7 +8,7 @@ export const GUARDED_TOOLS = new Set([
   "context7_resolve-library-id",
   "context7_query-docs",
   "context7_get-library-docs",
-  "websearch_web_search_exa",
+  "websearch",
 ])
 
 // Doc-intent triggers: direct library/framework doc lookups belong to the
@@ -25,7 +25,7 @@ export const NUDGE_MESSAGE =
   "[docs-lookup-guard] Prefer delegating docs lookup to the operator agent for context isolation — " +
   "use task(operator) instead of calling context7/websearch docs tools directly. " +
   "Example: task(subagent_type=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
-  "Operator agents may call context7_resolve-library-id / context7_query-docs / context7_get-library-docs / websearch_web_search_exa directly."
+  "Operator agents may call context7_resolve-library-id / context7_query-docs / context7_get-library-docs / websearch directly."
 
 export const FALLBACK_MESSAGE =
   "[docs-lookup-guard] Fallback: route this docs lookup to the operator agent (operator-direct) for context isolation — " +

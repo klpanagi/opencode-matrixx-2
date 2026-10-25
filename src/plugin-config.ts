@@ -27,10 +27,40 @@ function sanitizeDisabledHooks(
   return { ...raw, disabled_hooks: result.migrated };
 }
 
+
+let hasWarnedAboutLegacyWebsearchKey = false;
+
+/**
+ * Warn-and-ignore shim for the removed `websearch` config key
+ * (remove-custom-websearch-mcp plan, T2). Old configs that still set
+ * `websearch` keep loading: the key is stripped before Zod parsing and a
+ * one-time warning is emitted. Remove in v3.0.
+ */
+function stripLegacyWebsearchKey(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
+  if (!("websearch" in raw)) return raw;
+  if (!hasWarnedAboutLegacyWebsearchKey) {
+    hasWarnedAboutLegacyWebsearchKey = true;
+    console.warn(
+      "[matrixx] config key `websearch` is removed and now ignored. " +
+        "Remove it from your matrixx.json.",
+    );
+  }
+  const { websearch: _removed, ...rest } = raw;
+  void _removed;
+  return rest;
+}
+
+/** Test-only: allow the one-time websearch warning to fire again. */
+export function resetLegacyWebsearchWarningForTesting(): void {
+  hasWarnedAboutLegacyWebsearchKey = false;
+}
+
 export function parseConfigPartially(
   rawConfig: Record<string, unknown>
 ): MatrixxConfig | null {
-  const sanitized = sanitizeDisabledHooks(rawConfig);
+  const sanitized = stripLegacyWebsearchKey(sanitizeDisabledHooks(rawConfig));
   const fullResult = MatrixxConfigSchema.safeParse(sanitized);
   if (fullResult.success) {
     return fullResult.data;
@@ -71,7 +101,7 @@ function loadConfigFromPath(
   try {
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, "utf-8");
-      const rawConfig = sanitizeDisabledHooks(parseJsonc<Record<string, unknown>>(content));
+      const rawConfig = stripLegacyWebsearchKey(sanitizeDisabledHooks(parseJsonc<Record<string, unknown>>(content)));
 
 
       const result = MatrixxConfigSchema.safeParse(rawConfig);

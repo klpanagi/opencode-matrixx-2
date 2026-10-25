@@ -16,7 +16,7 @@ src/
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Background agents, commands (22 dirs) — see features/AGENTS.md
 │   ├── hooks/                            # 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) leaf domains — see hooks/AGENTS.md
-├── mcps/                             # Built-in MCPs (3: websearch, context7, document-reader) — see mcps/AGENTS.md
+├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains) + V1 adapters (17 files)
 ├── plugin-handlers/                  # Config loading, plan inheritance (15 files) — see plugin-handlers/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (~85 files) — see shared/AGENTS.md

@@ -233,7 +233,7 @@ You can fine-tune categories in `matrixx.json`.
         "budgetTokens": 32000
       },
       "tools": {
-        "websearch_web_search_exa": false // Disable web search
+        "websearch": false // Disable web search
       }
     }
   },
