@@ -210,6 +210,10 @@ echo "=== e2e-runtime: tier=$TIER runtime=$RUNTIME image=$IMAGE ==="
 "$RUNTIME" "${RUN_ARGS[@]}" "$IMAGE" bash -c "$GUEST_SCRIPT"
 GUEST_EXIT=$?
 
+# Guest runs as root, so dist/ it writes through the mount is root-owned; give it back.
+"$RUNTIME" run --rm -v "$REPO_ROOT:/work" "$IMAGE" \
+  chown -R "$(id -u):$(id -g)" /work >/dev/null 2>&1 || true
+
 echo ""
 echo "========== E2E RUNTIME SUMMARY (host) =========="
 echo "STAGES: tier=$TIER guest_exit=$GUEST_EXIT"

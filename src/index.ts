@@ -1,129 +1,47 @@
-import type { Plugin } from "@opencode-ai/plugin"
+/**
+ * Matrixx — OpenCode plugin entrypoint.
+ *
+ * OpenCode 2.x loads a plugin by decoding its default export against
+ * `{ id, effect } | { id, setup }` (packages/core/src/plugin/module.ts). This
+ * file is that entrypoint: it builds the plugin context the core expects, runs
+ * the core, and registers the hooks it produces onto the OpenCode domains.
+ *
+ * See V2_PORT_PLAN.md for the remaining migration stages.
+ */
 
-import type { HookName } from "./config"
+import { createV1PluginContext } from "./plugin/opencode-context"
+import { registerV1Hooks, type V1HooksLike } from "./plugin/opencode-hooks"
+import type { Cleanup, V2Context, V2PluginDefinition } from "./plugin/opencode-types"
+import { createMatrixxPlugin } from "./plugin/plugin-factory"
+import { log } from "./shared"
 
-import { createHooks } from "./create-hooks"
-import { createManagers } from "./create-managers"
-import { createTools } from "./create-tools"
-import { loadPluginConfig } from "./plugin-config"
-import { setAvailableToolNames } from "./plugin-handlers/agent-config-handler"
-import { createPluginInterface } from "./plugin-interface"
-import { createModelCacheState } from "./plugin-state"
-import { formatCompactionAppendLog, injectServerAuthIntoClient, log, summarizeCompactionAppend, utf8ByteLength } from "./shared"
-import { setContextModeForPrompts } from "./shared/context-mode-enforcement"
-import { switchProfile } from "./shared/dcp-switch-profile"
-import { createFirstMessageVariantGate } from "./shared/first-message-variant"
-import { startTmuxCheck } from "./tools"
-
-const MatrixxPlugin: Plugin = async (ctx) => {
-  log("[MatrixxPlugin] ENTRY - plugin loading", {
-    directory: ctx.directory,
+async function setup(ctx: V2Context): Promise<Cleanup> {
+  log("[matrixx] setup", {
+    directory: ctx.location?.directory,
+    opencode: ctx.app?.version,
   })
 
-  injectServerAuthIntoClient(ctx.client)
-  startTmuxCheck()
-
-const pluginConfig = await loadPluginConfig(ctx.directory, ctx)
-  setContextModeForPrompts(pluginConfig.context_mode)
-
-  // Auto-activate DCP profile on startup if default_profile is configured
-  if (pluginConfig.dcp?.default_profile) {
-    switchProfile(pluginConfig.dcp.default_profile, { pluginConfig })
-  }
-
-  const disabledHooks = new Set(pluginConfig.disabled_hooks ?? [])
-
-  const isHookEnabled = (hookName: HookName): boolean => !disabledHooks.has(hookName)
-  const safeHookEnabled = pluginConfig.experimental?.safe_hook_creation ?? true
-
-  const firstMessageVariantGate = createFirstMessageVariantGate()
-
-  const tmuxConfig = {
-    enabled: pluginConfig.tmux?.enabled ?? false,
-    layout: pluginConfig.tmux?.layout ?? "main-vertical",
-    main_pane_size: pluginConfig.tmux?.main_pane_size ?? 60,
-    main_pane_min_width: pluginConfig.tmux?.main_pane_min_width ?? 120,
-    agent_pane_min_width: pluginConfig.tmux?.agent_pane_min_width ?? 40,
-  }
-
-  const modelCacheState = createModelCacheState()
-
-  const managers = createManagers({
+  const v1ctx = createV1PluginContext(ctx)
+  const hooks = (await createMatrixxPlugin(v1ctx)) as unknown as V1HooksLike
+  const bridge = await registerV1Hooks({
     ctx,
-    pluginConfig,
-    tmuxConfig,
-    modelCacheState,
-    backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
-  })
-
-  const toolsResult = await createTools({
-    ctx,
-    pluginConfig,
-    managers,
-  })
-
-  // Store tool names for use when building agent prompts
-  const toolNames = Object.keys(toolsResult.filteredTools)
-  setAvailableToolNames(toolNames)
-
-  const hooks = createHooks({
-    ctx,
-    pluginConfig,
-    backgroundManager: managers.backgroundManager,
-    isHookEnabled,
-    safeHookEnabled,
-    builtinSkills: toolsResult.builtinSkills,
-    availableSkills: toolsResult.availableSkills,
-  })
-
-  const pluginInterface = createPluginInterface({
-    ctx,
-    pluginConfig,
-    firstMessageVariantGate,
-    managers,
     hooks,
-    tools: toolsResult.filteredTools,
+    directory: v1ctx.directory,
+    worktree: v1ctx.worktree,
   })
 
-  return {
-    ...pluginInterface,
+  log("[matrixx] ready", { registrations: bridge.registrations.length })
 
-    "experimental.session.compacting": async (
-      _input: { sessionID: string },
-      output: { context: string[] },
-    ): Promise<void> => {
-      let injectorBytes = 0
-      let planBytes = 0
-      if (hooks.compactionContextInjector) {
-        const fragment = hooks.compactionContextInjector(_input.sessionID)
-        injectorBytes = utf8ByteLength(fragment)
-        output.context.push(fragment)
-      }
-
-      // Inject plan context if mission is active
-      if (hooks.planPersister) {
-        const planContext = hooks.planPersister.buildRehydrationContext(_input.sessionID)
-        if (planContext) {
-          planBytes = utf8ByteLength(planContext)
-          output.context.push(planContext)
-        }
-      }
-
-      const evolutionBase = output.context.length
-      await hooks.evolutionCompressor?.["experimental.session.compacting"]?.(_input, output)
-      const evolutionBytes = output.context.slice(evolutionBase).reduce((n, f) => n + utf8ByteLength(f), 0)
-      const summary = summarizeCompactionAppend({ injector: injectorBytes, plan: planBytes, evolution: evolutionBytes })
-      log(formatCompactionAppendLog(_input.sessionID, summary.sources), { sessionID: _input.sessionID, addedBytes: summary.addedBytes, sources: summary.sources, hostTruncation: "not-performed-by-matrixx" })
-    },
-
-    "experimental.chat.system.transform": async (input, output): Promise<void> => {
-      await hooks.contextModeRouting(input, output)
-      await hooks.rtkRouting(input, output)
-    },
+  return async (): Promise<void> => {
+    await bridge.dispose()
+    log("[matrixx] disposed")
   }
 }
 
-export default MatrixxPlugin
+export default {
+  id: "matrixx",
+  setup,
+} satisfies V2PluginDefinition
 
 export type {
   AgentName,
@@ -135,7 +53,7 @@ export type {
   McpName,
 } from "./config"
 
-// NOTE: Do NOT export functions from main index.ts!
+// NOTE: Do NOT export functions from the entrypoint!
 // OpenCode treats ALL exports as plugin instances and calls them.
 // Config error utilities are available via "./shared/config-errors" for internal use only.
 export type { ConfigLoadError } from "./shared/config-errors"
