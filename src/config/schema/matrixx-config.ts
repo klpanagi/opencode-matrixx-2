@@ -34,7 +34,6 @@ import { TasksConfigSchema } from "./tasks"
 import { TddEnforcerConfigSchema } from "./tdd-enforcer"
 import { TmuxConfigSchema } from "./tmux"
 import { ToolGatingConfigSchema } from "./tool-policy"
-import { WebsearchConfigSchema } from "./websearch"
 
 export const MatrixxConfigSchema = z.object({
   $schema: z.string().optional(),
@@ -86,7 +85,6 @@ export const MatrixxConfigSchema = z.object({
 
   tdd_enforcer: TddEnforcerConfigSchema.optional(),
   browser_automation_engine: BrowserAutomationConfigSchema.optional(),
-  websearch: WebsearchConfigSchema.optional(),
   tmux: TmuxConfigSchema.optional(),
   morpheus: MorpheusConfigSchema.optional(),
   /** Assembly tool configuration — provider models for multi-model voting */

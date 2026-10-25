@@ -39,7 +39,6 @@ export async function applyMcpConfig(params: {
   // Capability resolved once at the edge; the builder itself never spawns.
   const { entries: builtinMcps, failures } = buildBuiltinMcpEntries({
     disabledMcps,
-    websearch: params.pluginConfig.websearch,
     uvxAvailable: isCommandAvailable("uvx"),
   });
 

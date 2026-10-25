@@ -7,12 +7,9 @@
  * and passed in as data, so repeated runs over the same input replay identically.
  */
 
-import type { WebsearchConfig } from "../config/schema"
 import { context7 } from "./context7"
 import { document_reader } from "./document-reader"
 import type { McpCreationFailure } from "./mcp-validator"
-import { validateWebsearchConfig } from "./mcp-validator"
-import { createWebsearchConfig } from "./websearch"
 
 export type { McpCreationFailure } from "./mcp-validator"
 
@@ -32,7 +29,6 @@ export type BuiltinMcpEntry =
 
 export interface BuildBuiltinMcpEntriesInput {
   disabledMcps?: string[]
-  websearch?: WebsearchConfig
   /** Resolved by the caller (e.g. `isCommandAvailable("uvx")`); never spawned here. */
   uvxAvailable: boolean
 }
@@ -42,35 +38,10 @@ export interface BuildBuiltinMcpEntriesResult {
   failures: McpCreationFailure[]
 }
 
-const DISABLED_REMOTE_STUB: BuiltinMcpEntry = {
-  type: "remote",
-  url: "",
-  enabled: false,
-  oauth: false,
-}
-
 const DISABLED_LOCAL_STUB: BuiltinMcpEntry = {
   type: "local",
   command: [],
   enabled: false,
-}
-
-/**
- * Pure websearch entry builder (reads env only, never spawns or writes).
- * Shared by the eager builder below and the lazy V1 composer in `./index`.
- */
-export function buildWebsearchEntry(
-  websearch?: WebsearchConfig,
-): { entry: BuiltinMcpEntry } | { failure: string } {
-  const validation = validateWebsearchConfig(websearch)
-  if (!validation.ok) {
-    return { failure: validation.error }
-  }
-  try {
-    return { entry: createWebsearchConfig(websearch) }
-  } catch (err) {
-    return { failure: err instanceof Error ? err.message : String(err) }
-  }
 }
 
 /** Pure: builtin MCP entries + non-fatal failures for a given input. */
@@ -80,16 +51,6 @@ export function buildBuiltinMcpEntries(
   const disabledMcps = input.disabledMcps ?? []
   const entries: Record<string, BuiltinMcpEntry> = {}
   const failures: McpCreationFailure[] = []
-
-  if (!disabledMcps.includes("websearch")) {
-    const result = buildWebsearchEntry(input.websearch)
-    if ("entry" in result) {
-      entries.websearch = result.entry
-    } else {
-      failures.push({ name: "websearch", error: result.failure })
-      entries.websearch = DISABLED_REMOTE_STUB
-    }
-  }
 
   if (!disabledMcps.includes("context7")) {
     entries.context7 = context7

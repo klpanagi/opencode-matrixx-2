@@ -8,7 +8,7 @@ export const JSON_ERROR_TOOL_EXCLUDE_LIST = [
   "webfetch",
   "look_at",
   "github_search",
-  "websearch_web_search_exa",
+  "websearch",
 ] as const
 
 export const JSON_ERROR_PATTERNS: readonly RegExp[] = [

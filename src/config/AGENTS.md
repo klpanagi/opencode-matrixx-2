@@ -24,7 +24,6 @@ config/
 │   ├── morpheus-agent.ts      # MorpheusAgentConfigSchema
 │   ├── skills.ts              # SkillsConfigSchema (45 lines)
 │   ├── tmux.ts                # TmuxConfigSchema, TmuxLayoutSchema
-│   ├── websearch.ts           # WebsearchConfigSchema
 │   ├── browser-automation.ts  # BrowserAutomationConfigSchema
 │   ├── git-master.ts          # GitMasterConfigSchema
 │   └── babysitting.ts         # BabysittingConfigSchema
@@ -36,7 +35,7 @@ config/
 
 ## ROOT SCHEMA
 
-`MatrixxConfigSchema` composes: `$schema`, `global_model`/`default_tier`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (14), `categories` (8), `tdd_enforcer` (`{enabled:true}` fail-closed; opt out via `{enabled:false}`), `assembly`, `security`, `headroom`, `context_mode`, `rtk`, `evolution`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `browser_automation_engine`, `websearch`, `tmux`, `dcp`, `_migrations`
+`MatrixxConfigSchema` composes: `$schema`, `global_model`/`default_tier`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (14), `categories` (8), `tdd_enforcer` (`{enabled:true}` fail-closed; opt out via `{enabled:false}`), `assembly`, `security`, `headroom`, `context_mode`, `rtk`, `evolution`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `browser_automation_engine`, `tmux`, `dcp`, `_migrations`
 
 ## CONFIGURATION HIERARCHY
 

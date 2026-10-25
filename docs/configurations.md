@@ -1175,9 +1175,8 @@ separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0
 
 ## MCPs
 
-Three built-in MCP servers (`src/mcps/`; names in `McpNameSchema`, `src/mcps/types.ts`): `websearch`, `context7`, `document_reader`. All enabled by default.
+Two built-in MCP servers (`src/mcps/`; names in `McpNameSchema`, `src/mcps/types.ts`): `context7`, `document_reader`. All enabled by default. Web search is provided by the native `websearch` tool (see [Websearch Migration](websearch-migration.md)).
 
-- **websearch**: Real-time web search powered by [Exa AI](https://exa.ai) - searches the web and returns relevant content
 - **context7**: Fetches up-to-date official documentation for libraries
 - **document_reader**: Document extraction for PDFs and other files (used by the `document-reader` skill and the Construct agent)
 
@@ -1187,25 +1186,13 @@ Don't want them? Disable via `disabled_mcps` in `~/.config/opencode/matrixx.json
 
 ```json
 {
-  "disabled_mcps": ["websearch", "context7", "document_reader"]
+  "disabled_mcps": ["context7", "document_reader"]
 }
 ```
 
 ## Websearch
 
-Choose the websearch provider (`src/config/schema/websearch.ts`):
-
-```jsonc
-{
-  "websearch": {
-    "provider": "tavily"   // "exa" (default, no API key needed) | "tavily" (requires TAVILY_API_KEY)
-  }
-}
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `provider` | `string` | `exa` | `exa` works without an API key; `tavily` needs `TAVILY_API_KEY`. |
+Web search is provided by the native `websearch` tool. The legacy `websearch` config key (`src/config/schema/websearch.ts`, removed) is stripped with a one-time deprecation warning — see [Websearch Migration](websearch-migration.md) for the provider mapping.
 
 ## Global Model and Auto-Update
 

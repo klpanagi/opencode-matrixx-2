@@ -10,6 +10,7 @@ import {
   loadPluginConfig,
   mergeConfigs,
   parseConfigPartially,
+  resetLegacyWebsearchWarningForTesting,
 } from "../src/plugin-config";
 
 describe("mergeConfigs", () => {
@@ -139,7 +140,7 @@ describe("mergeConfigs", () => {
 
       const base: MatrixxConfig = {
         disabled_agents: ["morpheus", "oracle"],
-        disabled_mcps: ["websearch"],
+        disabled_mcps: ["context7"],
         disabled_hooks: ["quality-gate"],
         disabled_commands: ["preset"],
         disabled_skills: ["git-master"],
@@ -189,7 +190,7 @@ describe("mergeConfigs", () => {
         expect(s1.disabledAgents.has("oracle")).toBe(true);
         expect(s1.disabledAgents.has("trinity")).toBe(true);
         expect(s1.disabledAgents.size).toBe(3);
-        expect(s1.disabledMcps.has("websearch")).toBe(true);
+        expect(s1.disabledMcps.has("context7")).toBe(true);
         expect(s1.disabledHooks.has("quality-gate")).toBe(true);
         expect(s1.disabledCommands.has("preset")).toBe(true);
         expect(s1.disabledSkills.has("git-master")).toBe(true);
@@ -203,7 +204,7 @@ describe("mergeConfigs", () => {
 
       const config: MatrixxConfig = {
         disabled_agents: ["morpheus"],
-        disabled_mcps: ["websearch"],
+        disabled_mcps: ["context7"],
         disabled_hooks: ["quality-gate"],
         disabled_commands: ["preset"],
         disabled_skills: ["git-master"],
@@ -537,4 +538,49 @@ describe("loadPluginConfig - preset application (end-to-end)", () => {
     expect(result.agents?.morpheus?.model).toBe("anthropic/claude-opus-4-6")
     expect(result.agents?.oracle?.model).toBe("anthropic/claude-sonnet-4-6")
   })
+});
+
+describe("legacy websearch key shim (remove-custom-websearch-mcp)", () => {
+  it("strips legacy websearch key and keeps loading", () => {
+    //#given - old config still carrying removed websearch key
+    resetLegacyWebsearchWarningForTesting();
+
+    //#when
+    const result = parseConfigPartially({
+      websearch: { provider: "exa" },
+      disabled_mcps: ["context7"],
+    } as unknown as Record<string, unknown>);
+
+    //#then - websearch stripped, rest of config intact
+    expect(result).not.toHaveProperty("websearch");
+    expect(result?.disabled_mcps).toEqual(["context7"]);
+  });
+
+  it("warns only once unless reset", () => {
+    //#given
+    resetLegacyWebsearchWarningForTesting();
+    const warnings: unknown[][] = [];
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args);
+    };
+    try {
+      //#when - parse twice with legacy key
+      parseConfigPartially({ websearch: { provider: "exa" } } as unknown as Record<string, unknown>);
+      parseConfigPartially({ websearch: { provider: "exa" } } as unknown as Record<string, unknown>);
+
+      //#then - one-time warning fired exactly once
+      expect(warnings.length).toBe(1);
+      expect(String(warnings[0][0])).toContain("websearch");
+
+      //#when - reset and parse again
+      resetLegacyWebsearchWarningForTesting();
+      parseConfigPartially({ websearch: { provider: "exa" } } as unknown as Record<string, unknown>);
+
+      //#then - warning fires again after reset
+      expect(warnings.length).toBe(2);
+    } finally {
+      console.warn = origWarn;
+    }
+  });
 });

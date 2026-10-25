@@ -3915,19 +3915,6 @@
       ],
       "additionalProperties": false
     },
-    "websearch": {
-      "type": "object",
-      "properties": {
-        "provider": {
-          "type": "string",
-          "enum": [
-            "exa",
-            "tavily"
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
     "tmux": {
       "type": "object",
       "properties": {

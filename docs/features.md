@@ -164,7 +164,7 @@ Single-skill deep dives (`frontend-ui-ux`, `git-master`, `ulw-research`, `remove
 
 - **Hooks** (lifecycle automation, quality gates, recovery, task enforcers): [Hooks](hooks.md).
 - **Tools** (LSP, AST-grep, delegation, task tools, assembly, session, handoff): the task tools are canonically documented in [Task System](task-system.md); delegation categories in [Category & Skill System Guide](category-skill-guide.md).
-- **MCPs** (`websearch`, `context7`, `github_search`, `document_reader`; skill-embedded MCPs): [Configuration](configurations.md).
+- **MCPs** (`context7`, `github_search`, `document_reader`; skill-embedded MCPs; web search is the native `websearch` tool): [Configuration](configurations.md).
 - **Context injection** (AGENTS.md, conditional rules) and DCP tiers: [Context Management](context-management.md).
 - **Handoff** (`/handoff` → `/pickup`, `.matrixx/handoff.md`): [Command Reference](command-reference.md) and [Task System](task-system.md).
 - **BDD pipeline** (`/bdd-contract`, `/bdd-tests`, `/bdd-frontend`, `/bdd-backend`, `/bdd-pipeline`): [Quality, Part A](quality.md).

@@ -85,7 +85,7 @@ describe("mcp transform replay", () => {
 
     //#then
     expect(snapshot(store)).toBe(first)
-    expect(store.size).toBe(3)
+    expect(store.size).toBe(2)
   })
 
   test("fresh editors converge on the same set", async () => {

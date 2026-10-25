@@ -17,7 +17,7 @@ export const ulwResearchSkill: BuiltinSkill = {
     "grep",
     "glob",
     "look_at",
-    "websearch_web_search_exa",
+    "websearch",
     "github_search",
     "context7_resolve-library-id",
     "context7_query-docs",
@@ -108,7 +108,7 @@ task(
   prompt="""
 Research the web for information about: <CURRENT_LEAD>
 
-Use websearch_web_search_exa and context7 tools. Find:
+Use websearch and context7 tools. Find:
 - Official documentation and blog posts
 - Technical articles and tutorials
 - Implementation patterns and best practices
