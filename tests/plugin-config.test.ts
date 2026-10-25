@@ -257,10 +257,10 @@ describe("parseConfigPartially", () => {
         agents: {
           oracle: { model: "openai/gpt-5.2" },
           smith: { model: "openai/gpt-5.2" },
+          // NOTE (V2): the old permission map no longer exists; a wrong-typed
+          // known key is what invalidates the section now.
           keymaker: {
-            permission: {
-              edit: { "*": "ask", ".morpheus/**": "allow" },
-            },
+            model: 123,
           },
         },
         disabled_hooks: ["comment-checker"],
@@ -296,7 +296,7 @@ describe("parseConfigPartially", () => {
 
     it("should return empty object when all sections are invalid", () => {
       const rawConfig = {
-        agents: { oracle: { temperature: "not-a-number" } },
+        agents: { oracle: { model: 123 } },
         disabled_hooks: ["not-a-real-hook"],
       };
 

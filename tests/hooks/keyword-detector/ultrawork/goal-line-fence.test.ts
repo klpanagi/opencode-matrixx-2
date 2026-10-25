@@ -13,7 +13,9 @@ import { ULTRAWORK_GPT_MESSAGE } from "../../../../src/hooks/keyword-detector/ul
 import { ULTRAWORK_MIMO_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/mimo"
 import type { MatrixxConfig } from "../../../../src/config"
 import { buildOracleAgentConfig } from "../../../../src/plugin-handlers/oracle-agent-config-builder"
-import { denyTodoTools, deriveTaskPermissions } from "../../../../src/plugin-handlers/task-permissions"
+import { denyTodoPermissions, deriveTaskPermissions } from "../../../../src/plugin-handlers/task-permissions"
+
+type Rule = { action: string; resource?: string; effect: string }
 import { applyToolConfig } from "../../../../src/plugin-handlers/tool-config-handler"
 
 const MODEL = "anthropic/claude-sonnet-4-5"
@@ -156,8 +158,8 @@ describe("task-store eligibility is a function of mode", () => {
 
     //#then
     for (const name of eligible) {
-      const permission = (agents[name] as { permission?: Record<string, unknown> }).permission ?? {}
-      expect(`${name}:${String(permission["task_*"])}`).toBe(`${name}:allow`)
+      const rules = ((agents[name] as { permissions?: Rule[] }).permissions ?? []) as Rule[]
+      expect(`${name}:${rules.some((r) => r.action === "task_*" && r.effect === "allow")}`).toBe(`${name}:true`)
     }
   })
 
@@ -167,16 +169,16 @@ describe("task-store eligibility is a function of mode", () => {
     // store is the channel it hands findings over on. Its own declared
     // `task: "deny"` must survive the fill-only grant.
     const sentinel = createSentinelAgent(MODEL)
-    const declared = sentinel.permission?.task
-    expect(`sentinel declares:${String(declared)}`).toBe("sentinel declares:deny")
+    const declared = (sentinel.permissions ?? []).filter((r) => r.action === "task")
+    expect(`sentinel declares:${declared.map((r) => r.effect).join(",")}`).toBe("sentinel declares:deny")
 
     //#when
-    const permission = deriveTaskPermissions(sentinel)
+    const grant = deriveTaskPermissions(sentinel)
 
     //#then
-    expect(`task_*:${String(permission["task_*"])}`).toBe("task_*:allow")
+    expect(`task_*:${grant.some((r) => r.action === "task_*" && r.effect === "allow")}`).toBe("task_*:true")
     // deriveTaskPermissions must not resurrect a self-denied capability.
-    expect(`task:${String(permission.task)}`).toBe("task:undefined")
+    expect(`task:${grant.some((r) => r.action === "task" && r.effect === "allow")}`).toBe("task:false")
   })
 
   test("a bare subagent receives no task grant", async () => {
@@ -196,24 +198,26 @@ describe("task-store eligibility is a function of mode", () => {
 })
 
 describe("legacy todo tools stay suppressed", () => {
-  test("denyTodoTools still denies both todo tools", () => {
+  test("denyTodoPermissions still denies both todo tools", () => {
     //#given / #when / #then
-    // Zeroing these is what prevents the legacy tools from being used at all;
+    // Denying these is what prevents the legacy tools from being used at all;
     // treating them as cleanup and removing them would be a regression.
-    expect(`todowrite:${String(denyTodoTools.todowrite)}`).toBe("todowrite:deny")
-    expect(`todoread:${String(denyTodoTools.todoread)}`).toBe("todoread:deny")
+    expect(`todowrite:${denyTodoPermissions.some((r) => r.action === "todowrite" && r.effect === "deny")}`).toBe("todowrite:true")
+    expect(`todoread:${denyTodoPermissions.some((r) => r.action === "todoread" && r.effect === "deny")}`).toBe("todoread:true")
   })
 
-  test("the built config keeps tools.todowrite/todoread false", async () => {
+  test("the built agent rulesets deny todowrite/todoread (V2 has no global tool map)", async () => {
     //#given
     const agents = await realAgentResult()
 
     //#when
-    const config = apply(agents)
-    const tools = config.tools as Record<string, boolean>
+    apply(agents)
 
-    //#then
-    expect(`todowrite:${String(tools.todowrite)}`).toBe("todowrite:false")
-    expect(`todoread:${String(tools.todoread)}`).toBe("todoread:false")
+    //#then every agent carries both denies
+    for (const [name, value] of Object.entries(agents)) {
+      const rules = ((value as { permissions?: Rule[] }).permissions ?? []) as Rule[]
+      expect(`${name}:todowrite:${rules.some((r) => r.action === "todowrite" && r.effect === "deny")}`).toBe(`${name}:todowrite:true`)
+      expect(`${name}:todoread:${rules.some((r) => r.action === "todoread" && r.effect === "deny")}`).toBe(`${name}:todoread:true`)
+    }
   })
 })

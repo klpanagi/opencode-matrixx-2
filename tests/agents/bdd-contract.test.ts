@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../src/agents/agent-config"
 import { BDD_CONTRACT_PROMPT_METADATA, createBddContractAgent } from "../../src/agents/bdd-contract"
 
 describe("createBddContractAgent", () => {
@@ -10,11 +11,11 @@ describe("createBddContractAgent", () => {
 
     const config = createBddContractAgent(model)
 
-    expect(config.model).toBe(model)
+    expect(config.model).toEqual(parseModelRef(model))
     expect(config.mode).toBe("all")
-    expect(config.temperature).toBe(0.1)
-    expect(config.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
-    expect(config.reasoningEffort).toBeUndefined()
+    expect(config.request?.body?.temperature).toBe(0.1)
+    expect(config.request?.body?.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
+    expect(config.request?.body?.reasoningEffort).toBeUndefined()
   })
 
   //#given a GPT model
@@ -25,9 +26,9 @@ describe("createBddContractAgent", () => {
 
     const config = createBddContractAgent(model)
 
-    expect(config.model).toBe(model)
-    expect(config.reasoningEffort).toBe("medium")
-    expect(config.thinking).toBeUndefined()
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.request?.body?.reasoningEffort).toBe("medium")
+    expect(config.request?.body?.thinking).toBeUndefined()
   })
 
   //#given the factory function
@@ -43,9 +44,9 @@ describe("createBddContractAgent", () => {
   test("prompt contains BDD, Gherkin, and Contract keywords", () => {
     const config = createBddContractAgent("anthropic/claude-sonnet-4-5")
 
-    expect(config.prompt).toContain("BDD")
-    expect(config.prompt).toContain("Gherkin")
-    expect(config.prompt).toContain("Contract")
+    expect(config.system).toContain("BDD")
+    expect(config.system).toContain("Gherkin")
+    expect(config.system).toContain("Contract")
   })
 
   //#given a model

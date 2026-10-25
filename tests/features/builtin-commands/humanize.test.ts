@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { loadBuiltinCommands } from "../../../src/features/builtin-commands/commands"
+import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands/commands.transform"
 import { HUMANIZE_TEMPLATE } from "../../../src/features/builtin-commands/templates/humanize"
 import type { BuiltinCommandName } from "../../../src/features/builtin-commands/types"
 
@@ -64,13 +64,13 @@ describe("HUMANIZE_TEMPLATE", () => {
   })
 })
 
-describe("loadBuiltinCommands - humanize", () => {
+describe("buildBuiltinCommandEntries - humanize", () => {
   test("should include humanize command in loaded commands", () => {
     //#given no disabled commands
     const disabledCommands: BuiltinCommandName[] = []
 
     //#when we load all builtin commands
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then humanize is present
     expect(commands.humanize).toBeDefined()
@@ -82,7 +82,7 @@ describe("loadBuiltinCommands - humanize", () => {
     const disabledCommands: BuiltinCommandName[] = ["humanize"]
 
     //#when we load builtin commands
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then humanize is omitted while others remain
     expect(commands.humanize).toBeUndefined()
@@ -92,7 +92,7 @@ describe("loadBuiltinCommands - humanize", () => {
   test("should include humanize template content with wrapper and $ARGUMENTS", () => {
     //#given no disabled commands
     //#when we load builtin commands
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then the template wraps HUMANIZE_TEMPLATE with $ARGUMENTS
     expect(commands.humanize.template).toContain(HUMANIZE_TEMPLATE)

@@ -831,7 +831,7 @@ describe("morpheus-task", () => {
       const userCategories = {
         "construct": {
           model: "google/gemini-3-pro",
-          prompt_append: "Custom instructions here",
+          system_append: "Custom instructions here",
         },
       }
 
@@ -850,8 +850,8 @@ describe("morpheus-task", () => {
       const userCategories = {
         "my-custom": {
           model: "openai/gpt-5.2",
-          temperature: 0.5,
-          prompt_append: "You are a custom agent",
+          request: { body: { temperature: 0.5 } },
+          system_append: "You are a custom agent",
         },
       }
 
@@ -861,7 +861,7 @@ describe("morpheus-task", () => {
       // then
       expect(result).not.toBeNull()
       expect(result?.config.model).toBe("openai/gpt-5.2")
-      expect(result?.config.temperature).toBe(0.5)
+      expect(result?.config.request?.body?.temperature).toBe(0.5)
       expect(result?.promptAppend).toBe("You are a custom agent")
     })
 

@@ -1,4 +1,4 @@
-// Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive 78% lives in preemptive-compaction. Do not add proactive threshold here. Cap API calls 2.
+// Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive compression belongs to DCP (/dcp-compress). Do not add proactive thresholds here. Cap API calls 2.
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { ExperimentalConfig } from "../../config"
 import { log } from "../../shared/logger"

@@ -68,4 +68,4 @@ When `morpheus_agent.planner_enabled === true`:
 
 ## INTEGRATION
 
-Created in `create-managers.ts`, exposed as `config` hook in `plugin-interface.ts`. OpenCode calls it during session init.
+Built in `setup-domains.ts`, exposed as the `config` hook. OpenCode calls it during session init.

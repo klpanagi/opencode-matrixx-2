@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { MatrixxConfigSchema } from "../../src/config"
-import { shouldEnableSessionCleanup } from "../../src/plugin/tool-gating"
+import { shouldEnableSessionCleanup } from "../../src/plugin/tool-policy"
 import { createSessionCleanupTool } from "../../src/tools/session-cleanup"
 
 //#given A mock SDK client that records every session.list and session.delete call

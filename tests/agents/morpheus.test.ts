@@ -16,7 +16,7 @@ describe("morpheus prompt model directives", () => {
     const agent = createMorpheusAgent(DEEPSEEK, [], tools)
 
     //#then
-    expect(agent.prompt as string).toContain(MARKER)
+    expect(agent.system as string).toContain(MARKER)
   })
 
   test("omits the anti-echo directive for an anthropic-configured agent", () => {
@@ -27,7 +27,7 @@ describe("morpheus prompt model directives", () => {
     const agent = createMorpheusAgent(ANTHROPIC, [], tools)
 
     //#then
-    expect(agent.prompt as string).not.toContain(MARKER)
+    expect(agent.system as string).not.toContain(MARKER)
   })
 })
 
@@ -40,7 +40,7 @@ describe("keymaker prompt model directives", () => {
     const agent = createKeymakerAgent(DEEPSEEK, [], tools)
 
     //#then
-    expect(agent.prompt as string).toContain(MARKER)
+    expect(agent.system as string).toContain(MARKER)
   })
 
   test("omits the anti-echo directive for an anthropic-configured agent", () => {
@@ -51,6 +51,6 @@ describe("keymaker prompt model directives", () => {
     const agent = createKeymakerAgent(ANTHROPIC, [], tools)
 
     //#then
-    expect(agent.prompt as string).not.toContain(MARKER)
+    expect(agent.system as string).not.toContain(MARKER)
   })
 })

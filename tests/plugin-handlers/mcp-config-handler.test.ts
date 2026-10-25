@@ -6,19 +6,19 @@ import type { MatrixxConfig } from "../../src/config"
 import * as mcpModule from "../../src/mcp"
 import * as shared from "../../src/shared"
 
-let createBuiltinMcpsSpy: ReturnType<typeof spyOn>
+let buildBuiltinMcpEntriesSpy: ReturnType<typeof spyOn>
 let logSpy: ReturnType<typeof spyOn>
 
 beforeEach(() => {
-  createBuiltinMcpsSpy = spyOn(mcpModule, "createBuiltinMcps").mockReturnValue({
-    mcps: {},
+  buildBuiltinMcpEntriesSpy = spyOn(mcpModule, "buildBuiltinMcpEntries").mockReturnValue({
+    entries: {},
     failures: [],
   })
   logSpy = spyOn(shared, "log").mockImplementation(() => {})
 })
 
 afterEach(() => {
-  createBuiltinMcpsSpy.mockRestore()
+  buildBuiltinMcpEntriesSpy.mockRestore()
   logSpy.mockRestore()
 })
 
@@ -62,8 +62,8 @@ describe("applyMcpConfig", () => {
 
   test("applies disabled_mcps to MCPs from all sources", async () => {
     //#given
-    createBuiltinMcpsSpy.mockReturnValue({
-      mcps: { websearch: { type: "remote", url: "https://mcp.exa.ai/mcp", enabled: true } },
+    buildBuiltinMcpEntriesSpy.mockReturnValue({
+      entries: { websearch: { type: "remote", url: "https://mcp.exa.ai/mcp", enabled: true } },
       failures: [],
     })
 
@@ -132,10 +132,10 @@ describe("applyMcpConfig", () => {
     const mergedMcp = config.mcp as Record<string, Record<string, unknown>>
     expect(mergedMcp).not.toHaveProperty("plugin:custom")
   })
-  test("logs failures when createBuiltinMcps reports them", async () => {
+  test("logs failures when buildBuiltinMcpEntries reports them", async () => {
     //#given
-    createBuiltinMcpsSpy.mockReturnValue({
-      mcps: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
+    buildBuiltinMcpEntriesSpy.mockReturnValue({
+      entries: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
       failures: [{ name: "websearch", error: "TAVILY_API_KEY missing" }],
     })
 

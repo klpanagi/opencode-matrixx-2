@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -171,28 +171,31 @@ Your response goes directly to the user with no intermediate processing. Make yo
 </delivery>`
 
 export function createMerovingianAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "task",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig = {
     description:
       "Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design. (Merovingian - Matrixx)",
     mode: MODE,
-    model,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: ORACLE_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    model: parseModelRef(model),
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: ORACLE_SYSTEM_PROMPT,
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 16000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: { ...base.request?.body, reasoningEffort: "medium", textVerbosity: "high" },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: { ...base.request?.body, thinking: { type: "enabled", budgetTokens: 16000 } },
+    },
+  }
 }
 createMerovingianAgent.mode = MODE
 

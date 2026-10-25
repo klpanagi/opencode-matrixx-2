@@ -11,7 +11,6 @@ import {
   createMouseNotepadHook,
   createNonInteractiveEnvHook,
   createOracleMdOnlyHook,
-  createPreemptiveCompactionHook,
   createRtkBashRewriterHook,
   createRuntimeFallbackHook,
   createSessionNotification,
@@ -33,7 +32,6 @@ import type { PluginContext } from "../types"
 
 export type SessionHooks = {
   contextWindowMonitor: ReturnType<typeof createContextWindowMonitorHook> | null
-  preemptiveCompaction: ReturnType<typeof createPreemptiveCompactionHook> | null
   sessionRecovery: ReturnType<typeof createSessionRecoveryHook> | null
   sessionNotification: ReturnType<typeof createSessionNotification> | null
   thinkMode: ReturnType<typeof createThinkModeHook> | null
@@ -67,12 +65,6 @@ export function createSessionHooks(args: {
   const contextWindowMonitor = isHookEnabled("context-window-monitor")
     ? safeHook("context-window-monitor", () => createContextWindowMonitorHook(ctx, pluginConfig))
     : null
-
-  const preemptiveCompaction =
-    isHookEnabled("preemptive-compaction") &&
-    pluginConfig.experimental?.preemptive_compaction
-      ? safeHook("preemptive-compaction", () => createPreemptiveCompactionHook(ctx, pluginConfig))
-      : null
 
   const sessionRecovery = isHookEnabled("session-recovery")
     ? safeHook("session-recovery", () =>
@@ -175,7 +167,6 @@ export function createSessionHooks(args: {
 
   return {
     contextWindowMonitor,
-    preemptiveCompaction,
     sessionRecovery,
     sessionNotification,
     thinkMode,

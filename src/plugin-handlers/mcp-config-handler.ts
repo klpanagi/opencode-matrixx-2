@@ -1,6 +1,7 @@
 import type { MatrixxConfig } from "../config";
-import { createBuiltinMcps } from "../mcp";
+import { buildBuiltinMcpEntries } from "../mcp";
 import { setMcpStartupFailures } from "../mcp/mcp-startup-state";
+import { isCommandAvailable } from "../mcp/mcp-validator";
 import { log } from "../shared";
 import type { PluginComponents } from "./plugin-components-loader";
 
@@ -35,10 +36,12 @@ export async function applyMcpConfig(params: {
   const userMcp = params.config.mcp as Record<string, unknown> | undefined;
   const userDisabledMcps = captureUserDisabledMcps(userMcp);
 
-  const { mcps: builtinMcps, failures } = createBuiltinMcps(
+  // Capability resolved once at the edge; the builder itself never spawns.
+  const { entries: builtinMcps, failures } = buildBuiltinMcpEntries({
     disabledMcps,
-    params.pluginConfig,
-  );
+    websearch: params.pluginConfig.websearch,
+    uvxAvailable: isCommandAvailable("uvx"),
+  });
 
   const merged = {
     ...builtinMcps,

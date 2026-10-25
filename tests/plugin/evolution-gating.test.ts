@@ -10,7 +10,7 @@ import { readRetrievalRecords, searchRecords } from "../../src/features/evolutio
 import { EVOLUTION_TEMPLATE } from "../../src/features/builtin-commands/templates/evolution"
 import { createContinuationHooks } from "../../src/plugin/hooks/create-continuation-hooks"
 import { createToolGuardHooks } from "../../src/plugin/hooks/create-tool-guard-hooks"
-import { shouldEnableEvolutionTool } from "../../src/plugin/tool-gating"
+import { shouldEnableEvolutionTool } from "../../src/plugin/tool-policy"
 import type { PluginContext } from "../../src/plugin/types"
 import { createEvolutionTool } from "../../src/tools/evolution"
 
@@ -65,8 +65,10 @@ describe("P2.3 evolution gating", () => {
     expect(enabledHooks.qualityGate).not.toBeNull()
   })
 
-  test("continuation compressor+hitl are null unless evolution.enabled is true", () => {
+  test("continuation hitl is null unless evolution.enabled is true", () => {
     //#given configs with evolution unset, disabled, and enabled
+    // NOTE (D6): the evolution-compressor hook was removed — proactive
+    // compression belongs to DCP, so only the hitl hook remains gated here.
     const unset = makeContinuationArgs({} as MatrixxConfig)
     const disabled = makeContinuationArgs(configWithEvolution(false))
     const enabled = makeContinuationArgs(configWithEvolution(true))
@@ -74,12 +76,10 @@ describe("P2.3 evolution gating", () => {
     const unsetHooks = createContinuationHooks(unset)
     const disabledHooks = createContinuationHooks(disabled)
     const enabledHooks = createContinuationHooks(enabled)
-    //#then compressor and hitl gated
-    expect(unsetHooks.evolutionCompressor).toBeNull()
-    expect(disabledHooks.evolutionCompressor).toBeNull()
+    //#then hitl gated, compressor hook absent
+    expect("evolutionCompressor" in unsetHooks).toBe(false)
     expect(unsetHooks.evolutionHitl).toBeNull()
     expect(disabledHooks.evolutionHitl).toBeNull()
-    expect(enabledHooks.evolutionCompressor).not.toBeNull()
     expect(enabledHooks.evolutionHitl).not.toBeNull()
   })
 })

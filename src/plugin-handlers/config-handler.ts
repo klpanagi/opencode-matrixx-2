@@ -4,6 +4,7 @@ import { log } from "../shared";
 import { bindTaskSystemDeprecationToast } from "../shared/task-system-gating";
 import { applyAgentConfig } from "./agent-config-handler";
 import { applyCommandConfig } from "./command-config-handler";
+import { applyFormatterConfig } from "./formatter-config-handler";
 import { applyMcpConfig } from "./mcp-config-handler";
 import { loadPluginComponents } from "./plugin-components-loader";
 import { applyProviderConfig } from "./provider-config-handler";
@@ -34,6 +35,7 @@ export function createConfigHandler(deps: ConfigHandlerDeps) {
       pluginComponents,
     });
 
+    applyFormatterConfig({ config });
     applyToolConfig({ config, pluginConfig, agentResult });
     await applyMcpConfig({ config, pluginConfig, pluginComponents });
     await applyCommandConfig({ config, pluginConfig, ctx, pluginComponents });

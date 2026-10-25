@@ -3,6 +3,7 @@ export * from "./agent-priority-order";
 export * from "./category-config-resolver";
 export * from "./command-config-handler";
 export { type ConfigHandlerDeps, createConfigHandler } from "./config-handler";
+export * from "./formatter-config-handler";
 export * from "./mcp-config-handler";
 export * from "./oracle-agent-config-builder";
 export * from "./plugin-components-loader";

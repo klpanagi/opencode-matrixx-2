@@ -319,8 +319,8 @@ describe("AgentOverrideConfigSchema", () => {
       const config = { 
         category: "source",
         skills: ["code-reviewer"],
-        temperature: 0.3,
-        prompt_append: "Extra instructions"
+        request: { body: { temperature: 0.3 } },
+        system_append: "Extra instructions"
       }
 
       // when
@@ -331,8 +331,8 @@ describe("AgentOverrideConfigSchema", () => {
       if (result.success) {
         expect(result.data.category).toBe("source")
         expect(result.data.skills).toEqual(["code-reviewer"])
-        expect(result.data.temperature).toBe(0.3)
-        expect(result.data.prompt_append).toBe("Extra instructions")
+        expect(result.data.request?.body?.temperature).toBe(0.3)
+        expect(result.data.system_append).toBe("Extra instructions")
       }
     })
   })
@@ -434,7 +434,7 @@ describe("CategoryConfigSchema", () => {
 
   test("accepts reasoningEffort as optional string with xhigh", () => {
     // given
-    const config = { reasoningEffort: "xhigh" }
+    const config = { request: { body: { reasoningEffort: "xhigh" } } }
 
     // when
     const result = CategoryConfigSchema.safeParse(config)
@@ -442,7 +442,7 @@ describe("CategoryConfigSchema", () => {
     // then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.reasoningEffort).toBe("xhigh")
+      expect(result.data.request?.body?.reasoningEffort).toBe("xhigh")
     }
   })
 
@@ -478,7 +478,7 @@ describe("Mouse agent override", () => {
       agents: {
         "mouse": {
           model: "openai/gpt-5.2",
-          temperature: 0.2,
+          request: { body: { temperature: 0.2 } },
         },
       },
     }
@@ -491,7 +491,7 @@ describe("Mouse agent override", () => {
     if (result.success) {
       expect(result.data.agents?.mouse).toBeDefined()
       expect(result.data.agents?.mouse?.model).toBe("openai/gpt-5.2")
-      expect(result.data.agents?.mouse?.temperature).toBe(0.2)
+      expect(result.data.agents?.mouse?.request?.body?.temperature).toBe(0.2)
     }
   })
 
@@ -500,7 +500,7 @@ describe("Mouse agent override", () => {
     const config = {
       agents: {
         "mouse": {
-          prompt_append: "Additional instructions for morpheus-junior",
+          system_append: "Additional instructions for morpheus-junior",
         },
       },
     }
@@ -511,13 +511,13 @@ describe("Mouse agent override", () => {
     // then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.mouse?.prompt_append).toBe(
+      expect(result.data.agents?.mouse?.system_append).toBe(
         "Additional instructions for morpheus-junior"
       )
     }
   })
 
-  test("schema accepts mouse with tools override", () => {
+  test("schema strips legacy tools map; permissions ruleset is the V2 form", () => {
     // given
     const config = {
       agents: {
@@ -526,6 +526,7 @@ describe("Mouse agent override", () => {
             read: true,
             write: false,
           },
+          permissions: [{ action: "read", resource: "*", effect: "allow" }],
         },
       },
     }
@@ -533,13 +534,13 @@ describe("Mouse agent override", () => {
     // when
     const result = MatrixxConfigSchema.safeParse(config)
 
-    // then
+    // then - unknown legacy key is stripped, ruleset survives
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.mouse?.tools).toEqual({
-        read: true,
-        write: false,
-      })
+      expect((result.data.agents?.mouse as Record<string, unknown> | undefined)?.tools).toBeUndefined()
+      expect(result.data.agents?.mouse?.permissions).toEqual([
+        { action: "read", resource: "*", effect: "allow" },
+      ])
     }
   })
 
@@ -548,13 +549,13 @@ describe("Mouse agent override", () => {
     const config = {
       agents: {
         morpheus: {
-          temperature: 0.1,
+          request: { body: { temperature: 0.1 } },
         },
         architect: {
-          temperature: 0.2,
+          request: { body: { temperature: 0.2 } },
         },
         oracle: {
-          temperature: 0.3,
+          request: { body: { temperature: 0.3 } },
         },
       },
     }
@@ -565,9 +566,9 @@ describe("Mouse agent override", () => {
     // then
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.agents?.morpheus?.temperature).toBe(0.1)
-      expect(result.data.agents?.architect?.temperature).toBe(0.2)
-      expect(result.data.agents?.oracle?.temperature).toBe(0.3)
+      expect(result.data.agents?.morpheus?.request?.body?.temperature).toBe(0.1)
+      expect(result.data.agents?.architect?.request?.body?.temperature).toBe(0.2)
+      expect(result.data.agents?.oracle?.request?.body?.temperature).toBe(0.3)
     }
   })
 

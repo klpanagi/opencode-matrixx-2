@@ -1,6 +1,6 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements } from "../../shared/model-requirements"
+import type { AgentConfig } from "../agent-config"
 import { createArchitectAgent } from "../architect"
 import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import type { AgentOverrides } from "../types"
@@ -60,8 +60,11 @@ export function maybeCreateArchitectConfig(input: {
     userCategories,
   })
 
-  if (architectResolvedVariant) {
-    orchestratorConfig = { ...orchestratorConfig, variant: architectResolvedVariant }
+  if (architectResolvedVariant && orchestratorConfig.model) {
+    orchestratorConfig = {
+      ...orchestratorConfig,
+      model: { ...orchestratorConfig.model, variant: architectResolvedVariant },
+    }
   }
 
   orchestratorConfig = applyOverrides(orchestratorConfig, orchestratorOverride, mergedCategories, directory)

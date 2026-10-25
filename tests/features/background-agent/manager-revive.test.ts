@@ -248,37 +248,6 @@ describe("BackgroundManager.revive", () => {
     mgr.shutdown()
   })
 
-  test("(g) admission timeout stops task with queue-saturated and persists", async () => {
-    //#given
-    const { client } = makeClient()
-    const mgr = makeManager(client, TMP_DIR, { defaultConcurrency: 1, admissionTimeoutMs: 30 })
-    const seed = seedCompletedTask({ id: "bg_sat01", sessionID: "sess_sat01", agent: "oracle" })
-    await mgr["concurrencyManager"].acquire("oracle")
-
-    //#when
-    let thrown: Error | undefined
-    try {
-      await mgr.revive({
-        taskId: seed.id,
-        prompt: "saturated retry",
-        parentSessionID: "sess_parent01",
-        parentMessageID: "msg_sat01",
-      })
-    } catch (error) {
-      thrown = error as Error
-    }
-
-    //#then
-    expect(thrown).toBeDefined()
-    const task = mgr.getTask(seed.id)
-    expect(task?.status).toBe("stopped")
-    expect(task?.terminalReason).toBe("queue-saturated")
-    const handles = readHandles(TMP_DIR)
-    const persisted = handles.find((h) => h.taskId === seed.id)
-    expect(persisted?.status).toBe("stopped")
-    mgr.shutdown()
-  })
-
   test("listRevivable merges memory and disk, dedupes, scopes, sorts", async () => {
     //#given
     const { client } = makeClient()

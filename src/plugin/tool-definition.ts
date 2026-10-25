@@ -1,7 +1,7 @@
-import type { CreatedHooks } from "../create-hooks"
+import type { DomainHooks } from "./setup-domains"
 
 export function createToolDefinitionHandler(args: {
-  hooks: CreatedHooks
+  hooks: DomainHooks
 }): (
   input: { toolID: string },
   output: { description: string; parameters: unknown },

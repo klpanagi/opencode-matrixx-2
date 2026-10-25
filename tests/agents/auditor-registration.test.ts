@@ -1,5 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../src/agents/agent-config"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { BuiltinAgentNameSchema } from "../../src/config/schema/agent-names"
@@ -135,8 +136,8 @@ describe("auditor factory shape", () => {
 
     //#then
     expect(config.mode).toBe("subagent")
-    expect(config.model).toBe(model)
-    expect(config.prompt).toBe(AUDITOR_SYSTEM_PROMPT)
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.system).toBe(AUDITOR_SYSTEM_PROMPT)
   })
 })
 

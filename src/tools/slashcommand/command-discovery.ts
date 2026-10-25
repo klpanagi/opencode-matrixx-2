@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { basename, join } from "node:path"
-import { loadBuiltinCommands } from "../../features/builtin-commands"
+import { buildBuiltinCommandEntries } from "../../features/builtin-commands"
 import { getOpenCodeConfigDir, parseFrontmatter } from "../../shared"
 import { isMarkdownFile } from "../../shared/file-utils"
 import { sanitizeModelField } from "../../shared/model-sanitizer"
@@ -60,7 +60,7 @@ export function discoverCommandsSync(directory?: string): CommandInfo[] {
   const opencodeGlobalCommands = discoverCommandsFromDir(opencodeGlobalDir, "opencode")
   const opencodeProjectCommands = discoverCommandsFromDir(opencodeProjectDir, "opencode-project")
 
-  const builtinCommandsMap = loadBuiltinCommands()
+  const builtinCommandsMap = buildBuiltinCommandEntries()
   const builtinCommands: CommandInfo[] = Object.values(builtinCommandsMap).map((command) => ({
     name: command.name,
     metadata: {

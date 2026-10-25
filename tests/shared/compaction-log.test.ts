@@ -49,19 +49,19 @@ describe("utf8ByteLength", () => {
 describe("summarizeCompactionAppend", () => {
   test("sums per-source bytes into addedBytes", () => {
     //#given
-    const sources = { injector: 10, plan: 20, evolution: 5 }
+    const sources = { injector: 10, plan: 20 }
 
     //#when
     const summary = summarizeCompactionAppend(sources)
 
     //#then
-    expect(summary.addedBytes).toBe(35)
+    expect(summary.addedBytes).toBe(30)
     expect(summary.sources).toEqual(sources)
   })
 
   test("empty sources yield 0 total", () => {
     //#given
-    const sources = { injector: 0, plan: 0, evolution: 0 }
+    const sources = { injector: 0, plan: 0 }
 
     //#when
     const summary = summarizeCompactionAppend(sources)
@@ -76,13 +76,13 @@ describe("formatCompactionAppendLog", () => {
   test("message contains addedBytes and host-truncation note", () => {
     //#given
     const sessionID = "ses-123"
-    const sources = { injector: 10, plan: 20, evolution: 5 }
+    const sources = { injector: 10, plan: 20 }
 
     //#when
     const message = formatCompactionAppendLog(sessionID, sources)
 
     //#then
-    expect(message).toContain("35")
+    expect(message).toContain("30")
     expect(message).toContain("host truncation not performed by Matrixx")
     expect(message).toContain("Matrixx appended")
   })

@@ -33,10 +33,3 @@ export const RETRY_CONFIG = {
   backoffFactor: 2,
   maxDelayMs: 30000,
 } as const
-
-export const TRUNCATE_CONFIG = {
-  maxTruncateAttempts: 5,
-  minOutputSizeToTruncate: 500,
-  targetTokenRatio: 0.5,
-  charsPerToken: 4,
-} as const

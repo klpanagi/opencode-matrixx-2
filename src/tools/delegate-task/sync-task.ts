@@ -113,9 +113,6 @@ export async function executeSyncTask(
           const children = executorCtx.manager.getTasksByParentSession(sessionID)
           return children.some(t => t.status === "running" || t.status === "pending")
         },
-        hasPendingParentWake: () => {
-          return executorCtx.manager.hasInFlightNotificationForParent(sessionID)
-        },
       })
       if (pollError) {
         pollTimedOut = isPollTimeoutOutcome(pollError)

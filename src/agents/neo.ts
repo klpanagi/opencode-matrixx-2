@@ -1,4 +1,3 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { CCXT_PRO_WEBSOCKETS_SKILL_NAME } from "../features/builtin-skills/skills/ccxt-pro-websockets"
 import { CCXT_REST_SKILL_NAME } from "../features/builtin-skills/skills/ccxt-rest"
 import { DATA_QUALITY_OBSERVABILITY_SKILL_NAME } from "../features/builtin-skills/skills/data-quality-observability"
@@ -6,7 +5,8 @@ import { MARKET_DATA_ARCHITECTURE_SKILL_NAME } from "../features/builtin-skills/
 import { ZEROMQ_ARCHITECTURE_SKILL_NAME } from "../features/builtin-skills/skills/zeromq-architecture"
 import { ZEROMQ_PUBSUB_SKILL_NAME } from "../features/builtin-skills/skills/zeromq-pubsub"
 import { ZEROMQ_RELIABILITY_SKILL_NAME } from "../features/builtin-skills/skills/zeromq-reliability"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -158,28 +158,40 @@ Your response goes directly to the user or calling agent. Deliver the structured
 </delivery>`
 
 export function createNeoAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "multiedit",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "Market-data systems architect and reviewer. End-to-end review of an exchange-ingestion → bus → consumer pipeline against the canonical 9 robustness invariants (snapshot+stream, seq/gap, staleness, error taxonomy, backpressure, process isolation, scalability, UTC-ns, no silent failure). Read-only — issues a structured verdict with evidence-backed violations. (Neo - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: NEO_SKILLS,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: NEO_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: NEO_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 8000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 8000 },
+      },
+    },
+  }
 }
 createNeoAgent.mode = MODE

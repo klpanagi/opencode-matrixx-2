@@ -1,7 +1,7 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BrowserAutomationProvider, CategoriesConfig, CategoryConfig } from "../config/schema"
 import { createBuiltinSkills } from "../features/builtin-skills"
 import { mergeCategories } from "../shared/merge-categories"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentFactory } from "./types"
 
 export type AgentSource = AgentFactory | AgentConfig
@@ -18,20 +18,29 @@ export function buildAgent(
   disabledSkills?: Set<string>
 ): AgentConfig {
   const base = isFactory(source) ? source(model) : { ...source }
+  // V2 agents carry ModelRef objects; normalize legacy "provider/id" strings
+  // so category variant/request merging below operates on the object form.
+  if (typeof base.model === "string") {
+    base.model = parseModelRef(base.model)
+  }
   const categoryConfigs: Record<string, CategoryConfig> = mergeCategories(categories)
 
-  const agentWithCategory = base as AgentConfig & { category?: string; skills?: string[]; variant?: string }
+  const agentWithCategory = base as AgentConfig & { category?: string; skills?: string[] }
   if (agentWithCategory.category) {
     const categoryConfig = categoryConfigs[agentWithCategory.category]
     if (categoryConfig) {
-      if (!base.model) {
-        base.model = categoryConfig.model
+      if (!base.model && categoryConfig.model) {
+        base.model = parseModelRef(categoryConfig.model)
       }
-      if (base.temperature === undefined && categoryConfig.temperature !== undefined) {
-        base.temperature = categoryConfig.temperature
+      if (base.model && base.model.variant === undefined && categoryConfig.variant !== undefined) {
+        base.model = { ...base.model, variant: categoryConfig.variant }
       }
-      if (base.variant === undefined && categoryConfig.variant !== undefined) {
-        base.variant = categoryConfig.variant
+      if (categoryConfig.request) {
+        base.request = {
+          ...categoryConfig.request,
+          ...base.request,
+          body: { ...categoryConfig.request.body, ...base.request?.body },
+        }
       }
     }
   }
@@ -41,7 +50,7 @@ export function buildAgent(
     const resolved = builtinSkills.filter(s => agentWithCategory.skills?.includes(s.name))
     if (resolved.length > 0) {
       const skillContent = resolved.map(s => s.template).join("\n\n")
-      base.prompt = skillContent + (base.prompt ? `\n\n${base.prompt}` : "")
+      base.system = skillContent + (base.system ? `\n\n${base.system}` : "")
     }
   }
 

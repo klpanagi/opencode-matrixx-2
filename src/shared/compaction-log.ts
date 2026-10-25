@@ -1,7 +1,6 @@
 export interface CompactionSourceBytes {
   injector: number
   plan: number
-  evolution: number
 }
 
 export interface CompactionAppendSummary {
@@ -17,7 +16,7 @@ export function utf8ByteLength(fragment: string | undefined | null): number {
 }
 
 export function summarizeCompactionAppend(sources: CompactionSourceBytes): CompactionAppendSummary {
-  const addedBytes = sources.injector + sources.plan + sources.evolution
+  const addedBytes = sources.injector + sources.plan
   return { addedBytes, sources: { ...sources } }
 }
 
@@ -28,7 +27,7 @@ export function formatCompactionAppendLog(
   const { addedBytes } = summarizeCompactionAppend(sources)
   return (
     `Matrixx appended ${addedBytes} bytes to compaction context ` +
-    `(session ${sessionID}; injector ${sources.injector}B, plan ${sources.plan}B, ` +
-    `evolution ${sources.evolution}B); host truncation not performed by Matrixx`
+    `(session ${sessionID}; injector ${sources.injector}B, plan ${sources.plan}B); ` +
+    `host truncation not performed by Matrixx`
   )
 }

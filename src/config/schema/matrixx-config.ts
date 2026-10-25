@@ -33,7 +33,7 @@ import { TaskConfigSchema } from "./task"
 import { TasksConfigSchema } from "./tasks"
 import { TddEnforcerConfigSchema } from "./tdd-enforcer"
 import { TmuxConfigSchema } from "./tmux"
-import { ToolGatingConfigSchema } from "./tool-gating"
+import { ToolGatingConfigSchema } from "./tool-policy"
 import { WebsearchConfigSchema } from "./websearch"
 
 export const MatrixxConfigSchema = z.object({

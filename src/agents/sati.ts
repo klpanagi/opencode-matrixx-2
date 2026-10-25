@@ -1,4 +1,3 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { FRONTEND_A11Y_SKILL_NAME } from "../features/builtin-skills/skills/frontend-a11y"
 import { FRONTEND_BUILD_TOOLING_SKILL_NAME } from "../features/builtin-skills/skills/frontend-build-tooling"
 import { FRONTEND_PERF_SKILL_NAME } from "../features/builtin-skills/skills/frontend-perf"
@@ -6,7 +5,8 @@ import { FRONTEND_REACT_NEXTJS_SKILL_NAME } from "../features/builtin-skills/ski
 import { FRONTEND_STATE_DATA_SKILL_NAME } from "../features/builtin-skills/skills/frontend-state-data"
 import { FRONTEND_SVELTE_SVELTEKIT_SKILL_NAME } from "../features/builtin-skills/skills/frontend-svelte-sveltekit"
 import { FRONTEND_TESTING_SKILL_NAME } from "../features/builtin-skills/skills/frontend-testing"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -121,25 +121,40 @@ Your response goes directly to the calling agent or user. Make it self-contained
 </delivery>`
 
 export function createSatiAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "frontend specialist. React/Next.js, Svelte/SvelteKit, accessibility, performance, design tokens, component architecture, build tooling. Self-contained — no delegation. (Sati - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: SATI_FRONTEND_SKILLS,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: SATI_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["subagent", "task"]),
+    system: SATI_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 10000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 10000 },
+      },
+    },
+  }
 }
 createSatiAgent.mode = MODE

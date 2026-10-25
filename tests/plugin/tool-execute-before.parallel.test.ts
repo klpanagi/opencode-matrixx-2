@@ -107,7 +107,6 @@ function buildStubHooks(spies: Record<FastFailHookName, ReturnType<typeof spyOn>
     "readImageResizer",
     "webfetchRedirectGuard",
     "contextWindowMonitor",
-    "preemptiveCompaction",
     "sessionRecovery",
     "sessionNotification",
     "thinkMode",

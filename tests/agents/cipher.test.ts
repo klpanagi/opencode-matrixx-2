@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../src/agents/agent-config"
 import { CIPHER_PROMPT_METADATA, createCipherAgent } from "../../src/agents/cipher"
 
 describe("createCipherAgent", () => {
@@ -10,11 +11,11 @@ describe("createCipherAgent", () => {
 
     const config = createCipherAgent(model)
 
-    expect(config.model).toBe(model)
+    expect(config.model).toEqual(parseModelRef(model))
     expect(config.mode).toBe("all")
-    expect(config.temperature).toBe(0.1)
-    expect(config.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
-    expect(config.reasoningEffort).toBeUndefined()
+    expect(config.request?.body?.temperature).toBe(0.1)
+    expect(config.request?.body?.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
+    expect(config.request?.body?.reasoningEffort).toBeUndefined()
   })
 
   //#given a GPT model
@@ -25,9 +26,9 @@ describe("createCipherAgent", () => {
 
     const config = createCipherAgent(model)
 
-    expect(config.model).toBe(model)
-    expect(config.reasoningEffort).toBe("medium")
-    expect(config.thinking).toBeUndefined()
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.request?.body?.reasoningEffort).toBe("medium")
+    expect(config.request?.body?.thinking).toBeUndefined()
   })
 
   //#given the factory function
@@ -43,8 +44,9 @@ describe("createCipherAgent", () => {
   test("allows task for delegation", () => {
     const config = createCipherAgent("anthropic/claude-opus-4-6")
 
-    expect(config.permission).toBeDefined()
-    expect(config.permission?.task).toBeUndefined()
+    expect(config.permissions).toBeDefined()
+    // no deny on the task action: delegation via task() stays available
+    expect(config.permissions?.some((r) => r.action === "task" && r.effect === "deny")).toBe(false)
   })
 
   //#given a model
@@ -53,10 +55,10 @@ describe("createCipherAgent", () => {
   test("prompt contains delegation instructions for language experts", () => {
     const config = createCipherAgent("anthropic/claude-opus-4-6")
 
-    expect(config.prompt).toContain("CODE GENERATION DELEGATION")
-    expect(config.prompt).toContain("DELEGATE")
-    expect(config.prompt).toContain("language expert")
-    expect(config.prompt).toContain("task(")
+    expect(config.system).toContain("CODE GENERATION DELEGATION")
+    expect(config.system).toContain("DELEGATE")
+    expect(config.system).toContain("language expert")
+    expect(config.system).toContain("task(")
   })
 
   //#given a model

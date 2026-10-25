@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 
 const MODE: AgentMode = "subagent"
@@ -334,23 +334,21 @@ additive plumbing that closes the gap over a plan that documents it. An
 additive optional parameter is rarely more expensive than a wrong premise.
 `
 
-const seraphRestrictions = createAgentToolRestrictions([
-  "write",
-  "edit",
-  "task",
-])
-
 export function createSeraphAgent(model: string): AgentConfig {
   return {
     description:
       "Pre-planning consultant that analyzes requests to identify hidden intentions, ambiguities, and AI failure points. (Seraph - Matrixx)",
     mode: MODE,
-    model,
-    temperature: 0.3,
-    ...seraphRestrictions,
-    prompt: SERAPH_SYSTEM_PROMPT,
-    thinking: { type: "enabled", budgetTokens: 12000 },
-  } as AgentConfig
+    model: parseModelRef(model),
+    request: {
+      body: {
+        temperature: 0.3,
+        thinking: { type: "enabled", budgetTokens: 12000 },
+      },
+    },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: SERAPH_SYSTEM_PROMPT,
+  }
 }
 createSeraphAgent.mode = MODE
 

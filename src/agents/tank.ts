@@ -1,9 +1,9 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { CCXT_REST_SKILL_NAME } from "../features/builtin-skills/skills/ccxt-rest"
 import { DATA_QUALITY_OBSERVABILITY_SKILL_NAME } from "../features/builtin-skills/skills/data-quality-observability"
 import { RESILIENCE_ERROR_TAXONOMY_SKILL_NAME } from "../features/builtin-skills/skills/resilience-error-taxonomy"
 import { SILENT_FAILURE_DETECTION_SKILL_NAME } from "../features/builtin-skills/skills/silent-failure-detection"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -144,28 +144,40 @@ Your response goes directly to the user or calling agent. Deliver the structured
 </delivery>`
 
 export function createTankAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "multiedit",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "Resilience and silent-failure hunter. Finds swallowed exceptions, log-and-default paths, bare gather calls, masked gaps, and failures indistinguishable from success. Classifies errors transient (retry w/ backoff+jitter) vs fatal (skip/log) and requires an explicit success/failure discriminator on every external call. Read-only — reports findings, never edits. (Tank - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: TANK_SKILLS,
-    temperature: 0.0,
-    ...restrictions,
-    prompt: TANK_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.0 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: TANK_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 8000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 8000 },
+      },
+    },
+  }
 }
 createTankAgent.mode = MODE

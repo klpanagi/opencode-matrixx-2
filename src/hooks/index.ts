@@ -20,7 +20,6 @@ export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
 export { createEnvContextInjectorHook } from "./env-context-injector";
 export { createEnvFileWriteGuardHook } from "./env-file-write-guard"
-export { createEvolutionCompressorHook } from "./evolution-compressor";
 export { createEvolutionHitlHook } from "./evolution-hitl";
 export { passesQualityGate } from "./evolution-quality-gate";
 export { createEvolutionWatcherHook } from "./evolution-watcher";
@@ -39,7 +38,6 @@ export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker";
 export { createOracleMdOnlyHook } from "./oracle-md-only";
 export { createPlanPersister } from "./plan-persister"
 export { createPostReadInjectorHook } from "./post-read-injector";
-export { createPreemptiveCompactionHook } from "./preemptive-compaction";
 export { createQualityGateHook } from "./quality-gate/hook"
 export { createReadImageResizerHook } from "./read-image-resizer"
 export { createRtkBashRewriterHook } from "./rtk-bash-rewriter";

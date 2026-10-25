@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
-import type { CreatedHooks } from "../../src/create-hooks"
+import type { DomainHooks } from "../../src/plugin/setup-domains"
 import { getSessionModel } from "../../src/features/session-state"
 import { createChatMessageHandler } from "../../src/plugin/chat-message"
 import type { PluginContext } from "../../src/plugin/types"
@@ -26,7 +26,7 @@ function createMockHandlerArgs(overrides?: {
       autoSlashCommand: null,
       startWork: null,
       matrixLoop: null,
-    } as Partial<CreatedHooks>,
+    } as Partial<DomainHooks>,
     _appliedSessions: appliedSessions,
   }
 }

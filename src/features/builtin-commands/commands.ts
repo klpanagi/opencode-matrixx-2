@@ -20,9 +20,9 @@ import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { TASK_LIST_TEMPLATE } from "./templates/task-list"
 import { ULTRAWORK_TEMPLATE } from "./templates/ultrawork"
-import type { BuiltinCommandName, BuiltinCommands } from "./types"
+import type { BuiltinCommandName } from "./types"
 
-const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
+export const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
     description: "(builtin) Initialize hierarchical AGENTS.md knowledge base",
     template: `<command-instruction>
@@ -273,20 +273,4 @@ $ARGUMENTS
 </user-request>`,
     argumentHint: "[--scope=file|module|project] [--target-grade=B] [--max-iterations=3] [--target=<path>]",
   },
-}
-
-export function loadBuiltinCommands(
-  disabledCommands?: BuiltinCommandName[]
-): BuiltinCommands {
-  const disabled = new Set(disabledCommands ?? [])
-  const commands: BuiltinCommands = {}
-
-  for (const [name, definition] of Object.entries(BUILTIN_COMMAND_DEFINITIONS)) {
-    if (!disabled.has(name as BuiltinCommandName)) {
-      const { argumentHint: _argumentHint, ...openCodeCompatible } = definition
-      commands[name] = { ...openCodeCompatible, name } as CommandDefinition
-    }
-  }
-
-  return commands
 }

@@ -15,91 +15,70 @@ describe("buildPlanDemoteConfig", () => {
   })
 
   test("extracts all model settings from oracle config", () => {
+    // NOTE (V2): model settings are model/variant-inside-model/request —
+    // flat sampling keys (temperature, thinking, ...) are not agent fields.
     //#given
     const oracleConfig = {
       name: "oracle",
-      model: "anthropic/claude-opus-4-6",
-      variant: "max",
+      model: { providerID: "anthropic", id: "claude-opus-4-6", variant: "max" },
       mode: "all",
-      prompt: "You are Oracle...",
-      permission: { edit: "allow" },
+      system: "You are Oracle...",
+      permissions: [{ action: "edit", resource: "*", effect: "allow" }],
       description: "Plan agent (Oracle)",
       color: "#FF5722",
-      temperature: 0.1,
-      top_p: 0.95,
-      maxTokens: 32000,
-      thinking: { type: "enabled", budgetTokens: 10000 },
-      reasoningEffort: "high",
-      textVerbosity: "medium",
-      providerOptions: { key: "value" },
+      request: { body: { temperature: 0.1, thinking: { type: "enabled", budgetTokens: 10000 } } },
     }
 
     //#when
     const result = buildPlanDemoteConfig(oracleConfig, undefined)
 
-    //#then - picks model settings, NOT prompt/permission/description/color/name/mode
+    //#then - picks model settings, NOT system/permissions/description/color/name/mode
     expect(result.mode).toBe("subagent")
-    expect(result.model).toBe("anthropic/claude-opus-4-6")
-    expect(result.variant).toBe("max")
-    expect(result.temperature).toBe(0.1)
-    expect(result.top_p).toBe(0.95)
-    expect(result.maxTokens).toBe(32000)
-    expect(result.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
-    expect(result.reasoningEffort).toBe("high")
-    expect(result.textVerbosity).toBe("medium")
-    expect(result.providerOptions).toEqual({ key: "value" })
-    expect(result.prompt).toBeUndefined()
-    expect(result.permission).toBeUndefined()
+    expect(result.model).toEqual({ providerID: "anthropic", id: "claude-opus-4-6", variant: "max" })
+    expect(result.request).toEqual({ body: { temperature: 0.1, thinking: { type: "enabled", budgetTokens: 10000 } } })
+    expect(result.system).toBeUndefined()
+    expect(result.permissions).toBeUndefined()
     expect(result.description).toBeUndefined()
     expect(result.color).toBeUndefined()
     expect(result.name).toBeUndefined()
+    expect(result.variant).toBeUndefined()
   })
 
   test("plan override takes priority over oracle for all model settings", () => {
     //#given
     const oracleConfig = {
-      model: "anthropic/claude-opus-4-6",
-      variant: "max",
-      temperature: 0.1,
-      reasoningEffort: "high",
+      model: { providerID: "anthropic", id: "claude-opus-4-6", variant: "max" },
+      request: { body: { temperature: 0.1, reasoningEffort: "high" } },
     }
     const planOverride = {
-      model: "openai/gpt-5.2",
-      variant: "high",
-      temperature: 0.5,
-      reasoningEffort: "low",
+      model: { providerID: "openai", id: "gpt-5.2", variant: "high" },
+      request: { body: { temperature: 0.5, reasoningEffort: "low" } },
     }
 
     //#when
     const result = buildPlanDemoteConfig(oracleConfig, planOverride)
 
     //#then
-    expect(result.model).toBe("openai/gpt-5.2")
-    expect(result.variant).toBe("high")
-    expect(result.temperature).toBe(0.5)
-    expect(result.reasoningEffort).toBe("low")
+    expect(result.model).toEqual({ providerID: "openai", id: "gpt-5.2", variant: "high" })
+    expect(result.request).toEqual({ body: { temperature: 0.5, reasoningEffort: "low" } })
   })
 
   test("falls back to oracle when plan override has partial settings", () => {
     //#given
     const oracleConfig = {
-      model: "anthropic/claude-opus-4-6",
-      variant: "max",
-      temperature: 0.1,
-      reasoningEffort: "high",
+      model: { providerID: "anthropic", id: "claude-opus-4-6", variant: "max" },
+      request: { body: { temperature: 0.1, reasoningEffort: "high" } },
     }
     const planOverride = {
-      model: "openai/gpt-5.2",
+      model: { providerID: "openai", id: "gpt-5.2" },
     }
 
     //#when
     const result = buildPlanDemoteConfig(oracleConfig, planOverride)
 
-    //#then - plan model wins, rest inherits from oracle
-    expect(result.model).toBe("openai/gpt-5.2")
-    expect(result.variant).toBe("max")
-    expect(result.temperature).toBe(0.1)
-    expect(result.reasoningEffort).toBe("high")
+    //#then - plan model wins, request inherits from oracle
+    expect(result.model).toEqual({ providerID: "openai", id: "gpt-5.2" })
+    expect(result.request).toEqual({ body: { temperature: 0.1, reasoningEffort: "high" } })
   })
 
   test("skips undefined values from both sources", () => {

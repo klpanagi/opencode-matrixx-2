@@ -1,4 +1,3 @@
-import type { CreatedHooks } from "../create-hooks"
 import {
   disableAssembly,
   enableAssembly,
@@ -13,6 +12,7 @@ import {
 } from "../features/ultrawork-state"
 import { log } from "../shared"
 import { resolveSessionAgent } from "./session-agent-resolver"
+import type { DomainHooks } from "./setup-domains"
 import type { PluginContext } from "./types"
 
 // Module-level regex constants for the slashcommand branches. Precompiled
@@ -27,7 +27,7 @@ const COMPLETION_PROMISE_RE = /--completion-promise=["']?([^"'\s]+)["']?/i
 
 export function createToolExecuteBeforeHandler(args: {
   ctx: PluginContext
-  hooks: CreatedHooks
+  hooks: DomainHooks
 }): (
   input: { tool: string; sessionID: string; callID: string },
   output: { args: Record<string, unknown>; message?: string },

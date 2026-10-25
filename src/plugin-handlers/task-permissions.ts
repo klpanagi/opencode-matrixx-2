@@ -4,26 +4,38 @@
  * The task store (`.matrixx/tasks/`) is a separate write channel from the
  * codebase. An agent whose prompt tells it to track work with tasks must be
  * able to reach it, no matter which agent happens to hold delegation rights.
+ *
+ * OpenCode 2.x expresses gating as an ordered `{action, resource, effect}`
+ * ruleset where the last matching rule wins, so grants are appended after the
+ * agent's own rules.
  */
 
+import { type PermissionRule, rule } from "../shared/permission-compat"
+
 /** The legacy todo tools are denied for every task-capable agent. */
-export const denyTodoTools = { todowrite: "deny", todoread: "deny" } as const
+export const denyTodoPermissions: PermissionRule[] = [
+  rule("todowrite", "deny"),
+  rule("todoread", "deny"),
+]
 
 /**
  * Tracking only: the agent may read and write its own task-store records but
  * may not delegate. Granted to every primary-capable agent.
  */
-export const taskStorePermissions = { "task_*": "allow", ...denyTodoTools } as const
+export const taskStorePermissions: PermissionRule[] = [
+  rule("task_*", "allow"),
+  ...denyTodoPermissions,
+]
 
 /** Tracking plus outgoing delegation via the task tool. */
-export const fullTaskPermissions = {
-  task: "allow",
-  "task_*": "allow",
-  teammate: "allow",
-  ...denyTodoTools,
-} as const
+export const fullTaskPermissions: PermissionRule[] = [
+  rule("task", "allow"),
+  rule("task_*", "allow"),
+  rule("teammate", "allow"),
+  ...denyTodoPermissions,
+]
 
-type AgentLike = { mode?: string; permission?: Record<string, unknown> }
+type AgentLike = { mode?: string; permissions?: PermissionRule[] }
 
 /**
  * An agent that can be driven as a top-level session is expected to track its
@@ -36,32 +48,18 @@ export function isTaskStorePrimary(agent: AgentLike): boolean {
 }
 
 /**
- * Agents that restrict `task` themselves (Sentinel, a read-only auditor) keep
- * that denial: the fill-only grant below never overwrites a declared value.
- * Everything else that is primary-capable delegates as well.
- *
- * Sentinel justification: its read-only mandate covers FILES. The task store
- * is not a source file — it is how a read-only auditor hands findings off to
- * an implementer without being able to touch the code itself.
+ * A read-only agent declares a `task` deny for itself. OpenCode 2.x keeps the
+ * built-in subagent tool (`subagent`) and matrixx's own delegation tool
+ * (`task`) as separate actions, so a read-only agent denies both.
  */
-function canDelegate(agent: AgentLike): boolean {
-  return agent.permission?.task !== "deny"
+export function deniesDelegation(agent: AgentLike): boolean {
+  return (agent.permissions ?? []).some(
+    (r) => r.action === "task" && r.resource === "*" && r.effect === "deny",
+  )
 }
 
-/** The permission defaults a primary-capable agent is missing. */
-export function deriveTaskPermissions(agent: AgentLike): Record<string, string> {
-  if (!isTaskStorePrimary(agent)) return {}
-  return canDelegate(agent) ? { ...fullTaskPermissions } : { ...taskStorePermissions }
-}
-
-/**
- * Fill-only merge (the architect arm's `??=` pattern): a factory value or an
- * explicit user override in their own config is never overwritten here.
- */
-export function grantTaskPermissions(agent: AgentLike): void {
-  const permission = (agent.permission ?? {}) as Record<string, unknown>;
-  for (const [key, value] of Object.entries(deriveTaskPermissions(agent))) {
-    permission[key] ??= value;
-  }
-  agent.permission = permission;
+/** The permission grants a primary-capable agent is missing. */
+export function deriveTaskPermissions(agent: AgentLike): PermissionRule[] {
+  if (!isTaskStorePrimary(agent)) return []
+  return deniesDelegation(agent) ? [...taskStorePermissions] : [...fullTaskPermissions]
 }

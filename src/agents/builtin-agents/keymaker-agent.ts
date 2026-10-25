@@ -1,6 +1,6 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements, isAnyProviderConnected } from "../../shared"
+import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { createKeymakerAgent } from "../keymaker"
 import type { AgentOverrides } from "../types"
@@ -74,9 +74,15 @@ export function maybeCreateKeymakerConfig(input: {
     availableCategories
   )
 
-  keymakerConfig = { ...keymakerConfig, variant: keymakerResolvedVariant ?? "medium" }
+  const keymakerVariant = keymakerResolvedVariant ?? "medium"
+  if (keymakerConfig.model) {
+    keymakerConfig = {
+      ...keymakerConfig,
+      model: { ...keymakerConfig.model, variant: keymakerVariant },
+    }
+  }
 
-  const keymakerOverrideCategory = (keymakerOverride as Record<string, unknown> | undefined)?.category as string | undefined
+  const keymakerOverrideCategory = keymakerOverride?.category
   if (keymakerOverrideCategory) {
     keymakerConfig = applyCategoryOverride(keymakerConfig, keymakerOverrideCategory, mergedCategories)
   }

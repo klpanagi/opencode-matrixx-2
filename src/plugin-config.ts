@@ -227,12 +227,12 @@ function assertModelsResolvable(config: MatrixxConfig): void {
   const unresolved: string[] = []
 
   for (const [name, entry] of Object.entries(config.agents ?? {})) {
-    if (entry && !entry.disable && !entry.model && !globalModel) {
+    if (entry && !entry.disabled && !entry.model && !globalModel) {
       unresolved.push(`agent "${name}"`)
     }
   }
   for (const [name, entry] of Object.entries(config.categories ?? {})) {
-    if (entry && !entry.disable && !entry.model && !globalModel) {
+    if (entry && !entry.disabled && !entry.model && !globalModel) {
       unresolved.push(`category "${name}"`)
     }
   }

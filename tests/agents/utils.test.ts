@@ -25,9 +25,9 @@ describe("createBuiltinAgents with model overrides", () => {
       const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], {})
 
       // #then
-      expect(agents.morpheus.model).toBe("anthropic/claude-opus-4-6")
-      expect(agents.morpheus.thinking).toEqual({ type: "enabled", budgetTokens: 8000 })
-      expect(agents.morpheus.reasoningEffort).toBeUndefined()
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+      expect(agents.morpheus.request?.body?.thinking).toEqual({ type: "enabled", budgetTokens: 8000 })
+      expect(agents.morpheus.request?.body?.reasoningEffort).toBeUndefined()
     } finally {
       fetchSpy.mockRestore()
     }
@@ -43,9 +43,9 @@ describe("createBuiltinAgents with model overrides", () => {
     const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
 
     // #then
-    expect(agents.morpheus.model).toBe("github-copilot/gpt-5.2")
-    expect(agents.morpheus.reasoningEffort).toBe("medium")
-    expect(agents.morpheus.thinking).toBeUndefined()
+    expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "github-copilot", id: "gpt-5.2" }))
+    expect(agents.morpheus.request?.body?.reasoningEffort).toBe("medium")
+    expect(agents.morpheus.request?.body?.thinking).toBeUndefined()
   })
 
   test("Architect uses uiSelectedModel when provided", async () => {
@@ -73,8 +73,8 @@ describe("createBuiltinAgents with model overrides", () => {
       // #then
       expect(agents.architect).toBeDefined()
       // TODO: uiSelectedModel is not currently applied to architect (production regression). Restore below when fixed.
-      expect(agents.architect.model).toBe("anthropic/claude-opus-4-6")
-      // expect(agents.architect.model).toBe("openai/gpt-5.2")
+      expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+      // expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -107,7 +107,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("google/antigravity-claude-opus-4-5-thinking")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -140,7 +140,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
       // #then
       expect(agents.architect).toBeDefined()
-      expect(agents.architect.model).toBe("google/antigravity-claude-opus-4-5-thinking")
+      expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -158,7 +158,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
     } finally {
       cacheSpy.mockRestore()
       fetchSpy.mockRestore()
@@ -177,9 +177,9 @@ describe("createBuiltinAgents with model overrides", () => {
         const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
 
         // #then - merovingian resolves via connected cache fallback to opencode/claude-sonnet-4-6
-        expect(agents.merovingian.model).toBe("opencode/claude-sonnet-4-6")
-        expect(agents.merovingian.reasoningEffort).toBeUndefined()
-        expect(agents.merovingian.thinking).toBeDefined()
+        expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "opencode", id: "claude-sonnet-4-6" }))
+        expect(agents.merovingian.request?.body?.reasoningEffort).toBeUndefined()
+        expect(agents.merovingian.request?.body?.thinking).toBeDefined()
       } finally {
         cacheSpy.mockRestore()
         fetchSpy.mockRestore()
@@ -195,7 +195,7 @@ describe("createBuiltinAgents with model overrides", () => {
 
      // #then - oracle should be created with system default model (fallback to systemDefaultModel)
      expect(agents.merovingian).toBeDefined()
-     expect(agents.merovingian.model).toBe(TEST_DEFAULT_MODEL)
+     expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
      cacheSpy.mockRestore?.()
    })
 
@@ -209,10 +209,10 @@ describe("createBuiltinAgents with model overrides", () => {
     const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
 
     // #then
-    expect(agents.merovingian.model).toBe("openai/gpt-5.2")
-    expect(agents.merovingian.reasoningEffort).toBe("medium")
-    expect(agents.merovingian.textVerbosity).toBe("high")
-    expect(agents.merovingian.thinking).toBeUndefined()
+    expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2" }))
+    expect(agents.merovingian.request?.body?.reasoningEffort).toBe("medium")
+    expect(agents.merovingian.request?.body?.textVerbosity).toBe("high")
+    expect(agents.merovingian.request?.body?.thinking).toBeUndefined()
   })
 
   test("Merovingian with Claude model override has thinking, no reasoningEffort", async () => {
@@ -225,10 +225,10 @@ describe("createBuiltinAgents with model overrides", () => {
     const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
 
     // #then
-    expect(agents.merovingian.model).toBe("anthropic/claude-sonnet-4")
-    expect(agents.merovingian.thinking).toEqual({ type: "enabled", budgetTokens: 16000 })
-    expect(agents.merovingian.reasoningEffort).toBeUndefined()
-    expect(agents.merovingian.textVerbosity).toBeUndefined()
+    expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-sonnet-4" }))
+    expect(agents.merovingian.request?.body?.thinking).toEqual({ type: "enabled", budgetTokens: 16000 })
+    expect(agents.merovingian.request?.body?.reasoningEffort).toBeUndefined()
+    expect(agents.merovingian.request?.body?.textVerbosity).toBeUndefined()
   })
 
    test("non-model overrides are still applied after factory rebuild", async () => {
@@ -241,7 +241,7 @@ describe("createBuiltinAgents with model overrides", () => {
      const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
 
      // #then
-     expect(agents.morpheus.model).toBe("github-copilot/gpt-5.2")
+     expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "github-copilot", id: "gpt-5.2" }))
      expect(agents.morpheus.temperature).toBe(0.5)
    })
 
@@ -253,9 +253,9 @@ describe("createBuiltinAgents with model overrides", () => {
     const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined, disabledSkills)
 
     // #then
-    expect(agents.morpheus.prompt).not.toContain("playwright")
-    expect(agents.morpheus.prompt).toContain("frontend-ui-ux")
-    expect(agents.morpheus.prompt).toContain("git-master")
+    expect(agents.morpheus.system).not.toContain("playwright")
+    expect(agents.morpheus.system).toContain("frontend-ui-ux")
+    expect(agents.morpheus.system).toContain("git-master")
   })
 
   test("includes custom agents in orchestrator prompts when provided via config", async () => {
@@ -292,9 +292,9 @@ describe("createBuiltinAgents with model overrides", () => {
 
       // #then
       // TODO: customAgentSummaries not currently injected into orchestrator prompts (production regression). Restore below when fixed.
-      expect(agents.morpheus.prompt).not.toContain("researcher")
-      expect(agents.keymaker.prompt).not.toContain("researcher")
-      expect(agents.architect.prompt).not.toContain("researcher")
+      expect(agents.morpheus.system).not.toContain("researcher")
+      expect(agents.keymaker.system).not.toContain("researcher")
+      expect(agents.architect.system).not.toContain("researcher")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -328,9 +328,9 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      expect(agents.morpheus.prompt).not.toContain("hidden-agent")
-      expect(agents.keymaker.prompt).not.toContain("hidden-agent")
-      expect(agents.architect.prompt).not.toContain("hidden-agent")
+      expect(agents.morpheus.system).not.toContain("hidden-agent")
+      expect(agents.keymaker.system).not.toContain("hidden-agent")
+      expect(agents.architect.system).not.toContain("hidden-agent")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -364,9 +364,9 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      expect(agents.morpheus.prompt).not.toContain("disabled-agent")
-      expect(agents.keymaker.prompt).not.toContain("disabled-agent")
-      expect(agents.architect.prompt).not.toContain("disabled-agent")
+      expect(agents.morpheus.system).not.toContain("disabled-agent")
+      expect(agents.keymaker.system).not.toContain("disabled-agent")
+      expect(agents.architect.system).not.toContain("disabled-agent")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -400,9 +400,9 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      expect(agents.morpheus.prompt).not.toContain("researcher")
-      expect(agents.keymaker.prompt).not.toContain("researcher")
-      expect(agents.architect.prompt).not.toContain("researcher")
+      expect(agents.morpheus.system).not.toContain("researcher")
+      expect(agents.keymaker.system).not.toContain("researcher")
+      expect(agents.architect.system).not.toContain("researcher")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -433,7 +433,7 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      const matches = agents.morpheus.prompt.match(/Custom agent: researcher/gi) ?? []
+      const matches = (agents.morpheus.system ?? "").match(/Custom agent: researcher/gi) ?? []
       // TODO: customAgentSummaries not currently in morpheus prompt (production regression). Restore below when fixed.
       expect(matches.length).toBe(0)
       // expect(matches.length).toBe(1)
@@ -470,8 +470,8 @@ describe("createBuiltinAgents with model overrides", () => {
 
       // #then
       // TODO: custom agent sanitization regressed (production regression). Restore below when fixed.
-      expect(agents.morpheus.prompt).not.toContain("Line1 Alpha \\| Beta")
-      // expect(agents.morpheus.prompt).toContain("Line1 Alpha \\| Beta")
+      expect(agents.morpheus.system).not.toContain("Line1 Alpha \\| Beta")
+      // expect(agents.morpheus.system).toContain("Line1 Alpha \\| Beta")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -492,7 +492,7 @@ describe("createBuiltinAgents without systemDefaultModel", () => {
 
         // #then - connected cache enables model resolution despite no systemDefaultModel
         expect(agents.merovingian).toBeDefined()
-        expect(agents.merovingian.model).toBe("opencode/claude-sonnet-4-6")
+        expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "opencode", id: "claude-sonnet-4-6" }))
       } finally {
         cacheSpy.mockRestore()
         fetchSpy.mockRestore()
@@ -508,7 +508,7 @@ describe("createBuiltinAgents without systemDefaultModel", () => {
 
       // #then - first fallback entry used as last resort
       expect(agents.merovingian).toBeDefined()
-      expect(agents.merovingian.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-sonnet-4-6" }))
       cacheSpy.mockRestore?.()
     })
 
@@ -531,7 +531,7 @@ describe("createBuiltinAgents without systemDefaultModel", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
     } finally {
       cacheSpy.mockRestore()
       fetchSpy.mockRestore()
@@ -621,7 +621,7 @@ describe("createBuiltinAgents with requiresProvider gating (keymaker)", () => {
 
       // #then
       expect(agents.keymaker).toBeDefined()
-      expect(agents.keymaker.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.keymaker.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
     } finally {
       cacheSpy.mockRestore()
       fetchSpy.mockRestore()
@@ -678,7 +678,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (morpheus)", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("anthropic/claude-opus-4-6")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
     } finally {
       cacheSpy.mockRestore()
       fetchSpy.mockRestore()
@@ -741,7 +741,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (morpheus)", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("google/antigravity-claude-opus-4-5-thinking")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
     } finally {
       fetchSpy.mockRestore()
       cacheSpy.mockRestore()
@@ -767,7 +767,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (morpheus)", () => {
 
       // #then
       expect(agents.morpheus).toBeDefined()
-      expect(agents.morpheus.model).toBe("google/antigravity-claude-opus-4-5-thinking")
+      expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
     } finally {
       fetchSpy.mockRestore()
       cacheSpy.mockRestore()
@@ -796,7 +796,7 @@ describe("buildAgent with category and skills", () => {
     })
 
     // #then - category's built-in model is applied
-    expect(agent.model).toBe("anthropic/claude-sonnet-4-6")
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-sonnet-4-6" }))
   })
 
   test("agent with category and existing model keeps existing model", () => {
@@ -814,7 +814,7 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then - explicit model takes precedence over category
-    expect(agent.model).toBe("custom/model")
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "custom", id: "model" }))
   })
 
   test("agent with category inherits variant", () => {
@@ -838,8 +838,8 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL, categories)
 
     // #then
-    expect(agent.model).toBe("openai/gpt-5.2")
-    expect(agent.variant).toBe("xhigh")
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2" }))
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2", variant: "xhigh" }))
   })
 
   test("agent with skills has content prepended to prompt", () => {
@@ -849,7 +849,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: ["frontend-ui-ux"],
-          prompt: "Original prompt content",
+          system: "Original prompt content",
         }) as AgentConfig,
     }
 
@@ -857,9 +857,9 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
-    expect(agent.prompt).toContain("Original prompt content")
-    expect(agent.prompt).toMatch(/Designer-Turned-Developer[\s\S]*Original prompt content/s)
+    expect(agent.system).toContain("Role: Designer-Turned-Developer")
+    expect(agent.system).toContain("Original prompt content")
+    expect(agent.system).toMatch(/Designer-Turned-Developer[\s\S]*Original prompt content/s)
   })
 
   test("agent with multiple skills has all content prepended", () => {
@@ -869,7 +869,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: ["frontend-ui-ux"],
-          prompt: "Agent prompt",
+          system: "Agent prompt",
         }) as AgentConfig,
     }
 
@@ -877,8 +877,8 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
-    expect(agent.prompt).toContain("Agent prompt")
+    expect(agent.system).toContain("Role: Designer-Turned-Developer")
+    expect(agent.system).toContain("Agent prompt")
   })
 
   test("agent without category or skills works as before", () => {
@@ -889,7 +889,7 @@ describe("buildAgent with category and skills", () => {
           description: "Test agent",
           model: "custom/model",
           temperature: 0.5,
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -897,9 +897,9 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then
-    expect(agent.model).toBe("custom/model")
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "custom", id: "model" }))
     expect(agent.temperature).toBe(0.5)
-    expect(agent.prompt).toBe("Base prompt")
+    expect(agent.system).toBe("Base prompt")
   })
 
   test("agent with category and skills applies both", () => {
@@ -910,7 +910,7 @@ describe("buildAgent with category and skills", () => {
           description: "Test agent",
           category: "source",
           skills: ["frontend-ui-ux"],
-          prompt: "Task description",
+          system: "Task description",
         }) as AgentConfig,
     }
 
@@ -920,10 +920,10 @@ describe("buildAgent with category and skills", () => {
     })
 
     // #then - category's built-in model and skills are applied
-    expect(agent.model).toBe("anthropic/claude-opus-4-6")
-    expect(agent.variant).toBe("max")
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
-    expect(agent.prompt).toContain("Task description")
+    expect(agent.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+    expect(agent.model).toEqual(expect.objectContaining({ variant: "max" }))
+    expect(agent.system).toContain("Role: Designer-Turned-Developer")
+    expect(agent.system).toContain("Task description")
   })
 
   test("agent with non-existent category has no effect", () => {
@@ -933,7 +933,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           category: "non-existent",
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -944,7 +944,7 @@ describe("buildAgent with category and skills", () => {
     // Note: The factory receives model, but if category doesn't exist, it's not applied
     // The agent's model comes from the factory output (which doesn't set model)
     expect(agent.model).toBeUndefined()
-    expect(agent.prompt).toBe("Base prompt")
+    expect(agent.system).toBe("Base prompt")
   })
 
   test("agent with non-existent skills only prepends found ones", () => {
@@ -954,7 +954,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: ["frontend-ui-ux", "non-existent-skill"],
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -962,8 +962,8 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then
-    expect(agent.prompt).toContain("Role: Designer-Turned-Developer")
-    expect(agent.prompt).toContain("Base prompt")
+    expect(agent.system).toContain("Role: Designer-Turned-Developer")
+    expect(agent.system).toContain("Base prompt")
   })
 
   test("agent with empty skills array keeps original prompt", () => {
@@ -973,7 +973,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: [],
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -981,7 +981,7 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then
-    expect(agent.prompt).toBe("Base prompt")
+    expect(agent.system).toBe("Base prompt")
   })
 
   test("agent with agent-browser skill resolves when browserProvider is set", () => {
@@ -991,7 +991,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: ["agent-browser"],
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -999,8 +999,8 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL, undefined, "agent-browser")
 
     // #then - agent-browser skill content should be in prompt
-    expect(agent.prompt).toContain("agent-browser")
-    expect(agent.prompt).toContain("Base prompt")
+    expect(agent.system).toContain("agent-browser")
+    expect(agent.system).toContain("Base prompt")
   })
 
   test("agent with agent-browser skill NOT resolved when browserProvider not set", () => {
@@ -1010,7 +1010,7 @@ describe("buildAgent with category and skills", () => {
         ({
           description: "Test agent",
           skills: ["agent-browser"],
-          prompt: "Base prompt",
+          system: "Base prompt",
         }) as AgentConfig,
     }
 
@@ -1018,13 +1018,13 @@ describe("buildAgent with category and skills", () => {
     const agent = buildAgent(source["test-agent"], TEST_MODEL)
 
     // #then - agent-browser skill not found, only base prompt remains
-    expect(agent.prompt).toBe("Base prompt")
-    expect(agent.prompt).not.toContain("agent-browser open")
+    expect(agent.system).toBe("Base prompt")
+    expect(agent.system).not.toContain("agent-browser open")
   })
 })
 
 describe("override.category expansion in createBuiltinAgents", () => {
-  type OverrideMap = Record<string, { category: string; variant?: string; reasoningEffort?: string }>
+  type OverrideMap = Record<string, { category: string; variant?: string; request?: { body?: Record<string, unknown> } }>
 
   let providerModelsSpy: ReturnType<typeof spyOn> | undefined
   let connectedProvidersSpy: ReturnType<typeof spyOn> | undefined
@@ -1063,8 +1063,8 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - source category: model=anthropic/claude-opus-4-6, variant=max
     expect(agents.merovingian).toBeDefined()
-    expect(agents.merovingian.model).toBe("anthropic/claude-opus-4-6")
-    expect(agents.merovingian.variant).toBe("max")
+    expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+    expect(agents.merovingian.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
   test("standard agent override with category AND direct variant - direct wins", async () => {
@@ -1078,19 +1078,21 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - direct variant overrides category variant
     expect(agents.merovingian).toBeDefined()
-    expect(agents.merovingian.variant).toBe("max")
+    expect(agents.merovingian.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
   test("standard agent override with category AND direct reasoningEffort - direct wins", async () => {
+    // NOTE (V2): sampling params live under request.body; top-level
+    // reasoningEffort is not part of the agent schema.
     // #given - custom category has reasoningEffort=xhigh, direct override says "low"
     const categories = {
       "test-cat": {
         model: "openai/gpt-5.2",
-        reasoningEffort: "xhigh" as const,
+        request: { body: { reasoningEffort: "xhigh" } },
       },
     }
     const overrides = {
-      merovingian: { category: "test-cat", reasoningEffort: "low" },
+      merovingian: { category: "test-cat", request: { body: { reasoningEffort: "low" } } },
     } satisfies OverrideMap
 
     // #when
@@ -1098,7 +1100,7 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - direct reasoningEffort wins over category
     expect(agents.merovingian).toBeDefined()
-    expect(agents.merovingian.reasoningEffort).toBe("low")
+    expect(agents.merovingian.request?.body?.reasoningEffort).toBe("low")
   })
 
   test("standard agent override with category applies reasoningEffort from category when no direct override", async () => {
@@ -1106,7 +1108,7 @@ describe("override.category expansion in createBuiltinAgents", () => {
     const categories = {
       "reasoning-cat": {
         model: "openai/gpt-5.2",
-        reasoningEffort: "high" as const,
+        request: { body: { reasoningEffort: "high" } },
       },
     }
     const overrides = {
@@ -1118,7 +1120,7 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - category reasoningEffort is applied
     expect(agents.merovingian).toBeDefined()
-    expect(agents.merovingian.reasoningEffort).toBe("high")
+    expect(agents.merovingian.request?.body?.reasoningEffort).toBe("high")
   })
 
   test("morpheus override with category expands category properties", async () => {
@@ -1135,8 +1137,8 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - source category: model=anthropic/claude-opus-4-6, variant=max
     expect(agents.morpheus).toBeDefined()
-    expect(agents.morpheus.model).toBe("anthropic/claude-opus-4-6")
-    expect(agents.morpheus.variant).toBe("max")
+    expect(agents.morpheus.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+    expect(agents.morpheus.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
   test("architect override with category expands category properties", async () => {
@@ -1153,8 +1155,8 @@ describe("override.category expansion in createBuiltinAgents", () => {
 
     // #then - source category: model=anthropic/claude-opus-4-6, variant=max
     expect(agents.architect).toBeDefined()
-    expect(agents.architect.model).toBe("anthropic/claude-opus-4-6")
-    expect(agents.architect.variant).toBe("max")
+    expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+    expect(agents.architect.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
   test("override with non-existent category has no effect on config", async () => {
@@ -1169,14 +1171,17 @@ describe("override.category expansion in createBuiltinAgents", () => {
     // #then - no category-specific variant/reasoningEffort applied from non-existent category
     expect(agents.merovingian).toBeDefined()
     const agentsWithoutOverride = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL)
-    expect(agents.merovingian.model).toBe(agentsWithoutOverride.merovingian.model)
+    expect(agents.merovingian.model).toEqual(agentsWithoutOverride.merovingian.model)
   })
 })
 
-describe("agent override tools migration", () => {
+describe("agent override legacy tools key", () => {
+  // NOTE (V2): permissions are rulesets (`permissions: PermissionRule[]`) —
+  // the V1 `tools` allow/deny map no longer exists. The legacy key is
+  // dropped by mergeAgentConfig so it never leaks onto the built agent.
   type ToolsOverrideMap = Record<string, { tools: Record<string, boolean> }>
 
-  test("tools: { x: false } is migrated to permission: { x: deny }", async () => {
+  test("legacy tools: { x: false } is dropped and factory permissions survive", async () => {
     // #given
     const overrides = {
       trinity: { tools: { "jetbrains_*": false } },
@@ -1187,11 +1192,11 @@ describe("agent override tools migration", () => {
 
     // #then
     expect(agents.trinity).toBeDefined()
-    const permission = agents.trinity.permission as Record<string, string>
-    expect(permission["jetbrains_*"]).toBe("deny")
+    expect((agents.trinity as unknown as { tools?: unknown }).tools).toBeUndefined()
+    expect(agents.trinity.permissions).toBeDefined()
   })
 
-  test("tools: { x: true } is migrated to permission: { x: allow }", async () => {
+  test("legacy tools: { x: true } is dropped and factory permissions survive", async () => {
     // #given
     const overrides = {
       operator: { tools: { "jetbrains_get_*": true } },
@@ -1202,11 +1207,11 @@ describe("agent override tools migration", () => {
 
     // #then
     expect(agents.operator).toBeDefined()
-    const permission = agents.operator.permission as Record<string, string>
-    expect(permission["jetbrains_get_*"]).toBe("allow")
+    expect((agents.operator as unknown as { tools?: unknown }).tools).toBeUndefined()
+    expect(agents.operator.permissions).toBeDefined()
   })
 
-  test("tools config is removed after migration", async () => {
+  test("legacy tools config is removed and does not migrate", async () => {
     // #given
     const overrides = {
       trinity: { tools: { "some_tool": false } },
@@ -1217,7 +1222,7 @@ describe("agent override tools migration", () => {
 
     // #then
     expect(agents.trinity).toBeDefined()
-    expect(agents.trinity.tools).toBeUndefined()
+    expect((agents.trinity as unknown as { tools?: unknown }).tools).toBeUndefined()
   })
 })
 
@@ -1268,7 +1273,7 @@ describe("Deadlock prevention - fetchAvailableModels must not receive client", (
 
     // #then - user variant takes precedence over hardcoded "medium"
     expect(agents.keymaker).toBeDefined()
-    expect(agents.keymaker.variant).toBe("high")
+    expect(agents.keymaker.model).toEqual(expect.objectContaining({ variant: "high" }))
   })
 
    test("Keymaker uses default variant when no user override provided", async () => {
@@ -1280,7 +1285,7 @@ describe("Deadlock prevention - fetchAvailableModels must not receive client", (
  
      // #then - default "max" variant is applied
      expect(agents.keymaker).toBeDefined()
-     expect(agents.keymaker.variant).toBe("max")
+     expect(agents.keymaker.model).toEqual(expect.objectContaining({ variant: "max" }))
    })
 })
 
@@ -1304,7 +1309,7 @@ describe("createBuiltinAgents with fallbackChain override", () => {
 
       // #then - should resolve to first entry in override chain
       expect(agents.merovingian).toBeDefined()
-      expect(agents.merovingian.model).toBe("google/gemini-3-flash")
+      expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "google", id: "gemini-3-flash" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -1323,7 +1328,7 @@ describe("createBuiltinAgents with fallbackChain override", () => {
 
       // #then - should resolve to default chain's first entry (claude-sonnet-4-6)
       expect(agents.merovingian).toBeDefined()
-      expect(agents.merovingian.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(agents.merovingian.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-sonnet-4-6" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -1347,7 +1352,7 @@ describe("createBuiltinAgents with fallbackChain override", () => {
 
       // #then - should use override chain model
       expect(agents.operator).toBeDefined()
-      expect(agents.operator.model).toBe("anthropic/claude-sonnet-4-6")
+      expect(agents.operator.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-sonnet-4-6" }))
     } finally {
       fetchSpy.mockRestore()
     }

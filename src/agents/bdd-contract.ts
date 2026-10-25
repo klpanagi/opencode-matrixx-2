@@ -1,6 +1,6 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { BDD_CONTRACT_SKILL_NAME } from "../features/builtin-skills/skills/bdd-contract"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -69,23 +69,40 @@ const BDD_CONTRACT_SYSTEM_PROMPT = `You are a BDD contract specialist. Your role
 Report the Contract file path, the key features/anomalies found, and the annotations inferred (api/ui/state/assumptions).`
 
 export function createBddContractAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "BDD contract specialist. Gherkin feature files → structured Contract JSON with semantic enrichment. (BddContract - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: BDD_CONTRACT_SKILLS,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: BDD_CONTRACT_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions([]),
+    system: BDD_CONTRACT_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 10000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 10000 },
+      },
+    },
+  }
 }
 createBddContractAgent.mode = MODE

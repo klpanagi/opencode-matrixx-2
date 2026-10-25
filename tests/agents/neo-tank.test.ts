@@ -1,5 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../src/agents/agent-config"
 import { createNeoAgent, NEO_PROMPT_METADATA } from "../../src/agents/neo"
 import { createTankAgent, TANK_PROMPT_METADATA } from "../../src/agents/tank"
 import { BuiltinAgentNameSchema } from "../../src/config/schema/agent-names"
@@ -21,13 +22,13 @@ describe("createNeoAgent", () => {
 
     //#then
     expect(config.mode).toBe("subagent")
-    expect(config.model).toBe(model)
-    expect(config.temperature).toBe(0.1)
-    const permission = (config as Record<string, unknown>).permission as Record<string, string>
-    expect(permission.write).toBe("deny")
-    expect(permission.edit).toBe("deny")
-    expect(permission.multiedit).toBe("deny")
-    expect(permission.task).toBe("deny")
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.request?.body?.temperature).toBe(0.1)
+    const rules = (config.permissions ?? []) as { action: string; effect: string }[]
+    for (const action of ["edit", "subagent", "task"]) {
+      expect(rules.some((r) => r.action === action && r.effect === "deny")).toBe(true)
+    }
+    expect(rules.some((r) => r.effect === "allow")).toBe(false)
   })
 
   test("carries the market-data skill set", () => {
@@ -55,8 +56,8 @@ describe("createNeoAgent", () => {
     const config = createNeoAgent(model)
 
     //#then
-    expect(config.reasoningEffort).toBe("medium")
-    expect(config.thinking).toBeUndefined()
+    expect(config.request?.body?.reasoningEffort).toBe("medium")
+    expect(config.request?.body?.thinking).toBeUndefined()
   })
 
   test("exposes the .mode static required by the AgentFactory form", () => {
@@ -69,7 +70,7 @@ describe("createNeoAgent", () => {
     const config = createNeoAgent("anthropic/claude-sonnet-4-6")
 
     //#when
-    const prompt = config.prompt as string
+    const prompt = config.system as string
 
     //#then
     expect(prompt).toContain("\"status\"")
@@ -89,13 +90,13 @@ describe("createTankAgent", () => {
 
     //#then
     expect(config.mode).toBe("subagent")
-    expect(config.model).toBe(model)
-    expect(config.temperature).toBe(0.0)
-    const permission = (config as Record<string, unknown>).permission as Record<string, string>
-    expect(permission.write).toBe("deny")
-    expect(permission.edit).toBe("deny")
-    expect(permission.multiedit).toBe("deny")
-    expect(permission.task).toBe("deny")
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.request?.body?.temperature).toBe(0.0)
+    const rules = (config.permissions ?? []) as { action: string; effect: string }[]
+    for (const action of ["edit", "subagent", "task"]) {
+      expect(rules.some((r) => r.action === action && r.effect === "deny")).toBe(true)
+    }
+    expect(rules.some((r) => r.effect === "allow")).toBe(false)
   })
 
   test("carries the resilience skill set", () => {
@@ -122,7 +123,7 @@ describe("createTankAgent", () => {
     const config = createTankAgent("anthropic/claude-sonnet-4-6")
 
     //#when
-    const prompt = config.prompt as string
+    const prompt = config.system as string
 
     //#then
     expect(prompt).toContain("\"findings\"")

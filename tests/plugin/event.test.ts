@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
-import type { CreatedHooks } from "../../src/create-hooks"
-import type { Managers } from "../../src/create-managers"
+import type { DomainHooks } from "../../src/plugin/setup-domains"
+import type { DomainManagers } from "../../src/plugin/setup-domains"
 import { createEventHandler } from "../../src/plugin/event"
 import type { PluginContext } from "../../src/plugin/types"
 
@@ -29,7 +29,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				autoUpdateChecker: { event: mockDispatchToHooks },
 			backgroundNotificationHook: { event: async () => {} },
@@ -47,7 +47,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 			matrixLoop: { event: async () => {} },
 			stopContinuationGuard: { event: async () => {} },
 			architectHook: { handler: async () => {} },
-		} as unknown as CreatedHooks,
+		} as unknown as DomainHooks,
 	})
 
 	const sessionId = "ses_test123"
@@ -103,7 +103,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				autoUpdateChecker: { event: mockDispatchToHooks },
 				backgroundNotificationHook: { event: async () => {} },
@@ -121,7 +121,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
 				architectHook: { handler: async () => {} },
-			} as unknown as CreatedHooks,
+			} as unknown as DomainHooks,
 		})
 
 		const sessionId = "ses_test456"
@@ -170,7 +170,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				autoUpdateChecker: { event: async () => {} },
 				backgroundNotificationHook: { event: async () => {} },
@@ -188,7 +188,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
 				architectHook: { handler: async () => {} },
-			} as unknown as CreatedHooks,
+			} as unknown as DomainHooks,
 		})
 
 		// Trigger some synthetic idles
@@ -256,7 +256,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				autoUpdateChecker: {
 					event: async (input: EventInput) => {
@@ -309,7 +309,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				autoUpdateChecker: {
 					event: async (input: EventInput) => {
@@ -333,7 +333,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
 				architectHook: { handler: async () => {} },
-			} as unknown as CreatedHooks,
+			} as unknown as DomainHooks,
 		})
 
 		const sessionId = "ses_outside_window"
@@ -388,14 +388,14 @@ describe("createEventHandler - DCP loop-breaker dispatch", () => {
 					onSessionCreated: async () => {},
 					onSessionDeleted: async () => {},
 				},
-			} as unknown as Managers,
+			} as unknown as DomainManagers,
 			hooks: {
 				nudgeLoopBreaker: {
 					event: async (input: { event: { type: string; properties?: unknown } }) => {
 						seen.push(input.event.type)
 					},
 				},
-			} as unknown as CreatedHooks,
+			} as unknown as DomainHooks,
 		})
 
 		//#when

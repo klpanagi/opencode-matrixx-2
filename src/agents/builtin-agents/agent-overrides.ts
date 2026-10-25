@@ -1,6 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { CategoryConfig } from "../../config/schema"
-import { deepMerge, migrateAgentConfig } from "../../shared"
+import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AgentOverrideConfig } from "../types"
 import { resolvePromptAppend } from "./resolve-file-uri"
 
@@ -18,21 +17,25 @@ export function applyCategoryOverride(
   const categoryConfig = mergedCategories[categoryName]
   if (!categoryConfig) return config
 
-  const result = { ...config } as AgentConfig & Record<string, unknown>
-  if (categoryConfig.model) result.model = categoryConfig.model
-  if (categoryConfig.variant !== undefined) result.variant = categoryConfig.variant
-  if (categoryConfig.temperature !== undefined) result.temperature = categoryConfig.temperature
-  if (categoryConfig.reasoningEffort !== undefined) result.reasoningEffort = categoryConfig.reasoningEffort
-  if (categoryConfig.textVerbosity !== undefined) result.textVerbosity = categoryConfig.textVerbosity
-  if (categoryConfig.thinking !== undefined) result.thinking = categoryConfig.thinking
-  if (categoryConfig.top_p !== undefined) result.top_p = categoryConfig.top_p
-  if (categoryConfig.maxTokens !== undefined) result.maxTokens = categoryConfig.maxTokens
-
-  if (categoryConfig.prompt_append && typeof result.prompt === "string") {
-    result.prompt = `${result.prompt}\n${resolvePromptAppend(categoryConfig.prompt_append)}`
+  const result: AgentConfig = { ...config }
+  if (categoryConfig.model) result.model = parseModelRef(categoryConfig.model)
+  if (result.model && categoryConfig.variant !== undefined) {
+    result.model = { ...result.model, variant: categoryConfig.variant }
+  }
+  if (categoryConfig.request) {
+    result.request = {
+      ...result.request,
+      ...categoryConfig.request,
+      body: { ...result.request?.body, ...categoryConfig.request.body },
+    }
   }
 
-  return result as AgentConfig
+  if (categoryConfig.system_append) {
+    const appended = resolvePromptAppend(categoryConfig.system_append)
+    result.system = result.system ? `${result.system}\n${appended}` : appended
+  }
+
+  return result
 }
 
 export function mergeAgentConfig(
@@ -40,12 +43,37 @@ export function mergeAgentConfig(
   override: AgentOverrideConfig,
   directory?: string
 ): AgentConfig {
-  const migratedOverride = migrateAgentConfig(override as Record<string, unknown>) as AgentOverrideConfig
-  const { prompt_append, ...rest } = migratedOverride
-  const merged = deepMerge(base, rest as Partial<AgentConfig>)
+  // Legacy V1 `tools` allow/deny maps are not part of the V2 permission
+  // ruleset vocabulary — drop the key so it never leaks onto the agent.
+  // (Unknown keys such as temperature intentionally pass through via rest.)
+  const {
+    system_append,
+    model,
+    variant,
+    request: overrideRequest,
+    tools: _legacyTools,
+    ...rest
+  } = override as AgentOverrideConfig & { tools?: unknown }
+  const merged: AgentConfig = { ...base, ...rest }
 
-  if (prompt_append && merged.prompt) {
-    merged.prompt = `${merged.prompt}\n${resolvePromptAppend(prompt_append, directory)}`
+  if (model !== undefined) {
+    merged.model = parseModelRef(model)
+  }
+  if (merged.model && variant !== undefined) {
+    merged.model = { ...merged.model, variant }
+  }
+
+  if (overrideRequest) {
+    merged.request = {
+      ...base.request,
+      ...overrideRequest,
+      body: { ...base.request?.body, ...overrideRequest.body },
+    }
+  }
+
+  if (system_append) {
+    const appended = resolvePromptAppend(system_append, directory)
+    merged.system = merged.system ? `${merged.system}\n${appended}` : appended
   }
 
   return merged
@@ -58,7 +86,7 @@ export function applyOverrides(
   directory?: string
 ): AgentConfig {
   let result = config
-  const overrideCategory = (override as Record<string, unknown> | undefined)?.category as string | undefined
+  const overrideCategory = override?.category
   if (overrideCategory) {
     result = applyCategoryOverride(result, overrideCategory, mergedCategories)
   }

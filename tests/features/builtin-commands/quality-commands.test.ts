@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { BuiltinCommandNameSchema } from "../../../src/config/schema/commands"
-import { loadBuiltinCommands } from "../../../src/features/builtin-commands"
+import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands"
 import { QUALITY_ASSURANCE_TEMPLATE } from "../../../src/features/builtin-commands/templates/quality-assurance"
 import { QUALITY_AUDIT_TEMPLATE } from "../../../src/features/builtin-commands/templates/quality-audit"
 
@@ -64,11 +64,11 @@ describe("quality-assurance template", () => {
 })
 
 describe("quality command registration", () => {
-  test("should register both commands in loadBuiltinCommands", () => {
+  test("should register both commands in buildBuiltinCommandEntries", () => {
     //#given the builtin command registry
     //#when we load all builtin commands
     //#then both quality commands are present
-    const names = Object.keys(loadBuiltinCommands())
+    const names = Object.keys(buildBuiltinCommandEntries())
     expect(names).toContain("quality-audit")
     expect(names).toContain("quality-assurance")
   })

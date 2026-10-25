@@ -358,8 +358,6 @@ describe("no hook, idle, or event-handler caller", () => {
       join(REPO_ROOT, "src/hooks"),
       join(REPO_ROOT, "src/plugin"),
       join(REPO_ROOT, "src/plugin-handlers"),
-      join(REPO_ROOT, "src/plugin-interface.ts"),
-      join(REPO_ROOT, "src/create-hooks.ts"),
     ]
 
     //#when each tree is scanned for the gatherer's public entry point

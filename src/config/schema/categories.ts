@@ -1,27 +1,21 @@
 import { z } from "zod"
+import { PermissionRuleSchema } from "./internal/permission"
+import { AgentRequestSchema } from "./internal/request"
 
 export const CategoryConfigSchema = z.object({
   /** Human-readable description of the category's purpose. Shown in task prompt. */
   description: z.string().optional(),
   model: z.string().optional(),
   variant: z.string().optional(),
-  temperature: z.number().min(0).max(2).optional(),
-  top_p: z.number().min(0).max(1).optional(),
-  maxTokens: z.number().optional(),
-  thinking: z
-    .object({
-      type: z.enum(["enabled", "disabled"]),
-      budgetTokens: z.number().optional(),
-    })
-    .optional(),
-  reasoningEffort: z.enum(["low", "medium", "high", "xhigh"]).optional(),
-  textVerbosity: z.enum(["low", "medium", "high"]).optional(),
-  tools: z.record(z.string(), z.boolean()).optional(),
-  prompt_append: z.string().optional(),
+  request: AgentRequestSchema.optional(),
+  system: z.string().optional(),
+  /** Text to append to the category system prompt. Supports file:// URIs (file:///abs, file://./rel, file://~/home) */
+  system_append: z.string().optional(),
+  disabled: z.boolean().optional(),
+  steps: z.number().int().positive().optional(),
+  permissions: z.array(PermissionRuleSchema).optional(),
   /** Mark agent as unstable - forces background mode for monitoring. Auto-enabled for gemini/minimax models. */
   is_unstable_agent: z.boolean().optional(),
-  /** Disable this category. Disabled categories are excluded from task delegation. */
-  disable: z.boolean().optional(),
   /** Ordered list of fallback models to try when the primary model fails (e.g. rate limit, quota) */
   fallback_models: z.union([z.string(), z.array(z.string())]).optional(),
   /** Per-complexity-level model downgrades. Key is complexity level string ("1"-"5"), value is model string. */

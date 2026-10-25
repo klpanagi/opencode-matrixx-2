@@ -4,7 +4,6 @@ import {
   createArchitectHook,
   createBackgroundNotificationHook,
   createCompactionContextInjector,
-  createEvolutionCompressorHook,
   createEvolutionHitlHook,
   createNudgeLoopBreakerHook,
   createPlanPersister,
@@ -24,7 +23,6 @@ export type ContinuationHooks = {
   backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
   architectHook: ReturnType<typeof createArchitectHook> | null
   planPersister: ReturnType<typeof createPlanPersister> | null
-  evolutionCompressor: ReturnType<typeof createEvolutionCompressorHook> | null
   evolutionHitl: ReturnType<typeof createEvolutionHitlHook> | null
 }
 
@@ -136,10 +134,6 @@ export function createContinuationHooks(args: {
         createPlanPersister(ctx, { directory: ctx.directory }))
     : null
 
-  const evolutionCompressor = evolutionEnabled && isHookEnabled("evolution-compressor")
-    ? safeHook("evolution-compressor", () => createEvolutionCompressorHook(ctx, pluginConfig.evolution))
-    : null
-
   const evolutionHitl = evolutionEnabled && isHookEnabled("evolution-hitl")
     ? safeHook("evolution-hitl", () => createEvolutionHitlHook(ctx, pluginConfig.evolution))
     : null
@@ -153,7 +147,6 @@ export function createContinuationHooks(args: {
     backgroundNotificationHook,
     architectHook,
     planPersister,
-    evolutionCompressor,
     evolutionHitl,
   }
 }

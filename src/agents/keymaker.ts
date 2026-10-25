@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { resolveGrepGlobUsable } from "../shared/context-mode-enforcement"
+import { type AgentConfig, parseModelRef, rule } from "./agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill, AvailableTool } from "./dynamic-agent-prompt-builder"
 import {
   buildAntiPatternsSection,
@@ -594,12 +594,11 @@ export function createKeymakerAgent(
     description:
       "Autonomous Deep Worker - goal-oriented execution with GPT 5.2 Codex. Explores thoroughly before acting, uses explore/librarian agents for comprehensive context, completes tasks end-to-end. Inspired by AmpCode deep mode. (Keymaker - Matrixx)",
     mode: MODE,
-    model,
-    maxTokens: 32000,
-    prompt,
+    model: parseModelRef(model),
+    request: { body: { maxTokens: 32000, reasoningEffort: "medium" } },
+    permissions: [rule("question", "allow")],
+    system: prompt,
     color: "#D97706", // Forged Amber - Golden heated metal, divine craftsman
-    permission: { question: "allow" } as AgentConfig["permission"],
-    reasoningEffort: "medium",
   }
 }
 createKeymakerAgent.mode = MODE

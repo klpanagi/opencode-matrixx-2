@@ -82,7 +82,7 @@ describe("resolveCategoryConfig with preset-based defaults", () => {
 
   it("#given disabled category #when resolved #then returns null", () => {
     //#given
-    const userCategories = { source: { disable: true } }
+    const userCategories = { source: { disabled: true } }
     //#when
     const result = resolveCategoryConfig("source", { systemDefaultModel: SYSTEM_DEFAULT, userCategories })
     //#then

@@ -1,4 +1,3 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { DSL_CODEGEN_SKILL_NAME } from "../features/builtin-skills/skills/dsl-codegen"
 import { DSL_COMPOSITION_SKILL_NAME } from "../features/builtin-skills/skills/dsl-composition"
 import { DSL_CORE_SKILL_NAME } from "../features/builtin-skills/skills/dsl-core"
@@ -10,7 +9,8 @@ import { DSL_TESTING_SKILL_NAME } from "../features/builtin-skills/skills/dsl-te
 import { DSL_TEXTX_ECOSYSTEM_SKILL_NAME } from "../features/builtin-skills/skills/dsl-textx-ecosystem"
 import { DSL_TOOLING_SKILL_NAME } from "../features/builtin-skills/skills/dsl-tooling"
 import { DSL_VALIDATION_SKILL_NAME } from "../features/builtin-skills/skills/dsl-validation"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -138,23 +138,40 @@ Dense and useful beats long and thorough.
 </delivery>`
 
 export function createCipherAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "DSL engineering specialist. Grammar design (BNF/EBNF/PEG), type systems, parsers, transpilers, code generators, metamodeling (textX/PyEcore/ANTLR4). (Cipher - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: CIPHER_DSL_SKILLS,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: CIPHER_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions([]),
+    system: CIPHER_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 10000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 10000 },
+      },
+    },
+  }
 }
 createCipherAgent.mode = MODE

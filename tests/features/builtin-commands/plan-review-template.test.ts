@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
-import { loadBuiltinCommands } from "../../../src/features/builtin-commands/commands"
+import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands/commands.transform"
 import { PLAN_REVIEW_TEMPLATE } from "../../../src/features/builtin-commands/templates/plan-review"
 
 const REPO_ROOT = resolve(import.meta.dir, "../../..")
@@ -12,7 +12,7 @@ describe("/plan-review command template", () => {
   test("is registered as a builtin command", () => {
     //#given the builtin command registry
     //#when it is loaded
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then /plan-review is present
     expect(commands["plan-review"]).toBeDefined()
@@ -22,7 +22,7 @@ describe("/plan-review command template", () => {
   test("can be disabled by name", () => {
     //#given the builtin command registry
     //#when plan-review is in the disabled list
-    const commands = loadBuiltinCommands(["plan-review"])
+    const commands = buildBuiltinCommandEntries(["plan-review"])
 
     //#then it is absent
     expect(commands["plan-review"]).toBeUndefined()

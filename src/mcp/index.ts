@@ -1,48 +1,37 @@
-import type { MatrixxConfig } from "../config/schema"
-import { context7 } from "./context7"
-import { document_reader } from "./document-reader"
-import { isCommandAvailable, type McpCreationFailure, validateWebsearchConfig } from "./mcp-validator"
-import { createWebsearchConfig } from "./websearch"
+/**
+ * MCP domain entrypoint — thin composer over the pure `./mcp.transform` core.
+ *
+ * `createBuiltinMcps` keeps the V1 `config`-handler contract (lazy websearch
+ * construction, injectable availability check) and delegates every entry to
+ * `buildBuiltinMcpEntries` / `buildWebsearchEntry`. New code should prefer the
+ * pure builder plus `registerMcpTransform` directly.
+ */
 
+import type { MatrixxConfig } from "../config/schema"
+import {
+  type BuildBuiltinMcpEntriesResult,
+  type BuiltinMcpEntry,
+  buildBuiltinMcpEntries,
+  buildWebsearchEntry,
+} from "./mcp.transform"
+import { isCommandAvailable, type McpCreationFailure } from "./mcp-validator"
+
+export type {
+  McpTransformDomain,
+  McpTransformEditor,
+  RegisterMcpTransformResult,
+} from "./mcp.transform"
+export { type BuiltinMcpEntry, buildBuiltinMcpEntries, buildWebsearchEntry, registerMcpTransform, toV2McpEntry } from "./mcp.transform"
 export type { McpCreationFailure } from "./mcp-validator"
 export { type McpName, McpNameSchema } from "./types"
-
-type RemoteMcpConfig = {
-  type: "remote"
-  url: string
-  enabled: boolean
-  headers?: Record<string, string>
-  oauth?: false
-}
-
-type LocalMcpConfig = {
-  type: "local"
-  command: string[]
-  enabled: boolean
-}
-
-type BuiltinMcpConfig = RemoteMcpConfig | LocalMcpConfig
 
 export interface CreateBuiltinMcpsOptions {
   isCommandAvailable?: (command: string) => boolean
 }
 
 export interface CreateBuiltinMcpsResult {
-  mcps: Record<string, BuiltinMcpConfig>
+  mcps: Record<string, BuiltinMcpEntry>
   failures: McpCreationFailure[]
-}
-
-const DISABLED_REMOTE_STUB: RemoteMcpConfig = {
-  type: "remote",
-  url: "",
-  enabled: false,
-  oauth: false,
-}
-
-const DISABLED_LOCAL_STUB: LocalMcpConfig = {
-  type: "local",
-  command: [],
-  enabled: false,
 }
 
 export function createBuiltinMcps(
@@ -51,53 +40,37 @@ export function createBuiltinMcps(
   options: CreateBuiltinMcpsOptions = {},
 ): CreateBuiltinMcpsResult {
   const commandAvailable = options.isCommandAvailable ?? isCommandAvailable
-  const mcps: Record<string, BuiltinMcpConfig> = {}
-  const failures: McpCreationFailure[] = []
+  const { entries, failures }: BuildBuiltinMcpEntriesResult = buildBuiltinMcpEntries({
+    disabledMcps,
+    websearch: config?.websearch,
+    uvxAvailable: commandAvailable("uvx"),
+  })
 
-  const recordFailure = (name: string, error: string): void => {
-    failures.push({ name, error })
-  }
-
-  if (!disabledMcps.includes("websearch")) {
-    const validation = validateWebsearchConfig(config?.websearch)
-    if (!validation.ok) {
-      recordFailure("websearch", validation.error)
-      mcps.websearch = DISABLED_REMOTE_STUB
-    } else {
-      let websearchConfig: BuiltinMcpConfig | undefined
-      Object.defineProperty(mcps, "websearch", {
-        enumerable: true,
-        configurable: true,
-        get() {
-          if (!websearchConfig) {
-            try {
-              websearchConfig = createWebsearchConfig(config?.websearch)
-            } catch (err) {
-              recordFailure("websearch", err instanceof Error ? err.message : String(err))
-              websearchConfig = DISABLED_REMOTE_STUB
+  if (!disabledMcps.includes("websearch") && entries.websearch) {
+    // Preserve lazy construction: the websearch config is (re)built on first
+    // access so a key that appears after startup is picked up and a missing
+    // key never throws at plugin-init time.
+    let websearchConfig: BuiltinMcpEntry | undefined
+    const websearchInput = config?.websearch
+    Object.defineProperty(entries, "websearch", {
+      enumerable: true,
+      configurable: true,
+      get() {
+        if (!websearchConfig) {
+          const result = buildWebsearchEntry(websearchInput)
+          if ("entry" in result) {
+            websearchConfig = result.entry
+          } else {
+            if (!failures.some((f) => f.name === "websearch")) {
+              failures.push({ name: "websearch", error: result.failure })
             }
+            websearchConfig = { type: "remote", url: "", enabled: false, oauth: false }
           }
-          return websearchConfig
-        },
-      })
-    }
+        }
+        return websearchConfig
+      },
+    })
   }
 
-  if (!disabledMcps.includes("context7")) {
-    mcps.context7 = context7
-  }
-
-  if (!disabledMcps.includes("document_reader")) {
-    if (commandAvailable("uvx")) {
-      mcps.document_reader = document_reader
-    } else {
-      recordFailure(
-        "document_reader",
-        "uvx (uv package manager) not found in PATH. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh",
-      )
-      mcps.document_reader = DISABLED_LOCAL_STUB
-    }
-  }
-
-  return { mcps, failures }
+  return { mcps: entries, failures }
 }

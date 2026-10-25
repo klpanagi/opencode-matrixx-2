@@ -36,7 +36,8 @@ ${rows.join("\n")}`
 export function buildCategorySection(userCategories?: Record<string, CategoryConfig>): string {
   const allCategories = mergeCategories(userCategories)
   const categoryRows = Object.entries(allCategories).map(([name, config]) => {
-    const temp = config.temperature ?? 0.5
+    const tempValue = config.request?.body?.temperature
+    const temp = typeof tempValue === "number" ? tempValue : 0.5
     return `| \`${name}\` | ${temp} | ${getCategoryDescription(name, userCategories)} |`
   })
 

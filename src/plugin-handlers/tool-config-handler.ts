@@ -1,10 +1,38 @@
 import type { MatrixxConfig } from "../config";
-import { denyTodoTools, fullTaskPermissions, grantTaskPermissions, taskStorePermissions } from "./task-permissions";
+import { type PermissionRule, rule } from "../shared/permission-compat";
+import {
+  denyTodoPermissions,
+  deriveTaskPermissions,
+  fullTaskPermissions,
+} from "./task-permissions";
 
-type AgentWithPermission = { permission?: Record<string, unknown>; mode?: string };
+type AgentWithPermissions = { permissions?: PermissionRule[]; mode?: string };
 
-function agentByKey(agentResult: Record<string, unknown>, key: string): AgentWithPermission | undefined {
-  return agentResult[key] as AgentWithPermission | undefined;
+/**
+ * V1 denied these for every agent globally and named agents re-allowed them.
+ * V2 has no global tool map, so the default-deny set is applied per agent here,
+ * before the re-allows that follow. The V1 `LspHover`/`LspCodeActions`/
+ * `LspCodeActionResolve` entries have no V2 successor.
+ */
+const globalDenies: PermissionRule[] = [
+  rule("github_search", "deny"),
+  rule("task", "deny"),
+  rule("task_*", "deny"),
+  rule("teammate", "deny"),
+  ...denyTodoPermissions,
+];
+
+function agentOverrides(questionEffect: "allow" | "deny"): Record<string, PermissionRule[]> {
+  return {
+    operator: [rule("github_search", "allow")],
+    trinity: [rule("github_search", "allow")],
+    construct: [rule("task", "deny"), rule("look_at", "deny")],
+    architect: [...fullTaskPermissions],
+    morpheus: [rule("question", questionEffect), ...fullTaskPermissions],
+    keymaker: [rule("question", questionEffect), ...fullTaskPermissions],
+    oracle: [rule("question", questionEffect), ...fullTaskPermissions],
+    mouse: [...fullTaskPermissions],
+  };
 }
 
 export function applyToolConfig(params: {
@@ -12,95 +40,39 @@ export function applyToolConfig(params: {
   pluginConfig: MatrixxConfig;
   agentResult: Record<string, unknown>;
 }): void {
-  params.config.tools = {
-    ...(params.config.tools as Record<string, unknown>),
-    github_search: false,
-    LspHover: false,
-    LspCodeActions: false,
-    LspCodeActionResolve: false,
-    "task_*": false,
-    teammate: false,
-    todowrite: false,
-    todoread: false,
-  };
-
   const isCliRunMode = process.env.OPENCODE_CLI_RUN_MODE === "true";
-  const questionPermission = isCliRunMode ? "deny" : "allow";
+  const overrides = agentOverrides(isCliRunMode ? "deny" : "allow");
 
-  const operator = agentByKey(params.agentResult, "operator");
-  if (operator) {
-    operator.permission = { ...operator.permission, github_search: "allow" };
-  }
-  const trinity = agentByKey(params.agentResult, "trinity");
-  if (trinity) {
-    trinity.permission = { ...trinity.permission, github_search: "allow" };
-  }
-  const construct = agentByKey(params.agentResult, "construct");
-  if (construct) {
-    construct.permission = { ...construct.permission, task: "deny", look_at: "deny" };
-  }
-  const architect = agentByKey(params.agentResult, "architect");
-  if (architect) {
-    // Fill-only: factory owns outgoing-task allow (see architect/agent.ts #111
-    // option b). Fill gaps per key with ?? so a factory value or explicit user
-    // override is never overwritten here.
-    const defaults = { ...fullTaskPermissions }
-    const permission = (architect.permission ?? {}) as Record<string, unknown>;
-    for (const [key, value] of Object.entries(defaults)) {
-      permission[key] ??= value;
-    }
-    architect.permission = permission;
-  }
-  const morpheus = agentByKey(params.agentResult, "morpheus");
-  if (morpheus) {
-    morpheus.permission = {
-      ...morpheus.permission,
-      question: questionPermission,
-      ...fullTaskPermissions,
-    };
-  }
-  const keymaker = agentByKey(params.agentResult, "keymaker");
-  if (keymaker) {
-    // Fill-only, so a user who narrowed the task store keeps their own choice.
-    const defaults = { question: questionPermission, task: "allow", ...taskStorePermissions };
-    const permission = (keymaker.permission ?? {}) as Record<string, unknown>;
-    for (const [key, value] of Object.entries(defaults)) {
-      permission[key] ??= value;
-    }
-    keymaker.permission = permission;
-  }
-  const oracle = agentByKey(params.agentResult, "oracle");
-  if (oracle) {
-    oracle.permission = {
-      ...oracle.permission,
-      question: questionPermission,
-      ...fullTaskPermissions,
-    };
-  }
-  const mouse = agentByKey(params.agentResult, "mouse");
-  if (mouse) {
-    // Mouse carve-out (R7): Mouse is mode "subagent", so the derived grant
-    // below skips it — yet it executes delegated multi-step work in its own
-    // child session and must own the resulting task-store records.
-    mouse.permission = {
-      ...mouse.permission,
-      ...fullTaskPermissions,
-    };
-  }
+  for (const [name, value] of Object.entries(params.agentResult)) {
+    const agent = value as AgentWithPermissions | undefined;
+    if (!agent || typeof agent !== "object") continue;
 
-  // Mode-derived grant: every agent that can run as a top-level session
-  // (mode "primary" or "all") gets task-store access. Read-only auditors that
-  // already deny `task` for themselves keep that denial — see task-permissions.
-  for (const key of Object.keys(params.agentResult)) {
-    const agent = agentByKey(params.agentResult, key);
-    if (agent) grantTaskPermissions(agent);
-  }
+    const declared = agent.permissions ?? [];
+    // A declared deny always wins over an explicit allow (issue #111
+    // option b: the handler is fill-only and must not override). Explicit
+    // denies (e.g. CLI-mode question deny) still apply over declared allows.
+    const declaredDeny = new Set(
+      declared.filter((r) => r.effect === "deny").map((r) => r.action),
+    );
+    const explicit = (overrides[name] ?? []).filter(
+      (r) => !(r.effect === "allow" && declaredDeny.has(r.action)),
+    );
+    const declaredActions = new Set(declared.map((r) => r.action));
+    const explicitActions = new Set(explicit.map((r) => r.action));
 
-  params.config.permission = {
-    ...(params.config.permission as Record<string, unknown>),
-    webfetch: "allow",
-    external_directory: "allow",
-    task: "deny",
-    ...denyTodoTools,
-  };
+    // Fill-only: never restate an action the agent (or its override) declares.
+    const derived = deriveTaskPermissions(agent).filter(
+      (grant) => !explicitActions.has(grant.action) && !declaredActions.has(grant.action),
+    );
+
+    const allowed = new Set(
+      [...declared, ...explicit, ...derived].filter((r) => r.effect === "allow").map((r) => r.action),
+    );
+    const covered = new Set([...declaredActions, ...explicitActions]);
+    const baseline = globalDenies.filter((r) => !allowed.has(r.action) && !covered.has(r.action));
+
+    // The host resolves permissions last-match-wins, so overrides and grants
+    // must follow the baseline denies.
+    agent.permissions = [...declared, ...baseline, ...derived, ...explicit];
+  }
 }

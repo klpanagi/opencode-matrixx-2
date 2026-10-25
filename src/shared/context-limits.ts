@@ -4,7 +4,7 @@ import { isAnthropicProvider, resolveActualContextLimit } from "./context-limit-
 
 /**
  * Single source for context window thresholds and limit defaults.
- * Boundary: monitor 70% warn (read-only) → preemptive 78% (proactive) → recovery (reactive, error-parse only).
+ * Boundary: monitor 70% warn (read-only) → single compaction hook → recovery (reactive, error-parse only). Proactive compression belongs to DCP (/dcp-compress).
  * Shared constants consumed via context-limits.ts + token-cache.ts.
  *
  * Thresholds:

@@ -1,6 +1,6 @@
 import type { Message, Part } from "@opencode-ai/sdk"
 
-import type { CreatedHooks } from "../create-hooks"
+import type { DomainHooks } from "./setup-domains"
 
 type MessageWithParts = {
   info: Message
@@ -13,7 +13,7 @@ export function _resetMessagesTransformCacheForTesting(): void {
 }
 
 export function createMessagesTransformHandler(args: {
-  hooks: CreatedHooks
+  hooks: DomainHooks
 }): (input: Record<string, never>, output: MessagesTransformOutput) => Promise<void> {
   return async (input, output): Promise<void> => {
 

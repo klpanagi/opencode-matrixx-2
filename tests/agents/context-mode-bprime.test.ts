@@ -20,7 +20,7 @@ const FAKE_PATH = "/nonexistent-fake/AGENTS.md"
 
 function makeAgents(names: string[]): Record<string, Record<string, unknown>> {
   const agents: Record<string, Record<string, unknown>> = {}
-  for (const n of names) agents[n] = { prompt: `${n} BASE` }
+  for (const n of names) agents[n] = { system: `${n} BASE` }
   return agents
 }
 
@@ -47,8 +47,8 @@ describe("B-prime prompt/hook agreement", () => {
     const agents = makeAgents(["trinity", "mouse"])
     //#when: discipline injected and grep attempted
     injectContextDiscipline(["ctx_search", "ctx_batch_execute", "grep", "glob"], agents)
-    const trinityPrompt = (agents["trinity"] as { prompt: string }).prompt
-    const mousePrompt = (agents["mouse"] as { prompt: string }).prompt
+    const trinityPrompt = (agents["trinity"] as { system: string }).system
+    const mousePrompt = (agents["mouse"] as { system: string }).system
     const thrown = await hookThrows("grep")
     //#then: prompt omits the blocked fallback and names the substitute; hook blocks naming it too
     expect(trinityPrompt).not.toContain("grep/glob fallback")
@@ -65,7 +65,7 @@ describe("B-prime prompt/hook agreement", () => {
     const agents = makeAgents(["trinity"])
     //#when: discipline injected
     injectContextDiscipline(["ctx_search", "grep", "glob"], agents)
-    const prompt = (agents["trinity"] as { prompt: string }).prompt
+    const prompt = (agents["trinity"] as { system: string }).system
     //#then: fallback advertised, hook does not throw
     expect(prompt).toContain("grep/glob fallback")
     expect(resolveGrepGlobUsable(["grep"], { enforce: false })).toBe(true)
@@ -78,7 +78,7 @@ describe("B-prime prompt/hook agreement", () => {
     const agents = makeAgents(["trinity"])
     //#when: discipline injected and grep attempted
     injectContextDiscipline(["ctx_search", "grep"], agents)
-    const prompt = (agents["trinity"] as { prompt: string }).prompt
+    const prompt = (agents["trinity"] as { system: string }).system
     const thrown = await hookThrows("grep")
     //#then: agent keeps a working path
     expect(prompt).toContain("grep/glob fallback")
