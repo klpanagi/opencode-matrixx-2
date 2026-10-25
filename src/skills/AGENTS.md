@@ -6,7 +6,7 @@
 
 | Scope | Count | Source |
 |------|-------|--------|
-| **Built-in (this dir)** | 46 | `src/features/builtin-skills/skills/*.ts` |
+| **Built-in (this dir)** | 46 | `src/skills/skills/*.ts` |
 | Opencode-project (`.opencode/skills/`) | varies | per-project |
 | Opencode-user (`~/.config/opencode/skills/`) | varies | per-user |
 | Claude Code compat (`.claude/skills/`) | varies | per-project |
@@ -15,7 +15,7 @@
 ## STRUCTURE
 
 ```
-builtin-skills/
+skills/
 ├── index.ts                      # Barrel: createBuiltinSkills, types
 ├── skills.ts                     # createBuiltinSkills() factory (92 LOC)
 ├── types.ts                      # BuiltinSkill interface
@@ -98,13 +98,13 @@ Returns `BuiltinSkill[]`. Disabled skills are filtered AFTER creation. The `disa
 
 ## SKILL LOADING
 
-All skills are loaded from `src/features/builtin-skills/` via `createBuiltinSkills()`. No external skill directory loading.
+All skills are loaded from `src/skills/` via `createBuiltinSkills()`. No external skill directory loading.
 
 ## HOW TO ADD A NEW BUILT-IN SKILL
 
-1. Create `src/features/builtin-skills/skills/<name>.ts`
+1. Create `src/skills/skills/<name>.ts`
 2. Export a `Skill` object: `export const mySkill: Skill = { name, description, template, ... }`
-3. Add a static import plus a `skillFactories` entry in `src/features/builtin-skills/skills.ts`:
+3. Add a static import plus a `skillFactories` entry in `src/skills/skills.ts`:
    ```typescript
    import { mySkill } from "./skills/my-name"
    // ...
@@ -120,9 +120,9 @@ Remove the static import and the `skillFactories` entry in `skills.ts`. Note: us
 
 ## KNOWN HOTSPOTS
 
-- `src/features/builtin-skills/skills/git-master.ts` — large skill with many workflow procedures
-- `src/features/builtin-skills/skills/ulw-research.ts` — references the research skill
-- `src/features/builtin-skills/skills.ts` `skillFactories` table — must stay in sync with `skills/*.ts` exports
+- `src/skills/skills/git-master.ts` — large skill with many workflow procedures
+- `src/skills/skills/ulw-research.ts` — references the research skill
+- `src/skills/skills.ts` `skillFactories` table — must stay in sync with `skills/*.ts` exports
 
 ## Skill Description SDO (Skill Discovery Optimization)
 

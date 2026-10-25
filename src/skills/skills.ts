@@ -1,4 +1,4 @@
-import type { BrowserAutomationProvider } from "../../config/schema"
+import type { BrowserAutomationProvider } from "../config/schema"
 import { createLazyTemplateSkill } from "./lazy-skill-helper"
 import { bddBackendSkill } from "./skills/bdd-backend"
 import { bddContractSkill } from "./skills/bdd-contract"

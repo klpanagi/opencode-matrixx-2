@@ -1,4 +1,4 @@
-import { BDD_CONTRACT_SKILL_NAME } from "../features/builtin-skills/skills/bdd-contract"
+import { BDD_CONTRACT_SKILL_NAME } from "../skills/skills/bdd-contract"
 import { denyActions } from "../shared/permission-compat"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"

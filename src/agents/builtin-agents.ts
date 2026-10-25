@@ -1,5 +1,5 @@
 import type { BrowserAutomationProvider, CategoriesConfig } from "../config/schema"
-import type { BuiltinSkill } from "../features/builtin-skills"
+import type { BuiltinSkill } from "../skills"
 import {
   fetchAvailableModels,
   readConnectedProvidersCache,

@@ -1,5 +1,5 @@
 import type { BrowserAutomationProvider } from "../../config/schema"
-import { createBuiltinSkills } from "../../features/builtin-skills"
+import { createBuiltinSkills } from "../../skills"
 
 export function resolveSkillContent(
   skills: string[],

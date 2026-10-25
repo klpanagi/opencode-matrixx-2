@@ -1,7 +1,7 @@
 /**
  * V2-native skill domain transform (D4).
  *
- * Owned by `src/features/builtin-skills/`: pure replay of skill entries onto
+ * Owned by `src/skills/`: pure replay of skill entries onto
  * `ctx.skill.transform`. The entry builders in `./skills` are static data plus
  * allocation-only wrappers — no filesystem access, no spawn, no network — so
  * repeated runs over the same entries replay identically.

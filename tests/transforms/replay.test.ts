@@ -10,8 +10,8 @@ import {
   registerAgentTransform,
 } from "../../src/agents/agents.transform"
 import { buildBuiltinCommandEntries, registerCommandTransform } from "../../src/features/builtin-commands/commands.transform"
-import { registerSkillTransform } from "../../src/features/builtin-skills/skills.transform"
-import { buildBuiltinMcpEntries, registerMcpTransform, toV2McpEntry } from "../../src/mcp/mcp.transform"
+import { registerSkillTransform } from "../../src/skills/skills.transform"
+import { buildBuiltinMcpEntries, registerMcpTransform, toV2McpEntry } from "../../src/mcps/mcp.transform"
 
 function createMapEditor() {
   const store = new Map<string, unknown>()

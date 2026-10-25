@@ -1,5 +1,5 @@
 import type { BrowserAutomationProvider, CategoriesConfig, CategoryConfig } from "../config/schema"
-import { createBuiltinSkills } from "../features/builtin-skills"
+import { createBuiltinSkills } from "../skills"
 import { mergeCategories } from "../shared/merge-categories"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentFactory } from "./types"

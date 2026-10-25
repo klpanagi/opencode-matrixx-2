@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { basename, dirname, join } from "node:path"
 import { buildBuiltinCommandEntries } from "../../features/builtin-commands"
-import type { BuiltinSkill } from "../../features/builtin-skills"
+import type { BuiltinSkill } from "../../skills"
 import type { CommandFrontmatter } from "../../features/command-loader/types"
 import {
   getOpenCodeConfigDir,

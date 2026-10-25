@@ -1,4 +1,4 @@
-import type { BuiltinSkill } from "../../features/builtin-skills"
+import type { BuiltinSkill } from "../../skills"
 
   export interface LazyContentLoader {
   loaded: boolean

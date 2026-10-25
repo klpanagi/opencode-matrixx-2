@@ -1,4 +1,4 @@
-import type { BuiltinSkill } from "../../features/builtin-skills"
+import type { BuiltinSkill } from "../../skills"
 import { log } from "../../shared"
 import {
   AUTO_SLASH_COMMAND_TAG_CLOSE,

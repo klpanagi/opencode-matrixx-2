@@ -1,6 +1,6 @@
 import { type ToolDefinition, tool } from "@opencode-ai/plugin"
 import type { createOpencodeClient } from "@opencode-ai/sdk"
-import { type BuiltinSkill, createBuiltinSkills } from "../../features/builtin-skills"
+import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
 import { log } from "../../shared"
 import { discoverCommandsSync } from "./command-discovery"
 import { formatCommandList, formatLoadedCommand } from "./command-output-formatter"
