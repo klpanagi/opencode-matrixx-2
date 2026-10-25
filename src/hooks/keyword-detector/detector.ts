@@ -5,7 +5,7 @@ import {
 } from "./constants"
 
 interface DetectedKeyword {
-  type: "ultrawork" | "search" | "analyze"
+  type: "ultrawork" | "search" | "analyze" | "docs"
   message: string
 }
 
@@ -26,7 +26,7 @@ function resolveMessage(
 
 export function detectKeywordsWithType(text: string, agentName?: string, modelID?: string): DetectedKeyword[] {
   const textWithoutCode = removeCodeBlocks(text)
-  const types: Array<"ultrawork" | "search" | "analyze"> = ["ultrawork", "search", "analyze"]
+  const types: Array<"ultrawork" | "search" | "analyze" | "docs"> = ["ultrawork", "search", "analyze", "docs"]
   const result: DetectedKeyword[] = []
   for (let i = 0; i < KEYWORD_DETECTORS.length; i++) {
     const detector = KEYWORD_DETECTORS[i]
@@ -36,6 +36,12 @@ export function detectKeywordsWithType(text: string, agentName?: string, modelID
         message: resolveMessage(detector.message, agentName, modelID),
       })
     }
+  }
+  // docs-suppresses-search: a docs intent co-match suppresses the broad
+  // SEARCH_PATTERN injection so pure doc lookups route to the operator
+  // agent instead of fanning out parallel search agents.
+  if (result.some((k) => k.type === "docs")) {
+    return result.filter((k) => k.type !== "search")
   }
   return result
 }
