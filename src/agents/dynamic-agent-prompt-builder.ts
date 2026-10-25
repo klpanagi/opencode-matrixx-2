@@ -1,0 +1,670 @@
+import { readFileSync } from "node:fs"
+import {
+  hasWorkingSubstitute,
+  resolveContextModeDisciplinePath,
+  hasGrepGlobToolNames as sharedHasGrepGlobToolNames,
+} from "../shared/context-mode-enforcement"
+import { type DcpCompressionMode, resolveDcpCompressionMode } from "../shared/dcp-guidance"
+import { log } from "../shared/logger"
+import { truncateDescription } from "../shared/truncate-description"
+import { appendModelDirective } from "./model-directives"
+import type { AgentPromptMetadata } from "./types"
+
+export interface AvailableAgent {
+  name: string
+  description: string
+  metadata: AgentPromptMetadata
+}
+
+export interface AvailableTool {
+  name: string
+  category: "lsp" | "ast" | "search" | "session" | "command" | "sandbox" | "other"
+}
+
+export interface AvailableSkill {
+  name: string
+  description: string
+  location: "user" | "project" | "plugin"
+}
+
+export interface AvailableCategory {
+  name: string
+  description: string
+  model?: string
+}
+
+export function categorizeTools(toolNames: string[]): AvailableTool[] {
+  return toolNames.map((name) => {
+    let category: AvailableTool["category"] = "other"
+    if (name.startsWith("lsp_")) {
+      category = "lsp"
+    } else if (name.startsWith("ast_grep")) {
+      category = "ast"
+    } else if (name.startsWith("ctx_") || name.startsWith("headroom_") || name === "n" || name === "n_file") {
+      category = "sandbox"
+    } else if (name === "grep" || name === "glob") {
+      category = "search"
+    } else if (name.startsWith("session_")) {
+      category = "session"
+    } else if (name === "slashcommand") {
+      category = "command"
+    }
+    return { name, category }
+  })
+}
+
+function formatToolsForPrompt(tools: AvailableTool[]): string {
+  const lspTools = tools.filter((t) => t.category === "lsp")
+  const astTools = tools.filter((t) => t.category === "ast")
+  const searchTools = tools.filter((t) => t.category === "search")
+  const sandboxTools = tools.filter((t) => t.category === "sandbox")
+
+  const parts: string[] = []
+
+  if (sandboxTools.length > 0) {
+    parts.push(...sandboxTools.map((t) => `\`${t.name}\``))
+  }
+
+  if (searchTools.length > 0) {
+    parts.push(...searchTools.map((t) => `\`${t.name}\``))
+  }
+
+  if (lspTools.length > 0) {
+    parts.push("`lsp_*`")
+  }
+
+  if (astTools.length > 0) {
+    parts.push("`ast_grep`")
+  }
+
+  return parts.join(", ")
+}
+
+export function buildKeyTriggersSection(agents: AvailableAgent[], _skills: AvailableSkill[] = []): string {
+  const keyTriggers = agents
+    .filter((a) => a.metadata.keyTrigger)
+    .map((a) => `- ${a.metadata.keyTrigger}`)
+
+  if (keyTriggers.length === 0) return ""
+
+  return `### Key Triggers (check BEFORE classification):
+
+${keyTriggers.join("\n")}
+- **"Look into" + "create PR"** → Not just research. Full implementation cycle expected.`
+}
+
+export function buildToolSelectionTable(
+  agents: AvailableAgent[],
+  tools: AvailableTool[] = [],
+  _skills: AvailableSkill[] = []
+): string {
+  const rows: string[] = [
+    "### Tool & Agent Selection:",
+    "",
+  ]
+
+  rows.push("| Resource | Cost | When to Use |")
+  rows.push("|----------|------|-------------|")
+
+  if (tools.length > 0) {
+    const toolsDisplay = formatToolsForPrompt(tools)
+    rows.push(`| ${toolsDisplay} | FREE | Not Complex, Scope Clear, No Implicit Assumptions |`)
+  }
+
+  const costOrder = { FREE: 0, CHEAP: 1, EXPENSIVE: 2 }
+  const sortedAgents = [...agents]
+    .filter((a) => a.metadata.category !== "utility")
+    .sort((a, b) => costOrder[a.metadata.cost] - costOrder[b.metadata.cost])
+
+  for (const agent of sortedAgents) {
+    const shortDesc = agent.description.split(".")[0] || agent.description
+    rows.push(`| \`${agent.name}\` agent | ${agent.metadata.cost} | ${shortDesc} |`)
+  }
+
+  rows.push("")
+  rows.push("**Default flow**: explore/librarian (background) + tools → oracle (if required)")
+
+  return rows.join("\n")
+}
+
+export function buildExploreSection(agents: AvailableAgent[]): string {
+  const exploreAgent = agents.find((a) => a.name === "trinity")
+  if (!exploreAgent) return ""
+
+  const useWhen = exploreAgent.metadata.useWhen || []
+  const avoidWhen = exploreAgent.metadata.avoidWhen || []
+
+  return `### Explore Agent = Contextual Grep
+
+Use it as a **peer tool**, not a fallback. Fire liberally.
+
+| Use Direct Tools | Use Explore Agent |
+|------------------|-------------------|
+${avoidWhen.map((w) => `| ${w} |  |`).join("\n")}
+${useWhen.map((w) => `|  | ${w} |`).join("\n")}`
+}
+
+export function buildLibrarianSection(agents: AvailableAgent[]): string {
+  const librarianAgent = agents.find((a) => a.name === "operator")
+  if (!librarianAgent) return ""
+
+  const useWhen = librarianAgent.metadata.useWhen || []
+
+  return `### Librarian Agent = Reference Grep
+
+Search **external references** (docs, OSS, web). Fire proactively when unfamiliar libraries are involved.
+
+| Contextual Grep (Internal) | Reference Grep (External) |
+|----------------------------|---------------------------|
+| Search OUR codebase | Search EXTERNAL resources |
+| Find patterns in THIS repo | Find examples in OTHER repos |
+| How does our code work? | How does this library work? |
+| Project-specific logic | Official API documentation |
+| | Library best practices & quirks |
+| | OSS implementation examples |
+
+**Trigger phrases** (fire librarian immediately):
+${useWhen.map((w) => `- "${w}"`).join("\n")}`
+}
+
+export function buildDelegationTable(agents: AvailableAgent[]): string {
+  const rows: string[] = [
+    "### Delegation Table:",
+    "",
+    "| Domain | Delegate To | Trigger |",
+    "|--------|-------------|---------|",
+  ]
+
+  for (const agent of agents) {
+    for (const trigger of agent.metadata.triggers) {
+      rows.push(`| ${trigger.domain} | \`${agent.name}\` | ${trigger.trigger} |`)
+    }
+  }
+
+  return rows.join("\n")
+}
+
+/**
+ * Renders the "User-Installed Skills (HIGH PRIORITY)" block used across multiple agent prompts.
+ * Extracted to avoid duplication between buildCategorySkillsDelegationGuide, buildSkillsSection, etc.
+ */
+export function formatCustomSkillsBlock(
+  customRows: string[],
+  customSkills: AvailableSkill[],
+  headerLevel: "####" | "**" = "####"
+): string {
+  const customSkillNames = customSkills.map((s) => `"${s.name}"`).join(", ")
+  const header = headerLevel === "####"
+    ? `#### User-Installed Skills (HIGH PRIORITY)`
+    : `**User-Installed Skills (HIGH PRIORITY):**`
+
+  return `${header}
+
+**The user has installed these custom skills. They MUST be evaluated for EVERY delegation.**
+Subagents are STATELESS — they lose all custom knowledge unless you pass these skills via \`load_skills\`.
+
+| Skill | Expertise Domain | Source |
+|-------|------------------|--------|
+${customRows.join("\n")}
+
+> **CRITICAL**: Ignoring user-installed skills when they match the task domain is a failure.
+> The user installed ${customSkillNames} for a reason — USE THEM when the task overlaps with their domain.`
+}
+
+export function buildCategorySkillsDelegationGuide(categories: AvailableCategory[], skills: AvailableSkill[]): string {
+  if (categories.length === 0 && skills.length === 0) return ""
+
+  const categoryRows = categories.map((c) => {
+    const desc = c.description || c.name
+    return `| \`${c.name}\` | ${desc} |`
+  })
+
+  const builtinSkills = skills.filter((s) => s.location === "plugin")
+  const customSkills = skills.filter((s) => s.location !== "plugin")
+
+   const builtinRows = builtinSkills.map((s) => {
+     const desc = truncateDescription(s.description)
+     return `| \`${s.name}\` | ${desc} |`
+   })
+
+   const customRows = customSkills.map((s) => {
+     const desc = truncateDescription(s.description)
+     const source = s.location === "project" ? "project" : "user"
+     return `| \`${s.name}\` | ${desc} | ${source} |`
+   })
+
+  const customSkillBlock = formatCustomSkillsBlock(customRows, customSkills)
+
+  let skillsSection: string
+
+  if (customSkills.length > 0 && builtinSkills.length > 0) {
+    skillsSection = `#### Built-in Skills
+
+| Skill | Expertise Domain |
+|-------|------------------|
+${builtinRows.join("\n")}
+
+${customSkillBlock}`
+  } else if (customSkills.length > 0) {
+    skillsSection = customSkillBlock
+  } else {
+    skillsSection = `#### Available Skills (Domain Expertise Injection)
+
+Skills inject specialized instructions into the subagent. Read the description to understand when each skill applies.
+
+| Skill | Expertise Domain |
+|-------|------------------|
+${builtinRows.join("\n")}`
+  }
+
+  return `### Category + Skills Delegation System
+
+**task() combines categories and skills for optimal task execution.**
+
+#### Available Categories (Domain-Optimized Models)
+
+Each category is configured with a model optimized for that domain. Read the description to understand when to use it.
+
+| Category | Domain / Best For |
+|----------|-------------------|
+${categoryRows.join("\n")}
+
+${skillsSection}
+
+---
+
+### MANDATORY: Category + Skill Selection Protocol
+
+**STEP 1: Select Category**
+- Read each category's description
+- Match task requirements to category domain
+- Select the category whose domain BEST fits the task
+
+**STEP 2: Evaluate ALL Skills (Built-in AND User-Installed)**
+For EVERY skill listed above, ask yourself:
+> "Does this skill's expertise domain overlap with my task?"
+
+- If YES → INCLUDE in \`load_skills=[...]\`
+- If NO → You MUST justify why (see below)
+${customSkills.length > 0 ? `
+> **User-installed skills get PRIORITY.** The user explicitly installed them for their workflow.
+> When in doubt about a user-installed skill, INCLUDE it rather than omit it.` : ""}
+
+**STEP 3: Justify Omissions**
+
+If you choose NOT to include a skill that MIGHT be relevant, you MUST provide:
+
+\`\`\`
+SKILL EVALUATION for "[skill-name]":
+- Skill domain: [what the skill description says]
+- Task domain: [what your task is about]
+- Decision: OMIT
+- Reason: [specific explanation of why domains don't overlap]
+\`\`\`
+
+**WHY JUSTIFICATION IS MANDATORY:**
+- Forces you to actually READ skill descriptions
+- Prevents lazy omission of potentially useful skills
+- Subagents are STATELESS - they only know what you tell them
+- Missing a relevant skill = suboptimal output
+
+---
+
+### Delegation Pattern
+
+\`\`\`typescript
+task(
+  category="[selected-category]",
+  load_skills=["skill-1", "skill-2"],  // Include ALL relevant skills — ESPECIALLY user-installed ones
+  prompt="..."
+)
+\`\`\`
+
+**ANTI-PATTERN (will produce poor results):**
+\`\`\`typescript
+task(category="...", load_skills=[], run_in_background=false, prompt="...")  // Empty load_skills without justification
+\`\`\``
+}
+
+export function buildOracleSection(agents: AvailableAgent[]): string {
+  const oracleAgent = agents.find((a) => a.name === "oracle")
+  if (!oracleAgent) return ""
+
+  const useWhen = oracleAgent.metadata.useWhen || []
+  const avoidWhen = oracleAgent.metadata.avoidWhen || []
+
+  return `<Oracle_Usage>
+## Oracle — Plan Builder
+
+Oracle is the Plan Builder — creates detailed, structured work plans from user requests. Use oracle when you need comprehensive planning before implementation.
+
+### WHEN to Consult:
+
+| Trigger | Action |
+|---------|--------|
+${useWhen.map((w) => `| ${w} | Oracle FIRST, then implement |`).join("\n")}
+
+### WHEN NOT to Consult:
+
+${avoidWhen.map((w) => `- ${w}`).join("\n")}
+
+### HARD ROUTING RULE — Plan File Creation (NON-NEGOTIABLE):
+- ANY task that creates or edits \`.matrixx/plans/*.md\` MUST use \`task(subagent_type='oracle')\` — NEVER \`task(category='...')\` / Mouse
+- ANY prompt containing \`Oracle plan\`, \`work plan\`, \`proposal\`, \`TL;DR\`, \`root cause\`, \`pure-host\`, \`fix options\` or similar planning language MUST route to \`oracle\`
+- Mouse is a leaf executor and CANNOT produce plans. Oracle owns all plan generation. Mouse → Oracle is a violation (extra hop, diluted context).
+- If you already created tasks for research + drafting, the drafting task MUST still be \`oracle\`, not \`mouse\`.
+
+### Usage Pattern:
+Oracle creates plans, not code. Invoke oracle to decompose complex requests into structured work plans with clear steps, then execute the plan yourself or delegate to workers.
+
+**Exception**: This is the ONLY case where you announce before acting. For all other work, start immediately without status updates.
+</Oracle_Usage>`
+}
+
+export function buildArchitectReferralSection(): string {
+  return `<Architect_Usage>
+## Architect — Session Orchestrator (/start-work-only)
+
+Architect is a /start-work-only session agent — it orchestrates work via a session until ALL tasks in a todo list are done. Architect is NOT callable via task().
+
+### WHEN to Refer:
+
+| Trigger | Action |
+| User provides a todo list path (.matrixx/plans/{name}.md) | /start-work FIRST, then Architect orchestrates |
+| Multiple tasks need to be completed in sequence or parallel | /start-work, NOT task() |
+| Work requires coordination across multiple specialized agents | /start-work, NOT task() |
+| Todo list path provided OR multiple tasks requiring multi-agent orchestration | /start-work |
+
+### HARD ROUTING RULE — Architect Referral (NON-NEGOTIABLE):
+- ANY task that executes \`.matrixx/plans/*.md\` MUST use \`/start-work\` — NEVER \`task(subagent_type="architect")\`
+- Architect is excluded from the task-delegation list by design. Do NOT attempt \`task(subagent_type="architect")\` — it will be rejected. Use \`/start-work\` instead.
+
+### Usage Pattern:
+Architect owns todo-list execution end to end. Invoke /start-work with the plan path so Architect can decompose and orchestrate the work across specialized agents.
+</Architect_Usage>`
+}
+
+export function buildHardBlocksSection(): string {
+  const blocks = [
+    "| Type error suppression (`as any`, `@ts-ignore`) | Never |",
+    "| Commit without explicit request | Never |",
+    "| Speculate about unread code | Never |",
+    "| Leave code in broken state after failures | Never |",
+  ]
+
+  return `## Hard Blocks (NEVER violate)
+
+| Constraint | No Exceptions |
+|------------|---------------|
+${blocks.join("\n")}`
+}
+
+export function buildAntiPatternsSection(): string {
+  const patterns = [
+    "| **Type Safety** | `as any`, `@ts-ignore`, `@ts-expect-error` |",
+    "| **Error Handling** | Empty catch blocks `catch(e) {}` |",
+    "| **Testing** | Deleting failing tests to \"pass\" |",
+    "| **Search** | Firing agents for single-line typos or obvious syntax errors |",
+    "| **Debugging** | Shotgun debugging, random changes |",
+  ]
+
+  return `## Anti-Patterns (BLOCKING violations)
+
+| Category | Forbidden |
+|----------|-----------|
+${patterns.join("\n")}`
+}
+
+let cachedRuntimeFull: Record<string, string> = {}
+let cachedRuntimeCompact: Record<string, string> = {}
+let cachedFallbackFull: Record<string, string> = {}
+let cachedFallbackCompact: Record<string, string> = {}
+
+export function _resetDisciplineCacheForTesting(): void {
+  cachedRuntimeFull = {}
+  cachedRuntimeCompact = {}
+  cachedFallbackFull = {}
+  cachedFallbackCompact = {}
+}
+
+export function hasGrepGlobToolNames(toolNames: readonly string[]): boolean {
+  return sharedHasGrepGlobToolNames(toolNames)
+}
+
+function compressionRow(dcpMode: DcpCompressionMode): string {
+  if (dcpMode === "guided")
+    return "| Compression | `compress` never bare without message IDs; proactive on closed sections + ctx_stats; no prose substitute |"
+  if (dcpMode === "manual")
+    return "| Compression | `compress` only after trigger prompt; no prose substitute (watch ctx_stats) |"
+  return "| Compression | No `compress` tool (DCP inactive); no prose substitute (watch ctx_stats) |"
+}
+
+function headroomDcpClause(dcpMode: DcpCompressionMode): string {
+  if (dcpMode === "guided") return " DCP auto-mode: `compress` never bare without message IDs; proactive on closed sections + ctx_stats; tool absent -> state unavailable and stop, no prose substitute."
+  if (dcpMode === "manual") return " DCP manual mode: `compress` only after the manual trigger; tool absent -> state unavailable and stop, no prose substitute."
+  return " No `compress` tool exists (DCP inactive); no prose substitute - state unavailable and stop.";
+}
+
+/**
+ * Minimal pointer emitted by every per-agent discipline tier once the
+ * `<context_window_protection>` system block (T6/T7 transform) already carries
+ * the full routing prose. Names the ctx_* tools and the marker, keeps the
+ * "Context Discipline" heading so `injectContextDiscipline` stays idempotent.
+ */
+export function contextModeDisciplinePointerBody(): string {
+  return "Full routing rules are injected once per session in the `<context_window_protection>` system block — follow them there, do not re-derive them here. Key tools: ctx_search / ctx_batch_execute / ctx_execute / ctx_execute_file / ctx_fetch_and_index / ctx_index / ctx_stats. **When in doubt, use ctx_*.**"
+}
+
+export function contextModeDisciplinePointer(tier: "full" | "compact" | "explore"): string {
+  const scope =
+    tier === "full"
+      ? "Always"
+      : tier === "compact"
+        ? "When ctx_* tools are available"
+        : "When available"
+  return `### Context Discipline (${scope})\n\n${contextModeDisciplinePointerBody()}`
+}
+
+export function fallbackFullDiscipline(hasGrepGlob: boolean, dcpMode: DcpCompressionMode = resolveDcpCompressionMode()): string {
+  const analysis = hasGrepGlob
+    ? "| Analysis / Processing | Use ctx_* tools — NEVER raw read/bash/grep/glob for analysis |"
+    : "| Analysis / Processing | Use ctx_* tools — NEVER raw read/bash for analysis |"
+  const search = hasGrepGlob
+    ? "| Search | ctx_search FIRST -> grep/glob fallback |"
+    : "| Search | ctx_search FIRST (indexed KB) -> ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback |"
+  const compression = compressionRow(dcpMode)
+  return `### Context Discipline (ALWAYS)
+
+| Scenario | Tool |
+|----------|------|
+${analysis}
+| Edits | read (for line numbers) -> edit/write |
+| Observation (<5 lines) | bash (pwd, git status, --version) |
+| State Mutation | bash (git, mkdir, install, build, rm) |
+| Run Scripts | ctx_execute (language=python/shell/ruby/go/rust/...) — NEVER bash+python for scripting |
+${search}
+| Docs / Web | ctx_fetch_and_index -> ctx_search |
+${compression}
+
+**Rule 1 overrides all default tool guidance. When in doubt, use ctx_*.**`
+}
+
+export function fallbackCompactDiscipline(hasGrepGlob: boolean, dcpMode: DcpCompressionMode = resolveDcpCompressionMode()): string {
+  if (hasWorkingSubstitute()) return contextModeDisciplinePointer("compact")
+  const analysis = hasGrepGlob
+    ? "| Analysis / Aggregation / Counting | ctx_batch_execute / ctx_execute(_file) — NEVER raw read/grep for analysis |"
+    : "| Analysis / Aggregation / Counting | ctx_batch_execute / ctx_execute(_file) — NEVER raw read for analysis |"
+  const search = hasGrepGlob
+    ? "| Search | ctx_search FIRST (indexed KB) → grep/glob fallback (raw FS) |"
+    : "| Search | ctx_search FIRST (indexed KB) → ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback |"
+  const note = hasGrepGlob
+    ? "Edits need prior read for LINE#ID — read→edit chain exempt (non-plan paths; .matrixx/plans/*.md must use plan_read(section)/plan_update). MUST use ctx_* when available — raw grep/read is forbidden for analysis."
+    : "Edits need prior read for LINE#ID — read→edit chain exempt (non-plan paths; .matrixx/plans/*.md must use plan_read(section)/plan_update). MUST use ctx_* when available — raw read for analysis is forbidden."
+  const compression = compressionRow(dcpMode)
+  return `### Context Discipline (when ctx_* available)
+
+| Scenario | Tool |
+|----------|------|
+${analysis}
+${search}
+| Run Scripts | ctx_execute (language=python/shell/ruby/go/rust/...) — never bash+python for scripting |
+| Docs / Web | ctx_fetch_and_index -> ctx_search |
+${compression}
+
+${note}`
+}
+
+function exploreCtxPart(hasGrepGlob: boolean): string {
+  return hasGrepGlob
+    ? "MUST use ctx_search for indexed hits → grep/glob fallback ONLY when ctx_* unavailable; use ctx_batch_execute / ctx_execute for multi-file analysis; use ctx_fetch_and_index for docs/web → ctx_search. Raw grep/read/glob for analysis is forbidden when ctx_* is available."
+    : "MUST use ctx_search for indexed hits → ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback ONLY when ctx_* unavailable; use ctx_batch_execute / ctx_execute for multi-file analysis; use ctx_fetch_and_index for docs/web → ctx_search. Raw read for analysis is forbidden when ctx_* is available."
+}
+
+
+function stripDisciplineHeader(content: string): string {
+  return content.trim()
+}
+
+function readDisciplineFile(): { text: string; version: string; path: string } {
+  const p = resolveContextModeDisciplinePath()
+  if (!p) throw new Error("discipline file not found")
+  const raw = readFileSync(p, "utf8")
+  let version = "1.0.169"
+  try {
+    const pkgResolved = require.resolve("context-mode/package.json")
+    const pkgRaw = readFileSync(pkgResolved, "utf8")
+    const pkg = JSON.parse(pkgRaw)
+    if (pkg.version) version = pkg.version
+  } catch {}
+  const body = stripDisciplineHeader(raw)
+  const text = body.includes("<!-- discipline") ? body : `${body}\n\n<!-- discipline v${version} Elastic-2.0 -->`
+  return { text, version, path: p }
+}
+
+function loadDiscipline(kind: "full" | "compact", hasGrepGlob = true, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  if (hasWorkingSubstitute()) return appendModelDirective(contextModeDisciplinePointer(kind), modelID)
+  const fallbackKey = `${hasGrepGlob ? "1" : "0"}:${dcpMode}`
+  const runtimeCache = kind === "full" ? cachedRuntimeFull : cachedRuntimeCompact
+  const fallbackCache = kind === "full" ? cachedFallbackFull : cachedFallbackCompact
+  const label = kind === "full" ? "context-discipline" : "compact-discipline"
+  if (runtimeCache[fallbackKey]) return appendModelDirective(runtimeCache[fallbackKey], modelID)
+  if (fallbackCache[fallbackKey]) return appendModelDirective(fallbackCache[fallbackKey], modelID)
+  try {
+    const { text, version, path } = readDisciplineFile()
+    runtimeCache[fallbackKey] = text
+    log(`${label} loaded`, { path, version })
+    return appendModelDirective(text, modelID)
+  } catch (e) {
+    log(`${label} fallback`, { error: String(e) })
+    const fallback = kind === "full" ? fallbackFullDiscipline(hasGrepGlob, dcpMode) : fallbackCompactDiscipline(hasGrepGlob, dcpMode)
+    fallbackCache[fallbackKey] = fallback
+    return appendModelDirective(fallback, modelID)
+  }
+}
+function loadContextModeDiscipline(hasGrepGlob = true, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  return loadDiscipline("full", hasGrepGlob, dcpMode, modelID)
+}
+
+
+export function buildContextDisciplineSection(hasContextMode = false, hasGrepGlob = true, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  if (!hasContextMode) return ""
+  return loadContextModeDiscipline(hasGrepGlob, dcpMode, modelID)
+}
+
+export function buildHeadroomSection(hasHeadroom = false, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  if (!hasHeadroom) return "";
+  const dcpClause = headroomDcpClause(dcpMode);
+  return appendModelDirective(`### Headroom Proxy Discipline (ALWAYS when headroom_* tools present)
+
+| Scenario | Tool / Action |
+|----------|----------------|
+| Retrieval from compressed history | Use headroom_retrieve / headroom_search — NEVER re-read full history |
+| Stats / diagnostics | headroom_stats or headroom dashboard |
+| Proxy not running | headroom doctor / check http://127.0.0.1:8787 (HEADROOM_PROXY_URL) |
+
+**Headroom L4 is transport-level (CacheAligner->ContentRouter->CCR). It complements L1 RTK, L2 context-mode, L3 DCP — do not duplicate their discipline. Compression ownership: the \`compress\` tool is DCP's — never call it bare without message IDs or invoke /dcp-compress; proactive on closed sections with IDs + headroom/ctx_stats signals.${dcpClause}**`, modelID);
+}
+
+
+function loadCompactContextDiscipline(hasGrepGlob = true, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  return loadDiscipline("compact", hasGrepGlob, dcpMode, modelID)
+}
+
+
+export function buildCompactContextDisciplineSection(hasContextMode = false, hasGrepGlob = true, dcpMode: DcpCompressionMode = resolveDcpCompressionMode(), modelID?: string): string {
+  if (!hasContextMode) return "";
+  return loadCompactContextDiscipline(hasGrepGlob, dcpMode, modelID);
+}
+
+export function buildExploreDisciplineSection(hasContextMode = false, hasHeadroom = false, hasGrepGlob = true, modelID?: string): string {
+  if (!hasContextMode && !hasHeadroom) return "";
+  const parts: string[] = [];
+  if (hasContextMode) {
+    parts.push(hasWorkingSubstitute() ? contextModeDisciplinePointerBody() : exploreCtxPart(hasGrepGlob));
+  }
+  if (hasHeadroom) {
+    parts.push("Use headroom_retrieve / headroom_search for compressed history — NEVER re-read full history.");
+  }
+  return appendModelDirective(`### Context Discipline (when available)\n\n${parts.join(" ")}`, modelID);
+}
+
+export function buildUltraworkSection(
+  agents: AvailableAgent[],
+  categories: AvailableCategory[],
+  skills: AvailableSkill[]
+): string {
+  const lines: string[] = []
+
+  if (categories.length > 0) {
+    lines.push("**Categories** (for implementation tasks):")
+    for (const cat of categories) {
+      const shortDesc = cat.description || cat.name
+      lines.push(`- \`${cat.name}\`: ${shortDesc}`)
+    }
+    lines.push("")
+  }
+
+  if (skills.length > 0) {
+    const builtinSkills = skills.filter((s) => s.location === "plugin")
+    const customSkills = skills.filter((s) => s.location !== "plugin")
+
+    if (builtinSkills.length > 0) {
+      lines.push("**Built-in Skills** (combine with categories):")
+      for (const skill of builtinSkills) {
+        const shortDesc = skill.description.split(".")[0] || skill.description
+        lines.push(`- \`${skill.name}\`: ${shortDesc}`)
+      }
+      lines.push("")
+    }
+
+    if (customSkills.length > 0) {
+      lines.push("**User-Installed Skills** (HIGH PRIORITY - user installed these for their workflow):")
+      for (const skill of customSkills) {
+        const shortDesc = skill.description.split(".")[0] || skill.description
+        lines.push(`- \`${skill.name}\`: ${shortDesc}`)
+      }
+      lines.push("")
+    }
+  }
+
+  if (agents.length > 0) {
+    const ultraworkAgentPriority = ["trinity", "operator", "plan", "oracle"]
+    const sortedAgents = [...agents].sort((a, b) => {
+      const aIdx = ultraworkAgentPriority.indexOf(a.name)
+      const bIdx = ultraworkAgentPriority.indexOf(b.name)
+      if (aIdx === -1 && bIdx === -1) return 0
+      if (aIdx === -1) return 1
+      if (bIdx === -1) return -1
+      return aIdx - bIdx
+    })
+
+    lines.push("**Agents** (for specialized consultation/exploration):")
+    for (const agent of sortedAgents) {
+      const shortDesc = agent.description.length > 120 ? `${agent.description.slice(0, 120)}...` : agent.description
+      const suffix = agent.name === "trinity" || agent.name === "operator" ? " (multiple)" : ""
+      lines.push(`- \`${agent.name}${suffix}\`: ${shortDesc}`)
+    }
+  }
+
+  return lines.join("\n")
+}

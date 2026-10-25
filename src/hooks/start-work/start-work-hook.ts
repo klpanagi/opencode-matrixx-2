@@ -1,0 +1,272 @@
+import type { PluginInput } from "@opencode-ai/plugin"
+import {
+  appendSessionId,
+  clearMissionState,
+  createMissionState,
+  findOraclePlans,
+  getPlanName,
+  getPlanProgress,
+  readMissionState,
+  rotateMissionIfComplete,
+  shouldReconcileOnStartWork,
+  writeMissionState,
+} from "../../features/mission-state"
+import { updateSessionAgent } from "../../features/session-state"
+import { log } from "../../shared/logger"
+import { classifyPlans, formatPlanListLine } from "./plan-filter"
+
+export const HOOK_NAME = "start-work" as const
+
+const KEYWORD_PATTERN = /\b(ultrawork|ulw)\b/gi
+
+interface StartWorkHookInput {
+  sessionID: string
+  messageID?: string
+}
+
+interface StartWorkHookOutput {
+  parts: Array<{ type: string; text?: string }>
+}
+
+function extractUserRequestPlanName(promptText: string): string | null {
+  const userRequestMatch = promptText.match(/<user-request>\s*([\s\S]*?)\s*<\/user-request>/i)
+  if (!userRequestMatch) return null
+  
+  const rawArg = userRequestMatch[1].trim()
+  if (!rawArg) return null
+  
+  const cleanedArg = rawArg.replace(KEYWORD_PATTERN, "").trim()
+  return cleanedArg || null
+}
+
+function findPlanByName(plans: string[], requestedName: string): string | null {
+  const lowerName = requestedName.toLowerCase()
+  
+  const exactMatch = plans.find(p => getPlanName(p).toLowerCase() === lowerName)
+  if (exactMatch) return exactMatch
+  
+  const partialMatch = plans.find(p => getPlanName(p).toLowerCase().includes(lowerName))
+  return partialMatch || null
+}
+
+export function createStartWorkHook(ctx: PluginInput) {
+  return {
+    "chat.message": async (
+      input: StartWorkHookInput,
+      output: StartWorkHookOutput
+    ): Promise<void> => {
+      const parts = output.parts
+      const promptText = parts
+        ?.filter((p) => p.type === "text" && p.text)
+        .map((p) => p.text)
+        .join("\n")
+        .trim() || ""
+
+      // Only trigger on actual command execution (contains <session-context> tag)
+      // NOT on description text like "Start Morpheus work session from Oracle plan"
+      const isStartWorkCommand = promptText.includes("<session-context>")
+
+      if (!isStartWorkCommand) {
+        return
+      }
+
+      log(`[${HOOK_NAME}] Processing start-work command`, {
+        sessionID: input.sessionID,
+      })
+
+      updateSessionAgent(input.sessionID, "architect") // Always switch: fixes #1298
+
+      const existingState = readMissionState(ctx.directory)
+      const sessionId = input.sessionID
+      const timestamp = new Date().toISOString()
+
+      let contextInfo = ""
+      
+      const explicitPlanName = extractUserRequestPlanName(promptText)
+      
+      if (explicitPlanName) {
+        log(`[${HOOK_NAME}] Explicit plan name requested: ${explicitPlanName}`, {
+          sessionID: input.sessionID,
+        })
+        
+        const allPlans = findOraclePlans(ctx.directory)
+        const matchedPlan = findPlanByName(allPlans, explicitPlanName)
+        
+        if (matchedPlan) {
+          const progress = getPlanProgress(matchedPlan)
+          
+          if (progress.isComplete) {
+            contextInfo = `
+## Plan Already Complete
+
+The requested plan "${getPlanName(matchedPlan)}" has been completed.
+All ${progress.total} tasks are done. Create a new plan with: /plan "your task"`
+          } else {
+            if (existingState) {
+              clearMissionState(ctx.directory)
+            }
+            const newState = createMissionState(matchedPlan, sessionId, "architect")
+            writeMissionState(ctx.directory, newState)
+            
+            contextInfo = `
+## Auto-Selected Plan
+
+**Plan**: ${getPlanName(matchedPlan)}
+**Path**: ${matchedPlan}
+**Progress**: ${progress.completed}/${progress.total} tasks
+**Session ID**: ${sessionId}
+**Started**: ${timestamp}
+
+mission.json has been created. Read the plan and begin execution.`
+          }
+        } else {
+          const { actionable, staleCandidates, triage } = classifyPlans(allPlans)
+          const listed = [...actionable, ...staleCandidates, ...triage]
+          if (listed.length > 0) {
+            const planList = [
+              ...actionable.map((p, i) => formatPlanListLine(p, i)),
+              ...staleCandidates.map((p, i) => formatPlanListLine(p, actionable.length + i, "stale")),
+              ...triage.map((p, i) =>
+                formatPlanListLine(p, actionable.length + staleCandidates.length + i, "needsTriage"),
+              ),
+            ].join("\n")
+            
+            contextInfo = `
+## Plan Not Found
+
+Could not find a plan matching "${explicitPlanName}".
+
+Available incomplete plans:
+${planList}
+
+Ask the user which plan to work on.`
+          } else {
+            contextInfo = `
+## Plan Not Found
+
+Could not find a plan matching "${explicitPlanName}".
+No incomplete plans available. Create a new plan with: /plan "your task"`
+          }
+        }
+      } else if (existingState) {
+        const progress = getPlanProgress(existingState.active_plan)
+        
+        if (!progress.isComplete) {
+          appendSessionId(ctx.directory, sessionId)
+          contextInfo = `
+## Active Work Session Found
+
+**Status**: RESUMING existing work
+**Plan**: ${existingState.plan_name}
+**Path**: ${existingState.active_plan}
+**Progress**: ${progress.completed}/${progress.total} tasks completed
+**Sessions**: ${existingState.session_ids.length + 1} (current session appended)
+**Started**: ${existingState.started_at}
+
+The current session (${sessionId}) has been added to session_ids.
+Read the plan file and continue from the first unchecked task.`
+        } else {
+          rotateMissionIfComplete(ctx.directory)
+          contextInfo = `
+## Previous Work Complete
+
+The previous plan (${existingState.plan_name}) has been completed.
+Looking for new plans...`
+        }
+      }
+
+      if ((!existingState && !explicitPlanName) || (existingState && !explicitPlanName && getPlanProgress(existingState.active_plan).isComplete)) {
+        const plans = findOraclePlans(ctx.directory)
+        const { actionable: incompletePlans, staleCandidates, triage } = classifyPlans(plans)
+        
+        if (plans.length === 0) {
+          contextInfo += `
+
+## No Plans Found
+
+No Oracle plan files found at .matrixx/plans/
+Use Oracle to create a work plan first: /plan "your task"`
+        } else if (incompletePlans.length === 0 && staleCandidates.length === 0 && triage.length === 0) {
+          contextInfo += `
+
+## All Plans Complete
+
+All ${plans.length} plan(s) are complete. Create a new plan with: /plan "your task"`
+        } else if (incompletePlans.length === 0) {
+          const staleList = [
+            ...staleCandidates.map((p, i) => formatPlanListLine(p, i, "stale")),
+            ...triage.map((p, i) => formatPlanListLine(p, staleCandidates.length + i, "needsTriage")),
+          ].join("\n")
+          contextInfo += `
+
+## No Actionable Plans
+
+No fresh incomplete plans remain. Stale and triage candidates (not auto-selected):
+
+${staleList}
+
+Review stale candidates for archival; triage-empty plans need checkboxes or manual review.`
+        } else if (incompletePlans.length === 1) {
+          const planPath = incompletePlans[0]
+          const progress = getPlanProgress(planPath)
+          const newState = createMissionState(planPath, sessionId, "architect")
+          writeMissionState(ctx.directory, newState)
+
+          contextInfo += `
+
+## Auto-Selected Plan
+
+**Plan**: ${getPlanName(planPath)}
+**Path**: ${planPath}
+**Progress**: ${progress.completed}/${progress.total} tasks
+**Session ID**: ${sessionId}
+**Started**: ${timestamp}
+
+mission.json has been created. Read the plan and begin execution.`
+        } else {
+          if (shouldReconcileOnStartWork(incompletePlans.length)) {
+            log(`[${HOOK_NAME}] Multiple actionable plans — reconciler pass available`, {
+              sessionID: input.sessionID,
+              incompleteCount: incompletePlans.length,
+            })
+          }
+          const actionList = incompletePlans.map((p, i) => formatPlanListLine(p, i)).join("\n")
+          const staleList = staleCandidates.map((p, i) =>
+            formatPlanListLine(p, incompletePlans.length + i, "stale"),
+          ).join("\n")
+          const triageList = triage.map((p, i) =>
+            formatPlanListLine(p, incompletePlans.length + staleCandidates.length + i, "needsTriage"),
+          ).join("\n")
+          const planList = [actionList, staleList, triageList].filter((s) => s.length > 0).join("\n")
+
+          contextInfo += `
+
+<system-reminder>
+## Multiple Plans Found
+
+Current Time: ${timestamp}
+Session ID: ${sessionId}
+
+${planList}
+
+Ask the user which plan to work on. Present the options above and wait for their response.
+</system-reminder>`
+        }
+      }
+
+      const idx = output.parts.findIndex((p) => p.type === "text" && p.text)
+      if (idx >= 0 && output.parts[idx].text) {
+        output.parts[idx].text = output.parts[idx].text
+          .replace(/\$SESSION_ID/g, sessionId)
+          .replace(/\$TIMESTAMP/g, timestamp)
+        
+        output.parts[idx].text += `\n\n---\n${contextInfo}`
+      }
+
+      log(`[${HOOK_NAME}] Context injected`, {
+        sessionID: input.sessionID,
+        hasExistingState: !!existingState,
+      })
+    },
+  }
+}

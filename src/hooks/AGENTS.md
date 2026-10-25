@@ -1,0 +1,91 @@
+# HOOKS KNOWLEDGE BASE
+
+## OVERVIEW
+
+76 hook entries (60 dirs + 16 loose `.ts` files) intercepting/modifying agent behavior across 7 event types. Three-tier registration: Core (session ~21 + tool-guard ~24 + transform 8) → Continuation (11) → Skill (2). `HookNameSchema` holds 63 enum members plus 5 retained literals (1 duplicate alias + 4 legacy todo no-ops) = 68 accepted values.
+
+## STRUCTURE
+```
+hooks/
+├── agent-usage-reminder/         # Specialized agent hints (109 lines)
+├── context-window-limit-recovery/ # Provider-agnostic recovery (~1100 lines)
+├── anthropic-effort/             # Effort=max for Opus max variant (56 lines)
+├── architect/                        # Main orchestration hook (1976 lines)
+├── auto-slash-command/           # Detects /command patterns (1134 lines)
+├── auto-update-checker/          # Plugin update check (1140 lines)
+├── background-notification/      # OS notifications (33 lines)
+├── category-skill-reminder/      # Category+skill delegation reminders (597 lines)
+├── comment-checker/              # Prevents AI slop comments (710 lines)
+├── compaction-context-injector/  # Injects context on compaction (128 lines)
+├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-mode-routing/` (~131 lines)
+├── context-window-monitor.ts     # Reminds of headroom at 70% (99 lines)
+├── delegate-task-retry/          # Retries failed delegations (266 lines)
+├── design-intent-preserver/      # Preserves design intent across edits
+├── directory-agents-injector/    # Auto-injects AGENTS.md (195 lines)
+├── edit-error-recovery/          # Recovers from edit failures (188 lines)
+├── empty-task-response-detector.ts # Detects empty responses (27 lines)
+├── interactive-bash-session/     # Tmux session management (695 lines)
+├── keyword-detector/             # ultrawork/search/analyze modes (1665 lines)
+├── non-interactive-env/          # Non-TTY handling (483 lines)
+├── preemptive-compaction.ts      # Auto-compact at 78% usage (108 lines)
+├── plan-persister/              # Persists plan state to disk on idle + compact (132 lines)
+├── oracle-md-only/           # Planner read-only mode (955 lines)
+├── quality-gate/                 # Post-task quality verification
+├── matrix-loop/                   # Self-referential dev loop (1687 lines)
+├── rules-injector/               # Conditional .morpheus/rules injection (1604 lines)
+├── session-notification.ts       # OS idle notifications (108 lines)
+├── session-recovery/             # Auto-recovers from crashes (1279 lines)
+├── mouse-notepad/      # Junior notepad directive (76 lines)
+├── start-work/                   # Morpheus work session starter (648 lines)
+├── stop-continuation-guard/      # Guards stop continuation (214 lines)
+├── task-resume-info/             # Resume info for cancelled tasks (39 lines)
+├── think-mode/                   # Dynamic thinking budget (1365 lines)
+├── thinking-block-validator/     # Validates thinking blocks (169 lines)
+├── tool-output-truncator.ts      # Prevents context bloat (62 lines)
+├── unstable-agent-babysitter/    # Monitors unstable behavior (451 lines)
+├── task-edit-guard/               # Blocks raw bash edits to .matrixx/plans and .matrixx/tasks — enforces plan_*/task_* tools; BLOCKs generic Write/Edit to plans (tool.execute.before)
+└── write-existing-file-guard/    # Guards against file overwrite (356 lines)
+```
+
+## EVENT TYPES
+
+| Event | Hook Method | Can Block | Count |
+|-------|-------------|-----------|-------|
+| UserPromptSubmit | `chat.message` | Yes | 4 |
+| ChatParams | `chat.params` | No | 2 |
+| PreToolUse | `tool.execute.before` | Yes | 14 |
+| PostToolUse | `tool.execute.after` | No | 18 |
+| SessionEvent | `event` | No | 17 |
+| MessagesTransform | `experimental.chat.messages.transform` | No | 1 |
+| Compaction | `onSummarize` | No | 1 |
+
+## BLOCKING HOOKS (10)
+
+| Hook | Event | Blocks When |
+|------|-------|-------------|
+| auto-slash-command | chat.message | Command execution fails |
+| context-mode-enforcer | tool.execute.before | Conditional, only under `enforce`: `grep`/`glob` and `webfetch` blocked when `hasWorkingSubstitute()` is true (use `ctx_search` / `ctx_fetch_and_index`); fetch-shaped `bash` blocked only when `bash` is also in `blockedTools`; `read` is warn-only and never throws. Non-enforce mode only attaches `output.message`, and a per-session throttle (`guidance-throttle.ts`) shows each guidance once per session |
+| keyword-detector | chat.message | Keyword injection fails |
+| non-interactive-env | tool.execute.before | Interactive command in non-TTY |
+| oracle-md-only | tool.execute.before | Write outside .morpheus/*.md |
+| task-edit-guard | tool.execute.before | Raw bash mutation of `.matrixx/plans/*.md` or `.matrixx/tasks/T-*.json` — use `plan_*` or `task_*` tools; generic Write/Edit to plans BLOCKED with plan_* hint |
+| write-existing-file-guard | tool.execute.before | Write to existing file |
+
+## EXECUTION ORDER
+
+**UserPromptSubmit**: keywordDetector → autoSlashCommand → startWork
+**PreToolUse**: subagentQuestionBlocker → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → morpheusJuniorNotepad → writeExistingFileGuard → architectHook
+**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → architectHook → taskResumeInfo → taskReminder
+
+## HOW TO ADD
+
+1. Create `src/hooks/name/` with `index.ts` exporting `createMyHook(ctx)`
+2. Add hook name to `HookNameSchema` in `src/config/schema/hooks.ts`
+3. Register in appropriate `src/plugin/hooks/create-*-hooks.ts`
+
+## ANTI-PATTERNS
+
+- **Heavy PreToolUse**: Runs before EVERY tool — keep light
+- **Blocking non-critical**: Use PostToolUse warnings instead
+- **Redundant injection**: Track injected files to avoid context bloat
+- **Direct state mutation**: Use `output.output +=` instead of replacing

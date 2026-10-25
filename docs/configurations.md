@@ -1,0 +1,1713 @@
+# Matrixx Configuration
+
+> Version 2.6.10. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+
+> **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
+
+Highly opinionated, but adjustable to taste.
+
+## Quick Start
+
+**Most users don't need to configure anything manually.** Run the interactive installer:
+
+```bash
+bunx opencode-matrixx install
+```
+
+It asks about your providers (Claude, OpenAI, Gemini, etc.) and generates optimal config automatically.
+
+**Want to customize?** Here's the common patterns:
+
+```jsonc
+{
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json",
+  
+  // Override specific agent models
+  "agents": {
+    "oracle": { "model": "opencode/kimi-k2.5-free" },                // Use a strong reasoning model for debugging
+    "operator": { "model": "zai-coding-plan/glm-4.7" },             // Cheap & fast for research
+    "trinity": { "model": "opencode/deepseek-v4-flash-free" }       // Cheap & fast for grep
+  },
+  
+  // Override category models (used by task)
+  "categories": {
+    "bullet-time": { "model": "opencode/ling-3.0-flash-free" } // Fast/cheap for trivial tasks
+  }
+}
+```
+
+**Find available models:** Run `opencode models` to see all models in your environment.
+
+## Config File Locations
+
+Config file locations (priority order):
+1. `.opencode/matrixx.jsonc` or `.opencode/matrixx.json` (project; prefers `.jsonc` when both exist)
+2. User config (platform-specific; prefers `.jsonc` when both exist):
+
+| Platform        | User Config Path                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Windows**     | `~/.config/opencode/matrixx.jsonc` (preferred) or `~/.config/opencode/matrixx.json` (fallback); `%APPDATA%\opencode\matrixx.jsonc` / `%APPDATA%\opencode\matrixx.json` (fallback) |
+| **macOS/Linux** | `~/.config/opencode/matrixx.jsonc` (preferred) or `~/.config/opencode/matrixx.json` (fallback)                |
+
+Schema autocomplete supported:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json"
+}
+```
+
+## JSONC Support
+
+The `matrixx` configuration file supports JSONC (JSON with Comments):
+- Line comments: `// comment`
+- Block comments: `/* comment */`
+- Trailing commas: `{ "key": "value", }`
+
+When both `matrixx.jsonc` and `matrixx.json` files exist, `.jsonc` takes priority.
+
+**Example with comments:**
+
+```jsonc
+{
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json",
+
+  /* Agent overrides - customize models for specific tasks */
+  "agents": {
+    "oracle": {
+      "model": "opencode/kimi-k2.5-free"  // Strong reasoning for strategic planning
+    },
+    "trinity": {
+      "model": "opencode/deepseek-v4-flash-free"  // Fast for exploration
+    },
+  },
+}
+```
+
+## Google Auth
+
+**Recommended**: For Google Gemini authentication, install the [`opencode-antigravity-auth`](https://github.com/NoeFabris/opencode-antigravity-auth) plugin (`@latest`). It provides multi-account load balancing, variant-based thinking levels, dual quota system (Antigravity + Gemini CLI), and active maintenance. See [Installation > Google Gemini](guide/installation.md#google-gemini-antigravity-oauth).
+
+## Ollama Provider
+
+**IMPORTANT**: When using Ollama as a provider, you **must** disable streaming to avoid JSON parsing errors.
+
+### Required Configuration
+
+```json
+{
+  "agents": {
+    "trinity": {
+      "model": "ollama/qwen3-coder",
+      "stream": false
+    }
+  }
+}
+```
+
+### Why `stream: false` is Required
+
+Ollama returns NDJSON (newline-delimited JSON) when streaming is enabled, but Claude Code SDK expects a single JSON object. This causes `JSON Parse error: Unexpected EOF` when agents attempt tool calls.
+
+**Example of the problem**:
+```json
+// Ollama streaming response (NDJSON - multiple lines)
+{"message":{"tool_calls":[...]}, "done":false}
+{"message":{"content":""}, "done":true}
+
+// Claude Code SDK expects (single JSON object)
+{"message":{"tool_calls":[...], "content":""}, "done":true}
+```
+
+### Supported Models
+
+Common Ollama models that work with matrixx:
+
+| Model | Best For | Configuration |
+|-------|----------|---------------|
+| `ollama/qwen3-coder` | Code generation, build fixes | `{"model": "ollama/qwen3-coder", "stream": false}` |
+| `ollama/ministral-3:14b` | Exploration, codebase search | `{"model": "ollama/ministral-3:14b", "stream": false}` |
+| `ollama/lfm2.5-thinking` | Documentation, writing | `{"model": "ollama/lfm2.5-thinking", "stream": false}` |
+
+### Troubleshooting
+
+If you encounter `JSON Parse error: Unexpected EOF`:
+
+1. **Verify `stream: false` is set** in your agent configuration
+2. **Check Ollama is running**: `curl http://localhost:11434/api/tags`
+3. **Test with curl**:
+   ```bash
+   curl -s http://localhost:11434/api/chat \
+     -d '{"model": "qwen3-coder", "messages": [{"role": "user", "content": "Hello"}], "stream": false}'
+   ```
+4. **Known-issue tracking**: https://github.com/klpanagi/opencode-matrixx/issues/1124
+
+### Future SDK Fix
+
+The proper long-term fix requires Claude Code SDK to parse NDJSON responses correctly. Until then, use `stream: false` as a workaround.
+
+**Tracking**: https://github.com/klpanagi/opencode-matrixx/issues/1124
+
+## Agents
+
+Override built-in agent settings:
+
+```json
+{
+  "agents": {
+    "trinity": {
+      "model": "opencode/deepseek-v4-flash-free",
+      "temperature": 0.5
+    },
+    "construct": {
+      "disable": true
+    }
+  }
+}
+```
+
+Each agent supports: `model`, `temperature`, `top_p`, `prompt`, `prompt_append`, `tools`, `disable`, `description`, `mode`, `color`, `permission`, `category`, `variant`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `providerOptions`.
+
+### Additional Agent Options
+| Option              | Type    | Description                                                                                     |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `category`          | string  | Category name to inherit model and other settings from category defaults                             |
+| `variant`           | string  | Model variant (e.g., `max`, `high`, `medium`, `low`, `xhigh`)                                 |
+| `maxTokens`         | number  | Maximum tokens for response. Passed directly to OpenCode SDK.                                      |
+| `thinking`          | object  | Extended thinking configuration for Anthropic models. See [Thinking Options](#thinking-options) below. |
+| `reasoningEffort`   | string  | OpenAI reasoning effort level. Values: `low`, `medium`, `high`, `xhigh`.                         |
+| `textVerbosity`      | string  | Text verbosity level. Values: `low`, `medium`, `high`.                                        |
+| `providerOptions`    | object  | Provider-specific options passed directly to OpenCode SDK.                                      |
+| `fallbackChain`      | array   | Fallback provider/model chain: `[{ providers: string[], model: string, variant?: string }]`      |
+#### Thinking Options
+
+```json
+{
+  "agents": {
+    "oracle": {
+      "thinking": {
+        "type": "enabled",
+        "budgetTokens": 200000
+      }
+    }
+  }
+}
+```
+
+| Option        | Type    | Default | Description                                  |
+| ------------- | ------- | ------- | -------------------------------------------- |
+| `type`        | string  | -       | `enabled` or `disabled`                      |
+| `budgetTokens`| number  | -       | Maximum budget tokens for extended thinking  |
+
+Use `prompt_append` to add extra instructions without replacing the default system prompt:
+
+```json
+{
+  "agents": {
+    "operator": {
+      "prompt_append": "Always use the elisp-dev-mcp for Emacs Lisp documentation lookups."
+    }
+  }
+}
+```
+
+You can also override settings for `Morpheus` (the main orchestrator) and `build` (the default agent) using the same options.
+
+### Permission Options
+
+Fine-grained control over what agents can do:
+
+```json
+{
+  "agents": {
+    "trinity": {
+      "permission": {
+        "edit": "deny",
+        "bash": "ask",
+        "webfetch": "allow"
+      }
+    }
+  }
+}
+```
+
+| Permission           | Description                            | Values                                                                      |
+| -------------------- | -------------------------------------- | --------------------------------------------------------------------------- |
+| `edit`               | File editing permission                | `ask` / `allow` / `deny`                                                    |
+| `bash`               | Bash command execution                 | `ask` / `allow` / `deny` or per-command: `{ "git": "allow", "rm": "deny" }` |
+| `webfetch`           | Web request permission                 | `ask` / `allow` / `deny`                                                    |
+| `task`               | Task tool (`task_create`/`task_update` etc.) | `ask` / `allow` / `deny`                                                    |
+| `doom_loop`          | Allow infinite loop detection override | `ask` / `allow` / `deny`                                                    |
+| `external_directory` | Access files outside project root      | `ask` / `allow` / `deny`                                                    |
+Or disable via `disabled_agents` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
+
+```json
+{
+  "disabled_agents": ["oracle", "construct"]
+}
+```
+
+Available agents: `morpheus`, `oracle`, `merovingian`, `operator`, `trinity`, `construct`, `seraph`, `smith`, `architect`, `cipher`, `sati`, `sentinel`, `keymaker`, `bdd-contract` (+ aliases `build`, `plan`, `mouse`, `OpenCode-Builder` via `agent_definitions` overrides)
+
+## Built-in Skills
+
+Matrixx includes built-in skills that provide additional capabilities:
+
+- **playwright** (default) / **agent-browser**: Browser automation for web scraping, testing, screenshots, and browser interactions. See [Browser Automation](#browser-automation) for switching between providers.
+- **git-master**: Git expert for atomic commits, rebase/squash, and history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with `task(category='quick', load_skills=['git-master'], ...)` to save context.
+
+Disable built-in skills via `disabled_skills` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
+
+```json
+{
+  "disabled_skills": ["playwright"]
+}
+```
+
+Available built-in skills: `playwright`, `agent-browser`, `git-master`
+
+## Skills Configuration
+
+Configure advanced skills settings including custom skill sources, enabling/disabling specific skills, and defining custom skills.
+
+```json
+{
+  "skills": {
+    "sources": [
+      { "path": "./custom-skills", "recursive": true },
+      "https://example.com/skill.yaml"
+    ],
+    "enable": ["my-custom-skill"],
+    "disable": ["other-skill"],
+    "my-skill": {
+      "description": "Custom skill description",
+      "template": "Custom prompt template",
+      "from": "source-file.ts",
+      "model": "custom/model",
+      "agent": "custom-agent",
+      "subtask": true,
+      "argument-hint": "usage hint",
+      "license": "MIT",
+      "compatibility": ">= 3.0.0",
+      "metadata": {
+        "author": "Your Name"
+      },
+      "allowed-tools": ["tool1", "tool2"]
+    }
+  }
+}
+```
+
+### Sources
+
+Load skills from local directories or remote URLs:
+
+```json
+{
+  "skills": {
+    "sources": [
+      { "path": "./custom-skills", "recursive": true },
+      { "path": "./single-skill.yaml" },
+      "https://example.com/skill.yaml",
+      "https://raw.githubusercontent.com/user/repo/main/skills/*"
+    ]
+  }
+}
+```
+
+| Option      | Default | Description                                    |
+| ----------- | ------- | ---------------------------------------------- |
+| `path`      | -       | Local file/directory path or remote URL            |
+| `recursive`  | `false`  | Recursively load from directory                 |
+| `glob`      | -       | Glob pattern for file selection                 |
+
+### Enable/Disable Skills
+
+```json
+{
+  "skills": {
+    "enable": ["skill-1", "skill-2"],
+    "disable": ["disabled-skill"]
+  }
+}
+```
+
+### Custom Skill Definition
+
+Define custom skills directly in your config:
+
+| Option           | Default | Description                                                                          |
+| ---------------- | ------- | ------------------------------------------------------------------------------------ |
+| `description`     | -       | Human-readable description of the skill                                                 |
+| `template`        | -       | Custom prompt template for the skill                                                    |
+| `from`           | -       | Source file to load template from                                                     |
+| `model`           | -       | Override model for this skill                                                         |
+| `agent`           | -       | Override agent for this skill                                                         |
+| `subtask`         | `false`  | Whether to run as a subtask                                                           |
+| `argument-hint`   | -       | Hint for how to use the skill                                                        |
+| `license`          | -       | Skill license                                                                       |
+| `compatibility`    | -       | Required matrixx version compatibility                                           |
+| `metadata`         | -       | Additional metadata as key-value pairs                                                |
+| `allowed-tools`    | -       | Array of tools this skill is allowed to use                                            |
+
+**Example: Custom skill**
+
+```json
+{
+  "skills": {
+    "data-analyst": {
+      "description": "Specialized for data analysis tasks",
+      "template": "You are a data analyst. Focus on statistical analysis, visualization, and data interpretation.",
+      "model": "opencode/qwen3.6-plus-free",
+      "allowed-tools": ["read", "bash", "lsp_diagnostics"]
+    }
+  }
+}
+```
+
+## Browser Automation
+
+Choose between four browser automation providers:
+
+| Provider | Interface | Features | Installation |
+|----------|-----------|----------|--------------|
+| **playwright** (default) | MCP tools | Playwright MCP server with structured tool calls | Auto-installed via npx |
+| **agent-browser** | Bash CLI | Vercel's CLI with session management, parallel browsers | Requires `bun add -g agent-browser` |
+| **dev-browser** | MCP tools | Dev browser MCP with enhanced debugging | Via MCP config |
+| **playwright-cli** | Bash CLI | Playwright CLI alternative | Requires `npx playwright` |
+**Switch providers** via `browser_automation_engine` in `matrixx.json`:
+
+```json
+{
+  "browser_automation_engine": {
+    "provider": "agent-browser"
+  }
+}
+```
+
+### Playwright (Default)
+
+Uses the official Playwright MCP server (`@playwright/mcp`). Browser automation happens through structured MCP tool calls.
+
+### agent-browser
+
+Uses [Vercel's agent-browser CLI](https://github.com/vercel-labs/agent-browser). Key advantages:
+- **Session management**: Run multiple isolated browser instances with `--session` flag
+- **Persistent profiles**: Keep browser state across restarts with `--profile`
+- **Snapshot-based workflow**: Get element refs via `snapshot -i`, interact with `@e1`, `@e2`, etc.
+- **CLI-first**: All commands via Bash - great for scripting
+
+**Installation required**:
+```bash
+bun add -g agent-browser
+agent-browser install  # Download Chromium
+```
+
+**Example workflow**:
+```bash
+agent-browser open https://example.com
+agent-browser snapshot -i  # Get interactive elements with refs
+agent-browser fill @e1 "user@example.com"
+agent-browser click @e2
+agent-browser screenshot result.png
+agent-browser close
+```
+
+## Tmux Integration
+
+Run background subagents in separate tmux panes for **visual multi-agent execution**. See your agents working in parallel, each in their own terminal pane.
+
+**Enable tmux integration** via `tmux` in `matrixx.json`:
+
+```json
+{
+  "tmux": {
+    "enabled": true,
+    "layout": "main-vertical",
+    "main_pane_size": 60,
+    "main_pane_min_width": 120,
+    "agent_pane_min_width": 40
+  }
+}
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `enabled` | `false` | Enable tmux subagent pane spawning. Only works when running inside an existing tmux session. |
+| `layout` | `main-vertical` | Tmux layout for agent panes. See [Layout Options](#layout-options) below. |
+| `main_pane_size` | `60` | Main pane size as percentage (20-80). |
+| `main_pane_min_width` | `120` | Minimum width for main pane in columns. |
+| `agent_pane_min_width` | `40` | Minimum width for each agent pane in columns. |
+
+### Layout Options
+
+| Layout | Description |
+|--------|-------------|
+| `main-vertical` | Main pane left, agent panes stacked on right (default) |
+| `main-horizontal` | Main pane top, agent panes stacked bottom |
+| `tiled` | All panes in equal-sized grid |
+| `even-horizontal` | All panes in horizontal row |
+| `even-vertical` | All panes in vertical stack |
+
+### Requirements
+
+1. **Must run inside tmux**: The feature only activates when OpenCode is already running inside a tmux session
+2. **Tmux installed**: Requires tmux to be available in PATH
+3. **Server mode**: OpenCode must run with `--port` flag to enable subagent pane spawning
+
+### How It Works
+
+When `tmux.enabled` is `true` and you're inside a tmux session:
+- Background agents (via `task(run_in_background=true)`) spawn in new tmux panes
+  **Note**: `run_in_background` defaults to `false`. Use `true` for any parallel independent work (exploration, fan-out, multi-agent waves). `true` is async (returns `task_id` immediately, no result); `false` is sync (awaits result inline). Never call `task()` sequentially when tasks are independent — use `run_in_background=true` + `background_output` instead (AGENTS.md:223).
+- Each pane shows the subagent's real-time output
+- Panes are automatically closed when the subagent completes
+- Layout is automatically adjusted based on your configuration
+
+### Running OpenCode with Tmux Subagent Support
+
+To enable tmux subagent panes, OpenCode must run in **server mode** with the `--port` flag. This starts an HTTP server that subagent panes connect to via `opencode attach`.
+
+**Basic setup**:
+```bash
+# Start tmux session
+tmux new -s dev
+
+# Run OpenCode with server mode (port 4096)
+opencode --port 4096
+
+# Now background agents will appear in separate panes
+```
+
+**Recommended: Shell Function**
+
+For convenience, create a shell function that automatically handles tmux sessions and port allocation. Here's an example for Fish shell:
+
+```fish
+# ~/.config/fish/config.fish
+function oc
+    set base_name (basename (pwd))
+    set path_hash (echo (pwd) | md5 | cut -c1-4)
+    set session_name "$base_name-$path_hash"
+    
+    # Find available port starting from 4096
+    function __oc_find_port
+        set port 4096
+        while test $port -lt 5096
+            if not lsof -i :$port >/dev/null 2>&1
+                echo $port
+                return 0
+            end
+            set port (math $port + 1)
+        end
+        echo 4096
+    end
+    
+    set oc_port (__oc_find_port)
+    set -x OPENCODE_PORT $oc_port
+    
+    if set -q TMUX
+        # Already inside tmux - just run with port
+        opencode --port $oc_port $argv
+    else
+        # Create tmux session and run opencode
+        set oc_cmd "OPENCODE_PORT=$oc_port opencode --port $oc_port $argv; exec fish"
+        if tmux has-session -t "$session_name" 2>/dev/null
+            tmux new-window -t "$session_name" -c (pwd) "$oc_cmd"
+            tmux attach-session -t "$session_name"
+        else
+            tmux new-session -s "$session_name" -c (pwd) "$oc_cmd"
+        end
+    end
+    
+    functions -e __oc_find_port
+end
+```
+
+**Bash/Zsh equivalent**:
+
+```bash
+# ~/.bashrc or ~/.zshrc
+oc() {
+    local base_name=$(basename "$PWD")
+    local path_hash=$(echo "$PWD" | md5sum | cut -c1-4)
+    local session_name="${base_name}-${path_hash}"
+    
+    # Find available port
+    local port=4096
+    while [ $port -lt 5096 ]; do
+        if ! lsof -i :$port >/dev/null 2>&1; then
+            break
+        fi
+        port=$((port + 1))
+    done
+    
+    export OPENCODE_PORT=$port
+    
+    if [ -n "$TMUX" ]; then
+        opencode --port $port "$@"
+    else
+        local oc_cmd="OPENCODE_PORT=$port opencode --port $port $*; exec $SHELL"
+        if tmux has-session -t "$session_name" 2>/dev/null; then
+            tmux new-window -t "$session_name" -c "$PWD" "$oc_cmd"
+            tmux attach-session -t "$session_name"
+        else
+            tmux new-session -s "$session_name" -c "$PWD" "$oc_cmd"
+        fi
+    fi
+}
+```
+
+**How subagent panes work**:
+
+1. Main OpenCode starts HTTP server on specified port (e.g., `http://localhost:4096`)
+2. When a background agent spawns, Matrixx creates a new tmux pane
+3. The pane runs: `opencode attach http://localhost:4096 --session <session-id>`
+4. Each subagent pane shows real-time streaming output
+5. Panes are automatically closed when the subagent completes
+
+**Environment variables**:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENCODE_PORT` | Default port for the HTTP server (used if `--port` not specified) |
+
+### Server Mode Reference
+
+OpenCode's server mode exposes an HTTP API for programmatic interaction:
+
+```bash
+# Standalone server (no TUI)
+opencode serve --port 4096
+
+# TUI with server (recommended for tmux integration)
+opencode --port 4096
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--port` | `4096` | Port for HTTP server |
+| `--hostname` | `127.0.0.1` | Hostname to listen on |
+
+For more details, see the [OpenCode Server documentation](https://opencode.ai/docs/server/).
+
+## Git Master
+
+The `git-master` skill (`src/features/builtin-skills/skills/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
+
+## Morpheus Agent
+
+When enabled (default), Morpheus provides a powerful orchestrator with optional specialized agents. See [Orchestration](orchestration.md) for the full planning/execution model.
+
+- **Morpheus**: Primary orchestrator agent (strong reasoning model)
+- **OpenCode-Builder**: OpenCode's default build agent, renamed due to SDK limitations (disabled by default)
+- **Oracle (Planner)**: OpenCode's default plan agent with work-planner methodology (enabled by default)
+- **Seraph (Plan Consultant)**: Pre-planning analysis agent that identifies hidden requirements and AI failure points
+
+**Configuration Options:**
+
+```json
+{
+  "morpheus_agent": {
+    "disabled": false,
+    "default_builder_enabled": false,
+    "planner_enabled": true,
+    "replace_plan": true
+  }
+}
+```
+
+**Example: Enable OpenCode-Builder:**
+
+```json
+{
+  "morpheus_agent": {
+    "default_builder_enabled": true
+  }
+}
+```
+
+This enables OpenCode-Builder agent alongside Morpheus. The default build agent is always demoted to subagent mode when Morpheus is enabled.
+
+**Example: Disable all Morpheus orchestration:**
+
+```json
+{
+  "morpheus_agent": {
+    "disabled": true
+  }
+}
+```
+
+You can also customize Morpheus agents like other agents:
+
+```json
+{
+  "agents": {
+    "Morpheus": {
+      "model": "opencode/kimi-k2.5-free",
+      "temperature": 0.1
+    },
+    "OpenCode-Builder": {
+      "model": "opencode/qwen3.6-plus-free"
+    },
+    "Oracle (Planner)": {
+      "model": "opencode/kimi-k2.5-free"
+    },
+    "Seraph (Plan Consultant)": {
+      "model": "opencode/glm-5-free"
+    }
+  }
+}
+```
+
+| Option                    | Default | Description                                                                                                                            |
+| ------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `disabled`                | `false` | When `true`, disables all Morpheus orchestration and restores original build/plan as primary.                                          |
+| `default_builder_enabled` | `false` | When `true`, enables OpenCode-Builder agent (same as OpenCode build, renamed due to SDK limitations). Disabled by default.             |
+| `planner_enabled`         | `true`  | When `true`, enables Oracle (Planner) agent with work-planner methodology. Enabled by default.                                     |
+| `replace_plan`            | `true`  | When `true`, demotes default plan agent to subagent mode. Set to `false` to keep both Oracle (Planner) and default plan available. |
+
+## Background Tasks
+
+Configure concurrency limits for background agent tasks. This controls how many parallel background agents can run simultaneously.
+
+```json
+{
+  "background_task": {
+    "defaultConcurrency": 5,
+    "staleTimeoutMs": 180000,
+    "admissionTimeoutMs": 0,
+    "nestedAdmission": {
+      "enabled": true,
+      "mode": "bypass",
+      "maxDepth": 2
+    },
+    "providerConcurrency": {
+      "anthropic": 3,
+      "openai": 5,
+      "google": 10
+    },
+    "modelConcurrency": {
+      "opencode/kimi-k2.5-free": 2,
+      "opencode/ling-3.0-flash-free": 10
+    },
+    "wakeScheduler": {
+      "enabled": true,
+      "intervalMs": 300000
+    },
+    "jobBoard": {
+      "enabled": true,
+      "strategy": "latest",
+      "maxRetainedSnapshots": 20
+    }
+  }
+}
+```
+
+| Option                | Default | Description                                                                                                             |
+| --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `defaultConcurrency`  | -       | Default maximum concurrent background tasks for all providers/models                                                    |
+| `staleTimeoutMs`      | `180000` | Stale timeout in milliseconds - interrupt tasks with no activity for this duration (minimum: 60000 = 1 minute)             |
+| `messageStalenessTimeoutMs` | `120000` | Timeout for message staleness detection (minimum: 60000)                                                         |
+| `maxToolCalls`        | `75`    | Maximum tool calls per background task (minimum: 10)                                                                    |
+| `providerConcurrency` | -       | Per-provider concurrency limits. Keys are provider names (e.g., `anthropic`, `openai`, `google`)                        |
+| `modelConcurrency`    | -       | Per-model concurrency limits. Keys are full model names (e.g., `opencode/kimi-k2.5-free`). Overrides provider limits. |
+| `circuitBreaker.enabled` | `false` | Enable circuit breaker for failing tasks                                                                            |
+| `circuitBreaker.maxToolCalls` | `50` | Max tool calls before circuit breaker trips                                                                       |
+| `circuitBreaker.consecutiveThreshold` | `3` | Consecutive failures before circuit breaker opens                                                              |
+| `admissionTimeoutMs` | `0` | Queue admission timeout in ms. `0` = unbounded (no timeout). Otherwise minimum `60000`. When a root task waits past this on a saturated queue, it becomes terminal `stopped` with `terminalReason: "queue-saturated"`. |
+| `nestedAdmission.enabled` | `true` | Enable nested-admission exemption. Prevents a managed background child that spawns its own background work from self-deadlocking the semaphore. |
+| `nestedAdmission.mode` | `"bypass"` | `"bypass"`: nested launches skip the concurrency semaphore entirely. `"reserve"`: nested launches acquire a slot but with exemption logic. |
+| `nestedAdmission.maxDepth` | `2` | Maximum nesting depth (1..5). Depth-cap overflow yields terminal `stopped` with `terminalReason: "nested-depth-exceeded"`. |
+| `wakeScheduler.enabled` | `true` | Idle-parent wake scheduler — periodic `<system-reminder>` nudges when the parent session is idle with pending todos. |
+| `wakeScheduler.intervalMs` | `300000` | Wake reminder interval in milliseconds (default: 300000 = 5 minutes, minimum: 60000 = 1 minute). |
+| `jobBoard.enabled` | `true` | Job-board snapshot in background-task notifications. |
+| `jobBoard.strategy` | `"latest"` | `"latest"`: strip-and-replace snapshot. `"checkpoint-compatible"`: append-only ledger with oldest-eviction. |
+| `jobBoard.maxRetainedSnapshots` | `20` | Max retained snapshots for the checkpoint-compatible strategy (1..100). |
+| `wallClockTimeoutMs`      | `0`   | Wall-clock execution timeout in milliseconds. Union type: `0` disables wall-clock enforcement (OFF/default). Values ≥60000 enforce a maximum runtime (range 60000–2147483647). Zero means legacy unbounded behavior; any non-zero value triggers terminal `stopped` with `terminalReason: "wallclock-timeout"` when the process runs past this limit. |
+| `wallClockAbortGraceMs`   | `5000` | Grace period in milliseconds between wall-clock timeout expiration and actual task abort signal. Gives long-running processes time to finish flush operations, release resources, or exit cleanly on SIGTERM/SIGKILL (range 1000–60000). |
+**Priority Order**: `modelConcurrency` > `providerConcurrency` > `defaultConcurrency`
+
+**Use Cases**:
+- Limit expensive models to prevent cost spikes
+- Allow more concurrent tasks for fast/cheap models
+- Respect provider rate limits by setting provider-level caps
+
+## Categories
+
+Categories enable domain-specific task delegation via the `task` tool. Each category applies runtime presets (model, temperature, prompt additions) when calling the `Mouse` agent.
+
+### Built-in Categories
+
+All 8 categories come with optimal model defaults, but **you must configure them to use those defaults**:
+
+| Category             | Built-in Default Model             | Description                                                          |
+| -------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `construct`          | `opencode/qwen3.6-plus-free`       | Frontend, UI/UX, design, styling, animation                          |
+| `source`             | `opencode/kimi-k2.5-free`          | Deep logical reasoning, complex architecture decisions               |
+| `deep-jack`          | `opencode/kimi-k2.5-free`          | Goal-oriented autonomous problem-solving, thorough research          |
+| `matrix-bend`        | `opencode/qwen3.6-plus-free`       | Complex problem-solving with creative approaches                     |
+| `bullet-time`        | `opencode/ling-3.0-flash-free`     | Trivial tasks - single file changes, typo fixes, simple modifications|
+| `blue-pill`          | `opencode/qwen3.6-plus-free`       | Tasks that don't fit other categories, low effort required           |
+| `red-pill`           | `opencode/kimi-k2.5-free` (max)    | Tasks that don't fit other categories, high effort required          |
+| `broadcast`          | `opencode/nemotron-3-super-free`   | Documentation, prose, technical writing                              |
+
+### ⚠️ Critical: Model Resolution Priority
+
+**Categories DO NOT use their built-in defaults unless configured.** Model resolution follows this priority:
+
+```
+1. User-configured model (explicit `model` in matrixx.json)
+2. Active preset entry (from `model_presets` + `active_preset` — per-agent/category assignment, then `default_model`)
+3. Category's built-in default (if you add category to config)
+4. System default model (from opencode.json)
+```
+
+**Example Problem:**
+
+```json
+// opencode.json
+{ "model": "opencode/qwen3.6-plus-free" }
+
+// matrixx.json (empty categories section)
+{}
+
+// Result: ALL categories use qwen3.6-plus-free (wasteful!)
+// - bullet-time tasks use a heavy model instead of a trivial one (expensive)
+// - source tasks lose their dedicated reasoning model (inferior reasoning)
+// - construct tasks use one model for everything (suboptimal)
+```
+
+### Recommended Configuration
+
+**To use optimal models for each category, add them to your config:**
+
+```json
+{
+  "categories": {
+    "source": { 
+      "model": "opencode/kimi-k2.5-free"      // Deep reasoning & architecture
+    },
+    "deep-jack": { 
+      "model": "opencode/kimi-k2.5-free",     // Goal-oriented problem solving
+      "variant": "medium"
+    },
+    "matrix-bend": { 
+      "model": "opencode/qwen3.6-plus-free"   // Creative problem solving
+    },
+    "construct": { 
+      "model": "opencode/qwen3.6-plus-free"   // Frontend, UI/UX, design
+    },
+    "red-pill": { 
+      "model": "opencode/kimi-k2.5-free",     // High effort, complex
+      "variant": "max"
+    },
+    "blue-pill": { 
+      "model": "opencode/qwen3.6-plus-free"   // Low effort, general
+    },
+    "broadcast": { 
+      "model": "opencode/nemotron-3-super-free" // Documentation, prose
+    },
+    "bullet-time": { 
+      "model": "opencode/ling-3.0-flash-free"   // Fast + cheap for trivial tasks
+    }
+  }
+}
+```
+
+**Only configure categories you have access to.** Unconfigured categories fall back to your system default model.
+
+### Usage
+
+```javascript
+// Via task tool
+task(category="construct", prompt="Create a responsive dashboard component")
+task(category="source", prompt="Design the payment processing flow")
+
+// Or target a specific agent directly (bypasses categories)
+task(agent="oracle", prompt="Review this architecture")
+```
+
+### Custom Categories
+
+Add your own categories or override built-in ones:
+
+```json
+{
+  "categories": {
+    "data-science": {
+      "model": "zai-coding-plan/glm-4.7",
+      "temperature": 0.2,
+      "prompt_append": "Focus on data analysis, ML pipelines, and statistical methods."
+    },
+    "construct": {
+      "model": "opencode/qwen3.6-plus-free",
+      "prompt_append": "Use shadcn/ui components and Tailwind CSS."
+    }
+  }
+}
+```
+
+Each category supports: `model`, `temperature`, `top_p`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `tools`, `prompt_append`, `variant`, `description`, `is_unstable_agent`.
+
+#### Category Temperature
+
+Each category can define a `temperature` that overrides the agent's default temperature for tasks routed through that category. This allows fine-grained control: use low temperature (0.1) for deterministic code generation, higher temperature (0.7) for creative tasks like documentation or brainstorming.
+
+```json
+{
+  "categories": {
+    "source": {
+      "model": "opencode/kimi-k2.5-free",
+      "temperature": 0.1
+    },
+    "broadcast": {
+      "model": "opencode/nemotron-3-super-free",
+      "temperature": 0.5
+    }
+  }
+}
+```
+
+| Option             | Type    | Default | Description                                                                                         |
+| ------------------ | ------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `description`       | string  | -       | Human-readable description of the category's purpose. Shown in task prompt.                     |
+| `is_unstable_agent`| boolean | `false`  | Mark agent as unstable - forces background mode for monitoring. Auto-enabled for known-flaky model families. |
+| `fallback_models`   | string\|string[] | - | Fallback model(s) for this category. Overrides provider chain.                            |
+| `complexity_downgrades` | object | -   | Map complexity level to model downgrade: `{ "2": "opencode/ling-3.0-flash-free" }`                              |
+| `disable`           | boolean | `false` | When `true`, disables this category.                                                        |
+## Model Resolution System
+
+At runtime, Matrixx uses a 3-step resolution process to determine which model to use for each agent and category. This happens dynamically based on your configuration and available models.
+
+### Overview
+
+**Problem**: Users have different provider configurations. The system needs to select the best available model for each task at runtime.
+
+**Solution**: A simple 3-step resolution flow:
+1. **Step 1: User Override** — If you specify a model in `matrixx.json`, use exactly that
+2. **Step 2: Provider Fallback** — Try each provider in the requirement's priority order until one is available
+3. **Step 3: System Default** — Fall back to OpenCode's configured default model
+
+### Resolution Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     MODEL RESOLUTION FLOW                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Step 1: USER OVERRIDE                                         │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ User specified model in matrixx.json?            │   │
+│   │         YES → Use exactly as specified                  │   │
+│   │         NO  → Continue to Step 2                        │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│   Step 2: PROVIDER PRIORITY FALLBACK                            │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ For each provider in requirement.providers order:       │   │
+│   │                                                         │   │
+│   │ Example for Morpheus:                                    │   │
+│   │ anthropic → github-copilot → opencode → antigravity     │   │
+│   │     │            │              │            │          │   │
+│   │     ▼            ▼              ▼            ▼          │   │
+│   │ Try: anthropic/kimi-k2.5-free                            │   │
+│   │ Try: github-copilot/kimi-k2.5-free                       │   │
+│   │ Try: opencode/kimi-k2.5-free                             │   │
+│   │ ...                                                     │   │
+│   │                                                         │   │
+│   │ Found in available models? → Return matched model       │   │
+│   │ Not found? → Try next provider                          │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼ (all providers exhausted)        │
+│   Step 3: SYSTEM DEFAULT                                        │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │ Return systemDefaultModel (from opencode.json)          │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Agent Provider Chains
+
+Each agent and category declares an ordered fallback chain of `<provider>/<model>` candidates; Matrixx selects the first whose provider is connected. Configure via `modelRequirements` (see `src/shared/model-requirements.ts`).
+
+| Agent | Model (no prefix) | Fallback chain |
+|-------|-------------------|-------------------------|
+| **Morpheus** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
+| **Keymaker** | `minimax-m3-free` | opencode (minimax-m3-free) → zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) |
+| **Merovingian** | `glm-5-free` | zai-coding-plan (glm-4.7) → opencode (glm-5-free) → opencode (qwen3.6-plus-free) |
+| **Operator** | `deepseek-v4-flash-free` | opencode (deepseek-v4-flash-free) → opencode (ling-3.0-flash-free) |
+| **Trinity** | `deepseek-v4-flash-free` | opencode (deepseek-v4-flash-free) → opencode (ling-3.0-flash-free) |
+| **Construct** | `qwen3.6-plus-free` | zai-coding-plan (glm-4.7) → opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) |
+| **Oracle (Planner)** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
+| **Seraph (Plan Consultant)** | `kimi-k2.5-free` | opencode (kimi-k2.5-free) → zai-coding-plan (glm-4.7) → opencode (glm-5-free) |
+| **Smith (Plan Reviewer)** | `glm-5-free` | opencode (glm-5-free) → zai-coding-plan (glm-4.7) → opencode (qwen3.6-plus-free) |
+| **Architect** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
+| **Cipher** | `qwen3.6-plus-free` | opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) → zai-coding-plan (glm-4.7) |
+
+### Category Provider Chains
+
+Categories follow the same resolution logic:
+
+| Category | Model (no prefix) | Fallback chain |
+|----------|-------------------|-------------------------|
+| **construct** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) |
+| **source** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (deepseek-v4-flash-free) |
+| **deep-jack** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (qwen3.6-plus-free) |
+| **matrix-bend** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (glm-5-free) |
+| **bullet-time** | `ling-3.0-flash-free` | zai-coding-plan → opencode (ling-3.0-flash-free) → opencode (deepseek-v4-flash-free) |
+| **blue-pill** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (deepseek-v4-flash-free) |
+| **red-pill** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
+| **broadcast** | `nemotron-3-super-free` | zai-coding-plan → opencode (nemotron-3-super-free) → opencode (kimi-k2.5-free) |
+
+### Checking Your Configuration
+
+Use the `doctor` command to see how models resolve with your current configuration:
+
+```bash
+bunx opencode-matrixx doctor --verbose
+```
+
+The "Model Resolution" check shows:
+- Each agent/category's model requirement
+- Provider fallback chain
+- User overrides (if configured)
+- Effective resolution path
+
+### Manual Override
+
+Override any agent or category model in `matrixx.json`:
+
+```json
+{
+  "agents": {
+    "Morpheus": {
+      "model": "opencode/kimi-k2.5-free"
+    },
+    "oracle": {
+      "model": "zai-coding-plan/glm-4.7"
+    }
+  },
+  "categories": {
+    "source": {
+      "model": "opencode/kimi-k2.5-free"
+    }
+  }
+}
+```
+
+When you specify a model override, it takes precedence (Step 1) and the provider fallback chain is skipped entirely.
+
+## Model Presets
+
+Model presets are **named static bundles of explicit `"provider/model"` strings** that map agents and categories to concrete models. They replace the old named-tier system with deterministic, provider-agnostic assignments — no runtime resolution against a live provider list.
+
+### Schema
+
+```jsonc
+{
+  "model_presets": {
+    "default": {
+      "default_model": "opencode/qwen3.6-plus-free",
+      "agents": { "trinity": { "model": "opencode/deepseek-v4-flash-free" } },
+      "categories": { "source": { "model": "opencode/kimi-k2.5-free" } }
+    },
+    "flagship": {
+      "default_model": "opencode/kimi-k2.5-free",
+      "agents": {
+        "morpheus": { "model": "opencode/kimi-k2.5-free" },
+        "trinity": { "model": "zai-coding-plan/glm-4.7" }
+      },
+      "categories": { "source": { "model": "opencode/kimi-k2.5-free", "variant": "max" } }
+    }
+  },
+  "active_preset": "default"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `model_presets` | `object` | Registry of named presets, keyed by preset name. |
+| `model_presets.<name>.default_model` | `string` | Default model applied to any agent/category entry that still has no `model`. Format: `<provider>/<model>`. |
+| `model_presets.<name>.agents` | `object` | Per-agent model assignments: `{ "<agent>": { "model": "<provider>/<model>", "variant": "..." } }`. |
+| `model_presets.<name>.categories` | `object` | Per-category model assignments (same shape as `agents`). |
+| `active_preset` | `string` | Name of the preset applied at config load. |
+
+### Precedence
+
+Presets use **fill-in semantics** — they never overwrite an explicit `model` on a config entry. Effective model resolution:
+
+```
+1. Explicit `model` on the agent/category config entry (wins)
+2. Active preset's per-agent/category assignment, then its `default_model`
+3. Built-in default (if the entry is configured)
+4. System default model (from opencode.json)
+```
+
+### `/preset` command
+
+Switch presets at runtime without editing config:
+
+| Command | Effect |
+|---------|--------|
+| `/preset` or `/preset list` | List available presets and mark the active one |
+| `/preset show [<name>]` | Show a preset's agent/category model assignments (defaults to the active preset) |
+| `/preset set <name>` | Switch the active preset for the current session — **delegate-task categories switch immediately**; builtin agents apply on the **next session** |
+| `/preset set <name> --save [--global\|--project]` | Also persist `active_preset` to config (project `.opencode/matrixx.jsonc` by default, or global `~/.config/opencode/matrixx.jsonc`) |
+
+The `/preset` command is backed by the built-in `preset` tool (`src/tools/preset/tools.ts`), which validates the preset name, applies the session overlay, and — with `--save` — persists `active_preset`. It never edits config files directly.
+
+### First-run wizard
+
+The setup wizard (`bunx opencode-matrixx setup`) generates a `default` preset from your connected providers when no `model_presets` exists in the target config: `default_model` is the first available `provider/model` from the highest-priority connected provider, and every builtin agent/category is assigned that same model. If no providers are connected, setup aborts with a hard error instructing you to configure a provider first.
+
+## Hooks
+
+Disable specific built-in hooks via `disabled_hooks` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
+
+```json
+{
+  "disabled_hooks": ["comment-checker", "agent-usage-reminder"]
+}
+```
+
+Available hooks (68 raw entries, 68 unique — see `src/config/schema/hooks.ts`). Four of them, `compaction-todo-preserver`, `task-notepad`, `tasks-todowrite-disabler`, and `todo-continuation-enforcer`, are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `architect`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `document-reader-guard`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `evolution-compressor`, `evolution-hitl`, `evolution-watcher`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `preemptive-compaction`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-notification`, `session-recovery`, `start-work`, `startup-toast`, `stop-continuation-guard`, `task-continuation-enforcer`, `task-edit-guard`, `task-notepad`, `task-notepad-writer`, `task-resume-info`, `tasks-todowrite-disabler`, `think-mode`, `thinking-block-validator`, `todo-continuation-enforcer`, `tool-output-truncator`, `tool-pair-validator`, `unstable-agent-babysitter`, `webfetch-redirect-guard`, `write-existing-file-guard`
+**Note on `directory-agents-injector`**: This hook is **automatically disabled** when running on OpenCode 1.1.37+ because OpenCode now has native support for dynamically resolving AGENTS.md files from subdirectories (PR #10678). This prevents duplicate AGENTS.md injection. For older OpenCode versions, the hook remains active to provide the same functionality.
+
+**Note on `auto-update-checker` and `startup-toast`**: The `startup-toast` hook is a sub-feature of `auto-update-checker`. To disable only the startup toast notification while keeping update checking enabled, add `"startup-toast"` to `disabled_hooks`. To disable all update checking features (including the toast), add `"auto-update-checker"` to `disabled_hooks`.
+
+**Note on `quality-gate`**: The quality-gate hook auto-lints `.ts` files after write/edit tool calls using Biome. It runs as a post-tool hook and can be disabled via `disabled_hooks` if you prefer to lint separately.
+
+## Disabled Commands
+
+Disable specific built-in commands via `disabled_commands` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
+
+```json
+{
+  "disabled_commands": ["init-deep", "start-work"]
+}
+```
+
+Available commands (23 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `ulw-loop`, `cancel-loop`, `refactor`, `start-work`, `stop-continuation`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-ultrawork`, `research`, `assembly`, `ultrawork`, `bdd-backend`, `bdd-contract`, `bdd-frontend`, `bdd-pipeline`, `bdd-tests`, `evolution`, `cleanup-tasks`, `task-list` (+ `ultrawork`/`ulw` keyword triggers)
+## Comment Checker
+
+Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.
+
+```json
+{
+  "comment_checker": {
+    "custom_prompt": "Your custom warning message. Use {{comments}} placeholder for detected comments XML."
+  }
+}
+```
+
+| Option        | Default | Description                                                                |
+| ------------- | ------- | -------------------------------------------------------------------------- |
+| `custom_prompt` | -       | Custom warning message to replace the default. Use `{{comments}}` placeholder. |
+
+## Notification
+
+Configure notification behavior for background task completion.
+
+```json
+{
+  "notification": {
+    "force_enable": true
+  }
+}
+```
+
+| Option         | Default | Description                                                                                   |
+| -------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `force_enable` | - (absent = `false`) | Force enable session-notification even if external notification plugins are detected. |
+
+## Tasks
+
+Canonical task-system configuration (storage, enforcer, poll timeout). The task
+system is unconditional: there is no master switch. Legacy `morpheus.tasks` and
+`task.pollTimeoutMs` still parse and act as fallbacks for storage keys — explicit
+`tasks.*` always wins. `tasks.enabled` is retained but ignored; see
+`docs/legacy-todo-migration.md`.
+
+```json
+{
+  "tasks": {
+    "enabled": true,
+    "scope": "project",
+    "storage_path": ".matrixx/tasks",
+    "task_list_id": "my-project",
+    "stale_after_hours": 24,
+    "background_stale_after_hours": 2,
+    "session_scoped": true,
+    "pollTimeoutMs": 600000
+  }
+}
+```
+
+### Tasks Configuration
+
+| Option               | Type     | Default            | Description                                                               |
+| -------------------- | -------- | ------------------ | ------------------------------------------------------------------------- |
+| `enabled`            | `boolean` | `true`            | **Retained-deprecated.** Parsed but ignored: the task system is unconditional. `false` logs a one-time deprecation warning. See `docs/legacy-todo-migration.md`. |
+| `storage_path`       | `string` | — (runtime default: `.matrixx/tasks` when `scope=project`) | Absolute or relative path override. When set, bypasses `scope`/`listId` resolution. |
+| `task_list_id`       | `string` | — (falls back to `basename(cwd)` sanitized) | Force task list ID (alternative to `ULTRAWORK_TASK_LIST_ID` / `CLAUDE_CODE_TASK_LIST_ID` env). Sanitized to `[a-zA-Z0-9_-]`. |
+| `scope`              | `"global" \| "project"` | `"project"` | `project` → `.matrixx/tasks` per project (default). `global` → `~/.config/opencode/tasks/{listId}`. |
+| `stale_after_hours`  | `number`   | `24` (min `0.25`)  | Pending/in_progress tasks with no file activity for this many hours are treated as stale by `task-continuation-enforcer` (skipped when all incomplete are stale; annotated `(stale: N)` otherwise). Fractional hours are accepted, so the floor is 15 minutes rather than 1 hour. |
+| `background_stale_after_hours` | `number` | `2` (min `0.25`) | Window used **only** by the background-agent completion gates (`session.idle`, polling, and the restart reconcile probe). A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
+| `session_scoped`     | `boolean` | `true`            | Only current-session (and subagent) tasks drive `task-continuation-enforcer` directives. `false` → all project tasks considered. This option does not apply to the background completion gate, which is always session- and ancestry-scoped. |
+| `pollTimeoutMs`      | `number`   | `600000` (min `60000`) | Poll budget for blocking `task()` calls. Increase for agents that delegate to sub-agents. |
+
+**Why there are two staleness windows.** They serve different consumers whose
+failure costs differ, so one knob would be wrong for one of them.
+`stale_after_hours` stays at 24 hours for the enforcer: a long-running task is
+normal, and a missed continuation nudge is cheap. `background_stale_after_hours`
+defaults to 2 hours because a task holding `pending` or `in_progress` with no file
+activity while its worker has gone is a wedged handle, not a slow one, and the
+handle has to be released so the session can be considered complete. Both read
+the same basis (task-file mtime), and `background_stale_after_hours` is canonical
+only: there is no `morpheus.tasks` mirror of it. The wall-clock backstop is a
+separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0`
+(off).
+
+## MCPs
+
+Three built-in MCP servers (`src/mcp/`; names in `McpNameSchema`, `src/mcp/types.ts`): `websearch`, `context7`, `document_reader`. All enabled by default.
+
+- **websearch**: Real-time web search powered by [Exa AI](https://exa.ai) - searches the web and returns relevant content
+- **context7**: Fetches up-to-date official documentation for libraries
+- **document_reader**: Document extraction for PDFs and other files (used by the `document-reader` skill and the Construct agent)
+
+GitHub code search is provided by the native `github_search` tool (`src/tools/github-search/`, local `gh`/`git`/`rg` CLIs only, no third-party remote services).
+
+Don't want them? Disable via `disabled_mcps` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
+
+```json
+{
+  "disabled_mcps": ["websearch", "context7", "document_reader"]
+}
+```
+
+## Websearch
+
+Choose the websearch provider (`src/config/schema/websearch.ts`):
+
+```jsonc
+{
+  "websearch": {
+    "provider": "tavily"   // "exa" (default, no API key needed) | "tavily" (requires TAVILY_API_KEY)
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `provider` | `string` | `exa` | `exa` works without an API key; `tavily` needs `TAVILY_API_KEY`. |
+
+## Global Model and Auto-Update
+
+Two small top-level keys (`src/config/schema/matrixx-config.ts`):
+
+```jsonc
+{
+  "global_model": "opencode/qwen3.6-plus-free",  // fallback when an agent/category entry has no explicit model
+  "auto_update": true                             // default true — automatic update behavior in session hooks
+}
+```
+
+`global_model` satisfies the config validation in `src/plugin-config.ts` (`assertModelsResolvable`): any configured agent or category without its own `model` resolves against it instead of raising an error. `auto_update` is passed through as `autoUpdate` to the session hooks (`src/plugin/hooks/create-session-hooks.ts`).
+
+## Handoff Tool
+
+The built-in **handoff** tool preserves session state across OpenCode sessions by writing structured context to `.matrixx/handoff.md`. It supports four actions:
+
+- **create**: Write a structured handoff with YAML frontmatter (topics, goals, key files, decisions) and a markdown body
+- **read**: Load the current handoff content for context pickup in a new session
+- **archive**: Mark the active handoff as consumed (renames to `handoff.consumed.md`)
+- **list**: Show all handoff files in the `.matrixx/` directory
+
+No configuration is required — the tool is always available. Use the `/handoff` slash command to create a handoff, or `/pickup` to resume from one.
+
+## LSP
+
+OpenCode provides LSP tools for analysis.
+Matrixx adds refactoring tools (rename, code actions).
+All OpenCode LSP configs and custom settings (from `opencode.jsonc` / `opencode.json`) are supported, plus additional Matrixx-specific settings.
+For config discovery, `.jsonc` takes precedence over `.json` when both exist (applies to both `opencode.*` and `matrixx.*`).
+
+Add LSP servers via the OpenCode-native `lsp` option in `~/.config/opencode/opencode.jsonc` / `~/.config/opencode/opencode.json` (not `matrixx.jsonc` — Matrixx has no top-level `lsp` key; `src/config/schema/matrixx-config.ts` defines none):
+
+```json
+{
+  "lsp": {
+    "typescript-language-server": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx"],
+      "priority": 10
+    },
+    "pylsp": {
+      "disabled": true
+    }
+  }
+}
+```
+
+Each server supports: `command`, `extensions`, `priority`, `env`, `initialization`, `disabled`.
+
+| Option         | Type     | Default | Description                                                            |
+| -------------- | -------- | ------- | ---------------------------------------------------------------------- |
+| `command`       | array    | -       | Command to start the LSP server (executable + args)                          |
+| `extensions`    | array    | -       | File extensions this server handles (e.g., `[".ts", ".tsx"]`)               |
+| `priority`      | number   | -       | Server priority when multiple servers match a file                               |
+| `env`           | object   | -       | Environment variables for the LSP server (key-value pairs)                     |
+| `initialization`| object   | -       | Custom initialization options passed to the LSP server                        |
+| `disabled`      | boolean  | `false`  | Whether to disable this LSP server                                         |
+
+**Example with advanced options:**
+
+```json
+{
+  "lsp": {
+    "typescript-language-server": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx"],
+      "priority": 10,
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      },
+      "initialization": {
+        "preferences": {
+          "includeInlayParameterNameHints": "all",
+          "includeInlayFunctionParameterTypeHints": true
+        }
+      }
+    }
+  }
+}
+```
+
+## Experimental
+
+Opt-in experimental features that may change or be removed in future versions. Use with caution.
+
+```json
+{
+  "experimental": {
+    "truncate_all_tool_outputs": true,
+    "aggressive_truncation": true,
+    "auto_resume": true,
+    "preemptive_compaction": true,
+    "context_warning_threshold": 0.70,
+    "preemptive_compaction_threshold": 0.78,
+    "hashline_edit": true
+  }
+}
+```
+
+| Option                      | Default | Description                                                                                                                                                                                   |
+| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `task_system`               | `true`  | Legacy (deprecated: use [`tasks.enabled`](#tasks)) — fallback when `tasks.enabled` is unset. See [Task System](./task-system.md). |
+| `truncate_all_tool_outputs` | `false` | Truncates ALL tool outputs instead of just whitelisted tools (Grep, Glob, LSP, AST-grep). Tool output truncator is enabled by default - disable via `disabled_hooks`.                         |
+| `aggressive_truncation`     | `false` | When token limit is exceeded, aggressively truncates tool outputs to fit within limits. More aggressive than the default truncation behavior. Falls back to summarize/revert if insufficient. |
+| `auto_resume`               | `false` | Automatically resumes session after successful recovery from thinking block errors or thinking disabled violations. Extracts last user message and continues.                             |
+| `preemptive_compaction`     | `false` | Proactively compact context before hitting limits.                                                                                                                                          |
+| `context_warning_threshold` | `0.70`  | Warn threshold 0-1 for `context-window-monitor` (read-only, Anthropic only). Must be < `preemptive_compaction_threshold` or a warning is logged. 0.1-0.95. |
+| `preemptive_compaction_threshold` | `0.78`  | Proactive compaction trigger 0-1 for `preemptive-compaction`. Must exceed `context_warning_threshold`. 0.1-0.95. |
+| `plugin_load_timeout_ms`    | `10000` | Timeout in ms for `loadAllPluginComponents` during config handler init (min: 1000).                                                             |
+| `safe_hook_creation`        | `true` (at call site) | Wrap hook creation in try/catch to prevent one failing hook from crashing the plugin.                                                  |
+| `hashline_edit`             | `true` (at call site) | Enable hashline-anchored `Edit` tool (line#hash IDs) for non-plan files — `.matrixx/plans/*.md` must use `plan_update`.                                     |
+## Context Mode
+
+Enforce sandbox-based `ctx_*` tools (`ctx_batch_execute`, `ctx_search`, `ctx_execute`, `ctx_execute_file`, `ctx_fetch_and_index`, `ctx_index`) over raw `Read`/`Grep`/`Glob` for analysis. Discipline prompt is loaded at runtime from the installed `context-mode` package (`configs/opencode/AGENTS.md`, memoized `readFileSync` + fallback) when `ctx_*` tools are present. Dedicated `plan_*` tools (`plan_create/read/update/list/delete`) plus `plan_tasks` (compact manifest) cover `.matrixx/plans/*.md` — generic `Write`/`Edit` to plans is blocked. See [Context Management](./context-management.md) for the full 5-layer stack.
+
+```jsonc
+{
+  "context_mode": {
+    "enabled": true,      // default true — inject ctx_* discipline into prompts (runtime read + fallback)
+    "enforce": false,     // when true, blocks raw grep/glob via hook (read is WARN_ONLY, write is no-op)
+    "blocked_tools": ["grep", "glob"]  // tools to gate (add "read"/"bash" to also cover those)
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Inject context-mode discipline into agent prompts (runtime file + fallback). |
+| `enforce` | `boolean` | `false` | When `true`, `context-mode-enforcer` hook blocks `grep`/`glob` for analysis (`read` warns, `write` no-op) — forces `ctx_*` sandbox. |
+| `blocked_tools` | `string[]` | `["grep","glob"]` | Tools gated when `enforce:true` (`read` warn-only when listed; `write` ignored — no branch). |
+
+> Schema: `src/config/schema/context-mode.ts` (`ContextModeConfigSchema`, `additionalProperties:false` — no `disabled_tools` inside `context_mode`; use top-level `disabled_tools` to hide tools). Example: `matrixx.example.jsonc` § context_mode. Doctor: `doctor --check context-mode-integration` reports discipline path + version + plan tools.
+
+## Headroom
+
+Network-proxy compression via [Headroom](https://github.com/headroomlabs-ai/headroom) (`CacheAligner→ContentRouter→CCR`). Opt-in `headroom wrap opencode` proxy. See [Context Management §2.4](./context-management.md#24-headroom--network-proxy-compression).
+
+```jsonc
+{
+  "headroom": {
+    "enabled": false,                         // opt-in
+    "proxyUrl": "http://127.0.0.1:8787",     // HEADROOM_PROXY_URL override
+    "project": "my-project",                 // CCR scoping
+    "backend": "openai"                      // HEADROOM_BACKEND
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable Headroom proxy + `headroom_retrieve`/`headroom_stats` discipline. |
+| `proxyUrl` | `string` (url) | `http://127.0.0.1:8787` | Proxy URL. |
+| `project` | `string` | — | CCR scoping per project. |
+| `backend` | `string` | — | Maps to `HEADROOM_BACKEND`. |
+
+> Schema: `src/config/schema/headroom.ts`. Requires `headroom wrap opencode` — see [Context Management](./context-management.md).
+
+## RTK
+
+Bash output compression via [RTK](https://github.com/rtk-ai/rtk) (`rtk <cmd>` rewriting hook). 60-90% token savings on `git`/`npm`/`cargo`/test outputs.
+
+```jsonc
+{
+  "rtk": {
+    "enabled": false,
+    "binary_path": "rtk",      // optional — resolves via PATH
+    "timeout_ms": 5000           // 1000–30000
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable RTK bash-rewriter hook. |
+| `binary_path` | `string` | `rtk` | Path to `rtk` binary. |
+| `timeout_ms` | `number` | `5000` | Subprocess timeout (1000–30000). |
+
+> Schema: `src/config/schema/rtk.ts`. Install: `brew install rtk-ai/tap/rtk`.
+
+## DCP
+
+Dynamic Context Pruning — tiered pruning (`economy`/`balanced`/`performance`/`ultimate`) via [`@tarquinen/opencode-dcp`](https://github.com/tarquinen/opencode-dcp). Switch tiers by setting `dcp.default_profile` in `matrixx.jsonc` (applied on startup).
+
+```jsonc
+{
+  "dcp": {
+    "enabled": true,
+    "default_profile": "balanced",   // economy | balanced | performance | ultimate
+    "profiles": { /* builtin tiers; override per tier by profile name as key */ }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable DCP plugin bridge. Requires `@tarquinen/opencode-dcp` installed. |
+| `default_profile` | `string` | — | Default DCP tier. |
+| `profiles` | `object` | 4 built-in (`economy`/`balanced`/`performance`/`ultimate`) | Per-tier overrides keyed by profile name (`compress`/`strategies`/`commands`/`manualMode`/`pruneNotificationType`/`autoUpdate`/`debug`/`protectedFilePatterns`). |
+
+> Schema: `src/config/schema/dcp.ts` (~9.5k). Switch: set `dcp.default_profile` (applied on startup by `src/shared/dcp-switch-profile.ts`). Docs: [Context Management](./context-management.md).
+
+## Assembly
+
+Multi-model debate — 3-5 parallel voters from different providers, synthesis via reciprocal rank fusion.
+
+```jsonc
+{
+  "assembly": {
+    "enabled": false,           // default false — opt-in per call via assembly tool
+    "default_voters": 3,        // 2–5
+    "default_rounds": 2,        // 1–3
+    "timeout_ms": 60000,        // 10000–300000
+    "providers": [
+      { "providerID": "opencode", "modelID": "kimi-k2.5-free" },
+      { "providerID": "zai-coding-plan", "modelID": "glm-4.7" },
+      { "providerID": "opencode", "modelID": "qwen3.6-plus-free" }
+    ]
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable assembly tool globally. |
+| `providers` | `array` | — | Provider-model pairs for auto-selection. |
+| `default_voters` | `number` | — | Default voters (2–5). |
+| `default_rounds` | `number` | — | Default synthesis rounds (1–3). |
+| `timeout_ms` | `number` | — | Max wait per voter (10000–300000). |
+
+> Schema: `src/config/schema/assembly.ts` (`AssemblyConfigSchema`). Tool: `src/tools/assembly/`.
+
+## Evolution
+
+Self-evolution loop: watches tool execution traces, compresses them into reusable knowledge skills, and governs promotion with human approval. Default **off** (`evolution.enabled: false` = zero overhead).
+
+```jsonc
+{
+  "evolution": {
+    "enabled": false,
+    "watcher": { "maxArgChars": 4000, "maxOutputChars": 8000, "skipTools": ["evolution-watcher", "evolution-compressor"] },
+    "compressor": { "provider": "llm", "minTraces": 5, "maxInputTokens": 32000, "trigger": "both" },
+    "writer": { "outputDir": ".matrixx/evolution/skills", "globalSkills": false, "allowToolGeneration": false, "allowAgentGeneration": false },
+    "governance": { "requireApproval": true, "autoPromote": false, "autoPromoteThreshold": 0.85, "minConfidence": 0.7 },
+    "retention": { "traceDays": 30, "maxPending": 50 },
+    "budget": { "maxCompressionsPerHour": 10, "maxCostCentsPerDay": 100 }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Master switch. All hooks and tools are disabled when `false`. |
+| `watcher.maxArgChars` | `number` | `4000` | Max characters captured from tool arguments per trace. |
+| `watcher.maxOutputChars` | `number` | `8000` | Max characters captured from tool outputs per trace. |
+| `watcher.skipTools` | `string[]` | `["evolution-watcher","evolution-compressor"]` | Tools excluded from trace capture (recursion guard). |
+| `compressor.provider` | `"llm" \| "dspy-gepa"` | `"llm"` | Compression backend. `dspy-gepa` is a placeholder for future use. |
+| `compressor.model` | `string?` | main model | Override the LLM model used for compression. |
+| `compressor.minTraces` | `number` | `5` | Minimum traces required before compression triggers. |
+| `compressor.maxInputTokens` | `number` | `32000` | Truncation cap for the compressor prompt. |
+| `compressor.trigger` | `"compacting" \| "idle" \| "both"` | `"both"` | Which session events fire the compressor. |
+| `writer.outputDir` | `string` | `".matrixx/evolution/skills"` | Directory for staged skill artifacts. |
+| `writer.globalSkills` | `boolean` | `false` | Also write promoted skills to `~/.agents/skills/`. |
+| `writer.allowToolGeneration` | `boolean` | `false` | Allow generation of new tools (gated). |
+| `writer.allowAgentGeneration` | `boolean` | `false` | Allow generation of new agents (gated). |
+| `governance.requireApproval` | `boolean` | `true` | Require human approval before promoting a skill. |
+| `governance.autoPromote` | `boolean` | `false` | Silently promote high-confidence skills without approval. |
+| `governance.autoPromoteThreshold` | `number` | `0.85` | Minimum confidence for auto-promotion. |
+| `governance.minConfidence` | `number` | `0.7` | Minimum confidence to stage a skill for approval. |
+| `retention.traceDays` | `number` | `30` | Days to retain trace JSONL files. Cleanup runs on compressor idle. |
+| `retention.maxPending` | `number` | `50` | Maximum pending proposals. Pipeline returns `max-pending` when full. |
+| `budget.maxCompressionsPerHour` | `number` | `10` | Hourly compression throttle. |
+| `budget.maxCostCentsPerDay` | `number` | `100` | Daily cost cap in cents. When exceeded, the paid LLM path is blocked but the free offline heuristic still runs. Resets on UTC day rollover. |
+
+**Enforcement behavior:**
+
+- **Pending queue full** (`>= maxPending`): pipeline returns `{ reason: "max-pending" }`, compressor not invoked.
+- **Daily cost exceeded** (`>= maxCostCentsPerDay`): LLM compressor is replaced by free offline heuristic (no charge recorded).
+- **Hourly cap exceeded**: compression skipped via `shouldThrottle`.
+
+> Schema: `src/config/schema/evolution.ts`. Tool: `src/tools/evolution/` (actions: `list`, `get`, `approve`, `reject`, `status`, `search`, `get_context`). Full docs: [Evolution](evolution.md).
+
+## Security
+
+Three-tier security: reactive hooks + policies + Sentinel agent. Hooks run first in pipeline (`position: pre`).
+
+```jsonc
+{
+  "security": {
+    "secret_scanning": { "enabled": true, "tool": "gitleaks", "block_on_detection": true },
+    "env_file_guard": { "enabled": true },
+    "dependency_audit": { "enabled": false },
+    "input_secret_guard": {
+      "enabled": true,
+      "mode": "prompt",
+      "blocklist_mode": "prompt",
+      "warnlist_mode": "prompt",
+      "allowlist_patterns": ["sk-test-.*"],
+      "detection": { "entropy_threshold": 4.5, "max_scan_bytes": 65536 }
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `secret_scanning.enabled` | `boolean` | `true` | Intercept `git commit`/`push`, run gitleaks, block on secrets. |
+| `secret_scanning.tool` | `string` | `gitleaks` | Scanner binary. |
+| `secret_scanning.block_on_detection` | `boolean` | `true` | Block commit/push when secrets found. |
+| `env_file_guard.enabled` | `boolean` | `true` | Block agent writes to `.env`/`*.pem`/`*.key`/`credentials.json`/`id_rsa` (+14 patterns). |
+| `dependency_audit.enabled` | `boolean` | `false` | Enable CVE/SBOM dependency audit (Sentinel). |
+| `input_secret_guard.enabled` | `boolean` | `true` | Detect secrets in `chat.message` before LLM send (local-only, RE2). Secure-by-default. |
+| `input_secret_guard.mode` | `"prompt" \| "block" \| "off"` | `"prompt"` | Global behaviour: `prompt`=require_approval (default, secure), `block`=hard block (no Allow Once), `off`=always continue (warn only, opt-in). |
+| `input_secret_guard.blocklist_mode` | `"prompt" \| "block"` | `"prompt"` | Action for deterministic blocklist (30 gitleaks rules: `sk-proj-`, `ghp_`, `AKIA`, PEM, JWT). Never `off`. |
+| `input_secret_guard.warnlist_mode` | `"prompt" \| "off"` | `"prompt"` | Action for heuristic warnlist (keyword proximity + entropy>4.5). |
+| `input_secret_guard.allowlist_patterns` | `string[]` | — | RE2 patterns suppressing detection for that span (e.g. `"sk-test-.*"`). |
+| `input_secret_guard.detection.entropy_threshold` | `number` | `4.5` | Shannon entropy gate (0-8) for high-entropy token heuristic. |
+| `input_secret_guard.detection.max_scan_bytes` | `number` | `65536` | Cap scan slice (1024-262144, default 64KB). |
+
+> Schema: `src/config/schema/security.ts`. Auditor: Sentinel agent (`security-*` skills). Hook: `secret-leak-guard` + `env-file-write-guard` + `input-secret-guard` (`chat.message`, local-only).
+
+### Input Secret Guard (`chat.message`)
+
+Guards **accidental paste** of API keys / passwords / private keys before they reach the LLM provider (irreversible sink, CWE-359). Like GitHub push protection: `Found 1 secret (openai-api-key: sk-proj…XXXX). Remove or confirm to send.`
+
+* **Hook**: `input-secret-guard` — runs **first** in `chat.message` chain, before `keyword-detector`. Throw blocks delivery to LLM.
+* **Detection** (local-only, <50 ms, RE2, zero network): tiered blocklist (~30 vendored gitleaks rules, near-zero FP) + warnlist (`local_heuristic`: keyword proximity `api_key|secret|password\s*[:=]` + Shannon entropy>4.5). `llm_judgement` is **rejected** (circular disclosure) — `local_heuristic` is the safe replacement.
+* **Redaction**: Toast / log / chat injection show `AKIA…XXXX` (4-char prefix/suffix, PEM replaced), never raw secret. `hashFinding` keys cache, never raw value. No persistence to tasks/handoff/logs.
+* **Allow flows**: `Allow Once` (one-shot `sessionID:hash`), `Allow Session` (session-scoped `Map`), `Block & Redact` (recommended). User replies `allow once` / `allow session` after block; confirmed via `session-allow-cache.ts` (in-memory `Map`, no disk, cleared on restart).
+* **Ordering**: `inputSecretGuard` → `stopContinuationGuard` → `keywordDetector` → `autoSlashCommand` → `startWork`.
+
+| `mode` | Behaviour | Warnlist |
+|--------|-----------|----------|
+| `prompt` (default) |  Block + redacted toast; require `allow once`/`allow session` or redact | Respects `warnlist_mode` |
+| `block` | Hard block, no Allow Once (only redact & resend) | Blocklist `block` only |
+| `off` | **Always continue** — detect but do not interrupt. ⚠️ **Warning**: disables protection; opt-in only, shows toast warning in docs. Not default. | `warnlist_mode: off` silences heuristic |
+
+> ⚠️ `mode: "off"` disables prompting for warnlist findings and should only be used if you accept the risk and rely on external review. Blocklist findings still prompt unless `enabled: false` (global kill-switch). Rotate any key that was sent without approval — the guard mitigates *future* disclosure, not past.
+
+To opt out per hook:
+
+```jsonc
+{
+  "disabled_hooks": ["input-secret-guard"]
+}
+```
+
+Redacted preview example: `openai-api-key: sk-proj…XXXX`, `aws-access-key: AKIA…XXXX`, `private-key-generic: -----BEGIN PRIVATE KEY----- …[REDACTED]`. Logs: `{sessionID, findingCount, redactedPreview, elapsedMs}` — no raw secret.
+
+
+## Evolution (Self-Evolution)
+
+Opt-in trace-driven skill evolution — watcher captures traces, compressor synthesizes, writer generates skills, governance approves, retention/budget gate.
+
+> **Gating**: evolution hooks (`evolution-watcher`, `evolution-compressor`, `evolution-hitl`) are only registered when `evolution.enabled: true` (default `false` — zero hook overhead when disabled). The quality gate `passesQualityGate()` is a pure function called inline by `pipeline.ts`, not a registered hook. **BREAKING**: `evolution-quality-gate` was never a functional hook name and was removed from the schema (61→60); remove it from `disabled_hooks` if present (it never had effect).
+
+```jsonc
+{
+  "evolution": {
+    "enabled": false,
+    "watcher": { "maxArgChars": 4000, "maxOutputChars": 8000 },
+    "compressor": { "provider": "llm" },
+    "writer": { "outputDir": ".matrixx/evolution/skills" },
+    "governance": { "requireApproval": true },
+    "retention": { "maxTraces": 1000 },
+    "budget": { "maxCostPerRun": 1.0 }
+  }
+}
+```
+
+| Sub-config | Key fields | Default | Description |
+|------------|------------|---------|-------------|
+| `enabled` | `boolean` | `false` | Master toggle for self-evolution loop. |
+| `watcher` | `maxArgChars`, `maxOutputChars`, `skipTools` | `4000`, `8000`, `["evolution-watcher","evolution-compressor"]` | Trace capture. |
+| `compressor` | `provider` (`llm`\|`dspy-gepa`), `minTraces`, `maxInputTokens` | `llm`, `5`, `32000` | Trace synthesis. |
+| `writer` | `outputDir`, `globalSkills`, `allowToolGeneration`, `allowAgentGeneration` | `.matrixx/evolution/skills`, `false`, `false`, `false` | Skill generation. |
+| `governance` | `requireApproval` | `true` | Human approval before promotion. |
+| `retention` | `maxTraces`, `maxPending` | `1000` | Trace/proposal retention. |
+| `budget` | `maxCostPerRun` | `1.0` | Compression cost throttle. |
+
+> Schema: `src/config/schema/evolution.ts` (6 sub-schemas). Full docs: [Evolution](./evolution.md). Commands: `/evolution` (approve/reject/list/audit).
+
+## Matrix Loop
+
+Self-referential development loop — agent iterates until completion criteria met.
+
+```jsonc
+{
+  "matrix_loop": {
+    "enabled": false,
+    "default_max_iterations": 10,
+    "state_dir": ".matrixx/matrix-loop"
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable matrix-loop hook. |
+| `default_max_iterations` | `number` | `10` | Default max iterations per loop. |
+| `state_dir` | `string` | `.matrixx/matrix-loop` | State directory. |
+
+> Schema: `src/config/schema/matrix-loop.ts`.
+
+## Babysitting
+
+Unstable-agent monitoring — forces background mode for flaky providers (auto-enabled for known-flaky model families).
+
+```jsonc
+{
+  "babysitting": {
+    "timeout_ms": 30000
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `timeout_ms` | `number` | `30000` | Monitoring timeout for unstable agents. |
+
+> Schema: `src/config/schema/babysitting.ts`.
+
+## TDD Enforcer
+
+Enforce test-driven development — `*.test.ts` alongside source, BDD comments, fail→implement→pass→refactor.
+
+```jsonc
+{
+  "tdd_enforcer": {
+    "enabled": false
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable TDD enforcer hook. |
+
+> Schema: `src/config/schema/tdd-enforcer.ts`. Skill: `tdd-enforcer`.
+
+## Runtime Fallback
+
+Provider fallback on transient errors — retry with next provider in chain.
+
+```jsonc
+{
+  "runtime_fallback": {
+    "enabled": true,
+    "retry_on_errors": ["rate_limit", "timeout"],
+    "max_fallback_attempts": 3
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable runtime fallback. |
+| `retry_on_errors` | `string[]` | `["rate_limit","timeout"]` | Error types to retry. |
+| `max_fallback_attempts` | `number` | `3` | Max fallback attempts per call. |
+
+> Schema: `src/config/schema/runtime-fallback.ts`.
+
+## Additional Top-Level Keys
+
+Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
+
+```jsonc
+{
+  "default_run_agent": "morpheus",  // default agent for `matrixx run` (env: OPENCODE_DEFAULT_AGENT)
+  "new_task_system_enabled": true,  // DEPRECATED no-op — parsed, ignored, warns once. Remove it.
+  "disabled_tools": ["webfetch"],  // hide specific tools by name
+  "task": { "pollTimeoutMs": 600000 },  // LEGACY (deprecated: use tasks.pollTimeoutMs)
+  "agent_definitions": ["./my-agents/extra.ts"],  // paths to external agent definition files
+  "matrixx_self_config": { "enabled": false, "proactive": false },  // opt-in self-config skill
+  "knowledge": {  // external knowledge hubs (see Knowledge Hub doc)
+    "hubs": [{ "name": "kb", "path": "<your-knowledge-dir>", "index": "_index.md", "scope": "global", "mode": "router-only" }]
+  },
+  "modelRequirements": {  // config-driven agent/category model requirements
+    "agents": { "oracle": { "fallbackChain": [{ "providers": ["zai-coding-plan"], "model": "glm-4.7" }] } }
+  },
+  "complexityDowngrades": { "bullet-time": { "hard": "opencode/ling-3.0-flash-free" } },  // per-category downgrade targets (<provider>/<model>)
+  "_migrations": ["model-v2"]  // migration history (prevents re-applying migrations)
+}
+```
+
+| Key | Schema | Default | Notes |
+|-----|--------|---------|-------|
+| `default_run_agent` | `string` | — | `src/config/schema/matrixx-config.ts:50`. |
+| `new_task_system_enabled` | `boolean` | — | **Retained-deprecated.** Oldest alias of the removed task-system switch. Parsed, ignored, warns once. Remove it; see `docs/legacy-todo-migration.md`. |
+| `disabled_tools` | `string[]` | — | Top-level tool hiding (also referenced by `context_mode` docs). |
+| `task` | `TaskConfigSchema` (`src/config/schema/task.ts`) | — | Legacy; only `pollTimeoutMs` (min `60000`). Use `tasks.pollTimeoutMs`. |
+| `agent_definitions` | `string[]` | — | `AgentDefinitionsConfigSchema` (`src/config/schema/agent-definitions.ts`). |
+| `matrixx_self_config` | `MatrixxSelfConfigSkillConfigSchema` (`src/config/schema/matrixx-self-config.ts`) | `enabled: false, proactive: false` | Opt-in. |
+| `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`). |
+| `modelRequirements` | `ModelRequirementsSchema` (`src/config/schema/model-config.ts`) | — | `agents`/`categories` maps with `fallbackChain` (`providers[]` + `model`), `requiresModel`, `requiresAnyModel`, `requiresProvider`, `variant`. |
+| `complexityDowngrades` | `ComplexityDowngradesSchema` (`src/config/schema/model-config.ts`) | — | Nested maps to `<provider>/<model>` values. |
+| `_migrations` | `string[]` | — | Internal migration history. |
+
+## Environment Variables
+
+
+| Variable              | Description                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENCODE_CONFIG_DIR` | Override the OpenCode configuration directory. Useful for profile isolation with tools like [OCX](https://github.com/kdcokenny/ocx) ghost mode. |

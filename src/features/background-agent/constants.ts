@@ -1,0 +1,68 @@
+import type { PluginInput } from "@opencode-ai/plugin"
+import type { BackgroundTask, LaunchInput } from "./types"
+
+export const TASK_TTL_MS = 30 * 60 * 1000
+export const MIN_STABILITY_TIME_MS = 10 * 1000
+export const DEFAULT_STALE_TIMEOUT_MS = 180_000
+export const DEFAULT_MESSAGE_STALENESS_TIMEOUT_MS = 600_000
+export const DEFAULT_MAX_TOOL_CALLS = 4000
+export const DEFAULT_CIRCUIT_BREAKER_CONSECUTIVE_THRESHOLD = 20
+export const DEFAULT_CIRCUIT_BREAKER_ENABLED = true
+export const MIN_RUNTIME_BEFORE_STALE_MS = 30_000
+export const MIN_IDLE_TIME_MS = 5000
+export const POLLING_INTERVAL_MS = 3000
+export const PRUNE_THROTTLE_MS = 30_000
+export const TASK_CLEANUP_DELAY_MS = 10 * 60 * 1000
+export const DEFAULT_ADMISSION_TIMEOUT_MS = 0
+export const DEFAULT_WALL_CLOCK_TIMEOUT_MS = 0
+export const DEFAULT_WALL_CLOCK_ABORT_GRACE_MS = 5000
+export const DEFAULT_NESTED_ADMISSION_ENABLED = true
+export const DEFAULT_NESTED_ADMISSION_MODE = "bypass" as const
+export const DEFAULT_NESTED_MAX_DEPTH = 2
+// Wake scheduler is opt-in (default OFF) to conserve tokens: the periodic
+// <system-reminder> nudge costs context on every idle parent. Enable via
+// background_task.wakeScheduler.enabled = true.
+export const DEFAULT_WAKE_SCHEDULER_ENABLED = false
+export const DEFAULT_WAKE_INTERVAL_MS = 300000
+export const MIN_WAKE_INTERVAL_MS = 60000
+export const DEFAULT_JOB_BOARD_ENABLED = true
+export const DEFAULT_JOB_BOARD_STRATEGY = "latest" as const
+// Lower snapshot retention bounds job-board ledger growth (token conservation).
+export const DEFAULT_MAX_RETAINED_SNAPSHOTS = 10
+export const RECONCILE_CONFIRMATION_GRACE_MS = 5000
+
+export type ProcessCleanupEvent = NodeJS.Signals | "beforeExit" | "exit"
+
+export type OpencodeClient = PluginInput["client"]
+
+export interface MessagePartInfo {
+  sessionID?: string
+  type?: string
+  tool?: string
+}
+
+export interface EventProperties {
+  sessionID?: string
+  info?: { id?: string }
+  [key: string]: unknown
+}
+
+export interface Todo {
+  content: string;
+  status: string;
+  priority: string;
+  id?: string;
+}
+
+export interface QueueItem {
+  task: BackgroundTask
+  input: LaunchInput
+}
+
+export interface SubagentSessionCreatedEvent {
+  sessionID: string
+  parentID: string
+  title: string
+}
+
+export type OnSubagentSessionCreated = (event: SubagentSessionCreatedEvent) => Promise<void>

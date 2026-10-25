@@ -1,0 +1,24 @@
+apiVersion: 1
+datasources:
+  - name: InfluxDB-Flux
+    type: influxdb
+    jsonData:
+      version: Flux
+
+panels:
+  - title: write points
+    targets:
+      - query: |
+          from(bucket: "market")
+            |> range(start: v.timeRangeStart)
+            |> to(bucket: "out")
+  - title: joined view
+    targets:
+      - query: |
+          a = from(bucket: "market") |> range(start: v.timeRangeStart)
+          b = from(bucket: "market") |> range(start: v.timeRangeStart)
+          join(tables: {a: a, b: b}, on: ["_time"])
+  - title: empty series
+    targets:
+      - query: 'from(bucket: "market") |> range(start: v.timeRangeStart)'
+        createEmpty: true

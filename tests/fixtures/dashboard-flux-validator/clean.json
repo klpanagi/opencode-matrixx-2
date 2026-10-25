@@ -1,0 +1,29 @@
+{
+  "title": "market health",
+  "templating": {
+    "list": [
+      {
+        "name": "symbol",
+        "type": "query",
+        "datasource": { "type": "influxdb", "uid": "influx" },
+        "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"market\", tag: \"symbol\")"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Staleness (s)",
+      "datasource": { "type": "influxdb", "uid": "influx" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "special", "options": {} }]
+        }
+      },
+      "targets": [
+        {
+          "query": "from(bucket: \"market\")\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) => r._measurement == \"staleness\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")"
+        }
+      ]
+    }
+  ]
+}

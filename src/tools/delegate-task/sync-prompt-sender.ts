@@ -1,0 +1,106 @@
+import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
+import {
+  promptSyncWithModelSuggestionRetry,
+  promptWithModelSuggestionRetry,
+} from "../../shared/model-suggestion-retry"
+import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
+import { isPlanFamily } from "./constants"
+import { formatDetailedError } from "./error-formatting"
+import type { DelegateTaskArgs, OpencodeClient } from "./types"
+
+type SendSyncPromptDeps = {
+  promptWithModelSuggestionRetry: typeof promptWithModelSuggestionRetry
+  promptSyncWithModelSuggestionRetry: typeof promptSyncWithModelSuggestionRetry
+}
+
+const sendSyncPromptDeps: SendSyncPromptDeps = {
+  promptWithModelSuggestionRetry,
+  promptSyncWithModelSuggestionRetry,
+}
+
+function isOracleAgent(agentToUse: string): boolean {
+  return agentToUse.toLowerCase() === "oracle"
+}
+
+function isUnexpectedEofError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error)
+  const lowered = message.toLowerCase()
+  return lowered.includes("unexpected eof") || lowered.includes("json parse error")
+}
+
+export async function sendSyncPrompt(
+  client: OpencodeClient,
+  input: {
+    sessionID: string
+    agentToUse: string
+    args: DelegateTaskArgs
+    systemContent: string | undefined
+    categoryModel: { providerID: string; modelID: string; variant?: string; temperature?: number } | undefined
+    toastManager: { removeTask: (id: string) => void } | null | undefined
+    taskId: string | undefined
+  },
+  deps: SendSyncPromptDeps = sendSyncPromptDeps
+): Promise<string | null> {
+  const allowTask = isPlanFamily(input.agentToUse)
+  const tools = {
+    task: allowTask,
+    question: false,
+    ...getAgentToolRestrictions(input.agentToUse),
+  }
+  setSessionTools(input.sessionID, tools)
+
+  if (input.categoryModel?.temperature !== undefined) {
+    setSessionTemperature(input.sessionID, input.categoryModel.temperature)
+  }
+
+  const promptArgs = {
+    path: { id: input.sessionID },
+    body: {
+      agent: input.agentToUse,
+      system: input.systemContent,
+      tools,
+      parts: [{ type: "text", text: input.args.prompt }],
+      ...(input.categoryModel
+        ? { model: { providerID: input.categoryModel.providerID, modelID: input.categoryModel.modelID } }
+        : {}),
+      ...(input.categoryModel?.variant ? { variant: input.categoryModel.variant } : {}),
+    },
+  }
+
+  try {
+    await deps.promptWithModelSuggestionRetry(client, promptArgs)
+  } catch (promptError) {
+    let lastError = promptError
+    if (isOracleAgent(input.agentToUse) && isUnexpectedEofError(promptError)) {
+      try {
+        await deps.promptSyncWithModelSuggestionRetry(client, promptArgs)
+        return null
+      } catch (oracleRetryError) {
+        lastError = oracleRetryError
+      }
+    }
+
+    if (input.toastManager && input.taskId !== undefined) {
+      input.toastManager.removeTask(input.taskId)
+    }
+    const errorMessage = lastError instanceof Error ? lastError.message : String(lastError)
+    if (errorMessage.includes("agent.name") || errorMessage.includes("undefined")) {
+      return formatDetailedError(new Error(`Agent "${input.agentToUse}" not found. Make sure the agent is registered in your opencode.json or provided by a plugin.`), {
+        operation: "Send prompt to agent",
+        args: input.args,
+        sessionID: input.sessionID,
+        agent: input.agentToUse,
+        category: input.args.category,
+      })
+    }
+    return formatDetailedError(lastError, {
+      operation: "Send prompt",
+      args: input.args,
+      sessionID: input.sessionID,
+      agent: input.agentToUse,
+      category: input.args.category,
+    })
+  }
+
+  return null
+}

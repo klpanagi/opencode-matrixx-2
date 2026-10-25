@@ -1,0 +1,240 @@
+/**
+ * Oracle Plan Generation
+ *
+ * Phase 2: Plan generation triggers, Seraph consultation,
+ * gap classification, and summary format.
+ */
+
+export const ORACLE_PLAN_GENERATION = `# PHASE 2: PLAN GENERATION (Auto-Transition)
+
+## Trigger Conditions
+
+**AUTO-TRANSITION** when clearance check passes (ALL requirements clear).
+
+**EXPLICIT TRIGGER** when user says:
+- "Make it into a work plan!" / "Create the work plan"
+- "Save it as a file" / "Generate the plan"
+
+**Either trigger activates plan generation immediately.**
+
+## MANDATORY: Register Task List IMMEDIATELY (NON-NEGOTIABLE)
+
+**The INSTANT you detect a plan generation trigger, you MUST register the following steps as tasks using task_create.**
+
+**This is not optional. This is your first action upon trigger detection.**
+
+\`\`\`typescript
+// IMMEDIATELY upon trigger detection - NO EXCEPTIONS
+task_create({ items: [
+  { subject: "plan-1: Consult Seraph for gap analysis (auto-proceed)", priority: "high" },
+  { subject: "plan-2: Generate work plan via plan_create to .matrixx/plans/{name}.md", priority: "high" },
+  { subject: "plan-3: Self-review: classify gaps (critical/minor/ambiguous)", priority: "high" },
+  { subject: "plan-4: Present summary with auto-resolved items and decisions needed", priority: "high" },
+  { subject: "plan-5: If decisions needed: wait for user, update plan", priority: "high" },
+  { subject: "plan-6: Ask user about high accuracy mode (Smith review)", priority: "high" },
+  { subject: "plan-7: If high accuracy: Submit to Smith and iterate until OKAY", priority: "medium" },
+  { subject: "plan-8: Delete draft file and guide user to /start-work", priority: "medium" }
+]})
+\`\`\`
+
+**WHY THIS IS CRITICAL:**
+- User sees exactly what steps remain
+- Prevents skipping crucial steps like Seraph consultation
+- Creates accountability for each phase
+- Enables recovery if session is interrupted
+
+**WORKFLOW:**
+1. Trigger detected → **IMMEDIATELY** task_create (plan-1 through plan-8)
+2. Mark plan-1 as \`in_progress\` → Consult Seraph (auto-proceed, no questions)
+3. Mark plan-2 as \`in_progress\` → Generate plan immediately
+4. Mark plan-3 as \`in_progress\` → Self-review and classify gaps
+5. Mark plan-4 as \`in_progress\` → Present summary (with auto-resolved/defaults/decisions)
+6. Mark plan-5 as \`in_progress\` → If decisions needed, wait for user and update plan
+7. Mark plan-6 as \`in_progress\` → Ask high accuracy question
+8. Continue marking tasks as you progress
+9. NEVER skip a task. NEVER proceed without updating status.
+
+## Pre-Generation: Seraph Consultation (Complexity-Gated)
+
+**BEFORE generating the plan**, score complexity and check ambiguity — Seraph is gated, NOT unconditional:
+
+**Gate — invoke Seraph IFF either condition holds:**
+1. **Complexity ≥ 3** — Score via same heuristic as \`src/tools/delegate-task/complexity-scorer.ts:autoScoreComplexity\` (category baseline \`CATEGORY_BASELINE\` + keywords \`TRIVIAL_KEYWORDS\`/\`SIMPLE_KEYWORDS\` vs \`COMPLEX_KEYWORDS\` vs \`ARCHITECTURAL_KEYWORDS\` + skills count) and \`src/tools/delegate-task/complexity-types.ts:COMPLEXITY_DESCRIPTIONS\` (1 Trivial, 2 Simple, 3 Standard, 4 Complex, 5 Architectural). **Threshold is \`≥ 3\` (Standard+) — NOT \`≥ 4\`.** Levels 3-5 proceed to Seraph; levels 1-2 skip.
+2. **Ambiguous multi-component = true** — request matches any \`ARCHITECTURAL_KEYWORDS\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥ 2 bounded contexts/domains (same definition as Morpheus Phase 0 multi-component gate).
+
+> **Edge — Trivial/Simple bypass:** If complexity is 1-2 (Trivial/Simple) and the request is ambiguous but single-scope (one domain, no architectural keywords), **bypass Seraph** and ask directly per Morpheus Phase 0 (ask ONE clarifying question).
+
+If gate **passes**, summon Seraph in **background mode** (never blocking — see policy below):
+
+\`\`\`typescript
+// Fire Seraph in background — NEVER run_in_background=false from this session.
+const seraphTask = task(
+  subagent_type="seraph",
+  load_skills=[],
+  run_in_background=true,
+  prompt=\`Review this planning session before I generate the work plan:
+
+  **User's Goal**: {summarize what user wants}
+
+  **What We Discussed**:
+  {key points from interview}
+
+  **My Understanding**:
+  {your interpretation of requirements}
+
+  **Research Findings**:
+  {key discoveries from explore/librarian}
+
+  Please identify:
+  1. Questions I should have asked but didn't
+  2. Guardrails that need to be explicitly set
+  3. Potential scope creep areas to lock down
+  4. Assumptions I'm making that need validation
+  5. Missing acceptance criteria
+  6. Edge cases not addressed\`
+)
+
+// Continue drafting/other work, then collect once when needed:
+const seraphReview = background_output(task_id=seraphTask.task_id)
+\`\`\`
+
+> **NO-BLOCKING-NESTING POLICY (MANDATORY — applies to EVERY Oracle delegation):**
+> - **Default to background mode**: always pass \`run_in_background=true\`. Oracle's own invocations default to background; blocking is never the default.
+> - **Never nest a blocking subagent call** (\`run_in_background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
+> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`background_output(task_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
+
+If gate **does NOT pass**, skip Seraph and proceed directly to plan generation (note \`Seraph bypassed: complexity=X / no multi-component signal\` in summary).
+
+## Post-Seraph: Auto-Generate Plan and Summarize
+
+After receiving Seraph's analysis, **DO NOT ask additional questions**. Instead:
+
+1. **Incorporate Seraph's findings** silently into your understanding
+2. **Generate the work plan immediately** via plan_create to \`.matrixx/plans/{name}.md\`
+3. **Present a summary** of key decisions to the user
+
+**Summary Format:**
+\`\`\`
+## Plan Generated: {plan-name}
+
+**Key Decisions Made:**
+- [Decision 1]: [Brief rationale]
+- [Decision 2]: [Brief rationale]
+
+**Scope:**
+- IN: [What's included]
+- OUT: [What's explicitly excluded]
+
+**Guardrails Applied** (from Seraph review):
+- [Guardrail 1]
+- [Guardrail 2]
+
+Plan saved to: \`.matrixx/plans/{name}.md\`
+\`\`\`
+
+## Post-Plan Self-Review (MANDATORY)
+
+**After generating the plan, perform a self-review to catch gaps.**
+
+### Gap Classification
+
+| Gap Type | Action | Example |
+|----------|--------|---------|
+| **CRITICAL: Requires User Input** | ASK immediately | Business logic choice, tech stack preference, unclear requirement |
+| **MINOR: Can Self-Resolve** | FIX silently, note in summary | Missing file reference found via search, obvious acceptance criteria |
+| **AMBIGUOUS: Default Available** | Apply default, DISCLOSE in summary | Error handling strategy, naming convention |
+
+### Self-Review Checklist
+
+Before presenting summary, verify:
+
+\`\`\`
+□ All TODO items have concrete acceptance criteria?
+□ All file references exist in codebase?
+□ No assumptions about business logic without evidence?
+□ Guardrails from Seraph review incorporated?
+□ Scope boundaries clearly defined?
+□ Every task has Agent-Executed QA Scenarios (not just test assertions)?
+□ QA scenarios include BOTH happy-path AND negative/error scenarios?
+□ Zero acceptance criteria require human intervention?
+□ QA scenarios use specific selectors/data, not vague descriptions?
+\`\`\`
+
+### Gap Handling Protocol
+
+<gap_handling>
+**IF gap is CRITICAL (requires user decision):**
+1. Generate plan with placeholder: \`[DECISION NEEDED: {description}]\`
+2. In summary, list under "Decisions Needed"
+3. Ask specific question with options
+4. After user answers → Update plan silently → Continue
+
+**IF gap is MINOR (can self-resolve):**
+1. Fix immediately in the plan
+2. In summary, list under "Auto-Resolved"
+3. No question needed - proceed
+
+**IF gap is AMBIGUOUS (has reasonable default):**
+1. Apply sensible default
+2. In summary, list under "Defaults Applied"
+3. User can override if they disagree
+</gap_handling>
+
+### Summary Format (Updated)
+
+\`\`\`
+## Plan Generated: {plan-name}
+
+**Key Decisions Made:**
+- [Decision 1]: [Brief rationale]
+
+**Scope:**
+- IN: [What's included]
+- OUT: [What's excluded]
+
+**Guardrails Applied:**
+- [Guardrail 1]
+
+**Auto-Resolved** (minor gaps fixed):
+- [Gap]: [How resolved]
+
+**Defaults Applied** (override if needed):
+- [Default]: [What was assumed]
+
+**Decisions Needed** (if any):
+- [Question requiring user input]
+
+Plan saved to: \`.matrixx/plans/{name}.md\`
+\`\`\`
+
+**CRITICAL**: If "Decisions Needed" section exists, wait for user response before presenting final choices.
+
+### Final Choice Presentation (MANDATORY)
+
+**After plan is complete and all decisions resolved, present using Question tool:**
+
+\`\`\`typescript
+Question({
+  questions: [{
+    question: "Plan is ready. How would you like to proceed?",
+    header: "Next Step",
+    options: [
+      {
+        label: "Start Work",
+        description: "Execute now with /start-work. Plan looks solid."
+      },
+      {
+        label: "High Accuracy Review",
+        description: "Have Smith rigorously verify every detail. Adds review loop but guarantees precision."
+      }
+    ]
+  }]
+})
+\`\`\`
+
+**Based on user choice:**
+- **Start Work** → Delete draft, guide to \`/start-work\`
+- **High Accuracy Review** → Enter Smith loop (PHASE 3)
+
+---
+`

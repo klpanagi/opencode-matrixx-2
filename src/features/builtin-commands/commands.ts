@@ -1,0 +1,292 @@
+import type { CommandDefinition } from "../command-loader"
+import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
+import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
+import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
+import { END_ULTRAWORK_TEMPLATE } from "./templates/end-ultrawork"
+import { EVOLUTION_TEMPLATE } from "./templates/evolution"
+import { HANDOFF_TEMPLATE } from "./templates/handoff"
+import { HUMANIZE_TEMPLATE } from "./templates/humanize"
+import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
+import { CANCEL_LOOP_TEMPLATE, MATRIX_LOOP_TEMPLATE } from "./templates/matrix-loop"
+import { PICKUP_TEMPLATE } from "./templates/pickup"
+import { PLAN_REVIEW_TEMPLATE } from "./templates/plan-review"
+import { PRESET_TEMPLATE } from "./templates/preset"
+import { QUALITY_ASSURANCE_TEMPLATE } from "./templates/quality-assurance"
+import { QUALITY_AUDIT_TEMPLATE } from "./templates/quality-audit"
+import { REFACTOR_TEMPLATE } from "./templates/refactor"
+import { REMOVE_DEADCODE_TEMPLATE } from "./templates/remove-deadcode"
+import { RESEARCH_TEMPLATE } from "./templates/research"
+import { START_WORK_TEMPLATE } from "./templates/start-work"
+import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
+import { TASK_LIST_TEMPLATE } from "./templates/task-list"
+import { ULTRAWORK_TEMPLATE } from "./templates/ultrawork"
+import type { BuiltinCommandName, BuiltinCommands } from "./types"
+
+const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
+  "init-deep": {
+    description: "(builtin) Initialize hierarchical AGENTS.md knowledge base",
+    template: `<command-instruction>
+${INIT_DEEP_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--create-new] [--max-depth=N]",
+  },
+   "matrix-loop": {
+     description: "(builtin) Start self-referential development loop until completion",
+     template: `<command-instruction>
+${MATRIX_LOOP_TEMPLATE}
+</command-instruction>
+
+<user-task>
+$ARGUMENTS
+</user-task>`,
+     argumentHint: '"task description" [--completion-promise=TEXT] [--max-iterations=N]',
+   },
+   "ulw-loop": {
+     description: "(builtin) Start ultrawork loop - continues until completion with ultrawork mode",
+     template: `<command-instruction>
+${MATRIX_LOOP_TEMPLATE}
+</command-instruction>
+
+<user-task>
+$ARGUMENTS
+</user-task>`,
+     argumentHint: '"task description" [--completion-promise=TEXT] [--max-iterations=N]',
+   },
+  "cancel-loop": {
+    description: "(builtin) Cancel active Matrix Loop",
+    template: `<command-instruction>
+${CANCEL_LOOP_TEMPLATE}
+</command-instruction>`,
+  },
+  refactor: {
+    description:
+      "(builtin) Intelligent refactoring command with LSP, AST-grep, architecture analysis, codemap, and TDD verification.",
+    template: `<command-instruction>
+${REFACTOR_TEMPLATE}
+</command-instruction>`,
+    argumentHint: "<refactoring-target> [--scope=<file|module|project>] [--strategy=<safe|aggressive>]",
+  },
+  "plan-review": {
+    description: "(builtin) Post-execution completion review of a finished plan (explicit only)",
+    template: `<command-instruction>
+${PLAN_REVIEW_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "<plan-name>",
+  },
+  "start-work": {
+    description: "(builtin) Start Morpheus work session from Oracle plan",
+    agent: "architect",
+    template: `<command-instruction>
+${START_WORK_TEMPLATE}
+</command-instruction>
+
+<session-context>
+Session ID: $SESSION_ID
+Timestamp: $TIMESTAMP
+</session-context>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[plan-name]",
+  },
+  "stop-continuation": {
+    description: "(builtin) Stop all continuation mechanisms (matrix loop, todo continuation, mission) for this session",
+    template: `<command-instruction>
+${STOP_CONTINUATION_TEMPLATE}
+</command-instruction>`,
+  },
+  humanize: {
+    description: "(builtin) Guided quality-focused humanization pipeline for prose, comments, and code (text/comments/code modes)",
+    template: `<command-instruction>
+${HUMANIZE_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[target] [--mode=text|comments|code|all] [--dry-run]",
+  },
+  handoff: {
+    description: "(builtin) Create a detailed context summary for continuing work in a new session",
+    template: `<command-instruction>
+${HANDOFF_TEMPLATE}
+</command-instruction>
+
+<session-context>
+Session ID: $SESSION_ID
+Timestamp: $TIMESTAMP
+</session-context>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[goal]",
+  },
+  pickup: {
+    description: "(builtin) Load handoff context from a previous session",
+    template: `<command-instruction>
+${PICKUP_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[task to continue with]",
+  },
+  "remove-deadcode": {
+    description: "(builtin) Find and remove dead code (zero-reference symbols) using LSP analysis",
+    template: `<command-instruction>
+${REMOVE_DEADCODE_TEMPLATE}
+</command-instruction>`,
+    argumentHint: "[target-path] [--scope=<file|module|project>] [--dry-run]",
+  },
+  preset: {
+    description: "(builtin) Switch the active model preset (session-scoped live switch; --save persists to config)",
+    template: `<command-instruction>
+${PRESET_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[list|show|set <name> [--save [--global|--project]]]",
+  },
+  "end-ultrawork": {
+    description: "(builtin) Deactivate ultrawork mode and return to default Matrixx behavior for the current session",
+    template: `<command-instruction>
+${END_ULTRAWORK_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[optional follow-up task]",
+  },
+  research: {
+    description:
+      "(builtin) Saturation research with parallel swarms and convergence — code, docs, web, and OSS repos",
+    template: `<command-instruction>
+${RESEARCH_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "<topic> [--scope=code|docs|web|oss|all] [--max-rounds=N]",
+  },
+  assembly: {
+    description:
+      "(builtin) Toggle assembly tool enable/disable for the current session",
+    template: `<command-instruction>
+${ASSEMBLY_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[enable|disable|status]",
+  },
+  ultrawork: {
+    description:
+      "(builtin) Toggle ultrawork mode on/off for the current session",
+    template: `<command-instruction>
+${ULTRAWORK_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[enable|disable|status]",
+  },
+  "bdd-pipeline": {
+    description: "(builtin) Full BDD pipeline: contract, tests, frontend, and backend from a .feature file.",
+    template: `<command-instruction>
+${BDD_PIPELINE_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "<feature-path> [--force]",
+  },
+  evolution: {
+    description: "(builtin) Manage self-evolution proposals: approve, reject, list, audit pending skills",
+    template: `<command-instruction>
+${EVOLUTION_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[list|approve <slug>|reject <slug>|audit]",
+  },
+  "cleanup-tasks": {
+    description: "(builtin) Delete completed tasks",
+    template: `<command-instruction>
+${CLEANUP_TASKS_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--olderThan <duration>] [--all]",
+  },
+  "task-list": {
+    description: "(builtin) Show current state of all tasks",
+    template: `<command-instruction>
+${TASK_LIST_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--all] [--status <pending|in_progress|completed|deleted>]",
+  },
+  "quality-audit": {
+    description: "(builtin) Run a read-only deterministic quality audit with graded report",
+    template: `<command-instruction>
+${QUALITY_AUDIT_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--scope=file|module|project] [--target=<path>]",
+  },
+  "quality-assurance": {
+    description: "(builtin) Drive quality to target grade via bounded oracle-smith-tdd loop",
+    template: `<command-instruction>
+${QUALITY_ASSURANCE_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--scope=file|module|project] [--target-grade=B] [--max-iterations=3] [--target=<path>]",
+  },
+}
+
+export function loadBuiltinCommands(
+  disabledCommands?: BuiltinCommandName[]
+): BuiltinCommands {
+  const disabled = new Set(disabledCommands ?? [])
+  const commands: BuiltinCommands = {}
+
+  for (const [name, definition] of Object.entries(BUILTIN_COMMAND_DEFINITIONS)) {
+    if (!disabled.has(name as BuiltinCommandName)) {
+      const { argumentHint: _argumentHint, ...openCodeCompatible } = definition
+      commands[name] = { ...openCodeCompatible, name } as CommandDefinition
+    }
+  }
+
+  return commands
+}

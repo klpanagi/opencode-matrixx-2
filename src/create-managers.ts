@@ -1,0 +1,82 @@
+import type { MatrixxConfig } from "./config"
+import type { SubagentSessionCreatedEvent } from "./features/background-agent"
+import { BackgroundManager } from "./features/background-agent"
+import { initTaskToastManager } from "./features/task-toast-manager"
+import { TmuxSessionManager } from "./features/tmux-subagent"
+import type { PluginContext, TmuxConfig } from "./plugin/types"
+import { createConfigHandler } from "./plugin-handlers"
+import type { ModelCacheState } from "./plugin-state"
+import { log } from "./shared"
+
+export type Managers = {
+  tmuxSessionManager: TmuxSessionManager
+  backgroundManager: BackgroundManager
+  configHandler: ReturnType<typeof createConfigHandler>
+}
+
+export function createManagers(args: {
+  ctx: PluginContext
+  pluginConfig: MatrixxConfig
+  tmuxConfig: TmuxConfig
+  modelCacheState: ModelCacheState
+  backgroundNotificationHookEnabled: boolean
+}): Managers {
+  const { ctx, pluginConfig, tmuxConfig, modelCacheState, backgroundNotificationHookEnabled } = args
+
+  const tmuxSessionManager = new TmuxSessionManager(ctx, tmuxConfig)
+
+  const backgroundManager = new BackgroundManager(
+    ctx,
+    pluginConfig.background_task,
+    {
+      tmuxConfig,
+      handoffCompression: pluginConfig.dcp?.handoffCompression,
+      pluginConfig,
+		onSubagentSessionCreated: async (event: SubagentSessionCreatedEvent) => {
+			log("[index] onSubagentSessionCreated callback received", {
+				sessionID: event.sessionID,
+				parentID: event.parentID,
+          title: event.title,
+        })
+
+        await tmuxSessionManager.onSessionCreated({
+          type: "session.created",
+          properties: {
+            info: {
+              id: event.sessionID,
+              parentID: event.parentID,
+              title: event.title,
+            },
+          },
+        })
+
+        log("[index] onSubagentSessionCreated callback completed")
+      },
+      onShutdown: () => {
+        tmuxSessionManager.cleanup().catch((error) => {
+          log("[index] tmux cleanup error during shutdown:", error)
+        })
+      },
+      enableParentSessionNotifications: backgroundNotificationHookEnabled,
+    },
+  )
+
+  // C5: restore persisted bg handles on plugin startup (fire-and-forget, never blocks init).
+  backgroundManager.restoreHandles().catch((error) => {
+    log("[index] Failed to restore background handles:", error)
+  })
+
+  initTaskToastManager(ctx.client)
+
+  const configHandler = createConfigHandler({
+    ctx: { directory: ctx.directory, client: ctx.client },
+    pluginConfig,
+    modelCacheState,
+  })
+
+  return {
+    tmuxSessionManager,
+    backgroundManager,
+    configHandler,
+  }
+}

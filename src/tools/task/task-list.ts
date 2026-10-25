@@ -1,0 +1,96 @@
+import { existsSync, readdirSync } from "node:fs"
+import { join } from "node:path"
+import type { PluginInput } from "@opencode-ai/plugin"
+import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxConfig } from "../../config/schema"
+import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import type { TaskObject, TaskStatus } from "./types"
+import { TaskObjectSchema } from "./types"
+
+interface TaskSummary {
+  id: string
+  subject: string
+  status: TaskStatus
+  owner?: string
+  blockedBy: string[]
+  parentID?: string
+}
+
+export function createTaskList(config: Partial<MatrixxConfig>, ctx?: PluginInput): ToolDefinition {
+  return tool({
+    description: `[TRACKING — local progress records only. Spawns nothing, executes nothing.]
+List all active tasks with summary information.
+    
+Returns tasks excluding completed and deleted statuses by default.
+For each task's blockedBy field, filters to only include unresolved (non-completed) blockers.
+Returns summary format: id, subject, status, owner, blockedBy (not full description).
+
+Optional \`parentID\` filter: when provided, returns only tasks whose parentID matches
+(i.e. the subtasks of that parent task).`,
+    args: {
+      parentID: tool.schema.string().optional().describe("Filter to subtasks of this parent task ID"),
+    },
+    execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
+      const parentID = args.parentID as string | undefined
+      const directory =
+        ((context as unknown as Record<string, unknown>)?.directory as string | undefined) ??
+        ((ctx as unknown as Record<string, unknown>)?.directory as string | undefined) ??
+        process.cwd()
+      const taskDir = getTaskDir(config, directory)
+
+      if (!existsSync(taskDir)) {
+        return JSON.stringify({ tasks: [] })
+      }
+
+      const files = readdirSync(taskDir)
+        .filter((f) => f.endsWith(".json") && f.startsWith("T-"))
+        .map((f) => f.replace(".json", ""))
+
+      if (files.length === 0) {
+        return JSON.stringify({ tasks: [] })
+      }
+
+      const allTasks: TaskObject[] = []
+      for (const fileId of files) {
+        const task = readJsonSafe(join(taskDir, `${fileId}.json`), TaskObjectSchema)
+        if (task) {
+          allTasks.push(task)
+        }
+      }
+
+      // Filter out completed and deleted tasks
+      const activeTasks = allTasks.filter(
+        (task) => task.status !== "completed" && task.status !== "deleted"
+      )
+
+      // Filter to subtasks of the requested parent when parentID is provided
+      const filteredTasks = parentID
+        ? activeTasks.filter((task) => task.parentID === parentID)
+        : activeTasks
+
+      // Build summary with filtered blockedBy
+      const summaries: TaskSummary[] = filteredTasks.map((task) => {
+        // Filter blockedBy to only include unresolved (non-completed) blockers
+        const unresolvedBlockers = task.blockedBy.filter((blockerId) => {
+          const blockerTask = allTasks.find((t) => t.id === blockerId)
+          // Include if blocker doesn't exist (missing) or if it's not completed
+          return blockerTask?.status !== "completed"
+        })
+
+        return {
+          id: task.id,
+          subject: task.subject,
+          status: task.status,
+          owner: task.owner,
+          blockedBy: unresolvedBlockers,
+          parentID: task.parentID,
+        }
+      })
+
+       return JSON.stringify({
+         tasks: summaries,
+         reminder: "1 task = 1 task. Maximize parallel execution by running independent tasks (tasks with empty blockedBy) concurrently."
+       })
+    },
+  })
+}

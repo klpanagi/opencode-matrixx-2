@@ -1,0 +1,115 @@
+export type BackgroundTaskStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "error"
+  | "cancelled"
+  | "interrupt"
+  | "stopped"
+  | "statusUncertain"
+
+/** Why a background task reached a terminal state (persisted on the handle). */
+export type BackgroundTerminalReason =
+  | "queue-saturated"
+  | "no-output"
+  | "uncertain"
+  | "aborted"
+  | "stale"
+  | "nested-depth-exceeded"
+  | "wall-clock-timeout"
+  | "expired"
+
+export interface ToolCallWindow {
+  lastSignature: string
+  consecutiveCount: number
+  threshold: number
+}
+
+interface TaskProgress {
+  toolCalls: number
+  lastTool?: string
+  toolCallWindow?: ToolCallWindow
+  lastUpdate: Date
+  lastMessage?: string
+  lastMessageAt?: Date
+  countedToolPartIDs?: Set<string>
+}
+
+export interface BackgroundTask {
+  id: string
+  sessionID?: string
+  parentSessionID: string
+  parentMessageID: string
+  description: string
+  prompt: string
+  agent: string
+  status: BackgroundTaskStatus
+  queuedAt?: Date
+  startedAt?: Date
+  completedAt?: Date
+  result?: string
+  error?: string
+  progress?: TaskProgress
+  parentModel?: { providerID: string; modelID: string }
+  model?: { providerID: string; modelID: string; variant?: string; temperature?: number }
+  /** Active concurrency slot key */
+  concurrencyKey?: string
+  /** Persistent key for re-acquiring concurrency on resume */
+  concurrencyGroup?: string
+  /** Parent session's agent name for notification */
+  parentAgent?: string
+  /** Parent session's tool restrictions for notification prompts */
+  parentTools?: Record<string, boolean>
+  /** Marks if the task was launched from an unstable agent/category */
+  isUnstableAgent?: boolean
+  /** Category used for this task (e.g., 'quick', 'construct') */
+  category?: string
+
+  /** Last message count for stability detection */
+  lastMsgCount?: number
+  /** Number of consecutive polls with stable message count */
+  stablePolls?: number
+  /** Why the task reached a terminal state (e.g. stopped/statusUncertain) */
+  terminalReason?: BackgroundTerminalReason
+
+  /** Compressed result payload for handoff to parent session (set by tryCompleteTask) */
+  compactedResult?: string
+}
+
+export interface LaunchInput {
+  description: string
+  prompt: string
+  agent: string
+  parentSessionID: string
+  parentMessageID: string
+  parentModel?: { providerID: string; modelID: string }
+  parentAgent?: string
+  parentTools?: Record<string, boolean>
+  model?: { providerID: string; modelID: string; variant?: string; temperature?: number }
+  isUnstableAgent?: boolean
+  skills?: string[]
+  skillContent?: string
+  category?: string
+}
+
+export interface ResumeInput {
+  sessionId: string
+  prompt: string
+  parentSessionID: string
+  parentMessageID: string
+  parentModel?: { providerID: string; modelID: string }
+  parentAgent?: string
+  parentTools?: Record<string, boolean>
+}
+
+export interface ReviveInput {
+  taskId?: string
+  sessionId?: string
+  prompt: string
+  parentSessionID: string
+  parentMessageID: string
+  parentModel?: { providerID: string; modelID: string }
+  parentAgent?: string
+  parentTools?: Record<string, boolean>
+  force?: boolean
+}

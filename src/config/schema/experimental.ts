@@ -1,0 +1,26 @@
+import { z } from "zod"
+
+export const ExperimentalConfigSchema = z.object({
+  aggressive_truncation: z.boolean().optional(),
+  auto_resume: z.boolean().optional(),
+  preemptive_compaction: z.boolean().optional(),
+  /** Truncate all tool outputs, not just whitelisted tools (default: false). Tool output truncator is enabled by default - disable via disabled_hooks. */
+  truncate_all_tool_outputs: z.boolean().optional(),
+  /** Legacy (deprecated: use tasks.enabled) — fallback when tasks.enabled is unset.
+   * No-op as of v2.7: the legacy todo system is gone, so this key no longer
+   * selects between two hook families. Still parses; read as `boolean | undefined`
+   * and resolved by `resolveTasksConfig()`. */
+  task_system: z.boolean().optional(),
+  /** Timeout in ms for loadAllPluginComponents during config handler init (default: 10000, min: 1000) */
+  plugin_load_timeout_ms: z.number().min(1000).optional(),
+  /** Warn threshold 0-1 (default 0.70). Monitor is read-only. */
+  context_warning_threshold: z.number().min(0.1).max(0.95).optional(),
+  /** Proactive compaction trigger 0-1 (default 0.78). Must exceed warning threshold. */
+  preemptive_compaction_threshold: z.number().min(0.1).max(0.95).optional(),
+  /** Wrap hook creation in try/catch to prevent one failing hook from crashing the plugin (default: true at call site) */
+  safe_hook_creation: z.boolean().optional(),
+  /** Enable hashline_edit tool for improved file editing with hash-based line anchors */
+  hashline_edit: z.boolean().optional(),
+})
+
+export type ExperimentalConfig = z.infer<typeof ExperimentalConfigSchema>

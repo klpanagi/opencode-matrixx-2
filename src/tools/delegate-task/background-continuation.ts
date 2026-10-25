@@ -1,0 +1,68 @@
+import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { getSessionTools } from "../../shared/session-state"
+import { formatDetailedError } from "./error-formatting"
+import type { ExecutorContext, ParentContext } from "./executor-types"
+import { buildContinuationTitle } from "./task-title"
+import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
+
+export async function executeBackgroundContinuation(
+  args: DelegateTaskArgs,
+  ctx: ToolContextWithMetadata,
+  executorCtx: ExecutorContext,
+  parentContext: ParentContext
+): Promise<string> {
+  const { manager } = executorCtx
+
+  const taskID = args.execute?.task_id ?? args.session_id
+
+  try {
+    const task = await manager.resume({
+      sessionId: taskID as string,
+      prompt: args.prompt,
+      parentSessionID: parentContext.sessionID,
+      parentMessageID: parentContext.messageID,
+      parentModel: parentContext.model,
+      parentAgent: parentContext.agent,
+      parentTools: getSessionTools(parentContext.sessionID),
+    })
+
+    const bgContMeta = {
+      title: buildContinuationTitle(args.description),
+      metadata: {
+        prompt: args.prompt,
+        agent: task.agent,
+        ...(task.category !== undefined ? { category: task.category } : {}),
+        load_skills: args.load_skills,
+        description: args.description,
+        run_in_background: args.run_in_background,
+        taskId: task.sessionID,
+        sessionId: task.sessionID,
+        command: args.command,
+      },
+    }
+    await ctx.metadata?.(bgContMeta)
+    if (ctx.callID) {
+      storeToolMetadata(ctx.sessionID, ctx.callID, bgContMeta)
+    }
+
+    return `Background task continued.
+
+Task ID: ${task.id}
+Description: ${task.description}
+Agent: ${task.agent}
+Status: ${task.status}
+
+Agent continues with full previous context preserved.
+Use \`background_output\` with task_id="${task.id}" to check progress.
+
+<task_metadata>
+session_id: ${task.sessionID}
+${task.agent ? `subagent: ${task.agent}\n` : ""}</task_metadata>`
+  } catch (error) {
+    return formatDetailedError(error, {
+      operation: "Continue background task",
+      args,
+      sessionID: taskID,
+    })
+  }
+}

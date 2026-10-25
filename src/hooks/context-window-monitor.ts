@@ -1,0 +1,127 @@
+// Boundary: 70% warn (read-only) → preemptive-compaction 78% (proactive) → context-window-limit-recovery (reactive, error-parse only). Shared: context-limits.ts + token-cache.ts.
+import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxConfig } from "../config"
+import type { ExperimentalConfig } from "../config/schema/experimental"
+import {
+  ANTHROPIC_DISPLAY_LIMIT,
+  DEFAULT_ANTHROPIC_ACTUAL_LIMIT,
+  isAnthropicProvider,
+  resolvePreemptiveThreshold,
+  resolveWarningThreshold,
+} from "../shared/context-limits"
+import { log } from "../shared/logger"
+import { createSystemDirective, SystemDirectiveTypes } from "../shared/system-directive"
+import { clearTokenCache, updateTokenCache } from "../shared/token-cache"
+
+const ANTHROPIC_ACTUAL_LIMIT =
+  process.env.ANTHROPIC_1M_CONTEXT === "true" ||
+  process.env.VERTEX_ANTHROPIC_1M_CONTEXT === "true"
+    ? ANTHROPIC_DISPLAY_LIMIT
+    : DEFAULT_ANTHROPIC_ACTUAL_LIMIT
+
+const CONTEXT_REMINDER = `${createSystemDirective(SystemDirectiveTypes.CONTEXT_WINDOW_MONITOR)}
+
+You are using Anthropic Claude with 1M context window.
+You have plenty of context remaining - do NOT rush or skip tasks.
+Complete your work thoroughly and methodically.`
+
+interface TokenInfo {
+  input: number
+  output: number
+  reasoning: number
+  cache: { read: number; write: number }
+}
+
+interface CachedTokenState {
+  providerID: string
+  tokens: TokenInfo
+}
+
+let misorderWarned = false
+
+export function createContextWindowMonitorHook(
+  _ctx: PluginInput,
+  pluginConfig?: MatrixxConfig | { experimental?: ExperimentalConfig },
+) {
+  const warningThreshold = resolveWarningThreshold(pluginConfig?.experimental)
+  const preemptiveThreshold = resolvePreemptiveThreshold(pluginConfig?.experimental)
+  if (!misorderWarned && warningThreshold >= preemptiveThreshold) {
+    misorderWarned = true
+    log("[context-limits] context_warning_threshold >= preemptive_compaction_threshold — monitor will warn at/after compaction")
+  }
+  const remindedSessions = new Set<string>()
+  const tokenCache = new Map<string, CachedTokenState>()
+
+  const toolExecuteAfter = async (
+    input: { tool: string; sessionID: string; callID: string },
+    output: { title: string; output: string; metadata: unknown }
+  ) => {
+    const { sessionID } = input
+
+    if (remindedSessions.has(sessionID)) return
+
+    const cached = tokenCache.get(sessionID)
+    if (!cached) return
+
+    if (!isAnthropicProvider(cached.providerID)) return
+
+    const lastTokens = cached.tokens
+    const totalInputTokens = (lastTokens?.input ?? 0) + (lastTokens?.cache?.read ?? 0)
+
+    const actualUsagePercentage = totalInputTokens / ANTHROPIC_ACTUAL_LIMIT
+
+    if (actualUsagePercentage < warningThreshold) return
+
+    remindedSessions.add(sessionID)
+
+    const displayUsagePercentage = totalInputTokens / ANTHROPIC_DISPLAY_LIMIT
+    const usedPct = (displayUsagePercentage * 100).toFixed(1)
+    const remainingPct = ((1 - displayUsagePercentage) * 100).toFixed(1)
+    const usedTokens = totalInputTokens.toLocaleString()
+    const limitTokens = ANTHROPIC_DISPLAY_LIMIT.toLocaleString()
+
+    output.output += `\n\n${CONTEXT_REMINDER}
+[Context Status: ${usedPct}% used (${usedTokens}/${limitTokens} tokens), ${remainingPct}% remaining]`
+  }
+
+  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
+    const props = event.properties as Record<string, unknown> | undefined
+
+    if (event.type === "session.deleted") {
+      const sessionInfo = props?.info as { id?: string } | undefined
+      if (sessionInfo?.id) {
+        remindedSessions.delete(sessionInfo.id)
+        tokenCache.delete(sessionInfo.id)
+        clearTokenCache(sessionInfo.id)
+      }
+    }
+
+    if (event.type === "message.updated") {
+      const info = props?.info as {
+        role?: string
+        sessionID?: string
+        providerID?: string
+        finish?: boolean
+        tokens?: TokenInfo
+      } | undefined
+
+      if (info?.role !== "assistant" || !info.finish) return
+      if (!info.sessionID || !info.providerID || !info.tokens) return
+
+      tokenCache.set(info.sessionID, {
+        providerID: info.providerID,
+        tokens: info.tokens,
+      })
+
+      updateTokenCache(info.sessionID, {
+        providerID: info.providerID,
+        tokens: info.tokens,
+      })
+    }
+  }
+
+  return {
+    "tool.execute.after": toolExecuteAfter,
+    event: eventHandler,
+  }
+}

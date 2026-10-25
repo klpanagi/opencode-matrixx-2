@@ -1,0 +1,286 @@
+import { normalizeSDKResponse } from "../../shared"
+import { log } from "../../shared/logger"
+import { formatPollTimeoutOutcome } from "../../shared/poll-timeout-outcome"
+import type { SessionMessage } from "./executor-types"
+import { getTimingConfig } from "./timing"
+import type { OpencodeClient, ToolContextWithMetadata } from "./types"
+
+const NON_TERMINAL_FINISH_REASONS = new Set(["tool-calls", "unknown"])
+
+const STALL_NO_RESPONSE_POLLS = 15
+const STALL_TOOL_CALLS_POLLS = 10
+const STALL_ORPHANED_TOOL_CALL_POLLS = 20
+const STALE_RUNNING_TIMEOUT_MS = 120_000  // 2 min — fail-safe for stale status API
+
+export function isSessionComplete(messages: SessionMessage[]): boolean {
+  let lastUser: SessionMessage | undefined
+  let lastAssistant: SessionMessage | undefined
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]
+    if (!lastAssistant && msg.info?.role === "assistant") lastAssistant = msg
+    if (!lastUser && msg.info?.role === "user") lastUser = msg
+    if (lastUser && lastAssistant) break
+  }
+
+  if (!lastAssistant?.info?.finish) return false
+  if (NON_TERMINAL_FINISH_REASONS.has(lastAssistant.info.finish)) return false
+
+  // Both user and assistant messages required for chronological ordering
+  if (!lastUser) return false
+
+  // Prefer timestamp comparison (chronologically reliable over string ID ordering)
+  const userTime = lastUser.info?.time?.created
+  const assistantTime = lastAssistant.info?.time?.created
+  if (userTime !== undefined && assistantTime !== undefined) {
+    return userTime < assistantTime
+  }
+
+  // Fall back to string ID comparison when timestamps unavailable
+  if (!lastUser.info?.id || !lastAssistant.info?.id) return false
+  return lastUser.info.id < lastAssistant.info.id
+}
+
+export function hasToolResultAfterAssistant(messages: SessionMessage[]): boolean {
+  let lastAssistant: SessionMessage | undefined
+  let lastUser: SessionMessage | undefined
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]
+    if (!lastAssistant && msg.info?.role === "assistant") lastAssistant = msg
+    if (!lastUser && msg.info?.role === "user") lastUser = msg
+    if (lastUser && lastAssistant) break
+  }
+
+  if (!lastAssistant || !lastUser) return false
+
+  // Prefer timestamp comparison (chronologically reliable)
+  const assistantTime = lastAssistant.info?.time?.created
+  const userTime = lastUser.info?.time?.created
+  if (userTime !== undefined && assistantTime !== undefined) {
+    return userTime > assistantTime
+  }
+
+  // Fall back to string ID comparison when timestamps unavailable
+  if (!lastAssistant.info?.id || !lastUser.info?.id) return false
+  return lastUser.info.id > lastAssistant.info.id
+}
+
+export function hasAssistantContent(messages: SessionMessage[]): boolean {
+  return messages.some((m) => {
+    if (m.info?.role !== "assistant") return false
+    const parts = m.parts ?? []
+    return parts.some((p) => {
+      if (p.type !== "text" && p.type !== "reasoning") return false
+      const text = (p.text ?? "").trim()
+      return text.length > 0
+    })
+  })
+}
+
+export async function pollSyncSession(
+  ctx: ToolContextWithMetadata,
+  client: OpencodeClient,
+  input: {
+    sessionID: string
+    agentToUse: string
+    toastManager: { removeTask: (id: string) => void } | null | undefined
+    taskId: string | undefined
+    anchorMessageCount?: number
+    /** Callback: does the parent session still have running background children? */
+    hasActiveChildBackgroundTasks?: () => boolean
+    /** Callback: is there a pending parent-wake notification in flight? */
+    hasPendingParentWake?: () => boolean
+  }
+): Promise<string | null> {
+  const syncTiming = getTimingConfig()
+  const maxPollTimeMs = Math.max(syncTiming.MAX_POLL_TIME_MS, 50)
+  const pollStart = Date.now()
+  let pollCount = 0
+  let timedOut = false
+  let idleStallCount = 0
+  let lastMsgCount = 0
+  let stableIdlePolls = 0
+
+  log("[task] Starting poll loop", { sessionID: input.sessionID, agentToUse: input.agentToUse, maxPollTimeMs })
+
+  while (Date.now() - pollStart < maxPollTimeMs) {
+    if (ctx.abort?.aborted) {
+      log("[task] Aborted by user", { sessionID: input.sessionID })
+      if (input.toastManager && input.taskId) input.toastManager.removeTask(input.taskId)
+      return `Task aborted.\n\nSession ID: ${input.sessionID}`
+    }
+
+    await new Promise(resolve => setTimeout(resolve, syncTiming.POLL_INTERVAL_MS))
+    pollCount++
+
+    let statusResult: { data?: Record<string, { type: string }> }
+    try {
+      statusResult = await client.session.status()
+    } catch (error) {
+      log("[task] Poll status fetch failed, retrying", { sessionID: input.sessionID, error: String(error) })
+      continue
+    }
+    const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
+    const sessionStatus = allStatuses[input.sessionID]
+
+    if (pollCount % 10 === 0) {
+      log("[task] Poll status", {
+        sessionID: input.sessionID,
+        pollCount,
+        elapsed: `${Math.floor((Date.now() - pollStart) / 1000)}s`,
+        sessionStatus: sessionStatus?.type ?? "not_in_status",
+        idleStallCount,
+        stableIdlePolls,
+      })
+    }
+
+    if (sessionStatus && sessionStatus.type !== "idle") {
+      idleStallCount = 0
+      lastMsgCount = 0
+      stableIdlePolls = 0
+
+      // Fallback: if session has been "running" for too long without transitioning
+      // to idle, check messages directly. This handles cases where OpenCode's
+      // status API is stale/cached and the session actually completed.
+      if (Date.now() - pollStart >= STALE_RUNNING_TIMEOUT_MS) {
+        const staleMsgs = await client.session.messages({ path: { id: input.sessionID } }).catch(() => undefined)
+        if (staleMsgs) {
+          const parsed = normalizeSDKResponse(staleMsgs, [] as SessionMessage[], {
+            preferResponseOnMissingData: true,
+          })
+          if (isSessionComplete(parsed)) {
+            log("[task] Poll complete - stale running status, messages show completion", {
+              sessionID: input.sessionID,
+              pollCount,
+            })
+            break
+          }
+        }
+      }
+
+      continue
+    }
+
+    // Race-condition guard: if the parent session still has running background
+    // children, or a parent-wake notification is in-flight, keep polling instead
+    // of prematurely concluding the session is done.
+    if (input.hasActiveChildBackgroundTasks?.() || input.hasPendingParentWake?.()) {
+      idleStallCount = 0
+      lastMsgCount = 0
+      stableIdlePolls = 0
+      continue
+    }
+
+    const messagesResult = await client.session.messages({ path: { id: input.sessionID } }).catch((error) => {
+      log("[task] Poll messages fetch failed, retrying", { sessionID: input.sessionID, error: String(error) })
+      return undefined
+    })
+    if (!messagesResult) continue
+    const msgs = normalizeSDKResponse(messagesResult, [] as SessionMessage[], {
+      preferResponseOnMissingData: true,
+    })
+
+    if (input.anchorMessageCount !== undefined && msgs.length <= input.anchorMessageCount) {
+      continue
+    }
+
+    if (isSessionComplete(msgs)) {
+      log("[task] Poll complete - terminal finish detected", { sessionID: input.sessionID, pollCount })
+      break
+    }
+
+    const lastAssistant = [...msgs].reverse().find((m) => m.info?.role === "assistant")
+    const hasText = hasAssistantContent(msgs)
+
+    if (!lastAssistant?.info?.finish && hasText) {
+      log("[task] Poll complete - assistant text detected (fallback)", {
+        sessionID: input.sessionID,
+        pollCount,
+      })
+      break
+    }
+
+    idleStallCount++
+
+    if (!lastAssistant && idleStallCount >= STALL_NO_RESPONSE_POLLS) {
+      log("[task] Session stalled - no assistant response after idle", {
+        sessionID: input.sessionID,
+        idleStallCount,
+        pollCount,
+      })
+      return `Session stalled: no assistant response generated after ${idleStallCount} idle polls. The model may have failed to start.\n\nSession ID: ${input.sessionID}`
+    }
+
+    const finishReason = lastAssistant?.info?.finish
+    if (finishReason && NON_TERMINAL_FINISH_REASONS.has(finishReason) && idleStallCount >= STALL_TOOL_CALLS_POLLS) {
+      if (hasToolResultAfterAssistant(msgs)) {
+        log("[task] Session stalled after tool call - tool result present but no new response", {
+          sessionID: input.sessionID,
+          finishReason,
+          idleStallCount,
+          pollCount,
+        })
+        break
+      }
+
+      if (idleStallCount >= STALL_ORPHANED_TOOL_CALL_POLLS) {
+        log("[task] Session stalled - orphaned tool call with no result", {
+          sessionID: input.sessionID,
+          finishReason,
+          idleStallCount,
+          pollCount,
+        })
+        break
+      }
+    }
+
+    if (lastAssistant && msgs.length > 0 && Date.now() - pollStart >= syncTiming.MIN_STABILITY_TIME_MS) {
+      const currentMsgCount = msgs.length
+      if (currentMsgCount === lastMsgCount) {
+        stableIdlePolls++
+        if (stableIdlePolls >= syncTiming.STABILITY_POLLS_REQUIRED) {
+          log("[task] Poll complete - stable idle detected (message count unchanged)", {
+            sessionID: input.sessionID,
+            pollCount,
+            stableIdlePolls,
+            msgCount: currentMsgCount,
+          })
+          break
+        }
+      } else {
+        stableIdlePolls = 0
+        lastMsgCount = currentMsgCount
+      }
+    }
+  }
+
+  if (Date.now() - pollStart >= maxPollTimeMs) {
+    timedOut = true
+    log("[task] Poll timeout reached", { sessionID: input.sessionID, pollCount })
+  }
+
+  if (!timedOut) return null
+
+  let lastAssistantText: string | undefined
+  try {
+    const timeoutMessagesResult = await client.session.messages({ path: { id: input.sessionID } }).catch(() => undefined)
+    if (timeoutMessagesResult) {
+      const timeoutMsgs = normalizeSDKResponse(timeoutMessagesResult, [] as SessionMessage[], {
+        preferResponseOnMissingData: true,
+      })
+      const lastAssistant = [...timeoutMsgs].reverse().find((m) => m.info?.role === "assistant")
+      const textParts = (lastAssistant?.parts ?? []).filter((p) => p.type === "text" && p.text).map((p) => p.text as string)
+      if (textParts.length > 0) lastAssistantText = textParts.join("\n")
+    }
+  } catch {
+    lastAssistantText = undefined
+  }
+
+  return formatPollTimeoutOutcome({
+    sessionID: input.sessionID,
+    agentToUse: input.agentToUse,
+    maxPollTimeMs,
+    lastAssistantText,
+  })
+}

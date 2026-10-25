@@ -1,0 +1,23 @@
+{
+  "title": "bad dashboard",
+  "templating": {
+    "list": [
+      {
+        "name": "symbol",
+        "type": "query",
+        "query": "SHOW TAG VALUES WITH KEY = \"symbol\""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "title": "Staleness seconds",
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "targets": [
+        {
+          "query": "from(bucket: \"market\")\n  |> range(start: v.timeRangeStart)\n  |> mean()"
+        }
+      ]
+    }
+  ]
+}

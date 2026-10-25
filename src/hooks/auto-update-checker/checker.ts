@@ -1,0 +1,8 @@
+export { getCachedVersion } from "./checker/cached-version"
+export { checkForUpdate } from "./checker/check-for-update"
+export { getLatestVersion } from "./checker/latest-version"
+export { getLocalDevPath, isLocalDevMode } from "./checker/local-dev-path"
+export { getLocalDevVersion } from "./checker/local-dev-version"
+export { revertPinnedVersion, updatePinnedVersion } from "./checker/pinned-version-updater"
+export type { PluginEntryInfo } from "./checker/plugin-entry"
+export { findPluginEntry } from "./checker/plugin-entry"

@@ -1,0 +1,120 @@
+import { z } from "zod"
+import { AnyMcpNameSchema } from "../../mcp/types"
+import { AgentDefinitionsConfigSchema } from "./agent-definitions"
+import { BuiltinAgentNameSchema, BuiltinSkillNameSchema } from "./agent-names"
+import { AgentOverridesSchema } from "./agent-overrides"
+import { AssemblyConfigSchema } from "./assembly"
+import { BabysittingConfigSchema } from "./babysitting"
+import { BackgroundTaskConfigSchema } from "./background-task"
+import { BrowserAutomationConfigSchema } from "./browser-automation"
+import { CategoriesConfigSchema } from "./categories"
+import { BuiltinCommandNameSchema } from "./commands"
+import { CommentCheckerConfigSchema } from "./comment-checker"
+import { ContextModeConfigSchema } from "./context-mode"
+import { DcpConfigSchema } from "./dcp"
+import { EvolutionConfigSchema } from "./evolution"
+import { ExperimentalConfigSchema } from "./experimental"
+import { HeadroomConfigSchema } from "./headroom"
+import { HookNameSchema } from "./hooks"
+import { KnowledgeConfigSchema } from "./knowledge"
+import { MatrixLoopConfigSchema } from "./matrix-loop"
+import { MatrixxSelfConfigSkillConfigSchema } from "./matrixx-self-config"
+import { ComplexityDowngradesSchema, ModelRequirementsSchema } from "./model-config"
+import { ActivePresetSchema, ModelPresetsSchema } from "./model-presets"
+import { MorpheusConfigSchema } from "./morpheus"
+import { MorpheusAgentConfigSchema } from "./morpheus-agent"
+import { NotificationConfigSchema } from "./notification"
+import { PlansConfigSchema } from "./plans"
+import { RtkConfigSchema } from "./rtk"
+import { RuntimeFallbackConfigSchema } from "./runtime-fallback"
+import { SecurityConfigSchema } from "./security"
+import { SkillsConfigSchema } from "./skills"
+import { TaskConfigSchema } from "./task"
+import { TasksConfigSchema } from "./tasks"
+import { TddEnforcerConfigSchema } from "./tdd-enforcer"
+import { TmuxConfigSchema } from "./tmux"
+import { ToolGatingConfigSchema } from "./tool-gating"
+import { WebsearchConfigSchema } from "./websearch"
+
+export const MatrixxConfigSchema = z.object({
+  $schema: z.string().optional(),
+  /** Global provider/model override for ALL agents and categories (e.g., "<provider>/<model>" from provider.list — replace with your live model).
+   * When set, this model is used for every agent and category regardless of their individual config. */
+  global_model: z.string().optional(),
+  /** Named static model presets — explicit provider/model bundles per agent/category */
+  model_presets: ModelPresetsSchema.optional(),
+  /** Name of the active preset in model_presets */
+  active_preset: ActivePresetSchema.optional(),
+  /** @deprecated no-op since v2.7 — the legacy todo system it toggled is removed.
+   * Parses and is ignored; `tasks.enabled` is the only task-system switch.
+   * Remove in v3.0. */
+  new_task_system_enabled: z.boolean().optional(),
+  /** Default agent name for `matrixx run` (env: OPENCODE_DEFAULT_AGENT) */
+  default_run_agent: z.string().optional(),
+  disabled_mcps: z.array(AnyMcpNameSchema).optional(),
+  disabled_agents: z.array(BuiltinAgentNameSchema).optional(),
+  disabled_skills: z.array(BuiltinSkillNameSchema).optional(),
+  disabled_hooks: z.array(HookNameSchema).optional(),
+  disabled_commands: z.array(BuiltinCommandNameSchema).optional(),
+  /** Disable specific tools by name.
+   * A `["todowrite", "todoread"]` entry here is a no-op since v2.7: both tools
+   * are unreachable, not merely disabled, so there is nothing for the list to
+   * act on. The key itself stays, and is honoured for tool names OpenCode
+   * still registers. */
+  disabled_tools: z.array(z.string()).optional(),
+  agents: AgentOverridesSchema.optional(),
+  categories: CategoriesConfigSchema.optional(),
+  morpheus_agent: MorpheusAgentConfigSchema.optional(),
+  comment_checker: CommentCheckerConfigSchema.optional(),
+  experimental: ExperimentalConfigSchema.optional(),
+  /** Dynamic Context Pruning (DCP) profile switcher configuration */
+  dcp: DcpConfigSchema.optional(),
+  auto_update: z.boolean().optional(),
+  skills: SkillsConfigSchema.optional(),
+  knowledge: KnowledgeConfigSchema.optional(),
+  matrix_loop: MatrixLoopConfigSchema.optional(),
+  background_task: BackgroundTaskConfigSchema.optional(),
+  notification: NotificationConfigSchema.optional(),
+  plans: PlansConfigSchema.optional(),
+  babysitting: BabysittingConfigSchema.optional(),
+  /** Canonical task-system configuration (master switch, storage, enforcer, poll timeout).
+   * Legacy `task`, `morpheus.tasks`, `experimental.task_system` still parse
+   * and act as fallback — explicit `tasks.*` always wins. */
+  tasks: TasksConfigSchema.optional(),
+  /** Legacy (deprecated: use tasks.pollTimeoutMs) */
+  task: TaskConfigSchema.optional(),
+
+  tdd_enforcer: TddEnforcerConfigSchema.optional(),
+  browser_automation_engine: BrowserAutomationConfigSchema.optional(),
+  websearch: WebsearchConfigSchema.optional(),
+  tmux: TmuxConfigSchema.optional(),
+  morpheus: MorpheusConfigSchema.optional(),
+  /** Assembly tool configuration — provider models for multi-model voting */
+  assembly: AssemblyConfigSchema.optional(),
+  /** Startup-token tool auto-gating — defer rarely-needed tools until auto-detect or opt-in */
+  tool_gating: ToolGatingConfigSchema.optional(),
+  /** Security scanning, secret detection, and sensitive file guards */
+  security: SecurityConfigSchema.optional(),
+  runtime_fallback: RuntimeFallbackConfigSchema.optional(),
+  /** Paths to external agent definition files */
+  agent_definitions: AgentDefinitionsConfigSchema.optional(),
+  /** Enable matrixx-self-config skill (default: false - opt-in feature) */
+  matrixx_self_config: MatrixxSelfConfigSkillConfigSchema.optional(),
+  /** Headroom network-proxy compression configuration (default: disabled) */
+  headroom: HeadroomConfigSchema.optional(),
+  /** context-mode tool sandbox discipline (L2) — FTS5 ctx_* gating */
+  context_mode: ContextModeConfigSchema.optional(),
+  /** RTK bash command rewriter configuration (default: disabled) */
+  rtk: RtkConfigSchema.optional(),
+  /** Self-evolution loop configuration (default: disabled) */
+  /** Self-evolution loop configuration (default: disabled) */
+  evolution: EvolutionConfigSchema.optional(),
+  /** Migration history to prevent re-applying migrations (e.g., model version upgrades) */
+  _migrations: z.array(z.string()).optional(),
+  /** Config-driven agent/category model requirements */
+  modelRequirements: ModelRequirementsSchema.optional(),
+  /** Config-driven complexity downgrade targets per category */
+  complexityDowngrades: ComplexityDowngradesSchema.optional(),
+})
+
+export type MatrixxConfig = z.infer<typeof MatrixxConfigSchema>

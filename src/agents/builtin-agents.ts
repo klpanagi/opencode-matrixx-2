@@ -1,0 +1,215 @@
+import type { AgentConfig } from "@opencode-ai/sdk"
+import type { BrowserAutomationProvider, CategoriesConfig } from "../config/schema"
+import type { BuiltinSkill } from "../features/builtin-skills"
+import {
+  fetchAvailableModels,
+  readConnectedProvidersCache,
+  readProviderModelsCache,
+} from "../shared"
+import { mergeCategories } from "../shared/merge-categories"
+import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
+import { architectPromptMetadata, createArchitectAgent } from "./architect"
+import { AUDITOR_PROMPT_METADATA, createAuditorAgent } from "./auditor"
+import { BDD_CONTRACT_PROMPT_METADATA, createBddContractAgent } from "./bdd-contract"
+import { maybeCreateArchitectConfig } from "./builtin-agents/architect-agent"
+import { buildAvailableSkills } from "./builtin-agents/available-skills"
+import { collectPendingBuiltinAgents } from "./builtin-agents/general-agents"
+import { maybeCreateKeymakerConfig } from "./builtin-agents/keymaker-agent"
+import { maybeCreateMorpheusConfig } from "./builtin-agents/morpheus-agent"
+import { CIPHER_PROMPT_METADATA, createCipherAgent } from "./cipher"
+import { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "./construct"
+import { buildCustomAgentMetadata, parseRegisteredAgentSummaries } from "./custom-agent-summaries"
+import type { AvailableCategory } from "./dynamic-agent-prompt-builder"
+import { createKeymakerAgent } from "./keymaker"
+import { createMerovingianAgent, ORACLE_PLAN_BUILDER_METADATA, ORACLE_PROMPT_METADATA } from "./merovingian"
+import { createMorpheusAgent } from "./morpheus"
+import { createNeoAgent, NEO_PROMPT_METADATA } from "./neo"
+import { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./operator"
+import { createSatiAgent } from "./sati"
+import { createSentinelAgent, SENTINEL_PROMPT_METADATA } from "./sentinel"
+import { createSeraphAgent, seraphPromptMetadata } from "./seraph"
+import { createSmithAgent, smithPromptMetadata } from "./smith"
+import { createTankAgent, TANK_PROMPT_METADATA } from "./tank"
+import { createTrinityAgent, TRINITY_PROMPT_METADATA } from "./trinity"
+import type { AgentFactory, AgentOverrides, AgentPromptMetadata, BuiltinAgentName } from "./types"
+
+type AgentSource = AgentFactory | AgentConfig
+
+// oracle is excluded intentionally — built dynamically by buildOracleAgentConfig()
+const agentSources: Partial<Record<BuiltinAgentName, AgentSource>> = {
+  morpheus: createMorpheusAgent,
+  keymaker: createKeymakerAgent,
+  merovingian: createMerovingianAgent,
+  operator: createOperatorAgent,
+  trinity: createTrinityAgent,
+  construct: createConstructAgent,
+  seraph: createSeraphAgent,
+  smith: createSmithAgent,
+  auditor: createAuditorAgent,
+  architect: createArchitectAgent as AgentFactory,
+  cipher: createCipherAgent,
+  sentinel: createSentinelAgent,
+  neo: createNeoAgent,
+  tank: createTankAgent,
+  sati: createSatiAgent,
+  "bdd-contract": createBddContractAgent,
+}
+
+/**
+ * Metadata for each agent, used to build Morpheus's dynamic prompt sections
+ * (Delegation Table, Tool Selection, Key Triggers, etc.)
+ */
+const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
+  merovingian: ORACLE_PROMPT_METADATA,
+  oracle: ORACLE_PLAN_BUILDER_METADATA,
+  operator: OPERATOR_PROMPT_METADATA,
+  trinity: TRINITY_PROMPT_METADATA,
+  construct: CONSTRUCT_PROMPT_METADATA,
+  seraph: seraphPromptMetadata,
+  smith: smithPromptMetadata,
+  auditor: AUDITOR_PROMPT_METADATA,
+  architect: architectPromptMetadata,
+  cipher: CIPHER_PROMPT_METADATA,
+  sentinel: SENTINEL_PROMPT_METADATA,
+  neo: NEO_PROMPT_METADATA,
+  tank: TANK_PROMPT_METADATA,
+  "bdd-contract": BDD_CONTRACT_PROMPT_METADATA,
+}
+
+export async function createBuiltinAgents(
+  disabledAgents: string[] = [],
+  agentOverrides: AgentOverrides = {},
+  directory?: string,
+  systemDefaultModel?: string,
+  categories?: CategoriesConfig,
+  discoveredSkills: BuiltinSkill[] = [],
+  customAgentSummaries?: unknown,
+  browserProvider?: BrowserAutomationProvider,
+  uiSelectedModel?: string,
+  disabledSkills?: Set<string>,
+  globalModel?: string,
+  availableToolNames: string[] = [],
+): Promise<Record<string, AgentConfig>> {
+  const connectedProviders = readConnectedProvidersCache()
+  const providerModelsConnected = connectedProviders
+    ? (readProviderModelsCache()?.connected ?? [])
+    : []
+  const mergedConnectedProviders = Array.from(
+    new Set([...(connectedProviders ?? []), ...providerModelsConnected])
+  )
+  // IMPORTANT: Do NOT call OpenCode client APIs during plugin initialization.
+  // This function is called from config handler, and calling client API causes deadlock.
+  // See: https://github.com/klpanagi/opencode-matrixx/issues/1301
+  const availableModels = await fetchAvailableModels(undefined, {
+    connectedProviders: mergedConnectedProviders.length > 0 ? mergedConnectedProviders : undefined,
+  })
+  const isFirstRunNoCache =
+    availableModels.size === 0 && mergedConnectedProviders.length === 0
+
+  const result: Record<string, AgentConfig> = {}
+
+  const mergedCategories = mergeCategories(categories)
+  const globalOverrideModel = globalModel
+
+  const availableCategories: AvailableCategory[] = Object.entries(mergedCategories).map(([name]) => ({
+    name,
+    description: categories?.[name]?.description ?? CATEGORY_DESCRIPTIONS[name] ?? "General tasks",
+  }))
+
+  const availableSkills = buildAvailableSkills(discoveredSkills, browserProvider, disabledSkills)
+
+  // Collect general agents first (for availableAgents), but don't add to result yet
+  const { pendingAgentConfigs, availableAgents } = collectPendingBuiltinAgents({
+    agentSources,
+    agentMetadata,
+    disabledAgents,
+    agentOverrides,
+    globalOverrideModel,
+    directory,
+    systemDefaultModel,
+    mergedCategories,
+    browserProvider,
+    uiSelectedModel,
+    availableModels,
+    disabledSkills,
+  })
+
+  const registeredAgents = parseRegisteredAgentSummaries(customAgentSummaries)
+  const builtinAgentNames = new Set(Object.keys(agentSources).map((name) => name.toLowerCase()))
+  const disabledAgentNames = new Set(disabledAgents.map((name) => name.toLowerCase()))
+
+  for (const agent of registeredAgents) {
+    const lowerName = agent.name.toLowerCase()
+    if (builtinAgentNames.has(lowerName)) continue
+    if (disabledAgentNames.has(lowerName)) continue
+    if (availableAgents.some((availableAgent) => availableAgent.name.toLowerCase() === lowerName)) continue
+
+    availableAgents.push({
+      name: agent.name,
+      description: agent.description,
+      metadata: buildCustomAgentMetadata(agent.name, agent.description),
+    })
+  }
+
+  const morpheusConfig = maybeCreateMorpheusConfig({
+    disabledAgents,
+    agentOverrides,
+    globalOverrideModel,
+    uiSelectedModel,
+    availableModels,
+    systemDefaultModel,
+    isFirstRunNoCache,
+    availableAgents,
+    availableSkills,
+    availableCategories,
+    mergedCategories,
+    directory,
+    userCategories: categories,
+    availableToolNames,
+  })
+  if (morpheusConfig) {
+    result.morpheus = morpheusConfig
+  }
+
+  const keymakerConfig = maybeCreateKeymakerConfig({
+    disabledAgents,
+    agentOverrides,
+    globalOverrideModel,
+    availableModels,
+    systemDefaultModel,
+    isFirstRunNoCache,
+    availableAgents,
+    availableSkills,
+    availableCategories,
+    mergedCategories,
+    directory,
+    availableToolNames,
+  })
+  if (keymakerConfig) {
+    result.keymaker = keymakerConfig
+  }
+
+  // Add pending agents after morpheus and keymaker to maintain order
+  for (const [name, config] of pendingAgentConfigs) {
+    result[name] = config
+  }
+
+  const architectConfig = maybeCreateArchitectConfig({
+    disabledAgents,
+    agentOverrides,
+    globalOverrideModel,
+    uiSelectedModel,
+    availableModels,
+    systemDefaultModel,
+    availableAgents,
+    availableSkills,
+    mergedCategories,
+    directory,
+    userCategories: categories,
+  })
+  if (architectConfig) {
+    result.architect = architectConfig
+  }
+
+  return result
+}

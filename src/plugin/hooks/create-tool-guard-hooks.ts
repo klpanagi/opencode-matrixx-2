@@ -1,0 +1,210 @@
+import type { HookName, MatrixxConfig } from "../../config"
+import { loadKnowledgeHubs } from "../../features/knowledge-hub/loader"
+import {
+  createBackgroundTaskBlockerHook,
+  createBashFileReadGuardHook,
+  createCommentCheckerHooks,
+  createContextModeEnforcerHook,
+  createDirectoryAgentsInjectorHook,
+  createDocumentReaderGuardHook,
+  createEmptyTaskResponseDetectorHook,
+  createEnvFileWriteGuardHook,
+  createEvolutionWatcherHook,
+  createHashlineReadEnhancerHook,
+  createJsonErrorRecoveryHook,
+  createKnowledgeHubGuardHook,
+  createKnowledgeHubSearchNudgeHook,
+  createQualityGateHook,
+  createReadImageResizerHook,
+  createRulesInjectorHook,
+  createSecretLeakGuardHook,
+  createTaskEditGuardHook,
+  createTaskNotepadWriterHook,
+  createToolOutputTruncatorHook,
+  createWebFetchRedirectGuardHook,
+  createWriteExistingFileGuardHook,
+} from "../../hooks"
+import { createSilentFailureGuardHook } from "../../hooks/silent-failure-guard"
+import {
+  getOpenCodeVersion,
+  isOpenCodeVersionAtLeast,
+  log,
+  OPENCODE_NATIVE_AGENTS_INJECTION_VERSION,
+} from "../../shared"
+import { safeCreateHook } from "../../shared/safe-create-hook"
+import type { PluginContext } from "../types"
+
+export type ToolGuardHooks = {
+  backgroundTaskBlocker: ReturnType<typeof createBackgroundTaskBlockerHook> | null
+  commentChecker: ReturnType<typeof createCommentCheckerHooks> | null
+  toolOutputTruncator: ReturnType<typeof createToolOutputTruncatorHook> | null
+  directoryAgentsInjector: ReturnType<typeof createDirectoryAgentsInjectorHook> | null
+  emptyTaskResponseDetector: ReturnType<typeof createEmptyTaskResponseDetectorHook> | null
+  rulesInjector: ReturnType<typeof createRulesInjectorHook> | null
+  writeExistingFileGuard: ReturnType<typeof createWriteExistingFileGuardHook> | null
+  silentFailureGuard: ReturnType<typeof createSilentFailureGuardHook> | null
+  hashlineReadEnhancer: ReturnType<typeof createHashlineReadEnhancerHook> | null
+  secretLeakGuard: ReturnType<typeof createSecretLeakGuardHook> | null
+  envFileWriteGuard: ReturnType<typeof createEnvFileWriteGuardHook> | null
+  jsonErrorRecovery: ReturnType<typeof createJsonErrorRecoveryHook> | null
+  bashFileReadGuard: ReturnType<typeof createBashFileReadGuardHook> | null
+  contextModeEnforcer: ReturnType<typeof createContextModeEnforcerHook> | null
+  readImageResizer: ReturnType<typeof createReadImageResizerHook> | null
+  webfetchRedirectGuard: ReturnType<typeof createWebFetchRedirectGuardHook> | null
+  qualityGate: ReturnType<typeof createQualityGateHook> | null
+  taskEditGuard: ReturnType<typeof createTaskEditGuardHook> | null
+  taskNotepadWriter: ReturnType<typeof createTaskNotepadWriterHook> | null
+  documentReaderGuard: ReturnType<typeof createDocumentReaderGuardHook> | null
+  knowledgeHubGuard: ReturnType<typeof createKnowledgeHubGuardHook> | null
+  knowledgeHubSearchNudge: ReturnType<typeof createKnowledgeHubSearchNudgeHook> | null
+  evolutionWatcher: ReturnType<typeof createEvolutionWatcherHook> | null
+}
+
+export function createToolGuardHooks(args: {
+  ctx: PluginContext
+  pluginConfig: MatrixxConfig
+  isHookEnabled: (hookName: HookName) => boolean
+  safeHookEnabled: boolean
+}): ToolGuardHooks {
+  const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
+  const evolutionEnabled = pluginConfig.evolution?.enabled === true
+  const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
+    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+
+  const backgroundTaskBlocker = isHookEnabled("background-task-blocker")
+    ? safeHook("background-task-blocker", () => createBackgroundTaskBlockerHook())
+    : null
+
+  const commentChecker = isHookEnabled("comment-checker")
+    ? safeHook("comment-checker", () => createCommentCheckerHooks(pluginConfig.comment_checker))
+    : null
+
+  const toolOutputTruncator = isHookEnabled("tool-output-truncator")
+    ? safeHook("tool-output-truncator", () =>
+        createToolOutputTruncatorHook(ctx, { experimental: pluginConfig.experimental }))
+    : null
+
+  let directoryAgentsInjector: ReturnType<typeof createDirectoryAgentsInjectorHook> | null = null
+  if (isHookEnabled("directory-agents-injector")) {
+    const currentVersion = getOpenCodeVersion()
+    const hasNativeSupport =
+      currentVersion !== null && isOpenCodeVersionAtLeast(OPENCODE_NATIVE_AGENTS_INJECTION_VERSION)
+    if (hasNativeSupport) {
+      log("directory-agents-injector auto-disabled due to native OpenCode support", {
+        currentVersion,
+        nativeVersion: OPENCODE_NATIVE_AGENTS_INJECTION_VERSION,
+      })
+    } else {
+      directoryAgentsInjector = safeHook("directory-agents-injector", () => createDirectoryAgentsInjectorHook(ctx))
+    }
+  }
+
+
+  const emptyTaskResponseDetector = isHookEnabled("empty-task-response-detector")
+    ? safeHook("empty-task-response-detector", () => createEmptyTaskResponseDetectorHook(ctx))
+    : null
+
+  const rulesInjector = isHookEnabled("rules-injector")
+    ? safeHook("rules-injector", () => createRulesInjectorHook(ctx))
+    : null
+
+  const writeExistingFileGuard = isHookEnabled("write-existing-file-guard")
+    ? safeHook("write-existing-file-guard", () => createWriteExistingFileGuardHook(ctx))
+    : null
+
+  const silentFailureGuard = isHookEnabled("silent-failure-guard")
+    ? safeHook("silent-failure-guard", () => createSilentFailureGuardHook(ctx))
+    : null
+
+  const hashlineReadEnhancer = isHookEnabled("hashline-read-enhancer")
+    ? safeHook("hashline-read-enhancer", () => createHashlineReadEnhancerHook(ctx, { hashline_edit: { enabled: pluginConfig.experimental?.hashline_edit ?? false } }))
+    : null
+
+  const secretLeakGuard = isHookEnabled("secret-leak-guard")
+    ? safeHook("secret-leak-guard", () => createSecretLeakGuardHook(ctx, pluginConfig.security?.secret_scanning))
+    : null
+
+  const envFileWriteGuard = isHookEnabled("env-file-write-guard")
+    ? safeHook("env-file-write-guard", () => createEnvFileWriteGuardHook(pluginConfig.security?.env_file_guard))
+    : null
+
+  const jsonErrorRecovery = isHookEnabled("json-error-recovery")
+    ? safeHook("json-error-recovery", () => createJsonErrorRecoveryHook(ctx))
+    : null
+
+  const bashFileReadGuard = isHookEnabled("bash-file-read-guard")
+    ? safeHook("bash-file-read-guard", () => createBashFileReadGuardHook())
+    : null
+
+  const contextModeEnforcer = isHookEnabled("context-mode-enforcer")
+    ? safeHook("context-mode-enforcer", () => createContextModeEnforcerHook(pluginConfig))
+    : null
+
+  const readImageResizer = isHookEnabled("read-image-resizer")
+    ? safeHook("read-image-resizer", () => createReadImageResizerHook(ctx))
+    : null
+
+  const webfetchRedirectGuard = isHookEnabled("webfetch-redirect-guard")
+    ? safeHook("webfetch-redirect-guard", () => createWebFetchRedirectGuardHook(ctx))
+    : null
+
+  const qualityGate = isHookEnabled("quality-gate")
+    ? safeHook("quality-gate", () => createQualityGateHook())
+    : null
+
+  const taskEditGuard = isHookEnabled("task-edit-guard")
+    ? safeHook("task-edit-guard", () => createTaskEditGuardHook(ctx))
+    : null
+
+  const taskNotepadWriter = isHookEnabled("task-notepad-writer")
+    ? safeHook("task-notepad-writer", () => createTaskNotepadWriterHook({ ...ctx, config: pluginConfig }))
+    : null
+
+  const documentReaderGuard = isHookEnabled("document-reader-guard")
+    ? safeHook("document-reader-guard", () => createDocumentReaderGuardHook(ctx))
+    : null
+
+  const knowledgeHubGuard = isHookEnabled("knowledge-hub-guard")
+    ? safeHook("knowledge-hub-guard", () =>
+        createKnowledgeHubGuardHook(ctx, {
+          getHubs: () => loadKnowledgeHubs(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
+        }))
+    : null
+
+  const knowledgeHubSearchNudge = isHookEnabled("knowledge-hub-search-nudge")
+    ? safeHook("knowledge-hub-search-nudge", () =>
+        createKnowledgeHubSearchNudgeHook(ctx, {
+          getHubs: () => loadKnowledgeHubs(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
+        }))
+    : null
+
+  const evolutionWatcher = evolutionEnabled && isHookEnabled("evolution-watcher")
+    ? safeHook("evolution-watcher", () => createEvolutionWatcherHook(ctx, pluginConfig.evolution))
+    : null
+
+  return {
+    backgroundTaskBlocker,
+    commentChecker,
+    toolOutputTruncator,
+    directoryAgentsInjector,
+    emptyTaskResponseDetector,
+    rulesInjector,
+    writeExistingFileGuard,
+    silentFailureGuard,
+    hashlineReadEnhancer,
+    secretLeakGuard,
+    envFileWriteGuard,
+    jsonErrorRecovery,
+    bashFileReadGuard,
+    contextModeEnforcer,
+    readImageResizer,
+    webfetchRedirectGuard,
+    qualityGate,
+    taskEditGuard,
+    taskNotepadWriter,
+    documentReaderGuard,
+    knowledgeHubGuard,
+    knowledgeHubSearchNudge,
+    evolutionWatcher,
+  }
+}
