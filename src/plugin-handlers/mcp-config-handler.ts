@@ -1,7 +1,7 @@
 import type { MatrixxConfig } from "../config";
-import { buildBuiltinMcpEntries } from "../mcp";
-import { setMcpStartupFailures } from "../mcp/mcp-startup-state";
-import { isCommandAvailable } from "../mcp/mcp-validator";
+import { buildBuiltinMcpEntries } from "../mcps";
+import { setMcpStartupFailures } from "../mcps/mcp-startup-state";
+import { isCommandAvailable } from "../mcps/mcp-validator";
 import { log } from "../shared";
 import type { PluginComponents } from "./plugin-components-loader";
 

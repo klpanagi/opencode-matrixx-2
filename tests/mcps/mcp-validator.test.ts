@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { validateWebsearchConfig } from "../../src/mcp/mcp-validator"
+import { validateWebsearchConfig } from "../../src/mcps/mcp-validator"
 
 describe("validateWebsearchConfig", () => {
   const originalTavily = process.env.TAVILY_API_KEY

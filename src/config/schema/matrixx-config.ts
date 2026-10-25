@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { AnyMcpNameSchema } from "../../mcp/types"
+import { AnyMcpNameSchema } from "../../mcps/types"
 import { AgentDefinitionsConfigSchema } from "./agent-definitions"
 import { BuiltinAgentNameSchema, BuiltinSkillNameSchema } from "./agent-names"
 import { AgentOverridesSchema } from "./agent-overrides"
