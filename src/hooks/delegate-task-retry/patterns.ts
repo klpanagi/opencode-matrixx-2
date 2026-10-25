@@ -62,7 +62,7 @@ export const DELEGATE_TASK_ERROR_PATTERNS: DelegateTaskErrorPattern[] = [
   {
     pattern: "AbortError",
     errorType: "abort_error",
-    fixHint: "AbortError — retry. Check preemptive-compaction not triggering at same time.",
+    fixHint: "AbortError — retry. Check compaction not triggering at same time.",
   },
   {
     pattern: "failed to start within timeout",

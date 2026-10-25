@@ -43,7 +43,17 @@ export function mergeAgentConfig(
   override: AgentOverrideConfig,
   directory?: string
 ): AgentConfig {
-  const { system_append, model, variant, request: overrideRequest, ...rest } = override
+  // Legacy V1 `tools` allow/deny maps are not part of the V2 permission
+  // ruleset vocabulary — drop the key so it never leaks onto the agent.
+  // (Unknown keys such as temperature intentionally pass through via rest.)
+  const {
+    system_append,
+    model,
+    variant,
+    request: overrideRequest,
+    tools: _legacyTools,
+    ...rest
+  } = override as AgentOverrideConfig & { tools?: unknown }
   const merged: AgentConfig = { ...base, ...rest }
 
   if (model !== undefined) {

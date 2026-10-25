@@ -136,10 +136,10 @@ describe("plan-tool binding — tool registry presence", () => {
     expect(typeof createPlanTasksTool).toBe("function")
   })
 
-  test("planToolsRecord in tool-registry includes plan_read and plan_tasks", () => {
-    //#given — read the tool-registry source and verify the record construction
+  test("planToolsRecord in tool-catalog includes plan_read and plan_tasks", () => {
+    //#given — read the tool-catalog source and verify the record construction
     const registrySource = readFileSync(
-      repoPath("src/plugin/tool-registry.ts"),
+      repoPath("src/plugin/tool-catalog.ts"),
       "utf8",
     )
 

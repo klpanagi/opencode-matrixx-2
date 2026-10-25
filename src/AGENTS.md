@@ -8,40 +8,36 @@ Main plugin entry point and orchestration layer. Plugin initialization, hook reg
 
 ```
 src/
-├── index.ts                          # Main plugin entry (106 lines) — MatrixxPlugin factory
-├── create-hooks.ts                   # Hook coordination: core, continuation, skill (62 lines)
-├── create-managers.ts                # Manager initialization: Tmux, Background, SkillMcp, Config (80 lines)
-├── create-tools.ts                   # Tool registry + skill context composition (54 lines)
-├── plugin-interface.ts               # Plugin interface assembly — 7 OpenCode hooks (66 lines)
+├── index.ts                          # V2-native { id, setup } entry → setup-domains
 ├── plugin-config.ts                  # Config loading orchestration (user + project merge, 180 lines)
 ├── plugin-state.ts                   # Model cache state (context limits, anthropic 1M flag, 12 lines)
 ├── agents/                           # 14 AI agents (32 files) — see agents/AGENTS.md
 ├── cli/                              # CLI installer, doctor (107+ files) — see cli/AGENTS.md
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Background agents, skills, commands (21 dirs) — see features/AGENTS.md
-│   ├── hooks/                            # 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) in 3 tiers — see hooks/AGENTS.md
+│   ├── hooks/                            # 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) leaf domains — see hooks/AGENTS.md
 ├── mcp/                              # Built-in MCPs (3: websearch, context7, document-reader) — see mcp/AGENTS.md
-├── plugin/                           # Plugin interface composition (21 files)
+├── plugin/                           # V2 composition root (setup-domains) + V1 adapters (17 files)
 ├── plugin-handlers/                  # Config loading, plan inheritance (15 files) — see plugin-handlers/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (~85 files) — see shared/AGENTS.md
-└── tools/                            # 24 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-gating.ts) — see tools/AGENTS.md
+└── tools/                            # 24 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-policy.ts) — see tools/AGENTS.md
 ```
 
-## PLUGIN INITIALIZATION (10 steps)
+## PLUGIN INITIALIZATION (`setup-domains.ts`)
 
 1. `injectServerAuthIntoClient(ctx.client)` — Auth injection
 2. `startTmuxCheck()` — Tmux availability
 3. `loadPluginConfig(ctx.directory, ctx)` — User + project config merge → Zod validation
 4. `createFirstMessageVariantGate()` — First message variant override gate
-5. `createModelCacheState()` — Model context limits cache
-6. `createManagers(...)` → 4 managers:
-   - `TmuxSessionManager` — Multi-pane tmux sessions
-   - `BackgroundManager` — Parallel subagent execution
-   - `ConfigHandler` — Plugin config API to OpenCode
-7. `createTools(...)` → `createSkillContext()` + `createAvailableCategories()` + `createToolRegistry()`
-8. `createHooks(...)` → `createCoreHooks()` + `createContinuationHooks()` + `createSkillHooks()`
-9. `createPluginInterface(...)` → 7 OpenCode hook handlers
-10. Return plugin with `experimental.session.compacting`
+5. Domain managers (tmux, background, config handler) — inline, no wrapper
+6. `setupToolsDomain(...)` → skill context + categories + tool catalog
+7. Leaf hook domains → `setupChatHooks` + `setupToolHooks` + `setupCompactionHooks`
+8. Assemble `Hooks` + `registerDomains(...)` onto the V2 context
+
+## HOOK REGISTRATION (leaf domains, no tiers)
+
+**Session** (`create-session-hooks.ts`):
+- context-window-monitor, session-recovery, think-mode, matrix-loop, anthropic-effort, ...
 
 ## HOOK REGISTRATION (3 tiers)
 
@@ -50,13 +46,17 @@ src/
 - Tool Guard (8): comment-checker, tool-output-truncator, rules-injector, write-existing-file-guard, ...
 - Transform (3): keyword-detector, context-injector, thinking-block-validator
 
-**Continuation Hooks** (`create-continuation-hooks.ts`):
+**Continuation** (`create-continuation-hooks.ts`):
 - 8 hooks: `stop-continuation-guard`, `compaction-context-injector`, `task-continuation-enforcer` (file-backed `.matrixx/tasks`, project-scoped), `unstable-agent-babysitter`, `nudge-loop-breaker`, `background-notification`, `architect`, `plan-persister` ...
 
-**Skill Hooks** (`create-skill-hooks.ts`):
+**Skill** (`create-skill-hooks.ts`):
 - 2 hooks: category-skill-reminder, auto-slash-command
 
-## PLUGIN INTERFACE (7 OpenCode handlers)
+**Transform** (`create-transform-hooks.ts` + `create-tool-guard-hooks.ts`):
+- keyword-detector, context-injector, thinking-block-validator, comment-checker,
+  tool-output-truncator, rules-injector, write-existing-file-guard, ...
+
+## PLUGIN INTERFACE (assembled `Hooks`)
 
 | Handler | Source | Purpose |
 |---------|--------|---------|

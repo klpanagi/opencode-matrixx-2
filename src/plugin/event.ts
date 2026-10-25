@@ -1,6 +1,4 @@
 import type { MatrixxConfig } from "../config"
-import type { CreatedHooks } from "../create-hooks"
-import type { Managers } from "../create-managers"
 import { invalidateSdkMessageCache } from "../features/hook-message-injector"
 import {
   clearSessionAgent,
@@ -14,6 +12,7 @@ import { log } from "../shared/logger"
 import { lspManager } from "../tools"
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
 import { normalizeSessionStatusToIdle } from "./session-status-normalizer"
+import type { DomainHooks, DomainManagers } from "./setup-domains"
 import type { PluginContext } from "./types"
 
 type FirstMessageVariantGate = {
@@ -25,10 +24,10 @@ export function createEventHandler(args: {
   ctx: PluginContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
-  managers: Managers
-  hooks: CreatedHooks
+  managers: DomainManagers
+  hooks: DomainHooks
 }): (input: { event: { type: string; properties?: Record<string, unknown> } }) => Promise<void> {
-  const { ctx, firstMessageVariantGate, managers, hooks } = args
+  const { ctx, firstMessageVariantGate, hooks } = args
 
   const dispatchToHooks = async (input: { event: { type: string; properties?: Record<string, unknown> } }): Promise<void> => {
     await Promise.resolve(hooks.autoUpdateChecker?.event?.(input))
@@ -51,7 +50,6 @@ export function createEventHandler(args: {
     await Promise.resolve(hooks.architectHook?.handler?.(input))
     await Promise.resolve(hooks.planPersister?.event?.(input))
     await Promise.resolve(hooks.runtimeFallback?.event?.(input))
-    await Promise.resolve(hooks.evolutionCompressor?.event?.(input))
   }
 
 
@@ -106,15 +104,7 @@ export function createEventHandler(args: {
       }
 
       firstMessageVariantGate.markSessionCreated(sessionInfo)
-
-      await managers.tmuxSessionManager.onSessionCreated(
-        event as {
-          type: string
-          properties?: {
-            info?: { id?: string; parentID?: string; title?: string }
-          }
-        },
-      )
+      // D5: native session APIs own subagent display; no tmux mirror.
     }
 
     if (event.type === "session.deleted") {
@@ -129,9 +119,7 @@ export function createEventHandler(args: {
         invalidateSdkMessageCache(sessionInfo.id)
         firstMessageVariantGate.clear(sessionInfo.id)
         await lspManager.cleanupTempDirectoryClients()
-        await managers.tmuxSessionManager.onSessionDeleted({
-          sessionID: sessionInfo.id,
-        })
+        // D5: native session APIs own subagent display; no tmux mirror.
       }
     }
 

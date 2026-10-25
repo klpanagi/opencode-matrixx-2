@@ -89,24 +89,25 @@ describe("BackgroundManager handle persistence", () => {
     expect(restored?.agent).toBe("explore")
   })
 
-  test("reconciles a stale running handle to stopped without re-acquiring concurrency", async () => {
+  test("restores a running handle as statusUncertain without host probing", async () => {
+    // NOTE (D5): restart reconciliation was deleted — restoreHandles() never
+    // probes the host. Persisted running/pending handles reload as
+    // statusUncertain and stay revivable with force: true.
     //#given a manager that died while a task was still running
     const manager = makeManager()
     const task = await launchRunningTask(manager)
     manager.shutdown()
 
-    //#when a fresh manager restores from disk and probes the (idle, empty) host
+    //#when a fresh manager restores from disk
     const restoredManager = makeManager()
     await restoredManager.restoreHandles()
 
-    //#then the task is truthfully stopped, its session re-attached, and no slot re-acquired
+    //#then the task reloads as statusUncertain, session re-attached
     const restored = restoredManager.getTask(task.id)
     expect(restored).toBeDefined()
-    expect(restored?.status).toBe("stopped")
-    expect(restored?.terminalReason).toBe("no-output")
+    expect(restored?.status).toBe("statusUncertain")
+    expect(restored?.terminalReason).toBe("uncertain")
     expect(restored?.sessionID).toBe("ses_child")
-    expect(restored?.concurrencyKey).toBeUndefined()
-    expect(restored?.concurrencyGroup).toBe("explore")
   })
 
   test("sweeps stale handle files on restore", async () => {
@@ -160,95 +161,5 @@ describe("handle persistence source guard", () => {
       const content = readFileSync(join(import.meta.dir, name), "utf-8")
       expect(content).not.toContain("background_tasks.json")
     }
-  })
-})
-describe("session title repair on restore", () => {
-  function makeRestoreClient(opts: { title?: string; getThrows?: boolean; updateCalls: unknown[] }) {
-    return {
-      session: {
-        get: async () => {
-          if (opts.getThrows) throw new Error("transport boom")
-          return { data: { directory: dir, title: opts.title ?? "" } }
-        },
-        create: async () => ({ data: { id: "ses_child" } }),
-        status: async () => ({ data: { ses_child: { type: "busy" } } }),
-        messages: async () => ({ data: [] }),
-        promptAsync: async () => ({}),
-        abort: async () => ({}),
-        todo: async () => ({ data: [] }),
-        update: async (args: unknown) => {
-          opts.updateCalls.push(args)
-          return { data: {} }
-        },
-      },
-    }
-  }
-
-  function persistRunningHandle(): BackgroundTask {
-    const task: BackgroundTask = {
-      id: "bg_abc12345",
-      parentSessionID: "ses_parent",
-      parentMessageID: "msg_parent",
-      description: "Investigate the thing",
-      prompt: "",
-      agent: "explore",
-      status: "running",
-      sessionID: "ses_child",
-      queuedAt: new Date(Date.now() - 2000),
-      startedAt: new Date(Date.now() - 1000),
-    }
-    writeHandle(dir, task)
-    return task
-  }
-
-  function makeRestoreManager(client: unknown): BackgroundManager {
-    const manager = new BackgroundManager({ client, directory: dir } as unknown as PluginInput)
-    managers.push(manager)
-    return manager
-  }
-
-  test("repairs an empty session title on the running restore path", async () => {
-    //#given a persisted running handle whose session title is empty
-    persistRunningHandle()
-    const updateCalls: unknown[] = []
-    const manager = makeRestoreManager(makeRestoreClient({ title: "", updateCalls }))
-
-    //#when restoring handles
-    await manager.restoreHandles()
-
-    //#then session.update is called with the shared title format
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0]).toEqual({
-      path: { id: "ses_child" },
-      body: { title: "Investigate the thing (@explore subagent)" },
-    })
-    expect(manager.getTask("bg_abc12345")?.status).toBe("running")
-  })
-
-  test("skips repair when the session already has a title", async () => {
-    //#given a persisted running handle whose session already has a title
-    persistRunningHandle()
-    const updateCalls: unknown[] = []
-    const manager = makeRestoreManager(makeRestoreClient({ title: "keep me", updateCalls }))
-
-    //#when restoring handles
-    await manager.restoreHandles()
-
-    //#then no title update is issued
-    expect(updateCalls).toHaveLength(0)
-    expect(manager.getTask("bg_abc12345")?.status).toBe("running")
-  })
-
-  test("a throwing session.get never rejects restoreHandles", async () => {
-    //#given a persisted running handle with a failing session.get
-    persistRunningHandle()
-    const updateCalls: unknown[] = []
-    const manager = makeRestoreManager(makeRestoreClient({ getThrows: true, updateCalls }))
-
-    //#when restoring handles
-    await manager.restoreHandles()
-
-    //#then restore still resolves and the task is running
-    expect(manager.getTask("bg_abc12345")?.status).toBe("running")
   })
 })

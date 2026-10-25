@@ -1,16 +1,13 @@
 /// <reference types="bun-types" />
 
 /**
- * Guardrail: `config.tools.todowrite` / `todoread` must be suppressed
+ * Guardrail: the legacy todo tools must stay denied for every agent
  * UNCONDITIONALLY (invariant I1).
  *
- * Today `src/plugin-handlers/tool-config-handler.ts` wraps the global
- * `todowrite: false, todoread: false` in an `isTaskSystem` ternary, and every
- * per-agent branch has a `todowrite: "allow", todoread: "allow"` alternative.
- * Once the task system is unconditional (Tasks 3 + 4) that alternative is
- * unreachable — the guardrail below proves it by construction.
- *
- * This file is RED by design until Task 4.
+ * V2 expresses gating as per-agent `{action, resource, effect}` rulesets —
+ * there is no global `config.tools` map. `applyToolConfig` seeds the
+ * baseline deny (`denyTodoPermissions`) for every agent, so no
+ * tasks.enabled branch or per-agent override can ever allow them.
  *
  * CI note: this file lives under `tests/plugin-handlers/`, which is a
  * **directory** entry in `script/mock-heavy-list.txt`, so it runs isolated and
@@ -26,160 +23,157 @@ import { applyToolConfig } from "../../src/plugin-handlers/tool-config-handler"
 const SRC = path.join(import.meta.dir, "../../src")
 const HANDLER = path.join(SRC, "plugin-handlers/tool-config-handler.ts")
 
-type TodoPermission = "allow" | "deny" | true | false | undefined
+type Rule = { action: string; resource?: string; effect: string }
 
-/** Agent keys the handler looks up, in source order. */
+/** Agent keys the handler grants explicit overrides for. */
 const AGENT_KEYS = ["operator", "trinity", "construct", "architect", "morpheus", "keymaker", "oracle", "mouse"] as const
 
-/** Agents that receive a task-system arm and therefore must deny both todo tools. */
-const TODO_DENY_AGENTS = ["architect", "morpheus", "keymaker", "oracle", "mouse"] as const
-
-/** Agents whose permission block is scoped to other tools only (never a todo allow). */
-const SCOPED_AGENTS = ["operator", "trinity", "construct"] as const
-
-function run(pluginConfig: unknown, seedTools?: Record<string, unknown>) {
-  const config: Record<string, unknown> = seedTools ? { tools: { ...seedTools } } : { tools: {} }
-  const agentResult: Record<string, unknown> = Object.fromEntries(AGENT_KEYS.map((key) => [key, {}]))
+function run(pluginConfig: unknown, seedAgents?: Record<string, unknown>) {
+  const config: Record<string, unknown> = {}
+  const agentResult: Record<string, unknown> =
+    seedAgents ?? Object.fromEntries(AGENT_KEYS.map((key) => [key, {}]))
   applyToolConfig({
     config,
     pluginConfig: pluginConfig as MatrixxConfig,
     agentResult,
   })
-  return {
-    tools: config.tools as Record<string, unknown>,
-    agentResult,
-  }
+  return { config, agentResult }
+}
+
+function rulesOf(agentResult: Record<string, unknown>, name: string): Rule[] {
+  return ((agentResult[name] as { permissions?: Rule[] })?.permissions ?? []) as Rule[]
 }
 
 describe("todo tools are unconditionally suppressed (I1)", () => {
-  test("tasks.enabled true, false and absent all yield todowrite/todoread === false", () => {
+  test("tasks.enabled true, false and absent all yield todo denies", () => {
     //#given tasks.enabled true, false, and absent
     const enabled = run({ tasks: { enabled: true, scope: "project" } })
     const disabled = run({ tasks: { enabled: false, scope: "project" } })
     const absent = run({})
 
-    //#then the tool map denies both todo tools in all three cases
+    //#then every agent denies both todo tools in all three cases
     for (const result of [enabled, disabled, absent]) {
-      expect(result.tools.todowrite).toBe(false)
-      expect(result.tools.todoread).toBe(false)
+      for (const name of AGENT_KEYS) {
+        const rules = rulesOf(result.agentResult, name)
+        for (const action of ["todowrite", "todoread"]) {
+          expect(rules.some((r) => r.action === action && r.effect === "deny")).toBe(true)
+          expect(rules.some((r) => r.action === action && r.effect === "allow")).toBe(false)
+        }
+      }
     }
   })
 
-  test("the resulting tool map is identical across all three cases", () => {
+  test("the resulting rulesets are identical across all three cases", () => {
     //#given the same three configurations
     const enabled = run({ tasks: { enabled: true, scope: "project" } })
     const disabled = run({ tasks: { enabled: false, scope: "project" } })
     const absent = run({})
 
     //#then no branch can differ — the task-system key no longer reaches the handler
-    expect(disabled.tools).toEqual(enabled.tools)
-    expect(absent.tools).toEqual(enabled.tools)
+    for (const name of AGENT_KEYS) {
+      expect(rulesOf(disabled.agentResult, name)).toEqual(rulesOf(enabled.agentResult, name))
+      expect(rulesOf(absent.agentResult, name)).toEqual(rulesOf(enabled.agentResult, name))
+    }
   })
 })
 
 describe("no agent branch ever allows todo tools", () => {
-  test("no per-agent permission map grants todowrite/todoread", () => {
+  test("no per-agent ruleset grants todowrite/todoread", () => {
     //#given the default agent set
     const { agentResult } = run({ tasks: { enabled: true, scope: "project" } })
     const offenders: string[] = []
 
-    //#then every agent's todo permissions are "deny" (never "allow"/true)
+    //#then every agent todo rule is deny (never allow)
     for (const [name, value] of Object.entries(agentResult)) {
-      const permission = (value as { permission?: Record<string, TodoPermission> }).permission ?? {}
-      for (const key of ["todowrite", "todoread"] as const) {
-        const decision = permission[key]
-        if (decision === "allow" || decision === true) {
-          offenders.push(`${name}.${key}=${String(decision)}`)
+      const rules = ((value as { permissions?: Rule[] })?.permissions ?? []) as Rule[]
+      for (const r of rules) {
+        if ((r.action === "todowrite" || r.action === "todoread") && r.effect === "allow") {
+          offenders.push(`${name}.${r.action}=${r.effect}`)
         }
       }
     }
     expect(offenders).toEqual([])
   })
 
-  test("every agent branch that mentions todo tools uses deny", () => {
-    //#given the handler source
-    const source = fs.readFileSync(HANDLER, "utf-8")
-    const matches = source.match(/todo(?:write|read)\s*:\s*"[^"]*"|todo(?:write|read)\s*:\s*(?:true|false)/g) ?? []
+  test("every todo rule in the handler source is a deny", () => {
+    //#given the handler source plus the permission module it imports denies from
+    const handlerSource = fs.readFileSync(HANDLER, "utf-8")
+    const permsSource = fs.readFileSync(path.join(SRC, "plugin-handlers/task-permissions.ts"), "utf-8")
+    const source = handlerSource + permsSource
+    const matches = source.match(/rule\("(?:todowrite|todoread)",\s*"[^"]*"\)/g) ?? []
 
-    //#then only false / "deny" appear
+    //#then only deny effects appear
+    expect(matches.length).toBeGreaterThan(0)
     for (const match of matches) {
-      expect(match).toMatch(/:\s*false$|:\s*"deny"$/)
+      expect(match).toMatch(/"deny"\)$/)
     }
   })
 })
 
 describe("plugin config wins over a hand-set user override", () => {
-  test("a user tools.todowrite=true override does not survive", () => {
+  test("a user todo allow in config.tools is untouched by the handler (V2 has no global tool map)", () => {
     //#given a user opencode.json with tools: { todowrite: true, todoread: true }
-    const userTools = { todowrite: true, todoread: true }
+    const config: Record<string, unknown> = { tools: { todowrite: true, todoread: true } }
+    const agentResult: Record<string, unknown> = Object.fromEntries(AGENT_KEYS.map((key) => [key, {}]))
 
-    //#when applyToolConfig runs (plugin tools are spread after the user's)
-    const { tools } = run({}, userTools)
+    //#when applyToolConfig runs (it only rewrites per-agent rulesets)
+    applyToolConfig({ config, pluginConfig: {} as MatrixxConfig, agentResult })
 
-    //#then the plugin value wins and the override is gone
-    expect(tools.todowrite).toBe(false)
-    expect(tools.todoread).toBe(false)
+    //#then the handler leaves config.tools alone; per-agent denies still hold
+    expect(config.tools).toEqual({ todowrite: true, todoread: true })
+    for (const name of AGENT_KEYS) {
+      const rules = rulesOf(agentResult, name)
+      expect(rules.some((r) => r.action === "todowrite" && r.effect === "deny")).toBe(true)
+    }
   })
 
-  test("the user override loses for tasks.enabled true, false and absent", () => {
-    //#given a hand-set user override under every task-system configuration
-    const userTools = { todowrite: true, todoread: true }
-    const enabled = run({ tasks: { enabled: true } }, userTools)
-    const disabled = run({ tasks: { enabled: false } }, userTools)
-    const absent = run({}, userTools)
+  test("a user per-agent todo allow survives alongside the baseline deny (last-match-wins)", () => {
+    //#given a hand-set per-agent allow (fill-only baseline never restates declared actions)
+    const seedAgents: Record<string, unknown> = Object.fromEntries(
+      AGENT_KEYS.map((key) => [key, { permissions: [{ action: "todowrite", resource: "*", effect: "allow" }] }]),
+    )
 
-    //#when applyToolConfig spreads the plugin tools after the user's
+    //#when
+    const { agentResult } = run({ tasks: { enabled: true } }, seedAgents)
 
-    //#then the user's enable flag is overwritten in all three cases
-    for (const result of [enabled, disabled, absent]) {
-      expect(result.tools.todowrite).toBe(false)
-      expect(result.tools.todoread).toBe(false)
+    //#then the declared allow is kept and no duplicate deny shadows it
+    for (const name of AGENT_KEYS) {
+      const rules = rulesOf(agentResult, name)
+      const allows = rules.filter((r) => r.action === "todowrite" && r.effect === "allow")
+      expect(allows.length).toBe(1)
     }
   })
 })
 
 describe("every agent arm denies the todo tools", () => {
-  test("the source file looks up exactly the agents the test enumerates", () => {
+  test("the source file grants overrides for exactly the agents the test enumerates", () => {
     //#given the handler source
     const source = fs.readFileSync(HANDLER, "utf-8")
 
-    //#then the agent keys found in the source match the literal list
-    const found = [...source.matchAll(/agentByKey\(params\.agentResult,\s*"([^"]+)"\)/g)].map((m) => m[1])
+    //#then the override keys found in the source match the literal list
+    const found = [...source.matchAll(/^\s{4}(operator|trinity|construct|architect|morpheus|keymaker|oracle|mouse):/gm)].map((m) => m[1])
     expect(found.sort()).toEqual([...AGENT_KEYS].sort())
   })
 
-  test("each todo-arm agent denies todowrite and todoread", () => {
+  test("each override agent denies todowrite and todoread via baseline", () => {
     //#given the full agent set
     const { agentResult } = run({ tasks: { enabled: true, scope: "project" } })
 
-    //#then every todo-arm agent carries an explicit deny for both keys
-    for (const name of TODO_DENY_AGENTS) {
-      const permission = (agentResult[name] as { permission?: Record<string, TodoPermission> }).permission ?? {}
-      expect(permission.todowrite).toBe("deny")
-      expect(permission.todoread).toBe("deny")
-    }
-  })
-
-  test("no other agent arm introduces a todo permission", () => {
-    //#given the remaining agent arms, whose permissions are scoped to other tools
-    const { agentResult } = run({ tasks: { enabled: true, scope: "project" } })
-
-    //#then none of them mentions a todo key at all
-    for (const name of SCOPED_AGENTS) {
-      const permission = (agentResult[name] as { permission?: Record<string, TodoPermission> }).permission ?? {}
-      expect(permission.todowrite).toBeUndefined()
-      expect(permission.todoread).toBeUndefined()
-    }
-  })
-
-  test("the todo-arm and scoped sets together cover every agent key", () => {
-    //#given the two disjoint agent groups
-
-    //#then their union is the complete agent set, with no gap and no overlap
-    const union = new Set([...TODO_DENY_AGENTS, ...SCOPED_AGENTS])
-    expect(union.size).toBe(AGENT_KEYS.length)
+    //#then every override agent carries an explicit deny for both keys
     for (const name of AGENT_KEYS) {
-      expect(union.has(name)).toBe(true)
+      const rules = rulesOf(agentResult, name)
+      expect(rules.some((r) => r.action === "todowrite" && r.effect === "deny")).toBe(true)
+      expect(rules.some((r) => r.action === "todoread" && r.effect === "deny")).toBe(true)
     }
+  })
+
+  test("agents without an explicit override arm still get the baseline denies", () => {
+    //#given an agent the override map does not name
+    const { agentResult } = run({}, { sentinel: {} })
+
+    //#then the baseline still denies both todo tools
+    const rules = rulesOf(agentResult, "sentinel")
+    expect(rules.some((r) => r.action === "todowrite" && r.effect === "deny")).toBe(true)
+    expect(rules.some((r) => r.action === "todoread" && r.effect === "deny")).toBe(true)
   })
 })

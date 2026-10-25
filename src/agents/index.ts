@@ -1,3 +1,12 @@
+export type {
+  AgentTransformDomain,
+  AgentTransformEditor,
+  AgentTransformEntryFailure,
+  AgentTransformInfo,
+  RegisterAgentTransformInput,
+  RegisterAgentTransformResult,
+} from "./agents.transform"
+export { applyAgentEntry, registerAgentTransform } from "./agents.transform"
 export { architectPromptMetadata, createArchitectAgent } from "./architect"
 export {
   AUDITOR_PROMPT_METADATA,

@@ -228,7 +228,7 @@ describe("P2: prefix-cache stability — affected agents are clean", () => {
 
     //#then
     for (const token of envTokens) {
-      expect(agent.prompt).not.toContain(token)
+      expect(agent.system).not.toContain(token)
     }
   })
 
@@ -238,7 +238,7 @@ describe("P2: prefix-cache stability — affected agents are clean", () => {
 
     //#then
     for (const token of envTokens) {
-      expect(agent.prompt).not.toContain(token)
+      expect(agent.system).not.toContain(token)
     }
   })
 
@@ -248,7 +248,7 @@ describe("P2: prefix-cache stability — affected agents are clean", () => {
 
     //#then
     for (const token of envTokens) {
-      expect(agent.prompt).not.toContain(token)
+      expect(agent.system).not.toContain(token)
     }
   })
 })

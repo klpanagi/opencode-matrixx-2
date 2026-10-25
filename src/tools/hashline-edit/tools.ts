@@ -1,5 +1,4 @@
 import { type ToolContext, type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
-import type { PluginContext } from "../../plugin/types"
 import { executeHashlineEditTool } from "./hashline-edit-executor"
 import type { RawHashlineEdit } from "./normalize-edits"
 import { HASHLINE_EDIT_DESCRIPTION } from "./tool-description"
@@ -15,7 +14,7 @@ function isPlansPath(filePath: string): boolean {
   return filePath.toLowerCase().replace(/\\/g, "/").includes(".matrixx/plans")
 }
 
-export function createHashlineEditTool(ctx?: PluginContext): ToolDefinition {
+export function createHashlineEditTool(): ToolDefinition {
   return tool({
     description: HASHLINE_EDIT_DESCRIPTION,
     args: {
@@ -48,7 +47,7 @@ export function createHashlineEditTool(ctx?: PluginContext): ToolDefinition {
             "Use plan_update for plan file edits (LINE#ID anchors supported) and plan_read for reading plan files."
         )
       }
-      return executeHashlineEditTool(args, context, ctx)
+      return executeHashlineEditTool(args, context)
     },
   })
 }

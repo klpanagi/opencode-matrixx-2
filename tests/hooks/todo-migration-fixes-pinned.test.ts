@@ -56,49 +56,38 @@ function lineOf(source: string, needle: string): number {
   return source.slice(0, source.indexOf(needle)).split("\n").length
 }
 
-describe("R1: the three background completion gates are still wired to plugin config", () => {
+describe("R1: D5 removed the completion gates — completion is native events only", () => {
+  // NOTE (D5 native migration): the reconcile / session.idle / polling
+  // completion gates (hasIncompleteTasksForSession + 2h window) were deleted
+  // with the polling loops and restart reconciliation. Completion is detected
+  // from native session.idle / session.error events via handleEvent().
+  // These pins guard against reintroducing the deleted orchestration.
   const source = readSrc(MANAGER)
 
-  test("10. the reconcile gate (manager.ts:315,321) passes config and the 2h window", () => {
-    //#given the reconcile gate's injected predicate
-    const block = blockAfter(source, "hasPendingTaskWork: async (sessionID) =>")
-
-    //#when the query fields are inspected
-    //#then the gate reads the configured store and the BACKGROUND window
-    expect(block).toContain("config: this.pluginConfig")
-    expect(block).toContain("staleAfterMs: getBackgroundStaleAfterMs(this.pluginConfig)")
+  test("10. no completion-gate predicate survives in the manager", () => {
+    expect(source).not.toContain("hasIncompleteTasksForSession")
+    expect(source).not.toContain("getBackgroundStaleAfterMs")
   })
 
-  test("11. the session.idle gate (manager.ts:1329,1332) passes config and the 2h window", () => {
-    //#given the session.idle completion gate
-    const gate = blockAfter(source.slice(source.indexOf("const hasIncompleteTaskWork = hasIncompleteTasksForSession({", 2000)), "hasIncompleteTasksForSession({")
-
-    //#when the query fields are inspected
-    //#then the gate reads the configured store and the BACKGROUND window
-    expect(gate).toContain("config: this.pluginConfig")
-    expect(gate).toContain("staleAfterMs: getBackgroundStaleAfterMs(this.pluginConfig)")
+  test("11. no polling or reconcile probes survive in the manager", () => {
+    expect(source).not.toContain("pollRunningTasks")
+    expect(source).not.toContain("checkAndInterruptStaleTasks")
+    expect(source).not.toContain("pruneStaleTasksAndNotifications")
+    // "reconcile" appears in prose comments only — no reconcile identifiers
+    expect(source).not.toMatch(/reconcile[A-Z(]/)
+    expect(source).not.toContain("reconcileRestoredTask")
   })
 
-  test("12. the polling gate (manager.ts:2237,2240) passes config and the 2h window", () => {
-    //#given the polling completion gate (the third of the three)
-    const third = source.lastIndexOf("hasIncompleteTasksForSession({")
-    const gate = blockAfter(source.slice(third), "hasIncompleteTasksForSession({")
-
-    //#when the query fields are inspected
-    //#then it carries the same two arguments as the other two sites
-    expect(gate).toContain("config: this.pluginConfig")
-    expect(gate).toContain("staleAfterMs: getBackgroundStaleAfterMs(this.pluginConfig)")
+  test("12. completion arrives via the native event route", () => {
+    expect(source).toContain("handleEvent")
+    expect(source).toContain("session.idle")
+    expect(source).toContain("session.error")
   })
 
-  test("13. every gate site in manager.ts carries BOTH arguments — no site drops the window", () => {
-    //#given all hasIncompleteTasksForSession call sites in the manager
-    const gates = source.match(/hasIncompleteTasksForSession\(\{/g)?.length ?? 0
-    const complete = source.match(/staleAfterMs: getBackgroundStaleAfterMs\(this\.pluginConfig\),/g)?.length ?? 0
-    const configured = source.match(/config: this\.pluginConfig,/g)?.length ?? 0
-
-    //#when each site's argument list is counted
-    //#then there are exactly 3 sites and each has both — dropping one is the T7 defect
-    expect({ gates, complete, configured }).toEqual({ gates: 3, complete: 3, configured: 3 })
+  test("13. stale-handle expiry is the throttle-free TTL sweep", () => {
+    expect(source).toContain("sweepStaleHandles")
+    // the reset-hook comment below names the removed throttle; no live code may use it
+    expect(source).not.toMatch(/this\.lastPruneAt|lastPruneAt:/)
   })
 })
 
@@ -268,16 +257,18 @@ describe("D4 and the config-compat surface are pinned on purpose", () => {
     expect(missing).toEqual([])
   })
 
-  test("27. tool-config-handler.ts still denies both legacy todo tools globally", () => {
-    //#given the tool config handler source
-    const handler = readSrc("plugin-handlers/tool-config-handler.ts")
+  test("27. tool-config-handler.ts still denies both legacy todo tools via ruleset", () => {
+    //#given the tool config handler source plus the permission module it spreads
+    const handler =
+      readSrc("plugin-handlers/tool-config-handler.ts") +
+      readSrc("plugin-handlers/task-permissions.ts")
 
-    //#when the global tool table is inspected
-    //#then the deny map and both `false` entries survive — this is what keeps the
-    //     legacy tools unusable, not merely deprecated
-    expect(handler).toContain("denyTodoTools")
-    expect(handler).toMatch(/todowrite: false/)
-    expect(handler).toMatch(/todoread: false/)
-    expect(lineOf(handler, "denyTodoTools")).toBeGreaterThan(0)
+    //#when the deny ruleset is inspected
+    //#then the shared deny ruleset survives — this is what keeps the
+    //     legacy tools unusable, not merely deprecated (V2 has no global tool map)
+    expect(handler).toContain("denyTodoPermissions")
+    expect(handler).toContain("todowrite")
+    expect(handler).toContain("todoread")
+    expect(lineOf(handler, "denyTodoPermissions")).toBeGreaterThan(0)
   })
 })

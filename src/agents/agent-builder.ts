@@ -18,6 +18,11 @@ export function buildAgent(
   disabledSkills?: Set<string>
 ): AgentConfig {
   const base = isFactory(source) ? source(model) : { ...source }
+  // V2 agents carry ModelRef objects; normalize legacy "provider/id" strings
+  // so category variant/request merging below operates on the object form.
+  if (typeof base.model === "string") {
+    base.model = parseModelRef(base.model)
+  }
   const categoryConfigs: Record<string, CategoryConfig> = mergeCategories(categories)
 
   const agentWithCategory = base as AgentConfig & { category?: string; skills?: string[] }

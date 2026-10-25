@@ -111,7 +111,7 @@ export function createPlanUpdateTool(ctx?: PluginContext, postApply?: PostApplyH
         const scoped = resolveSectionScopedEdits(originalContent, edits as RawSectionEdit[])
         if (scoped.kind === "error") return JSON.stringify(scoped.body)
         const effectiveEdits = scoped.edits
-        const result = await executeHashlineEditTool({ filePath: resolved, edits: effectiveEdits as never }, context as never, ctx)
+        const result = await executeHashlineEditTool({ filePath: resolved, edits: effectiveEdits as never }, context as never)
         if (!result.startsWith("Updated")) {
           return result
         }

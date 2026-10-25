@@ -14,10 +14,10 @@ describe("mergeCategories", () => {
     expect(Object.keys(result)).toEqual(Object.keys(DEFAULT_CATEGORIES))
   })
 
-  it("filters out categories with disable: true", () => {
+  it("filters out categories with disabled: true", () => {
     //#given
     const userCategories = {
-      "bullet-time": { disable: true },
+      "bullet-time": { disabled: true },
     }
 
     //#when
@@ -28,10 +28,10 @@ describe("mergeCategories", () => {
     expect(Object.keys(result).length).toBe(Object.keys(DEFAULT_CATEGORIES).length - 1)
   })
 
-  it("keeps categories with disable: false", () => {
+  it("keeps categories with disabled: false", () => {
     //#given
     const userCategories = {
-      "bullet-time": { disable: false },
+      "bullet-time": { disabled: false },
     }
 
     //#when
@@ -58,7 +58,7 @@ describe("mergeCategories", () => {
   it("allows user to disable custom categories", () => {
     //#given
     const userCategories = {
-      "my-custom": { model: "openai/gpt-5.2", disable: true },
+      "my-custom": { model: "openai/gpt-5.2", disabled: true },
     }
 
     //#when

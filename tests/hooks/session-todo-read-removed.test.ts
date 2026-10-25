@@ -100,15 +100,15 @@ describe("each former call site is clean", () => {
     expect(hasRead).toBe(false)
   })
 
-  test("5. the background-agent reconciler has no session.todo( read", () => {
-    //#given the reconciler source
-    const source = readSrc("features/background-agent/reconcile.ts")
+  test("5. the background-agent reconciler is gone (D5: restart visibility only, no host probes)", () => {
+    //#given the D5-native background-agent layout
+    const reconcilePath = path.join(SRC, "features/background-agent/reconcile.ts")
 
-    //#when the read is searched for
-    const hasRead = source.includes("session.todo(")
+    //#when the reconciler file is looked up
+    const exists = fs.existsSync(reconcilePath)
 
-    //#then it is absent
-    expect(hasRead).toBe(false)
+    //#then it is absent — restoreHandles() never probes the host
+    expect(exists).toBe(false)
   })
 
   test("6. the plan-persister hook has no session.todo( fallback", () => {
@@ -149,14 +149,16 @@ describe("config compatibility is preserved (pinned on purpose)", () => {
     ])
   })
 
-  test("9. the tool-config deny map still hides both legacy todo tools", () => {
-    //#given the tool config handler source
-    const source = readSrc("plugin-handlers/tool-config-handler.ts")
+  test("9. the tool-config deny ruleset still hides both legacy todo tools", () => {
+    //#given the tool config handler source plus the permission module it spreads
+    const source =
+      readSrc("plugin-handlers/tool-config-handler.ts") +
+      readSrc("plugin-handlers/task-permissions.ts")
 
     //#when the deny mechanism is inspected
-    //#then the shared deny map and both global tool entries survive
-    expect(source).toContain("denyTodoTools")
-    expect(source).toContain("todowrite: false")
-    expect(source).toContain("todoread: false")
+    //#then the shared deny ruleset (no global tool map in V2) survives
+    expect(source).toContain("denyTodoPermissions")
+    expect(source).toContain("todowrite")
+    expect(source).toContain("todoread")
   })
 })

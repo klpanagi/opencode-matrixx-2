@@ -1,17 +1,17 @@
 import { describe, expect, test } from "bun:test"
-import { loadBuiltinCommands } from "../../../src/features/builtin-commands/commands"
+import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands/commands.transform"
 import { END_ULTRAWORK_TEMPLATE } from "../../../src/features/builtin-commands/templates/end-ultrawork"
 import { HANDOFF_TEMPLATE } from "../../../src/features/builtin-commands/templates/handoff"
 import { REMOVE_DEADCODE_TEMPLATE } from "../../../src/features/builtin-commands/templates/remove-deadcode"
 import type { BuiltinCommandName } from "../../../src/features/builtin-commands/types"
 
-describe("loadBuiltinCommands", () => {
+describe("buildBuiltinCommandEntries", () => {
   test("should include handoff command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands.handoff).toBeDefined()
@@ -23,7 +23,7 @@ describe("loadBuiltinCommands", () => {
     const disabledCommands: BuiltinCommandName[] = ["handoff"]
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands.handoff).toBeUndefined()
@@ -33,7 +33,7 @@ describe("loadBuiltinCommands", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands.handoff.template).toContain(HANDOFF_TEMPLATE)
@@ -43,7 +43,7 @@ describe("loadBuiltinCommands", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands.handoff.template).toContain("$SESSION_ID")
@@ -55,20 +55,20 @@ describe("loadBuiltinCommands", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands.handoff.description).toContain("context summary")
   })
 })
 
-describe("loadBuiltinCommands - remove-deadcode", () => {
+describe("buildBuiltinCommandEntries - remove-deadcode", () => {
   test("should include remove-deadcode command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands["remove-deadcode"]).toBeDefined()
@@ -80,7 +80,7 @@ describe("loadBuiltinCommands - remove-deadcode", () => {
     const disabledCommands: BuiltinCommandName[] = ["remove-deadcode"]
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands["remove-deadcode"]).toBeUndefined()
@@ -90,7 +90,7 @@ describe("loadBuiltinCommands - remove-deadcode", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["remove-deadcode"].template).toContain(REMOVE_DEADCODE_TEMPLATE)
@@ -100,7 +100,7 @@ describe("loadBuiltinCommands - remove-deadcode", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["remove-deadcode"].template).toContain("$ARGUMENTS")
@@ -110,20 +110,20 @@ describe("loadBuiltinCommands - remove-deadcode", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["remove-deadcode"].description).toContain("dead code")
   })
 })
 
-describe("loadBuiltinCommands - end-ultrawork", () => {
+describe("buildBuiltinCommandEntries - end-ultrawork", () => {
   test("should include end-ultrawork command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands["end-ultrawork"]).toBeDefined()
@@ -135,7 +135,7 @@ describe("loadBuiltinCommands - end-ultrawork", () => {
     const disabledCommands: BuiltinCommandName[] = ["end-ultrawork"]
 
     //#when
-    const commands = loadBuiltinCommands(disabledCommands)
+    const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
     expect(commands["end-ultrawork"]).toBeUndefined()
@@ -145,7 +145,7 @@ describe("loadBuiltinCommands - end-ultrawork", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["end-ultrawork"].template).toContain(END_ULTRAWORK_TEMPLATE)
@@ -155,7 +155,7 @@ describe("loadBuiltinCommands - end-ultrawork", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["end-ultrawork"].template).toContain("$ARGUMENTS")
@@ -165,7 +165,7 @@ describe("loadBuiltinCommands - end-ultrawork", () => {
     //#given - no disabled commands
 
     //#when
-    const commands = loadBuiltinCommands()
+    const commands = buildBuiltinCommandEntries()
 
     //#then
     expect(commands["end-ultrawork"].description).toContain("ultrawork")

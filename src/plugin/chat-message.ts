@@ -1,5 +1,4 @@
 import type { MatrixxConfig } from "../config"
-import type { CreatedHooks } from "../create-hooks"
 import {
   setSessionAgent,
   setSessionModel,
@@ -11,6 +10,7 @@ import {
   resolveVariantForModel,
 } from "../shared/agent-variant"
 import { log } from "../shared/logger"
+import type { DomainHooks } from "./setup-domains"
 import type { PluginContext } from "./types"
 
 type FirstMessageVariantGate = {
@@ -38,7 +38,7 @@ export function createChatMessageHandler(args: {
   ctx: PluginContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
-  hooks: CreatedHooks
+  hooks: DomainHooks
 }): (
   input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
   output: ChatMessageHandlerOutput

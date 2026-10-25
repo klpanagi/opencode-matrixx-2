@@ -4,9 +4,7 @@ import type {
   AvailableCategory,
 } from "../agents/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../config"
-import type { Managers } from "../create-managers"
 import { resolvePlanCap } from "../features/mission-state/constants"
-import { log } from "../shared"
 import { filterDisabledTools } from "../shared/disabled-tools"
 import { isTaskSystemEnabled } from "../shared/task-system-gating"
 import {
@@ -51,6 +49,7 @@ import {
   interactive_bash,
 } from "../tools"
 import { createPlanTasksTool } from "../tools/plan"
+import type { DomainManagers } from "./setup-domains"
 import type { SkillContext } from "./skill-context"
 import {
   isConstructAgentEnabled,
@@ -61,21 +60,21 @@ import {
   shouldEnablePdfFigures,
   shouldEnablePresetTools,
   shouldEnableSessionCleanup,
-} from "./tool-gating"
+} from "./tool-policy"
 import type { PluginContext, ToolsRecord } from "./types"
 
-export type ToolRegistryResult = {
+export type ToolCatalogResult = {
   filteredTools: ToolsRecord
   taskSystemEnabled: boolean
 }
 
-export function createToolRegistry(args: {
+export function createToolCatalog(args: {
   ctx: PluginContext
   pluginConfig: MatrixxConfig
-  managers: Pick<Managers, "backgroundManager" | "tmuxSessionManager">
+  managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
-}): ToolRegistryResult {
+}): ToolCatalogResult {
   const { ctx, pluginConfig, managers, skillContext, availableCategories } = args
 
   const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx.client, ctx.directory)
@@ -126,23 +125,6 @@ export function createToolRegistry(args: {
     modelPresets: pluginConfig.model_presets,
     activePreset: pluginConfig.active_preset,
     agentOverrides: pluginConfig.agents,
-    onSyncSessionCreated: async (event) => {
-      log("[index] onSyncSessionCreated callback", {
-        sessionID: event.sessionID,
-        parentID: event.parentID,
-        title: event.title,
-      })
-      await managers.tmuxSessionManager.onSessionCreated({
-        type: "session.created",
-        properties: {
-          info: {
-            id: event.sessionID,
-            parentID: event.parentID,
-            title: event.title,
-          },
-        },
-      })
-    },
   })
 
   const skillTool = createSkillTool({
@@ -169,7 +151,7 @@ export function createToolRegistry(args: {
     : {}
   const hashlineEnabled = pluginConfig.experimental?.hashline_edit ?? false
   const hashlineToolsRecord: Record<string, ToolDefinition> = hashlineEnabled
-    ? { edit: createHashlineEditTool(ctx) }
+    ? { edit: createHashlineEditTool() }
     : {}
 
   const planCap = resolvePlanCap(pluginConfig)

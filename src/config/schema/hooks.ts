@@ -11,7 +11,6 @@ const HookNameEnum = z.enum([
   "empty-task-response-detector",
   "think-mode",
   "context-window-limit-recovery",
-  "preemptive-compaction",
   "rules-injector",
   "background-notification",
   "background-task-blocker",
@@ -57,7 +56,6 @@ const HookNameEnum = z.enum([
   "design-intent-preserver",
   "rtk-bash-rewriter",
   "evolution-watcher",
-  "evolution-compressor",
   "evolution-hitl",
   "context-mode-enforcer",
   "task-edit-guard",
@@ -89,6 +87,10 @@ export const HookNameSchema = z.union([
   z.literal("tasks-todowrite-disabler"),
   /** @deprecated no-op since v2.7 — hook removed, name retained so existing configs keep loading. Remove in v3.0. */
   z.literal("task-notepad"),
+  /** @deprecated no-op (D6) — preemptive-compaction deleted, single compaction hook owns compaction. Retained so existing configs keep loading. */
+  z.literal("preemptive-compaction"),
+  /** @deprecated no-op (D6) — evolution-compressor deleted (context-freed=0 parentless leak), single compaction hook owns compaction. Retained so existing configs keep loading. */
+  z.literal("evolution-compressor"),
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

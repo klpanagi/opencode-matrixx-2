@@ -36,9 +36,15 @@ async function realAgentResult(): Promise<Record<string, unknown>> {
   }
 }
 
-function permissionOf(agentResult: Record<string, unknown>, name: string): Record<string, unknown> {
-  const agent = agentResult[name] as { permission?: Record<string, unknown> }
-  return (agent.permission ?? {}) as Record<string, unknown>
+type Rule = { action: string; resource?: string; effect: string }
+
+function permissionOf(agentResult: Record<string, unknown>, name: string): Rule[] {
+  const agent = agentResult[name] as { permissions?: Rule[] }
+  return agent.permissions ?? []
+}
+
+function hasRule(rules: Rule[], action: string, effect: string): boolean {
+  return rules.some((r) => r.action === action && r.effect === effect)
 }
 
 function modeOf(agentResult: Record<string, unknown>, name: string): string {
@@ -67,7 +73,7 @@ describe("task-store permission grant (mode-derived)", () => {
     //#then
     for (const name of eligible) {
       const permission = permissionOf(agentResult, name)
-      expect(`${name}:${String(permission["task_*"])}`).toBe(`${name}:allow`)
+      expect(`${name}:${hasRule(permission, "task_*", "allow")}`).toBe(`${name}:true`)
     }
   })
 
@@ -80,8 +86,8 @@ describe("task-store permission grant (mode-derived)", () => {
 
     //#then
     const permission = permissionOf(agentResult, "keymaker")
-    expect(permission["task_*"]).toBe("allow")
-    expect(permission.task).toBe("allow")
+    expect(hasRule(permission, "task_*", "allow")).toBe(true)
+    expect(hasRule(permission, "task", "allow")).toBe(true)
   })
 
   test("sentinel keeps its own task denial but gains the task store", async () => {
@@ -94,8 +100,8 @@ describe("task-store permission grant (mode-derived)", () => {
     //#then
     const permission = permissionOf(agentResult, "sentinel")
     // Read-only applies to files; the task store is a separate write channel.
-    expect(permission.task).toBe("deny")
-    expect(permission["task_*"]).toBe("allow")
+    expect(hasRule(permission, "task", "deny")).toBe(true)
+    expect(hasRule(permission, "task_*", "allow")).toBe(true)
   })
 
   test("cipher may delegate per its own instructions", async () => {
@@ -107,8 +113,8 @@ describe("task-store permission grant (mode-derived)", () => {
 
     //#then
     const permission = permissionOf(agentResult, "cipher")
-    expect(permission.task).toBe("allow")
-    expect(permission["task_*"]).toBe("allow")
+    expect(hasRule(permission, "task", "allow")).toBe(true)
+    expect(hasRule(permission, "task_*", "allow")).toBe(true)
   })
 
   test("mouse carve-out: a subagent executor still gets full task permissions", async () => {
@@ -121,22 +127,26 @@ describe("task-store permission grant (mode-derived)", () => {
 
     //#then
     const permission = permissionOf(agentResult, "mouse")
-    expect(permission.task).toBe("allow")
-    expect(permission["task_*"]).toBe("allow")
+    expect(hasRule(permission, "task", "allow")).toBe(true)
+    expect(hasRule(permission, "task_*", "allow")).toBe(true)
   })
 
-  test("a user override is never clobbered by the derived grant", async () => {
+  test("a user override is never clobbered by the derived or explicit grant", async () => {
+    // NOTE: keymaker carries a handler-level explicit grant (it must reach
+    // the task store for its core loop), but a declared deny still wins
+    // (issue #111 option b: the handler is fill-only and must not override).
     //#given
     const agentResult = await realAgentResult()
-    ;(agentResult.keymaker as { permission?: Record<string, unknown> }).permission = {
-      "task_*": "deny",
-    }
+    ;(agentResult.keymaker as { permissions?: Rule[] }).permissions = [
+      { action: "task_*", resource: "*", effect: "deny" },
+    ]
 
     //#when
     apply(agentResult)
 
-    //#then
-    expect(permissionOf(agentResult, "keymaker")["task_*"]).toBe("deny")
+    //#then - declared deny survives; no allow is granted for the same action
+    expect(hasRule(permissionOf(agentResult, "keymaker"), "task_*", "deny")).toBe(true)
+    expect(hasRule(permissionOf(agentResult, "keymaker"), "task_*", "allow")).toBe(false)
   })
 
   test("the legacy todo tools stay denied globally and per agent", async () => {
@@ -146,11 +156,10 @@ describe("task-store permission grant (mode-derived)", () => {
     //#when
     const config = apply(agentResult)
 
-    //#then
-    const tools = config.tools as Record<string, boolean>
-    expect(tools.todowrite).toBe(false)
-    expect(tools.todoread).toBe(false)
-    expect(permissionOf(agentResult, "keymaker").todowrite).toBe("deny")
+    //#then - V2 has no global tool map; denies ride the per-agent ruleset
+    expect(config.tools).toBeUndefined()
+    expect(hasRule(permissionOf(agentResult, "keymaker"), "todowrite", "deny")).toBe(true)
+    expect(hasRule(permissionOf(agentResult, "keymaker"), "todoread", "deny")).toBe(true)
   })
 
   test("a subagent with no task-store role is not granted delegation", async () => {
@@ -164,7 +173,7 @@ describe("task-store permission grant (mode-derived)", () => {
 
     //#then
     const permission = permissionOf(agentResult, "custom-sub")
-    expect(permission["task_*"]).toBeUndefined()
-    expect(permission.task).toBeUndefined()
+    expect(hasRule(permission, "task_*", "allow")).toBe(false)
+    expect(hasRule(permission, "task", "allow")).toBe(false)
   })
 })

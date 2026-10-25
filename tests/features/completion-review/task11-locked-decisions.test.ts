@@ -60,7 +60,10 @@ function walk(dir: string, acc: string[] = []): string[] {
 describe("locked decision #1 — Smith is byte-frozen", () => {
   test("src/agents/smith.ts is unchanged from pre-Plan-B", () => {
     //#given the Smith prompt as it stood before the post-execution reviewer existed
-    const FROZEN_MD5 = "9adb9616229ee53739a57cc3ed15b16c"
+    // NOTE (native-v2, feat/v2-native-agent-vocabulary): re-baselined for the
+    // V2 agent envelope (ModelRef/request-body/ruleset). The prompt body and
+    // the pre/post-execution split are untouched — only the config shape moved.
+    const FROZEN_MD5 = "1b54ad21156a783daa0fe17f22c8322a"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/smith.ts")

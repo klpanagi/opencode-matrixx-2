@@ -267,3 +267,13 @@ export interface V2PluginDefinition {
   readonly id: string
   setup(context: V2Context): Promise<Cleanup | undefined> | Cleanup | undefined
 }
+
+/**
+ * Identity helper mirroring `Plugin.define` from `@opencode/plugin`.
+ * That package is not resolvable in this toolchain; the host validates the
+ * default export structurally (`{ id, setup }`), so this keeps the entry
+ * explicit without adding a dependency.
+ */
+export function definePlugin(definition: V2PluginDefinition): V2PluginDefinition {
+  return definition
+}

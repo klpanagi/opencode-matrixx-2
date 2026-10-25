@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../src/agents/agent-config"
 import { createSatiAgent, SATI_PROMPT_METADATA } from "../../src/agents/sati"
 
 describe("createSatiAgent", () => {
@@ -10,11 +11,11 @@ describe("createSatiAgent", () => {
 
     const config = createSatiAgent(model)
 
-    expect(config.model).toBe(model)
+    expect(config.model).toEqual(parseModelRef(model))
     expect(config.mode).toBe("subagent")
-    expect(config.temperature).toBe(0.1)
-    expect(config.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
-    expect(config.reasoningEffort).toBeUndefined()
+    expect(config.request?.body?.temperature).toBe(0.1)
+    expect(config.request?.body?.thinking).toEqual({ type: "enabled", budgetTokens: 10000 })
+    expect(config.request?.body?.reasoningEffort).toBeUndefined()
   })
 
   //#given a GPT model
@@ -25,9 +26,9 @@ describe("createSatiAgent", () => {
 
     const config = createSatiAgent(model)
 
-    expect(config.model).toBe(model)
-    expect(config.reasoningEffort).toBe("medium")
-    expect(config.thinking).toBeUndefined()
+    expect(config.model).toEqual(parseModelRef(model))
+    expect(config.request?.body?.reasoningEffort).toBe("medium")
+    expect(config.request?.body?.thinking).toBeUndefined()
   })
 
   //#given the factory function
@@ -43,8 +44,8 @@ describe("createSatiAgent", () => {
   test("denies task for self-contained execution", () => {
     const config = createSatiAgent("anthropic/claude-opus-4-6")
 
-    expect(config.permission).toBeDefined()
-    expect(config.permission?.task).toBe("deny")
+    expect(config.permissions).toBeDefined()
+    expect(config.permissions?.some((r) => r.action === "task" && r.effect === "deny")).toBe(true)
   })
 
   //#given a model
@@ -53,7 +54,7 @@ describe("createSatiAgent", () => {
   test("prompt contains frontend-specialist keywords", () => {
     const config = createSatiAgent("anthropic/claude-opus-4-6")
 
-    const prompt = config.prompt
+    const prompt = config.system as string
     const hasFrontendKeyword =
       prompt.includes("FRONTEND") ||
       prompt.includes("COMPONENT") ||

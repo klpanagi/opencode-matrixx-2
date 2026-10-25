@@ -185,7 +185,6 @@
               "empty-task-response-detector",
               "think-mode",
               "context-window-limit-recovery",
-              "preemptive-compaction",
               "rules-injector",
               "background-notification",
               "background-task-blocker",
@@ -229,7 +228,6 @@
               "design-intent-preserver",
               "rtk-bash-rewriter",
               "evolution-watcher",
-              "evolution-compressor",
               "evolution-hitl",
               "context-mode-enforcer",
               "task-edit-guard",
@@ -258,6 +256,14 @@
           {
             "type": "string",
             "const": "task-notepad"
+          },
+          {
+            "type": "string",
+            "const": "preemptive-compaction"
+          },
+          {
+            "type": "string",
+            "const": "evolution-compressor"
           }
         ]
       }

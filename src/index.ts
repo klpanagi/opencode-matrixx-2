@@ -1,18 +1,21 @@
 /**
  * Matrixx — OpenCode plugin entrypoint.
  *
- * OpenCode 2.x loads a plugin by decoding its default export against
- * `{ id, effect } | { id, setup }` (packages/core/src/plugin/module.ts). This
- * file is that entrypoint: it builds the plugin context the core expects, runs
- * the core, and registers the hooks it produces onto the OpenCode domains.
+ * V2-native `{ id, setup }` shape (packages/core/src/plugin/module.ts
+ * decodes the default export against `{ id, effect } | { id, setup }`).
+ * `setup` delegates to the domain setup functions in
+ * `./plugin/setup-domains`, which build `Hooks` fragments directly and
+ * register them onto the V2 context — no factory, no bridge in between.
  *
- * See V2_PORT_PLAN.md for the remaining migration stages.
+ * NOTE: `Plugin.define` from `@opencode/plugin` names the same `{id, setup}`
+ * object; that package is not resolvable in this toolchain, so the entry
+ * uses the structurally identical `definePlugin` helper from
+ * `./plugin/opencode-types` instead of adding a dependency.
  */
 
-import { createV1PluginContext } from "./plugin/opencode-context"
-import { registerV1Hooks, type V1HooksLike } from "./plugin/opencode-hooks"
-import type { Cleanup, V2Context, V2PluginDefinition } from "./plugin/opencode-types"
-import { createMatrixxPlugin } from "./plugin/plugin-factory"
+import type { Cleanup, V2Context } from "./plugin/opencode-types"
+import { definePlugin } from "./plugin/opencode-types"
+import { registerDomains, setupDomains } from "./plugin/setup-domains"
 import { log } from "./shared"
 
 async function setup(ctx: V2Context): Promise<Cleanup> {
@@ -21,14 +24,8 @@ async function setup(ctx: V2Context): Promise<Cleanup> {
     opencode: ctx.app?.version,
   })
 
-  const v1ctx = createV1PluginContext(ctx)
-  const hooks = (await createMatrixxPlugin(v1ctx)) as unknown as V1HooksLike
-  const bridge = await registerV1Hooks({
-    ctx,
-    hooks,
-    directory: v1ctx.directory,
-    worktree: v1ctx.worktree,
-  })
+  const { hooks, directory, worktree } = await setupDomains(ctx)
+  const bridge = await registerDomains({ ctx, hooks, directory, worktree })
 
   log("[matrixx] ready", { registrations: bridge.registrations.length })
 
@@ -38,10 +35,10 @@ async function setup(ctx: V2Context): Promise<Cleanup> {
   }
 }
 
-export default {
+export default definePlugin({
   id: "matrixx",
   setup,
-} satisfies V2PluginDefinition
+})
 
 export type {
   AgentName,

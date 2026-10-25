@@ -14,7 +14,7 @@ export const qualityGateSkill: BuiltinSkill = {
 
 Every code change (write, edit, refactor) MUST be verified before marking complete.
 
-**The quality-gate hook auto-lints .ts files after write/edit tool calls.** You will see lint warnings in the tool output. Address them.
+**Formatting is applied by OpenCode's native formatter pipeline; the quality-gate hook itself runs no checks.** Lint warnings still appear in tool output when present. Address them.
 
 But the hook only covers linting. YOU must run the full verification suite.
 
@@ -29,7 +29,7 @@ Run these in order. ALL must pass before marking task done.
 bun run lint          # Full codebase lint
 bun run lint:fix      # Auto-fix what Biome can
 \`\`\`
-The quality-gate hook runs Biome on each .ts file you write/edit. Fix warnings as they appear.
+OpenCode's native formatter pipeline handles per-file formatting. Fix lint warnings as they appear.
 
 ### 2. Type Check
 \`\`\`bash
@@ -71,19 +71,12 @@ If ANY step fails:
 
 ## HOOK BEHAVIOR
 
-The quality-gate hook in tool.execute.after:
-- Runs Biome on .ts/.tsx/.js/.jsx files after write/edit/multiedit
-- Appends lint warnings to tool output
-- Non-blocking (never halts execution)
-- 10s timeout per file
+The quality-gate hook is a pure non-blocking check (D2):
+- Formatting is owned by OpenCode's native formatter pipeline — no double-format
+- Verification policy (not a running task): bun run lint / typecheck / test / build
+- Never halts tool execution; never starts child processes or timers
 
-You will see output like:
-\`\`\`
-⚠️ **Quality Gate** — lint issues in \`file.ts\`:
-[biome output]
-Run \`bun run lint:fix\` to auto-fix, or address manually.
-\`\`\`
-
+Run \`bun run lint:fix\` to auto-fix, or address issues manually.
 Fix these inline when possible. For bulk fixes, run \`bun run lint:fix\`.
 
 ---

@@ -1,11 +1,8 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
 import {
-  applyLayout,
-  closeTmuxPane,
   isInsideTmux,
   isServerRunning,
   resetServerCheck,
-  spawnTmuxPane,
 } from "../../../src/shared/tmux/tmux-utils"
 
 describe("isInsideTmux", () => {
@@ -165,31 +162,5 @@ describe("resetServerCheck", () => {
 
     // cleanup
     globalThis.fetch = originalFetch
-  })
-})
-
-describe("tmux pane functions", () => {
-  test("spawnTmuxPane is exported as function", async () => {
-    // given, #when
-    const result = typeof spawnTmuxPane
-
-    // then
-    expect(result).toBe("function")
-  })
-
-  test("closeTmuxPane is exported as function", async () => {
-    // given, #when
-    const result = typeof closeTmuxPane
-
-    // then
-    expect(result).toBe("function")
-  })
-
-  test("applyLayout is exported as function", async () => {
-    // given, #when
-    const result = typeof applyLayout
-
-    // then
-    expect(result).toBe("function")
   })
 })

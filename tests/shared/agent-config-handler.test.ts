@@ -13,7 +13,7 @@ afterAll(() => _setDisciplinePathForTesting(undefined))
 
 function makeAgents(names: string[]): Record<string, Record<string, unknown>> {
   const agents: Record<string, Record<string, unknown>> = {}
-  for (const n of names) agents[n] = { prompt: `${n} BASE` }
+  for (const n of names) agents[n] = { system: `${n} BASE` }
   return agents
 }
 
@@ -25,7 +25,7 @@ describe("injectContextDiscipline pure", () => {
     injectContextDiscipline(["grep", "read"], agents)
     //#then: nothing injected
     for (const cfg of Object.values(agents)) {
-      const prompt = (cfg as { prompt: string }).prompt
+      const prompt = (cfg as { system: string }).system
       expect(prompt).not.toContain("Context Discipline")
     }
   })
@@ -37,7 +37,7 @@ describe("injectContextDiscipline pure", () => {
     injectContextDiscipline(["ctx_search", "ctx_batch_execute"], agents)
     //#then: compact discipline in either form
     for (const name of ["mouse", "cipher", "sati", "sentinel", "architect", "customBot"]) {
-      const prompt = (agents[name] as { prompt: string }).prompt
+      const prompt = (agents[name] as { system: string }).system
       expect(prompt.includes("when ctx_* available") || prompt.includes("context-mode")).toBe(true)
       expect(prompt).toContain("ctx_batch_execute")
       expect(prompt).toContain("ctx_search")
@@ -52,7 +52,7 @@ describe("injectContextDiscipline pure", () => {
     injectContextDiscipline(["ctx_search", "ctx_batch_execute", "grep", "glob"], agents)
     //#then: explore with grep/glob fallback
     for (const name of ["trinity", "operator", "seraph", "smith", "merovingian", "construct", "oracle"]) {
-      const prompt = (agents[name] as { prompt: string }).prompt
+      const prompt = (agents[name] as { system: string }).system
       expect(prompt).toContain("when available")
       expect(prompt).toContain("ctx_search")
       expect(prompt).toContain("grep/glob fallback")
@@ -65,7 +65,7 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: explore points at LSP/ast_grep instead
-    const prompt = (agents["trinity"] as { prompt: string }).prompt
+    const prompt = (agents["trinity"] as { system: string }).system
     expect(prompt).toContain("when available")
     expect(prompt).toContain("ctx_search")
     expect(prompt).not.toContain("grep/glob fallback")
@@ -78,7 +78,7 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: bdd-contract gets explore
-    const prompt = (agents["bdd-contract"] as { prompt: string }).prompt
+    const prompt = (agents["bdd-contract"] as { system: string }).system
     expect(prompt).toContain("when available")
     expect(prompt).toContain("ctx_search")
   })
@@ -89,8 +89,8 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["headroom_retrieve", "headroom_search"], agents)
     //#then: both get headroom
-    expect((agents["trinity"] as { prompt: string }).prompt).toContain("headroom_retrieve")
-    expect((agents["mouse"] as { prompt: string }).prompt).toContain("headroom_retrieve")
+    expect((agents["trinity"] as { system: string }).system).toContain("headroom_retrieve")
+    expect((agents["mouse"] as { system: string }).system).toContain("headroom_retrieve")
   })
 
   it("should inject both ctx and headroom when both present", () => {
@@ -99,10 +99,10 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search", "headroom_retrieve"], agents)
     //#then: both
-    const trinityPrompt = (agents["trinity"] as { prompt: string }).prompt
+    const trinityPrompt = (agents["trinity"] as { system: string }).system
     expect(trinityPrompt).toContain("ctx_search")
     expect(trinityPrompt).toContain("headroom_retrieve")
-    const mousePrompt = (agents["mouse"] as { prompt: string }).prompt
+    const mousePrompt = (agents["mouse"] as { system: string }).system
     expect(mousePrompt).toContain("ctx_search")
     expect(mousePrompt).toContain("headroom_retrieve")
   })
@@ -113,22 +113,22 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: morpheus/keymaker untouched, trinity injected
-    expect((agents["morpheus"] as { prompt: string }).prompt).not.toContain("when available")
-    expect((agents["morpheus"] as { prompt: string }).prompt).not.toContain("when ctx_* available")
-    expect((agents["morpheus"] as { prompt: string }).prompt).toBe("morpheus BASE")
-    expect((agents["keymaker"] as { prompt: string }).prompt).toBe("keymaker BASE")
-    expect((agents["trinity"] as { prompt: string }).prompt).toContain("when available")
+    expect((agents["morpheus"] as { system: string }).system).not.toContain("when available")
+    expect((agents["morpheus"] as { system: string }).system).not.toContain("when ctx_* available")
+    expect((agents["morpheus"] as { system: string }).system).toBe("morpheus BASE")
+    expect((agents["keymaker"] as { system: string }).system).toBe("keymaker BASE")
+    expect((agents["trinity"] as { system: string }).system).toContain("when available")
   })
 
   it("should be idempotent when already contains Context Discipline", () => {
     //#given: already has discipline
     const agents: Record<string, Record<string, unknown>> = {
-      customBot: { prompt: "BASE\n\n### Context Discipline (when ctx_* available)\nold" },
+      customBot: { system: "BASE\n\n### Context Discipline (when ctx_* available)\nold" },
     }
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: not duplicated
-    const prompt = (agents["customBot"] as { prompt: string }).prompt
+    const prompt = (agents["customBot"] as { system: string }).system
     const count = (prompt.match(/Context Discipline/g) ?? []).length
     expect(count).toBe(1)
   })
@@ -139,7 +139,7 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: compact
-    const prompt = (agents["myCustom"] as { prompt: string }).prompt
+    const prompt = (agents["myCustom"] as { system: string }).system
     expect(prompt.includes("when ctx_* available") || prompt.includes("context-mode")).toBe(true)
     expect(prompt).toContain("ctx_search")
   })
@@ -148,14 +148,14 @@ describe("injectContextDiscipline pure", () => {
     //#given: no prompt
     const agents: Record<string, Record<string, unknown>> = {
       noPromptAgent: { mode: "subagent" },
-      trinity: { prompt: "BASE" },
+      trinity: { system: "BASE" },
     }
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: no throw, trinity still injected, noPrompt preserved
     expect(agents["noPromptAgent"]).toBeDefined()
-    expect((agents["noPromptAgent"] as { prompt?: string }).prompt).toBeUndefined()
-    expect((agents["trinity"] as { prompt: string }).prompt).toContain("ctx_search")
+    expect((agents["noPromptAgent"] as { system?: string }).system).toBeUndefined()
+    expect((agents["trinity"] as { system: string }).system).toContain("ctx_search")
   })
 
   it("should handle case-insensitive explore names", () => {
@@ -164,9 +164,9 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: Trinity/Oracle get explore (lowercased), MOUSE gets compact
-    expect((agents["Trinity"] as { prompt: string }).prompt).toContain("when available")
-    expect((agents["Oracle"] as { prompt: string }).prompt).toContain("when available")
-    const mousePrompt = (agents["MOUSE"] as { prompt: string }).prompt
+    expect((agents["Trinity"] as { system: string }).system).toContain("when available")
+    expect((agents["Oracle"] as { system: string }).system).toContain("when available")
+    const mousePrompt = (agents["MOUSE"] as { system: string }).system
     expect(mousePrompt.includes("when ctx_* available") || mousePrompt.includes("context-mode")).toBe(true)
   })
 
@@ -176,7 +176,7 @@ describe("injectContextDiscipline pure", () => {
     //#when
     injectContextDiscipline(["ctx_search"], agents)
     //#then: edit-read guidance in either form
-    const prompt = (agents["cipher"] as { prompt: string }).prompt
+    const prompt = (agents["cipher"] as { system: string }).system
     expect(prompt.includes("LINE#ID") || prompt.includes("reading correct") || prompt.includes("ctx_execute_file")).toBe(true)
   })
 
@@ -190,7 +190,7 @@ describe("injectContextDiscipline pure", () => {
 
     //#then: the pointer names the ctx_* tools and the marker, and the static table is gone
     for (const name of ["cipher", "trinity"]) {
-      const prompt = (agents[name] as { prompt: string }).prompt
+      const prompt = (agents[name] as { system: string }).system
       expect(prompt).toContain("<context_window_protection>")
       expect(prompt).toContain("ctx_search")
       expect(prompt).not.toContain("| Scenario | Tool |")

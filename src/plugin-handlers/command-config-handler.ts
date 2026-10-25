@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../config";
-import { loadBuiltinCommands } from "../features/builtin-commands";
+import { buildBuiltinCommandEntries } from "../features/builtin-commands";
 import type { PluginComponents } from "./plugin-components-loader";
 
 export async function applyCommandConfig(params: {
@@ -8,7 +8,7 @@ export async function applyCommandConfig(params: {
   ctx: { directory: string };
   pluginComponents: PluginComponents;
 }): Promise<void> {
-  const builtinCommands = loadBuiltinCommands(params.pluginConfig.disabled_commands);
+  const builtinCommands = buildBuiltinCommandEntries(params.pluginConfig.disabled_commands);
   const systemCommands = (params.config.command as Record<string, unknown>) ?? {};
 
   params.config.command = {

@@ -1,6 +1,15 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { extname, join } from "node:path"
 
+/**
+ * Native tool policy for the OpenCode v2 layer.
+ *
+ * Pure, side-effect-free predicates decide which tools register; the host
+ * applies them through singular `ctx.tool.transform` (pure rewrites) and
+ * `ctx.permission` decisions. Optional shell environment shaping goes through
+ * `ctx.shell`. Singular namespaces only by design.
+ */
+
 /** Directories never descended into during the bounded startup scan. */
 export const TOOL_GATING_SKIP_DIRS: readonly string[] = [
   "node_modules",
@@ -128,4 +137,109 @@ export function shouldEnableEvolutionTool(enabled: boolean | undefined): boolean
 /** session_cleanup: opt-in only, because the tool deletes sessions. */
 export function shouldEnableSessionCleanup(enabled: boolean | undefined): boolean {
   return enabled === true
+}
+
+export type ToolPermissionEffect = "allow" | "deny" | "ask"
+
+export interface ToolPermissionDecision {
+  decision: ToolPermissionEffect
+  reason: string
+}
+
+export interface ToolPolicyOptions {
+  sessionCleanupEnabled: boolean
+  presetEnabled: boolean
+}
+
+/**
+ * Pure permission decision for natively gated tools. Never throws: unknown
+ * tools default to allow so a policy miss cannot crash a turn.
+ */
+export function decideToolPermission(
+  toolName: string,
+  options: ToolPolicyOptions,
+): ToolPermissionDecision {
+  if (toolName === "session_cleanup" && !options.sessionCleanupEnabled) {
+    return { decision: "deny", reason: "session_cleanup is opt-in and not enabled" }
+  }
+  if (toolName === "preset" && !options.presetEnabled) {
+    return { decision: "deny", reason: "preset tools are opt-in and not enabled" }
+  }
+  return { decision: "allow", reason: "no native policy denies this tool" }
+}
+
+export interface ToolEditorLike {
+  remove(id: string): void
+}
+
+/**
+ * Pure `ctx.tool.transform` rewrite: drop disabled tools from the editor.
+ * Replayable: same input list always yields the same removals. Never throws.
+ */
+export function applyDisabledToolsTransform(
+  editor: ToolEditorLike,
+  disabledTools: readonly string[] | undefined,
+): void {
+  if (!disabledTools || disabledTools.length === 0) return
+  for (const name of disabledTools) {
+    try {
+      editor.remove(name)
+    } catch {
+    }
+  }
+}
+
+interface NativeToolCtxLike {
+  tool: {
+    transform(callback: (editor: ToolEditorLike) => void): Promise<unknown>
+  }
+  permission: {
+    assert(input: Record<string, unknown>): Promise<void>
+  }
+  shell: {
+    hook(name: "create.before", callback: (event: Record<string, unknown>) => void): Promise<unknown>
+  }
+}
+
+/**
+ * Native registration helper: applies the pure disabled-tools rewrite via
+ * singular `ctx.tool.transform`. Permission denials stay on the
+ * `ctx.permission` path (see decideToolPermission); this transform only
+ * prunes the editor so gated tools never register.
+ */
+export async function registerNativeToolPolicy(
+  ctx: NativeToolCtxLike,
+  disabledTools: readonly string[] | undefined,
+): Promise<void> {
+  await ctx.tool.transform((editor) => {
+    applyDisabledToolsTransform(editor, disabledTools)
+  })
+}
+
+/**
+ * Native permission probe: routes a gated tool through `ctx.permission`
+ * and maps the outcome to a structured decision. A denial resolves to a
+ * clean deny decision instead of throwing up the stack.
+ */
+export async function checkNativeToolPermission(
+  ctx: NativeToolCtxLike,
+  input: Record<string, unknown>,
+): Promise<ToolPermissionDecision> {
+  try {
+    await ctx.permission.assert(input)
+    return { decision: "allow", reason: "host granted permission" }
+  } catch (error) {
+    return {
+      decision: "deny",
+      reason: error instanceof Error ? error.message : "host denied permission",
+    }
+  }
+}
+
+/**
+ * Native shell passthrough registered via `ctx.shell`. Keeps the tool
+ * environment inherit-only (no secrets injected, no mutation).
+ */
+export async function registerNativeShellPolicy(ctx: NativeToolCtxLike): Promise<void> {
+  await ctx.shell.hook("create.before", () => undefined)
 }

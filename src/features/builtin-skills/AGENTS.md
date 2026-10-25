@@ -104,21 +104,25 @@ All skills are loaded from `src/features/builtin-skills/` via `createBuiltinSkil
 
 1. Create `src/features/builtin-skills/skills/<name>.ts`
 2. Export a `Skill` object: `export const mySkill: Skill = { name, description, template, ... }`
-3. Add to the `skillLoaders` map in `src/features/builtin-skills/skills.ts` (line 7-56):
+3. Add a static import plus a `skillFactories` entry in `src/features/builtin-skills/skills.ts`:
    ```typescript
-   "my-name": () => require("./skills/my-name").mySkill,
+   import { mySkill } from "./skills/my-name"
+   // ...
+   "my-name": () => mySkill,
    ```
+   Content dirs are data only — no `require()` seam. Registration onto the
+   domain goes through `registerSkillTransform` in `./skills.transform.ts`.
 4. The factory pattern means no other change is needed — the lazy wrapper handles hydration.
 
 ## HOW TO REMOVE A BUILT-IN SKILL
 
-Remove from `skillLoaders` in `skills.ts`. Note: users with `disabled_skills: ["my-skill"]` will see a benign "not found" message.
+Remove the static import and the `skillFactories` entry in `skills.ts`. Note: users with `disabled_skills: ["my-skill"]` will see a benign "not found" message.
 
 ## KNOWN HOTSPOTS
 
 - `src/features/builtin-skills/skills/git-master.ts` — large skill with many workflow procedures
 - `src/features/builtin-skills/skills/ulw-research.ts` — references the research skill
-- `src/features/builtin-skills/skills.ts` `skillLoaders` map — must stay in sync with `skills/*.ts` exports
+- `src/features/builtin-skills/skills.ts` `skillFactories` table — must stay in sync with `skills/*.ts` exports
 
 ## Skill Description SDO (Skill Discovery Optimization)
 

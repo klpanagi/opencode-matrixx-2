@@ -208,12 +208,10 @@ describe("Retention invariant", () => {
       mkdirSync(dir, { recursive: true })
       writeHandle(TMP_ROOT, task)
 
-      // Access private method via bracket notation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tryComplete = (mgr as any).tryCompleteTask.bind(mgr)
-
-      //#when
-      await tryComplete(task, "direct-test")
+      // NOTE (D5): completion now arrives via the public native-event route
+      // (wired by the background-notification hook) — no private tryCompleteTask.
+      //#when native session.idle fires for the task's session
+      mgr.handleEvent({ type: "session.idle", properties: { sessionID: task.sessionID } })
 
       //#then
       const filePath = join(dir, `${task.id}.json`)
@@ -223,16 +221,20 @@ describe("Retention invariant", () => {
     })
   })
 
-  describe("prune — running tasks are never prune-killed", () => {
-    test("pruning leaves a stale running task in memory and on disk untouched", async () => {
+  describe("restore — stale-handle TTL sweep (D5: replaces prune throttle)", () => {
+    // NOTE (D5 native migration): the in-memory prune throttle
+    // (`lastPruneAt` + `pruneStaleTasksAndNotifications`) was removed. Stale
+    // expiry is now the throttle-free TTL sweep in `handle-index.ts`
+    // (`sweepStaleHandles`), invoked by `restoreHandles()`. Handles are
+    // restart-visibility only; live tasks live in the memory map.
+    test("running handle within TTL reloads as statusUncertain and stays on disk", async () => {
       //#given
       const ctx = makeMockClient({
         sessionStatuses: { "sess_prune01": { type: "idle" } },
       })
-      const mgr = buildManager(ctx)
 
-      // Fast-forward time so TASK_TTL_MS has passed
-      const past = Date.now() - 60 * 60 * 1000 // 1 hour ago
+      // 5 minutes ago: within the default 30-minute handle TTL
+      const past = Date.now() - 5 * 60 * 1000
 
       const task: BackgroundTask = {
         id: "bg_prune01",
@@ -245,40 +247,64 @@ describe("Retention invariant", () => {
         agent: "oracle",
         startedAt: new Date(past),
       }
-      mgr["tasks"].set(task.id, task)
 
       const dir = join(TMP_ROOT, ".matrixx", BG_HANDLE_DIR_NAME)
       mkdirSync(dir, { recursive: true })
       writeHandle(TMP_ROOT, task)
 
-      // Disarm prune throttle so prune runs immediately
-      ;(mgr as unknown as { lastPruneAt: number }).lastPruneAt = 0
+      //#when a fresh manager restores handles (TTL sweep + reload)
+      const mgr = buildManager(ctx)
+      await mgr.restoreHandles()
 
-      //#when
-      // Invoke prune directly (private, accessed via bracket)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ;(mgr as any).pruneStaleTasksAndNotifications()
-
-      //#then — running task stays in memory, untouched
+      //#then — running handle reloads as statusUncertain (revivable), file untouched
       expect(mgr["tasks"].has(task.id)).toBe(true)
-      expect(mgr["tasks"].get(task.id)?.status).toBe("running")
+      expect(mgr["tasks"].get(task.id)?.status).toBe("statusUncertain")
 
-      // Handle file still on disk with running status (no prune overwrite)
+      // Handle file still on disk with running status (no sweep overwrite)
       const filePath = join(dir, `${task.id}.json`)
       const raw = JSON.parse(readFileSync(filePath, "utf-8"))
       expect(raw.status).toBe("running")
 
       // Re-read via readHandles proves persistence survives
       const handles = readHandles(TMP_ROOT)
-      expect(handles.length).toBeGreaterThanOrEqual(1)
       const reap = handles.find((h) => h.taskId === task.id)
       expect(reap).toBeDefined()
       expect(reap!.status).toBe("running")
       expect(reap!.terminalReason).toBe(undefined)
     })
+
+    test("running handle beyond TTL is swept from disk on restore", async () => {
+      //#given a running handle older than the default 30-minute TTL
+      const ctx = makeMockClient({
+        sessionStatuses: { "sess_prune02": { type: "idle" } },
+      })
+      const past = Date.now() - 60 * 60 * 1000 // 1 hour ago
+      const task: BackgroundTask = {
+        id: "bg_prune02",
+        status: "running",
+        sessionID: "sess_prune02",
+        parentSessionID: "sess_parent_prune",
+        parentMessageID: "msg_ref_p",
+        description: "expired running task",
+        prompt: "run long",
+        agent: "oracle",
+        startedAt: new Date(past),
+      }
+      const dir = join(TMP_ROOT, ".matrixx", BG_HANDLE_DIR_NAME)
+      mkdirSync(dir, { recursive: true })
+      writeHandle(TMP_ROOT, task)
+
+      //#when
+      const mgr = buildManager(ctx)
+      await mgr.restoreHandles()
+
+      //#then — TTL sweep applies regardless of status (handles are restart-visibility only)
+      const filePath = join(dir, `${task.id}.json`)
+      expect(existsSync(filePath)).toBe(false)
+      expect(mgr["tasks"].has(task.id)).toBe(false)
+    })
   })
 })
-
 describe("Configured handle TTL", () => {
   beforeEach(() => {
     _resetPruneThrottleForTesting()
@@ -302,33 +328,36 @@ describe("Configured handle TTL", () => {
     }
   }
 
-  test("evicts 2-minute-old terminal task when handleTtlMs is 60000", async () => {
-    //#given
+  test("evicts 2-minute-old terminal handle file when handleTtlMs is 60000", async () => {
+    //#given a terminal handle older than the configured 60s TTL
     const ctx = makeMockClient()
     const mgr = buildManager(ctx, { handleTtlMs: 60000 })
     const task = makeTerminalTask("bg_ttl_evict", new Date(Date.now() - 2 * 60 * 1000))
-    mgr["tasks"].set(task.id, task)
-    ;(mgr as unknown as { lastPruneAt: number }).lastPruneAt = 0
+    const dir = join(TMP_ROOT, ".matrixx", BG_HANDLE_DIR_NAME)
+    mkdirSync(dir, { recursive: true })
+    writeHandle(TMP_ROOT, task)
 
-    //#when
-    ;(mgr as unknown as { pruneStaleTasksAndNotifications: () => void }).pruneStaleTasksAndNotifications()
+    //#when restore runs the TTL sweep with the configured TTL
+    await mgr.restoreHandles()
 
-    //#then
-    expect(mgr["tasks"].has(task.id)).toBe(false)
+    //#then the handle file is swept (disk-level expiry; memory map is append-only on restore)
+    expect(existsSync(join(dir, `${task.id}.json`))).toBe(false)
   })
 
-  test("retains 2-minute-old terminal task with default config", async () => {
-    //#given
+  test("retains 2-minute-old terminal handle with default config", async () => {
+    //#given a terminal handle within the default 30-minute TTL
     const ctx = makeMockClient()
     const mgr = buildManager(ctx)
     const task = makeTerminalTask("bg_ttl_keep", new Date(Date.now() - 2 * 60 * 1000))
-    mgr["tasks"].set(task.id, task)
-    ;(mgr as unknown as { lastPruneAt: number }).lastPruneAt = 0
+    const dir = join(TMP_ROOT, ".matrixx", BG_HANDLE_DIR_NAME)
+    mkdirSync(dir, { recursive: true })
+    writeHandle(TMP_ROOT, task)
 
     //#when
-    ;(mgr as unknown as { pruneStaleTasksAndNotifications: () => void }).pruneStaleTasksAndNotifications()
+    await mgr.restoreHandles()
 
-    //#then
-    expect(mgr["tasks"].has(task.id)).toBe(true)
+    //#then the handle file survives and reloads into memory as completed
+    expect(existsSync(join(dir, `${task.id}.json`))).toBe(true)
+    expect(mgr["tasks"].get(task.id)?.status).toBe("completed")
   })
 })

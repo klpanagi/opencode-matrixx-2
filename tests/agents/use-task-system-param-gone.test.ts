@@ -130,9 +130,9 @@ describe("rendered prompts name only the task tools (R8)", () => {
     }
   }
 
-  function promptOf(config: { prompt?: unknown }): string {
-    expect(typeof config.prompt).toBe("string")
-    return config.prompt as string
+  function promptOf(config: { system?: unknown }): string {
+    expect(typeof config.system).toBe("string")
+    return config.system as string
   }
 
   test("morpheus prompt advertises only task tools", async () => {

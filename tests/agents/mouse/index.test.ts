@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { parseModelRef } from "../../../src/agents/agent-config"
 import {
   buildMousePrompt,
   createMouseAgentWithOverrides,
@@ -26,29 +27,29 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.model).toBe("openai/gpt-5.2")
+      expect(result.model).toEqual(parseModelRef("openai/gpt-5.2"))
     })
 
     test("applies temperature override", () => {
       // given
-      const override = { temperature: 0.5 }
+      const override = { request: { body: { temperature: 0.5 } } }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.temperature).toBe(0.5)
+      expect(result.request?.body?.temperature).toBe(0.5)
     })
 
     test("applies top_p override", () => {
       // given
-      const override = { top_p: 0.9 }
+      const override = { request: { body: { top_p: 0.9 } } }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.top_p).toBe(0.9)
+      expect(result.request?.body?.top_p).toBe(0.9)
     })
 
     test("applies description override", () => {
@@ -75,14 +76,14 @@ describe("createMouseAgentWithOverrides", () => {
 
     test("appends prompt_append to base prompt", () => {
       // given
-      const override = { prompt_append: "Extra instructions here" }
+      const override = { system_append: "Extra instructions here" }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.prompt).toContain("You work ALONE")
-      expect(result.prompt).toContain("Extra instructions here")
+      expect(result.system).toContain("You work ALONE")
+      expect(result.system).toContain("Extra instructions here")
     })
   })
 
@@ -95,7 +96,7 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.model).toBe(MOUSE_DEFAULTS.model)
+      expect(result.model).toEqual(parseModelRef(MOUSE_DEFAULTS.model))
     })
 
     test("uses default temperature when no override", () => {
@@ -106,7 +107,7 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.temperature).toBe(MOUSE_DEFAULTS.temperature)
+      expect(result.request?.body?.temperature).toBe(MOUSE_DEFAULTS.temperature)
     })
   })
 
@@ -114,17 +115,17 @@ describe("createMouseAgentWithOverrides", () => {
     test("disable: true causes override block to be ignored", () => {
       // given
       const override = {
-        disable: true,
+        disabled: true,
         model: "openai/gpt-5.2",
-        temperature: 0.9,
+        request: { body: { temperature: 0.9 } },
       }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then - defaults should be used, not the overrides
-      expect(result.model).toBe(MOUSE_DEFAULTS.model)
-      expect(result.temperature).toBe(MOUSE_DEFAULTS.temperature)
+      expect(result.model).toEqual(parseModelRef(MOUSE_DEFAULTS.model))
+      expect(result.request?.body?.temperature).toBe(MOUSE_DEFAULTS.temperature)
     })
   })
 
@@ -142,63 +143,46 @@ describe("createMouseAgentWithOverrides", () => {
 
     test("prompt override is ignored (discipline text preserved)", () => {
       // given
-      const override = { prompt: "Completely new prompt that replaces everything" }
+      const override = { system: "Completely new prompt that replaces everything" }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.prompt).toContain("You work ALONE")
-      expect(result.prompt).not.toBe("Completely new prompt that replaces everything")
+      expect(result.system).toContain("You work ALONE")
+      expect(result.system).not.toBe("Completely new prompt that replaces everything")
     })
   })
 
-  describe("tool safety (task blocked, pure leaf)", () => {
-    test("task remains blocked via tools format", () => {
+  describe("tool safety (subagent blocked, pure leaf)", () => {
+    // NOTE (V2): delegation gating is a permissions ruleset. Mouse is a pure
+    // leaf: the factory always denies subagent. task-store access is granted
+    // later by the tool-config handler (fullTaskPermissions), not here.
+    test("subagent stays denied even when the override asks for task tools", () => {
       // given
       const override = {
-        tools: {
-          task: true,
-          read: true,
-        },
+        permissions: [
+          { action: "task", resource: "*", effect: "allow" },
+          { action: "read", resource: "*", effect: "allow" },
+        ],
       }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      const tools = result.tools as Record<string, boolean> | undefined
-      const permission = result.permission as Record<string, string> | undefined
-      if (tools) {
-        expect(tools.task).toBe(false)
-        expect(tools.read).toBe(true)
-      }
-      if (permission) {
-        expect(permission.task).toBe("deny")
-      }
+      const rules = result.permissions ?? []
+      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(true)
+      expect(rules.some((r) => r.action === "task" && r.effect === "allow")).toBe(true)
     })
 
-    test("task remains blocked when using permission format override", () => {
-      // given
-      const override = {
-        permission: {
-          task: "allow",
-          read: "allow",
-        },
-      } as { permission: Record<string, string> }
-
+    test("subagent stays denied with no override", () => {
       // when
-      const result = createMouseAgentWithOverrides(override as Parameters<typeof createMouseAgentWithOverrides>[0])
+      const result = createMouseAgentWithOverrides({})
 
-      // then - task blocked, pure leaf with no delegation
-      const tools = result.tools as Record<string, boolean> | undefined
-      const permission = result.permission as Record<string, string> | undefined
-      if (tools) {
-        expect(tools.task).toBe(false)
-      }
-      if (permission) {
-        expect(permission.task).toBe("deny")
-      }
+      // then - pure leaf with no delegation of its own
+      const rules = result.permissions ?? []
+      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(true)
     })
   })
 
@@ -211,9 +195,9 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect(result.prompt).toContain("task_create")
-      expect(result.prompt).toContain("task_update")
-      expect(result.prompt).not.toContain("todowrite")
+      expect(result.system).toContain("task_create")
+      expect(result.system).toContain("task_update")
+      expect(result.system).not.toContain("todowrite")
     })
 
     test("produces task_discipline_spec prompt for GPT", () => {
@@ -224,9 +208,9 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect(result.prompt).toContain("<task_discipline_spec>")
-      expect(result.prompt).toContain("task_create")
-      expect(result.prompt).not.toContain("<todo_discipline_spec>")
+      expect(result.system).toContain("<task_discipline_spec>")
+      expect(result.system).toContain("task_create")
+      expect(result.system).not.toContain("<todo_discipline_spec>")
     })
 
     
@@ -238,11 +222,11 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then - prompt must disambiguate: delegation tool blocked, management tools allowed
-      expect(result.prompt).toContain("task_create")
-      expect(result.prompt).toContain("task_update")
-      expect(result.prompt).toContain("task_list")
-      expect(result.prompt).toContain("task_get")
-      expect(result.prompt).toContain("agent delegation tool")
+      expect(result.system).toContain("task_create")
+      expect(result.system).toContain("task_update")
+      expect(result.system).toContain("task_list")
+      expect(result.system).toContain("task_get")
+      expect(result.system).toContain("agent delegation tool")
     })
 
     test("explicitly lists task management tools as ALLOWED for GPT", () => {
@@ -253,11 +237,11 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then - prompt must disambiguate: delegation tool blocked, management tools allowed
-      expect(result.prompt).toContain("task_create")
-      expect(result.prompt).toContain("task_update")
-      expect(result.prompt).toContain("task_list")
-      expect(result.prompt).toContain("task_get")
-      expect(result.prompt).toContain("Agent delegation tool")
+      expect(result.system).toContain("task_create")
+      expect(result.system).toContain("task_update")
+      expect(result.system).toContain("task_list")
+      expect(result.system).toContain("task_get")
+      expect(result.system).toContain("Agent delegation tool")
     })
 
       })
@@ -310,8 +294,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.prompt).toContain("Mouse")
-      expect(result.prompt).toContain("You work ALONE")
+      expect(result.system).toContain("Mouse")
+      expect(result.system).toContain("You work ALONE")
     })
 
     test("Claude model uses default prompt with BLOCKED ACTIONS section", () => {
@@ -322,8 +306,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.prompt).toContain("BLOCKED ACTIONS")
-      expect(result.prompt).not.toContain("<blocked_actions>")
+      expect(result.system).toContain("BLOCKED ACTIONS")
+      expect(result.system).not.toContain("<blocked_actions>")
     })
 
     test("GPT model uses GPT-optimized prompt with blocked_actions section", () => {
@@ -334,21 +318,21 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      expect(result.prompt).toContain("<blocked_actions>")
-      expect(result.prompt).toContain("<output_verbosity_spec>")
-      expect(result.prompt).toContain("<scope_and_design_constraints>")
+      expect(result.system).toContain("<blocked_actions>")
+      expect(result.system).toContain("<output_verbosity_spec>")
+      expect(result.system).toContain("<scope_and_design_constraints>")
     })
 
     test("prompt_append is added after base prompt", () => {
       // given
-      const override = { prompt_append: "CUSTOM_MARKER_FOR_TEST" }
+      const override = { system_append: "CUSTOM_MARKER_FOR_TEST" }
 
       // when
       const result = createMouseAgentWithOverrides(override)
 
       // then
-      const baseEndIndex = result.prompt?.indexOf("Dense > verbose.")
-      const appendIndex = result.prompt?.indexOf("CUSTOM_MARKER_FOR_TEST")
+      const baseEndIndex = result.system?.indexOf("Dense > verbose.")
+      const appendIndex = result.system?.indexOf("CUSTOM_MARKER_FOR_TEST")
       expect(baseEndIndex).not.toBe(-1)
       expect(appendIndex).toBeGreaterThan(baseEndIndex)
     })
@@ -363,8 +347,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
-      expect((result as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
+      expect((result.request?.body as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
     })
 
     test("Google Vertex Anthropic model gets thinking config", () => {
@@ -375,7 +359,7 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 })
     })
 
     test("GPT model gets reasoningEffort config", () => {
@@ -386,8 +370,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).reasoningEffort).toBe("medium")
-      expect((result as AgentConfigWithModelConfig).thinking).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).reasoningEffort).toBe("medium")
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toBeUndefined()
     })
 
     test("Gemini model gets NO thinking or reasoning config", () => {
@@ -398,8 +382,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).thinking).toBeUndefined()
-      expect((result as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
     })
 
     test("Google Gemini Pro model gets NO thinking config", () => {
@@ -410,8 +394,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).thinking).toBeUndefined()
-      expect((result as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
     })
 
     test("unknown provider model gets NO thinking config", () => {
@@ -422,8 +406,8 @@ describe("createMouseAgentWithOverrides", () => {
       const result = createMouseAgentWithOverrides(override)
 
       //#then
-      expect((result as AgentConfigWithModelConfig).thinking).toBeUndefined()
-      expect((result as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).thinking).toBeUndefined()
+      expect((result.request?.body as AgentConfigWithModelConfig).reasoningEffort).toBeUndefined()
     })
   })
 })
@@ -633,7 +617,7 @@ describe("createMouseAgentWithOverrides (DeepSeek thinking)", () => {
     const result = createMouseAgentWithOverrides(override);
 
     //#then
-    expect((result as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 });
+    expect((result.request?.body as AgentConfigWithModelConfig).thinking).toEqual({ type: "enabled", budgetTokens: 32000 });
   });
 });
 

@@ -1,10 +1,8 @@
 import type { ToolContext } from "@opencode-ai/plugin/tool"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import type { PluginContext } from "../../plugin/types"
 import { countLineDiffs, generateUnifiedDiff } from "./diff-utils"
 import { applyHashlineEditsWithReport } from "./edit-operations"
 import { canonicalizeFileText, restoreFileText } from "./file-text-canonicalization"
-import { type FormatterClient, runFormattersForFile } from "./formatter-trigger"
 import { normalizeHashlineEdits, type RawHashlineEdit } from "./normalize-edits"
 import type { HashlineEdit } from "./types"
 import { HashlineMismatchError } from "./validation"
@@ -82,7 +80,7 @@ function buildSuccessMeta(
   }
 }
 
-export async function executeHashlineEditTool(args: HashlineEditArgs, context: ToolContext, pluginCtx?: PluginContext): Promise<string> {
+export async function executeHashlineEditTool(args: HashlineEditArgs, context: ToolContext): Promise<string> {
   try {
     const metadataContext = context as ToolContextWithMetadata
     const filePath = args.filePath
@@ -130,35 +128,6 @@ export async function executeHashlineEditTool(args: HashlineEditArgs, context: T
     const writeContent = restoreFileText(canonicalNewContent, oldEnvelope)
 
     await Bun.write(filePath, writeContent)
-
-    const contextWithDir = context as ToolContext & { directory?: string }
-    if (pluginCtx?.client && contextWithDir.directory) {
-      await runFormattersForFile(pluginCtx.client as FormatterClient, contextWithDir.directory, filePath)
-      const formattedContent = Buffer.from(await Bun.file(filePath).arrayBuffer()).toString("utf8")
-      if (formattedContent !== writeContent) {
-        const formattedEnvelope = canonicalizeFileText(formattedContent)
-        const formattedMeta = buildSuccessMeta(
-          filePath,
-          oldEnvelope.content,
-          formattedEnvelope.content,
-          applyResult.noopEdits,
-          applyResult.deduplicatedEdits
-        )
-        if (typeof metadataContext.metadata === "function") {
-          metadataContext.metadata(formattedMeta)
-        }
-        const callID = resolveToolCallID(metadataContext)
-        if (callID) {
-          storeToolMetadata(context.sessionID, callID, formattedMeta)
-        }
-        if (rename && rename !== filePath) {
-          await Bun.write(rename, formattedContent)
-          await Bun.file(filePath).delete()
-          return `Moved ${filePath} to ${rename}`
-        }
-        return `Updated ${filePath}`
-      }
-    }
 
     if (rename && rename !== filePath) {
       await Bun.write(rename, writeContent)

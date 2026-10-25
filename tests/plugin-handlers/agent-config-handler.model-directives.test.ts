@@ -10,26 +10,26 @@ describe("injectContextDiscipline model directives", () => {
   test("injects the directive when the agent model is deepseek", () => {
     //#given
     const agents: Record<string, Record<string, unknown>> = {
-      oracle: { model: DEEPSEEK, prompt: "base prompt" },
+      oracle: { model: { providerID: "deepseek", id: "deepseek-v4.1-flash" }, system: "base prompt" },
     }
 
     //#when
     injectContextDiscipline(["ctx_search"], agents)
 
     //#then
-    expect(agents.oracle.prompt as string).toContain(MARKER)
+    expect(agents.oracle.system as string).toContain(MARKER)
   })
 
   test("omits the directive when the agent model is anthropic", () => {
     //#given
     const agents: Record<string, Record<string, unknown>> = {
-      oracle: { model: ANTHROPIC, prompt: "base prompt" },
+      oracle: { model: { providerID: "anthropic", id: "claude-sonnet-4" }, system: "base prompt" },
     }
 
     //#when
     injectContextDiscipline(["ctx_search"], agents)
 
     //#then
-    expect(agents.oracle.prompt as string).not.toContain(MARKER)
+    expect(agents.oracle.system as string).not.toContain(MARKER)
   })
 })

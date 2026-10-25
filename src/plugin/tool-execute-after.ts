@@ -1,8 +1,8 @@
-import type { CreatedHooks } from "../create-hooks"
 import { consumeToolMetadata } from "../features/tool-metadata-store"
+import type { DomainHooks } from "./setup-domains"
 
 export function createToolExecuteAfterHandler(args: {
-  hooks: CreatedHooks
+  hooks: DomainHooks
 }): (
   input: { tool: string; sessionID: string; callID: string },
   output:
@@ -29,9 +29,6 @@ export function createToolExecuteAfterHandler(args: {
 
     await hooks.toolOutputTruncator?.["tool.execute.after"]?.(input, output)
 
-    // Run preemptiveCompaction in parallel with remaining hooks — it has a 60s timeout
-    // on session.summarize() and should not block the other 16 hooks in the chain.
-    // Total time: max(prepaction, remaining) instead of preemption + remaining.
     const remainingHooks = async () => {
       await hooks.webfetchRedirectGuard?.["tool.execute.after"]?.(input, output)
       await hooks.evolutionWatcher?.["tool.execute.after"]?.(input, output)
@@ -55,7 +52,6 @@ export function createToolExecuteAfterHandler(args: {
     }
 
     await Promise.all([
-      hooks.preemptiveCompaction?.["tool.execute.after"]?.(input, output),
       hooks.qualityGate?.["tool.execute.after"]?.(input, output),
       remainingHooks(),
     ])

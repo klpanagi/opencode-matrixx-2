@@ -48,7 +48,15 @@ export function applyToolConfig(params: {
     if (!agent || typeof agent !== "object") continue;
 
     const declared = agent.permissions ?? [];
-    const explicit = overrides[name] ?? [];
+    // A declared deny always wins over an explicit allow (issue #111
+    // option b: the handler is fill-only and must not override). Explicit
+    // denies (e.g. CLI-mode question deny) still apply over declared allows.
+    const declaredDeny = new Set(
+      declared.filter((r) => r.effect === "deny").map((r) => r.action),
+    );
+    const explicit = (overrides[name] ?? []).filter(
+      (r) => !(r.effect === "allow" && declaredDeny.has(r.action)),
+    );
     const declaredActions = new Set(declared.map((r) => r.action));
     const explicitActions = new Set(explicit.map((r) => r.action));
 

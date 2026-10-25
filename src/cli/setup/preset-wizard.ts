@@ -1,7 +1,7 @@
 import * as p from "@clack/prompts"
 import { BuiltinAgentNameSchema } from "../../config/schema/agent-names"
 import { BuiltinCategoryNameSchema } from "../../config/schema/categories"
-import type { ModelPreset, ModelPresetEntry } from "../../config/schema/model-presets"
+import type { ModelPreset } from "../../config/schema/model-presets"
 import { readConnectedProvidersCache } from "../../shared/connected-providers-cache"
 import { fetchAvailableModels } from "../../shared/model-availability"
 
