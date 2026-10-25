@@ -69,7 +69,6 @@ fi
 read -r -d '' GUEST_SCRIPT <<'GUEST_EOF' || true
 set -euo pipefail
 export CI=1
-export BUN_INSTALL_ALLOW_SCRIPTS="@ast-grep/napi"
 export PATH="$HOME/.opencode/bin:$PATH"
 
 STEPS=0; FAILED=0

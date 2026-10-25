@@ -144,7 +144,7 @@ Per-area `AGENTS.md` in `src/`, `src/agents/`, `src/hooks/`, `src/tools/`, `src/
 ## QUICK COMMANDS
 
 ```bash
-BUN_INSTALL_ALLOW_SCRIPTS="@ast-grep/napi" bun install  # required — postinstall hangs without it
+bun install
 bun run typecheck                   # tsc --noEmit
 bun run lint                        # biome check src/  (formatter disabled)
 bun run lint:fix                    # biome check --write src/
@@ -159,7 +159,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 ## GOTCHAS
 
-**`BUN_INSTALL_ALLOW_SCRIPTS` required** — `@ast-grep/napi` postinstall fails/hangs without `BUN_INSTALL_ALLOW_SCRIPTS="@ast-grep/napi"`.
+**Trusted dependencies** — `@ast-grep/cli` postinstall is allowlisted via `trustedDependencies` in `package.json`. No extra env var needed.
 
 **Bun pinned to 1.4.0** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
 
@@ -269,7 +269,7 @@ Never `bun publish` or bump `package.json` version locally.
 ## NOTES
 
 - OpenCode SDK `>= 1.0.150`
-- Trusted deps: `@ast-grep/cli`, `@ast-grep/napi`, `@code-yeongyu/comment-checker`
+- Trusted deps: `@ast-grep/cli`, `@code-yeongyu/comment-checker`
 - Platform packages: 7 + 4 baseline (glibc x86_64)
 - Logger: `src/shared/logger.ts` → `/tmp/matrixx.log`
 - Local dev state: `.matrixx/` (handoff, notepads), `UNIQUE_BRANCH_MARKER.md` — gitignored

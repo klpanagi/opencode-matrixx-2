@@ -37,8 +37,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-        env:
-          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
 
       - name: Run mock-heavy tests (isolated)
         run: |
@@ -69,8 +67,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-        env:
-          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
 
       - name: Type check
         run: bun run typecheck
@@ -106,8 +102,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-        env:
-          BUN_INSTALL_ALLOW_SCRIPTS: "@ast-grep/napi"
 
       - name: Calculate version
         id: version
