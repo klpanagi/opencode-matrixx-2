@@ -123,9 +123,10 @@ matrixx/
 │   ├── agents/   → 14 agents + AGENTS.md
 │   ├── hooks/    → 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) in 3 tiers
 │   ├── tools/    → 24 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-gating.ts)
-│   ├── features/ → 21 dirs (background-agent, builtin-skills/commands, task-storage, handoff, knowledge-hub, ...)
+│   ├── features/ → 22 dirs (background-agent, builtin-commands, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → 80+ utilities (logger → /tmp/matrixx.log)
-│   ├── mcp/      → 3 built-in MCPs (websearch, context7, document-reader) + native `github_search` tool
+│   ├── skills/   → 46 built-in skills + AGENTS.md
+│   ├── mcps/     → 3 built-in MCPs (websearch, context7, document-reader) + native `github_search` tool
 │   ├── cli/      → installer, doctor, config-manager
 │   ├── config/   → Zod schema
 │   ├── plugin/   → hook composition (create-core/continuation/skill-hooks)
@@ -138,7 +139,7 @@ matrixx/
 └── dist/                           # Build output (ESM + .d.ts + schema)
 ```
 
-Per-area `AGENTS.md` in `src/`, `src/agents/`, `src/hooks/`, `src/tools/`, `src/features/`, `src/shared/`, `src/config/`, `src/plugin-handlers/`, `src/mcp/` — read when working in that area.
+Per-area `AGENTS.md` in `src/`, `src/agents/`, `src/hooks/`, `src/tools/`, `src/features/`, `src/skills/`, `src/mcps/`, `src/shared/`, `src/config/`, `src/plugin-handlers/` — read when working in that area.
 
 ## QUICK COMMANDS
 
@@ -183,8 +184,8 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 | New agent | `src/agents/<name>.ts` | Add to `agentSources` in `src/agents/builtin-agents.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
 | New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{core,continuation,skill}-hooks.ts` |
 | New tool | `src/tools/<name>/` | Register in `src/plugin/tool-registry.ts` (needs `index, types, constants, tools` structure) |
-| New MCP | `src/mcp/` | Add to `createBuiltinMcps()` |
-| New built-in skill | `src/features/builtin-skills/skills/` | Export from `skills/index.ts`; add to `createBuiltinSkills()` |
+| New MCP | `src/mcps/` | Add to `createBuiltinMcps()` |
+| New built-in skill | `src/skills/skills/` | Export from `skills/index.ts`; add to `createBuiltinSkills()` |
 | New command | `src/features/builtin-commands/` | Add template + register in `commands.ts` |
 | Schema field | `src/config/schema/` | Run `bun run build:schema` → regenerates `dist/` and `assets/matrixx.schema.json` |
 | User-facing skill | `.opencode/skills/<name>/SKILL.md` | Loaded by OpenCode session — not the plugin |
@@ -258,7 +259,7 @@ Never `bun publish` or bump `package.json` version locally.
 
 ## MCP (2 tiers)
 
-1. Built-in `src/mcp/`: `websearch`, `context7`, `document-reader` (+ native `github_search` tool in `src/tools/`)
+1. Built-in `src/mcps/`: `websearch`, `context7`, `document-reader` (+ native `github_search` tool in `src/tools/`)
 2. Plugin-config / user-configured MCPs
 
 ## HOTSPOTS

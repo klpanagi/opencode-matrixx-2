@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { createBuiltinMcps } from "../../src/mcp/index"
+import { createBuiltinMcps } from "../../src/mcps/index"
 
 // NOTE: This suite tests the NEW contract (v2.0.1+): createBuiltinMcps returns
 // { mcps, failures } with defensive creation. Broken MCPs are skipped with a

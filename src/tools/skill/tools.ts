@@ -1,5 +1,5 @@
 import { type ToolDefinition, tool } from "@opencode-ai/plugin"
-import { type BuiltinSkill, createBuiltinSkills } from "../../features/builtin-skills"
+import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
 import { TOOL_DESCRIPTION_NO_SKILLS, TOOL_DESCRIPTION_PREFIX } from "./constants"
 import type { SkillArgs, SkillInfo, SkillLoadOptions } from "./types"
 

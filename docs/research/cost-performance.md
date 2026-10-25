@@ -63,8 +63,8 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 | Multi-strategy context recovery | `src/hooks/context-window-limit-recovery/ (~1100 LOC)
 | Concurrency limits + circuit breakers | `src/features/background-agent/concurrency.ts` | Model-specific limits |
 | 8-category delegation routing | `src/tools/delegate-task/constants.ts` (591 LOC) | Has per-category models |
-| 45 built-in skills | `src/features/builtin-skills/skills/` | **Lazy-loaded since v2.0.0** — see P1 (`lazy-skill-helper.ts`, `skills.ts`) |
-| 4 MCP servers | `src/mcp/index.ts` | Lazy hydration — see P1 |
+| 45 built-in skills | `src/skills/skills/` | **Lazy-loaded since v2.0.0** — see P1 (`lazy-skill-helper.ts`, `skills.ts`) |
+| 4 MCP servers | `src/mcps/index.ts` | Lazy hydration — see P1 |
 | `handoff` tool | `src/tools/handoff/` | Already supports file-based state |
 
 ---
@@ -73,14 +73,14 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 
 ### P1. Lazy Skill & MCP Loading (barkain pattern)
 
-> **Status:** Implemented (v2.0.0). Evidence: `src/features/builtin-skills/skills.ts` (lazy loaders), `src/features/builtin-skills/lazy-skill-helper.ts`. See `docs/features.md` § "Lazy Skill Loading".
+> **Status:** Implemented (v2.0.0). Evidence: `src/skills/skills.ts` (lazy loaders), `src/skills/lazy-skill-helper.ts`. See `docs/features.md` § "Lazy Skill Loading".
 
 
 - **What:** Defer loading of 45 skills + 3 MCPs until first reference. Register lightweight stubs at init, hydrate on demand.
 - **Cost impact:** **~6.6K tokens saved per session startup** (barkain-validated). Multiplied across long sessions.
 - **Performance impact:** Faster plugin init, smaller first-message context.
 - **Complexity:** **Low.** Already have registry pattern; just split into "registered" vs "loaded".
-- **Where:** `src/features/builtin-skills/skills.ts`, `src/mcp/index.ts`, `src/create-tools.ts`
+- **Where:** `src/skills/skills.ts`, `src/mcps/index.ts`, `src/create-tools.ts`
 - **Source:** barkain/claude-code-workflow-orchestration
 
 ### P2. Prefix-Cache Stability (DeepSeek-Reasonix pattern)
@@ -107,13 +107,13 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 
 ### P4. Skill Discovery Optimization audit (superpowers pattern)
 
-> **Status:** Implemented (v2.0.0). Evidence: `tests/features/builtin-skills/sdo-compliance.test.ts`; skill descriptions in `src/features/builtin-skills/skills/*.ts`. Docs: `docs/features.md` § "Skill Discovery Optimization".
+> **Status:** Implemented (v2.0.0). Evidence: `tests/skills/sdo-compliance.test.ts`; skill descriptions in `src/skills/skills/*.ts`. Docs: `docs/features.md` § "Skill Discovery Optimization".
 
 - **What:** Audit all built-in skill descriptions so each contains **ONLY triggering conditions** (no workflow summaries). This is superpowers' most counterintuitive but highest-leverage finding: workflow summaries cause agents to shortcut.
 - **Cost impact:** Prevents skill-misuse retries and re-explanations. **10–30% reduction in skill-related rework.**
 - **Performance impact:** More reliable, faster skill activation.
 - **Complexity:** **Low.** Documentation/audit task, no code change.
-- **Where:** `src/features/builtin-skills/skills/*.ts` (45 files)
+- **Where:** `src/skills/skills/*.ts` (45 files)
 - **Source:** obra/superpowers (Skill Discovery Optimization)
 
 ### P5. Plan-as-File (planning-with-files pattern)

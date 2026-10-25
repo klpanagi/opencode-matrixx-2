@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
 
-import * as mcpModule from "../../src/mcp"
+import * as mcpModule from "../../src/mcps"
 import * as shared from "../../src/shared"
 
 let buildBuiltinMcpEntriesSpy: ReturnType<typeof spyOn>

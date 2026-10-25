@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { createWebsearchConfig } from "../../src/mcp/websearch"
+import { createWebsearchConfig } from "../../src/mcps/websearch"
 
 describe("websearch MCP provider configuration", () => {
   let originalExaApiKey: string | undefined

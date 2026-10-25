@@ -100,17 +100,17 @@ Two goals are possible and imply different builds; pick one explicitly before im
 
 | Thing | File / symbol (verified in this repo) |
 |-------|----------------------------------------|
-| New skill file | Create `src/features/builtin-skills/skills/<kebab-name>.ts` (a `*_SKILL_NAME` const + a `BuiltinSkill = { name, description, template }`) → register in the **runtime** `skillLoaders` map in `src/features/builtin-skills/skills.ts` (`"<name>": () => require("./skills/<name>").<camel>Skill`). `skills/index.ts` is **type-only** and is NOT a runtime registry. `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts:21`) validates only `disabled_skills` and is **incomplete** (omits `zeromq-*`) — never treat it as the list of loadable skills. |
-| Existing zeromq skills | `src/features/builtin-skills/skills/zeromq-{core,sockets-patterns,pubsub,advanced-reqrep,reliability,architecture,frameworks}.ts` (exported `index.ts:52-58`) |
+| New skill file | Create `src/skills/skills/<kebab-name>.ts` (a `*_SKILL_NAME` const + a `BuiltinSkill = { name, description, template }`) → register in the **runtime** `skillLoaders` map in `src/skills/skills.ts` (`"<name>": () => require("./skills/<name>").<camel>Skill`). `skills/index.ts` is **type-only** and is NOT a runtime registry. `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts:21`) validates only `disabled_skills` and is **incomplete** (omits `zeromq-*`) — never treat it as the list of loadable skills. |
+| Existing zeromq skills | `src/skills/skills/zeromq-{core,sockets-patterns,pubsub,advanced-reqrep,reliability,architecture,frameworks}.ts` (exported `index.ts:52-58`) |
 | New agent | `src/agents/<name>.ts` → add to `agentSources` in `src/agents/builtin-agents.ts:37` → add to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts:3` |
 | New tool | `src/tools/<kebab-name>/` (`index.ts`/`types.ts`/`constants.ts`/`tools.ts`) → register in `src/plugin/tool-registry.ts`; gating in `src/plugin/tool-gating.ts`; composed in `src/create-tools.ts` |
-| New MCP | `src/mcp/` + `createBuiltinMcps()` (`src/mcp/index.ts:48`) — **recommended NOT used** (see §5) |
+| New MCP | `src/mcps/` + `createBuiltinMcps()` (`src/mcps/index.ts:48`) — **recommended NOT used** (see §5) |
 | New hook | `src/hooks/<name>/` → add to `HookNameSchema` (`src/config/schema/hooks.ts:79`) → register in `src/plugin/hooks/create-{core,continuation,skill,tool-guard,transform,session}-hooks.ts` |
 | Schema regen | `bun run build:schema` (regenerates `dist/matrixx.schema.json` + `assets/matrixx.schema.json`) |
 | Tests | new tests under `tests/**` (CI-discovered by `find tests script -name '*.test.ts'`); `mock.module()` tests MUST be added to `script/mock-heavy-list.txt` |
 | Full CI | `bash script/run-ci.sh` |
 
-**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, architect, cipher, sentinel, sati, bdd-contract). `src/mcp/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/features/builtin-skills/skills.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
+**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, architect, cipher, sentinel, sati, bdd-contract). `src/mcps/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/skills/skills.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
 
 ---
 
@@ -263,7 +263,7 @@ Data-source contracts:
 | **Telegram MCP** | community | **Read-only message search only, or none.** Control-plane should be *code*, not a model tool — giving a model bot-send authority is a privilege the domain explicitly distrusts | User-configured (recommend none) |
 | CoinGecko / Dune / OpenBB / ClickHouse | official/community | Optional research; ClickHouse = 3 read-only tools posture; default-off | User-configured |
 
-**Delivery mechanism**: rather than `src/mcp/`, ship **hardened config presets + docs** (a `docs/` guide + example `~/.config/opencode` snippets) and, optionally, a small **scaffold command** that writes a least-privilege MCP config block. This keeps secrets out of the plugin and the blast radius at zero by default.
+**Delivery mechanism**: rather than `src/mcps/`, ship **hardened config presets + docs** (a `docs/` guide + example `~/.config/opencode` snippets) and, optionally, a small **scaffold command** that writes a least-privilege MCP config block. This keeps secrets out of the plugin and the blast radius at zero by default.
 
 **Posture summary (encode as a skill/doc)**: config-file-only escalation · read-only default · default-off tool categories · least-privilege tokens · no private/trade scope · never echo secrets.
 
@@ -353,7 +353,7 @@ Task F = "an error caught, logged as a warning, then recorded as an outcome indi
 - **Files**: `docs/` guide + finance rules file (see Phase 4 hook). No source changes.
 
 ### Phase 1 — Skills (highest ROI, no runtime risk) — **do this first**
-For each: `src/features/builtin-skills/skills/<name>.ts` → export in `.../skills/index.ts` → `createBuiltinSkills()` → `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`).
+For each: `src/skills/skills/<name>.ts` → export in `.../skills/index.ts` → `createBuiltinSkills()` → `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`).
 
 Ordered (the **MVP gate** = items 1–3 green in CI before anything else):
 1. `resilience-error-taxonomy`, `silent-failure-detection` **(Task F core — MVP gate)**
@@ -371,7 +371,7 @@ Ordered (the **MVP gate** = items 1–3 green in CI before anything else):
 ### Phase 2 — MCPs (docs + hardened presets; NO built-in)
 - `docs/` guide + example config snippets for ccxt-mcp / InfluxDB / Grafana (+ optional research MCPs), each with least-privilege, read-only, default-off, config-file-only escalation.
 - Optional scaffold command writing a hardened config block.
-- **Files**: `docs/**` (+ optional small command under `src/features/builtin-commands/`). No changes to `src/mcp/`.
+- **Files**: `docs/**` (+ optional small command under `src/features/builtin-commands/`). No changes to `src/mcps/`.
 
 ### Phase 3 — Agents
 - `src/agents/neo.ts`, `src/agents/tank.ts` → add to `agentSources` (`src/agents/builtin-agents.ts`) → `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts`).

@@ -61,7 +61,7 @@ export const mcp_name = {
 
 ## HOW TO ADD
 
-1. Create `src/mcp/my-mcp.ts` with config object
+1. Create `src/mcps/my-mcp.ts` with config object
 2. Add conditional check in `createBuiltinMcps()` in `index.ts`
 3. Add name to `McpNameSchema` in `types.ts`
 

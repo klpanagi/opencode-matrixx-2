@@ -1,7 +1,7 @@
 /**
  * V2-native MCP domain transform (D4).
  *
- * Owned by `src/mcp/`: pure entry builder + single `ctx.mcp.transform` registration.
+ * Owned by `src/mcps/`: pure entry builder + single `ctx.mcp.transform` registration.
  * The builder performs no filesystem access, no process spawn and no network —
  * environment capability (`uvxAvailable`) is resolved by the caller at the edge
  * and passed in as data, so repeated runs over the same input replay identically.

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { clearLazyTemplateCache, createLazyTemplateSkill } from "../../../src/features/builtin-skills/lazy-skill-helper"
-import type { BuiltinSkill } from "../../../src/features/builtin-skills/types"
+import { clearLazyTemplateCache, createLazyTemplateSkill } from "../../src/skills/lazy-skill-helper"
+import type { BuiltinSkill } from "../../src/skills/types"
 
 describe("createLazyTemplateSkill", () => {
   test("returns object matching BuiltinSkill shape", () => {

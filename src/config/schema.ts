@@ -1,4 +1,4 @@
-export { type AnyMcpName, AnyMcpNameSchema, type McpName, McpNameSchema } from "../mcp/types"
+export { type AnyMcpName, AnyMcpNameSchema, type McpName, McpNameSchema } from "../mcps/types"
 export * from "./schema/agent-definitions"
 export * from "./schema/agent-names"
 export * from "./schema/agent-overrides"

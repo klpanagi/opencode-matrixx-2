@@ -1,4 +1,4 @@
-import type { BuiltinSkill } from "../../features/builtin-skills"
+import type { BuiltinSkill } from "../../skills"
 import type { CommandInfo } from "./types"
 
 export function skillToCommandInfo(skill: BuiltinSkill): CommandInfo {

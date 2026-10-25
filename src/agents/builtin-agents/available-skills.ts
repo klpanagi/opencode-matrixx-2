@@ -1,5 +1,5 @@
 import type { BrowserAutomationProvider } from "../../config/schema"
-import { type BuiltinSkill, createBuiltinSkills } from "../../features/builtin-skills"
+import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
 import type { AvailableSkill } from "../dynamic-agent-prompt-builder"
 
 export function buildAvailableSkills(

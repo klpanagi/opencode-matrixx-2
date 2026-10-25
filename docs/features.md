@@ -34,7 +34,7 @@ Skills inject specialized knowledge and MCP tools into agents. Full catalog: [Ca
 
 ## Skills Unique to This Page
 
-Skill counts, honest version (verified against `src/config/schema/agent-names.ts`, `src/features/builtin-skills/skills.ts`, and `src/features/builtin-skills/skills/` on disk): **37** names in `BuiltinSkillNameSchema`; **46** loader keys in `skillLoaders`; **45** skill modules on disk (`agent-browser` is provider-resolved and ships no module file). Full catalog: [Category & Skill System Guide](category-skill-guide.md).
+Skill counts, honest version (verified against `src/config/schema/agent-names.ts`, `src/skills/skills.ts`, and `src/skills/skills/` on disk): **37** names in `BuiltinSkillNameSchema`; **46** loader keys in `skillLoaders`; **45** skill modules on disk (`agent-browser` is provider-resolved and ships no module file). Full catalog: [Category & Skill System Guide](category-skill-guide.md).
 
 All built-in skills follow **SDO (Skill Discovery Optimization)** — descriptions use trigger-first patterns with cross-references for high-precision agent delegation.
 
@@ -58,8 +58,8 @@ All non-browser built-in skills use **lazy template resolution**. Skill factorie
 
 **Files:**
 
-- `src/features/builtin-skills/lazy-skill-helper.ts` — `createLazyTemplateSkill()` factory + cache.
-- `src/features/builtin-skills/skills.ts` — wraps all non-browser skill loaders via the helper (`BROWSER_SKILL_NAMES`, eager `browserSkillName` resolution, `lazySkillNames` filter).
+- `src/skills/lazy-skill-helper.ts` — `createLazyTemplateSkill()` factory + cache.
+- `src/skills/skills.ts` — wraps all non-browser skill loaders via the helper (`BROWSER_SKILL_NAMES`, eager `browserSkillName` resolution, `lazySkillNames` filter).
 
 **Note:** Custom (project / user) skills loaded via the opencode-skill-loader are NOT affected — they already use the async `LazyContentLoader` pattern for their markdown bodies.
 
@@ -106,7 +106,7 @@ The `delegate_task` tool accepts an optional `complexity` field (1-5 or `"auto"`
 
 **Trigger**: Any browser-related request
 
-Matrixx provides browser automation providers, configurable via `browser_automation_engine.provider` (eagerly resolved at init — see `browserSkillName` in `src/features/builtin-skills/skills.ts`):
+Matrixx provides browser automation providers, configurable via `browser_automation_engine.provider` (eagerly resolved at init — see `browserSkillName` in `src/skills/skills.ts`):
 
 #### Option 1: Playwright MCP (Default)
 

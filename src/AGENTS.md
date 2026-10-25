@@ -14,12 +14,13 @@ src/
 ├── agents/                           # 14 AI agents (32 files) — see agents/AGENTS.md
 ├── cli/                              # CLI installer, doctor (107+ files) — see cli/AGENTS.md
 ├── config/                           # Zod schema — see config/AGENTS.md
-├── features/                         # Background agents, skills, commands (21 dirs) — see features/AGENTS.md
+├── features/                         # Background agents, commands (22 dirs) — see features/AGENTS.md
 │   ├── hooks/                            # 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) leaf domains — see hooks/AGENTS.md
-├── mcp/                              # Built-in MCPs (3: websearch, context7, document-reader) — see mcp/AGENTS.md
+├── mcps/                             # Built-in MCPs (3: websearch, context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains) + V1 adapters (17 files)
 ├── plugin-handlers/                  # Config loading, plan inheritance (15 files) — see plugin-handlers/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (~85 files) — see shared/AGENTS.md
+├── skills/                           # 46 built-in skills (`src/skills/`) — see skills/AGENTS.md
 └── tools/                            # 24 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-policy.ts) — see tools/AGENTS.md
 ```
 

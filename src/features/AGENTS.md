@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-19 feature modules (background-agent, tmux-subagent, builtin-skills/commands, task-storage, bdd, assembly-state, evolution, handoff, context-injector, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+22 feature modules (background-agent, tmux-subagent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injector, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
@@ -17,8 +17,6 @@ features/
 │   └── handle-index.ts         # File-backed handle index (`BgHandleSchema`, `.matrixx/bg-handles/`)
 ├── tmux-subagent/              # Tmux integration (25 files, ~3000 LOC)
 │   └── manager.ts              # Pane management, grid planning (350 lines)
-├── builtin-skills/             # Built-in skills (8 files, ~1700 LOC)
-│   └── skills/                 # dev-browser, frontend-ui-ux, git-master (1111), matrixx-self-config, playwright
 ├── builtin-commands/           # 22 command templates (see templates/ list below)
 │   └── templates/              # 21 templates: refactor, matrix-loop, init-deep, handoff, start-work, research, assembly, bdd-*, evolution...
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`, `addBlocks`/`addBlockedBy` Set) — 7 files, 1165 LOC + `task-toast-manager/`
@@ -55,7 +53,7 @@ Task creation → Queue → Admission check → Concurrency check → Execute �
 - **Job board** (`jobBoard: { enabled: boolean (default true), strategy: "latest"|"checkpoint-compatible" (default "latest"), maxRetainedSnapshots: 1..100 (default 20) }`): `latest` strip-and-replaces the snapshot; `checkpoint-compatible` appends to a bounded ledger with oldest-eviction. Surfaced on history + notification paths.
 - **Default conservation** (U9): `run_in_background` default stays `false`. `true` is async fan-out (returns `task_id`, retrieve via `background_output`); `false` is sync inline. Never call `task()` sequentially for independent work.
 
-**Skill Management:** All skills are loaded from `src/features/builtin-skills/` via `createBuiltinSkills()`. No external skill directory loading. Skills are configured via `disabled_skills` in `matrixx.jsonc`.
+**Skill Management:** All skills are loaded from `src/skills/` via `createBuiltinSkills()`. No external skill directory loading. Skills are configured via `disabled_skills` in `matrixx.jsonc`.
 
 **SKILL.md Format:**
 ```yaml
