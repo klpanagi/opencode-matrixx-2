@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -122,27 +122,31 @@ What remains to call this plan done: the specific outstanding items, with an est
 `
 
 export function createAuditorAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig = {
     description:
       "Post-execution plan auditor. Measures completeness, complexity, and required effort of an already-executed plan. Invoked only by /plan-review. Never automatic. (Auditor - Matrixx)",
     mode: MODE,
-    model,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: AUDITOR_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    model: parseModelRef(model),
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: AUDITOR_SYSTEM_PROMPT,
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 8000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: { ...base.request?.body, reasoningEffort: "medium", textVerbosity: "high" },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: { ...base.request?.body, thinking: { type: "enabled", budgetTokens: 8000 } },
+    },
+  }
 }
 createAuditorAgent.mode = MODE
 

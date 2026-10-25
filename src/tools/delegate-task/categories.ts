@@ -36,7 +36,7 @@ export function resolveCategoryConfig(
   const userConfig = userCategories?.[categoryName]
   const hasExplicitUserConfig = userConfig !== undefined
 
-  if (userConfig?.disable) {
+  if (userConfig?.disabled) {
     return null
   }
 
@@ -70,11 +70,17 @@ export function resolveCategoryConfig(
   }
 
   let promptAppend = defaultPromptAppend
-  if (userConfig?.prompt_append) {
+  if (userConfig?.system_append) {
     promptAppend = defaultPromptAppend
-      ? `${defaultPromptAppend}\n\n${userConfig.prompt_append}`
-      : userConfig.prompt_append
+      ? `${defaultPromptAppend}\n\n${userConfig.system_append}`
+      : userConfig.system_append
   }
 
-  return { config, promptAppend, model, temperature: config.temperature }
+  const temperatureValue = config.request?.body?.temperature
+  return {
+    config,
+    promptAppend,
+    model,
+    temperature: typeof temperatureValue === "number" ? temperatureValue : undefined,
+  }
 }

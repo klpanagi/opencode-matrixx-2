@@ -11,10 +11,11 @@
  */
 
 import { log } from "../shared"
-import { toAgentPatch } from "./opencode-agents"
 import { toV1Event } from "./opencode-events"
 import { toV2Tool } from "./opencode-tools"
 import type {
+  V2AgentEditor,
+  V2AgentInfo,
   V2Context,
   V2Registration,
   V2SessionContextEvent,
@@ -104,6 +105,37 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : {}
 }
 
+/**
+ * The draft carries the V1 MCP entry shape (`enabled`, no discriminator);
+ * V2 requires the tagged `type` and spells enablement `disabled`. Fields that
+ * would fail the V2 schema (an explicit `undefined`, a non-object `headers`)
+ * are dropped, because a schema defect here disables the whole plugin.
+ */
+function toV2McpConfig(entry: unknown): { type: string; [key: string]: unknown } | undefined {
+  const record = asRecord(entry)
+  const type =
+    record.type ??
+    (Array.isArray(record.command) ? "local" : typeof record.url === "string" ? "remote" : undefined)
+  if (type !== "local" && type !== "remote") return undefined
+
+  const config: { type: string; [key: string]: unknown } = { type }
+  for (const [key, value] of Object.entries(record)) {
+    if (value === undefined || key === "enabled" || key === "type") continue
+    if (key === "headers") {
+      if (typeof value !== "object" || value === null || Array.isArray(value)) continue
+      const headers: Record<string, string> = {}
+      for (const [header, headerValue] of Object.entries(value)) {
+        if (typeof headerValue === "string") headers[header] = headerValue
+      }
+      config.headers = headers
+      continue
+    }
+    config[key] = value
+  }
+  if (record.enabled === false) config.disabled = true
+  return config
+}
+
 async function registerTools(input: RegisterV1HooksInput): Promise<V2Registration[]> {
   const tools = input.hooks.tool
   if (!tools || Object.keys(tools).length === 0) return []
@@ -141,7 +173,8 @@ async function registerTools(input: RegisterV1HooksInput): Promise<V2Registratio
   const registration = await guard("tool.transform", () =>
     input.ctx.tool.transform((editor: V2ToolEditor) => {
       for (const [name, definition] of Object.entries(tools)) {
-        editor.add(toV2Tool(name, definition, deps))
+        const tool = toV2Tool(name, definition, deps)
+        if (tool) editor.add(tool)
       }
       for (const [name, override] of overrides) {
         editor.update(name, (tool) => {
@@ -182,8 +215,21 @@ async function registerSessionHooks(input: RegisterV1HooksInput): Promise<V2Regi
     const handler = hooks["chat.message"]
     const registration = await guard("session.hook(prompt)", () =>
       ctx.session.hook("prompt", async (event) => {
-        const output: { message: unknown; parts: unknown[] } = { message: {}, parts: [] }
+        // Seed `parts` with the real prompt so handlers that read the text
+        // (auto-slash-command, keyword-detector, matrix-loop) see it, then fold
+        // the result back into the prompt the request will actually send.
+        // `output.message.variant` has no V2 twin on this event and is dropped.
+        const output: {
+          message: Record<string, unknown>
+          parts: Array<{ type: string; text?: string }>
+        } = { message: {}, parts: [{ type: "text", text: event.prompt.text }] }
         await handler({ sessionID: event.sessionID, messageID: event.messageID }, output)
+        const text = output.parts
+          .filter((part) => part.type === "text" && typeof part.text === "string")
+          .map((part) => part.text ?? "")
+          .join("\n")
+        if (text.length > 0) event.prompt.text = text
+        if (typeof output.message.delivery === "string") event.delivery = output.message.delivery
       }),
     )
     if (registration) registrations.push(registration)
@@ -225,6 +271,9 @@ async function registerSessionHooks(input: RegisterV1HooksInput): Promise<V2Regi
   ) {
     const registration = await guard("session.hook(context)", () =>
       ctx.session.hook("context", async (event) => {
+        // `context` fires for the primary turn only (per-kind dispatch in the
+        // host's session/model-request); compaction has its own hook, so the
+        // routing discipline reaches primary turns, not auxiliary requests.
         await guard("chat.params", () => applyChatParams(event))
         await guard("system.transform", () => applySystemTransform(event))
         // Stage 4: V2 `messages` are flat `Message[]` while the V1 transform
@@ -300,6 +349,38 @@ async function registerToolHooks(input: RegisterV1HooksInput): Promise<V2Registr
   return registrations
 }
 
+function applyAgentEntry(agent: V2AgentInfo, entry: unknown): void {
+  const next = asRecord(entry)
+  if (next.model !== undefined) agent.model = next.model as V2AgentInfo["model"]
+  if (typeof next.system === "string") agent.system = next.system
+  if (typeof next.description === "string") agent.description = next.description
+  if (next.mode === "primary" || next.mode === "subagent" || next.mode === "all") agent.mode = next.mode
+  if (typeof next.hidden === "boolean") agent.hidden = next.hidden
+  if (typeof next.color === "string") agent.color = next.color
+  if (typeof next.steps === "number") agent.steps = next.steps
+
+  const request = asRecord(next.request)
+  const headers: Record<string, string> = {}
+  for (const [key, value] of Object.entries(asRecord(request.headers))) {
+    if (typeof value === "string") headers[key] = value
+  }
+  const body = asRecord(request.body)
+  if (Object.keys(body).length > 0 || Object.keys(headers).length > 0) {
+    agent.request = {
+      settings: { ...(agent.request.settings ?? {}), ...asRecord(request.settings) },
+      headers: { ...(agent.request.headers ?? {}), ...headers },
+      body: { ...(agent.request.body ?? {}), ...body },
+    }
+  }
+
+  // MERGE, not replace: evaluation is last-match-wins over
+  // `[...Info.default, ...ours]`, so our rules win where they overlap while the
+  // seeded ruleset keeps the default `read *.env -> ask` secret-read guard.
+  if (Array.isArray(next.permissions)) {
+    agent.permissions = [...agent.permissions, ...next.permissions]
+  }
+}
+
 /**
  * Fans the single V1 `config` mutation out into V2 domain transforms.
  *
@@ -325,16 +406,45 @@ async function registerConfigTransforms(input: RegisterV1HooksInput): Promise<V2
 
   const agents = asRecord(draft.agent ?? draft.agents)
   if (Object.keys(agents).length > 0) {
+    const defaultAgent = typeof draft.default_agent === "string" ? draft.default_agent : undefined
     // The agent editor has no `add`; `update` seeds a missing agent from its
     // default, which makes it the registration path as well.
     const registration = await guard("config:agent", () =>
-      input.ctx.agent.transform((editor) => {
+      input.ctx.agent.transform((editor: V2AgentEditor) => {
         for (const [name, entry] of Object.entries(agents)) {
+          if (asRecord(entry).disabled === true) {
+            editor.remove(name)
+            continue
+          }
           try {
-            const patch = toAgentPatch(name, asRecord(entry))
-            editor.update(name, (agent) => Object.assign(agent, patch))
+            editor.update(name, (agent) => applyAgentEntry(agent, entry))
           } catch (error) {
-            log("[matrixx] config:agent entry failed", { name, error: String(error) })
+            log("[matrixx] config:agent entry failed", {
+              name,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+        if (defaultAgent !== undefined) editor.default(defaultAgent)
+      }),
+    )
+    if (registration) registrations.push(registration)
+  }
+
+  const mcps = asRecord(draft.mcp)
+  if (Object.keys(mcps).length > 0) {
+    const registration = await guard("config:mcp", () =>
+      input.ctx.mcp.transform((editor) => {
+        for (const [name, entry] of Object.entries(mcps)) {
+          const config = toV2McpConfig(entry)
+          if (!config) continue
+          try {
+            editor.set(name, config)
+          } catch (error) {
+            log("[matrixx] config:mcp entry failed", {
+              name,
+              error: error instanceof Error ? error.message : String(error),
+            })
           }
         }
       }),
@@ -342,7 +452,7 @@ async function registerConfigTransforms(input: RegisterV1HooksInput): Promise<V2
     if (registration) registrations.push(registration)
   }
 
-  for (const key of ["command", "skill", "mcp"] as const) {
+  for (const key of ["command", "skill"] as const) {
     const count = Object.keys(asRecord(draft[key])).length
     if (count > 0) log(`[matrixx] config:${key} registration deferred to Stage 3`, { entries: count })
   }

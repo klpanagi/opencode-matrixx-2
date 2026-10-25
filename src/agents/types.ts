@@ -1,12 +1,14 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
+import type { AgentConfig, AgentMode } from "./agent-config"
 
-/**
- * Agent mode determines UI model selection behavior:
- * - "primary": Respects user's UI-selected model (morpheus, architect)
- * - "subagent": Uses own fallback chain, ignores UI selection (merovingian, trinity, etc.)
- * - "all": Available in both contexts (OpenCode compatibility)
- */
-export type AgentMode = "primary" | "subagent" | "all"
+export type {
+  AgentConfig,
+  AgentMode,
+  ModelRef,
+  PermissionEffect,
+  PermissionRule,
+  ProviderRequest,
+} from "./agent-config"
+
 
 /**
  * Agent factory function with static mode property.
@@ -142,9 +144,15 @@ type OverridableAgentName =
 
 export type AgentName = BuiltinAgentName
 
-export type AgentOverrideConfig = Partial<AgentConfig> & {
-  prompt_append?: string
+export type AgentOverrideConfig = Omit<Partial<AgentConfig>, "model"> & {
+  model?: string
+  system_append?: string
   variant?: string
+  category?: string
+  skills?: string[]
+  is_unstable_agent?: boolean
+  fallback_models?: string | string[]
+  complexity_downgrades?: Record<string, string>
   fallbackChain?: { providers: string[]; model: string; variant?: string }[]
 }
 

@@ -1,4 +1,3 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { BrowserAutomationProvider, CategoriesConfig } from "../config/schema"
 import type { BuiltinSkill } from "../features/builtin-skills"
 import {
@@ -8,6 +7,7 @@ import {
 } from "../shared"
 import { mergeCategories } from "../shared/merge-categories"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
+import type { AgentConfig } from "./agent-config"
 import { architectPromptMetadata, createArchitectAgent } from "./architect"
 import { AUDITOR_PROMPT_METADATA, createAuditorAgent } from "./auditor"
 import { BDD_CONTRACT_PROMPT_METADATA, createBddContractAgent } from "./bdd-contract"

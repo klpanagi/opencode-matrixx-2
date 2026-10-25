@@ -1,3 +1,5 @@
+import type { PermissionRule } from "../../shared/permission-compat"
+import { rule } from "../../shared/permission-compat"
 import { ORACLE_BEHAVIORAL_SUMMARY } from "./behavioral-summary"
 import {
   createOracleHighAccuracyMode,
@@ -33,11 +35,11 @@ export const ORACLE_SYSTEM_PROMPT = createOracleSystemPrompt()
  * branches through plan_create, so an implicit grant would break silently.
  * Question permission allows agent to ask user questions via OpenCode's QuestionTool.
  */
-export const ORACLE_PERMISSION = {
-  edit: "deny" as const,
-  plan_create: "allow" as const,
-  plan_update: "allow" as const,
-  bash: "allow" as const,
-  webfetch: "allow" as const,
-  question: "allow" as const,
-}
+export const ORACLE_PERMISSION: PermissionRule[] = [
+  rule("edit", "deny"),
+  rule("plan_create", "allow"),
+  rule("plan_update", "allow"),
+  rule("shell", "allow"),
+  rule("webfetch", "allow"),
+  rule("question", "allow"),
+]

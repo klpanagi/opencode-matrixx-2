@@ -46,10 +46,10 @@ These are the most commonly edited configuration keys in \`matrixx.jsonc\`:
 |-----|---------|---------|
 | \`profile\` | Set model lineup for all agents | \`"balanced"\` |
 | \`agents.{name}.model\` | Override a specific agent's model | \`"claude-opus-4-6"\` |
-| \`agents.{name}.temperature\` | Adjust agent creativity | \`0.1\` |
-| \`agents.{name}.prompt_append\` | Add persistent instructions | \`"Always write tests"\` |
+| \`agents.{name}.request.body.temperature\` | Adjust agent creativity | \`0.1\` |
+| \`agents.{name}.system_append\` | Add persistent instructions | \`"Always write tests"\` |
 | \`agents.{name}.skills\` | Assign skills to an agent | \`["git-master"]\` |
-| \`agents.{name}.disable\` | Disable a specific agent | \`true\` |
+| \`agents.{name}.disabled\` | Disable a specific agent | \`true\` |
 | \`disabled_hooks\` | Disable specific hooks | \`["comment-checker"]\` |
 | \`disabled_skills\` | Disable specific skills | \`["dsl-core"]\` |
 | \`disabled_mcps\` | Disable specific MCPs | \`["websearch"]\` |
@@ -271,7 +271,7 @@ Before completing any configuration edit, verify:
 **Steps:**
 1. Read current config
 2. Find \`agents.comment_checker\` or \`comment_checker\` section
-3. Propose adjusting prompt_append or relevant setting
+3. Propose adjusting system_append or relevant setting
 4. Wait for user confirmation
 5. Create backup
 6. Edit the specific key

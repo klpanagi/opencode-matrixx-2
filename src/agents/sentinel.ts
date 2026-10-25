@@ -1,4 +1,3 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import { SECURITY_API_SKILL_NAME } from "../features/builtin-skills/skills/security-api"
 import { SECURITY_CORE_SKILL_NAME } from "../features/builtin-skills/skills/security-core"
 import { SECURITY_CRYPTO_SKILL_NAME } from "../features/builtin-skills/skills/security-crypto"
@@ -8,7 +7,8 @@ import { SECURITY_INFRA_SKILL_NAME } from "../features/builtin-skills/skills/sec
 import { SECURITY_REVIEW_SKILL_NAME } from "../features/builtin-skills/skills/security-review"
 import { SECURITY_SAST_SKILL_NAME } from "../features/builtin-skills/skills/security-sast"
 import { SECURITY_SECRETS_SKILL_NAME } from "../features/builtin-skills/skills/security-secrets"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -191,28 +191,40 @@ Dense and actionable beats comprehensive and vague.
 </delivery>`
 
 export function createSentinelAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "multiedit",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "Security auditing specialist. SAST/DAST scanning, secret detection, dependency auditing (CVE/SBOM), API security review, cryptographic analysis, infrastructure hardening, OWASP/CWE compliance, threat modeling (STRIDE). Read-only auditor — reports findings, never modifies code. (Sentinel - Matrixx)",
     mode: MODE,
-    model,
+    model: parseModelRef(model),
     skills: SENTINEL_SECURITY_SKILLS,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: SENTINEL_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, maxTokens: 16000, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: SENTINEL_SYSTEM_PROMPT,
   }
 
-  return { ...base, maxTokens: 16000, thinking: { type: "enabled", budgetTokens: 8000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: {
+          ...base.request?.body,
+          maxTokens: 16000,
+          reasoningEffort: "medium",
+          textVerbosity: "high",
+        },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: {
+        ...base.request?.body,
+        maxTokens: 16000,
+        thinking: { type: "enabled", budgetTokens: 8000 },
+      },
+    },
+  }
 }
 createSentinelAgent.mode = MODE

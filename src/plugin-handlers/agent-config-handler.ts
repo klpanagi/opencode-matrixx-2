@@ -6,7 +6,7 @@ import {
 } from "../agents/dynamic-agent-prompt-builder";
 import { createMouseAgentWithOverrides } from "../agents/mouse";
 import type { MatrixxConfig } from "../config";
-import { log, migrateAgentConfig } from "../shared";
+import { log } from "../shared";
 import { type ContextModeConfigInput, getContextModeForPrompts, resolveGrepGlobUsable, setContextModeForPrompts } from "../shared/context-mode-enforcement";
 import { reorderAgentsByPriority } from "./agent-priority-order";
 import { buildOracleAgentConfig } from "./oracle-agent-config-builder";
@@ -34,10 +34,11 @@ export function injectContextDiscipline(
   const exploreAgents = new Set(["trinity", "operator", "seraph", "smith", "auditor", "merovingian", "construct", "bdd-contract", "neo", "tank"])
   for (const [name, cfg] of Object.entries(agents)) {
     if (name === "morpheus" || name === "keymaker") continue;
-    if (!cfg || typeof cfg.prompt !== "string") continue;
-    if (cfg.prompt.includes("Context Discipline") || cfg.prompt.includes("context-mode — MANDATORY routing rules")) continue;
+    if (!cfg || typeof cfg.system !== "string") continue;
+    if (cfg.system.includes("Context Discipline") || cfg.system.includes("context-mode — MANDATORY routing rules")) continue;
     const normalized = name.toLowerCase();
-    const modelID = typeof cfg.model === "string" ? cfg.model : undefined;
+    const modelRef = cfg.model as { id?: unknown } | undefined;
+    const modelID = typeof modelRef?.id === "string" ? modelRef.id : undefined;
     let discipline = "";
     if (exploreAgents.has(normalized) || normalized === "oracle") {
       discipline = buildExploreDisciplineSection(hasContextMode, hasHeadroom, hasGrepGlob, modelID);
@@ -47,7 +48,7 @@ export function injectContextDiscipline(
       discipline = [compact, headroom].filter(Boolean).join("\n\n");
     }
     if (discipline) {
-      (cfg as { prompt: string }).prompt = `${cfg.prompt}\n\n${discipline}`;
+      cfg.system = `${cfg.system}\n\n${discipline}`;
     }
   }
 }
@@ -97,13 +98,7 @@ export async function applyAgentConfig(params: {
     availableToolNames,
   );
 
-  const rawPluginAgents = params.pluginComponents.agents;
-  const pluginAgents = Object.fromEntries(
-    Object.entries(rawPluginAgents).map(([key, value]) => [
-      key,
-      value ? migrateAgentConfig(value as Record<string, unknown>) : value,
-    ]),
-  );
+  const pluginAgents = params.pluginComponents.agents;
 
   const isMorpheusEnabled = params.pluginConfig.morpheus_agent?.disabled !== true;
   const builderEnabled =
@@ -131,21 +126,16 @@ export async function applyAgentConfig(params: {
     if (builderEnabled) {
       const { name: _buildName, ...buildConfigWithoutName } =
         configAgent?.build ?? {};
-      const migratedBuildConfig = migrateAgentConfig(
-        buildConfigWithoutName as Record<string, unknown>,
-      );
       const override = params.pluginConfig.agents?.["OpenCode-Builder"];
       const base = {
-        ...migratedBuildConfig,
+        ...buildConfigWithoutName,
         description: `${(configAgent?.build?.description as string) ?? "Build agent"} (OpenCode default)`,
       };
       agentConfig["OpenCode-Builder"] = override ? { ...base, ...override } : base;
     }
 
     if (plannerEnabled) {
-      const oracleOverride = params.pluginConfig.agents?.oracle as
-        | (Record<string, unknown> & { prompt_append?: string })
-        | undefined;
+      const oracleOverride = params.pluginConfig.agents?.oracle;
 
       agentConfig.oracle = await buildOracleAgentConfig({
         configAgentPlan: configAgent?.plan,
@@ -155,28 +145,22 @@ export async function applyAgentConfig(params: {
         globalOverrideModel: params.pluginConfig.global_model,
         modelRequirements: params.pluginConfig.modelRequirements,
         pluginConfig: params.pluginConfig,
+        directory: params.ctx.directory,
       });
     }
 
     const filteredConfigAgents = configAgent
       ? Object.fromEntries(
-          Object.entries(configAgent)
-            .filter(([key]) => {
-              if (key === "build") return false;
-              if (key === "plan" && shouldDemotePlan) return false;
-              if (key in builtinAgents) return false;
-              return true;
-            })
-            .map(([key, value]) => [
-              key,
-              value ? migrateAgentConfig(value as Record<string, unknown>) : value,
-            ]),
+          Object.entries(configAgent).filter(([key]) => {
+            if (key === "build") return false;
+            if (key === "plan" && shouldDemotePlan) return false;
+            if (key in builtinAgents) return false;
+            return true;
+          }),
         )
       : {};
 
-    const migratedBuild = configAgent?.build
-      ? migrateAgentConfig(configAgent.build as Record<string, unknown>)
-      : {};
+    const migratedBuild = configAgent?.build ?? {};
 
     const planDemoteConfig = shouldDemotePlan
       ? buildPlanDemoteConfig(

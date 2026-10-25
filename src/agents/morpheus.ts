@@ -1,4 +1,4 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
+import { type AgentConfig, parseModelRef, rule } from "./agent-config"
 import type { AgentMode } from "./types"
 import { isGptModel } from "./types"
 
@@ -479,22 +479,29 @@ export function createMorpheusAgent(
     ? buildDynamicMorpheusPrompt(availableAgents, tools, skills, categories, model)
     : buildDynamicMorpheusPrompt([], tools, skills, categories, model)
 
-  const permission = { question: "allow" } as AgentConfig["permission"]
-  const base = {
+  const base: AgentConfig = {
     description:
       "Powerful AI orchestrator. Plans obsessively with todos, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explore for internal code (parallel-friendly), librarian for external docs. (Morpheus - Matrixx)",
     mode: MODE,
-    model,
-    maxTokens: 24000,
-    prompt,
+    model: parseModelRef(model),
+    request: { body: { maxTokens: 24000 } },
+    permissions: [rule("question", "allow")],
+    system: prompt,
     color: "#00CED1",
-    permission,
   }
 
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium" }
+    return {
+      ...base,
+      request: { body: { ...base.request?.body, reasoningEffort: "medium" } },
+    }
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 8000 } }
+  return {
+    ...base,
+    request: {
+      body: { ...base.request?.body, thinking: { type: "enabled", budgetTokens: 8000 } },
+    },
+  }
 }
 createMorpheusAgent.mode = MODE

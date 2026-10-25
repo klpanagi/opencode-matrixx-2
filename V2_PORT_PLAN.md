@@ -135,6 +135,34 @@ Unmapped methods are surfaced loudly: the shim logs
 - **Stage 3 — config registration.** Replace the `config`-draft fan-out in
   `opencode-hooks.ts` with explicit `agent`/`command`/`mcp`/`skill` transforms owned by the
   modules that build those definitions.
+
+  The agent domain needs the producers to speak V2 vocabulary first. Today the agent
+  record is `AgentConfig` from `@opencode-ai/sdk` — the V1 shape, imported by 43 files —
+  and the registration path can only paper over it by reimplementing OpenCode's
+  `ConfigMigrateV1`. Instead the producer itself moves to V2:
+
+  | Current (V1 `AgentConfig`) | Target (V2 `Agent.Info`) |
+  |---|---|
+  | `prompt` / `prompt_append` | `system` (append folded in at build time) |
+  | `model: "provider/model"` + `variant` | `model: {providerID, id, variant?}` (config form: `"provider/model#variant"`) |
+  | `temperature`, `top_p`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `options`, `providerOptions` | `request.body.<same name>` |
+  | `tools: {[name]: boolean}` | `permissions: [{action: name, resource: "*", effect: "allow"｜"deny"}]` |
+  | `permission: {edit, bash, webfetch, doom_loop, external_directory, task}` | `permissions: [{action, resource, effect}]`, with actions `edit`, `shell`, `subagent` |
+  | `disable` | `disabled` |
+  | `maxSteps` | `steps` |
+  | `mode`, `hidden`, `description`, `color` | unchanged |
+
+  Registration then needs no translation: `ctx.agent.transform(editor => editor.update(id, agent => Object.assign(agent, definition)))`
+  — `AgentEditor` has no `add`, and `update` seeds a missing agent from `Info.default(id)`.
+
+  Work list: `src/agents/agent-config.ts` is the single source of the V2-native record;
+  `src/agents/types.ts` re-exports it; the 43 `AgentConfig` importers switch to it and
+  their field sites move per the table. `src/shared/permission-compat.ts`
+  (`migrateAgentConfig`, `migrateToolsToPermission`) is deleted, as is the
+  `normalizeAction` renaming table. matrixx's user-facing config
+  (`src/config/schema/agent-overrides.ts`, `internal/permission.ts`) adopts the same
+  vocabulary, so `~/.config/opencode/matrixx.jsonc` agent overrides migrate with it
+  (25 `temperature`, 18 `thinking`, 1 `permission`, and `variant` folding into `model`).
 - **Stage 4 — request transforms.** Rewrite the system/message transforms and compaction
   injection against `session.hook("context")` / `session.hook("compaction")` so
   `opencode-hooks.ts` no longer translates payload shapes.

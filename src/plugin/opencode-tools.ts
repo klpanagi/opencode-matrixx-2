@@ -6,12 +6,13 @@
  * (`{ name, description, input, execute(input, context): Promise<Result> }`)
  * through `ctx.tool.transform`.
  *
- * The zod raw shape is passed as `input` directly: V2 accepts any Standard Schema
- * and zod v4 objects implement it.
+ * `args` is converted to a JSON Schema here, with this package's zod copy:
+ * OpenCode resolves a different zod and cannot walk a schema built by ours.
  */
 
 import type { ToolDefinition } from "@opencode-ai/plugin"
 import { z } from "zod"
+import { log } from "../shared"
 import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "./opencode-types"
 import type { ToolsRecord } from "./types"
 
@@ -61,8 +62,26 @@ function buildV1ToolContext(context: V2ToolContext, deps: ToolBridgeDeps) {
   }
 }
 
-export function toV2Tool(name: string, definition: ToolDefinition, deps: ToolBridgeDeps): V2ToolInfo {
-  const input = z.object(definition.args)
+function toInputSchema(name: string, args: ToolDefinition["args"]): unknown | undefined {
+  try {
+    const { $schema, ...jsonSchema } = z.toJSONSchema(z.object(args), { io: "input" })
+    return jsonSchema
+  } catch (error) {
+    log("[matrixx] tool schema conversion failed", {
+      tool: name,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return undefined
+  }
+}
+
+export function toV2Tool(
+  name: string,
+  definition: ToolDefinition,
+  deps: ToolBridgeDeps,
+): V2ToolInfo | undefined {
+  const input = toInputSchema(name, definition.args)
+  if (input === undefined) return undefined
   return {
     name,
     description: definition.description,
@@ -78,5 +97,10 @@ export function toV2Tool(name: string, definition: ToolDefinition, deps: ToolBri
 }
 
 export function toV2Tools(tools: ToolsRecord, deps: ToolBridgeDeps): V2ToolInfo[] {
-  return Object.entries(tools).map(([name, definition]) => toV2Tool(name, definition, deps))
+  const converted: V2ToolInfo[] = []
+  for (const [name, definition] of Object.entries(tools)) {
+    const tool = toV2Tool(name, definition, deps)
+    if (tool) converted.push(tool)
+  }
+  return converted
 }

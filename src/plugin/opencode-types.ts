@@ -176,7 +176,7 @@ export interface V2TransformDomain {
   reload(): Promise<void>
 }
 
-/** Shared shape of the agent/command/mcp/skill/provider/model/reference editors. */
+/** Shared shape of the command/skill/provider/model/reference editors. */
 export interface V2DomainEditor {
   list(...args: unknown[]): ReadonlyArray<unknown>
   get(...args: unknown[]): unknown
@@ -184,6 +184,52 @@ export interface V2DomainEditor {
   update(...args: unknown[]): void
   remove(...args: unknown[]): void
   [key: string]: unknown
+}
+
+/** `MCPEditor` registers a server by name via `set`; it has no `add`. */
+export interface V2McpEditor {
+  list(): ReadonlyArray<[string, unknown]>
+  get(name: string): unknown
+  set(name: string, config: unknown): void
+  update(name: string, update: (config: Record<string, unknown>) => void): void
+  remove(name: string): void
+}
+
+export interface V2McpTransformDomain {
+  list(input?: Record<string, unknown>): Promise<unknown>
+  transform(callback: (editor: V2McpEditor) => void): Promise<V2Registration>
+  reload(): Promise<void>
+}
+
+export interface V2AgentInfo {
+  id: string
+  name: string
+  model?: { providerID: string; id: string; variant?: string }
+  request: { settings?: Record<string, unknown>; headers?: Record<string, string>; body?: Record<string, unknown> }
+  system?: string
+  description?: string
+  mode: "primary" | "subagent" | "all"
+  hidden: boolean
+  color?: string
+  steps?: number
+  disabled?: boolean
+  permissions: unknown[]
+  [key: string]: unknown
+}
+
+/** `AgentEditor` has no `add`; `update` seeds a missing agent from `Info.default`. */
+export interface V2AgentEditor {
+  list(): readonly V2AgentInfo[]
+  get(id: string): V2AgentInfo | undefined
+  default(id: string | undefined): void
+  update(id: string, update: (agent: V2AgentInfo) => void): void
+  remove(id: string): void
+}
+
+export interface V2AgentTransformDomain {
+  list(input?: Record<string, unknown>): Promise<unknown>
+  transform(callback: (editor: V2AgentEditor) => void): Promise<V2Registration>
+  reload(): Promise<void>
 }
 
 export interface V2Context {
@@ -195,9 +241,9 @@ export interface V2Context {
   readonly event: {
     subscribe(options?: { signal?: AbortSignal }): AsyncIterable<V2Event>
   }
-  readonly agent: V2TransformDomain
+  readonly agent: V2AgentTransformDomain
   readonly command: V2TransformDomain
-  readonly mcp: V2TransformDomain
+  readonly mcp: V2McpTransformDomain
   readonly skill: V2TransformDomain
   readonly model: V2TransformDomain
   readonly provider: V2TransformDomain

@@ -15,6 +15,10 @@ import { createPlanUpdateTool } from "../../src/tools/plan/plan-update"
 const REPO_ROOT = resolve(import.meta.dir, "../..")
 const TEST_ABORT = new AbortController()
 
+function oraclePermissionMap(): Record<string, string> {
+  return Object.fromEntries(ORACLE_PERMISSION.map((rule) => [rule.action, rule.effect]))
+}
+
 const PLAN_CONTENT = ["# Title", "", "## Section One", "alpha", "", "## Section Two", "beta", ""].join("\n")
 
 /** Every plan tool the plugin registers, keyed by its registered tool name. */
@@ -85,7 +89,7 @@ describe("plan access rule (ORACLE_PERMISSION enforcement half)", () => {
     //#given the Oracle planner permission config
     // The enumeration invariant ("exactly the two authoring tools are granted")
     // lives in the test above; this one owns the mutation-vs-permission split.
-    const permission = ORACLE_PERMISSION as Record<string, string>
+    const permission = oraclePermissionMap()
 
     //#when the granted plan_* tools are classified by what they do to an existing plan
     const mutators = ["plan_update"]
@@ -101,7 +105,7 @@ describe("plan access rule (ORACLE_PERMISSION enforcement half)", () => {
 
   test("the plan-authoring path is explicitly reachable: plan_create AND plan_update are both allowed", () => {
     //#given the Oracle planner permission config
-    const permission = ORACLE_PERMISSION as Record<string, string>
+    const permission = oraclePermissionMap()
 
     //#when the granted plan_* tools are listed
     const planPermissionKeys = Object.keys(permission)
@@ -119,7 +123,7 @@ describe("plan access rule (ORACLE_PERMISSION enforcement half)", () => {
 
   test("no non-authoring plan tool is granted", () => {
     //#given the Oracle planner permission config
-    const permission = ORACLE_PERMISSION as Record<string, string>
+    const permission = oraclePermissionMap()
 
     //#when read-only, destructive and task-plan tools are checked
     const forbidden = ["plan_read", "plan_list", "plan_delete", "plan_tasks", "plan_tasks_clear"]
@@ -143,7 +147,7 @@ describe("plan access rule (ORACLE_PERMISSION enforcement half)", () => {
 
   test("the permission object grants no write/edit path that could touch a plan file", () => {
     //#given the Oracle planner permission config
-    const permission = ORACLE_PERMISSION as Record<string, string>
+    const permission = oraclePermissionMap()
 
     //#when the keys that could mutate a file are listed
     const mutatingKeys = Object.keys(permission).filter((k) => /^(write|edit|multiedit|patch|apply_patch)$/.test(k))

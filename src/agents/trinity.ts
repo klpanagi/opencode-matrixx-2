@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 
 const MODE: AgentMode = "subagent"
@@ -25,21 +25,14 @@ export const TRINITY_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createTrinityAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "task",
-    "task",
-  ])
-
   return {
     description:
       'Contextual grep for codebases. Answers "Where is X?", "Which file has Y?", "Find the code that does Z". Fire multiple in parallel for broad searches. Specify thoroughness: "quick" for basic, "medium" for moderate, "very thorough" for comprehensive analysis. (Explore - Matrixx)',
     mode: MODE,
-    model,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: `You are a codebase search specialist. Your job: find files and code, return actionable results.
+    model: parseModelRef(model),
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: `You are a codebase search specialist. Your job: find files and code, return actionable results.
 
 ## Your Mission
 

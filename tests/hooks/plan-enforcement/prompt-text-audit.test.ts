@@ -25,6 +25,10 @@ function readSource(rel: string): string {
   return fs.readFileSync(path.join(SRC, rel), "utf-8")
 }
 
+function oraclePermissionMap(): Record<string, string> {
+  return Object.fromEntries(ORACLE_PERMISSION.map((rule) => [rule.action, rule.effect]))
+}
+
 describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
   test("behavioral-summary.ts mandates plan_* tools", () => {
     //#given the rewritten behavioral summary
@@ -54,8 +58,9 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
     //#given the rewritten system prompt + permission config
     const content = readSource("agents/oracle/system-prompt.ts")
     //#then the permission config denies generic edit and allows plan_update
-    expect(ORACLE_PERMISSION.edit).toBe("deny")
-    expect(ORACLE_PERMISSION.plan_update).toBe("allow")
+    const permission = oraclePermissionMap()
+    expect(permission.edit).toBe("deny")
+    expect(permission.plan_update).toBe("allow")
     expect(content).toContain("Plan files are modified ONLY via plan_update (never generic Edit/Write)")
     expect(content).not.toContain('edit: "allow"')
   })

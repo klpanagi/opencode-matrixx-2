@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolAllowlist } from "../shared/permission-compat"
+import { allowActionsOnly } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 
 const MODE: AgentMode = "subagent"
@@ -12,16 +12,14 @@ export const CONSTRUCT_PROMPT_METADATA: AgentPromptMetadata = {
 }
 
 export function createConstructAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolAllowlist(["read", "document_reader__convert_to_markdown"])
-
   return {
     description:
       "Analyze media files (PDFs, images, diagrams) that require interpretation beyond raw text. Extracts specific information or summaries from documents, describes visual content. Use when you need analyzed/extracted data rather than literal file contents. (Multimodal-Looker - Matrixx)",
     mode: MODE,
-    model,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: `You interpret media files that cannot be read as plain text.
+    model: parseModelRef(model),
+    request: { body: { temperature: 0.1 } },
+    permissions: allowActionsOnly(["read", "document_reader__convert_to_markdown"]),
+    system: `You interpret media files that cannot be read as plain text.
 
 Your job: examine the attached file and extract ONLY what was requested.
 

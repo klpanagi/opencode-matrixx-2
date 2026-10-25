@@ -183,7 +183,7 @@ Available categories: ${allCategoryNames}`,
       const parsedModel = parseModelString(actualModel)
       const variantToUse = userCategories?.[args.category as string]?.variant ?? resolvedVariant ?? resolved.config.variant
       categoryModel = parsedModel
-        ? (variantToUse ? { ...parsedModel, variant: variantToUse, temperature: resolved.config.temperature } : { ...parsedModel, temperature: resolved.config.temperature })
+        ? (variantToUse ? { ...parsedModel, variant: variantToUse, temperature: resolved.temperature } : { ...parsedModel, temperature: resolved.temperature })
         : undefined
     }
   }
@@ -191,7 +191,7 @@ Available categories: ${allCategoryNames}`,
   if (!categoryModel && actualModel) {
     const parsedModel = parseModelString(actualModel)
     categoryModel = parsedModel
-      ? { ...parsedModel, temperature: resolved.config.temperature }
+      ? { ...parsedModel, temperature: resolved.temperature }
       : undefined
   }
   const categoryPromptAppend = resolved.promptAppend || undefined
@@ -232,7 +232,7 @@ Available categories: ${allCategoryNames}`,
       // Re-parse model after downgrade
       const parsed = parseModelString(actualModel)
       if (parsed) {
-        categoryModel = { ...parsed, temperature: resolved.config.temperature }
+        categoryModel = { ...parsed, temperature: resolved.temperature }
       }
       _complexityNote = `Model auto-downgraded from ${previousModel} to ${resolvedDowngrade.model} (complexity: ${complexityLevel})`
     }

@@ -13,6 +13,6 @@ export function mergeCategories(
     : { ...DEFAULT_CATEGORIES }
 
   return Object.fromEntries(
-    Object.entries(merged).filter(([, config]) => !config.disable),
+    Object.entries(merged).filter(([, config]) => !config.disabled),
   )
 }

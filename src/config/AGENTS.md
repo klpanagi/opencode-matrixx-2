@@ -44,7 +44,7 @@ Project (`.opencode/matrixx.jsonc`) → User (`~/.config/opencode/matrixx.jsonc`
 
 ## AGENT OVERRIDE FIELDS
 
-`model`, `variant`, `category`, `skills`, `temperature`, `top_p`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `prompt`, `prompt_append`, `tools`, `permission`, `providerOptions`, `disable`, `description`, `mode`, `color`
+`model`, `variant`, `category`, `skills`, `request`, `system`, `system_append`, `disabled`, `steps`, `permissions`, `description`, `mode`, `color`, `fallbackChain`
 
 ## AFTER SCHEMA CHANGES
 

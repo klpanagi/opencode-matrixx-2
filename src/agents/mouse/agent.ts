@@ -12,12 +12,9 @@
  * 5. Default (Anthropic/Claude, etc.) -> default.ts (Claude-optimized)
  */
 
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { AgentOverrideConfig } from "../../config/schema"
-import {
-  createAgentToolRestrictions,
-  type PermissionValue,
-} from "../../shared/permission-compat"
+import { denyActions } from "../../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AgentMode } from "../types"
 import {
   isAnthropicModel,
@@ -34,8 +31,8 @@ import { buildQwenMousePrompt } from "./qwen"
 
 const MODE: AgentMode = "subagent"
 
-// Core tools that Mouse must NEVER have access to
-const BLOCKED_TOOLS = ["task"]
+// Core actions that Mouse must NEVER have access to
+const BLOCKED_ACTIONS = ["subagent"]
 
 export const MOUSE_DEFAULTS = {
   model: "<provider>/<model>", // placeholder — resolved via active model preset or system default
@@ -83,56 +80,56 @@ export function createMouseAgentWithOverrides(
   override: AgentOverrideConfig | undefined,
   systemDefaultModel?: string,
 ): AgentConfig {
-  if (override?.disable) {
+  if (override?.disabled) {
     override = undefined
   }
 
-  const overrideModel = (override as { model?: string } | undefined)?.model
-  const model = overrideModel ?? systemDefaultModel ?? MOUSE_DEFAULTS.model
-  const temperature = override?.temperature ?? MOUSE_DEFAULTS.temperature
+  const model = override?.model ?? systemDefaultModel ?? MOUSE_DEFAULTS.model
+  const overrideBody = override?.request?.body
+  const overrideTemperature =
+    typeof overrideBody?.temperature === "number" ? overrideBody.temperature : undefined
+  const overrideTopP = typeof overrideBody?.top_p === "number" ? overrideBody.top_p : undefined
+  const temperature = overrideTemperature ?? MOUSE_DEFAULTS.temperature
 
-  const promptAppend = override?.prompt_append
+  const promptAppend = override?.system_append
   const prompt = buildMousePrompt(model, promptAppend)
 
-  const baseRestrictions = createAgentToolRestrictions(BLOCKED_TOOLS)
-
-  const userPermission = (override?.permission ?? {}) as Record<string, PermissionValue>
-  const basePermission = baseRestrictions.permission
-  const merged: Record<string, PermissionValue> = { ...userPermission }
-  for (const tool of BLOCKED_TOOLS) {
-    merged[tool] = "deny"
-  }
-  const toolsConfig = { permission: { ...merged, ...basePermission } }
+  const permissions = [...(override?.permissions ?? []), ...denyActions(BLOCKED_ACTIONS)]
 
   const base: AgentConfig = {
     description: override?.description ??
       "Focused task executor. Same discipline, no delegation. (Mouse - Matrixx)",
     mode: MODE,
-    model,
-    temperature,
-    maxTokens: 64000,
-    prompt,
+    model: parseModelRef(model),
+    request: {
+      body: {
+        temperature,
+        maxTokens: 64000,
+        ...(overrideTopP !== undefined ? { top_p: overrideTopP } : {}),
+      },
+    },
+    permissions,
+    system: prompt,
     color: override?.color ?? "#20B2AA",
-    ...toolsConfig,
   }
 
-  if (override?.top_p !== undefined) {
-    base.top_p = override.top_p
-  }
-
-  // Enable thinking for models that support it
   if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium" } as AgentConfig
+    return {
+      ...base,
+      request: { body: { ...base.request?.body, reasoningEffort: "medium" } },
+    }
   }
 
   if (isAnthropicModel(model) || isDeepSeekModel(model)) {
     return {
       ...base,
-      thinking: { type: "enabled", budgetTokens: 32000 },
-    } as AgentConfig
+      request: {
+        body: { ...base.request?.body, thinking: { type: "enabled", budgetTokens: 32000 } },
+      },
+    }
   }
 
-  return base as AgentConfig
+  return base
 }
 
 createMouseAgentWithOverrides.mode = MODE

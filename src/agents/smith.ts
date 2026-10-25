@@ -1,5 +1,5 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
-import { createAgentToolRestrictions } from "../shared/permission-compat"
+import { denyActions } from "../shared/permission-compat"
+import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
@@ -185,28 +185,31 @@ If REJECT:
 `
 
 export function createSmithAgent(model: string): AgentConfig {
-  const restrictions = createAgentToolRestrictions([
-    "write",
-    "edit",
-    "task",
-    "task",
-  ])
-
-  const base = {
+  const base: AgentConfig = {
     description:
       "Expert reviewer for evaluating work plans against rigorous clarity, verifiability, and completeness standards. (Smith - Matrixx)",
     mode: MODE,
-    model,
-    temperature: 0.1,
-    ...restrictions,
-    prompt: SMITH_SYSTEM_PROMPT,
-  } as AgentConfig
-
-  if (isGptModel(model)) {
-    return { ...base, reasoningEffort: "medium", textVerbosity: "high" } as AgentConfig
+    model: parseModelRef(model),
+    request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["edit", "subagent", "task"]),
+    system: SMITH_SYSTEM_PROMPT,
   }
 
-  return { ...base, thinking: { type: "enabled", budgetTokens: 8000 } } as AgentConfig
+  if (isGptModel(model)) {
+    return {
+      ...base,
+      request: {
+        body: { ...base.request?.body, reasoningEffort: "medium", textVerbosity: "high" },
+      },
+    }
+  }
+
+  return {
+    ...base,
+    request: {
+      body: { ...base.request?.body, thinking: { type: "enabled", budgetTokens: 8000 } },
+    },
+  }
 }
 createSmithAgent.mode = MODE
 

@@ -9,9 +9,9 @@
  * 2. Default (Claude, etc.) → default.ts (Claude-optimized)
  */
 
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { CategoryConfig } from "../../config/schema"
 import { mergeCategories } from "../../shared/merge-categories"
+import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { buildCategorySkillsDelegationGuide } from "../dynamic-agent-prompt-builder"
 import type { AgentMode, AgentPromptMetadata } from "../types"
@@ -97,17 +97,17 @@ export function createArchitectAgent(ctx: OrchestratorContext): AgentConfig {
   // task(subagent_type="architect") remains rejected at subagent-resolver.ts:57
   // (different axis).
 
-  const baseConfig = {
+  const baseConfig: AgentConfig = {
     description:
       "Orchestrates work via task() to complete ALL tasks in a todo list until fully done. (Architect - Matrixx)",
     mode: MODE,
-    ...(ctx.model ? { model: ctx.model } : {}),
-    temperature: 0.1,
-    prompt: buildDynamicOrchestratorPrompt(ctx),
+    ...(ctx.model ? { model: parseModelRef(ctx.model) } : {}),
+    request: { body: { temperature: 0.1 } },
+    system: buildDynamicOrchestratorPrompt(ctx),
     color: "#10B981",
   }
 
-  return baseConfig as AgentConfig
+  return baseConfig
 }
 createArchitectAgent.mode = MODE
 

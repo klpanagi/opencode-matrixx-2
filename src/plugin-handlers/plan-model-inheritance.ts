@@ -1,13 +1,7 @@
 const MODEL_SETTINGS_KEYS = [
   "model",
   "variant",
-  "temperature",
-  "top_p",
-  "maxTokens",
-  "thinking",
-  "reasoningEffort",
-  "textVerbosity",
-  "providerOptions",
+  "request",
 ] as const
 
 export function buildPlanDemoteConfig(

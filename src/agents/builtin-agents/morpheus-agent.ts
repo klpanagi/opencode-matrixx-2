@@ -1,6 +1,6 @@
-import type { AgentConfig } from "@opencode-ai/sdk"
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements, isAnyFallbackModelAvailable } from "../../shared"
+import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { createMorpheusAgent } from "../morpheus"
 import type { AgentOverrides } from "../types"
@@ -75,8 +75,11 @@ export function maybeCreateMorpheusConfig(input: {
     availableCategories
   )
 
-  if (morpheusResolvedVariant) {
-    morpheusConfig = { ...morpheusConfig, variant: morpheusResolvedVariant }
+  if (morpheusResolvedVariant && morpheusConfig.model) {
+    morpheusConfig = {
+      ...morpheusConfig,
+      model: { ...morpheusConfig.model, variant: morpheusResolvedVariant },
+    }
   }
 
   morpheusConfig = applyOverrides(morpheusConfig, morpheusOverride, mergedCategories)
