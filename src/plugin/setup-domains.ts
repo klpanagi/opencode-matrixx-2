@@ -764,8 +764,20 @@ async function registerDomainConfigTransforms(input: RegisterDomainsInput & { br
 
   const commands = asRecord(draft.command)
   if (Object.keys(commands).length > 0) {
+    const v2ctx = ctx as unknown as {
+      session?: {
+        switchAgent?: (input: Record<string, unknown>) => Promise<unknown>
+        switchModel?: (input: Record<string, unknown>) => Promise<unknown>
+        prompt?: (input: Record<string, unknown>) => Promise<unknown>
+        create?: (input: Record<string, unknown>) => Promise<unknown>
+      }
+      agent?: { get?: (input: Record<string, unknown>) => Promise<unknown> }
+    }
     const result = await guard("config:command", () =>
-      registerCommandTransform(ctx.command, commands),
+      registerCommandTransform(ctx.command, commands, {
+        session: v2ctx?.session,
+        agent: v2ctx?.agent,
+      }),
     )
     if (result) registrations.push(result.registration as V2Registration)
   }
