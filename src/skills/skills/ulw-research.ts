@@ -80,18 +80,18 @@ Flag any claims that seem contested or unverifiable by reading alone.
 """)
 \`\`\`
 
-### Direction 2: Documentation (trinity agent)
+### Direction 2: Documentation (operator agent)
 
 \`\`\`
 task(
-  subagent_type="trinity",
+  subagent_type="operator",
   run_in_background=true,
   description="Research docs: <lead>",
   prompt="""
 Research documentation and knowledge base files related to: <CURRENT_LEAD>
 
 Read AGENTS.md files, README.md, doc/ directories, and inline documentation.
-Use context7_resolve-library-id and context7_query-docs for library/framework docs.
+For library/framework docs delegate via task(operator) for context7 resolve→query (resolve-library-id then query-docs); do NOT call context7 or websearch directly.
 
 OUTPUT: Structured findings from docs with source attribution.
 Flag any claims that contradict other sources.

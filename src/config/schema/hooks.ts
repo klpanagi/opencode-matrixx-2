@@ -60,6 +60,7 @@ const HookNameEnum = z.enum([
   "context-mode-enforcer",
   "task-edit-guard",
   "document-reader-guard",
+  "docs-lookup-guard",
   "knowledge-hub-guard",
   "knowledge-hub-injector",
   "knowledge-hub-search-nudge",

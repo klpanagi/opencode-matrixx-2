@@ -15,6 +15,7 @@ export { createDcpNudgeSanitizerHook } from "./dcp-nudge-sanitizer";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createDesignIntentPreserverHook } from "./design-intent-preserver"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector";
+export { createDocsLookupGuardHook } from "./docs-lookup-guard";
 export { createDocumentReaderGuardHook } from "./document-reader-guard";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";

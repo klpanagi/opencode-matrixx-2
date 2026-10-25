@@ -6,6 +6,7 @@ import {
   createCommentCheckerHooks,
   createContextModeEnforcerHook,
   createDirectoryAgentsInjectorHook,
+  createDocsLookupGuardHook,
   createDocumentReaderGuardHook,
   createEmptyTaskResponseDetectorHook,
   createEnvFileWriteGuardHook,
@@ -55,6 +56,7 @@ export type ToolGuardHooks = {
   taskEditGuard: ReturnType<typeof createTaskEditGuardHook> | null
   taskNotepadWriter: ReturnType<typeof createTaskNotepadWriterHook> | null
   documentReaderGuard: ReturnType<typeof createDocumentReaderGuardHook> | null
+  docsLookupGuard: ReturnType<typeof createDocsLookupGuardHook> | null
   knowledgeHubGuard: ReturnType<typeof createKnowledgeHubGuardHook> | null
   knowledgeHubSearchNudge: ReturnType<typeof createKnowledgeHubSearchNudgeHook> | null
   evolutionWatcher: ReturnType<typeof createEvolutionWatcherHook> | null
@@ -164,6 +166,10 @@ export function createToolGuardHooks(args: {
     ? safeHook("document-reader-guard", () => createDocumentReaderGuardHook(ctx))
     : null
 
+  const docsLookupGuard = isHookEnabled("docs-lookup-guard")
+    ? safeHook("docs-lookup-guard", () => createDocsLookupGuardHook(ctx))
+    : null
+
   const knowledgeHubGuard = isHookEnabled("knowledge-hub-guard")
     ? safeHook("knowledge-hub-guard", () =>
         createKnowledgeHubGuardHook(ctx, {
@@ -203,6 +209,7 @@ export function createToolGuardHooks(args: {
     taskEditGuard,
     taskNotepadWriter,
     documentReaderGuard,
+    docsLookupGuard,
     knowledgeHubGuard,
     knowledgeHubSearchNudge,
     evolutionWatcher,
