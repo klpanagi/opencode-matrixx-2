@@ -21,7 +21,6 @@ fail() {
   echo "::endgroup::"
 }
 
-export BUN_INSTALL_ALLOW_SCRIPTS="@ast-grep/napi"
 
 # ------------------------------------------------------------------
 # Install dependencies (shared across all CI jobs)
