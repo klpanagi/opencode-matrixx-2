@@ -1,3 +1,4 @@
+import { denyActions } from "../shared/permission-compat"
 import { FRONTEND_A11Y_SKILL_NAME } from "../skills/skills/frontend-a11y"
 import { FRONTEND_BUILD_TOOLING_SKILL_NAME } from "../skills/skills/frontend-build-tooling"
 import { FRONTEND_PERF_SKILL_NAME } from "../skills/skills/frontend-perf"
@@ -5,7 +6,6 @@ import { FRONTEND_REACT_NEXTJS_SKILL_NAME } from "../skills/skills/frontend-reac
 import { FRONTEND_STATE_DATA_SKILL_NAME } from "../skills/skills/frontend-state-data"
 import { FRONTEND_SVELTE_SVELTEKIT_SKILL_NAME } from "../skills/skills/frontend-svelte-sveltekit"
 import { FRONTEND_TESTING_SKILL_NAME } from "../skills/skills/frontend-testing"
-import { denyActions } from "../shared/permission-compat"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"

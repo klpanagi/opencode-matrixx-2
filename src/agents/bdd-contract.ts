@@ -1,5 +1,5 @@
-import { BDD_CONTRACT_SKILL_NAME } from "../skills/skills/bdd-contract"
 import { denyActions } from "../shared/permission-compat"
+import { BDD_CONTRACT_SKILL_NAME } from "../skills/skills/bdd-contract"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"

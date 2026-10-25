@@ -1,11 +1,11 @@
 import type { BrowserAutomationProvider, CategoriesConfig } from "../config/schema"
-import type { BuiltinSkill } from "../skills"
 import {
   fetchAvailableModels,
   readConnectedProvidersCache,
   readProviderModelsCache,
 } from "../shared"
 import { mergeCategories } from "../shared/merge-categories"
+import type { BuiltinSkill } from "../skills"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import type { AgentConfig } from "./agent-config"
 import { architectPromptMetadata, createArchitectAgent } from "./architect"

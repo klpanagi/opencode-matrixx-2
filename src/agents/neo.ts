@@ -1,3 +1,4 @@
+import { denyActions } from "../shared/permission-compat"
 import { CCXT_PRO_WEBSOCKETS_SKILL_NAME } from "../skills/skills/ccxt-pro-websockets"
 import { CCXT_REST_SKILL_NAME } from "../skills/skills/ccxt-rest"
 import { DATA_QUALITY_OBSERVABILITY_SKILL_NAME } from "../skills/skills/data-quality-observability"
@@ -5,7 +6,6 @@ import { MARKET_DATA_ARCHITECTURE_SKILL_NAME } from "../skills/skills/market-dat
 import { ZEROMQ_ARCHITECTURE_SKILL_NAME } from "../skills/skills/zeromq-architecture"
 import { ZEROMQ_PUBSUB_SKILL_NAME } from "../skills/skills/zeromq-pubsub"
 import { ZEROMQ_RELIABILITY_SKILL_NAME } from "../skills/skills/zeromq-reliability"
-import { denyActions } from "../shared/permission-compat"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"

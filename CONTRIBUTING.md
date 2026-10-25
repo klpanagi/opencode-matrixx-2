@@ -216,8 +216,8 @@ export function createMyHook(input: PluginInput) {
 
 ### Adding a New MCP Server
 
-1. Create configuration in `src/mcp/`
-2. Add to `src/mcp/index.ts`
+1. Create configuration in `src/mcps/`
+2. Add to `src/mcps/index.ts`
 3. Document in README if it requires external setup
 
 ## Pull Request Process

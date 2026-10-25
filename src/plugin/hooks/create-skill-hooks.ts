@@ -1,8 +1,8 @@
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import type { HookName } from "../../config"
-import type { BuiltinSkill } from "../../skills"
 import { createAutoSlashCommandHook, createCategorySkillReminderHook } from "../../hooks"
 import { safeCreateHook } from "../../shared/safe-create-hook"
+import type { BuiltinSkill } from "../../skills"
 import type { PluginContext } from "../types"
 
 export type SkillHooks = {

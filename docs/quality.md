@@ -586,7 +586,7 @@ src/
 │   ├── bdd-contract.ts        ← BDD contract specialist agent (only new agent)
 │   ├── bdd-contract.test.ts   ← 12 agent tests
 │   ├── morpheus.ts            ← Matrixx orchestrator (runs bdd-tests, bdd-frontend, bdd-backend)
-├── features/builtin-skills/skills/
+├── skills/skills/
 │   ├── bdd-contract.ts        ← BDD contract skill (template prompt)
 │   ├── bdd-tests.ts           ← BDD tests skill
 │   ├── bdd-frontend.ts        ← BDD frontend skill
@@ -736,7 +736,7 @@ Scenario: Successful login redirects to dashboard
 
 ### Layer 2: tdd-enforcer — Execution Enforcement
 
-The `tdd-enforcer` skill (`src/features/builtin-skills/skills/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
+The `tdd-enforcer` skill (`src/skills/skills/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
 
 #### Prime Directive
 
@@ -790,7 +790,7 @@ Before marking task DONE:
 
 ### Pipeline Integration
 
-TDD enforcement is integrated into the **software-dev pipeline** (`src/features/builtin-skills/skills/software-dev.ts`):
+TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/skills/software-dev.ts`):
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

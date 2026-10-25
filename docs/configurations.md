@@ -593,7 +593,7 @@ For more details, see the [OpenCode Server documentation](https://opencode.ai/do
 
 ## Git Master
 
-The `git-master` skill (`src/features/builtin-skills/skills/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
+The `git-master` skill (`src/skills/skills/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
 
 ## Morpheus Agent
 
@@ -1175,7 +1175,7 @@ separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0
 
 ## MCPs
 
-Three built-in MCP servers (`src/mcp/`; names in `McpNameSchema`, `src/mcp/types.ts`): `websearch`, `context7`, `document_reader`. All enabled by default.
+Three built-in MCP servers (`src/mcps/`; names in `McpNameSchema`, `src/mcps/types.ts`): `websearch`, `context7`, `document_reader`. All enabled by default.
 
 - **websearch**: Real-time web search powered by [Exa AI](https://exa.ai) - searches the web and returns relevant content
 - **context7**: Fetches up-to-date official documentation for libraries
