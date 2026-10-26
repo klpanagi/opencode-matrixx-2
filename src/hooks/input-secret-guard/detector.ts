@@ -28,25 +28,6 @@ export function shannonEntropy(token: string): number {
   return entropy
 }
 
-export function compileRules(): CompiledRule[] {
-  const rules: CompiledRule[] = []
-  for (const r of BLOCKLIST_RULES) {
-    try {
-      rules.push({ id: r.id, severity: r.severity, regex: new RegExp(r.pattern, "g") })
-    } catch {
-    }
-  }
-  for (const r of WARNLIST_HEURISTICS) {
-    if (r.id === "generic-secret-assignment") {
-      try {
-        rules.push({ id: r.id, severity: r.severity, regex: new RegExp(r.pattern, "gi") })
-      } catch {
-      }
-    }
-  }
-  return rules
-}
-
 const COMPILED_BLOCKLIST = (() => {
   const list: CompiledRule[] = []
   for (const r of BLOCKLIST_RULES) {
