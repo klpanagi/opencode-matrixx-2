@@ -44,6 +44,7 @@ import { removeAiSlopsSkill } from "./skills/remove-ai-slops"
 import { resilienceErrorTaxonomySkill } from "./skills/resilience-error-taxonomy"
 import { reviewWorkSkill } from "./skills/review-work"
 import { securityApiSkill } from "./skills/security-api"
+import { securityAuditSkill } from "./skills/security-audit"
 import { securityCoreSkill } from "./skills/security-core"
 import { securityCryptoSkill } from "./skills/security-crypto"
 import { securityDastSkill } from "./skills/security-dast"
@@ -112,6 +113,7 @@ const skillFactories: Record<string, () => BuiltinSkill> = {
   "security-dast": () => securityDastSkill,
   "security-dependencies": () => securityDependenciesSkill,
   "security-api": () => securityApiSkill,
+  "security-audit": () => securityAuditSkill,
   "security-crypto": () => securityCryptoSkill,
   "security-infra": () => securityInfraSkill,
   "security-review": () => securityReviewSkill,

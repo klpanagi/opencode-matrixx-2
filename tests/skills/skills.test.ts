@@ -106,7 +106,7 @@ describe("createBuiltinSkills", () => {
 		}
 	})
 
-	test("returns exactly 64 skills regardless of provider", () => {
+	test("returns exactly 65 skills regardless of provider", () => {
 		// given
 
 		// when
@@ -114,8 +114,8 @@ describe("createBuiltinSkills", () => {
 		const agentBrowserSkills = createBuiltinSkills({ browserProvider: "agent-browser" })
 
 		// then
-		expect(defaultSkills).toHaveLength(64)
-		expect(agentBrowserSkills).toHaveLength(64)
+		expect(defaultSkills).toHaveLength(65)
+		expect(agentBrowserSkills).toHaveLength(65)
 	})
 
 	test("should exclude playwright when it is in disabledSkills", () => {
@@ -131,7 +131,7 @@ describe("createBuiltinSkills", () => {
 		expect(skills.map((s) => s.name)).toContain("git-master")
 		expect(skills.map((s) => s.name)).toContain("dev-browser")
 		expect(skills.map((s) => s.name)).toContain("dsl-core")
-		expect(skills.length).toBe(63)
+		expect(skills.length).toBe(64)
 	})
 
 	test("should return all skills when disabledSkills set is empty", () => {
@@ -142,7 +142,7 @@ describe("createBuiltinSkills", () => {
 		const skills = createBuiltinSkills(options)
 
 		// #then
-		expect(skills.length).toBe(64)
+		expect(skills.length).toBe(65)
 	})
 
 	test("should always include docker-master skill", () => {
@@ -191,6 +191,23 @@ describe("createBuiltinSkills", () => {
 		expect(playwrightSkill?.allowedTools).toContain("Bash(playwright-cli:*)")
 		expect(playwrightSkill?.mcpConfig).toBeUndefined()
 		expect(agentBrowserSkill).toBeUndefined()
+	})
+
+
+	test("security-review stub is DEPRECATED and factory still resolves it", () => {
+		// #given
+		// #when
+		const skills = createBuiltinSkills()
+		const stub = skills.find((s) => s.name === "security-review")
+		void stub?.template // trigger lazy hydration (populates description)
+
+		// #then - export intact, factory entry kept, SDO starts with Deprecated
+		expect(stub).toBeDefined()
+		expect(stub?.description.startsWith("Deprecated")).toBe(true)
+		expect(stub?.description).toContain("Use when")
+		expect(stub?.description).toContain("security-audit")
+		expect(stub?.template).toContain("DEPRECATED")
+		expect(stub?.template).toContain("security-audit")
 	})
 
 	test("playwright-cli skill template contains CLI commands", () => {

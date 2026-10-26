@@ -3,62 +3,27 @@ import type { BuiltinSkill } from "../types"
 export const SECURITY_REVIEW_SKILL_NAME = "security-review"
 
 const SECURITY_REVIEW_SKILL_DESCRIPTION =
-  "Use when conducting security reviews, applying STRIDE threat modeling, or producing audit reports — security review methodology: LLM-powered review phases, STRIDE threat model, attack surface mapping, architecture review checklist, risk assessment framework, and structured report format. Related: security-core, security-sast."
+  "Deprecated — Use when conducting security reviews, applying STRIDE threat modeling, or producing audit reports — superseded by security-audit; load security-audit instead. Related: security-audit, security-core."
 
 export const securityReviewSkill: BuiltinSkill = {
   name: SECURITY_REVIEW_SKILL_NAME,
   description: SECURITY_REVIEW_SKILL_DESCRIPTION,
-  template: `# Security — Review & Threat Modeling
+  template: `# Security Review — DEPRECATED
 
-## LLM-POWERED SECURITY REVIEW METHODOLOGY
+> **DEPRECATED.** This skill is superseded by the \`security-audit\`
+> orchestrator. Load \`security-audit\` instead.
 
-- **Phase 1: Understand the application** (read architecture, data flow, trust boundaries)
-- **Phase 2: Identify attack surface** (entry points, data inputs, external integrations, authentication boundaries)
-- **Phase 3: Apply threat modeling** (STRIDE per component)
-- **Phase 4: Code-level review** (focus on security-critical paths: auth, input handling, data access, crypto usage)
-- **Phase 5: Generate findings report** with severity, CWE, remediation
+## Why
 
-## STRIDE THREAT MODEL
+The 5-phase review methodology that lived here is subsumed by the
+security-audit 6-phase workflow (recon → hunting waves → candidate
+validation → findings.json + coverage ledger → independent verification →
+report), plus the hunter/verifier split and validator modules.
 
-- **Spoofing**: Can an attacker pretend to be someone else? (auth weaknesses)
-- **Tampering**: Can data be modified in transit or at rest? (integrity checks)
-- **Repudiation**: Can actions be denied? (audit logging gaps)
-- **Information Disclosure**: Can sensitive data leak? (error messages, logs, responses)
-- **Denial of Service**: Can the service be overwhelmed? (rate limits, resource limits)
-- **Elevation of Privilege**: Can a user gain unauthorized access? (authorization flaws)
+## Migration
 
-## ATTACK SURFACE MAPPING
-
-- **External interfaces**: APIs, web forms, file uploads, webhooks
-- **Internal interfaces**: database connections, message queues, RPC calls
-- **Data flows**: trace sensitive data from input to storage to output
-- **Trust boundaries**: where does authenticated ↔ unauthenticated transition happen?
-- **Third-party integrations**: external APIs, OAuth providers, payment gateways
-
-## SECURITY ARCHITECTURE REVIEW CHECKLIST
-
-- **Authentication**: Is it properly implemented? Multi-factor? Account lockout?
-- **Authorization**: Is access control enforced consistently? At every layer?
-- **Data protection**: Is sensitive data encrypted at rest and in transit?
-- **Logging and monitoring**: Are security events logged? Are logs tamper-proof?
-- **Error handling**: Do errors leak sensitive information?
-- **Configuration**: Are defaults secure? Are debug features disabled in production?
-- **Dependencies**: Are they up to date? Are there known vulnerabilities?
-
-## RISK ASSESSMENT FRAMEWORK
-
-- **Likelihood × Impact = Risk Rating**
-- **Likelihood factors**: attacker skill required, access level needed, prevalence of vulnerability
-- **Impact factors**: data confidentiality loss, integrity damage, availability impact, compliance implications
-- **Risk ratings**: Critical (immediate fix), High (fix in current sprint), Medium (fix in next release), Low (track and plan)
-
-## SECURITY REVIEW REPORT STRUCTURE
-
-- Executive summary (1 paragraph for stakeholders)
-- Scope and methodology
-- Findings table (severity, CWE, location, description, remediation)
-- Risk matrix visualization
-- Recommendations prioritized by risk
-- Appendix: detailed evidence for each finding
+- Guidance or full audit: load the \`security-audit\` skill.
+- Threat-model reference only: \`security-audit\` Phase 1 (Recon) covers
+  attack-surface mapping and STRIDE per component.
 `,
 }
