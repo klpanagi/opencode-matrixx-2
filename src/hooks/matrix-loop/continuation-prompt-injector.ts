@@ -3,7 +3,7 @@ import { findNearestMessageWithFields } from "../../features/hook-message-inject
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { getMessageDir } from "../../shared/opencode-message-dir"
-import { withTimeout } from "./with-timeout"
+import { withTimeout } from "../../shared/with-timeout"
 
 type MessageInfo = {
 	agent?: string

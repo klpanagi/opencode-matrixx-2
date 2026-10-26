@@ -7,7 +7,7 @@ import { DEFAULT_VERIFICATION_AGENT, DEFAULT_VERIFICATION_MAX_RETRIES, DEFAULT_V
 import { buildContinuationPrompt } from "./continuation-prompt-builder"
 import { injectContinuationPrompt } from "./continuation-prompt-injector"
 import type { MatrixLoopOptions, MatrixLoopState } from "./types"
-import { withTimeout } from "./with-timeout"
+import { withTimeout } from "../../shared/with-timeout"
 
 type SessionRecovery = { isRecovering: (sessionID: string) => boolean; markRecovering: (sessionID: string) => void; clear: (sessionID: string) => void }
 type LoopStateController = { getState: () => MatrixLoopState | null; clear: () => boolean; incrementIteration: () => MatrixLoopState | null }

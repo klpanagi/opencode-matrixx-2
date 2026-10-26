@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
 import { HOOK_NAME } from "./constants"
-import { withTimeout } from "./with-timeout"
+import { withTimeout } from "../../shared/with-timeout"
 
 export interface OpenCodeSessionMessage {
 	info?: { role?: string }
