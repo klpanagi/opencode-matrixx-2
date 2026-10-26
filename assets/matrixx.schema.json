@@ -238,7 +238,8 @@
               "knowledge-hub-search-nudge",
               "dcp-nudge-sanitizer",
               "nudge-loop-breaker",
-              "task-notepad-writer"
+              "task-notepad-writer",
+              "session-memory"
             ]
           },
           {},
