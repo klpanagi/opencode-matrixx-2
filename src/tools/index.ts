@@ -8,7 +8,7 @@ import {
   lspManager,
 } from "./lsp"
 
-export { createAstGrepTools } from "./ast-grep"
+export { createAstGrepTools } from "./ast-grep/tools"
 export { createBddCreateContractTool } from "./bdd-create-contract/tools"
 export { createBddParseGherkinTool } from "./bdd-parse-gherkin/tools"
 export { createBddPipelineTool } from "./bdd-pipeline/tools"

@@ -17,7 +17,7 @@ export { createDesignIntentPreserverHook } from "./design-intent-preserver/hook"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector/hook";
 export { createDocsLookupGuardHook } from "./docs-lookup-guard/hook";
 export { createDocumentReaderGuardHook } from "./document-reader-guard/hook";
-export { createEditErrorRecoveryHook } from "./edit-error-recovery";
+export { createEditErrorRecoveryHook } from "./edit-error-recovery/hook";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
 export { createEnvContextInjectorHook } from "./env-context-injector";
 export { createEnvFileWriteGuardHook } from "./env-file-write-guard/hook"
@@ -32,7 +32,7 @@ export { createKeywordDetectorHook } from "./keyword-detector/hook";
 export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard/hook";
 export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector/hook";
 export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge/hook";
-export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop";
+export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop/matrix-loop-hook";
 export { createMouseNotepadHook } from "./mouse-notepad/hook";
 export { createNonInteractiveEnvHook } from "./non-interactive-env/non-interactive-env-hook";
 export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker/hook";

@@ -4,7 +4,7 @@ import { dirname, join } from "node:path"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import type { MatrixxConfig } from "../../config"
 import type { ModelPreset } from "../../config/schema/model-presets"
-import { getSessionPreset, setSessionPreset } from "../../features/preset-state"
+import { getSessionPreset, setSessionPreset } from "../../features/preset-state/manager"
 import { parseJsoncSafe } from "../../shared/jsonc-parser"
 import { log } from "../../shared/logger"
 
