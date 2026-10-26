@@ -1,5 +1,5 @@
 export { createAgentUsageReminderHook } from "./agent-usage-reminder/hook";
-export { createArchitectHook } from "./architect";
+export { createArchitectHook } from "./architect/architect-hook";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createAutoUpdateCheckerHook } from "./auto-update-checker";
 export { createBackgroundNotificationHook } from "./background-notification/hook"
@@ -15,7 +15,7 @@ export { createDcpNudgeSanitizerHook } from "./dcp-nudge-sanitizer/hook";
 export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createDesignIntentPreserverHook } from "./design-intent-preserver/hook"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector/hook";
-export { createDocsLookupGuardHook } from "./docs-lookup-guard";
+export { createDocsLookupGuardHook } from "./docs-lookup-guard/hook";
 export { createDocumentReaderGuardHook } from "./document-reader-guard/hook";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
@@ -28,13 +28,13 @@ export { createHashlineReadEnhancerHook } from "./hashline-read-enhancer/hook";
 export { createInputSecretGuardHook } from "./input-secret-guard/hook";
 export { createInteractiveBashSessionHook } from "./interactive-bash-session/hook";
 export { createJsonErrorRecoveryHook } from "./json-error-recovery"
-export { createKeywordDetectorHook } from "./keyword-detector";
-export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard";
+export { createKeywordDetectorHook } from "./keyword-detector/hook";
+export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard/hook";
 export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector/hook";
 export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge/hook";
 export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop";
-export { createMouseNotepadHook } from "./mouse-notepad";
-export { createNonInteractiveEnvHook } from "./non-interactive-env";
+export { createMouseNotepadHook } from "./mouse-notepad/hook";
+export { createNonInteractiveEnvHook } from "./non-interactive-env/non-interactive-env-hook";
 export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker/hook";
 export { createOracleMdOnlyHook } from "./oracle-md-only/hook";
 export { createPlanPersister } from "./plan-persister"
