@@ -88,6 +88,27 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 
 > Counts verified against source (`BuiltinAgentNameSchema`, `BuiltinSkillNameSchema`, hook registry). The roster lives in docs — this page links, never duplicates.
 
+### Session memory (new)
+
+Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](https://github.com/Plutarch01/opencode-lcm) interop semantics, pinned `84103cca`). It archives conversation turns as JSONL under `.matrixx/memory/`, recalls them with scope-aware budgets, and collaborates with compaction — no SQLite, no new handler, off by default.
+
+```jsonc
+// matrixx.jsonc — enable native session memory
+{
+  "memory": {
+    "enabled": true,
+    "ignoreToolPrefixes": ["ctx_"],
+    "retention": { "deletedSessionDays": 30, "orphanBlobDays": 14 }
+    // staleSessionDays omitted = disabled (NOT 90)
+  },
+  "plugin": ["context-mode"] // plugin-only form: do NOT add a legacy mcp.context-mode block
+}
+```
+
+- **Native (`memory.enabled`)**: JSONL-first store, deterministic recall (110 chars/msg, 900-char cap, 2/1/1 hit quotas), retention triple with tombstones (`[removed]`/`[pruned:id]`, pinned skipped). Details: [Context Management](docs/context-management.md) · FTS deferral note: [session-memory-fts.md](docs/session-memory-fts.md) · options: [Configuration](docs/configurations.md).
+- **External `opencode-lcm`**: use instead if you want the upstream SQLite/FTS5 build with its 18 `lcm_*` tools. Pair with context-mode via `ignoreToolPrefixes: ["ctx_"]`; keep scopes at `session` default. Native memory and upstream lcm solve the same gap — pick one.
+- **External `magic-context` (CortexKit)**: use for cross-session/cross-tool semantic memory (2.4k stars, local embeddings, zero per-turn LLM cost; historian/dreamer crons carry the spend). Runs alongside native memory with `compaction:false`-equivalent scoping; note it owns `ctx_search`/`ctx_reduce` naming that overlaps context-mode — resolve the collision before enabling both.
+
 ---
 
 ## Quick Start
