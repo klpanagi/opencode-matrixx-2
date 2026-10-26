@@ -62,11 +62,11 @@ jobs:
           cd /tmp/smoke-test
           bun init -y 2>&1 | tail -3
           bun add "$GITHUB_WORKSPACE/$TGZ" 2>&1 | tail -10
-          ls -la node_modules/opencode-matrixx/dist/cli.js
-          test -f node_modules/opencode-matrixx/dist/cli.js || (echo "cli.js not in installed package" && exit 1)
-          node -e "const p=require('./node_modules/opencode-matrixx/package.json'); if(!p.bin['opencode-matrixx']) throw new Error('installed bin missing'); console.log('installed bin OK', p.bin)"
+          ls -la node_modules/opencode-matrixx-v2/dist/cli.js
+          test -f node_modules/opencode-matrixx-v2/dist/cli.js || (echo "cli.js not in installed package" && exit 1)
+          node -e "const p=require('./node_modules/opencode-matrixx-v2/package.json'); if(!p.bin['opencode-matrixx']) throw new Error('installed bin missing'); console.log('installed bin OK', p.bin)"
           ls -la node_modules/.bin/opencode-matrixx* 2>&1 | head -10 || true
-          cat node_modules/opencode-matrixx/dist/cli.js | head -2
+          cat node_modules/opencode-matrixx-v2/dist/cli.js | head -2
 
       - name: Test bunx execution (fresh cache)
         run: |
