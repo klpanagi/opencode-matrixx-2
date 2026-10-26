@@ -11,7 +11,7 @@ import {
   createStopContinuationGuardHook,
   createTaskContinuationEnforcer,
 } from "../../hooks"
-import { safeCreateHook } from "../../shared/safe-create-hook"
+import { bindSafeHook } from "../../shared/safe-create-hook"
 import type { PluginContext } from "../types"
 import { createUnstableAgentBabysitter } from "../unstable-agent-babysitter"
 
@@ -49,8 +49,7 @@ export function createContinuationHooks(args: {
     sessionRecovery,
   } = args
 
-  const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
-    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+  const safeHook = bindSafeHook(safeHookEnabled)
 
   const evolutionEnabled = pluginConfig.evolution?.enabled === true
 

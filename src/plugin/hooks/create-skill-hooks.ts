@@ -1,7 +1,7 @@
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import type { HookName } from "../../config"
 import { createAutoSlashCommandHook, createCategorySkillReminderHook } from "../../hooks"
-import { safeCreateHook } from "../../shared/safe-create-hook"
+import { bindSafeHook } from "../../shared/safe-create-hook"
 import type { BuiltinSkill } from "../../skills"
 import type { PluginContext } from "../types"
 
@@ -19,8 +19,7 @@ export function createSkillHooks(args: {
 }): SkillHooks {
   const { ctx, isHookEnabled, safeHookEnabled, builtinSkills, availableSkills } = args
 
-  const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
-    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+  const safeHook = bindSafeHook(safeHookEnabled)
 
   const categorySkillReminder = isHookEnabled("category-skill-reminder")
     ? safeHook("category-skill-reminder", () =>

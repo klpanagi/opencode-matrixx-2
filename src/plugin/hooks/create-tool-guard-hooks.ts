@@ -32,7 +32,7 @@ import {
   log,
   OPENCODE_NATIVE_AGENTS_INJECTION_VERSION,
 } from "../../shared"
-import { safeCreateHook } from "../../shared/safe-create-hook"
+import { bindSafeHook } from "../../shared/safe-create-hook"
 import type { PluginContext } from "../types"
 
 export type ToolGuardHooks = {
@@ -70,8 +70,7 @@ export function createToolGuardHooks(args: {
 }): ToolGuardHooks {
   const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
   const evolutionEnabled = pluginConfig.evolution?.enabled === true
-  const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
-    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+  const safeHook = bindSafeHook(safeHookEnabled)
 
   const backgroundTaskBlocker = isHookEnabled("background-task-blocker")
     ? safeHook("background-task-blocker", () => createBackgroundTaskBlockerHook())
