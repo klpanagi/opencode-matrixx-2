@@ -14,7 +14,7 @@ import {
   createThinkingBlockValidatorHook,
   createToolPairValidatorHook,
 } from "../../hooks"
-import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer"
+import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer/hook"
 import { createDomainKeywordDetectorHook } from "../../hooks/domain-keyword-detector"
 import { createInputSecretGuardHook } from "../../hooks/input-secret-guard"
 import { safeCreateHook } from "../../shared/safe-create-hook"
