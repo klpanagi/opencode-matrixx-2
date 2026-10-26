@@ -39,6 +39,7 @@ function hasExistingPluginRegistration(configPath: string): boolean {
   if (!existsSync(configPath)) return false
   try {
     const content = readFileSync(configPath, "utf-8")
+    // Substring covers opencode-matrixx-v2 + legacy v1 opencode-matrixx
     return content.includes("opencode-matrixx")
   } catch {
     return false
@@ -56,7 +57,7 @@ function generatePluginEntry(absolutePath: string, forceLocal?: boolean): string
     if (existsSync(distEntry)) return `file://${distEntry}`
     if (existsSync(absolutePath)) return `file://${absolutePath}`
   }
-  return "opencode-matrixx"
+  return "opencode-matrixx-v2"
 }
 
 export async function executeInstall(options: InstallOptions): Promise<string> {
@@ -124,8 +125,8 @@ export async function executeInstall(options: InstallOptions): Promise<string> {
 
   parts.push("  Next steps:")
   parts.push("    1. Configure authentication via `opencode auth login`")
-  parts.push("    2. Verify with `bunx opencode-matrixx doctor`")
-  if (pluginEntry === "opencode-matrixx") {
+  parts.push("    2. Verify with `bunx opencode-matrixx-v2 doctor`")
+  if (pluginEntry === "opencode-matrixx-v2") {
     parts.push("    3. Restart OpenCode to load the plugin")
   } else {
     parts.push("    3. Run `bun run build` in the repo, then restart OpenCode")

@@ -8,8 +8,10 @@
  *   ./bin/matrixx.ts version
  *
  * Published as:
- *   bunx opencode-matrixx
- *   npx opencode-matrixx
+ *   bunx opencode-matrixx-v2
+ *   npx opencode-matrixx-v2
+ *   bunx opencode-matrixx (back-compat alias)
+ *   npx matrixx (back-compat alias)
  */
 
 import main from "../src/cli/index"

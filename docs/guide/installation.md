@@ -31,7 +31,7 @@ Paste this into any LLM agent session (Claude Code, Cursor, etc.):
 
 ```
 Install and configure matrixx by following the instructions here:
-https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/docs/guide/installation.md
+https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/refs/heads/dev/docs/guide/installation.md
 ```
 
 The agent will walk you through provider selection and authentication.
@@ -41,7 +41,7 @@ The agent will walk you through provider selection and authentication.
 Run the interactive installer:
 
 ```bash
-bunx opencode-matrixx install
+bunx opencode-matrixx-v2 install
 ```
 
 Follow the prompts to configure Claude, ChatGPT, and Gemini subscriptions.
@@ -49,13 +49,13 @@ Follow the prompts to configure Claude, ChatGPT, and Gemini subscriptions.
 For non-interactive setup (CI/agents):
 
 ```bash
-bunx opencode-matrixx install --no-tui --claude=yes --openai=yes --gemini=no --copilot=no
+bunx opencode-matrixx-v2 install --no-tui --claude=yes --openai=yes --gemini=no --copilot=no
 ```
 
 Verify:
 
 ```bash
-bunx opencode-matrixx doctor
+bunx opencode-matrixx-v2 doctor
 # Expected: no "fail" entries. "warn" for missing optional providers is OK.
 ```
 
@@ -65,7 +65,7 @@ After installation, see the [overview guide](./overview.md).
 
 > **IMPORTANT: Use `curl` to fetch this file, NOT WebFetch.** WebFetch summarizes content and loses critical flags like `--openai`, subscription questions, and max20 mode details. Always use:
 > ```bash
-> curl -fsSL https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/docs/guide/installation.md
+> curl -fsSL https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/refs/heads/dev/docs/guide/installation.md
 > ```
 
 If you're an LLM Agent helping set up matrixx, follow these steps:
@@ -104,22 +104,22 @@ Spawn a subagent to handle installation if missing.
 ### Step 2: Run the installer
 
 ```bash
-bunx opencode-matrixx install --no-tui --claude=<yes|no|max20> --gemini=<yes|no> --copilot=<yes|no> [--openai=<yes|no>] [--opencode-zen=<yes|no>] [--zai-coding-plan=<yes|no>]
+bunx opencode-matrixx-v2 install --no-tui --claude=<yes|no|max20> --gemini=<yes|no> --copilot=<yes|no> [--openai=<yes|no>] [--opencode-zen=<yes|no>] [--zai-coding-plan=<yes|no>]
 ```
 
 Examples:
-- All native: `bunx opencode-matrixx install --no-tui --claude=max20 --openai=yes --gemini=yes --copilot=no`
-- Only Claude: `bunx opencode-matrixx install --no-tui --claude=yes --gemini=no --copilot=no`
-- Only Copilot: `bunx opencode-matrixx install --no-tui --claude=no --gemini=no --copilot=yes`
+- All native: `bunx opencode-matrixx-v2 install --no-tui --claude=max20 --openai=yes --gemini=yes --copilot=no`
+- Only Claude: `bunx opencode-matrixx-v2 install --no-tui --claude=yes --gemini=no --copilot=no`
+- Only Copilot: `bunx opencode-matrixx-v2 install --no-tui --claude=no --gemini=no --copilot=yes`
 
-The CLI registers the plugin in `~/.config/opencode/opencode.jsonc` as `"opencode-matrixx"` (bare package name, resolved via npm). For local dev checkouts, use `--local` to register a `file://` path.
+The CLI registers the plugin in `~/.config/opencode/opencode.jsonc` as `"opencode-matrixx-v2"` (bare package name, resolved via npm). For local dev checkouts, use `--local` to register a `file://` path.
 
 ### Step 3: Verify Setup
 
 ```bash
 opencode --version  # >= 1.0.150
-cat ~/.config/opencode/opencode.jsonc  # should contain "opencode-matrixx" in plugin array
-bunx opencode-matrixx doctor            # check for fails
+cat ~/.config/opencode/opencode.jsonc  # should contain "opencode-matrixx-v2" in plugin array
+bunx opencode-matrixx-v2 doctor            # check for fails
 ```
 
 `doctor` checks:
@@ -129,7 +129,7 @@ bunx opencode-matrixx doctor            # check for fails
 - **dependencies:** Bun, Node, Git, Python3
 - **tools:** ast-grep, Gitleaks, PyMuPDF, Playwright (optional)
 
-Use `bunx opencode-matrixx doctor --json` for machine-readable output or `--category authentication` to check one category.
+Use `bunx opencode-matrixx-v2 doctor --json` for machine-readable output or `--category authentication` to check one category.
 
 ### Step 4: Configure Authentication
 
@@ -147,7 +147,7 @@ opencode auth login
 Add the antigravity plugin:
 
 ```json
-{ "plugin": ["opencode-matrixx", "opencode-antigravity-auth@latest"] }
+{ "plugin": ["opencode-matrixx-v2", "opencode-antigravity-auth@latest"] }
 ```
 
 Read [opencode-antigravity-auth](https://github.com/NoeFabris/opencode-antigravity-auth) for full model config, then:
@@ -172,17 +172,17 @@ Authenticated via `opencode auth login` provider selection as well.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `could not determine executable to run for package opencode-matrixx` | Stale Bun cache or old package (pre-2.6.0) | `bun pm cache rm && bunx opencode-matrixx@latest --help`; ensure you're on ≥ 2.6.0 |
-| `opencode-matrixx doctor` says `No API providers configured` after `opencode auth login` | Doctor checked wrong file (fixed in 2.6.0) | Update: `bunx opencode-matrixx@latest doctor`; verify auth storage: `cat ~/.local/share/opencode/auth.json` or `opencode auth list` |
-| Plugin not loading in OpenCode | Plugin entry is `file://` pointing to deleted temp dir | Re-run `bunx opencode-matrixx install` (without `--local`); check `cat ~/.config/opencode/opencode.jsonc` contains `"opencode-matrixx"` |
+| `could not determine executable to run for package opencode-matrixx` | Stale Bun cache or old package (pre-2.6.0) | `bun pm cache rm && bunx opencode-matrixx-v2@latest --help`; ensure you're on ≥ 2.6.0 |
+| `opencode-matrixx-v2 doctor` says `No API providers configured` after `opencode auth login` | Doctor checked wrong file (fixed in 2.6.0) | Update: `bunx opencode-matrixx-v2@latest doctor`; verify auth storage: `cat ~/.local/share/opencode/auth.json` or `opencode auth list` |
+| Plugin not loading in OpenCode | Plugin entry is `file://` pointing to deleted temp dir | Re-run `bunx opencode-matrixx-v2 install` (without `--local`); check `cat ~/.config/opencode/opencode.jsonc` contains `"opencode-matrixx-v2"` |
 | `opencode.json` vs `opencode.jsonc` | OpenCode supports both; doctor checks both + `.jsonc` comments | Ensure your config is valid JSONC: `cat ~/.config/opencode/opencode.jsonc` |
 | `bunx` not found | Bun not installed or not in PATH | `curl -fsSL https://bun.sh/install | bash` then reopen shell |
-| `npx opencode-matrixx` fails | `npx` uses Node, but CLI needs Bun (`#!/usr/bin/env bun`) | Use `bunx opencode-matrixx` instead |
+| `npx opencode-matrixx-v2` fails | `npx` uses Node, but CLI needs Bun (`#!/usr/bin/env bun`) | Use `bunx opencode-matrixx-v2` instead |
 
 If `doctor` still fails after these steps, run with verbose JSON and share output:
 
 ```bash
-bunx opencode-matrixx doctor --json
+bunx opencode-matrixx-v2 doctor --json
 opencode auth list
 cat ~/.config/opencode/opencode.jsonc
 cat ~/.local/share/opencode/auth.json | head -20
@@ -192,13 +192,15 @@ cat ~/.local/share/opencode/auth.json | head -20
 
 ### 1. Remove the plugin from OpenCode config
 
-Edit `~/.config/opencode/opencode.json` (or `opencode.jsonc`) and remove the matrixx plugin entry (either `"opencode-matrixx"` or the legacy `"matrixx"` form, with or without a `@<version>` suffix, or a `file://` local-dev path from `install --local`) from the `plugin` array:
+Edit `~/.config/opencode/opencode.json` (or `opencode.jsonc`) and remove the matrixx plugin entry (either `"opencode-matrixx-v2"`, the v1 `"opencode-matrixx"`, or the legacy `"matrixx"` form, with or without a `@<version>` suffix, or a `file://` local-dev path from `install --local`) from the `plugin` array:
 
 ```bash
 # Using jq — strips both the current and the legacy plugin names, with or without version pins.
 # NOTE: this does not strip file:// local-dev entries (from install --local) — remove those by hand.
 jq '.plugin = [.plugin[] | select(
-        . != "opencode-matrixx"
+        . != "opencode-matrixx-v2"
+        and (startswith("opencode-matrixx-v2@") | not)
+        and . != "opencode-matrixx"
         and (startswith("opencode-matrixx@") | not)
         and . != "matrixx"
         and (startswith("matrixx@") | not)

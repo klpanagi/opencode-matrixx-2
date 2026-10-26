@@ -148,7 +148,7 @@ describe("pluginInstallationCheck", () => {
   test("passes when opencode CLI and plugin registered", async () => {
     const configPath = join(homedir(), ".config", "opencode", "opencode.json")
     mockFiles.add(configPath)
-    mockFileContents.set(configPath, JSON.stringify({ plugin: ["opencode-matrixx"] }))
+    mockFileContents.set(configPath, JSON.stringify({ plugin: ["opencode-matrixx-v2"] }))
     mockBunSpawnSyncResults = [{ exitCode: 0, stdout: "opencode 1.0.155", stderr: "" }]
     const result = await pluginInstallationCheck.check()
     expect(result.status).toBe("pass")
@@ -193,7 +193,7 @@ describe("authCheck", () => {
     mockFileContents.set(
       configPath,
       JSON.stringify({
-        plugin: ["opencode-matrixx"],
+        plugin: ["opencode-matrixx-v2"],
         provider: { anthropic: { apiKey: "sk-ant-xxx" } },
       }),
     )

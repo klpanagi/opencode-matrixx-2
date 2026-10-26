@@ -122,8 +122,8 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
 **Prerequisites:** Bun 1.4.0 · OpenCode ≥ 1.0.150
 
 ```bash
-bunx opencode-matrixx install
-bunx opencode-matrixx doctor   # no "fail" = good
+bunx opencode-matrixx-v2 install
+bunx opencode-matrixx-v2 doctor   # no "fail" = good
 opencode auth login             # connect at least one provider
 ```
 

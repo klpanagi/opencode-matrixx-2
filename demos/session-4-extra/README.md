@@ -676,7 +676,7 @@ Next step: Implement auto-recovery — restart camera node on cascade detection.
 >
 > *The common thread across all of this is **specialization**: instead of one model doing everything poorly, 17 agents each do one thing well. The right model for the right job — automatically.*
 >
-> *Matrixx is open source. Install it with `npm install -g opencode-matrixx`, configure with a JSONC file, and you get all of this out of the box."*
+> *Matrixx is open source. Install it with `npm install -g opencode-matrixx-v2`, configure with a JSONC file, and you get all of this out of the box."*
 
 ---
 

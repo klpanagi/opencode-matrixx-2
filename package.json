@@ -9,6 +9,7 @@
     "dist"
   ],
   "bin": {
+    "opencode-matrixx-v2": "dist/cli.js",
     "opencode-matrixx": "dist/cli.js",
     "matrixx": "dist/cli.js"
   },

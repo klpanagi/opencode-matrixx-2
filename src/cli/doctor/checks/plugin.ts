@@ -28,6 +28,11 @@ function parsePluginEntries(content: string): string[] | null {
 
 function isMatrixxPlugin(entry: string): boolean {
   const lower = entry.toLowerCase()
+  if (lower === "opencode-matrixx-v2") return true
+  if (lower.startsWith("opencode-matrixx-v2@")) return true
+  if (lower === "@klpanagi/opencode-matrixx-v2") return true
+  if (lower.startsWith("@klpanagi/opencode-matrixx-v2@")) return true
+  // Back-compat: v1 package id still counts as registered (migrate path)
   if (lower === "opencode-matrixx") return true
   if (lower.startsWith("opencode-matrixx@")) return true
   if (lower === "@klpanagi/opencode-matrixx") return true
@@ -85,13 +90,13 @@ export const pluginInstallationCheck: DoctorCheck = {
       return { name: "plugin-installation", status: "warn", message: `OpenCode ${version}, plugin file:// target issue`, detail: fileErrors.join("\n") }
     }
     if (hasLegacy && matrixxEntries.length === 0) {
-      return { name: "plugin-installation", status: "warn", message: `OpenCode ${version}, legacy "matrixx" entry found`, detail: `→ fix: Replace "matrixx" with "opencode-matrixx" in ${configPath}` }
+      return { name: "plugin-installation", status: "warn", message: `OpenCode ${version}, legacy "matrixx" entry found`, detail: `→ fix: Replace "matrixx" with "opencode-matrixx-v2" in ${configPath}` }
     }
     if (hasLegacy && matrixxEntries.length > 0) {
       return { name: "plugin-installation", status: "warn", message: `OpenCode ${version}, plugin registered but legacy "matrixx" entry present`, detail: `→ fix: Remove legacy "matrixx" from ${configPath}` }
     }
     if (matrixxEntries.length === 0) {
-      return { name: "plugin-installation", status: "warn", message: `OpenCode ${version} installed, plugin not registered in ${configPath}`, detail: "→ fix: Run bunx opencode-matrixx install to register the plugin" }
+      return { name: "plugin-installation", status: "warn", message: `OpenCode ${version} installed, plugin not registered in ${configPath}`, detail: "→ fix: Run bunx opencode-matrixx-v2 install to register the plugin" }
     }
     return { name: "plugin-installation", status: "pass", message: `OpenCode ${version}, plugin registered in ${configPath}` }
   },

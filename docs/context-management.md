@@ -207,7 +207,7 @@ Matrixx gate `context_mode` (default `enabled:true`) + external plugin `plugin: 
 ```jsonc
 {
   // opencode.jsonc — external plugin
-  "plugin": ["context-mode", "opencode-matrixx"]
+  "plugin": ["context-mode", "opencode-matrixx-v2"]
 }
 ```
 ```jsonc

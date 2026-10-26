@@ -49,24 +49,24 @@ jobs:
 
       - name: Verify package.json bin and pack contents
         run: |
-          node -e "const p=require('./package.json'); if(!p.bin||!p.bin['opencode-matrixx']) throw new Error('bin missing'); console.log('bin:', p.bin)"
+          node -e "const p=require('./package.json'); if(!p.bin||!p.bin['opencode-matrixx-v2']) throw new Error('bin opencode-matrixx-v2 missing'); if(!p.bin['opencode-matrixx']) throw new Error('alias bin opencode-matrixx missing'); console.log('bin:', p.bin)"
           npm pack --dry-run 2>&1 | grep -q "dist/cli.js" || (echo "dist/cli.js not in pack" && exit 1)
           echo "pack OK"
 
       - name: Test local pack install via bun
         run: |
           npm pack
-          TGZ=$(ls opencode-matrixx-*.tgz | head -1)
+          TGZ=$(ls opencode-matrixx-v2-*.tgz | head -1)
           echo "Packed $TGZ"
           mkdir -p /tmp/smoke-test
           cd /tmp/smoke-test
           bun init -y 2>&1 | tail -3
           bun add "$GITHUB_WORKSPACE/$TGZ" 2>&1 | tail -10
-          ls -la node_modules/opencode-matrixx/dist/cli.js
-          test -f node_modules/opencode-matrixx/dist/cli.js || (echo "cli.js not in installed package" && exit 1)
-          node -e "const p=require('./node_modules/opencode-matrixx/package.json'); if(!p.bin['opencode-matrixx']) throw new Error('installed bin missing'); console.log('installed bin OK', p.bin)"
+          ls -la node_modules/opencode-matrixx-v2/dist/cli.js
+          test -f node_modules/opencode-matrixx-v2/dist/cli.js || (echo "cli.js not in installed package" && exit 1)
+          node -e "const p=require('./node_modules/opencode-matrixx-v2/package.json'); if(!p.bin['opencode-matrixx-v2']) throw new Error('installed bin missing'); console.log('installed bin OK', p.bin)"
           ls -la node_modules/.bin/opencode-matrixx* 2>&1 | head -10 || true
-          cat node_modules/opencode-matrixx/dist/cli.js | head -2
+          cat node_modules/opencode-matrixx-v2/dist/cli.js | head -2
 
       - name: Test bunx execution (fresh cache)
         run: |
@@ -85,7 +85,8 @@ jobs:
           echo "HOME=$HOME"
           bun run dist/cli.js install --no-tui --claude=no --openai=no --gemini=no --copilot=no 2>&1 | tail -20
           cat "$HOME/.config/opencode/opencode.json" 2>&1 | head -30
-          grep -q "opencode-matrixx" "$HOME/.config/opencode/opencode.json" || (echo "plugin not registered" && cat "$HOME/.config/opencode/opencode.json" && exit 1)
+          grep -q "opencode-matrixx-v2" "$HOME/.config/opencode/opencode.json" || (echo "plugin -v2 not registered" && cat "$HOME/.config/opencode/opencode.json" && exit 1)
+          grep -q "opencode-matrixx" "$HOME/.config/opencode/opencode.json" || (echo "plugin alias substring missing" && exit 1)
           echo "plugin registration OK"
           # Second run should detect already registered
           bun run dist/cli.js install --no-tui --claude=no --openai=no --gemini=no --copilot=no 2>&1 | grep -q "already registered" && echo "idempotent OK"
