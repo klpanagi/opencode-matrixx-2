@@ -19,6 +19,7 @@ import { HookNameSchema } from "./hooks"
 import { KnowledgeConfigSchema } from "./knowledge"
 import { MatrixLoopConfigSchema } from "./matrix-loop"
 import { MatrixxSelfConfigSkillConfigSchema } from "./matrixx-self-config"
+import { MemoryConfigSchema } from "./memory"
 import { ComplexityDowngradesSchema, ModelRequirementsSchema } from "./model-config"
 import { ActivePresetSchema, ModelPresetsSchema } from "./model-presets"
 import { MorpheusConfigSchema } from "./morpheus"
@@ -102,6 +103,8 @@ export const MatrixxConfigSchema = z.object({
   headroom: HeadroomConfigSchema.optional(),
   /** context-mode tool sandbox discipline (L2) — FTS5 ctx_* gating */
   context_mode: ContextModeConfigSchema.optional(),
+  /** session-memory interop configuration (default: disabled) */
+  memory: MemoryConfigSchema.optional(),
   /** RTK bash command rewriter configuration (default: disabled) */
   rtk: RtkConfigSchema.optional(),
   /** Self-evolution loop configuration (default: disabled) */

@@ -83,3 +83,12 @@ export function buildContextModeRoutingBlock(): string {
 export function containsContextModeMarker(system: readonly string[]): boolean {
   return system.some((message) => typeof message === "string" && message.includes(MATRIXX_CONTEXT_MODE_MARKER))
 }
+
+export interface BatchCommand {
+  label: string
+  command: string
+}
+
+export function propagateBatchLabels(commands: readonly BatchCommand[]): string[] {
+  return commands.map((c) => c.label.trim()).filter(Boolean)
+}

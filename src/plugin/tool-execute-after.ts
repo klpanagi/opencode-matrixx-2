@@ -49,6 +49,7 @@ export function createToolExecuteAfterHandler(args: {
       await hooks.jsonErrorRecovery?.["tool.execute.after"]?.(input, output)
       await hooks.readImageResizer?.["tool.execute.after"]?.(input, output)
       await hooks.silentFailureGuard?.["tool.execute.after"]?.(input, output)
+      await hooks.sessionMemory?.["tool.execute.after"]?.(input, output)
     }
 
     await Promise.all([

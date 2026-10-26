@@ -1,5 +1,10 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import {
+  COMPACTING_SNIPPET_BUDGET,
+  type CompactingSnippetInput,
+  getCompactingSnippet,
+} from "../../features/session-memory"
+import {
   createSystemDirective,
   SystemDirectiveTypes,
 } from "../../shared/system-directive"
@@ -29,8 +34,16 @@ When summarizing this session, you MUST include the following sections in your s
 This section is CRITICAL for reviewer agents to maintain continuity.
 `
 
-export function createCompactionContextInjector(backgroundManager?: BackgroundManager) {
-  return (sessionID?: string): string => {
+export interface CompactionMemoryOptions {
+  enabled?: boolean
+  snippet?: CompactingSnippetInput
+}
+
+export function createCompactionContextInjector(
+  backgroundManager?: BackgroundManager,
+  memoryOptions?: CompactionMemoryOptions,
+) {
+  return (sessionID?: string, memoryOverride?: CompactionMemoryOptions): string => {
     let prompt = COMPACTION_CONTEXT_PROMPT
 
     if (backgroundManager && sessionID) {
@@ -41,6 +54,14 @@ export function createCompactionContextInjector(backgroundManager?: BackgroundMa
             ? `${history.slice(0, MAX_TASK_HISTORY_CHARS)}\n[... history truncated to 1500 chars]`
             : history
         prompt += `\n### Active/Recent Delegated Sessions\n${cappedHistory}\n`
+      }
+    }
+
+    const memory = memoryOverride ?? memoryOptions
+    if (memory?.enabled === true && memory.snippet !== undefined) {
+      const budgeted = getCompactingSnippet(memory.snippet, COMPACTING_SNIPPET_BUDGET)
+      if (budgeted) {
+        prompt += `\n### Session Memory\n${budgeted}\n`
       }
     }
 
