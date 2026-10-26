@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 2.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.3.6
+**Version:** 3.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.3.6
 
 ---
 
@@ -106,7 +106,7 @@ Matrixx is a multi-agent orchestration **plugin for OpenCode**. 17 built-in agen
 
 | Aspect | Value |
 |---|---|
-| Package | `opencode-matrixx` (npm, v2.0.0) |
+| Package | `opencode-matrixx-v2` (npm, v3.0.0) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
 | Stack | Bun 1.4.0 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |

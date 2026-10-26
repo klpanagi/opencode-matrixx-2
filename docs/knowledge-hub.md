@@ -1,7 +1,7 @@
 # Knowledge Hub
 
 > **Audience:** users with an external knowledge corpus and engineers configuring `knowledge` hubs.
-> **Version:** 2.0.0.
+> **Version:** 3.0.0.
 > **See also:** `configurations.md` (the `knowledge` key), `hooks.md` §2.3 (`knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`).
 
 External knowledge-base routing with a read-only guard. Declare one or more hubs in config; agents consult the router index before answering domain questions and read single files on demand — never bulk-read the corpus. No source changes required.

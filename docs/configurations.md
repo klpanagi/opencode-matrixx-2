@@ -1,6 +1,6 @@
 # Matrixx Configuration
 
-> Version 2.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+> Version 3.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
 
 > **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
 

@@ -1,6 +1,6 @@
 # Installation
 
-> **Audience:** new users (humans and LLM agents). **Version:** 2.0.0.
+> **Audience:** new users (humans and LLM agents). **Version:** 3.0.0.
 > **See also:** `overview.md` (what you get), `../cli-guide.md` (`doctor`, `install --no-tui`), `../configurations.md` (post-install tuning).
 
 ## Prerequisites

@@ -1,7 +1,7 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 2.0.0, verified against `src/config/schema/hooks.ts:3-96` and `src/hooks/` disk listing.
+> **Version:** 3.0.0, verified against `src/config/schema/hooks.ts:3-96` and `src/hooks/` disk listing.
 > **Scope:** `src/hooks/`, `src/create-hooks.ts`, `src/plugin/hooks/*`, `src/plugin-interface.ts`, `src/plugin/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 

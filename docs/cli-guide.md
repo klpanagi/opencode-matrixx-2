@@ -1,6 +1,6 @@
 # Matrixx CLI Guide
 
-> Version 2.0.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
+> Version 3.0.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
 
 This document provides a comprehensive guide to using the Matrixx CLI tools.
 
@@ -122,7 +122,7 @@ Authentication
 
 Dependencies
   ✓ Bun 1.4.0 installed
-  ✓ Node.js 22.0.0 installed
+  ✓ Node.js 23.0.0 installed
   ✓ Git 2.45.0 installed
 
 Summary: 10 passed, 1 warning, 1 failed

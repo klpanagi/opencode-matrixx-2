@@ -1,6 +1,6 @@
 # Matrixx Documentation
 
-> Version 2.0.0 — OpenCode V2 plugin line only. All pages are English-only.
+> Version 3.0.0 — OpenCode V2 plugin line only. All pages are English-only.
 > Start with the row that matches your goal; each page declares its audience
 > in its header. After upgrading, restart OpenCode so the new plugin version loads.
 

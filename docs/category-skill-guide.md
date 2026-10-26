@@ -1,6 +1,6 @@
 # Category & Skill System Guide
 
-> Version 2.0.0. **Audience:** users composing delegated work and engineers adding skills.
+> Version 3.0.0. **Audience:** users composing delegated work and engineers adding skills.
 > 8 categories (`src/features/delegate-task/`), 50 skills (`src/skills/`).
 
 This document provides a comprehensive guide to the **Category** and **Skill** systems, which form the extensibility core of Matrixx. For delegation flows, see [Orchestration](orchestration.md). For the agent roster, see [Agents](agents.md).

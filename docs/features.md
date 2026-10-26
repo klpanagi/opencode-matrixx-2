@@ -1,6 +1,6 @@
 # Matrixx Features
 
-> Version 2.0.0. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
+> Version 3.0.0. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
 
 Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, category-routed delegation, lazily-loaded skills, slash-command workflows, lifecycle hooks, file-backed tasks, and a BDD pipeline — all configured through `matrixx.json`/`matrixx.jsonc`.
 
