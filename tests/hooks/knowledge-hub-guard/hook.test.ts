@@ -5,7 +5,7 @@ import * as path from "node:path";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { ToolContext } from "@opencode-ai/plugin/tool";
 import type { LoadedHub } from "../../../src/features/knowledge-hub/loader";
-import { createKnowledgeHubConfirmTool } from "../../../src/tools/knowledge-hub-confirm";
+import { createKnowledgeHubConfirmTool } from "../../../src/tools/knowledge-hub-confirm/tools";
 import { approveHubWrite, clearHubWriteApprovals } from "../../../src/hooks/knowledge-hub-guard/approvals";
 import { createKnowledgeHubGuardHook } from "../../../src/hooks/knowledge-hub-guard/hook";
 
