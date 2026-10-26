@@ -5,7 +5,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard"
+import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard/hook"
 import { BLOCKED_PATTERNS, PLAN_READ_WARN, PLAN_WRITE_WARN } from "../../../src/hooks/task-edit-guard/constants"
 
 /**

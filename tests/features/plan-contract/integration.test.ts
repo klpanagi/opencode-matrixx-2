@@ -13,7 +13,7 @@ import { CANONICAL_SECTIONS, REQUIRED_TASK_SUBFIELDS, validatePlanContract } fro
 import { countPlanProgressFromContent, readPlanFile } from "../../../src/features/mission-state"
 import { measurePlanBytes } from "../../../src/features/mission-state/constants"
 import { buildOrchestratorReminder } from "../../../src/hooks/architect/verification-reminders"
-import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard"
+import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard/hook"
 import { PLAN_READ_WARN, PLAN_WRITE_WARN } from "../../../src/hooks/task-edit-guard/constants"
 import {
   MAX_PLAN_FILE_BYTES,

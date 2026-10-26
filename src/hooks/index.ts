@@ -2,7 +2,7 @@ export { createAgentUsageReminderHook } from "./agent-usage-reminder/hook";
 export { createArchitectHook } from "./architect";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createAutoUpdateCheckerHook } from "./auto-update-checker";
-export { createBackgroundNotificationHook } from "./background-notification"
+export { createBackgroundNotificationHook } from "./background-notification/hook"
 export { createBackgroundTaskBlockerHook } from "./background-task-blocker/hook"
 export { createBashFileReadGuardHook } from "./bash-file-read-guard"
 export { createCategorySkillReminderHook } from "./category-skill-reminder/hook";
@@ -16,7 +16,7 @@ export { createDelegateTaskRetryHook } from "./delegate-task-retry";
 export { createDesignIntentPreserverHook } from "./design-intent-preserver/hook"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector/hook";
 export { createDocsLookupGuardHook } from "./docs-lookup-guard";
-export { createDocumentReaderGuardHook } from "./document-reader-guard";
+export { createDocumentReaderGuardHook } from "./document-reader-guard/hook";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
 export { createEnvContextInjectorHook } from "./env-context-injector";
@@ -30,19 +30,19 @@ export { createInteractiveBashSessionHook } from "./interactive-bash-session/hoo
 export { createJsonErrorRecoveryHook } from "./json-error-recovery"
 export { createKeywordDetectorHook } from "./keyword-detector";
 export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard";
-export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector";
-export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge";
+export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector/hook";
+export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge/hook";
 export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop";
 export { createMouseNotepadHook } from "./mouse-notepad";
 export { createNonInteractiveEnvHook } from "./non-interactive-env";
 export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker/hook";
-export { createOracleMdOnlyHook } from "./oracle-md-only";
+export { createOracleMdOnlyHook } from "./oracle-md-only/hook";
 export { createPlanPersister } from "./plan-persister"
 export { createPostReadInjectorHook } from "./post-read-injector";
 export { createQualityGateHook } from "./quality-gate/hook"
 export { createReadImageResizerHook } from "./read-image-resizer/hook"
 export { createRtkBashRewriterHook } from "./rtk-bash-rewriter/hook";
-export { createRulesInjectorHook } from "./rules-injector";
+export { createRulesInjectorHook } from "./rules-injector/hook";
 export { createRuntimeFallbackHook, type RuntimeFallbackHook, type RuntimeFallbackOptions, SessionCategoryRegistry } from "./runtime-fallback"
 export { createSecretLeakGuardHook } from "./secret-leak-guard/hook";
 export { createSessionMemoryHook, MAX_CAPTURE_CHARS, MAX_PENDING_ENTRIES, type SessionMemoryHook, type SessionMemoryHookOptions } from "./session-memory";
@@ -51,11 +51,11 @@ export { buildWindowsToastScript, escapeAppleScriptText, escapePowerShellSingleQ
 export { createIdleNotificationScheduler } from "./session-notification-scheduler";
 export { detectPlatform, getDefaultSoundPath, playSessionNotificationSound, sendSessionNotification } from "./session-notification-sender";
 export { createSessionRecoveryHook, type SessionRecoveryHook, type SessionRecoveryOptions } from "./session-recovery";
-export { createStartWorkHook } from "./start-work";
-export { createStopContinuationGuardHook, type StopContinuationGuard } from "./stop-continuation-guard";
+export { createStartWorkHook } from "./start-work/start-work-hook";
+export { createStopContinuationGuardHook, type StopContinuationGuard } from "./stop-continuation-guard/hook";
 export { createTaskContinuationEnforcer, type TaskContinuationEnforcer } from "./task-continuation-enforcer";
-export { createTaskEditGuardHook } from "./task-edit-guard";
-export { createTaskNotepadWriterHook } from "./task-notepad-writer";
+export { createTaskEditGuardHook } from "./task-edit-guard/hook";
+export { createTaskNotepadWriterHook } from "./task-notepad-writer/hook";
 export { createTaskResumeInfoHook } from "./task-resume-info/hook";
 export { createThinkModeHook } from "./think-mode";
 export { createThinkingBlockValidatorHook } from "./thinking-block-validator/hook";
