@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { createDashboardFluxValidatorTool } from "../../src/tools/dashboard-flux-validator"
+import { createDashboardFluxValidatorTool } from "../../src/tools/dashboard-flux-validator/tools"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "dashboard-flux-validator")
 
