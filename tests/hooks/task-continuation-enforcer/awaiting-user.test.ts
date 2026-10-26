@@ -100,7 +100,7 @@ describe("task-continuation awaiting-user guard (RED)", () => {
     const promptAsyncMock = mock(async () => ({} as never))
     const ctx = makeCtx(dir, toastMock, [], promptAsyncMock)
     const store = createSessionStateStore()
-    const { registerSubagentSession } = await import("../../../src/features/session-state")
+    const { registerSubagentSession } = await import("../../../src/features/session-state/state")
     registerSubagentSession("await-3b", "await-3")
     //#when idle fires and inject runs without awaiting signal
     await handleSessionIdle({ ctx, sessionID: "await-3", sessionStateStore: store, skipAgents: [] })

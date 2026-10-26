@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import type { MatrixxConfig } from "../../src/config"
-import { _resetForTesting, setMainSession, subagentSessions } from "../../src/features/session-state"
+import { _resetForTesting, setMainSession, subagentSessions } from "../../src/features/session-state/state"
 import { createSessionNotification } from "../../src/hooks/session-notification"
 import * as utils from "../../src/hooks/session-notification-utils"
 import { TaskObjectSchema } from "../../src/tools/task/types"

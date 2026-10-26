@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { getSessionModel } from "../../src/features/session-state"
+import { getSessionModel } from "../../src/features/session-state/state"
 import { createChatParamsHandler } from "../../src/plugin/chat-params"
 
 function createRawInput(sessionID: string, providerID: string, modelID: string) {

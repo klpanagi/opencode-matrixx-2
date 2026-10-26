@@ -5,7 +5,7 @@ import type { Message, Part } from "@opencode-ai/sdk";
 import type { KnowledgeHub } from "../../config/schema/knowledge";
 import { type ContextCollector, contextCollector } from "../../features/context-injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
-import { getMainSessionID } from "../../features/session-state";
+import { getMainSessionID } from "../../features/session-state/state";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 import { log } from "../../shared/logger";
 

@@ -69,7 +69,7 @@ const { createArchitectHook } = await import("../src/hooks/architect/index")
 const { invalidateSdkMessageCache } = await import(
   "../src/features/hook-message-injector/sdk-message-cache" as string
 ).catch(() => ({ invalidateSdkMessageCache: null }))
-const { _resetForTesting, setSessionAgent } = await import("../src/features/session-state")
+const { _resetForTesting, setSessionAgent } = await import("../src/features/session-state/state")
 const { createPlanCreateTool } = await import("../src/tools/plan/plan-create")
 const { MAX_PLAN_FILE_BYTES } = await import("../src/features/mission-state/constants")
 

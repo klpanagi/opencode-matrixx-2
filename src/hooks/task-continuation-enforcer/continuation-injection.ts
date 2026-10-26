@@ -8,7 +8,7 @@ import {
   findNearestMessageWithFieldsFromSDK,
   type ToolPermission,
 } from "../../features/hook-message-injector"
-import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state"
+import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"
 import { getAgentConfigKey } from "../../shared/agent-display-names"

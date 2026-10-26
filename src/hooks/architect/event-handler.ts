@@ -1,6 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { clearMissionState, getPlanProgress, readMissionState } from "../../features/mission-state"
-import { subagentSessions } from "../../features/session-state"
+import { subagentSessions } from "../../features/session-state/state"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"

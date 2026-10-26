@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, mock, test } from "bun:test"
 const mockUnregisterSubagentSession = mock(() => {})
 const mockRegisterSubagentSession = mock(() => {})
 
-mock.module("../../../src/features/session-state", () => ({
+mock.module("../../../src/features/session-state/state", () => ({
   registerSubagentSession: mockRegisterSubagentSession,
   unregisterSubagentSession: mockUnregisterSubagentSession,
 }))

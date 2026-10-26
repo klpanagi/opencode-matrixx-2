@@ -1,5 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin";
-import { subagentSessions } from "../../features/session-state";
+import { subagentSessions } from "../../features/session-state/state";
 import { log } from "../../shared/logger";
 import { buildSessionReminderMessage } from "./constants";
 import { extractSessionNameFromTokens, findSubcommand, tokenizeCommand } from "./parser";

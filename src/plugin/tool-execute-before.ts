@@ -4,7 +4,7 @@ import {
   isAssemblyDisabled,
 } from "../features/assembly-state"
 import { clearMissionState } from "../features/mission-state"
-import { getMainSessionID } from "../features/session-state"
+import { getMainSessionID } from "../features/session-state/state"
 import {
   disableUltrawork,
   enableUltrawork,

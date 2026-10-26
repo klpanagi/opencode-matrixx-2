@@ -3,7 +3,7 @@ import { findFirstMessageWithAgent,
   findFirstMessageWithAgentFromSDK,findNearestMessageWithFields, 
   findNearestMessageWithFieldsFromSDK,} from "../../features/hook-message-injector"
 import { readMissionState } from "../../features/mission-state"
-import { getSessionAgent } from "../../features/session-state"
+import { getSessionAgent } from "../../features/session-state/state"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
 

@@ -39,7 +39,7 @@ import { writeHandle, readHandles } from "../../../src/features/background-agent
 import { initTaskToastManager } from "../../../src/features/task-toast-manager/manager"
 import { _resetTaskToastManagerForTesting } from "../../../src/features/task-toast-manager/manager"
 import { _resetMessageDirCacheForTesting } from "../../../src/features/background-agent/message-dir"
-import { registerSubagentSession, subagentSessions } from "../../../src/features/session-state"
+import { registerSubagentSession, subagentSessions } from "../../../src/features/session-state/state"
 import { BG_HANDLE_DIR_NAME } from "../../../src/features/background-agent/handle-index"
 
 // ── helpers ────────────────────────────────────────────────────────────

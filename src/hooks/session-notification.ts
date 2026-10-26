@@ -4,7 +4,7 @@ import {
   getMainSessionID,
   getSubagentSessionIDs,
   subagentSessions,
-} from "../features/session-state"
+} from "../features/session-state/state"
 import { hasIncompleteTasksForSession } from "../features/task-session-scope"
 import { createIdleNotificationScheduler } from "./session-notification-scheduler"
 import {

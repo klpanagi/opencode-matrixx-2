@@ -1,4 +1,4 @@
-import { getSessionAgent } from "../../features/session-state"
+import { getSessionAgent } from "../../features/session-state/state"
 
 const AGENT_NAMES = [
   "morpheus",

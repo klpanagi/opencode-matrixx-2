@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
 import type { DomainHooks } from "../../src/plugin/setup-domains"
-import { getSessionModel } from "../../src/features/session-state"
+import { getSessionModel } from "../../src/features/session-state/state"
 import { createChatMessageHandler } from "../../src/plugin/chat-message"
 import type { PluginContext } from "../../src/plugin/types"
 

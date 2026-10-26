@@ -14,7 +14,7 @@ import { writeHandle } from "../../../src/features/background-agent/handle-index
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import { _resetMessageDirCacheForTesting, findNearestMessageExcludingCompaction, getMessageDir } from "../../../src/features/background-agent/message-dir"
 import type { BackgroundTask, ResumeInput } from "../../../src/features/background-agent/types"
-import { registerSubagentSession, subagentSessions } from "../../../src/features/session-state"
+import { registerSubagentSession, subagentSessions } from "../../../src/features/session-state/state"
 
 // Shared fs call counters for mock.module("node:fs")-based tests
 // (getMessageDir caching + B2 readFileSync regression).

@@ -27,7 +27,7 @@ import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
 import { getAgentToolRestrictions, log, promptWithModelSuggestionRetry } from "../../shared"
 import { delay } from "../../shared/delay"
 import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
-import { registerSubagentSession } from "../session-state"
+import { registerSubagentSession } from "../session-state/state"
 import { getTaskToastManager } from "../task-toast-manager"
 import type {
   EventProperties,

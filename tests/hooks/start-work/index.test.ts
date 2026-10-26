@@ -8,7 +8,7 @@ import {
   clearMissionState,
   writeMissionState,
 } from "../../../src/features/mission-state"
-import * as sessionState from "../../../src/features/session-state"
+import * as sessionState from "../../../src/features/session-state/state"
 import { createStartWorkHook } from "../../../src/hooks/start-work/index"
 
 describe("start-work hook", () => {

@@ -40,7 +40,7 @@ describe("executeSyncTask - cleanup on error paths", () => {
     })
 
     //#given - mock subagentSessions
-    const { subagentSessions } = require("../../../src/features/session-state")
+    const { subagentSessions } = require("../../../src/features/session-state/state")
     spyOn(subagentSessions, "add").mockImplementation((id: string) => {
       addCalls.push(id)
     })

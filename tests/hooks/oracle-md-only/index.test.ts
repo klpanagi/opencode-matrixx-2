@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { clearSessionAgent, setSessionAgent } from "../../../src/features/session-state"
+import { clearSessionAgent, setSessionAgent } from "../../../src/features/session-state/state"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../../src/shared/system-directive"
 
 mock.module("../../../src/shared/opencode-storage-detection", () => ({
