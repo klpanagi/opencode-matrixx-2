@@ -1,7 +1,9 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import { formatFileChanges, parseGitDiffNumstat, parseGitStatusPorcelain } from "../../../src/shared/git-worktree/index"
+import { formatFileChanges } from "../../../src/shared/git-worktree/format-file-changes";
+import { parseGitDiffNumstat } from "../../../src/shared/git-worktree/parse-diff-numstat";
+import { parseGitStatusPorcelain } from "../../../src/shared/git-worktree/parse-status-porcelain"
 
 describe("git-worktree", () => {
   test("#given status porcelain output #when parsing #then maps paths to statuses", () => {

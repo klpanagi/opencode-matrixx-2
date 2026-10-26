@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import {
-  createTaskNotepadWriterHook,
-  type TaskNotepadWriterContext,
-} from "../../../src/hooks/task-notepad-writer/index"
+import { createTaskNotepadWriterHook } from "../../../src/hooks/task-notepad-writer/hook";
+import type { TaskNotepadWriterContext } from "../../../src/hooks/task-notepad-writer/notepad-path"
 
 /**
  * Hand-rolled harness. The hook is re-keyed from the deleted `task-notepad` hook:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { createAnthropicEffortHook } from "../../../src/hooks/anthropic-effort/index"
+import { createAnthropicEffortHook } from "../../../src/hooks/anthropic-effort/hook"
 
 interface ChatParamsInput {
   sessionID: string

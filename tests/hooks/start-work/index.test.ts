@@ -9,7 +9,7 @@ import {
   writeMissionState,
 } from "../../../src/features/mission-state"
 import * as sessionState from "../../../src/features/session-state/state"
-import { createStartWorkHook } from "../../../src/hooks/start-work/index"
+import { createStartWorkHook } from "../../../src/hooks/start-work/start-work-hook"
 
 describe("start-work hook", () => {
   let testDir: string

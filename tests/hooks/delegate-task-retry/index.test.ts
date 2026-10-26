@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test"
+import { buildRetryGuidance } from "../../../src/hooks/delegate-task-retry/guidance";
 import {
-  buildRetryGuidance,
   DELEGATE_TASK_ERROR_PATTERNS,
   detectDelegateTaskError,
-} from "../../../src/hooks/delegate-task-retry/index"
+} from "../../../src/hooks/delegate-task-retry/patterns"
 
 describe("morpheus-task-retry", () => {
   describe("DELEGATE_TASK_ERROR_PATTERNS", () => {

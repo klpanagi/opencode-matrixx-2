@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createEnvFileWriteGuardHook } from "../../../src/hooks/env-file-write-guard/index"
+import { createEnvFileWriteGuardHook } from "../../../src/hooks/env-file-write-guard/hook"
 
 describe("createEnvFileWriteGuardHook", () => {
   describe("tool.execute.before", () => {

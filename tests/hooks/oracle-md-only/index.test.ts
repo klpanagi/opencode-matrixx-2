@@ -11,7 +11,7 @@ mock.module("../../../src/shared/opencode-storage-detection", () => ({
   resetSqliteBackendCache: () => {},
 }))
 
-const { createOracleMdOnlyHook } = await import("../../../src/hooks/oracle-md-only/index")
+const { createOracleMdOnlyHook } = await import("../../../src/hooks/oracle-md-only/hook")
 const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
 
 afterAll(() => {
