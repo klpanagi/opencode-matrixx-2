@@ -26,7 +26,7 @@ const HANDLER = path.join(SRC, "plugin-handlers/tool-config-handler.ts")
 type Rule = { action: string; resource?: string; effect: string }
 
 /** Agent keys the handler grants explicit overrides for. */
-const AGENT_KEYS = ["operator", "trinity", "construct", "architect", "morpheus", "keymaker", "oracle", "mouse"] as const
+const AGENT_KEYS = ["operator", "trinity", "construct", "niobe", "morpheus", "keymaker", "oracle", "mouse"] as const
 
 function run(pluginConfig: unknown, seedAgents?: Record<string, unknown>) {
   const config: Record<string, unknown> = {}
@@ -151,7 +151,7 @@ describe("every agent arm denies the todo tools", () => {
     const source = fs.readFileSync(HANDLER, "utf-8")
 
     //#then the override keys found in the source match the literal list
-    const found = [...source.matchAll(/^\s{4}(operator|trinity|construct|architect|morpheus|keymaker|oracle|mouse):/gm)].map((m) => m[1])
+    const found = [...source.matchAll(/^\s{4}(operator|trinity|construct|niobe|morpheus|keymaker|oracle|mouse):/gm)].map((m) => m[1])
     expect(found.sort()).toEqual([...AGENT_KEYS].sort())
   })
 

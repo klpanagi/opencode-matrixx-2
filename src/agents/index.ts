@@ -7,7 +7,7 @@ export type {
   RegisterAgentTransformResult,
 } from "./agents.transform"
 export { applyAgentEntry, registerAgentTransform } from "./agents.transform"
-export { architectPromptMetadata, createArchitectAgent } from "./architect"
+export { niobePromptMetadata, createNiobeAgent } from "./niobe"
 export {
   AUDITOR_PROMPT_METADATA,
   AUDITOR_SYSTEM_PROMPT,

@@ -1,10 +1,10 @@
 /// <reference types="bun-types" />
 import { readFileSync } from "node:fs"
 import { describe, expect, test } from "bun:test"
-import { ARCHITECT_SYSTEM_PROMPT } from "../../../src/agents/architect/default"
-import { ARCHITECT_GPT_SYSTEM_PROMPT } from "../../../src/agents/architect/gpt"
-import { buildOrchestratorReminder } from "../../../src/hooks/architect/verification-reminders"
-import { MISSION_CONTINUATION_PROMPT } from "../../../src/hooks/architect/system-reminder-templates"
+import { NIOBE_SYSTEM_PROMPT } from "../../../src/agents/niobe/default"
+import { NIOBE_GPT_SYSTEM_PROMPT } from "../../../src/agents/niobe/gpt"
+import { buildOrchestratorReminder } from "../../../src/hooks/niobe/verification-reminders"
+import { MISSION_CONTINUATION_PROMPT } from "../../../src/hooks/niobe/system-reminder-templates"
 import {
   createPlanReadTool,
   createPlanTasksTool,
@@ -62,20 +62,20 @@ function assertRequiredPresence(label: string, content: string): void {
 // ═══════════════════════════════════════════════════════════════════
 
 describe("plan-tool binding — absence of prohibited plan-Read instructions", () => {
-  test("ARCHITECT_SYSTEM_PROMPT has no generic plan-Read (call or prose)", () => {
+  test("NIOBE_SYSTEM_PROMPT has no generic plan-Read (call or prose)", () => {
     //#given
-    const prompt = ARCHITECT_SYSTEM_PROMPT
+    const prompt = NIOBE_SYSTEM_PROMPT
 
     //#when / #then
-    assertNoProhibitedPlanInstructions("ARCHITECT_SYSTEM_PROMPT", prompt)
+    assertNoProhibitedPlanInstructions("NIOBE_SYSTEM_PROMPT", prompt)
   })
 
-  test("ARCHITECT_GPT_SYSTEM_PROMPT has no generic plan-Read (call or prose)", () => {
+  test("NIOBE_GPT_SYSTEM_PROMPT has no generic plan-Read (call or prose)", () => {
     //#given
-    const prompt = ARCHITECT_GPT_SYSTEM_PROMPT
+    const prompt = NIOBE_GPT_SYSTEM_PROMPT
 
     //#when / #then
-    assertNoProhibitedPlanInstructions("ARCHITECT_GPT_SYSTEM_PROMPT", prompt)
+    assertNoProhibitedPlanInstructions("NIOBE_GPT_SYSTEM_PROMPT", prompt)
   })
 
   test("buildOrchestratorReminder has no generic plan-Read (call or prose)", () => {
@@ -98,20 +98,20 @@ describe("plan-tool binding — absence of prohibited plan-Read instructions", (
 })
 
 describe("plan-tool binding — required plan_tasks / plan_read presence", () => {
-  test("ARCHITECT_SYSTEM_PROMPT contains plan_tasks, plan_read, and non-delegation rule", () => {
+  test("NIOBE_SYSTEM_PROMPT contains plan_tasks, plan_read, and non-delegation rule", () => {
     //#given
-    const prompt = ARCHITECT_SYSTEM_PROMPT
+    const prompt = NIOBE_SYSTEM_PROMPT
 
     //#when / #then
-    assertRequiredPresence("ARCHITECT_SYSTEM_PROMPT", prompt)
+    assertRequiredPresence("NIOBE_SYSTEM_PROMPT", prompt)
   })
 
-  test("ARCHITECT_GPT_SYSTEM_PROMPT contains plan_tasks, plan_read, and non-delegation rule", () => {
+  test("NIOBE_GPT_SYSTEM_PROMPT contains plan_tasks, plan_read, and non-delegation rule", () => {
     //#given
-    const prompt = ARCHITECT_GPT_SYSTEM_PROMPT
+    const prompt = NIOBE_GPT_SYSTEM_PROMPT
 
     //#when / #then
-    assertRequiredPresence("ARCHITECT_GPT_SYSTEM_PROMPT", prompt)
+    assertRequiredPresence("NIOBE_GPT_SYSTEM_PROMPT", prompt)
   })
 
   test("buildOrchestratorReminder contains plan_tasks, plan_read, and plan_update", () => {

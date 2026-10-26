@@ -100,7 +100,7 @@
           "seraph",
           "smith",
           "auditor",
-          "architect",
+          "niobe",
           "cipher",
           "sentinel",
           "sati",
@@ -206,7 +206,7 @@
               "plan-persister",
               "mouse-notepad",
               "start-work",
-              "architect",
+              "niobe",
               "unstable-agent-babysitter",
               "task-resume-info",
               "stop-continuation-guard",
@@ -2152,7 +2152,7 @@
           },
           "additionalProperties": false
         },
-        "architect": {
+        "niobe": {
           "type": "object",
           "properties": {
             "model": {

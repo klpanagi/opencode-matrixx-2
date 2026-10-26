@@ -11,16 +11,16 @@ export async function isCallerOrchestrator(sessionID?: string, client?: PluginIn
 
   // In-memory session agent is already authoritative for the live session
   // (set by chat.message). Checking it first makes this O(1) for every
-  // non-architect agent instead of a full-transcript fetch.
+  // non-niobe agent instead of a full-transcript fetch.
   const knownAgent = getSessionAgent(sessionID)
   if (knownAgent) {
-    return getAgentConfigKey(knownAgent) === "architect"
+    return getAgentConfigKey(knownAgent) === "niobe"
   }
 
   if (isSqliteBackend() && client) {
     try {
       const nearest = await findNearestMessageWithFieldsFromSDK(client, sessionID)
-      return getAgentConfigKey(nearest?.agent ?? "") === "architect"
+      return getAgentConfigKey(nearest?.agent ?? "") === "niobe"
     } catch (error) {
       log("[session-utils] SDK orchestrator check failed", { sessionID, error: String(error) })
       return false
@@ -30,5 +30,5 @@ export async function isCallerOrchestrator(sessionID?: string, client?: PluginIn
   const messageDir = getMessageDir(sessionID)
   if (!messageDir) return false
   const nearest = findNearestMessageWithFields(messageDir)
-  return getAgentConfigKey(nearest?.agent ?? "") === "architect"
+  return getAgentConfigKey(nearest?.agent ?? "") === "niobe"
 }

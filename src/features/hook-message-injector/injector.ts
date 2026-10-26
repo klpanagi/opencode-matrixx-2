@@ -279,7 +279,7 @@ function getOrCreateMessageDir(sessionID: string): string {
  *
  * Features degraded on beta:
  * - Hook message injection (e.g., continuation prompts, context injection) won't persist
- * - Architect hook's injected messages won't be visible in SQLite backend
+ * - Niobe hook's injected messages won't be visible in SQLite backend
  * - Todo continuation enforcer's injected prompts won't persist
  * - Ralph loop's continuation prompts won't persist
  *

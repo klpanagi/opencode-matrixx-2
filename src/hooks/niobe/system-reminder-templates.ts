@@ -107,7 +107,7 @@ ${createSystemDirective(SystemDirectiveTypes.DELEGATION_REQUIRED)}
 
 **STOP. YOU ARE VIOLATING ORCHESTRATOR PROTOCOL.**
 
-You (Architect) are attempting to directly modify a file outside \`.matrixx/\`.
+You (Niobe) are attempting to directly modify a file outside \`.matrixx/\`.
 
 **Path attempted:** $FILE_PATH
 

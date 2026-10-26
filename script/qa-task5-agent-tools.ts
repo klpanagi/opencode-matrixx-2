@@ -13,7 +13,7 @@
  * gone, the ONLY thing denying `todowrite`/`todoread` is this permission layer.
  *
  * Given: a config + agentResult containing morpheus, keymaker, oracle,
- *        architect, mouse
+ *        niobe, mouse
  * When:  applyToolConfig runs
  * Then:  todowrite/todoread are "deny" and the task tools plus teammate are
  *        "allow" for every one of the five, and the global tool map hides the
@@ -23,7 +23,7 @@
 import { applyToolConfig } from "../src/plugin-handlers/tool-config-handler"
 import type { MatrixxConfig } from "../src/config"
 
-const AGENTS = ["morpheus", "keymaker", "oracle", "architect", "mouse"] as const
+const AGENTS = ["morpheus", "keymaker", "oracle", "niobe", "mouse"] as const
 const MUST_DENY = ["todowrite", "todoread"] as const
 const MUST_ALLOW = ["task", "task_*", "teammate"] as const
 /**

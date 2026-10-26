@@ -4,14 +4,14 @@ import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 
 const REPO_ROOT = resolve(import.meta.dir, "..", "..")
-const AGENT_DIR = join(REPO_ROOT, "src", "agents", "architect")
+const AGENT_DIR = join(REPO_ROOT, "src", "agents", "niobe")
 
 function readVariant(file: string): string {
   return readFileSync(join(AGENT_DIR, file), "utf8")
 }
 
 /**
- * Contract claims that MUST appear verbatim in every Architect prompt variant.
+ * Contract claims that MUST appear verbatim in every Niobe prompt variant.
  * `gpt.ts` is a sibling copy of `default.ts`; without this list one variant
  * silently rots while the other stays current.
  */
@@ -34,9 +34,9 @@ const OBSOLETE_PHRASES: readonly string[] = [
   "One call cannot return a plan",
 ]
 
-describe("architect prompt plan-read contract", () => {
+describe("niobe prompt plan-read contract", () => {
   describe("default.ts", () => {
-    //#given the Claude-optimized Architect prompt
+    //#given the Claude-optimized Niobe prompt
     const prompt = readVariant("default.ts")
 
     test("no obsolete recovery-protocol phrasing survives", () => {
@@ -71,17 +71,17 @@ describe("architect prompt plan-read contract", () => {
       expect(prompt).toContain("sectionIndex=K")
     })
 
-    test("keeps plan access Architect-owned and non-delegable", () => {
+    test("keeps plan access Niobe-owned and non-delegable", () => {
       //#given the boundaries section
       //#when the plan-ownership rules are read
-      //#then a reader subagent is forbidden and ownership stays with Architect
+      //#then a reader subagent is forbidden and ownership stays with Niobe
       expect(prompt).toContain("MUST NEVER be delegated to a subagent")
       expect(prompt).toContain("spawn a reader subagent for plan content")
     })
   })
 
   describe("cross-variant consistency", () => {
-    //#given both Architect prompt variants as sibling copies of one contract
+    //#given both Niobe prompt variants as sibling copies of one contract
     const variants = ["default.ts", "gpt.ts"].map((file) => [file, readVariant(file)] as const)
 
     test("both variants assert the SAME contract", () => {

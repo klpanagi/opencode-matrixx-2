@@ -1,5 +1,5 @@
 export { createAgentUsageReminderHook } from "./agent-usage-reminder/hook";
-export { createArchitectHook } from "./architect/architect-hook";
+export { createNiobeHook } from "./niobe/niobe-hook";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createAutoUpdateCheckerHook } from "./auto-update-checker";
 export { createBackgroundNotificationHook } from "./background-notification/hook"

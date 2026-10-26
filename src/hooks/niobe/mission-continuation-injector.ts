@@ -48,7 +48,7 @@ export async function injectMissionContinuation(input: {
     await ctx.client.session.promptAsync({
       path: { id: sessionID },
       body: {
-        agent: agent ?? "architect",
+        agent: agent ?? "niobe",
         ...(model !== undefined ? { model } : {}),
         parts: [{ type: "text", text: prompt }],
       },

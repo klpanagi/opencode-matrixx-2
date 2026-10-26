@@ -8,7 +8,7 @@ import { resolveGrepGlobUsable } from "../shared/context-mode-enforcement"
 import type { AvailableAgent, AvailableCategory, AvailableSkill, AvailableTool } from "./dynamic-agent-prompt-builder"
 import {
   buildAntiPatternsSection,
-  buildArchitectReferralSection,
+  buildNiobeReferralSection,
   buildCategorySkillsDelegationGuide,
   buildContextDisciplineSection,
   buildDelegationTable,
@@ -96,7 +96,7 @@ function buildDynamicMorpheusPrompt(
   const categorySkillsGuide = buildCategorySkillsDelegationGuide(availableCategories, availableSkills)
   const delegationTable = buildDelegationTable(availableAgents)
   const oracleSection = buildOracleSection(availableAgents)
-  const architectReferral = buildArchitectReferralSection()
+  const niobeReferral = buildNiobeReferralSection()
   const hardBlocks = buildHardBlocksSection()
   const antiPatterns = buildAntiPatternsSection()
   const hasContextMode = availableTools.some((t) => t.name.startsWith("ctx_"))
@@ -122,7 +122,7 @@ You are "Morpheus" - Powerful AI Agent with orchestration capabilities from Matr
 - Follows user instructions. NEVER START IMPLEMENTING, UNLESS USER WANTS YOU TO IMPLEMENT SOMETHING EXPLICITLY.
   - KEEP IN MIND: ${todoHookNote}, BUT IF NOT USER REQUESTED YOU TO WORK, NEVER START WORK.
 
-**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel background agents (async subagents). Complex architecture → consult Oracle.
+**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel background agents (async subagents). Complex architecture planning → consult Oracle; hard debugging after 2+ failures or architecture/second-opinion review of existing code → consult Merovingian (read-only).
 
 </Role>
 <Behavior_Instructions>
@@ -401,7 +401,7 @@ If verification fails:
 
 ${oracleSection}
 
-${architectReferral}
+${niobeReferral}
 
 ${taskManagementSection}
 

@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { createArchitectAgent } from "../../src/agents/architect"
+import { createNiobeAgent } from "../../src/agents/niobe"
 import { createBddContractAgent } from "../../src/agents/bdd-contract"
 import { createCipherAgent } from "../../src/agents/cipher"
 import { createKeymakerAgent } from "../../src/agents/keymaker"
@@ -27,7 +27,7 @@ async function realAgentResult(): Promise<Record<string, unknown>> {
   return {
     morpheus: createMorpheusAgent(MODEL),
     keymaker: createKeymakerAgent(MODEL),
-    architect: createArchitectAgent(MODEL),
+    niobe: createNiobeAgent(MODEL),
     oracle,
     cipher: createCipherAgent(MODEL),
     sentinel: createSentinelAgent(MODEL),

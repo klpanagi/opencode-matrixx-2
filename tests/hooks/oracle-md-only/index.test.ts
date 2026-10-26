@@ -481,20 +481,20 @@ describe("oracle-md-only", () => {
       rmSync(MISSION_DIR, { recursive: true, force: true })
     })
 
-    //#given session was started with oracle (first message), but /start-work set mission agent to architect
+    //#given session was started with oracle (first message), but /start-work set mission agent to niobe
     //#when user types "continue" after interruption (memory cleared, falls back to message files)
-    //#then should use mission state agent (architect), not message file agent (oracle)
+    //#then should use mission state agent (niobe), not message file agent (oracle)
     test("should prioritize mission agent over message file agent", async () => {
       // given - oracle in message files (from /plan)
       setupMessageStorage(TEST_SESSION_ID, "oracle", false)
       
-      // given - architect in mission state (from /start-work)
+      // given - niobe in mission state (from /start-work)
       writeFileSync(MISSION_FILE, JSON.stringify({
         active_plan: "/test/plan.md",
         started_at: new Date().toISOString(),
         session_ids: [TEST_SESSION_ID],
         plan_name: "test-plan",
-        agent: "architect"
+        agent: "niobe"
       }))
 
       const hook = createOracleMdOnlyHook({
@@ -511,15 +511,15 @@ describe("oracle-md-only", () => {
         args: { filePath: "/path/to/code.ts" },
       }
 
-      // when / then - should NOT block because mission says architect, not oracle
+      // when / then - should NOT block because mission says niobe, not oracle
       await expect(
         hook["tool.execute.before"](input, output)
       ).resolves.toBeUndefined()
     })
 
     test("should use oracle from mission state when set", async () => {
-      // given - architect in message files (from some other agent)
-      setupMessageStorage(TEST_SESSION_ID, "architect", false)
+      // given - niobe in message files (from some other agent)
+      setupMessageStorage(TEST_SESSION_ID, "niobe", false)
       
       // given - oracle in mission state (edge case, but should honor it)
       writeFileSync(MISSION_FILE, JSON.stringify({
@@ -560,7 +560,7 @@ describe("oracle-md-only", () => {
         started_at: new Date().toISOString(),
         session_ids: ["ses_other_session_id"],
         plan_name: "test-plan",
-        agent: "architect"
+        agent: "niobe"
       }))
 
       const hook = createOracleMdOnlyHook({

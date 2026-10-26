@@ -1,4 +1,4 @@
-[![Matrixx](./.github/assets/orchestrator-architect.png?v=3)](https://github.com/klpanagi/opencode-matrixx)
+[![Matrixx](./.github/assets/orchestrator-niobe.png?v=3)](https://github.com/klpanagi/opencode-matrixx)
 
 <div align="center">
 
@@ -68,7 +68,7 @@ ulw add authentication to my Next.js app
 
 The agent explores your codebase, researches best practices, implements following your conventions, and verifies with diagnostics and tests. No planning ceremony.
 
-**Oracle → Architect — for precision.** Press `Tab` for Oracle (planner), answer a short interview, get a work plan in `.matrixx/plans/*.md`, then run `/start-work`. The Architect executes phase by phase with independent verification. Best for multi-day work, production changes, and large refactors.
+**Oracle → Niobe — for precision.** Press `Tab` for Oracle (planner), answer a short interview, get a work plan in `.matrixx/plans/*.md`, then run `/start-work`. The Niobe executes phase by phase with independent verification. Best for multi-day work, production changes, and large refactors.
 
 Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orchestration.md) · [Task System](docs/task-system.md)
 

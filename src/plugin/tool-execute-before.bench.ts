@@ -14,7 +14,7 @@
  *                                                     bashFileReadGuard,
  *                                                     oracleMdOnly (MUTATOR),
  *                                                     mouseNotepad,
- *                                                     architectHook
+ *                                                     niobeHook
  *
  * Total: 13 calls per iteration (oracleMdOnly appears in both Wave 2 and
  * Wave 3; the handler calls `hooks.oracleMdOnly?.["tool.execute.before"]`
@@ -29,7 +29,7 @@
  *     entire wave resolves).
  *   - Within Wave 3, the 5 calls occur in documented order (mutator order
  *     matters: nonInteractiveEnv rewrites output.args.command and must
- *     precede other mutators; architectHook prepends outermost so must run last).
+ *     precede other mutators; niobeHook prepends outermost so must run last).
  *   - Waves 1 and 2 admit any internal order (parallel execution); we do
  *     not assert that.
  *   - Per-iteration global counter increments by exactly 16 with no gaps
@@ -69,7 +69,7 @@ const WAVE_3: HookName[] = [
   "bashFileReadGuard",
   "oracleMdOnly",
   "mouseNotepad",
-  "architectHook",
+  "niobeHook",
 ]
 
 // Globally unique hook names. Index by position in this array is the

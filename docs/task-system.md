@@ -585,7 +585,7 @@ The scaffold routes to one of two buckets. A task goes to `.matrixx/notepads/<pl
 `metadata.planName` is set **and** `.matrixx/plans/<planName>.md` exists; everything else falls back to
 `.matrixx/notepads/adhoc/`. There is no recency scan, so a dangling `planName` never gets attached to a
 guessed plan. Files are flat and named `<n>-<slug>.md`, which is a hard requirement rather than a style choice:
-the architect reads notepads with the non-recursive glob `.matrixx/notepads/{plan-name}/*.md`, so a
+the niobe reads notepads with the non-recursive glob `.matrixx/notepads/{plan-name}/*.md`, so a
 subdirectory would be invisible to it.
 
 Idempotency comes from markers in the file, not from cached state: the scaffold is keyed on its

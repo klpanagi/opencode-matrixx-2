@@ -10,7 +10,7 @@
  * SIX DECISIONS:
  *   1. `src/agents/smith.ts` is byte-frozen — Smith is the PRE-execution
  *      reviewer; `auditor` is the POST-execution one. They coexist.
- *   2. `src/hooks/architect/event-handler.ts` is byte-frozen.
+ *   2. `src/hooks/niobe/event-handler.ts` is byte-frozen.
  *   3. No hook / plugin-handler / plugin module reaches the reviewer.
  *   4. The plan-file size cap is defined EXACTLY ONCE, value unchanged.
  *   5. The plan contract stays permanently advisory (`errors.push` count 1,
@@ -86,9 +86,9 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
   })
 })
 
-describe("locked decision #2 — the architect event handler is byte-frozen", () => {
-  test("src/hooks/architect/event-handler.ts is unchanged", () => {
-    //#given the architect hook as it stood before Plan B
+describe("locked decision #2 — the niobe event handler is byte-frozen", () => {
+  test("src/hooks/niobe/event-handler.ts is unchanged", () => {
+    //#given the niobe hook as it stood before Plan B
     // NOTE (debloat P1-1): hash advanced from da354664312b93b3e95f2a1cfd1cd26b.
     // The only delta is a mechanical import-path rewire
     // ("../../features/session-state" -> "../../features/session-state/state")
@@ -96,22 +96,22 @@ describe("locked decision #2 — the architect event handler is byte-frozen", ()
     const FROZEN_MD5 = "36bcba5dc519a7bc5c99b3a84d81cb53"
 
     //#when its bytes are hashed
-    const actual = md5Of("src/hooks/architect/event-handler.ts")
+    const actual = md5Of("src/hooks/niobe/event-handler.ts")
 
     //#then adding a post-execution reviewer did not perturb the execution path
     expect(actual).toBe(FROZEN_MD5)
   })
 
-  test("src/agents/architect/default.ts is unchanged", () => {
-    //#given the architect default agent as it stood before Plan B
+  test("src/agents/niobe/default.ts is unchanged", () => {
+    //#given the niobe default agent as it stood before Plan B
     // NOTE (PR #173): hash advanced from 8038fa9c6e2cb2c6a11a9c3c68b69a07.
     // The only delta is REQUIRED description params in task() examples
-    // (background-task titles); Architect remains the plan EXECUTOR —
+    // (background-task titles); Niobe remains the plan EXECUTOR —
     // no reviewer role was added, so the locked decision still holds.
     const FROZEN_MD5 = "0e320a775231fdbe8c006b1a3aad105b"
 
     //#when its bytes are hashed
-    const actual = md5Of("src/agents/architect/default.ts")
+    const actual = md5Of("src/agents/niobe/default.ts")
 
     //#then the plan EXECUTOR was not repurposed as the plan REVIEWER
     expect(actual).toBe(FROZEN_MD5)

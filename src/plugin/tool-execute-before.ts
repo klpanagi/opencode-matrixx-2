@@ -56,7 +56,7 @@ export function createToolExecuteBeforeHandler(args: {
   const nonInteractiveEnvHook = hooks.nonInteractiveEnv?.["tool.execute.before"]
   const bashFileReadGuardHook = hooks.bashFileReadGuard?.["tool.execute.before"]
   const mouseNotepadHook = hooks.mouseNotepad?.["tool.execute.before"]
-  const architectHookHook = hooks.architectHook?.["tool.execute.before"]
+  const niobeHookHook = hooks.niobeHook?.["tool.execute.before"]
 const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
   const webfetchRedirectGuardHook = hooks.webfetchRedirectGuard?.["tool.execute.before"]
   const evolutionWatcherHook = hooks.evolutionWatcher?.["tool.execute.before"]
@@ -117,13 +117,13 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // Wave 3 (7 hooks): MUTATOR — must run sequentially to preserve
     //   mutation order. Specifically:
   //   - 3 hooks CONCAT to output.args.prompt (oracleMdOnly,
-  //     mouseNotepad, architectHook). Parallel writes would stomp
+  //     mouseNotepad, niobeHook). Parallel writes would stomp
     //     each other (both read prompt from the same starting state).
     //   - nonInteractiveEnv REWRITES output.args.command (line 58) and
     //     REPLACES output.message; running it before other mutators is
     //     required so that downstream hooks see the rewritten command.
-    //   - The order oracleMdOnly -> mouseNotepad -> architectHook
-    //     is critical: architectHook's prepended <system-reminder> must be
+    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook
+    //     is critical: niobeHook's prepended <system-reminder> must be
     //     the outermost (closest to the model), oracleMdOnly's
     //     prepended PLANNING_CONSULT_WARNING the innermost (closest to the
     //     user prompt). Reversing the order would change semantics.
@@ -158,7 +158,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     await bashFileReadGuardHook?.(input, output)
     await oracleMdOnlyHook?.(input, output)
     await mouseNotepadHook?.(input, output)
-    await architectHookHook?.(input, output)
+    await niobeHookHook?.(input, output)
 
     const wave3Message = typeof output.message === "string" ? output.message : undefined
     if (preexistingMessage && preexistingMessage !== wave3Message && !wave3Message?.startsWith(preexistingMessage)) {

@@ -34,7 +34,7 @@ const HookNameEnum = z.enum([
   "plan-persister",
 	"mouse-notepad",
   "start-work",
-  "architect",
+  "niobe",
   "unstable-agent-babysitter",
   "task-resume-info",
   "stop-continuation-guard",

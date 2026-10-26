@@ -5,7 +5,7 @@ const AGENT_NAMES = [
   "keymaker",
   "oracle",
   "merovingian",
-  "architect",
+  "niobe",
   "operator",
   "trinity",
   "construct",

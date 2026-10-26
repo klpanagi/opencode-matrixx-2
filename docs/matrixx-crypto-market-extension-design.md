@@ -112,7 +112,7 @@ Two goals are possible and imply different builds; pick one explicitly before im
 | Tests | new tests under `tests/**` (CI-discovered by `find tests script -name '*.test.ts'`); `mock.module()` tests MUST be added to `script/mock-heavy-list.txt` |
 | Full CI | `bash script/run-ci.sh` |
 
-**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, architect, cipher, sentinel, sati, bdd-contract). `src/mcps/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/skills/skills.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
+**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, niobe, cipher, sentinel, sati, bdd-contract). `src/mcps/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/skills/skills.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
 
 ---
 

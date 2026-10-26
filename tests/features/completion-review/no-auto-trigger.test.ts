@@ -77,13 +77,13 @@ describe("locked decision #3 — the review is unreachable from automation", () 
     expect(importers.filter((f) => f.startsWith("hooks/"))).toEqual([])
   })
 
-  test("NO file under src/hooks/architect/ imports the feature", () => {
+  test("NO file under src/hooks/niobe/ imports the feature", () => {
     //#given the whole src/ module graph
     //#when every external importer of the feature is collected
     const importers = importersOutsideFeature()
 
-    //#then the architect hook does not reach it
-    expect(importers.filter((f) => f.startsWith("hooks/architect/"))).toEqual([])
+    //#then the niobe hook does not reach it
+    expect(importers.filter((f) => f.startsWith("hooks/niobe/"))).toEqual([])
   })
 
   test("NO file under src/plugin-handlers/ imports the feature", () => {

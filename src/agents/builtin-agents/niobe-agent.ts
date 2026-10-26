@@ -1,13 +1,13 @@
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements } from "../../shared/model-requirements"
 import type { AgentConfig } from "../agent-config"
-import { createArchitectAgent } from "../architect"
+import { createNiobeAgent } from "../niobe"
 import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import type { AgentOverrides } from "../types"
 import { applyOverrides } from "./agent-overrides"
 import { applyModelResolution } from "./model-resolution"
 
-export function maybeCreateArchitectConfig(input: {
+export function maybeCreateNiobeConfig(input: {
   disabledAgents: string[]
   agentOverrides: AgentOverrides
   globalOverrideModel?: string
@@ -35,35 +35,35 @@ export function maybeCreateArchitectConfig(input: {
   } = input
 
 
-  if (disabledAgents.includes("architect")) return undefined
+  if (disabledAgents.includes("niobe")) return undefined
 
-  const orchestratorOverride = agentOverrides.architect
+  const orchestratorOverride = agentOverrides.niobe
   const agentRequirements = getAgentModelRequirements()
-  const architectRequirement = agentRequirements.architect
+  const niobeRequirement = agentRequirements.niobe
 
-  const architectResolution = applyModelResolution({
+  const niobeResolution = applyModelResolution({
     globalOverrideModel,
     uiSelectedModel: orchestratorOverride?.model ? undefined : uiSelectedModel,
     userModel: orchestratorOverride?.model,
-    requirement: architectRequirement,
+    requirement: niobeRequirement,
     availableModels,
     systemDefaultModel,
   })
 
-  if (!architectResolution) return undefined
-  const { model: architectModel, variant: architectResolvedVariant } = architectResolution
+  if (!niobeResolution) return undefined
+  const { model: niobeModel, variant: niobeResolvedVariant } = niobeResolution
 
-  let orchestratorConfig = createArchitectAgent({
-    model: architectModel,
+  let orchestratorConfig = createNiobeAgent({
+    model: niobeModel,
     availableAgents,
     availableSkills,
     userCategories,
   })
 
-  if (architectResolvedVariant && orchestratorConfig.model) {
+  if (niobeResolvedVariant && orchestratorConfig.model) {
     orchestratorConfig = {
       ...orchestratorConfig,
-      model: { ...orchestratorConfig.model, variant: architectResolvedVariant },
+      model: { ...orchestratorConfig.model, variant: niobeResolvedVariant },
     }
   }
 

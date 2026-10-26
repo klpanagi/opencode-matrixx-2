@@ -1,5 +1,5 @@
 /**
- * Architect Orchestrator - Shared Utilities
+ * Niobe Orchestrator - Shared Utilities
  *
  * Common functions for building dynamic prompt sections used by both
  * default (Claude-optimized) and GPT-optimized prompts.

@@ -11,7 +11,7 @@ export const BuiltinAgentNameSchema = z.enum([
   "seraph",
   "smith",
   "auditor",
-  "architect",
+  "niobe",
   "cipher",
   "sentinel",
   "sati",

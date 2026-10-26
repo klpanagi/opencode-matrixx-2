@@ -37,7 +37,7 @@ async function main() {
   console.log("\n[2] applyToolConfig symmetric deny (unconditional)")
   const configTrue: Record<string, unknown> = { tools: {} }
   const agentResultTrue: Record<string, unknown> = {
-    architect: {}, morpheus: {}, oracle: {}, mouse: {}, keymaker: {},
+    niobe: {}, morpheus: {}, oracle: {}, mouse: {}, keymaker: {},
   }
   applyToolConfig({
     config: configTrue,
@@ -47,9 +47,9 @@ async function main() {
   const toolsTrue = configTrue.tools as Record<string, unknown>
   assert(toolsTrue.todowrite === false, "tools.todowrite === false")
   assert(toolsTrue.todoread === false, "tools.todoread === false")
-  const archPerm = (agentResultTrue.architect as any).permission
-  assert(archPerm["task_*"] === "allow", "architect task_* allow")
-  assert(archPerm.todowrite === "deny", "architect todowrite deny")
+  const archPerm = (agentResultTrue.niobe as any).permission
+  assert(archPerm["task_*"] === "allow", "niobe task_* allow")
+  assert(archPerm.todowrite === "deny", "niobe todowrite deny")
 
   // 3. No sync layer files
   console.log("\n[3] No todowrite sync layer")

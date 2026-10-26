@@ -266,7 +266,7 @@ Never `bun publish` or bump `package.json` version locally.
 
 ## HOTSPOTS
 
-`background-agent/manager.ts` + `background-agent/reconcile.ts` (restart reconciliation) + `background-agent/admission.ts` (nested-admission classifier) + `shared/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `task-continuation-enforcer/` (file-backed `.matrixx/tasks/T-{uuid}.json`, atomic write, 30s stale lock) `context-window-limit-recovery/` · `architect/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
+`background-agent/manager.ts` + `background-agent/reconcile.ts` (restart reconciliation) + `background-agent/admission.ts` (nested-admission classifier) + `shared/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `task-continuation-enforcer/` (file-backed `.matrixx/tasks/T-{uuid}.json`, atomic write, 30s stale lock) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
 
 ## NOTES
 

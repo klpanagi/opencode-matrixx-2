@@ -48,7 +48,7 @@ export const AgentOverridesSchema = z.object({
   operator: AgentOverrideConfigSchema.optional(),
   trinity: AgentOverrideConfigSchema.optional(),
   construct: AgentOverrideConfigSchema.optional(),
-  architect: AgentOverrideConfigSchema.optional(),
+  niobe: AgentOverrideConfigSchema.optional(),
   cipher: AgentOverrideConfigSchema.optional(),
   sentinel: AgentOverrideConfigSchema.optional(),
   sati: AgentOverrideConfigSchema.optional(),

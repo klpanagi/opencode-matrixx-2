@@ -164,7 +164,7 @@ User Request (one sentence)
 ┌─────────────────────────────┐
 │  /start-work (activation)   │  ← Creates mission state
 ├─────────────────────────────┤
-│  Architect (orchestration)  │  ← Reads plan, iterates TODOs
+│  Niobe (orchestration)  │  ← Reads plan, iterates TODOs
 └─────────────────────────────┘
     │
     ▼
@@ -192,7 +192,7 @@ User Request (one sentence)
 | Plan generation | Oracle agent | `src/agents/oracle/` (8 files, ~1500 LOC) |
 | Plan validation | Smith agent | `src/agents/smith/` |
 | Mission activation | start-work hook | `src/hooks/start-work/` |
-| Task orchestration | Architect hook | `src/hooks/architect/` (17 files) |
+| Task orchestration | Niobe hook | `src/hooks/niobe/` (17 files) |
 | Parallel task execution | Task system (background) | `src/tools/task/` |
 | TDD enforcement | tdd-enforcer skill | `src/features/builtin-skills/skills/tdd-enforcer.ts` (317 LOC) |
 | Auto lint after writes | quality-gate hook | `src/hooks/quality-gate/hook.ts` |

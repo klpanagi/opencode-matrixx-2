@@ -3,7 +3,7 @@ import type { BackgroundManager } from "../../features/background-agent"
 
 export type ModelInfo = { providerID: string; modelID: string }
 
-export interface ArchitectHookOptions {
+export interface NiobeHookOptions {
   directory: string
   backgroundManager?: BackgroundManager
   isContinuationStopped?: (sessionID: string) => boolean

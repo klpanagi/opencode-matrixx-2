@@ -58,7 +58,7 @@ describe("Wave 3 hook ordering", () => {
       bashFileReadGuard: { "tool.execute.before": async () => { callOrder.push("bashFileReadGuard") } },
       oracleMdOnly: { "tool.execute.before": async () => { callOrder.push("oracleMdOnly") } },
       mouseNotepad: { "tool.execute.before": async () => { callOrder.push("mouseNotepad") } },
-      architectHook: { "tool.execute.before": async () => { callOrder.push("architectHook") } },
+      niobeHook: { "tool.execute.before": async () => { callOrder.push("niobeHook") } },
     }
 
     const ctx = { client: {} } as any
@@ -80,7 +80,7 @@ describe("Wave 3 hook ordering", () => {
       "bashFileReadGuard", // Wave 3c
       "oracleMdOnly",  // Wave 3d (MUTATOR)
       "mouseNotepad",      // Wave 3e
-      "architectHook",     // Wave 3f
+      "niobeHook",     // Wave 3f
     ])
   })
 })

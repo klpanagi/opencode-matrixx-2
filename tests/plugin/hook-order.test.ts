@@ -59,7 +59,7 @@ describe("hook registration order golden", () => {
       "unstable-agent-babysitter",
       "nudge-loop-breaker",
       "background-notification",
-      "architect",
+      "niobe",
       "plan-persister",
       "evolution-hitl",
     ]

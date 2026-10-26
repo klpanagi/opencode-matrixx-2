@@ -6,7 +6,7 @@ import {
   type AvailableAgent,
   type AvailableCategory,
   type AvailableSkill,
-  buildArchitectReferralSection,
+  buildNiobeReferralSection,
   buildCategorySkillsDelegationGuide,
   buildUltraworkSection,
   formatCustomSkillsBlock,
@@ -204,7 +204,7 @@ describe("formatCustomSkillsBlock", () => {
   })
 
   it("should use bold header when specified", () => {
-    //#given: bold header level (used by Architect)
+    //#given: bold header level (used by Niobe)
     const result = formatCustomSkillsBlock(customRows, customSkills, "**")
 
     //#then: uses bold instead of h4
@@ -692,16 +692,16 @@ describe("categorizeTools extended", () => {
   })
 })
 
-describe("buildArchitectReferralSection (issue #111 option b)", () => {
-  it("points Morpheus to /start-work and forbids task(subagent_type=architect)", () => {
+describe("buildNiobeReferralSection (issue #111 option b)", () => {
+  it("points Morpheus to /start-work and forbids task(subagent_type=niobe)", () => {
     //#given
     //#when
-    const result = buildArchitectReferralSection()
+    const result = buildNiobeReferralSection()
 
     //#then
     expect(result).toContain("/start-work")
-    expect(result).toContain("rchitect")
-    expect(result).toContain('task(subagent_type="architect")')
+    expect(result).toContain("Niobe")
+    expect(result).toContain('task(subagent_type="niobe")')
   })
 })
 

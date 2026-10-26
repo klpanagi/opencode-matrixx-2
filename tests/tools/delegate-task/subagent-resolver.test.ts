@@ -81,11 +81,11 @@ describe("resolveSubagentExecution", () => {
     })
   })
 
-  test("rejects incoming task(subagent_type=architect) with /start-work hint", async () => {
+  test("rejects incoming task(subagent_type=niobe) with /start-work hint", async () => {
     //#given
-    const args = createBaseArgs({ subagent_type: "architect" })
+    const args = createBaseArgs({ subagent_type: "niobe" })
     const executorCtx = createExecutorContext(async () => [
-      { name: "architect", mode: "primary" },
+      { name: "niobe", mode: "primary" },
       { name: "explore", mode: "subagent" },
     ])
 
@@ -98,7 +98,7 @@ describe("resolveSubagentExecution", () => {
     expect(result.error).toContain("/start-work")
   })
 
-  test("rejects other primaries without architect hint", async () => {
+  test("rejects other primaries without niobe hint", async () => {
     //#given
     const args = createBaseArgs({ subagent_type: "morpheus" })
     const executorCtx = createExecutorContext(async () => [

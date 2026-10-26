@@ -129,14 +129,14 @@ describe("getAgentModelRequirements", () => {
         construct: {
           fallbackChain: [{ providers: ["provider-a"], model: "model-a" }], // fixture: synthetic
         },
-        architect: {
+        niobe: {
           fallbackChain: [{ providers: ["provider-b"], model: "model-b" }], // fixture: synthetic
         },
       },
     })
     const result = getAgentModelRequirements(cfg)
     expect(result.construct.fallbackChain[0].model).toBe("model-a") // fixture: synthetic
-    expect(result.architect.fallbackChain[0].providers).toEqual(["provider-b"])
+    expect(result.niobe.fallbackChain[0].providers).toEqual(["provider-b"])
   })
 
   test("filters invalid entries via Zod validation", () => {

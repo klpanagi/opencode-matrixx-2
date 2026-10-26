@@ -130,7 +130,7 @@ export type BuiltinAgentName =
   | "seraph"
   | "smith"
   | "auditor"
-  | "architect"
+  | "niobe"
   | "cipher"
   | "sentinel"
   | "sati"
