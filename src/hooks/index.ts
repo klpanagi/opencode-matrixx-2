@@ -1,5 +1,4 @@
 export { createAgentUsageReminderHook } from "./agent-usage-reminder/hook";
-export { createNiobeHook } from "./niobe/niobe-hook";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createAutoUpdateCheckerHook } from "./auto-update-checker";
 export { createBackgroundNotificationHook } from "./background-notification/hook"
@@ -34,6 +33,7 @@ export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector/hook";
 export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge/hook";
 export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop/matrix-loop-hook";
 export { createMouseNotepadHook } from "./mouse-notepad/hook";
+export { createNiobeHook } from "./niobe/niobe-hook";
 export { createNonInteractiveEnvHook } from "./non-interactive-env/non-interactive-env-hook";
 export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker/hook";
 export { createOracleMdOnlyHook } from "./oracle-md-only/hook";

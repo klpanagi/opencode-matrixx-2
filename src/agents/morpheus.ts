@@ -8,7 +8,6 @@ import { resolveGrepGlobUsable } from "../shared/context-mode-enforcement"
 import type { AvailableAgent, AvailableCategory, AvailableSkill, AvailableTool } from "./dynamic-agent-prompt-builder"
 import {
   buildAntiPatternsSection,
-  buildNiobeReferralSection,
   buildCategorySkillsDelegationGuide,
   buildContextDisciplineSection,
   buildDelegationTable,
@@ -17,6 +16,7 @@ import {
   buildHeadroomSection,
   buildKeyTriggersSection,
   buildLibrarianSection,
+  buildNiobeReferralSection,
   buildOracleSection,
   buildToolSelectionTable,
   categorizeTools,

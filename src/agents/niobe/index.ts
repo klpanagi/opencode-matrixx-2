@@ -1,8 +1,8 @@
 export { isGptModel } from "../types"
 export type { NiobePromptSource, OrchestratorContext } from "./agent"
-export { niobePromptMetadata, createNiobeAgent, getNiobePrompt, getNiobePromptSource } from "./agent"
-export { NIOBE_SYSTEM_PROMPT, getDefaultNiobePrompt } from "./default"
-export { NIOBE_GPT_SYSTEM_PROMPT, getGptNiobePrompt } from "./gpt"
+export { createNiobeAgent, getNiobePrompt, getNiobePromptSource, niobePromptMetadata } from "./agent"
+export { getDefaultNiobePrompt, NIOBE_SYSTEM_PROMPT } from "./default"
+export { getGptNiobePrompt, NIOBE_GPT_SYSTEM_PROMPT } from "./gpt"
 export {
   buildAgentSelectionSection,
   buildCategorySection,

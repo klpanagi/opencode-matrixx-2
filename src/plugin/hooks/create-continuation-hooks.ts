@@ -2,10 +2,10 @@ import type { HookName, MatrixxConfig } from "../../config"
 import { resolveMemoryBackend } from "../../config/schema/memory"
 import type { BackgroundManager } from "../../features/background-agent"
 import {
-  createNiobeHook,
   createBackgroundNotificationHook,
   createCompactionContextInjector,
   createEvolutionHitlHook,
+  createNiobeHook,
   createNudgeLoopBreakerHook,
   createPlanPersister,
   createStopContinuationGuardHook,
