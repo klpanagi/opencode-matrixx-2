@@ -16,6 +16,7 @@ import { QUALITY_AUDIT_TEMPLATE } from "./templates/quality-audit"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
 import { REMOVE_DEADCODE_TEMPLATE } from "./templates/remove-deadcode"
 import { RESEARCH_TEMPLATE } from "./templates/research"
+import { SECURITY_AUDIT_TEMPLATE } from "./templates/security-audit"
 import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { TASK_LIST_TEMPLATE } from "./templates/task-list"
@@ -272,5 +273,16 @@ ${QUALITY_ASSURANCE_TEMPLATE}
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[--scope=file|module|project] [--target-grade=B] [--max-iterations=3] [--target=<path>]",
+  },
+  "security-audit": {
+    description: "(builtin) Run a read-only scoped security audit with findings report",
+    template: `<command-instruction>
+${SECURITY_AUDIT_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--scope=file|module|project] [--target=<path>] [--full] [--budget=N]",
   },
 }

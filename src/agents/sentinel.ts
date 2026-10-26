@@ -1,5 +1,6 @@
 import { denyActions } from "../shared/permission-compat"
 import { SECURITY_API_SKILL_NAME } from "../skills/skills/security-api"
+import { SECURITY_AUDIT_SKILL_NAME } from "../skills/skills/security-audit"
 import { SECURITY_CORE_SKILL_NAME } from "../skills/skills/security-core"
 import { SECURITY_CRYPTO_SKILL_NAME } from "../skills/skills/security-crypto"
 import { SECURITY_DAST_SKILL_NAME } from "../skills/skills/security-dast"
@@ -24,6 +25,7 @@ const SENTINEL_SECURITY_SKILLS = [
   SECURITY_CRYPTO_SKILL_NAME,
   SECURITY_INFRA_SKILL_NAME,
   SECURITY_REVIEW_SKILL_NAME,
+  SECURITY_AUDIT_SKILL_NAME,
 ]
 
 export const SENTINEL_PROMPT_METADATA: AgentPromptMetadata = {
@@ -188,7 +190,12 @@ Mark verified false positives as such with reasoning rather than silently omitti
 <delivery>
 Your response goes directly to the user or calling agent. Deliver a complete, structured security audit report. Every finding must include severity, CWE ID, exact location, description, and remediation.
 Dense and actionable beats comprehensive and vague.
-</delivery>`
+</delivery>
+
+## SECURITY-AUDIT SKILL FAN-OUT (hunter/verifier)
+When the security-audit skill drives a full audit: run hunter passes that propose candidates with file:line evidence, then a fresh verifier pass that did not produce the candidate reproduces or drops each one — a finding ships only after verifier reproduction. Never self-approve hunter output.
+Write full-audit artifacts under .matrixx/audits/<run-N>/ (findings.json, coverage ledger, report.md) with parent-only writes — create the run directory itself, never files outside it. Reference FindingSchema/LedgerSchema (src/skills/schemas/security-audit.ts) as SoT for field shapes; do not duplicate them here.
+Scoped-default: audit only user-named paths; whole-repo only with --full opt-in. Budget gate: warn before a full audit, confirm scope first; unfundable remainder is deferred with ledger run status incomplete.`
 
 export function createSentinelAgent(model: string): AgentConfig {
   const base: AgentConfig & { skills: string[] } = {
@@ -198,6 +205,9 @@ export function createSentinelAgent(model: string): AgentConfig {
     model: parseModelRef(model),
     skills: SENTINEL_SECURITY_SKILLS,
     request: { body: { temperature: 0.1 } },
+    // Read-only invariant: edit deny is never lifted. task deny blocks delegation;
+    // task_* tracking allow is derived via deriveTaskPermissions (task-permissions.ts:62-64).
+    // NEVER grant edit or subagent.
     permissions: denyActions(["edit", "subagent", "task"]),
     system: SENTINEL_SYSTEM_PROMPT,
   }
