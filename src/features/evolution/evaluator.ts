@@ -112,45 +112,4 @@ export async function evaluateSkill(slug: string, opts?: { threshold?: number; p
   }
 }
 
-async function listPromotedEvolutionSlugs(projectRoot: string): Promise<string[]> {
-  const stagedDir = path.resolve(projectRoot, SKILLS_DIR)
-  let entries: string[]
-  try {
-    entries = await fs.promises.readdir(stagedDir)
-  } catch {
-    return []
-  }
-  const promotedRoot = path.resolve(projectRoot, ".opencode/skills")
-  const slugs: string[] = []
-  for (const entry of entries) {
-    try {
-      const stat = await fs.promises.stat(path.join(stagedDir, entry))
-      if (!stat.isDirectory()) continue
-      await fs.promises.access(path.join(promotedRoot, entry))
-      slugs.push(entry)
-    } catch {}
-  }
-  return slugs
-}
 
-export type EvaluationSweepResult = { evaluated: string[]; demoted: string[] }
-
-/** Evaluate every promoted evolution skill (demoting/quarantining low scorers). Safe to call on session idle. */
-export async function evaluatePromotedSkills(opts?: {
-  threshold?: number
-  projectRoot?: string
-  slugs?: string[]
-}): Promise<EvaluationSweepResult> {
-  const projectRoot = opts?.projectRoot ?? process.cwd()
-  const slugs = opts?.slugs ?? (await listPromotedEvolutionSlugs(projectRoot))
-  const evaluated: string[] = []
-  const demoted: string[] = []
-  for (const slug of slugs) {
-    try {
-      const result = await evaluateSkill(slug, { threshold: opts?.threshold, projectRoot })
-      evaluated.push(slug)
-      if (result.demoted) demoted.push(slug)
-    } catch {}
-  }
-  return { evaluated, demoted }
-}
