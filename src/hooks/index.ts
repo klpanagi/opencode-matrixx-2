@@ -41,10 +41,10 @@ export { createPlanPersister } from "./plan-persister"
 export { createPostReadInjectorHook } from "./post-read-injector";
 export { createQualityGateHook } from "./quality-gate/hook"
 export { createReadImageResizerHook } from "./read-image-resizer/hook"
-export { createRtkBashRewriterHook } from "./rtk-bash-rewriter";
+export { createRtkBashRewriterHook } from "./rtk-bash-rewriter/hook";
 export { createRulesInjectorHook } from "./rules-injector";
 export { createRuntimeFallbackHook, type RuntimeFallbackHook, type RuntimeFallbackOptions, SessionCategoryRegistry } from "./runtime-fallback"
-export { createSecretLeakGuardHook } from "./secret-leak-guard";
+export { createSecretLeakGuardHook } from "./secret-leak-guard/hook";
 export { createSessionMemoryHook, MAX_CAPTURE_CHARS, MAX_PENDING_ENTRIES, type SessionMemoryHook, type SessionMemoryHookOptions } from "./session-memory";
 export { createSessionNotification } from "./session-notification";
 export { buildWindowsToastScript, escapeAppleScriptText, escapePowerShellSingleQuotedText } from "./session-notification-formatting";
@@ -56,11 +56,11 @@ export { createStopContinuationGuardHook, type StopContinuationGuard } from "./s
 export { createTaskContinuationEnforcer, type TaskContinuationEnforcer } from "./task-continuation-enforcer";
 export { createTaskEditGuardHook } from "./task-edit-guard";
 export { createTaskNotepadWriterHook } from "./task-notepad-writer";
-export { createTaskResumeInfoHook } from "./task-resume-info";
+export { createTaskResumeInfoHook } from "./task-resume-info/hook";
 export { createThinkModeHook } from "./think-mode";
-export { createThinkingBlockValidatorHook } from "./thinking-block-validator";
+export { createThinkingBlockValidatorHook } from "./thinking-block-validator/hook";
 export { createToolOutputTruncatorHook } from "./tool-output-truncator";
-export { createToolPairValidatorHook } from "./tool-pair-validator"
+export { createToolPairValidatorHook } from "./tool-pair-validator/hook"
 export { createUnstableAgentBabysitterHook } from "./unstable-agent-babysitter";
-export { createWebFetchRedirectGuardHook } from "./webfetch-redirect-guard"
-export { createWriteExistingFileGuardHook } from "./write-existing-file-guard";
+export { createWebFetchRedirectGuardHook } from "./webfetch-redirect-guard/hook"
+export { createWriteExistingFileGuardHook } from "./write-existing-file-guard/hook";
