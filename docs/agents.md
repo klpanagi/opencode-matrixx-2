@@ -1,8 +1,8 @@
-# Matrixx Agents
+# Matrixx Agents (v2.0.0)
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
-14 built-in agents (13 static in `agentSources` plus Oracle built dynamically, see `src/agents/builtin-agents.ts`; names in `BuiltinAgentNameSchema`, `src/config/schema/agent-names.ts`) plus Mouse, the dynamic category-spawned worker. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
+17 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, architect, cipher, sentinel, sati, bdd-contract, neo, tank — 16 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
 
 ---
 
@@ -14,15 +14,15 @@ In The Matrix, Morpheus was the captain who saw the truth beyond the simulation 
 
 **Yes! LLM Agents are no different from us. They can write code as brilliant as ours and work just as excellently — if you give them great tools and solid teammates.**
 
-> **How models are chosen:** The model IDs below are OpenCode's free tier — copy-paste as-is, or point any agent at `<provider>/<model>` from your own provider. Shipped defaults are a provider-resolved fallback chain: Matrixx declares a per-agent and per-category chain of candidates and selects the first whose provider is connected. Override via `modelRequirements` or `model_presets` (see `src/shared/model-requirements.ts`).
+> **How models are chosen:** Matrixx is Claude-only — per-agent fallback chains of `claude-opus-4-6` / `claude-sonnet-4-6` / `claude-haiku-4-5` declared in `src/shared/model-requirements.ts`. Matrixx selects the first chain entry whose provider (`anthropic`, `github-copilot`, `opencode`) is connected. Override via `modelRequirements` (same file).
 
-Meet the main agent: **Morpheus** (`opencode/kimi-k2.5-free`). Everything below is customizable. All features are enabled by default. Battery included, works out of the box.
+Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is customizable. All features are enabled by default. Battery included, works out of the box.
 
 ### What Morpheus Does
 
 1. **Delegates, doesn't grind** — fires off background tasks to faster, cheaper models in parallel to map the territory. Keeps the main context lean.
 2. **Surgical refactoring** — leverages LSP for deterministic, safe, surgical code changes.
-3. **Specialist delegation** — UI work goes to Sati (`opencode/qwen3.6-plus-free`). Debugging goes to Merovingian (`opencode/glm-5-free`). The right model for the right job.
+3. **Specialist delegation** — UI work goes to Sati (`claude-sonnet-4-6`). Debugging goes to Merovingian (`claude-sonnet-4-6`). The right model for the right job.
 4. **Contextual awareness** — spawns subagents to digest source code and documentation in real-time when working with unfamiliar frameworks.
 5. **Clean code enforcement** — either justifies a comment's existence or nukes it. Code should be indistinguishable from human-written.
 6. **Relentless execution** — bound by the task list (`.matrixx/tasks`, see [Task System](./task-system.md)). If he doesn't finish, `task-continuation-enforcer` forces him back — tasks survive `/clear`. Your task gets done, period.
@@ -32,22 +32,24 @@ Meet the main agent: **Morpheus** (`opencode/kimi-k2.5-free`). Everything below 
 
 | Agent | Role | Model |
 |-------|------|-------|
-| **Keymaker** | Autonomous deep worker | `opencode/minimax-m3-free` |
-| **Merovingian** | Architecture and debugging | `opencode/glm-5-free` |
-| **Operator** | Docs, OSS search, codebase exploration | `opencode/deepseek-v4-flash-free` |
-| **Trinity** | Fast codebase grep | `opencode/deepseek-v4-flash-free` |
-| **Cipher** | DSL engineering | `opencode/kimi-k2.5-free` |
-| **Construct** | PDF/image analysis | `opencode/qwen3.6-plus-free` |
-| **Oracle** | Strategic planning | `opencode/glm-5-free` |
-| **Seraph** | Pre-planning analysis | `opencode/glm-5-free` |
-| **Smith** | Plan validation | `opencode/glm-5-free` |
-| **Architect** | Plan execution orchestrator | `opencode/glm-5-free` |
-| **Mouse** | Category-spawned task executor (delegated worker) | `opencode/qwen3.6-plus-free` |
-| **Sati** | Frontend specialist (components, a11y, perf, testing) | `opencode/qwen3.6-plus-free` |
-| **Sentinel** | Security auditor | `opencode/qwen3.6-plus-free` |
-| **BDD Contract** | BDD contract authoring | `opencode/qwen3.6-plus-free` |
+| **Keymaker** | Autonomous deep worker | `claude-opus-4-6` |
+| **Merovingian** | Architecture and debugging | `claude-sonnet-4-6` |
+| **Operator** | Docs, OSS search, codebase exploration | `claude-haiku-4-5` |
+| **Trinity** | Fast codebase grep | `claude-haiku-4-5` |
+| **Cipher** | DSL engineering | `claude-opus-4-6` |
+| **Construct** | PDF/image analysis | `claude-sonnet-4-6` |
+| **Oracle** | Strategic planning | `claude-opus-4-6` |
+| **Seraph** | Pre-planning analysis | `claude-opus-4-6` |
+| **Smith** | Plan validation | `claude-sonnet-4-6` |
+| **Architect** | Plan execution orchestrator | `claude-sonnet-4-6` |
+| **Auditor** | Post-execution plan auditor (`/plan-review`) | `claude-sonnet-4-6` |
+| **Neo** | Market-data pipeline architect/reviewer | `claude-opus-4-6` |
+| **Tank** | Resilience / silent-failure hunter | `claude-sonnet-4-6` |
+| **Sati** | Frontend specialist (components, a11y, perf, testing) | `claude-sonnet-4-6` |
+| **Sentinel** | Security auditor | `claude-sonnet-4-6` |
+| **BDD Contract** | BDD contract authoring (Gherkin → Contract JSON) | provider-resolved fallback chain |
 
-The 14 names above match `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`. Thirteen are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse is the dynamic category-spawned worker used when `task()` is called with a `category` (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model-requirements.ts`.
+The 17 names in scope (16 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Sixteen are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model-requirements.ts`.
 
 ### Built-in Capabilities
 
@@ -69,7 +71,7 @@ The 14 names above match `BuiltinAgentNameSchema` in `src/config/schema/agent-na
 
 In The Matrix, the Keymaker could craft keys to open any door — a master craftsman with unmatched precision and purpose, creating exactly what was needed to unlock any path.
 
-**Meet the autonomous deep worker: Keymaker (`opencode/minimax-m3-free`). The Legitimate Craftsman Agent.**
+**Meet the autonomous deep worker: Keymaker (`claude-opus-4-6`). The Legitimate Craftsman Agent.**
 
 *Why "Legitimate"? When Anthropic blocked third-party access citing ToS violations, the community started joking about "legitimate" usage. Keymaker embraces this irony — he's the craftsman who builds things the right way, methodically and thoroughly, without cutting corners.*
 
@@ -89,7 +91,7 @@ Keymaker is inspired by [AmpCode's deep mode](https://ampcode.com) — autonomou
 
 ![Meet Cipher](../.github/assets/cipher.png)
 
-In The Matrix, ciphers were the encoded signals flowing through the system — the raw language underneath reality itself. **Meet the DSL engineering specialist: Cipher (`opencode/kimi-k2.5-free`). The Language Architect.**
+In The Matrix, ciphers were the encoded signals flowing through the system — the raw language underneath reality itself. **Meet the DSL engineering specialist: Cipher (`claude-opus-4-6`). The Language Architect.**
 
 Cipher is the agent you call when you need to design, build, or extend domain-specific languages. He doesn't just write parsers — he thinks in grammars, type systems, and metamodels.
 
@@ -97,7 +99,7 @@ Cipher is the agent you call when you need to design, build, or extend domain-sp
 
 | Property | Value |
 |----------|-------|
-| **Model** | `opencode/kimi-k2.5-free` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`) |
+| **Model** | `claude-opus-4-6` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`) |
 | **Mode** | `all` — selectable in agent menu AND spawnable as subagent |
 | **Thinking** | Extended thinking enabled (32k budget) |
 | **Max Tokens** | 64,000 — DSL tasks produce large outputs (grammars + parsers + code generators) |
@@ -229,7 +231,7 @@ Sati is the dedicated frontend specialist. Self-contained execution — Sati han
 ### Agent Characteristics
 
 - **Role**: Frontend specialist
-- **Model**: `opencode/qwen3.6-plus-free` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`)
+- **Model**: `claude-sonnet-4-6` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`)
 - **Tool Restrictions**: Cannot use `task` or `delegate_agent` (self-contained execution)
 - **Skills**: 8 frontend and browser skills (`frontend-react-nextjs`, `frontend-svelte-sveltekit`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright`, verified in `src/agents/sati.ts` via `SATI_FRONTEND_SKILLS`)
 - **Mode**: `subagent` — explicitly invokable only
@@ -272,7 +274,7 @@ Workers must be **stateless and disposable**. The Architect remains in context a
 
 | Property | Value |
 |----------|-------|
-| **Model** | `opencode/qwen3.6-plus-free` (provider-resolved fallback chain) — configurable via `agents.mouse.model` |
+| **Model** | Category-resolved (`source` → `claude-opus-4-6`, see `src/shared/model-requirements.ts`) — configurable via `agents.mouse.model` |
 | **Mode** | `subagent` — spawnable only, never appears in agent menu |
 | **Max Tokens** | 64,000 |
 | **Temperature** | 0.1 |
@@ -289,11 +291,11 @@ Mouse has **5 model-specific prompt variants** auto-selected at runtime:
 |---------|------|------------------|-------|
 | **Default** | `default.ts` | Reasoning-first, strong constraint enforcement (provider: any) | Extended reasoning, strict constraint enforcement against "helpful" drift |
 | **GPT** | `gpt.ts` | Verbosity limits, scope discipline, table-based specs | Uncertainty handling, bounded output length |
-| **DeepSeek** | `deepseek.ts` | Structured XML output, moderate verbosity, verification tables | Output-shape enforcement, self-check tables |
+| **DS-family** | family-matched file | Structured XML output, moderate verbosity, verification tables | Output-shape enforcement, self-check tables |
 | **Mimo** | `mimo.ts` | Extra concise, minimal prose, tool-first emphasis | Token economy, action over narration |
-| **Qwen** | `qwen.ts` | Reasoning-first, explicit output formatting | Structured sections, consistent section headers |
+| **Q-family** | family-matched file | Reasoning-first, explicit output formatting | Structured sections, consistent section headers |
 
-Routing is driven by model-family detection in `getMousePromptSource()`: each variant is selected when the resolved model belongs to the matching family, and everything unrecognized falls through to `default.ts`. The file suffixes (`claude.ts`, `gpt.ts`, `deepseek.ts`, `qwen.ts`, `mimo.ts`) are real on-disk filenames, so the entries above describe the prompt style each one encodes, not the vendor whose name happens to appear in the filename.
+Routing is driven by model-family detection in `getMousePromptSource()`: each variant is selected when the resolved model belongs to the matching family, and everything unrecognized falls through to the default file. Variant files live on disk per model family (see `getMousePromptSource()`), so the entries above describe the prompt style each one encodes, not a vendor model ID.
 
 ### Tool Restrictions
 
@@ -329,39 +331,42 @@ task(category="source", load_skills=[...])
 
 ## Agent Roster by Layer
 
-The 14-agent roster maps to **distinct cognitive functions** in software development. Models below are defaults; fallback chains live in `src/shared/model-requirements.ts`.
+The 17-agent roster (3 + 4 + 3 + 5 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
 
 ### The Orchestration Layer (3 agents)
 
-- **Morpheus** (user-facing orchestrator, `opencode/kimi-k2.5-free`): The "face" — translates user intent into delegation decisions. Orchestration requires the strongest model for understanding nuance.
-- **Architect** (subagent orchestrator, `opencode/glm-5-free`): Pure conductor — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
-- **Mouse** (task executor, `opencode/qwen3.6-plus-free`): The "hands" — spawned per-task with category-specific config. Workers are stateless and disposable.
+- **Morpheus** (user-facing orchestrator, `claude-opus-4-6`): The "face" — translates user intent into delegation decisions. Orchestration requires the strongest model for understanding nuance.
+- **Architect** (subagent orchestrator, `claude-sonnet-4-6`): Pure conductor — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
+- **Keymaker** (autonomous deep worker, `claude-opus-4-6`): Goal-oriented end-to-end execution — explores via parallel Trinity/Operator agents before acting.
 
-### The Intelligence Layer (3 agents)
+### The Intelligence Layer (4 agents)
 
-- **Merovingian** (strategic advisor, `opencode/glm-5-free`): Read-only consultation for hard architecture decisions and debugging.
-- **Oracle** (planner, `opencode/glm-5-free`): Interview-mode plan generation. Structured output with RED-GREEN-REFACTOR built into plans (see [Quality, Part B](quality.md)).
-- **Seraph** (pre-planning, `opencode/glm-5-free`): Classifies intent BEFORE Oracle plans. Prevents AI failure patterns (ambiguity, scope creep, false assumptions).
+- **Merovingian** (strategic advisor, `claude-sonnet-4-6`): Read-only consultation for hard architecture decisions and debugging.
+- **Auditor** (post-execution plan auditor, `claude-sonnet-4-6`): Measures completeness/complexity/effort of an executed plan. Invoked only by `/plan-review`, never automatic.
+- **Oracle** (planner, `claude-opus-4-6`): Interview-mode plan generation. Structured output with RED-GREEN-REFACTOR built into plans (see [Quality, Part B](quality.md)).
+- **Seraph** (pre-planning, `claude-opus-4-6`): Classifies intent BEFORE Oracle plans. Prevents AI failure patterns (ambiguity, scope creep, false assumptions).
 
-### The Review Layer (2 agents)
+### The Review Layer (3 agents)
 
-- **Smith** (plan reviewer, `opencode/glm-5-free`): Approval-biased validator. Outputs [OKAY] or [REJECT] — no "looks good but..." cop-outs.
-- **Sentinel** (security auditor, `opencode/qwen3.6-plus-free`): Read-only, 9 security skills (`security-core`, `security-secrets`, `security-sast`, `security-dast`, `security-dependencies`, `security-api`, `security-crypto`, `security-infra`, `security-review`, verified in `src/agents/sentinel.ts`). Security needs dedicated attention, not an afterthought.
+- **Smith** (plan reviewer, `claude-sonnet-4-6`): Approval-biased validator. Outputs [OKAY] or [REJECT] — no "looks good but..." cop-outs.
+- **Tank** (resilience hunter, `claude-sonnet-4-6`): Read-only silent-failure hunter — swallowed exceptions, log-and-default paths, bare gather calls. Requires an explicit success/failure discriminator on every external call.
+- **Sentinel** (security auditor, `claude-sonnet-4-6`): Read-only, 9 security skills (`security-core`, `security-secrets`, `security-sast`, `security-dast`, `security-dependencies`, `security-api`, `security-crypto`, `security-infra`, `security-review`, verified in `src/agents/sentinel.ts`). Security needs dedicated attention, not an afterthought.
 
-### The Specialist Layer (3 agents)
+### The Specialist Layer (5 agents)
 
-- **Sati** (frontend specialist, `opencode/qwen3.6-plus-free`): Self-contained with 8 frontend skills + browser verification. It doesn't delegate — it does the full-stack frontend work itself.
-- **Cipher** (DSL engineering, `opencode/kimi-k2.5-free`): 11 DSL skills for grammar design, parser engineering, code generation. Niche but critical for language work.
-- **Construct** (multimodal, `opencode/qwen3.6-plus-free`): PDF/image/diagram interpretation. Architecture diagrams and specs come in visual formats.
+- **Sati** (frontend specialist, `claude-sonnet-4-6`): Self-contained with 8 frontend skills + browser verification. It doesn't delegate — it does the full-stack frontend work itself.
+- **Cipher** (DSL engineering, `claude-opus-4-6`): 11 DSL skills for grammar design, parser engineering, code generation. Niche but critical for language work.
+- **Construct** (multimodal, `claude-sonnet-4-6`): PDF/image/diagram interpretation. Architecture diagrams and specs come in visual formats.
 
 ### The Research Layer (2 agents)
 
-- **Operator** (librarian, `opencode/deepseek-v4-flash-free`): External research with mandatory citations. Cheap cost signals: use liberally for documentation lookup.
-- **Trinity** (codebase explorer, `opencode/deepseek-v4-flash-free`): Read-only grep/AST/LSP. Fire in parallel, use as a peer tool.
+- **Operator** (librarian, `claude-haiku-4-5`): External research with mandatory citations. Cheap cost signals: use liberally for documentation lookup.
+- **Trinity** (codebase explorer, `claude-haiku-4-5`): Read-only grep/AST/LSP. Fire in parallel, use as a peer tool.
 
 ### BDD Contract Agent
 
-- **bdd-contract** (`opencode/qwen3.6-plus-free`): BDD contract generation from Gherkin files (see `/bdd-contract` in the [Command Reference](command-reference.md)).
+- **Neo** (market-data architect, `claude-opus-4-6`): End-to-end review of exchange-ingestion → bus → consumer pipelines against robustness invariants. Read-only verdict with evidence-backed violations.
+- **bdd-contract** (provider-resolved fallback chain): BDD contract generation from Gherkin files (see `/bdd-contract` in the [Command Reference](command-reference.md)).
 
 ### Design Rationale
 
@@ -378,32 +383,36 @@ graph TB
     end
 
     subgraph PRIMARY["Primary Agents (mode: primary)"]
-        MOR["🔴 Morpheus<br/>kimi-k2.5-free<br/><i>Main Orchestrator</i>"]
-        KEY["🟡 Keymaker<br/>minimax-m3-free<br/><i>Autonomous Deep Worker</i>"]
-        ARC["🟣 Architect<br/>glm-5-free<br/><i>Plan Execution Orchestrator</i>"]
+        MOR["🔴 Morpheus<br/>claude-opus-4-6<br/><i>Main Orchestrator</i>"]
+        KEY["🟡 Keymaker<br/>claude-opus-4-6<br/><i>Autonomous Deep Worker</i>"]
+        ARC["🟣 Architect<br/>claude-sonnet-4-6<br/><i>Plan Execution Orchestrator</i>"]
     end
 
     subgraph SPECIALIST["Specialist Agents (mode: all)"]
-        CIP["🔵 Cipher<br/>kimi-k2.5-free<br/><i>DSL Engineering</i><br/>11 skills"]
-        SAT["🎨 Sati<br/>qwen3.6-plus-free<br/><i>Frontend Specialist</i><br/>8 skills"]
+        CIP["🔵 Cipher<br/>claude-opus-4-6<br/><i>DSL Engineering</i><br/>11 skills"]
+        SAT["🎨 Sati<br/>claude-sonnet-4-6<br/><i>Frontend Specialist</i><br/>8 skills"]
     end
 
     subgraph ADVISORS["Advisory Agents (mode: subagent)"]
-        ORA["📋 Oracle<br/>glm-5-free<br/><i>Strategic Planning</i>"]
-        MER["🏛️ Merovingian<br/>glm-5-free<br/><i>Architecture & Debugging</i>"]
-        SER["👁️ Seraph<br/>glm-5-free<br/><i>Pre-Planning Analysis</i>"]
-        SMI["⚔️ Smith<br/>glm-5-free<br/><i>Plan Validation</i>"]
-        SEN["🛡️ Sentinel<br/>qwen3.6-plus-free<br/><i>Security Auditor</i><br/>9 skills"]
+        ORA["📋 Oracle<br/>claude-opus-4-6<br/><i>Strategic Planning (dynamic)</i>"]
+        MER["🏛️ Merovingian<br/>claude-sonnet-4-6<br/><i>Architecture & Debugging</i>"]
+        SER["👁️ Seraph<br/>claude-opus-4-6<br/><i>Pre-Planning Analysis</i>"]
+        SMI["⚔️ Smith<br/>claude-sonnet-4-6<br/><i>Plan Validation</i>"]
+        AUD["🔍 Auditor<br/>claude-sonnet-4-6<br/><i>Post-Execution Audit</i>"]
+        TNK["🛡️ Tank<br/>claude-sonnet-4-6<br/><i>Silent-Failure Hunter</i>"]
+        SEN["🛡️ Sentinel<br/>claude-sonnet-4-6<br/><i>Security Auditor</i><br/>9 skills"]
     end
 
     subgraph EXPLORERS["Exploration Agents (mode: subagent)"]
-        TRI["⚡ Trinity<br/>deepseek-v4-flash-free<br/><i>Codebase Grep</i>"]
-        OPR["📚 Operator<br/>deepseek-v4-flash-free<br/><i>Docs & OSS Search</i>"]
-        CON["👀 Construct<br/>qwen3.6-plus-free<br/><i>Multimodal Analysis</i>"]
+        TRI["⚡ Trinity<br/>claude-haiku-4-5<br/><i>Codebase Grep</i>"]
+        OPR["📚 Operator<br/>claude-haiku-4-5<br/><i>Docs & OSS Search</i>"]
+        CON["👀 Construct<br/>claude-sonnet-4-6<br/><i>Multimodal Analysis</i>"]
+        NEO["📈 Neo<br/>claude-opus-4-6<br/><i>Market-Data Review</i>"]
+        BDD["📝 BDD-Contract<br/>fallback chain<br/><i>Gherkin → Contract</i>"]
     end
 
     subgraph EXECUTOR["Dynamic Executor"]
-        MOU["🐭 Mouse<br/>qwen3.6-plus-free<br/><i>Category-Spawned Worker</i>"]
+        MOU["🐭 Mouse<br/>category-resolved<br/><i>Spawned Worker (not in schema)</i>"]
     end
 
     UI --> MOR
@@ -437,6 +446,10 @@ graph TB
     style CON fill:#d35400,color:#fff
     style SAT fill:#e91e63,color:#fff
     style SEN fill:#2c3e50,color:#fff
+    style AUD fill:#16a085,color:#fff
+    style TNK fill:#7f8c8d,color:#fff
+    style NEO fill:#2980b9,color:#fff
+    style BDD fill:#8e44ad,color:#fff
     style MOU fill:#7f8c8d,color:#fff
 ```
 

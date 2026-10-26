@@ -1,5 +1,8 @@
 # Matrixx → OpenCode V2 Plugin API Port Plan
 
+> **Caveat (verified truth, Phase 0):** `2.6.18` is the legacy V1 API line (`@opencode-ai/plugin` v1.3.15) and is **incompatible** with the OpenCode V2 loader (`{ id, setup }`). This repo is the V2-only line. Current counts: 17 agents, 65-enum hooks +7 literals, 23 commands, 50 schema skills / 66 files, 30 tools, 23 features, 2 MCPs.
+
+
 Status: **Stage 1 in progress**. Owner: matrixx maintainers.
 Created: 2026-10-25.
 

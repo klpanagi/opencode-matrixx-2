@@ -1,21 +1,29 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 2.6.10 (`package.json`), verified against `src/`.
+> **Version:** 2.0.0, verified against `src/config/schema/hooks.ts:3-96` and `src/hooks/` disk listing.
 > **Scope:** `src/hooks/`, `src/create-hooks.ts`, `src/plugin/hooks/*`, `src/plugin-interface.ts`, `src/plugin/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 
 ## 0. TL;DR
 
-- `HookNameSchema` (`src/config/schema/hooks.ts`) holds 67 raw entries, 66 unique
-  (`context-mode-enforcer` is listed twice) plus 1 deprecated alias
+- `HookNameSchema` (`src/config/schema/hooks.ts:3-96`) accepts **72** names:
+  **65-enum** (`HookNameEnum`) + **7 literals** — 1 alias
   (`anthropic-context-window-limit-recovery` maps to
-  `context-window-limit-recovery`).
-- `src/hooks/` holds 63 subdirectories (62 hook dirs + `shared/`) and 16 loose
-  `.ts` files (5 `preemptive-compaction*`, 5 `session-notification*`, plus
-  `bash-file-read-guard.ts`, `context-window-monitor.ts`,
-  `empty-task-response-detector.ts`, `tool-output-truncator.ts`,
-  `session-todo-status.ts`), plus `index.ts`, `AGENTS.md`.
+  `context-window-limit-recovery`), 4 retired legacy-todo literals
+  (`todo-continuation-enforcer`, `compaction-todo-preserver`,
+  `tasks-todowrite-disabler`, `task-notepad`) that map to null via
+  `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`) so old
+  `disabled_hooks` lists keep loading, plus 2 retained no-ops
+  (`preemptive-compaction`, `evolution-compressor`).
+- `src/hooks/` on disk holds **64 subdirectories** (63 hook dirs + `shared/`)
+  plus loose `.ts` files (`bash-file-read-guard.ts`,
+  `context-window-monitor.ts`, `empty-task-response-detector.ts`,
+  `tool-output-truncator.ts`, 5 `session-notification*`), plus `index.ts`,
+  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 64,
+  `shared/` included). NOTE: older docs claimed 76 entries / 60 dirs — those
+  figures are stale and superseded by the counts above; do not cite 76/60
+  without this note.
 - Every tool call passes through `tool.execute.before` (18 invocations over
   17 unique hooks in 3 waves, `src/plugin/tool-execute-before.ts`) **and**
   `tool.execute.after` (19 invocations, `src/plugin/tool-execute-after.ts`).

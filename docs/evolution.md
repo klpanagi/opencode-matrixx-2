@@ -1,7 +1,7 @@
 # Matrixx Self-Evolution Loop
 
 > **Audience:** users opting into session learning and engineers extending the loop.
-> **Version:** 2.6.10. Default **off** (`evolution.enabled: false` = zero overhead).
+> **Version:** 2.0.0. Default **off** (`evolution.enabled: false` = zero overhead).
 > **See also:** `command-reference.md` (`/evolution`), `hooks.md` (`evolution-watcher`, `evolution-compressor`, `evolution-hitl`), `configurations.md` (`evolution.*`).
 
 Self-evolution records what happens in sessions, compresses traces into reusable knowledge, and governs promotion with human-in-the-loop approval. Every session makes the next one smarter.

@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 2.6.10 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Version:** 2.0.0 · **Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).
@@ -254,26 +254,14 @@ work complete. It cannot delegate further and cannot touch plan files.
 
 ### Specialists
 
-| Agent | Source | Role |
-|-------|--------|------|
-| **Trinity** | `src/agents/trinity.ts` | Codebase search and pattern discovery |
-| **Operator** | `src/agents/operator.ts` | Library docs and OSS research |
-| **Sati** | `src/agents/sati.ts` | Frontend and UI implementation |
-| **Cipher** | `src/agents/cipher.ts` | DSL engineering specialist |
-| **Sentinel** | `src/agents/sentinel.ts` | Read-only security auditing |
-| **Merovingian** | `src/agents/merovingian.ts` | Read-only high-IQ consultation |
-| **Construct** | `src/agents/construct.ts` | Media analysis (vision-only) |
-| **bdd-contract** | `src/agents/bdd-contract.ts` | BDD contract work (see `/bdd-contract`) |
-| **env-context** | `src/agents/env-context.ts` | Environment context variant |
+Specialist roster (Trinity, Operator, Sati, Cipher, Sentinel, Merovingian, Construct, and others): see [`docs/agents.md`](./agents.md) — linked, not duplicated here.
 
-The full registry (14 built-ins: `morpheus`, `keymaker`, `oracle`,
-`merovingian`, `operator`, `trinity`, `construct`, `seraph`, `smith`,
-`architect`, `cipher`, `sentinel`, `sati`, `bdd-contract`) lives in
+The full registry (17 built-ins) lives in
 `src/agents/builtin-agents.ts` with the schema in
 `src/config/schema/agent-names.ts`. Mouse is created dynamically as the
 delegated executor. Models resolve from your configured providers with
 fallback chains; worker agents default to temperature 0.1 (Seraph uses 0.3).
-For per-agent detail, see [`docs/agents.md`](./agents.md).
+For the full roster and per-agent detail, see [`docs/agents.md`](./agents.md).
 
 ## The task() Category + Skill System
 
@@ -300,7 +288,7 @@ task(category="construct", load_skills=["frontend-ui-ux"], prompt="...")
 task(category="bullet-time", load_skills=["playwright"], prompt="...")
 ```
 
-Skills prepend domain instructions to the worker prompt. All 40+ built-in
+Skills prepend domain instructions to the worker prompt. All 50 built-in
 skills (frontend, DSL, security, testing, and more) are domain-specific, so
 for pure prose and docs tasks `load_skills=[]` is intentional, not an
 omission.
@@ -355,7 +343,7 @@ is reached. `/ulw-loop` is the same loop with ultrawork mode active.
 
 Full reference with arguments and intercepts:
 [`docs/command-reference.md`](./command-reference.md)
-(24 built-ins covering orchestration, research, refactoring, handoffs,
+(23 built-ins covering orchestration, research, refactoring, handoffs,
 tasks, BDD, and toggles).
 
 ## Configuration

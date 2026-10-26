@@ -223,6 +223,7 @@ export function createMyHook(input: PluginInput) {
 ## Pull Request Process
 
 1. **Fork** the repository and create your branch from `dev`
+2. **Target `dev`** — every Pull Request MUST target the `dev` branch (never `master`; PRs to `master` are automatically rejected; squash merge is disabled, use merge commit)
 2. **Make changes** following the conventions above
 3. **Build and test** locally:
    ```bash

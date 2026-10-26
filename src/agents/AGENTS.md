@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-15 AI agents with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
+17 AI agents with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
 
 `Smith` is the **pre-execution** reviewer (binary `[OKAY]`/`[REJECT]`, max 3 blockers). `Auditor` is the **post-execution** reviewer (Summary / Score / Complexity / Required Effort), invoked **only** by the explicit `/plan-review` command — never automatically (including never as a post-step of `/quality-assurance` or any other command loop), and never on a hook, idle, or completion trigger.
 

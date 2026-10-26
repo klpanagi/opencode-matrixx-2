@@ -1,3 +1,5 @@
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+
 # Websearch Migration: Custom MCP to Native Tool
 
 The custom `websearch` MCP (`src/mcps/websearch.ts`, Exa AI / Tavily) was removed.

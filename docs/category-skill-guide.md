@@ -1,7 +1,7 @@
 # Category & Skill System Guide
 
-> Version 2.6.10. **Audience:** users composing delegated work and engineers adding skills.
-> 8 categories (`src/features/delegate-task/`), 37 skills (`src/skills/`).
+> Version 2.0.0. **Audience:** users composing delegated work and engineers adding skills.
+> 8 categories (`src/features/delegate-task/`), 50 skills (`src/skills/`).
 
 This document provides a comprehensive guide to the **Category** and **Skill** systems, which form the extensibility core of Matrixx. For delegation flows, see [Orchestration](orchestration.md). For the agent roster, see [Agents](agents.md).
 
@@ -64,9 +64,9 @@ When you use a Category, a special agent called **Mouse** performs the work.
 
 A Skill is a mechanism that injects **specialized knowledge (Context)** and **tools (MCP)** for specific domains into agents.
 
-### Built-in Skills (37 total)
+### Built-in Skills (50 total)
 
-37 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/skills/` and load via `createBuiltinSkills()`.
+50 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/skills/` and load via `createBuiltinSkills()`.
 
 **Development & Tools (6):**
 - **`git-master`** — Git expert. Detects commit styles, splits atomic commits, rebase strategies.
@@ -82,7 +82,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 - **`agent-browser`** — Agent-controlled browser automation.
 - **`frontend-ui-ux`** — Designer mindset. Color, typography, motion guidelines.
 
-Skill counts, honest version: **37** names in `BuiltinSkillNameSchema` (grouped above as 6 + 4 + 11 + 9 + 5 + 2); **46** loader keys in `skillLoaders` (`src/skills/skills.ts` — adds `document-reader`, `frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `react-nextjs-patterns`, `svelte-sveltekit-patterns`); **45** skill modules on disk (`agent-browser` is provider-resolved and ships no module file).
+Skill counts, honest version: **50** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **66** files in `src/skills/skills/` (65 skill modules + `index.ts`). The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `document-reader`).
 
 **DSL Engineering (11):**
 - **`dsl-core`**, **`dsl-grammar`**, **`dsl-codegen`**, **`dsl-metamodel`**, **`dsl-tooling`**

@@ -2,7 +2,7 @@
 
 > **Scope:** Persistent, file-backed task management for Matrixx agent orchestration.
 > **Audience:** Engineers evolving the task system: storage, tools, hooks, scheduling, and agent integration.
-> **Version:** 2.6.10, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
+> **Version:** 2.0.0, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
 
 Every normative claim below traces to the source path cited beside it. Where behavior belongs to another doc, this spec cross-links instead of duplicating: hook internals → `docs/hooks.md`, orchestration and wave planning flow → `docs/orchestration.md`, command reference → `docs/command-reference.md`.
 

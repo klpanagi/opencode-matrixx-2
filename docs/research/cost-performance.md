@@ -1,3 +1,5 @@
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+
 # Matrixx Cost/Performance Improvement Proposals
 
 > **Research note — point-in-time analysis, not a usage reference.** Historical dates, version stamps, and evidences below are preserved as written; counts re-verified against current `src/` where noted. For current behavior see `../hooks.md`, `../context-management.md`, and `../features.md`.

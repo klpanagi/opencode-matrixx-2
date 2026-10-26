@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-22 feature modules (background-agent, tmux-subagent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injector, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+23 feature modules (background-agent, tmux-subagent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injector, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
@@ -17,8 +17,8 @@ features/
 │   └── handle-index.ts         # File-backed handle index (`BgHandleSchema`, `.matrixx/bg-handles/`)
 ├── tmux-subagent/              # Tmux integration (25 files, ~3000 LOC)
 │   └── manager.ts              # Pane management, grid planning (350 lines)
-├── builtin-commands/           # 22 command templates (see templates/ list below)
-│   └── templates/              # 21 templates: refactor, matrix-loop, init-deep, handoff, start-work, research, assembly, bdd-*, evolution...
+├── builtin-commands/           # 23 commands (see templates/ list below; 21 templates via matrix-loop fan-out; config-schema command count of 17 is known-stale drift)
+│   └── templates/              # 21 templates: refactor, matrix-loop, init-deep, handoff, start-work, research, assembly, bdd-*, evolution... (23 commands official per features types.ts + definitions)
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`, `addBlocks`/`addBlockedBy` Set) — 7 files, 1165 LOC + `task-toast-manager/`
 ├── context-injector/           # AGENTS.md, README.md, rules injection (6 files, 809 LOC)
 ├── handoff/                    # Multi-action handoff: create, read, list, archive

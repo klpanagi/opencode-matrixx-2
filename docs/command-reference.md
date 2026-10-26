@@ -1,10 +1,10 @@
 # Command Reference
 
-> Version 2.6.10. All 24 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> Version 2.0.0. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, and tool toggles.
+Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, and tool toggles.
 
-> **Count reconciliation (honest):** the Zod `BuiltinCommandNameSchema` in `src/config/schema/commands.ts` lists 19 names (used for `disabled_commands` validation). `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts` (and the local `BuiltinCommandName` union in `src/features/builtin-commands/types.ts`) registers 24 — the extra 5 are `pickup`, `remove-deadcode`, `evolution`, `cleanup-tasks`, and `task-list`. Templates live in `src/features/builtin-commands/templates/` (22 files; `matrix-loop`/`ulw-loop` share one template).
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts:3` lists 23 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (21 files). `cancel-loop` and `ulw-loop` have no standalone template file (aliases): `ulw-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -30,11 +30,11 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 | `/task-list` | List active tasks (`task_list`) | — | — |
 | `/cleanup-tasks` | Clean completed tasks (`task_cleanup`) | — | — |
 | `/evolution` | Self-evolution proposals (approve/reject/list) | — | — |
-| `/bdd-contract` | BDD contract from Gherkin | — | bdd-contract |
-| `/bdd-frontend` | BDD React components | — | — |
-| `/bdd-backend` | BDD typed API service | — | — |
 | `/bdd-pipeline` | Full BDD pipeline (contract→tests→frontend→backend) | — | — |
-| `/bdd-tests` | BDD Cucumber steps + page objects | — | — |
+| `/plan-review` | Post-execution plan completion review | — | — |
+| `/quality-audit` | Read-only deterministic quality audit | — | — |
+| `/quality-assurance` | Bounded quality improvement loop | — | — |
+| `/humanize` | Quality-focused humanization pipeline | — | — |
 
 ### Legend
 
@@ -86,7 +86,7 @@ This command has an **imperative intercept** — it calls the matrix-loop manage
 
 ## 3. `/ulw-loop`
 
-Identical to `/matrix-loop` but activates ultrawork mode for the duration of the loop. Same arguments:
+Alias of `/matrix-loop` (no standalone template file — reuses `MATRIX_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). Identical behavior but activates ultrawork mode for the duration of the loop. Same arguments:
 
 ```
 /ulw-loop Implement critical auth flow --max-iterations=15
@@ -104,7 +104,7 @@ Cancel an active Matrix Loop or ULW Loop.
 /cancel-loop
 ```
 
-No arguments. Calls `hooks.matrixLoop?.cancelAll()` to stop all running loops.
+Alias (no standalone template file — uses `CANCEL_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). No arguments. Calls `hooks.matrixLoop?.cancelAll()` to stop all running loops.
 
 This command has an **imperative intercept**.
 
@@ -426,59 +426,13 @@ Evolution hooks only run when `evolution.enabled: true` in config. See [Evolutio
 
 ---
 
-## 19. `/bdd-contract`
+## 19. `/bdd-pipeline`
 
-Generate a BDD Contract JSON from a Gherkin `.feature` file, with semantic enrichment.
-
-```
-/bdd-contract features/login.feature
-/bdd-contract features/login.feature --force
-```
-
-| Argument | Description |
-|----------|-------------|
-| `<feature-path>` | Path to the `.feature` file |
-| `--force` | Overwrite existing contract output |
-
-Routes to the `bdd-contract` agent. **Related:** `/bdd-pipeline`, [Quality, Part A](./quality.md).
-
----
-
-## 20. `/bdd-frontend`
-
-Generate React components from a BDD Contract JSON file, using `@ui:*` annotations.
+Run the full BDD pipeline from a single `.feature` file: contract, tests, frontend, and backend. Template: `src/features/builtin-commands/templates/bdd-pipeline.ts`.
 
 ```
-/bdd-frontend contracts/login.contract.json
-```
-
-| Argument | Description |
-|----------|-------------|
-| `<contract.json>` | Path to the contract file produced by `/bdd-contract` |
-
----
-
-## 21. `/bdd-backend`
-
-Generate a typed API service from a BDD Contract JSON file.
-
-```
-/bdd-backend contracts/login.contract.json
-```
-
-| Argument | Description |
-|----------|-------------|
-| `<contract.json>` | Path to the contract file produced by `/bdd-contract` |
-
----
-
-## 22. `/bdd-pipeline`
-
-Run the full BDD pipeline from a single `.feature` file: contract, tests, frontend, and backend.
-
-```
-/bdd-pipeline features/login.feature
-/bdd-pipeline features/login.feature --force
+ /bdd-pipeline features/login.feature
+ /bdd-pipeline features/login.feature --force
 ```
 
 | Argument | Description |
@@ -490,21 +444,61 @@ Runs the contract, tests, frontend, and backend stages in order. **Related:** [Q
 
 ---
 
-## 23. `/bdd-tests`
+## 20. `/plan-review`
 
-Generate Cucumber step definitions and page objects from a BDD Contract JSON file.
+Post-execution completion review of a finished plan (explicit only). Template: `src/features/builtin-commands/templates/plan-review.ts`.
 
 ```
-/bdd-tests contracts/login.contract.json
+ /plan-review my-plan-name
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `<contract.json>` | Path to the contract file produced by `/bdd-contract` |
+| `<plan-name>` | Finished plan to review |
 
 ---
 
-In addition to the 24 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+## 21. `/quality-audit`
+
+Run a read-only deterministic quality audit with graded report. Template: `src/features/builtin-commands/templates/quality-audit.ts`.
+
+```
+ /quality-audit --scope=project --target=src/
+```
+
+| Argument | Description |
+|----------|-------------|
+| `--scope` | `file`, `module`, or `project` |
+| `--target` | Path to audit |
+
+---
+
+## 22. `/quality-assurance`
+
+Drive quality to target grade via bounded oracle-smith-tdd loop. Template: `src/features/builtin-commands/templates/quality-assurance.ts`.
+
+```
+ /quality-assurance --scope=project --target-grade=B --max-iterations=3 --target=src/
+```
+
+---
+
+## 23. `/humanize`
+
+Guided quality-focused humanization pipeline for prose, comments, and code. Template: `src/features/builtin-commands/templates/humanize.ts`.
+
+```
+ /humanize src/api/routes/auth.ts --mode=code
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--mode` | — | `text`, `comments`, `code`, or `all` |
+| `--dry-run` | `false` | Preview without modifying |
+
+---
+
+In addition to the 23 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|

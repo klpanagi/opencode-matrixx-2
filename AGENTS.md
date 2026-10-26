@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 2.6.1 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.3.6
+**Version:** 2.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.3.6
 
 ---
 
@@ -100,11 +100,13 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 14 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 76 hook entries (60 dirs) and 24 custom tool dirs (conditional registration via `src/plugin/tool-gating.ts`). ~960 TS source files, 246 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 17 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 65-enum hooks (+7 literals) and 30 custom tool dirs (conditional registration via `src/plugin/tool-gating.ts`). 23 built-in commands, 50 schema skills / 66 skill files, 23 features, 2 MCPs. ~960 TS source files, 246 test files.
+
+> **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). `2.6.18` is the legacy V1 API (`@opencode-ai/plugin` v1.3.15) release line and does not load in OpenCode V2.
 
 | Aspect | Value |
 |---|---|
-| Package | `opencode-matrixx` (npm, v2.6.1) |
+| Package | `opencode-matrixx` (npm, v2.0.0) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
 | Stack | Bun 1.4.0 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |
@@ -120,13 +122,13 @@ matrixx/
 │   ├── create-tools.ts             # Tool registry + skill context composition
 │   ├── plugin-config.ts            # Config load + Zod validation
 │   ├── plugin-state.ts             # Model context-limit cache
-│   ├── agents/   → 14 agents + AGENTS.md
-│   ├── hooks/    → 76 entries (60 dirs + 16 loose .ts; HookNameSchema 63 enum + 5 literals = 68 accepted) in 3 tiers
-│   ├── tools/    → 24 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-gating.ts)
-│   ├── features/ → 22 dirs (background-agent, builtin-commands, task-storage, handoff, knowledge-hub, ...)
+│   ├── agents/   → 17 agents + AGENTS.md
+│   ├── hooks/    → 65-enum hooks (+7 literals) in 3 tiers
+│   ├── tools/    → 30 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-gating.ts)
+│   ├── features/ → 23 dirs (background-agent, builtin-commands, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → 80+ utilities (logger → /tmp/matrixx.log)
-│   ├── skills/   → 46 built-in skills + AGENTS.md
-│   ├── mcps/     → 3 built-in MCPs (websearch, context7, document-reader) + native `github_search` tool
+│   ├── skills/   → 50 schema skills / 66 skill files + AGENTS.md
+│   ├── mcps/     → 2 built-in MCPs + native `github_search` tool
 │   ├── cli/      → installer, doctor, config-manager
 │   ├── config/   → Zod schema
 │   ├── plugin/   → hook composition (create-core/continuation/skill-hooks)
@@ -134,7 +136,7 @@ matrixx/
 ├── bin/                            # Platform-detecting CLI wrappers
 ├── script/                         # build-schema, build-binaries, publish, run-ci.sh
 ├── packages/                       # 7 platform + 4 baseline binary packages
-├── .opencode/                      # Local OpenCode config (commands, skills)
+├── .opencode/                      # Local OpenCode config (23 commands, skills)
 ├── docs/                           # Long-form docs (configurations.md ~50k)
 └── dist/                           # Build output (ESM + .d.ts + schema)
 ```
@@ -238,9 +240,9 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 | Bash | `sleep N` (use conditional waits); `cd dir && cmd` (use `workdir`) |
 | Publishing | `bun publish` directly — CI only, never bump version locally |
 
-## AGENTS (14 via `BuiltinAgentNameSchema`)
+## AGENTS (17 via `BuiltinAgentNameSchema`)
 
-`agentSources` in `src/agents/builtin-agents.ts` lists 13; `oracle` built dynamically in `plugin-handlers/agent-config-handler.ts`. `mouse` via `createMouseAgentWithOverrides`; `OpenCode-Builder` when `morpheus_agent.default_builder_enabled`. See `src/agents/AGENTS.md` for model/temperature/fallback chains.
+17 agents total via `BuiltinAgentNameSchema` (see `src/agents/AGENTS.md` for model/temperature/fallback chains).
 
 ## DEPLOYMENT
 

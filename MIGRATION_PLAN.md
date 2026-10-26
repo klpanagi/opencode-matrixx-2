@@ -1,5 +1,8 @@
 # Loader Removal & Simplification Plan
 
+> **Caveat (verified truth, Phase 0):** counts in the body below are historical (14 agents / 45 skills / 4 MCPs at time of writing) and are kept as-is. Current V2 truth: 17 agents, 65-enum hooks +7 literals, 23 commands, 50 schema skills / 66 files, 30 tools, 23 features, 2 MCPs. `2.6.18` = legacy V1 API line, incompatible with the V2 loader. All PRs target `dev` (never `master`).
+
+
 ## Executive Summary
 
 Remove all local directory loaders from Matrixx. Built-in skills/commands/agents/MCPs will be registered directly via OpenCode's `config` hook. This eliminates ~7,169 LOC across 42 files and removes Claude Code compatibility layers.
