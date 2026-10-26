@@ -1,4 +1,5 @@
 import type { HookName, MatrixxConfig } from "../../config"
+import { resolveMemoryBackend } from "../../config/schema/memory"
 import {
   createAgentUsageReminderHook,
   createAutoUpdateCheckerHook,
@@ -21,7 +22,6 @@ import {
   createThinkModeHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
-import { resolveMemoryBackend } from "../../config/schema/memory"
 import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
 import {
   detectExternalNotificationPlugin,

@@ -21,6 +21,7 @@ export * from "./git-worktree"
 export * from "./is-abort-error"
 export * from "./jsonc-parser"
 export * from "./logger"
+export * from "./memory-backend-detect"
 export * from "./model-availability"
 export * from "./model-requirements"
 export {
@@ -30,7 +31,6 @@ export {
   normalizeModel,
   resolveModelPipeline,
 } from "./model-resolution-pipeline"
-export * from "./memory-backend-detect"
 export * from "./model-suggestion-retry"
 export * from "./normalize-sdk-response"
 export * from "./opencode-config-dir"

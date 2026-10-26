@@ -1,4 +1,4 @@
-import { type NativeMemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
+import { MemoryConfigSchema, type NativeMemoryConfig } from "../../config/schema/memory"
 import { isSyntheticMessage } from "./constants"
 import type { MemoryEntry } from "./types"
 
