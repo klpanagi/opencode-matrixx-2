@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import type { PluginInput } from "@opencode-ai/plugin"
+import { escapeRegExp as escapeRegex } from "../../shared/escape-regexp"
 import { log } from "../../shared/logger"
 import { withTimeout } from "../../shared/with-timeout"
 import { HOOK_NAME } from "./constants"
@@ -7,10 +8,6 @@ import { HOOK_NAME } from "./constants"
 export interface OpenCodeSessionMessage {
 	info?: { role?: string }
 	parts?: Array<{ type: string; text?: string }>
-}
-
-function escapeRegex(str: string): string {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
 function buildPromisePattern(promise: string): RegExp {
