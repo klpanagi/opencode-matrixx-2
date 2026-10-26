@@ -20,13 +20,13 @@ export { createDocumentReaderGuardHook } from "./document-reader-guard";
 export { createEditErrorRecoveryHook } from "./edit-error-recovery";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
 export { createEnvContextInjectorHook } from "./env-context-injector";
-export { createEnvFileWriteGuardHook } from "./env-file-write-guard"
+export { createEnvFileWriteGuardHook } from "./env-file-write-guard/hook"
 export { createEvolutionHitlHook } from "./evolution-hitl";
 export { passesQualityGate } from "./evolution-quality-gate";
 export { createEvolutionWatcherHook } from "./evolution-watcher";
-export { createHashlineReadEnhancerHook } from "./hashline-read-enhancer";
-export { createInputSecretGuardHook } from "./input-secret-guard";
-export { createInteractiveBashSessionHook } from "./interactive-bash-session";
+export { createHashlineReadEnhancerHook } from "./hashline-read-enhancer/hook";
+export { createInputSecretGuardHook } from "./input-secret-guard/hook";
+export { createInteractiveBashSessionHook } from "./interactive-bash-session/hook";
 export { createJsonErrorRecoveryHook } from "./json-error-recovery"
 export { createKeywordDetectorHook } from "./keyword-detector";
 export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard";
@@ -35,12 +35,12 @@ export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge"
 export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop";
 export { createMouseNotepadHook } from "./mouse-notepad";
 export { createNonInteractiveEnvHook } from "./non-interactive-env";
-export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker";
+export { createNudgeLoopBreakerHook } from "./nudge-loop-breaker/hook";
 export { createOracleMdOnlyHook } from "./oracle-md-only";
 export { createPlanPersister } from "./plan-persister"
 export { createPostReadInjectorHook } from "./post-read-injector";
 export { createQualityGateHook } from "./quality-gate/hook"
-export { createReadImageResizerHook } from "./read-image-resizer"
+export { createReadImageResizerHook } from "./read-image-resizer/hook"
 export { createRtkBashRewriterHook } from "./rtk-bash-rewriter";
 export { createRulesInjectorHook } from "./rules-injector";
 export { createRuntimeFallbackHook, type RuntimeFallbackHook, type RuntimeFallbackOptions, SessionCategoryRegistry } from "./runtime-fallback"

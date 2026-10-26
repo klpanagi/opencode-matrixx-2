@@ -1,1 +1,0 @@
-export { createInputSecretGuardHook } from "./hook"

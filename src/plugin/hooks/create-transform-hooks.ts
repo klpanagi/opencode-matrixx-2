@@ -16,7 +16,7 @@ import {
 } from "../../hooks"
 import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer/hook"
 import { createDomainKeywordDetectorHook } from "../../hooks/domain-keyword-detector"
-import { createInputSecretGuardHook } from "../../hooks/input-secret-guard"
+import { createInputSecretGuardHook } from "../../hooks/input-secret-guard/hook"
 import { safeCreateHook } from "../../shared/safe-create-hook"
 import type { PluginContext } from "../types"
 
