@@ -194,7 +194,7 @@ ctx stats
 # Expected: tool list and index stats appear
 ```
 
-> **Plugin-only form (no `mcp` block):** context-mode is configured ONLY as an OpenCode plugin via `"plugin": ["context-mode"]` in `opencode.json` / `opencode.jsonc`. Do NOT add a legacy `mcp.context-mode` / `mcp` block — the MCP form is unsupported and may leave zero `ctx_*` tools exposed. If both forms are present, delete the `mcp` entry, keep only the `plugin` entry, then run `context-mode upgrade` (or reinstall) and restart.
+> **MCP form (verified working):** context-mode is configured as a local MCP server in `opencode.jsonc` (`"mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } }`) and shows as `context-mode · Connected` under MCP in the OpenCode TUI. Upstream also documents a `"plugin": ["context-mode"]` in-process form — either delivery works with matrixx (enforcer + routing block match on the `ctx_*` tool names regardless of transport); do not enable both forms at once.
 >
 > `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-mode-routing/routing-block.ts`).
 >

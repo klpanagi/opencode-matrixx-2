@@ -101,7 +101,7 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
     "retention": { "deletedSessionDays": 30, "orphanBlobDays": 14 }
     // staleSessionDays omitted = disabled (NOT 90)
   },
-  "plugin": ["context-mode"] // plugin-only form: do NOT add a legacy mcp.context-mode block
+  "mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } } // verified working form (shows as Connected under MCP)
 }
 ```
 
