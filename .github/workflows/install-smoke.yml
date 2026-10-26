@@ -2,14 +2,14 @@ name: Install Smoke
 
 on:
   push:
-    branches: [dev, master]
+    branches: [dev]
     paths:
       - "package.json"
       - "src/cli/**"
       - "dist/**"
       - ".github/workflows/install-smoke.yml"
   pull_request:
-    branches: [dev, master]
+    branches: [dev]
     paths:
       - "package.json"
       - "src/cli/**"

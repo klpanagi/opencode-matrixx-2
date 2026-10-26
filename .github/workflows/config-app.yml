@@ -2,11 +2,11 @@ name: Config App
 
 on:
   push:
-    branches: [master, dev]
+    branches: [dev]
     paths:
       - "apps/matrixx-config/**"
   pull_request:
-    branches: [master, dev]
+    branches: [dev]
     paths:
       - "apps/matrixx-config/**"
 
