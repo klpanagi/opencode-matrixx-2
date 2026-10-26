@@ -33,7 +33,7 @@ import {
   log,
   resolveRtkEnforcement,
 } from "../../shared"
-import { safeCreateHook } from "../../shared/safe-create-hook"
+import { bindSafeHook } from "../../shared/safe-create-hook"
 import { sessionExists } from "../../tools"
 import type { PluginContext } from "../types"
 
@@ -69,8 +69,7 @@ export function createSessionHooks(args: {
   safeHookEnabled: boolean
 }): SessionHooks {
   const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
-  const safeHook = <T>(hookName: HookName, factory: () => T): T | null =>
-    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+  const safeHook = bindSafeHook(safeHookEnabled)
 
   const contextWindowMonitor = isHookEnabled("context-window-monitor")
     ? safeHook("context-window-monitor", () => createContextWindowMonitorHook(ctx, pluginConfig))

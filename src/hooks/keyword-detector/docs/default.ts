@@ -11,11 +11,8 @@
  * triggers, no init-time checks.
  */
 
+import { escapeRegExp } from "../../../shared/escape-regexp"
 import { DOC_INTENT_TRIGGERS } from "../../docs-lookup-guard/constants"
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
 
 // docs-suppresses-search pattern: exact DOC_INTENT_TRIGGERS phrases.
 export const DOCS_PATTERN = new RegExp(

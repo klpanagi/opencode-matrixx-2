@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
+import { escapeRegExp } from "../../shared/escape-regexp"
 import { CAPABILITIES, EXCHANGE_IDS, RULE_CATALOG, SYMBOL_EXTENSIONS } from "./constants"
 import type { SymbolFinding, SymbolSeverity, SymbolValidationResult } from "./types"
 
@@ -16,10 +17,6 @@ const IGNORED_DIRS = new Set(["node_modules", ".git", "dist", "build", ".venv", 
 interface Occurrence {
   symbol: string
   kind: "settle" | "nosettle"
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
 function makeFinding(rule: string, file: string, line: number, symbol: string): SymbolFinding {

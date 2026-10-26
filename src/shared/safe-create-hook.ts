@@ -22,3 +22,8 @@ export function safeCreateHook<T>(
     return null
   }
 }
+
+export function bindSafeHook(safeHookEnabled: boolean) {
+  return <T>(hookName: string, factory: () => T): T | null =>
+    safeCreateHook(hookName, factory, { enabled: safeHookEnabled })
+}
