@@ -1,5 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import type { MemoryConfig } from "../../config/schema/memory"
+import type { NativeMemoryConfig } from "../../config/schema/memory"
 import { appendMemoryEntry, isSyntheticMessage, type MemoryEntryInput } from "../../features/session-memory"
 import { log } from "../../shared/logger"
 
@@ -12,7 +12,7 @@ export const MAX_PENDING_ENTRIES = 50
 export const MAX_CAPTURE_CHARS = 2000
 
 export interface SessionMemoryHookOptions {
-  memory?: MemoryConfig
+  memory?: NativeMemoryConfig
   directory?: string
 }
 
@@ -32,12 +32,16 @@ function isIgnoredTool(toolName: string, ignoreToolPrefixes: string[]): boolean 
 
 /**
  * Light session-memory hook (PostToolUse + event only).
+ * Active only when the resolved memory backend is native; callers pass
+ * the native sub-object (`memory.native`).
  *
  * Hot path (`tool.execute.after`) does NO JSONL read/write — it stages
  * entries in a bounded in-memory buffer. Flush to disk happens only on
  * `session.idle` / `session.compacted` events (off the hot path).
  *
  * Disabled (`memory.enabled !== true`) = no-op handlers, never throws.
+ * External `lcm_*` / `supermemory*` tool calls observed while the native
+ * backend is active log a one-time double-capture warning (still staged).
  */
 export function createSessionMemoryHook(
   ctx: PluginInput,
@@ -47,12 +51,22 @@ export function createSessionMemoryHook(
   const directory = options.directory ?? ctx.directory
   const ignoreToolPrefixes = options.memory?.ignoreToolPrefixes ?? ["ctx_"]
   const pending: MemoryEntryInput[] = []
+  let doubleCaptureWarned = false
 
   const toolExecuteAfter = async (
     input: { tool: string; sessionID: string; callID: string },
     output: { title: string; output: string; metadata: unknown },
   ): Promise<void> => {
     if (!enabled) return
+    if (
+      !doubleCaptureWarned &&
+      (input.tool.startsWith("lcm_") || input.tool.startsWith("supermemory"))
+    ) {
+      doubleCaptureWarned = true
+      log(
+        `[${HOOK_NAME}] Double-capture risk: external tool "${input.tool}" observed while the native backend is active. Pick one backend — memory.backend="native" XOR "lcm" / "supermemory".`,
+      )
+    }
     if (isIgnoredTool(input.tool, ignoreToolPrefixes)) return
     const text = (output.output ?? "").trim()
     if (!text) return

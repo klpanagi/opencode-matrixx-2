@@ -1698,3 +1698,27 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | Variable              | Description                                                                                                                                     |
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `OPENCODE_CONFIG_DIR` | Override the OpenCode configuration directory. Useful for profile isolation with tools like [OCX](https://github.com/kdcokenny/ocx) ghost mode. |
+
+## Session Memory Backend
+
+Selector: `memory.backend` (`off` | `native` | `lcm` | `supermemory`, default `off`). Native options live under `memory.native`. Flat `memory.enabled: true` is a deprecated alias for native (warns once, still resolves to native).
+
+| Backend | Behavior |
+|---------|----------|
+| `off` (default) | Nothing runs. Native hook is not created. |
+| `native` | Hook on. Requires `memory.native.enabled: true`. JSONL store under `.matrixx/memory/`, deterministic recall (110 chars/msg, 900-char cap, 2/1/1 hit quotas), retention with tombstones. |
+| `lcm` | Native hook forced OFF. Use upstream `opencode-lcm` 18 `lcm_*` tools (pin `84103cca`). Missing-plugin warning if no `lcm_*` tools / plugin detected. |
+| `supermemory` | Native hook forced OFF. Use `supermemory_recall` + `supermemory.jsonc` + env `SUPERMEMORY_API_KEY` (package `opencode-supermemory@latest`). Missing-plugin warning if absent. |
+
+Rules: one backend at a time; `lcm` / `supermemory` force native OFF even if `native.enabled` is true; missing-plugin warning is fail-open on empty tool catalog; external `lcm_*` / `supermemory*` tool calls observed while `backend=native` log a one-time double-capture warning (still staged).
+
+Migration:
+
+```jsonc
+// before (deprecated, still honored with one-time warning)
+{ "memory": { "enabled": true } }
+// after
+{ "memory": { "backend": "native", "native": { "enabled": true } } }
+```
+
+`{ "enabled": false }` behavior is unchanged (resolves to `off`). FTS deferred (see `docs/session-memory-fts.md`); recall wiring is a follow-up.

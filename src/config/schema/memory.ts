@@ -3,7 +3,10 @@ import { z } from "zod"
 /**
  * Session-memory (opencode-lcm interop) configuration.
  *
- * Plugin-only OpenCode config — opt-in via `enabled: true` (default: false).
+ * Backend selector: `memory.backend` (`off`|`native`|`lcm`|`supermemory`,
+ * default `off`). Native keys live under `memory.native`. Flat
+ * `memory.enabled: true` is honored as a deprecated alias for the native
+ * backend (logs a one-time deprecation warning at the call site).
  * Defaults mirror upstream opencode-lcm `DEFAULT_OPTIONS` at pinned SHA
  * `84103cca85b2324626a8b8df0f592a555fe8ac96` (v0.15.1).
  * `retention.staleSessionDays` undefined = disabled (NOT 90).
@@ -61,8 +64,12 @@ export const AutomaticRetrievalSchema = z.object({
   }),
 })
 
-export const MemoryConfigSchema = z.object({
-  /** Enable session-memory interop (default: false — opt-in) */
+export const MemoryBackendSchema = z.enum(["off", "native", "lcm", "supermemory"])
+
+export type MemoryBackend = z.infer<typeof MemoryBackendSchema>
+
+export const NativeMemoryConfigSchema = z.object({
+  /** Enable native session-memory interop (default: false — opt-in) */
   enabled: z.boolean().default(false),
   /** Tool-name prefixes ignored when guessing message text (upstream: ["ctx_"]) */
   ignoreToolPrefixes: z.array(z.string()).default(["ctx_"]),
@@ -82,4 +89,57 @@ export const MemoryConfigSchema = z.object({
   systemHint: z.boolean().default(true),
 })
 
+export type NativeMemoryConfig = z.infer<typeof NativeMemoryConfigSchema>
+
+const DEFAULT_NATIVE_MEMORY: NativeMemoryConfig = {
+  enabled: false,
+  ignoreToolPrefixes: ["ctx_"],
+  scopeDefaults: { grep: "session", describe: "session" },
+  scopeProfiles: [],
+  retention: { deletedSessionDays: 30, orphanBlobDays: 14 },
+  perMessageBudget: 110,
+  automaticRetrieval: {
+    maxChars: 900,
+    minTokens: 2,
+    maxMessageHits: 2,
+    maxSummaryHits: 1,
+    maxArtifactHits: 1,
+    budgets: { session: 16, root: 12, worktree: 8, all: 6 },
+  },
+  compactContextLimit: 1200,
+  systemHint: true,
+}
+
+export const MemoryConfigSchema = z.object({
+  /** Backend selector (default: "off" — nothing runs) */
+  backend: MemoryBackendSchema.default("off"),
+  /** Native backend options */
+  native: NativeMemoryConfigSchema.default(DEFAULT_NATIVE_MEMORY),
+  /**
+   * @deprecated flat alias — use `backend: "native"` + `native.enabled: true`.
+   * `enabled: true` (without an explicit non-off backend) resolves to the
+   * native backend with a one-time deprecation warning at the call site.
+   */
+  enabled: z.boolean().optional(),
+})
+
 export type MemoryConfig = z.infer<typeof MemoryConfigSchema>
+
+/**
+ * Resolve the effective memory backend from parsed config.
+ * Pure — no logging (callers emit the flat-alias deprecation warning once).
+ *
+ * Precedence: explicit non-off `backend` wins (even if `native.enabled`
+ * disagrees); else flat `enabled === true` -> native (deprecated alias);
+ * else `native.enabled === true` -> native; else off.
+ */
+export function resolveMemoryBackend(
+  cfg?: Pick<MemoryConfig, "backend" | "native"> & { enabled?: boolean } | null,
+): MemoryBackend {
+  if (!cfg) return "off"
+  const backend = (cfg as { backend?: MemoryBackend }).backend
+  if (backend && backend !== "off") return backend
+  if ((cfg as { enabled?: boolean }).enabled === true) return "native"
+  if ((cfg as { native?: { enabled?: boolean } }).native?.enabled === true) return "native"
+  return "off"
+}
