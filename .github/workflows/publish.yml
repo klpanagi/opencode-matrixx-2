@@ -315,15 +315,3 @@ jobs:
       # ci-v2-publish Task 2: master branch retired — releases are dev+tags only.
       # Step disabled (if:false); tags pushed in 'Git commit and tag' step above.
       # To verify a tag instead, run: git rev-parse "v${VERSION}" / git ls-remote --tags origin.
-      - name: Merge to master (disabled — dev+tags only)
-        if: false
-        continue-on-error: true
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION="${{ needs.publish-main.outputs.version }}"
-          git stash --include-untracked || true
-          git rev-parse "v${VERSION}"
-          echo "Tag v${VERSION} verified — no master push (dev+tags flow)."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
