@@ -147,6 +147,7 @@ function toStoredEntry(input: MemoryEntryInput): MemoryEntry {
 }
 
 export function appendMemoryEntry(input: MemoryEntryInput, directory?: string): MemoryEntry | null {
+  // Shared-backed synthetic gate (see constants.isSyntheticMessage); text-only on payload string.
   if (isSyntheticMessage(input.text)) return null
   const entry = toStoredEntry(input)
   const dir = getMemoryDir(directory)

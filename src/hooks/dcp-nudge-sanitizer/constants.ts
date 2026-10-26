@@ -3,13 +3,18 @@
 export const NUDGE_MARKERS: RegExp[] = [
   /<instruction\s+name=iteration_nudge>/i,
   /compressed block context:/i,
-  /\(b\d+\)/,
+  // Bare (bN) alone over-matches citations/build numbers, so it is narrowed:
+  // only match when adjacent (within ~40 chars) to compress/iteration_nudge/sticky.
+  // Out-of-element prose otherwise passes through byte-identical (control element
+  // drop in sanitizeKnownTags covers DCP compressed-block prose).
+  /(?:compress|iteration_nudge|sticky)[\s\S]{0,40}\(b\d+\)|\(b\d+\)[\s\S]{0,40}(?:compress|iteration_nudge|sticky)/i,
 ]
 
-// Collapse duplicate internal whitespace and strip the surrounding whitespace of a
-// kept nudge part. Non-nudge parts are never rewritten.
+// Trim-only normalization: strip surrounding whitespace of a kept nudge part.
+// Never collapse interior whitespace — collapsing mangles fenced code blocks.
+// Non-nudge parts are never rewritten.
 export function normalizeNudgeText(text: string): string {
-  return text.replace(/\s+/g, " ").trim()
+  return text.trim()
 }
 
 // A kept nudge that orders `compress` unconditionally misfires in sessions where

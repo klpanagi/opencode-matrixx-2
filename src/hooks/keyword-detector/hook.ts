@@ -9,7 +9,7 @@ import { getUltraworkState } from "../../features/ultrawork-state"
 import { log } from "../../shared"
 import {
   isSystemDirective,
-  removeSystemReminders,
+  sanitizeKnownTags,
 } from "../../shared/system-directive"
 import { isPlannerAgent } from "./constants"
 import { detectKeywordsWithType, extractPromptText } from "./detector"
@@ -37,8 +37,8 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
 
       const currentAgent = getSessionAgent(input.sessionID) ?? input.agent
 
-      // Remove system-reminder content to prevent automated system messages from triggering mode keywords
-      const cleanText = removeSystemReminders(promptText)
+      // Strip known tags to prevent automated system messages from triggering mode keywords
+      const cleanText = sanitizeKnownTags(promptText, { presentation: "drop" })
       const modelID = input.model?.modelID
       let detectedKeywords = detectKeywordsWithType(cleanText, currentAgent, modelID)
 

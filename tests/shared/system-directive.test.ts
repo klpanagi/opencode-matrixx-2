@@ -4,6 +4,7 @@ import {
   hasSystemReminder,
   isSystemDirective,
   removeSystemReminders,
+  sanitizeKnownTags,
 } from "../../src/shared/system-directive"
 
 describe("system-directive utilities", () => {
@@ -187,5 +188,64 @@ Another system reminder with research keyword.
       expect(cleanText).not.toContain("search and investigate")
       expect(cleanText).not.toContain("research")
     })
+  })
+})
+
+
+describe("sanitizeKnownTags — closed-table passthrough", () => {
+  test("drops control iteration_nudge element including inner text", () => {
+    //#given
+    const text = "keep <instruction name=iteration_nudge>compress now</instruction> this"
+    //#when
+    const out = sanitizeKnownTags(text)
+    //#then
+    expect(out).not.toContain("compress now")
+    expect(out).not.toContain("iteration_nudge")
+    expect(out).toContain("keep")
+  })
+
+  test("unwraps answer + analysis keeping inner text", () => {
+    //#given //#when //#then
+    expect(sanitizeKnownTags("<answer>forty-two</answer>")).toBe("forty-two")
+    expect(sanitizeKnownTags("<analysis>deep thought</analysis>")).toBe("deep thought")
+  })
+
+  test("unknown foo passes through byte-identical", () => {
+    //#given
+    const foo = "<foo>bar</foo>"
+    //#when //#then
+    expect(sanitizeKnownTags(foo)).toBe(foo)
+  })
+
+  test("bare b1 prose passes through", () => {
+    //#given
+    const prose = "see build (b1) for details"
+    //#when //#then
+    expect(sanitizeKnownTags(prose)).toBe(prose)
+  })
+
+  test("unwrap-keep-inner preserves control prose for kept-nudge path", () => {
+    //#given
+    const text = "<instruction name=iteration_nudge>use the compress tool on it now</instruction>"
+    //#when
+    const out = sanitizeKnownTags(text, { control: "unwrap-keep-inner" })
+    //#then
+    expect(out).toBe("use the compress tool on it now")
+  })
+
+  test("unwrap-keep-inner strips lone control open tag keeping prose", () => {
+    //#given //#when //#then
+    expect(
+      sanitizeKnownTags("<instruction name=iteration_nudge>sticky prose", {
+        control: "unwrap-keep-inner",
+      }),
+    ).toBe("sticky prose")
+  })
+
+  test("leak scan: foo retained after sanitize", () => {
+    //#given //#when
+    const out = sanitizeKnownTags("note <foo>bar</foo> end")
+    expect(out).toContain("<foo>")
+    expect(out).toContain("bar")
   })
 })

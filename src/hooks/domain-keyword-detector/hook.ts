@@ -1,5 +1,5 @@
 import { log } from "../../shared"
-import { isSystemDirective, removeSystemReminders } from "../../shared/system-directive"
+import { isSystemDirective, sanitizeKnownTags } from "../../shared/system-directive"
 import { DOMAIN_HINT_MARKER } from "./constants"
 import { buildDomainHint, detectDomainSkills } from "./detector"
 
@@ -41,7 +41,7 @@ export function createDomainKeywordDetectorHook() {
       if (originalText.includes(DOMAIN_HINT_MARKER)) return
       if (isSystemDirective(originalText)) return
 
-      const cleanText = removeSystemReminders(originalText)
+      const cleanText = sanitizeKnownTags(originalText, { presentation: "drop" })
       const skills = detectDomainSkills(cleanText)
       if (skills.length === 0) return
 
