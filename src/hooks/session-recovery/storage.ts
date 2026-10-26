@@ -4,7 +4,7 @@ export {
   findFirstEmptyMessage,
 } from "./storage/empty-messages"
 export { findMessagesWithEmptyTextParts, findMessagesWithEmptyTextPartsFromSDK, replaceEmptyTextParts, replaceEmptyTextPartsAsync } from "./storage/empty-text"
-export { getMessageDir } from "./storage/message-dir"
+export { getMessageDir } from "../../shared/opencode-message-dir"
 export { readMessages, readMessagesFromSDK } from "./storage/messages-reader"
 export {
   findMessageByIndexNeedingThinking,

@@ -4,7 +4,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { isSqliteBackend, normalizeSDKResponse } from "../../../shared"
 import { isRecord } from "../../../shared/record-type-guard"
 import type { StoredMessageMeta } from "../types"
-import { getMessageDir } from "./message-dir"
+import { getMessageDir } from "../../../shared/opencode-message-dir"
 
 type OpencodeClient = PluginInput["client"]
 

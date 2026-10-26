@@ -23,7 +23,7 @@ import {
   DEFAULT_SKIP_AGENTS,
   HOOK_NAME,
 } from "./constants"
-import { getMessageDir } from "./message-directory"
+import { getMessageDir } from "../../shared/opencode-message-dir"
 import type { SessionStateStore } from "./session-state"
 import { filterFreshIncompleteTasks, formatTaskAge, getStaleAfterMs, getTaskAgeMs } from "./staleness"
 import { dropSubtasksWithResolvedParent, filterTasksBySession, getIncompleteTasks } from "./todo"

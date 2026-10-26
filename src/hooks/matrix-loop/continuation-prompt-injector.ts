@@ -2,7 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
-import { getMessageDir } from "./message-storage-directory"
+import { getMessageDir } from "../../shared/opencode-message-dir"
 import { withTimeout } from "./with-timeout"
 
 type MessageInfo = {
