@@ -1,7 +1,7 @@
 # Context Management in Matrixx
 
 > **Audience:** operators tuning context behavior and engineers working on the context stack.
-> **Version:** 2.6.10. Canonical page for all context topics; other docs summarize and link here.
+> **Version:** 2.0.0. Canonical page for all context topics; other docs summarize and link here.
 > **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys), `research/cost-performance.md` (background analysis).
 
 Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. For background and cost analysis see [cost-performance proposals](research/cost-performance.md) P6 (RTK), P7 (context-mode), and P16 (Headroom).
@@ -444,6 +444,14 @@ Package versions: `npm: headroom-ai@0.37.0`, `PyPI: headroom-ai[all]`. Docs at `
 | L2 context-mode | context-mode plugin | FTS5 sandbox `ctx_*` | 98% sandbox |
 | L3 DCP | `@tarquinen/opencode-dcp` | Pruning tiers `economy` to `ultimate` | Tiered pruning |
 | L4 Headroom | headroom proxy | `CacheAligner` to `ContentRouter` to `CCR` | 60 to 95% JSON |
+
+---
+
+### 2.5 Session memory (EXPERIMENTAL)
+
+> EXPERIMENTAL: opt-in session-memory backend (`memory.backend`, default `off`) with JSONL store under `.matrixx/memory/` and deterministic recall quotas. May change. Full reference: `configurations.md` (§ Session Memory Backend) and `session-memory-fts.md` (Phase 2 FTS design note, deferred).
+
+Native (`memory.backend: "native"`) stages tool outputs to a bounded in-memory buffer and flushes to JSONL on `session.idle` / `session.compacted`; recall is a verbatim substring scan (no SQLite/FTS in v1). The `lcm` / `supermemory` backends delegate to external plugins and force native OFF. See `configurations.md` for the selector, quotas (`perMessageBudget 110`, `maxChars 900`, hits `2-1-1`), and retention.
 
 ---
 

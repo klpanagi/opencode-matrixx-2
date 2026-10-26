@@ -9,10 +9,10 @@ Zod schema definitions for plugin configuration. Schema component files composin
 config/
 ├── schema/                    # schema component files
 │   ├── matrixx-config.ts         # Root schema composition (57 lines)
-│   ├── agent-names.ts         # BuiltinAgentNameSchema (14 agents), BuiltinSkillNameSchema (37 skills)
+│   ├── agent-names.ts         # BuiltinAgentNameSchema (17 agents), BuiltinSkillNameSchema (50 skills)
 │   ├── agent-overrides.ts     # AgentOverrideConfigSchema (model, variant, temp, thinking...)
 │   ├── categories.ts          # 8 categories: construct, source, deep-jack, matrix-bend, bullet-time, ...
-│   ├── hooks.ts               # HookNameSchema (63 enum + 5 retained literals = 68 accepted; 76 hook entries in 60 dirs + 16 loose .ts on disk)
+│   ├── hooks.ts               # HookNameSchema (65 enum + 7 retained literals = 72 accepted; 73 hook entries in 64 dirs + 9 loose .ts on disk)
 │   ├── commands.ts            # BuiltinCommandNameSchema
 │   ├── experimental.ts        # ExperimentalConfigSchema
 │   ├── background-task.ts     # BackgroundTaskConfigSchema
@@ -35,7 +35,7 @@ config/
 
 ## ROOT SCHEMA
 
-`MatrixxConfigSchema` composes: `$schema`, `global_model`/`default_tier`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (14), `categories` (8), `tdd_enforcer` (`{enabled:true}` fail-closed; opt out via `{enabled:false}`), `assembly`, `security`, `headroom`, `context_mode`, `rtk`, `evolution`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `browser_automation_engine`, `tmux`, `dcp`, `_migrations`
+`MatrixxConfigSchema` composes: `$schema`, `global_model`/`default_tier`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (17), `categories` (8), `tdd_enforcer` (`{enabled:true}` fail-closed; opt out via `{enabled:false}`), `assembly`, `security`, `headroom`, `context_mode`, `rtk`, `evolution`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `browser_automation_engine`, `tmux`, `dcp`, `_migrations`
 
 ## CONFIGURATION HIERARCHY
 

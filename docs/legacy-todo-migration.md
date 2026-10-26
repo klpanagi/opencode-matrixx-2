@@ -1,3 +1,5 @@
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+
 # Legacy Todo System: Removal & Migration
 
 > **Audience:** Anyone with a `matrixx.json` / `matrixx.jsonc` written before v2.7, or reading a log line that mentions a hook name they cannot find.

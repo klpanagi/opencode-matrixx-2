@@ -1,3 +1,5 @@
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+
 # Matrixx Crypto Market Extension Design
 
 > **What this is**: the domain analysis and architecture/capability design for extending

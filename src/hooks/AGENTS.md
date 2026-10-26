@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-76 hook entries (60 dirs + 16 loose `.ts` files) intercepting/modifying agent behavior across 7 event types. Three-tier registration: Core (session ~21 + tool-guard ~24 + transform 8) → Continuation (11) → Skill (2). `HookNameSchema` holds 63 enum members plus 5 retained literals (1 duplicate alias + 4 legacy todo no-ops) = 68 accepted values.
+73 hook entries (64 dirs + 9 loose `.ts` files) intercepting/modifying agent behavior across 7 event types. Three-tier registration: Core (session ~21 + tool-guard ~24 + transform 8) → Continuation (11) → Skill (2). `HookNameSchema` holds 65 enum members plus 7 retained literals = 72 accepted values.
 
 ## STRUCTURE
 ```

@@ -1,5 +1,7 @@
 # Task Notepad Writer
 
+> **Version:** 2.0.0, verified against `src/hooks/task-notepad-writer/` (`hook.ts`, `notepad-path.ts`, `constants.ts`).
+
 `task-notepad-writer` is a `tool.execute.after` hook that gives every file-backed task a plain-markdown working
 notepad on disk. When an agent creates a task, the hook writes a scaffolded note next to the plan it belongs to.
 When that task later completes, the hook appends a completion stamp. Nothing else reads or renders these files;

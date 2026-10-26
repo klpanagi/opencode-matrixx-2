@@ -1,6 +1,6 @@
 # Matrixx Overview
 
-> **Audience:** new users. **Version:** 2.6.10.
+> **Audience:** new users. **Version:** 2.0.0.
 > **See also:** `installation.md` (setup), `../features.md` (capability index), `../orchestration.md` (how work runs).
 
 Learn about Matrixx, a plugin that transforms OpenCode into the best agent harness.

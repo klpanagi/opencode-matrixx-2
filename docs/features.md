@@ -1,6 +1,6 @@
 # Matrixx Features
 
-> Version 2.6.10. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
+> Version 2.0.0. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
 
 Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, category-routed delegation, lazily-loaded skills, slash-command workflows, lifecycle hooks, file-backed tasks, and a BDD pipeline — all configured through `matrixx.json`/`matrixx.jsonc`.
 
@@ -8,7 +8,7 @@ Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, 
 
 | Subsystem | Canonical doc |
 |-----------|---------------|
-| Agents (14-agent roster, models, fallbacks, permissions, background/tmux) | [Agents](agents.md) |
+| Agents (17-agent roster, models, fallbacks, permissions, background/tmux) | [Agents](agents.md) |
 | Categories, skills, combos, task-prompt guide | [Category & Skill System Guide](category-skill-guide.md) |
 | Commands (full argument reference) | [Command Reference](command-reference.md) |
 | Tasks, mission state, continuation, `/task-list`, `/cleanup-tasks` | [Task System](task-system.md) |
@@ -22,7 +22,7 @@ Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, 
 
 ## Agents (summary)
 
-Matrixx provides 14 specialized agents (`BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`; factories in `src/agents/`): Morpheus (default orchestrator), Keymaker, Merovingian, Operator, Trinity, Construct, Sati (frontend), Architect, Cipher (DSL), Sentinel (security, read-only), Oracle, Seraph, Smith, plus `bdd-contract`. Full roster with models, fallbacks, tool restrictions, and background/tmux usage: [Agents](agents.md). Planning/execution model: [Orchestration](orchestration.md).
+Matrixx provides 17 specialized agents. Full roster with models, fallbacks, tool restrictions, and background/tmux usage: [Agents](agents.md). Planning/execution model: [Orchestration](orchestration.md).
 
 ### Background Agents (summary)
 
@@ -34,7 +34,7 @@ Skills inject specialized knowledge and MCP tools into agents. Full catalog: [Ca
 
 ## Skills Unique to This Page
 
-Skill counts, honest version (verified against `src/config/schema/agent-names.ts`, `src/skills/skills.ts`, and `src/skills/skills/` on disk): **37** names in `BuiltinSkillNameSchema`; **46** loader keys in `skillLoaders`; **45** skill modules on disk (`agent-browser` is provider-resolved and ships no module file). Full catalog: [Category & Skill System Guide](category-skill-guide.md).
+50 built-in skills. Full catalog: [Category & Skill System Guide](category-skill-guide.md).
 
 All built-in skills follow **SDO (Skill Discovery Optimization)** — descriptions use trigger-first patterns with cross-references for high-precision agent delegation.
 
@@ -156,13 +156,13 @@ Use agent-browser to navigate to example.com and extract the main heading
 
 ## Commands (summary)
 
-Slash-triggered workflows. Counts, honest version: **18** names in `BuiltinCommandNameSchema` (`src/config/schema/commands.ts`); **23** entries in `BUILTIN_COMMAND_DEFINITIONS` (`src/features/builtin-commands/commands.ts` — adds `pickup`, `remove-deadcode`, `evolution`, `cleanup-tasks`, `task-list` beyond the schema); **21** template files in `src/features/builtin-commands/templates/`. Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
+Slash-triggered workflows (23 built-in commands). Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
 
 Single-skill deep dives (`frontend-ui-ux`, `git-master`, `ulw-research`, `remove-ai-slops`) live in [Category & Skill System Guide](category-skill-guide.md). Runtime toggles (`/ultrawork`, `/assembly`, `/end-ultrawork`, `/preset`, `/stop-continuation`, `/remove-deadcode`, `/task-list`, `/cleanup-tasks`, `/evolution`, `/handoff`, `/pickup`, `/research`, loops, BDD commands) are documented canonically in [Command Reference](command-reference.md) and [Task System](task-system.md).
 
 ## Hooks, Tools, MCPs, Context (summaries)
 
-- **Hooks** (lifecycle automation, quality gates, recovery, task enforcers): [Hooks](hooks.md).
+- **Hooks** (65-enum lifecycle automation, quality gates, recovery, task enforcers): [Hooks](hooks.md).
 - **Tools** (LSP, AST-grep, delegation, task tools, assembly, session, handoff): the task tools are canonically documented in [Task System](task-system.md); delegation categories in [Category & Skill System Guide](category-skill-guide.md).
 - **MCPs** (`context7`, `github_search`, `document_reader`; skill-embedded MCPs; web search is the native `websearch` tool): [Configuration](configurations.md).
 - **Context injection** (AGENTS.md, conditional rules) and DCP tiers: [Context Management](context-management.md).

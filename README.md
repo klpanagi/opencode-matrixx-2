@@ -9,7 +9,9 @@
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
-**14 specialized agents. 64 lifecycle hooks. 22 tools. 37 skills. One plugin.**
+**17 specialized agents. 65 lifecycle hooks. 30 tools. 50 skills. One plugin.**
+
+> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2 (OpenCode-v2-only line). Version restart: `2.6.18` was the last legacy v1 release; v2 restarts at `NEW_VERSION` (`2.0.0` placeholder until the user confirms the number).
 
 [Quick Start](#quick-start) · [Why Matrixx?](#why-matrixx) · [How It Works](#how-it-works) · [Features](#features) · [Comparison](#how-matrixx-compares) · [Docs](docs/README.md)
 
@@ -76,19 +78,19 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 
 | Area | What you get | Details |
 |------|--------------|---------|
-| **Agent Orchestration** | 14 agents, category routing (`source`, `deep-jack`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
+| **Agent Orchestration** | 17 agents, category routing (`source`, `deep-jack`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
-| **Lifecycle Hooks (64)** | Context injection, think mode, task/todo continuation, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
-| **Skills (37)** | DSL engineering (11), security (9), frontend (7), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
+| **Lifecycle Hooks (65-enum)** | Context injection, think mode, task/todo continuation, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
+| **Skills (50)** | DSL engineering (11), security (9), frontend (7), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
 | **Software Dev Pipeline** | 6-phase PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP with 5 team roles, adaptive to task size | [Quality](docs/quality.md) |
 | **Context Management (L0–L4)** | Native recovery + RTK (60–90% bash savings) + context-mode sandbox + DCP pruning + Headroom proxy (60–95% JSON) | [Context](docs/context-management.md) |
 | **Security** | Secret-leak guard (gitleaks), env-file write guard, read-only Sentinel auditor with CWE-rated findings | [Hooks](docs/hooks.md) · [Agents](docs/agents.md) |
 | **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, Exa web search, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
 | **Configurability** | Every agent, model, temperature, and hook tunable via `matrixx.jsonc` with JSON schema + Config Studio UI | [Configuration](docs/configurations.md) |
 
-> Counts verified against source (`BuiltinAgentNameSchema`, `BuiltinSkillNameSchema`, hook registry). The roster lives in docs — this page links, never duplicates.
+Counts are schema-official: 17 agents (`BuiltinAgentNameSchema`), 50 skills (skills schema), 65-enum hooks (`src/config/schema/hooks.ts`, 72 accepted incl. 7 literals), 23 commands (23 names / 21 templates), 2 MCPs (`context7`, `document_reader`), 30 tool dirs, 23 features. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
 
-### Session memory (new)
+### Session memory (new, EXPERIMENTAL)
 
 Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](https://github.com/Plutarch01/opencode-lcm) interop semantics, pinned `84103cca`). It archives conversation turns as JSONL under `.matrixx/memory/`, recalls them with scope-aware budgets, and collaborates with compaction — no SQLite, no new handler, off by default.
 
@@ -154,7 +156,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 **Trade-offs to know**
 
 - **OpenCode-only.** Matrixx is a plugin, not a standalone agent or IDE. You adopt OpenCode to use it.
-- **Learning curve.** 14 agents, 8 categories, 37 skills, 24 commands — `ultrawork` hides this well, but mastery takes time.
+- **Learning curve.** 17 agents, 8 categories, 50 skills, 23 commands — `ultrawork` hides this well, but mastery takes time.
 - **Multiple providers help.** It runs on one provider, but the multi-model value shows with two or more connected (or the OpenCode free tier).
 - **Orchestration overhead.** Delegation costs extra tokens on trivial one-line tasks — use direct mode for those.
 - **Pinned toolchain.** Bun 1.4.0 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.
@@ -166,7 +168,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 
 | Tool | Approach | Where Matrixx differs |
 |------|----------|-----------------------|
-| **Vanilla OpenCode** | Single powerful agent + tools | Matrixx adds the team layer: specialists, persistent tasks, 64 hooks, skills, and context compression. Same base, orchestrated. |
+| **Vanilla OpenCode** | Single powerful agent + tools | Matrixx adds the team layer: specialists, persistent tasks, 65-enum hooks, skills, and context compression. Same base, orchestrated. |
 | **Claude Code** | Polished single-vendor agent (Anthropic models) | Matrixx is provider-agnostic and multi-model by design — mix Claude, OpenAI, Gemini, local models per role instead of one vendor. More setup, more control. |
 | **Cursor / Windsurf** | IDE-integrated agent with proprietary models | Matrixx lives in the terminal (OpenCode TUI), is fully open and configurable, and exposes its orchestration as code. No IDE lock-in, no black-box model routing. |
 | **Cline / Roo Code** | IDE-based autonomous agents, mode switching | Similar autonomy ethos; Matrixx goes further on parallelism (background swarms), persistent cross-session tasks, and deterministic refactoring tools (LSP/AST-Grep). |

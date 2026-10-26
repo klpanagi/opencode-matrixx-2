@@ -1,7 +1,8 @@
 # Matrixx Documentation
 
-> Version 2.6.10. All pages are English-only. Start with the row that matches
-> your goal; each page declares its audience in its header.
+> Version 2.0.0 — OpenCode V2 plugin line only. All pages are English-only.
+> Start with the row that matches your goal; each page declares its audience
+> in its header. After upgrading, restart OpenCode so the new plugin version loads.
 
 ## Start here
 
@@ -16,9 +17,9 @@
 | Page | Audience | What you get |
 |---|---|---|
 | `orchestration.md` | Users running multi-step work | The delegation workflow: planner → plan → mission → workers |
-| `agents.md` | Users choosing agents | The 14 agents: what each does and when to use it |
-| `category-skill-guide.md` | Users composing work | The 8 task categories × 37 skills, and how they combine |
-| `command-reference.md` | Users | All 24 slash commands: usage, options, examples |
+| `agents.md` | Users choosing agents | The [17 agents](agents.md): what each does and when to use it |
+| `category-skill-guide.md` | Users composing work | The task categories × [50 skills](category-skill-guide.md), and how they combine |
+| `command-reference.md` | Users | All 23 slash commands: usage, options, examples |
 | `quality.md` | Users implementing features or enforcing tests | BDD pipeline (Part A) + TDD discipline (Part B): when to use which |
 | `evolution.md` | Users opting into learning | What self-evolution records, approves, and compresses (default off) |
 | `knowledge-hub.md` | Users with an external corpus | Hub declaration, router-only discipline, read-only guard + confirm flow |

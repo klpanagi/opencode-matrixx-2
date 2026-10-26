@@ -1,3 +1,5 @@
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+
 # Matrixx Config Studio — Setup & Build Guide
 
 > Canonical documentation lives with the code: `apps/matrixx-config/README.md`.

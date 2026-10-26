@@ -1,6 +1,6 @@
 # Matrixx Configuration
 
-> Version 2.6.10. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+> Version 2.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
 
 > **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
 
@@ -1699,9 +1699,25 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `OPENCODE_CONFIG_DIR` | Override the OpenCode configuration directory. Useful for profile isolation with tools like [OCX](https://github.com/kdcokenny/ocx) ghost mode. |
 
-## Session Memory Backend
+## Session Memory Backend (EXPERIMENTAL)
+
+> EXPERIMENTAL: backend selector + native interop; may change. Schema: `src/config/schema/memory.ts:67-145` (top-level key: `src/config/schema/matrixx-config.ts`).
 
 Selector: `memory.backend` (`off` | `native` | `lcm` | `supermemory`, default `off`). Native options live under `memory.native`. Flat `memory.enabled: true` is a deprecated alias for native (warns once, still resolves to native).
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `memory.backend` | `off` | Backend selector: `off` \| `native` \| `lcm` \| `supermemory`. Explicit non-`off` wins even if `native.enabled` disagrees. |
+| `memory.native.enabled` | `false` | Enable native session-memory interop (opt-in). |
+| `memory.native.ignoreToolPrefixes` | `["ctx_"]` | Tool-name prefixes ignored when guessing message text. |
+| `memory.native.scopeDefaults` | `{ grep: "session", describe: "session" }` | Default recall scopes. |
+| `memory.native.scopeProfiles` | `[]` | Per-worktree scope overrides (`{ worktree, grep?, describe? }`). |
+| `memory.native.retention` | `{ deletedSessionDays: 30, orphanBlobDays: 14 }` | Retention with tombstones; `staleSessionDays` undefined = disabled (NOT 90). |
+| `memory.native.perMessageBudget` | `110` | Deterministic summary per-message char budget. |
+| `memory.native.automaticRetrieval` | `maxChars: 900, minTokens: 2, maxMessageHits: 2, maxSummaryHits: 1, maxArtifactHits: 1` | Recall quotas; budgets `{ session: 16, root: 12, worktree: 8, all: 6 }`. |
+| `memory.native.compactContextLimit` | `1200` | Compaction context limit. |
+| `memory.native.systemHint` | `true` | Inject system hint. |
+| `memory.enabled` | — | Deprecated flat alias: `true` resolves to native with one-time warning; `false` resolves to `off`. Use `backend: "native"` + `native.enabled: true`. |
 
 | Backend | Behavior |
 |---------|----------|
