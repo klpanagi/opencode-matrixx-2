@@ -4,14 +4,9 @@ import * as path from "node:path"
 import type { EvolutionWriterConfig } from "../../config/schema/evolution"
 import { log } from "../../shared/logger"
 import { normalizeKnowledgeKind } from "./schema"
-import {
-  normalizeProjectId,
-  PENDING_DIR,
-  projectSlugSuffix,
-  SKILLS_DIR,
-  supersedeSkill,
-  traceStore,
-} from "./store"
+import { normalizeProjectId, projectSlugSuffix } from "./store/project-identity";
+import { PENDING_DIR, SKILLS_DIR, traceStore } from "./store/trace-store";
+import { supersedeSkill } from "./store/lifecycle";
 import type { DistilledKnowledge, SkillMeta } from "./types"
 import { emitArtifact, slugify } from "./writer-emit"
 import { hasProvenance } from "./writer-frontmatter"

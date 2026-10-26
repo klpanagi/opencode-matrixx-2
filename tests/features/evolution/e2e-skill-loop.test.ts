@@ -12,7 +12,9 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import type { ToolContext } from "@opencode-ai/plugin/tool"
 import type { LlmCall } from "../../../src/features/evolution/compressor/interface"
 import { runEvolutionPipeline } from "../../../src/features/evolution/pipeline"
-import { EVOLUTION_DIR, loadLedger, resolveProjectIdentity, traceStore } from "../../../src/features/evolution/store"
+import { loadLedger } from "../../../src/features/evolution/store/budget-ledger";
+import { resolveProjectIdentity } from "../../../src/features/evolution/store/project-identity";
+import { EVOLUTION_DIR, traceStore } from "../../../src/features/evolution/store/trace-store"
 import type { TraceRecord } from "../../../src/features/evolution/types"
 import { createEvolutionTool } from "../../../src/tools/evolution"
 import {

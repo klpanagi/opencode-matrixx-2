@@ -1,6 +1,6 @@
 import type { Message, Part } from "@opencode-ai/sdk"
 import type { EvolutionConfig } from "../../config/schema/evolution"
-import { traceStore } from "../../features/evolution/store"
+import { traceStore } from "../../features/evolution/store/trace-store"
 import { EvolutionWriter } from "../../features/evolution/writer"
 import { log } from "../../shared/logger"
 import { createSystemDirective } from "../../shared/system-directive"

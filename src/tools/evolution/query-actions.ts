@@ -1,10 +1,10 @@
 // Per-file budget: ≤200 LOC (T9 retrieval handlers split from tools.ts).
 import {
   readRetrievalRecords,
-  resolveProjectIdentity,
   searchRecords,
   truncateContext,
-} from "../../features/evolution/store";
+} from "../../features/evolution/store/query";
+import { resolveProjectIdentity } from "../../features/evolution/store/project-identity";
 import { GET_CONTEXT_CHAR_CAP, NO_RETRIEVABLE_MESSAGE, SEARCH_RESULT_LIMIT } from "./constants";
 import type { EvolutionToolArgs } from "./types";
 

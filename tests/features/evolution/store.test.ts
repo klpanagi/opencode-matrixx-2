@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 import * as fs from "node:fs/promises"
 import * as os from "node:os"
 import * as path from "node:path"
-import { TraceStore } from "../../../src/features/evolution/store"
+import { TraceStore } from "../../../src/features/evolution/store/trace-store"
 import type { TraceRecord } from "../../../src/features/evolution/types"
 import { classifySuccess, truncate } from "../../../src/hooks/evolution-watcher/utils"
 

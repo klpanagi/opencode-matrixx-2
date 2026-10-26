@@ -1,5 +1,5 @@
 import type { EvolutionConfig } from "../../config/schema/evolution"
-import { traceStore } from "../../features/evolution/store"
+import { traceStore } from "../../features/evolution/store/trace-store"
 import type { TraceRecord } from "../../features/evolution/types"
 import type { PluginContext } from "../../plugin/types"
 import { classifySuccess, truncate } from "./utils"

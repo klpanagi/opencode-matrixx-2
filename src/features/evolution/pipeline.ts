@@ -5,14 +5,13 @@ import { createCompressor } from "./compressor"
 import type { LlmCall, LlmUsage } from "./compressor/interface"
 import {
   checkPendingCapacity,
-  EVOLUTION_DIR,
   isOverDailyCap,
   loadLedger,
   MaxPendingError,
   recordUsageToDisk,
-  resolveProjectIdentity,
-  traceStore,
-} from "./store"
+} from "./store/budget-ledger";
+import { resolveProjectIdentity } from "./store/project-identity";
+import { EVOLUTION_DIR, traceStore } from "./store/trace-store"
 import type { CompressionInput } from "./types"
 import { EvolutionWriter } from "./writer"
 
