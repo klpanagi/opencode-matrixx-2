@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { ContextCollector } from "../../../src/features/context-injector"
-import * as sessionState from "../../../src/features/session-state"
-import { _resetForTesting, clearSessionAgent, setMainSession, updateSessionAgent } from "../../../src/features/session-state"
+import * as sessionState from "../../../src/features/session-state/state"
+import { _resetForTesting, clearSessionAgent, setMainSession, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
-import { createKeywordDetectorHook } from "../../../src/hooks/keyword-detector/index"
+import { createKeywordDetectorHook } from "../../../src/hooks/keyword-detector/hook"
 
 describe("keyword-detector message transform", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>

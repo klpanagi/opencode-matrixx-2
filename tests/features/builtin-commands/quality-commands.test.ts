@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { BuiltinCommandNameSchema } from "../../../src/config/schema/commands"
-import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands"
+import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands/commands.transform"
 import { QUALITY_ASSURANCE_TEMPLATE } from "../../../src/features/builtin-commands/templates/quality-assurance"
 import { QUALITY_AUDIT_TEMPLATE } from "../../../src/features/builtin-commands/templates/quality-audit"
 

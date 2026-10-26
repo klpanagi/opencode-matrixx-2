@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
-import * as builtinCommandsModule from "../../src/features/builtin-commands"
+import * as builtinCommandsModule from "../../src/features/builtin-commands/commands.transform"
 import * as ccCommandLoaderModule from "../../src/features/command-loader"
 
 let buildBuiltinCommandEntriesSpy: ReturnType<typeof spyOn>

@@ -8,12 +8,13 @@ import {
   findNearestMessageWithFieldsFromSDK,
   type ToolPermission,
 } from "../../features/hook-message-injector"
-import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state"
+import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAwaitingUser } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
+import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
 import { resolveTasksConfig } from "../../shared/task-system-gating"
 import { TaskObjectSchema } from "../../tools/task/types"
@@ -23,7 +24,6 @@ import {
   DEFAULT_SKIP_AGENTS,
   HOOK_NAME,
 } from "./constants"
-import { getMessageDir } from "./message-directory"
 import type { SessionStateStore } from "./session-state"
 import { filterFreshIncompleteTasks, formatTaskAge, getStaleAfterMs, getTaskAgeMs } from "./staleness"
 import { dropSubtasksWithResolvedParent, filterTasksBySession, getIncompleteTasks } from "./todo"

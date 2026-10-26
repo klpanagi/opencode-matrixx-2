@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { registerSubagentSession, unregisterSubagentSession } from "../../../src/features/session-state"
+import { registerSubagentSession, unregisterSubagentSession } from "../../../src/features/session-state/state"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { handleNonIdleEvent } from "../../../src/hooks/task-continuation-enforcer/non-idle-events"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"

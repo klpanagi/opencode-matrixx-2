@@ -1,5 +1,5 @@
 import { log } from "../../shared"
-import { unregisterSubagentSession } from "../session-state"
+import { unregisterSubagentSession } from "../session-state/state"
 import type { QueueItem } from "./constants"
 import type { BackgroundTask, LaunchInput } from "./types"
 export class TaskStateManager {

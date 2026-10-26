@@ -1,4 +1,4 @@
-import { getSessionAgent } from "../../features/session-state"
+import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
 import { normalizeAgentName, resolveAgentForSession, resolveRegisteredAgentName } from "./agent-resolver"
 import { HOOK_NAME } from "./constants"

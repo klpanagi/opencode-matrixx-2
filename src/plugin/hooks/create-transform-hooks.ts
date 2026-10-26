@@ -3,8 +3,8 @@ import {
   contextCollector,
   createContextInjectorMessagesTransformHook,
 } from "../../features/context-injector"
-import { createContextModeSystemTransformHook } from "../../features/context-mode-routing"
-import { createRtkSystemTransformHook } from "../../features/rtk-routing"
+import { createContextModeSystemTransformHook } from "../../features/context-mode-routing/system-transform"
+import { createRtkSystemTransformHook } from "../../features/rtk-routing/system-transform"
 
 import {
   createDesignIntentPreserverHook,
@@ -14,9 +14,9 @@ import {
   createThinkingBlockValidatorHook,
   createToolPairValidatorHook,
 } from "../../hooks"
-import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer"
+import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer/hook"
 import { createDomainKeywordDetectorHook } from "../../hooks/domain-keyword-detector"
-import { createInputSecretGuardHook } from "../../hooks/input-secret-guard"
+import { createInputSecretGuardHook } from "../../hooks/input-secret-guard/hook"
 import { safeCreateHook } from "../../shared/safe-create-hook"
 import type { PluginContext } from "../types"
 

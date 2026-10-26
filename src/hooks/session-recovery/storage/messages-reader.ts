@@ -2,9 +2,9 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { isSqliteBackend, normalizeSDKResponse } from "../../../shared"
+import { getMessageDir } from "../../../shared/opencode-message-dir"
 import { isRecord } from "../../../shared/record-type-guard"
 import type { StoredMessageMeta } from "../types"
-import { getMessageDir } from "./message-dir"
 
 type OpencodeClient = PluginInput["client"]
 

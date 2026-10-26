@@ -1,6 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../features/hook-message-injector"
-import { getSessionAgent } from "../features/session-state"
+import { getSessionAgent } from "../features/session-state/state"
 import { getAgentConfigKey } from "./agent-display-names"
 import { log } from "./logger"
 import { getMessageDir } from "./opencode-message-dir"

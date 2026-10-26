@@ -6,7 +6,8 @@ import * as os from "node:os"
 import * as path from "node:path"
 import type { EvolutionConfig } from "../../../src/config/schema/evolution"
 import { runEvolutionPipeline } from "../../../src/features/evolution/pipeline"
-import { budgetPath, EVOLUTION_DIR, loadLedger, utcDayKey } from "../../../src/features/evolution/store"
+import { budgetPath, loadLedger, utcDayKey } from "../../../src/features/evolution/store/budget-ledger";
+import { EVOLUTION_DIR } from "../../../src/features/evolution/store/trace-store"
 import type { CompressionInput, TraceRecord } from "../../../src/features/evolution/types"
 
 function makeTrace(id: string): TraceRecord {

@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { AvailableSkill } from "../../../src/agents/dynamic-agent-prompt-builder"
-import { _resetForTesting, clearSessionAgent, updateSessionAgent } from "../../../src/features/session-state"
+import { _resetForTesting, clearSessionAgent, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
-import { createCategorySkillReminderHook } from "../../../src/hooks/category-skill-reminder/index"
+import { createCategorySkillReminderHook } from "../../../src/hooks/category-skill-reminder/hook"
 
 describe("category-skill-reminder hook", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>

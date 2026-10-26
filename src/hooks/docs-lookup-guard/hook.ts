@@ -1,7 +1,7 @@
 // docs-lookup-guard — warn-first docs-lookup nudge (only-operator-direct).
 import type { Hooks, PluginInput } from "@opencode-ai/plugin"
 
-import { getSessionAgent } from "../../features/session-state"
+import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared"
 import { FALLBACK_MESSAGE, GUARDED_TOOLS, HOOK_NAME, NUDGE_MESSAGE, OPERATOR_AGENT } from "./constants"
 

@@ -1,4 +1,4 @@
-import { registerSubagentSession, unregisterSubagentSession } from "../../features/session-state"
+import { registerSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
 import { storeToolMetadata } from "../../features/tool-metadata-store"

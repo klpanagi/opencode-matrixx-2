@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import { existsSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import { subagentSessions } from "../../../src/features/session-state"
+import { subagentSessions } from "../../../src/features/session-state/state"
 import { INTERACTIVE_BASH_SESSION_STORAGE } from "../../../src/hooks/interactive-bash-session/constants"
 import { createInteractiveBashSessionHook } from "../../../src/hooks/interactive-bash-session/hook"
 

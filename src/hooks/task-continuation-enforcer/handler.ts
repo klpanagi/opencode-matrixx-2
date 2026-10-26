@@ -1,7 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import { subagentSessions } from "../../features/session-state"
+import { subagentSessions } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
 import { DEFAULT_SKIP_AGENTS, HOOK_NAME } from "./constants"
 import { handleSessionIdle } from "./idle-event"

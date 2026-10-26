@@ -5,7 +5,8 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { ToolContext } from "@opencode-ai/plugin/tool";
-import { CONTEXT_TRUNCATION_MARKER, resolveProjectIdentity } from "../../../src/features/evolution/store";
+import { CONTEXT_TRUNCATION_MARKER } from "../../../src/features/evolution/store/query";
+import { resolveProjectIdentity } from "../../../src/features/evolution/store/project-identity";
 import { EVOLUTION_QUERY_ACTIONS, GET_CONTEXT_CHAR_CAP } from "../../../src/tools/evolution/constants";
 import { createEvolutionTool } from "../../../src/tools/evolution/tools";
 

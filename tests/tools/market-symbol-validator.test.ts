@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { createMarketSymbolValidatorTool } from "../../src/tools/market-symbol-validator"
+import { createMarketSymbolValidatorTool } from "../../src/tools/market-symbol-validator/tools"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "market-symbol-validator")
 

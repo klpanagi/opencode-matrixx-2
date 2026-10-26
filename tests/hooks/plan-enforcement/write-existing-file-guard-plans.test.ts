@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { createWriteExistingFileGuardHook } from "../../../src/hooks/write-existing-file-guard"
+import { createWriteExistingFileGuardHook } from "../../../src/hooks/write-existing-file-guard/hook"
 
 /**
  * Regression suite for the write-existing-file-guard plans carve-out removal

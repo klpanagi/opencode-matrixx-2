@@ -1,1 +1,0 @@
-export { createRtkBashRewriterHook } from "./hook"

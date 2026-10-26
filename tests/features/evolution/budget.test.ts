@@ -8,14 +8,13 @@ import {
   budgetPath,
   checkPendingCapacity,
   emptyLedger,
-  EVOLUTION_DIR,
   isOverDailyCap,
   loadLedger,
   MaxPendingError,
   recordUsageToDisk,
-  TraceStore,
   utcDayKey,
-} from "../../../src/features/evolution/store"
+} from "../../../src/features/evolution/store/budget-ledger";
+import { EVOLUTION_DIR, TraceStore } from "../../../src/features/evolution/store/trace-store"
 
 function evolutionDirOf(projectDir: string): string {
   return path.resolve(projectDir, EVOLUTION_DIR)

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createMatrixLoopHook } from "../../../src/hooks/matrix-loop/index"
+import { createMatrixLoopHook } from "../../../src/hooks/matrix-loop/matrix-loop-hook"
 import { clearState, readState, writeState } from "../../../src/hooks/matrix-loop/storage"
 import type { MatrixLoopState } from "../../../src/hooks/matrix-loop/types"
 

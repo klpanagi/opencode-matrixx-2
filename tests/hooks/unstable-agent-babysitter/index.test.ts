@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import type { BackgroundTask } from "../../../src/features/background-agent"
-import { _resetForTesting, setMainSession } from "../../../src/features/session-state"
+import { _resetForTesting, setMainSession } from "../../../src/features/session-state/state"
 import { createUnstableAgentBabysitterHook } from "../../../src/hooks/unstable-agent-babysitter/index"
 
 const projectDir = process.cwd()

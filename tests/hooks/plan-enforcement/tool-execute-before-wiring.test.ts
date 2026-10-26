@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard"
+import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard/hook"
 import { PLAN_WRITE_WARN } from "../../../src/hooks/task-edit-guard/constants"
 import { createToolExecuteBeforeHandler } from "../../../src/plugin/tool-execute-before"
 

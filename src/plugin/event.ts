@@ -6,7 +6,7 @@ import {
   isMainSessionCandidate,
   setMainSession,
   updateSessionAgent,
-} from "../features/session-state"
+} from "../features/session-state/state"
 import { resetMessageCursor } from "../shared"
 import { log } from "../shared/logger"
 import { lspManager } from "../tools"

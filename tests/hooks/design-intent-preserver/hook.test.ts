@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { createDesignIntentPreserverHook } from "../../../src/hooks/design-intent-preserver/index"
+import { createDesignIntentPreserverHook } from "../../../src/hooks/design-intent-preserver/hook"
 
 describe("design-intent-preserver", () => {
   let tempDir: string

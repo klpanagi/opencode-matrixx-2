@@ -19,7 +19,7 @@ afterAll(() => {
 })
 
 import { TaskHistory } from "../../../src/features/background-agent/task-history"
-import { createCompactionContextInjector } from "../../../src/hooks/compaction-context-injector/index"
+import { createCompactionContextInjector } from "../../../src/hooks/compaction-context-injector/hook"
 
 describe("createCompactionContextInjector", () => {
   describe("Agent Verification State preservation", () => {

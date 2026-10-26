@@ -2,7 +2,7 @@ import type { MatrixxConfig } from "../config"
 import {
   setSessionAgent,
   setSessionModel,
-} from "../features/session-state"
+} from "../features/session-state/state"
 import { hasConnectedProvidersCache } from "../shared"
 import {
   applyAgentVariant,

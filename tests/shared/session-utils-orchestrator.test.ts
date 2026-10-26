@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test"
 import type { OpencodeClient } from "../../src/features/hook-message-injector/injector"
 import { invalidateSdkMessageCache } from "../../src/features/hook-message-injector/sdk-message-cache"
-import { _resetForTesting, setSessionAgent } from "../../src/features/session-state"
+import { _resetForTesting, setSessionAgent } from "../../src/features/session-state/state"
 import { isCallerOrchestrator } from "../../src/shared/session-utils"
 
 function makeClient(agent: string) {

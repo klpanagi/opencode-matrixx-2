@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { basename, join } from "node:path"
-import { buildBuiltinCommandEntries } from "../../features/builtin-commands"
+import { buildBuiltinCommandEntries } from "../../features/builtin-commands/commands.transform"
 import { getOpenCodeConfigDir, parseFrontmatter } from "../../shared"
 import { isMarkdownFile } from "../../shared/file-utils"
 import { sanitizeModelField } from "../../shared/model-sanitizer"

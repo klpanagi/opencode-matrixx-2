@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { createEditErrorRecoveryHook, EDIT_ERROR_PATTERNS, EDIT_ERROR_REMINDER } from "../../../src/hooks/edit-error-recovery/index"
+import { createEditErrorRecoveryHook, EDIT_ERROR_PATTERNS, EDIT_ERROR_REMINDER } from "../../../src/hooks/edit-error-recovery/hook"
 
 describe("createEditErrorRecoveryHook", () => {
   let hook: ReturnType<typeof createEditErrorRecoveryHook>

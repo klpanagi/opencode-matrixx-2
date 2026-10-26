@@ -10,7 +10,7 @@ import {
   readMissionState,
   writeMissionState,
 } from "../../../src/features/mission-state"
-import { _resetForTesting, subagentSessions } from "../../../src/features/session-state"
+import { _resetForTesting, subagentSessions } from "../../../src/features/session-state/state"
 
 const TEST_STORAGE_ROOT = join(tmpdir(), `architect-test-storage-${randomUUID()}`)
 const TEST_MESSAGE_STORAGE = join(TEST_STORAGE_ROOT, "messages")
@@ -57,7 +57,7 @@ mock.module("/home/klpanagi/matrixx/src/shared/session-utils.ts", () => ({
   },
 }))
 
-const { createArchitectHook } = await import("../../../src/hooks/architect/index")
+const { createArchitectHook } = await import("../../../src/hooks/architect/architect-hook")
 const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
 
 afterAll(() => {

@@ -89,7 +89,11 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
 describe("locked decision #2 — the architect event handler is byte-frozen", () => {
   test("src/hooks/architect/event-handler.ts is unchanged", () => {
     //#given the architect hook as it stood before Plan B
-    const FROZEN_MD5 = "da354664312b93b3e95f2a1cfd1cd26b"
+    // NOTE (debloat P1-1): hash advanced from da354664312b93b3e95f2a1cfd1cd26b.
+    // The only delta is a mechanical import-path rewire
+    // ("../../features/session-state" -> "../../features/session-state/state")
+    // after folding the trivial session-state barrel; execution path unchanged.
+    const FROZEN_MD5 = "36bcba5dc519a7bc5c99b3a84d81cb53"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/architect/event-handler.ts")

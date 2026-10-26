@@ -3,7 +3,7 @@
 import { describe, expect, test } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { BASH_BLOCK_MESSAGE, BLOCKED_PATTERNS, READ_BLOCK_MESSAGE } from "../../src/hooks/document-reader-guard/constants"
-import { createDocumentReaderGuardHook } from "../../src/hooks/document-reader-guard"
+import { createDocumentReaderGuardHook } from "../../src/hooks/document-reader-guard/hook"
 
 function makeHook() {
   return createDocumentReaderGuardHook({ directory: "/tmp" } as unknown as PluginInput)

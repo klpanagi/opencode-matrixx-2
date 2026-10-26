@@ -4,7 +4,7 @@ import type { PluginInput } from "@opencode-ai/plugin";
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
 import { type EvolutionWriterConfig, EvolutionWriterConfigSchema } from "../../config/schema/evolution";
 import { KNOWLEDGE_KINDS } from "../../features/evolution/schema";
-import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store";
+import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store/trace-store";
 import type { SkillMeta } from "../../features/evolution/types";
 import { EvolutionWriter } from "../../features/evolution/writer";
 import { AUDIT_TAIL_LIMIT, EVOLUTION_DESCRIPTION, NO_PENDING_MESSAGE, SLUG_PATTERN } from "./constants";

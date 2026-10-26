@@ -1,5 +1,5 @@
 import type { BackgroundManager } from "../../features/background-agent"
-import { getMainSessionID, getSessionAgent } from "../../features/session-state"
+import { getMainSessionID, getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
 import {
   buildReminder,

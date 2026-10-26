@@ -8,33 +8,33 @@ import {
   lspManager,
 } from "./lsp"
 
-export { createAstGrepTools } from "./ast-grep"
-export { createBddCreateContractTool } from "./bdd-create-contract"
-export { createBddParseGherkinTool } from "./bdd-parse-gherkin"
-export { createBddPipelineTool } from "./bdd-pipeline"
-export { createBddValidateContractTool } from "./bdd-validate-contract"
-export { createDashboardFluxValidatorTool } from "./dashboard-flux-validator"
+export { createAstGrepTools } from "./ast-grep/tools"
+export { createBddCreateContractTool } from "./bdd-create-contract/tools"
+export { createBddParseGherkinTool } from "./bdd-parse-gherkin/tools"
+export { createBddPipelineTool } from "./bdd-pipeline/tools"
+export { createBddValidateContractTool } from "./bdd-validate-contract/tools"
+export { createDashboardFluxValidatorTool } from "./dashboard-flux-validator/tools"
 export { createEvolutionTool } from "./evolution"
-export { createGithubSearchTools } from "./github-search"
-export { createGlobTools } from "./glob"
-export { createGrepTools } from "./grep"
-export { createHandoffTools } from "./handoff"
+export { createGithubSearchTools } from "./github-search/tools"
+export { createGlobTools } from "./glob/tools"
+export { createGrepTools } from "./grep/tools"
+export { createHandoffTools } from "./handoff/tools"
 export { interactive_bash, startBackgroundCheck as startTmuxCheck } from "./interactive-bash"
-export { createKnowledgeHubConfirmTool } from "./knowledge-hub-confirm"
-export { createMarketSymbolValidatorTool } from "./market-symbol-validator"
-export { createPdfExtractFiguresTool } from "./pdf-extract-figures"
+export { createKnowledgeHubConfirmTool } from "./knowledge-hub-confirm/tools"
+export { createMarketSymbolValidatorTool } from "./market-symbol-validator/tools"
+export { createPdfExtractFiguresTool } from "./pdf-extract-figures/tools"
 export { createPlanCreateTool } from "./plan/plan-create"
 export { createPlanDeleteTool } from "./plan/plan-delete"
 export { createPlanListTool } from "./plan/plan-list"
 export { createPlanReadTool } from "./plan/plan-read"
 export { createPlanUpdateTool } from "./plan/plan-update"
-export { createPresetTool } from "./preset"
+export { createPresetTool } from "./preset/tools"
 export { createSessionCleanupTool } from "./session-cleanup"
-export { createSessionManagerTools } from "./session-manager"
 export { sessionExists } from "./session-manager/storage"
+export { createSessionManagerTools } from "./session-manager/tools"
 export { createSilentFailureScannerTool } from "./silent-failure-scanner"
-export { createSkillTool } from "./skill"
-export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand"
+export { createSkillTool } from "./skill/tools"
+export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/tools"
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { lspManager }
 
@@ -51,10 +51,10 @@ import {
 
 type OpencodeClient = PluginInput["client"]
 
-export { createAssemblyTool } from "./assembly"
+export { createAssemblyTool } from "./assembly/tools"
 export { createDelegateTask } from "./delegate-task"
 export { createHashlineEditTool } from "./hashline-edit"
-export { createLookAt } from "./look-at"
+export { createLookAt } from "./look-at/tools"
 export {
   createTaskCleanupTool,
   createTaskCreateTool,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continuation-guard/index"
+import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continuation-guard/hook"
 
 describe("stop-continuation-guard", () => {
   function createMockPluginInput() {

@@ -1,13 +1,13 @@
 export { CODE_BLOCK_PATTERN, INLINE_CODE_PATTERN } from "../../shared/code-patterns"
-export { ANALYZE_MESSAGE, ANALYZE_PATTERN } from "./analyze"
-export { DOCS_MESSAGE, DOCS_PATTERN } from "./docs"
-export { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search"
+export { ANALYZE_MESSAGE, ANALYZE_PATTERN } from "./analyze/default"
+export { DOCS_MESSAGE, DOCS_PATTERN } from "./docs/default"
+export { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search/default"
 // Re-export from submodules
 export { getUltraworkMessage, isPlannerAgent } from "./ultrawork"
 
-import { ANALYZE_MESSAGE, ANALYZE_PATTERN } from "./analyze"
-import { DOCS_MESSAGE, DOCS_PATTERN } from "./docs"
-import { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search"
+import { ANALYZE_MESSAGE, ANALYZE_PATTERN } from "./analyze/default"
+import { DOCS_MESSAGE, DOCS_PATTERN } from "./docs/default"
+import { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search/default"
 import { getUltraworkMessage } from "./ultrawork"
 
 type KeywordDetector = {

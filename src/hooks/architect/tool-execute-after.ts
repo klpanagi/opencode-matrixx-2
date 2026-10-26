@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { appendSessionId, getPlanProgress, readMissionState } from "../../features/mission-state"
-import { collectGitDiffStats, formatFileChanges } from "../../shared/git-worktree"
+import { collectGitDiffStats } from "../../shared/git-worktree/collect-git-diff-stats"
+import { formatFileChanges } from "../../shared/git-worktree/format-file-changes"
 import { log } from "../../shared/logger"
 import { isCallerOrchestrator } from "../../shared/session-utils"
 import { HOOK_NAME } from "./hook-name"

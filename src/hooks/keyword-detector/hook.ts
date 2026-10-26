@@ -4,7 +4,7 @@ import {
   getMainSessionID,
   getSessionAgent,
   subagentSessions,
-} from "../../features/session-state"
+} from "../../features/session-state/state"
 import { getUltraworkState } from "../../features/ultrawork-state"
 import { log } from "../../shared"
 import {

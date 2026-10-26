@@ -2,7 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin";
 import type { ExperimentalConfig } from "../../config";
 import { log } from "../../shared/logger"
 import type { Client } from "./client";
-import { runSummarizeRetryStrategy } from "./recovery-strategy";
+import { runSummarizeRetryStrategy } from "./summarize-retry-strategy";
 import type { AutoCompactState } from "./types";
 
 export { getLastAssistant } from "./message-builder";

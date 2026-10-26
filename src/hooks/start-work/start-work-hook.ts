@@ -11,7 +11,7 @@ import {
   shouldReconcileOnStartWork,
   writeMissionState,
 } from "../../features/mission-state"
-import { updateSessionAgent } from "../../features/session-state"
+import { updateSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
 import { classifyPlans, formatPlanListLine } from "./plan-filter"
 

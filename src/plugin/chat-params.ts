@@ -57,7 +57,7 @@ function isChatParamsOutput(raw: unknown): raw is ChatParamsOutput {
   return isRecord(raw.options)
 }
 
-import { setSessionModel } from "../features/session-state"
+import { setSessionModel } from "../features/session-state/state"
 import { clearSessionTemperature, getSessionTemperature } from "../shared/session-state"
 
 export function createChatParamsHandler(args: {
