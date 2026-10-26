@@ -63,7 +63,7 @@ describe("executeInstall", () => {
     mockFiles.add(CONFIG_PATH)
     mockFileContents.set(
       CONFIG_PATH,
-      JSON.stringify({ plugin: ["opencode-matrixx"] }),
+      JSON.stringify({ plugin: ["opencode-matrixx-v2"] }),
     )
 
     const result = await executeInstall({ noTui: true })

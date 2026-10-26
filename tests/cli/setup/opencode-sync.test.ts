@@ -40,7 +40,7 @@ describe("opencode-sync file handling", () => {
     const cfgDir = join(dir, "opencode");
     const { mkdirSync } = await import("node:fs");
     mkdirSync(cfgDir, { recursive: true });
-    writeFileSync(join(cfgDir, "opencode.jsonc"), JSON.stringify({ plugin: ["opencode-matrixx", "@tarquinen/context-mode", "context-mode"] }));
+    writeFileSync(join(cfgDir, "opencode.jsonc"), JSON.stringify({ plugin: ["opencode-matrixx-v2", "@tarquinen/context-mode", "context-mode"] }));
     process.env.XDG_CONFIG_HOME = dir;
     const { syncOpencodePlugins } = await import("../../../src/cli/setup/opencode-sync");
     await syncOpencodePlugins({ taskSystem: true, headroom: { enabled: false }, rtk: { enabled: false }, dcp: { enabled: false }, contextMode: true }, { dryRun: false });

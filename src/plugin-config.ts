@@ -271,7 +271,7 @@ function assertModelsResolvable(config: MatrixxConfig): void {
     throw new ConfigError(
       `Matrixx config error: no model resolved for ${unresolved.join(", ")}. ` +
         `Set an explicit "model" on the entry, define model_presets with an active_preset, ` +
-        `or run "bunx opencode-matrixx setup" to generate a preset from your connected providers.`,
+        `or run "bunx opencode-matrixx-v2 setup" to generate a preset from your connected providers.`,
     )
   }
 }

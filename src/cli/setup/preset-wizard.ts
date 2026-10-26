@@ -10,7 +10,7 @@ import { fetchAvailableModels } from "../../shared/model-availability"
  * Aborts setup before any config is written.
  */
 export const NO_CONNECTED_PROVIDERS_ERROR =
-  "No connected providers detected. Configure at least one provider in OpenCode (opencode auth login), then re-run: bunx opencode-matrixx setup"
+  "No connected providers detected. Configure at least one provider in OpenCode (opencode auth login), then re-run: bunx opencode-matrixx-v2 setup"
 
 export type PresetWizardResult =
   | { status: "generated"; name: string; preset: ModelPreset }

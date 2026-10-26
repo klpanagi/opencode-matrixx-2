@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 2.0.0 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Version:** 3.0.0 · **Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).

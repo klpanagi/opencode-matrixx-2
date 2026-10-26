@@ -1,3 +1,19 @@
+/**
+ * QUARANTINED LEGACY MULTI-PACKAGE PUBLISH SCRIPT (ci-v2-publish Task 5)
+ *
+ * Formerly: script/publish.ts — DO NOT RUN. Disabled via `.disabled` suffix.
+ *
+ * Why quarantined:
+ *  - PACKAGE_NAME was bare "matrixx", which is TAKEN on npm. This package
+ *    publishes as "opencode-matrixx" (see package.json).
+ *  - Assumed a packages/ dir with 7 platform packages (PLATFORM_PACKAGES);
+ *    `ls packages` → missing, never existed in this repo.
+ *  - Referenced `bun run build:binaries`, which does not exist in package.json.
+ *  - .github/workflows/publish.yml (single-package flow) is the source of truth.
+ *
+ * Retained for reference only.
+ */
+
 #!/usr/bin/env bun
 
 import { $ } from "bun"

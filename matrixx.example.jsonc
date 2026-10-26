@@ -258,9 +258,9 @@
   // Matrixx auto-detects ctx_* tools and injects discipline (MUST use ctx_*).
   //
   // ENABLING (default — discipline + FTS5):
-  //   1. opencode.jsonc: { "plugin": ["context-mode", "opencode-matrixx"] }
+  //   1. opencode.jsonc: { "plugin": ["context-mode", "opencode-matrixx-v2"] }
   //   2. matrixx.jsonc: { "context_mode": { "enabled": true } }  ← default true, omit to keep enabled
-  //   3. Restart OpenCode. Verify via `ctx stats` or `bunx opencode-matrixx doctor`
+  //   3. Restart OpenCode. Verify via `ctx stats` or `bunx opencode-matrixx-v2 doctor`
   //
   // DISABLING:
   //   - Soft (keep plugin, hide discipline): { "context_mode": { "enabled": false } }

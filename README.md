@@ -11,7 +11,7 @@
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
 **17 specialized agents. 65 lifecycle hooks. 30 tools. 50 skills. One plugin.**
 
-> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2 (OpenCode-v2-only line). Version restart: `2.6.18` was the last legacy v1 release; v2 restarts at `NEW_VERSION` (`2.0.0` placeholder until the user confirms the number).
+> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2 (OpenCode-v2-only line). Version restart: `2.6.18` was the last legacy v1 release; v2 restarts at `3.0.0` (`2.6.18` was the last legacy v1 release).
 
 [Quick Start](#quick-start) · [Why Matrixx?](#why-matrixx) · [How It Works](#how-it-works) · [Features](#features) · [Comparison](#how-matrixx-compares) · [Docs](docs/README.md)
 
@@ -122,8 +122,8 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
 **Prerequisites:** Bun 1.4.0 · OpenCode ≥ 1.0.150
 
 ```bash
-bunx opencode-matrixx install
-bunx opencode-matrixx doctor   # no "fail" = good
+bunx opencode-matrixx-v2 install
+bunx opencode-matrixx-v2 doctor   # no "fail" = good
 opencode auth login             # connect at least one provider
 ```
 

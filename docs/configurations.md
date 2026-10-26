@@ -1,6 +1,6 @@
 # Matrixx Configuration
 
-> Version 2.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+> Version 3.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
 
 > **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
 
@@ -11,7 +11,7 @@ Highly opinionated, but adjustable to taste.
 **Most users don't need to configure anything manually.** Run the interactive installer:
 
 ```bash
-bunx opencode-matrixx install
+bunx opencode-matrixx-v2 install
 ```
 
 It asks about your providers (Claude, OpenAI, Gemini, etc.) and generates optimal config automatically.
@@ -969,7 +969,7 @@ Categories follow the same resolution logic:
 Use the `doctor` command to see how models resolve with your current configuration:
 
 ```bash
-bunx opencode-matrixx doctor --verbose
+bunx opencode-matrixx-v2 doctor --verbose
 ```
 
 The "Model Resolution" check shows:
@@ -1063,7 +1063,7 @@ The `/preset` command is backed by the built-in `preset` tool (`src/tools/preset
 
 ### First-run wizard
 
-The setup wizard (`bunx opencode-matrixx setup`) generates a `default` preset from your connected providers when no `model_presets` exists in the target config: `default_model` is the first available `provider/model` from the highest-priority connected provider, and every builtin agent/category is assigned that same model. If no providers are connected, setup aborts with a hard error instructing you to configure a provider first.
+The setup wizard (`bunx opencode-matrixx-v2 setup`) generates a `default` preset from your connected providers when no `model_presets` exists in the target config: `default_model` is the first available `provider/model` from the highest-priority connected provider, and every builtin agent/category is assigned that same model. If no providers are connected, setup aborts with a hard error instructing you to configure a provider first.
 
 ## Hooks
 

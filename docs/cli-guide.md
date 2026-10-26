@@ -1,19 +1,19 @@
 # Matrixx CLI Guide
 
-> Version 2.0.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
+> Version 3.0.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
 
 This document provides a comprehensive guide to using the Matrixx CLI tools.
 
 ## 1. Overview
 
-Matrixx provides CLI tools accessible via the `bunx opencode-matrixx` command (or `bunx matrixx` once installed locally — the binary is named `matrixx`, but the npm package is `opencode-matrixx`). The CLI supports various features including plugin installation, environment diagnostics, and session execution.
+Matrixx provides CLI tools accessible via the `bunx opencode-matrixx-v2` command (or `bunx matrixx` once installed locally — the binary is named `matrixx`, but the npm package is `opencode-matrixx-v2` (v1: `opencode-matrixx`). The CLI supports various features including plugin installation, environment diagnostics, and session execution.
 
 ```bash
 # Basic execution (displays help)
-bunx opencode-matrixx
+bunx opencode-matrixx-v2
 
 # Or run with npx
-npx opencode-matrixx
+npx opencode-matrixx-v2
 ```
 
 ---
@@ -37,7 +37,7 @@ An interactive installation tool for initial Matrixx setup. Provides a beautiful
 ### Usage
 
 ```bash
-bunx opencode-matrixx install
+bunx opencode-matrixx-v2 install
 ```
 
 ### Installation Process
@@ -77,7 +77,7 @@ Diagnoses your environment to ensure Matrixx is functioning correctly. Runs 12 c
 ### Usage
 
 ```bash
-bunx opencode-matrixx doctor
+bunx opencode-matrixx-v2 doctor
 ```
 
 ### Diagnostic Categories
@@ -122,7 +122,7 @@ Authentication
 
 Dependencies
   ✓ Bun 1.4.0 installed
-  ✓ Node.js 22.0.0 installed
+  ✓ Node.js 23.0.0 installed
   ✓ Git 2.45.0 installed
 
 Summary: 10 passed, 1 warning, 1 failed
@@ -137,8 +137,8 @@ Generates deps + `matrixx.jsonc` without the full install flow. Entry: `src/cli/
 ### Usage
 
 ```bash
-bunx opencode-matrixx setup
-bunx opencode-matrixx setup --yes --dry-run
+bunx opencode-matrixx-v2 setup
+bunx opencode-matrixx-v2 setup --yes --dry-run
 ```
 
 ### Options
@@ -158,8 +158,8 @@ When no `model_presets` exist in the target config, setup generates a `default` 
 
 There is no `auth` subcommand. Authentication is handled in two places:
 
-1. **Install wizard** (`bunx opencode-matrixx install`) — captures provider API keys during setup.
-2. **Doctor** (`bunx opencode-matrixx doctor --category authentication`) — reports provider API key status.
+1. **Install wizard** (`bunx opencode-matrixx-v2 install`) — captures provider API keys during setup.
+2. **Doctor** (`bunx opencode-matrixx-v2 doctor --category authentication`) — reports provider API key status.
 
 For Google Gemini, Matrixx recommends the external [`opencode-antigravity-auth`](https://github.com/NoeFabris/opencode-antigravity-auth) plugin. See [Configuration > Google Auth](configurations.md#google-auth).
 
@@ -218,17 +218,17 @@ bun add -g opencode@latest
 
 ```bash
 # Reinstall plugin
-bunx opencode-matrixx install
+bunx opencode-matrixx-v2 install
 ```
 
 ### Doctor Check Failures
 
 ```bash
 # Diagnose with detailed information
-bunx opencode-matrixx doctor --verbose
+bunx opencode-matrixx-v2 doctor --verbose
 
 # Check specific category only
-bunx opencode-matrixx doctor --category authentication
+bunx opencode-matrixx-v2 doctor --category authentication
 ```
 
 ---
@@ -239,10 +239,10 @@ Use the `--no-tui` option for CI/CD environments.
 
 ```bash
 # Run doctor in CI environment
-bunx opencode-matrixx doctor --no-tui --json
+bunx opencode-matrixx-v2 doctor --no-tui --json
 
 # Save results to file
-bunx opencode-matrixx doctor --json > doctor-report.json
+bunx opencode-matrixx-v2 doctor --json > doctor-report.json
 ```
 
 ---

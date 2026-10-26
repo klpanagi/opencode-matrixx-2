@@ -1,7 +1,7 @@
 # Quality: BDD Pipeline & TDD Discipline
 
 > **Audience:** users implementing features or enforcing test discipline.
-> **Version:** 2.0.0.
+> **Version:** 3.0.0.
 > **See also:** `command-reference.md` (the `/bdd-pipeline` command), `orchestration.md` (how plans execute), `hooks.md` §2.1 (`oracle-md-only`, `quality-gate`).
 
 Two complementary workflows produce tested code. **BDD** starts from a `.feature` file and generates the implementation through a contract; **TDD** governs how any implementation is written (test first, then code, then refactor).
@@ -18,7 +18,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 # Part A — BDD Pipeline
 
 > **Status**: Shipped and verified
-> **Package**: `opencode-matrixx` (v2.0.0)
+> **Package**: `opencode-matrixx-v2` (v3.0.0)
 > **Context**: Native matrixx feature — no Python, no external bundling
 
 ---
@@ -502,7 +502,7 @@ Run per-demo tests with the `run-tests.sh` inside each demo dir.
 
 #### Prerequisites
 
-- matrixx (opencode-matrixx v2.0.0+)
+- matrixx (opencode-matrixx-v2 v3.0.0+)
 - `@cucumber/gherkin` v34 (bundled dependency — auto-installed with matrixx)
 - `@cucumber/cucumber` and `@playwright/test` (user-installed per project)
 

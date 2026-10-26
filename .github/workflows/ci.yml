@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [master, dev]
+    branches: [dev]
     paths-ignore:
       - '**.md'
       - 'docs/**'
   pull_request:
-    branches: [master, dev]
+    branches: [dev]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Block PRs targeting master branch
+  # Block PRs targeting master branch (harmless legacy guard; repo has no master — ci-v2-publish Task 2 kept intentionally).
   block-master-pr:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -122,7 +122,7 @@ jobs:
           test -f dist/index.d.ts || (echo "ERROR: dist/index.d.ts not found!" && exit 1)
 
       - name: Auto-commit schema changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         run: |
           if git diff --quiet assets/matrixx.schema.json; then
             echo "No schema changes to commit"

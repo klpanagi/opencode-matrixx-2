@@ -19,7 +19,7 @@ export async function executeSetup(opts: { dryRun: boolean; yes: boolean; skipPr
   const missingRequired = required.filter((d) => !d.found);
   if (missingRequired.length > 0) {
     const report = formatDepReport(required);
-    return `✗ Missing required dependencies:\n${report}\n\nInstall them and re-run: bunx opencode-matrixx setup`;
+    return `✗ Missing required dependencies:\n${report}\n\nInstall them and re-run: bunx opencode-matrixx-v2 setup`;
   }
 
   const optional = checkOptionalDeps();
@@ -84,7 +84,7 @@ export async function executeSetup(opts: { dryRun: boolean; yes: boolean; skipPr
     "",
     "Next steps:",
     "  1. Restart OpenCode to load new config",
-    "  2. Verify with: bunx opencode-matrixx doctor",
+    "  2. Verify with: bunx opencode-matrixx-v2 doctor",
     state.headroom.enabled ? "  3. Headroom enabled — run: headroom wrap opencode" : "  3. Headroom disabled — enable later via setup or manual headroom.enabled:true",
     state.contextMode ? "  4. context-mode enabled — plugin array updated in opencode.jsonc" : "  4. context-mode disabled — add \"context-mode\" to opencode.jsonc plugin array to enable",
     "",

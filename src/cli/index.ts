@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Matrixx CLI — `bunx opencode-matrixx <command>`
+ * Matrixx CLI — `bunx opencode-matrixx-v2 <command>`
  *
  * Commands:
  *   doctor    - Environment diagnostics and health checks
@@ -42,7 +42,7 @@ function printHelp(): void {
   console.log(`
 Matrixx CLI v${VERSION}
 
-Usage: bunx opencode-matrixx <command> [options]
+Usage: bunx opencode-matrixx-v2-v2 <command> [options]
 
 Commands:
   doctor     Environment diagnostics and health checks

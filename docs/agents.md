@@ -1,4 +1,4 @@
-# Matrixx Agents (v2.0.0)
+# Matrixx Agents (v3.0.0)
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
