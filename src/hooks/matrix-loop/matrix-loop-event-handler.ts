@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { withTimeout } from "../../shared/with-timeout"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { detectCompletionInSessionMessages, detectCompletionInTranscript } from "./completion-promise-detector"
 import { verifyCompletion } from "./completion-verifier"
@@ -7,7 +8,6 @@ import { DEFAULT_VERIFICATION_AGENT, DEFAULT_VERIFICATION_MAX_RETRIES, DEFAULT_V
 import { buildContinuationPrompt } from "./continuation-prompt-builder"
 import { injectContinuationPrompt } from "./continuation-prompt-injector"
 import type { MatrixLoopOptions, MatrixLoopState } from "./types"
-import { withTimeout } from "../../shared/with-timeout"
 
 type SessionRecovery = { isRecovering: (sessionID: string) => boolean; markRecovering: (sessionID: string) => void; clear: (sessionID: string) => void }
 type LoopStateController = { getState: () => MatrixLoopState | null; clear: () => boolean; incrementIteration: () => MatrixLoopState | null }
