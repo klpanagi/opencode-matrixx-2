@@ -13,6 +13,7 @@
 import type { Part } from "@opencode-ai/sdk"
 
 import type { PluginContext } from "../../plugin/types"
+import { sanitizeKnownTags } from "../../shared/system-directive"
 import { guardCompressDirective, NUDGE_MARKERS, normalizeNudgeText } from "./constants"
 
 interface MessageWithParts {
@@ -36,7 +37,10 @@ function getTextPart(part: Part): { text: string } | null {
 }
 
 function isNudgeText(text: string): boolean {
-  return NUDGE_MARKERS.some((marker) => marker.test(text))
+  return NUDGE_MARKERS.some((marker) => {
+    marker.lastIndex = 0
+    return marker.test(text)
+  })
 }
 
 export function sanitizeNudgeParts(messages: MessageWithParts[]): void {
@@ -54,7 +58,11 @@ export function sanitizeNudgeParts(messages: MessageWithParts[]): void {
         continue
       }
       keptNudge = true
-      ;(message.parts[i] as { text: string }).text = guardCompressDirective(normalizeNudgeText(textPart.text))
+      // Known-tag handling routes via the shared closed-table helper; text-part-only,
+      // no part add/remove/reorder here (cap logic above owns that).
+      ;(message.parts[i] as { text: string }).text = guardCompressDirective(
+        normalizeNudgeText(sanitizeKnownTags(textPart.text, { control: "unwrap-keep-inner" })),
+      )
       i++
     }
   }

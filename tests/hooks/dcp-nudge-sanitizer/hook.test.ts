@@ -49,9 +49,12 @@ describe("createDcpNudgeSanitizerHook — dedupe and cap sticky nudges", () => {
     await runSanitizer([message])
 
     //#then
-    expect(countNudges(message.parts)).toBe(1)
-    expect(getText(message.parts[0])).toBe("real assistant answer")
     expect(message.parts.length).toBe(2)
+    expect(getText(message.parts[0])).toBe("real assistant answer")
+    const kept = getText(message.parts[1])
+    expect(kept).toContain("use the compress tool on it now")
+    expect(kept).not.toContain("iteration_nudge")
+    expect(kept).toContain("state that explicitly and continue")
   })
 
   test("caps nudges globally across the transcript", async () => {
@@ -65,9 +68,10 @@ describe("createDcpNudgeSanitizerHook — dedupe and cap sticky nudges", () => {
     await runSanitizer([first, second])
 
     //#then
-    expect(countNudges(first.parts)).toBe(1)
-    expect(countNudges(second.parts)).toBe(0)
+    expect(first.parts.length).toBe(1)
+    expect(getText(first.parts[0])).toContain("use the compress tool on it now")
     expect(second.parts.length).toBe(1)
+    expect(getText(second.parts[0])).toBe("tail")
   })
 
   test("leaves messages without nudges untouched", async () => {
@@ -115,7 +119,7 @@ describe("createDcpNudgeSanitizerHook — dedupe and cap sticky nudges", () => {
     //#then
     expect(message.parts.length).toBe(2)
     expect((message.parts[0] as { type: string }).type).toBe("tool_use")
-    expect(countNudges(message.parts)).toBe(1)
+    expect(getText(message.parts[1])).toContain("use the compress tool on it now")
   })
 
   test("appends availability guard to unconditional compress orders", async () => {
@@ -146,6 +150,8 @@ describe("createDcpNudgeSanitizerHook — dedupe and cap sticky nudges", () => {
 
     //#then
     expect(message.parts.length).toBe(1)
-    expect(getText(message.parts[0])).toBe(conditional)
+    expect(getText(message.parts[0])).toBe(
+      "If your session exposes a `compress` tool, use it when context is low.",
+    )
   })
 })

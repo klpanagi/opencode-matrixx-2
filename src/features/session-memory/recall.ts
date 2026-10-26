@@ -1,5 +1,5 @@
 import { type MemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
-import { SYNTHETIC_MESSAGE_PREFIXES } from "./constants"
+import { isSyntheticMessage } from "./constants"
 import type { MemoryEntry } from "./types"
 
 export type RecallScope = "session" | "project" | "global" | "all"
@@ -83,9 +83,12 @@ export function truncateRecall(text: string, limit: number): string {
   return text.length <= limit ? text : `${text.slice(0, Math.max(0, limit - 3))}...`
 }
 
+/**
+ * Shared-backed synthetic gate (single source: constants.isSyntheticMessage,
+ * which references the shared closed table). Text-only on payload strings.
+ */
 export function isSyntheticCandidate(text: string): boolean {
-  const trimmed = text.trimStart()
-  return SYNTHETIC_MESSAGE_PREFIXES.some((prefix) => trimmed.startsWith(prefix))
+  return isSyntheticMessage(text)
 }
 
 function toCandidate(entry: MemoryEntry | RecallCandidate): RecallCandidate {
