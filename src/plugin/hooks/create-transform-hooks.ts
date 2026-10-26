@@ -3,8 +3,8 @@ import {
   contextCollector,
   createContextInjectorMessagesTransformHook,
 } from "../../features/context-injector"
-import { createContextModeSystemTransformHook } from "../../features/context-mode-routing"
-import { createRtkSystemTransformHook } from "../../features/rtk-routing"
+import { createContextModeSystemTransformHook } from "../../features/context-mode-routing/system-transform"
+import { createRtkSystemTransformHook } from "../../features/rtk-routing/system-transform"
 
 import {
   createDesignIntentPreserverHook,

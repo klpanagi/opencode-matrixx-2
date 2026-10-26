@@ -34,7 +34,7 @@ export { createSessionManagerTools } from "./session-manager"
 export { sessionExists } from "./session-manager/storage"
 export { createSilentFailureScannerTool } from "./silent-failure-scanner"
 export { createSkillTool } from "./skill"
-export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand"
+export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/tools"
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { lspManager }
 
@@ -51,7 +51,7 @@ import {
 
 type OpencodeClient = PluginInput["client"]
 
-export { createAssemblyTool } from "./assembly"
+export { createAssemblyTool } from "./assembly/tools"
 export { createDelegateTask } from "./delegate-task"
 export { createHashlineEditTool } from "./hashline-edit"
 export { createLookAt } from "./look-at"
