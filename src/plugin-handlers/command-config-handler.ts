@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../config";
-import { buildBuiltinCommandEntries } from "../features/builtin-commands";
+import { buildBuiltinCommandEntries } from "../features/builtin-commands/commands.transform";
 import type { PluginComponents } from "./plugin-components-loader";
 
 export async function applyCommandConfig(params: {

@@ -12,7 +12,7 @@ export { createContextModeEnforcerHook } from "./context-mode-enforcer/hook";
 export { type ContextWindowLimitRecoveryOptions, type ContextWindowLimitRecoveryOptions as AnthropicContextWindowLimitRecoveryOptions, createContextWindowLimitRecoveryHook, createContextWindowLimitRecoveryHook as createAnthropicContextWindowLimitRecoveryHook } from "./context-window-limit-recovery";
 export { createContextWindowMonitorHook } from "./context-window-monitor";
 export { createDcpNudgeSanitizerHook } from "./dcp-nudge-sanitizer/hook";
-export { createDelegateTaskRetryHook } from "./delegate-task-retry";
+export { createDelegateTaskRetryHook } from "./delegate-task-retry/hook";
 export { createDesignIntentPreserverHook } from "./design-intent-preserver/hook"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector/hook";
 export { createDocsLookupGuardHook } from "./docs-lookup-guard/hook";
