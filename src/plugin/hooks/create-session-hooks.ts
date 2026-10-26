@@ -21,8 +21,14 @@ import {
   createThinkModeHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort"
+import { resolveMemoryBackend } from "../../config/schema/memory"
+import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
 import {
   detectExternalNotificationPlugin,
+  detectMemoryBackendPlugins,
+  detectMemoryBackendTools,
+  getMemoryBackendMissingWarning,
+  getMemoryBackendRoutingHint,
   getNotificationConflictWarning,
   log,
   resolveRtkEnforcement,
@@ -30,6 +36,8 @@ import {
 import { safeCreateHook } from "../../shared/safe-create-hook"
 import { sessionExists } from "../../tools"
 import type { PluginContext } from "../types"
+
+let memoryFlatAliasWarned = false
 
 export type SessionHooks = {
   contextWindowMonitor: ReturnType<typeof createContextWindowMonitorHook> | null
@@ -167,9 +175,38 @@ export function createSessionHooks(args: {
     : null
 
 
-  const sessionMemory = isHookEnabled("session-memory") && pluginConfig.memory?.enabled === true
-    ? safeHook("session-memory", () => createSessionMemoryHook(ctx, { memory: pluginConfig.memory }))
-    : null
+  const memoryBackend = resolveMemoryBackend(pluginConfig.memory)
+  let sessionMemory: ReturnType<typeof createSessionMemoryHook> | null = null
+  if (isHookEnabled("session-memory")) {
+    if (memoryBackend === "native") {
+      if (pluginConfig.memory?.enabled === true && !memoryFlatAliasWarned) {
+        memoryFlatAliasWarned = true
+        log(
+          `[matrixx] memory.enabled is deprecated — use { "memory": { "backend": "native", "native": { "enabled": true } } }. Flat enabled:true still resolves to the native backend.`,
+        )
+      }
+      const memoryCfg = pluginConfig.memory
+      if (memoryCfg && (memoryCfg.native.enabled === true || memoryCfg.enabled === true)) {
+        sessionMemory = safeHook("session-memory", () =>
+          createSessionMemoryHook(ctx, { memory: memoryCfg.native }),
+        )
+      }
+    } else if (memoryBackend === "lcm" || memoryBackend === "supermemory") {
+      log(getMemoryBackendRoutingHint(memoryBackend))
+      const knownToolNames = getAvailableToolNames()
+      const toolDetection = detectMemoryBackendTools(knownToolNames)
+      const pluginDetection = detectMemoryBackendPlugins(ctx.directory)
+      const hasSignal =
+        knownToolNames.length > 0 || pluginDetection.allPlugins.length > 0
+      const satisfied =
+        memoryBackend === "lcm"
+          ? toolDetection.hasLcmTools || pluginDetection.hasLcmPlugin
+          : toolDetection.hasSupermemoryTools || pluginDetection.hasSupermemoryPlugin
+      if (hasSignal && !satisfied) {
+        log(getMemoryBackendMissingWarning(memoryBackend))
+      }
+    }
+  }
 
   return {
     contextWindowMonitor,

@@ -1,4 +1,5 @@
 import type { HookName, MatrixxConfig } from "../../config"
+import { resolveMemoryBackend } from "../../config/schema/memory"
 import type { BackgroundManager } from "../../features/background-agent"
 import {
   createArchitectHook,
@@ -67,7 +68,9 @@ export function createContinuationHooks(args: {
         }))
     : null
 
-  const compactionMemoryEnabled = pluginConfig.memory?.enabled === true
+  const compactionMemoryEnabled =
+    resolveMemoryBackend(pluginConfig.memory) === "native" &&
+    (pluginConfig.memory?.native?.enabled === true || pluginConfig.memory?.enabled === true)
   const compactionContextInjector = isHookEnabled("compaction-context-injector")
     ? safeHook("compaction-context-injector", () =>
         createCompactionContextInjector(backgroundManager, { enabled: compactionMemoryEnabled }))

@@ -1,4 +1,4 @@
-import { type MemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
+import { type NativeMemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
 import type { MemoryEntry } from "./types"
 
 export interface SummarySource {
@@ -20,8 +20,8 @@ export interface ShapeSummaryOptions {
   compactContextLimit?: number
 }
 
-function memoryDefaults(): MemoryConfig {
-  return MemoryConfigSchema.parse({})
+function memoryDefaults(): NativeMemoryConfig {
+  return MemoryConfigSchema.parse({}).native
 }
 
 /** Verbatim truncate — mirrors upstream truncate(), no text mutation beyond cut. */

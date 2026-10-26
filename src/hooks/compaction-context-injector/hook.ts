@@ -57,6 +57,9 @@ export function createCompactionContextInjector(
       }
     }
 
+    // Caller passes the resolved native-backend boolean
+    // (resolveMemoryBackend(...) === "native" && native opt-in);
+    // the enabled === true gate itself is unchanged.
     const memory = memoryOverride ?? memoryOptions
     if (memory?.enabled === true && memory.snippet !== undefined) {
       const budgeted = getCompactingSnippet(memory.snippet, COMPACTING_SNIPPET_BUDGET)

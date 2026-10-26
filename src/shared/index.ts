@@ -30,6 +30,7 @@ export {
   normalizeModel,
   resolveModelPipeline,
 } from "./model-resolution-pipeline"
+export * from "./memory-backend-detect"
 export * from "./model-suggestion-retry"
 export * from "./normalize-sdk-response"
 export * from "./opencode-config-dir"

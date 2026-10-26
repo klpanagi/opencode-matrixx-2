@@ -83,6 +83,19 @@ describe("createSessionMemoryHook", () => {
       })
     })
 
+    describe("#when an external memory-backend tool completes while native is active", () => {
+      it("#then output is still staged and double-capture is warned once (see task-4 evidence)", async () => {
+        // #given an enabled native hook
+        const hook = createSessionMemoryHook(ctx, { memory: enabledMemory })
+        // #when lcm_ and supermemory tools complete
+        await hook["tool.execute.after"](createInput("lcm_grep"), createOutput("external result one"))
+        await hook["tool.execute.after"](createInput("lcm_grep"), createOutput("external result two"))
+        await hook["tool.execute.after"](createInput("supermemory_recall"), createOutput("external result three"))
+        // #then all entries are still staged (warning is one-time, no drop)
+        expect(hook.pendingCount()).toBe(3)
+      })
+    })
+
     describe("#when a non-idle event fires", () => {
       it("#then the buffer is left untouched", async () => {
         // #given an enabled hook with a staged entry

@@ -1,4 +1,4 @@
-import { type MemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
+import { type NativeMemoryConfig, MemoryConfigSchema } from "../../config/schema/memory"
 import { isSyntheticMessage } from "./constants"
 import type { MemoryEntry } from "./types"
 
@@ -51,8 +51,8 @@ const DEFAULT_BUDGETS: Record<RecallScope, number> = {
   all: 6,
 }
 
-function memoryDefaults(): MemoryConfig {
-  return MemoryConfigSchema.parse({})
+function memoryDefaults(): NativeMemoryConfig {
+  return MemoryConfigSchema.parse({}).native
 }
 
 function normalizeScope(value: unknown): RecallScope | undefined {
