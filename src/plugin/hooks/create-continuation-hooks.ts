@@ -67,8 +67,10 @@ export function createContinuationHooks(args: {
         }))
     : null
 
+  const compactionMemoryEnabled = pluginConfig.memory?.enabled === true
   const compactionContextInjector = isHookEnabled("compaction-context-injector")
-    ? safeHook("compaction-context-injector", () => createCompactionContextInjector(backgroundManager))
+    ? safeHook("compaction-context-injector", () =>
+        createCompactionContextInjector(backgroundManager, { enabled: compactionMemoryEnabled }))
     : null
 
   const taskContinuationEnforcer = isHookEnabled("task-continuation-enforcer")

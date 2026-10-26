@@ -45,6 +45,7 @@ export { createRtkBashRewriterHook } from "./rtk-bash-rewriter";
 export { createRulesInjectorHook } from "./rules-injector";
 export { createRuntimeFallbackHook, type RuntimeFallbackHook, type RuntimeFallbackOptions, SessionCategoryRegistry } from "./runtime-fallback"
 export { createSecretLeakGuardHook } from "./secret-leak-guard";
+export { createSessionMemoryHook, MAX_CAPTURE_CHARS, MAX_PENDING_ENTRIES, type SessionMemoryHook, type SessionMemoryHookOptions } from "./session-memory";
 export { createSessionNotification } from "./session-notification";
 export { buildWindowsToastScript, escapeAppleScriptText, escapePowerShellSingleQuotedText } from "./session-notification-formatting";
 export { createIdleNotificationScheduler } from "./session-notification-scheduler";

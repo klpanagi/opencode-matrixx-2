@@ -13,6 +13,7 @@ import {
   createOracleMdOnlyHook,
   createRtkBashRewriterHook,
   createRuntimeFallbackHook,
+  createSessionMemoryHook,
   createSessionNotification,
   createSessionRecoveryHook,
   createStartWorkHook,
@@ -50,6 +51,7 @@ export type SessionHooks = {
   anthropicEffort: ReturnType<typeof createAnthropicEffortHook> | null
   runtimeFallback: ReturnType<typeof createRuntimeFallbackHook> | null
   rtkBashRewriter: ReturnType<typeof createRtkBashRewriterHook> | null
+  sessionMemory: ReturnType<typeof createSessionMemoryHook> | null
 }
 
 export function createSessionHooks(args: {
@@ -165,6 +167,10 @@ export function createSessionHooks(args: {
     : null
 
 
+  const sessionMemory = isHookEnabled("session-memory") && pluginConfig.memory?.enabled === true
+    ? safeHook("session-memory", () => createSessionMemoryHook(ctx, { memory: pluginConfig.memory }))
+    : null
+
   return {
     contextWindowMonitor,
     sessionRecovery,
@@ -185,5 +191,6 @@ export function createSessionHooks(args: {
     anthropicEffort,
     runtimeFallback,
     rtkBashRewriter,
+    sessionMemory,
   }
 }

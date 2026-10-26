@@ -194,7 +194,11 @@ ctx stats
 # Expected: tool list and index stats appear
 ```
 
-> **Legacy duplication trap:** If you have both `mcp.context-mode` (old MCP config) and `plugin: ["context-mode"]` (new plugin), OpenCode may expose zero `ctx_*` tools. Remove the old `mcp` entry and keep only the `plugin` entry, then run `context-mode upgrade` or reinstall and restart.
+> **Plugin-only form (no `mcp` block):** context-mode is configured ONLY as an OpenCode plugin via `"plugin": ["context-mode"]` in `opencode.json` / `opencode.jsonc`. Do NOT add a legacy `mcp.context-mode` / `mcp` block — the MCP form is unsupported and may leave zero `ctx_*` tools exposed. If both forms are present, delete the `mcp` entry, keep only the `plugin` entry, then run `context-mode upgrade` (or reinstall) and restart.
+>
+> `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-mode-routing/routing-block.ts`).
+>
+> Session-memory hygiene: entries whose text starts with a `SYNTHETIC_MESSAGE_PREFIXES` value (`<task-notification>`, `<system-reminder>`, `<context_guidance>`, `<tool-result>`) are filtered on memory write (`appendMemoryEntry`, hook staging) and recall (`recall`/`isSyntheticCandidate`) paths only — routing and enforcement are unaffected.
 
 #### Configuration
 

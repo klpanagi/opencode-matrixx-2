@@ -4367,6 +4367,222 @@
       ],
       "additionalProperties": false
     },
+    "memory": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "type": "boolean"
+        },
+        "ignoreToolPrefixes": {
+          "default": [
+            "ctx_"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scopeDefaults": {
+          "default": {
+            "grep": "session",
+            "describe": "session"
+          },
+          "type": "object",
+          "properties": {
+            "grep": {
+              "default": "session",
+              "type": "string",
+              "enum": [
+                "session",
+                "root",
+                "worktree",
+                "all"
+              ]
+            },
+            "describe": {
+              "default": "session",
+              "type": "string",
+              "enum": [
+                "session",
+                "root",
+                "worktree",
+                "all"
+              ]
+            }
+          },
+          "required": [
+            "grep",
+            "describe"
+          ],
+          "additionalProperties": false
+        },
+        "scopeProfiles": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "worktree": {
+                "type": "string"
+              },
+              "grep": {
+                "type": "string",
+                "enum": [
+                  "session",
+                  "root",
+                  "worktree",
+                  "all"
+                ]
+              },
+              "describe": {
+                "type": "string",
+                "enum": [
+                  "session",
+                  "root",
+                  "worktree",
+                  "all"
+                ]
+              }
+            },
+            "required": [
+              "worktree"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "retention": {
+          "default": {
+            "deletedSessionDays": 30,
+            "orphanBlobDays": 14
+          },
+          "type": "object",
+          "properties": {
+            "staleSessionDays": {
+              "type": "number"
+            },
+            "deletedSessionDays": {
+              "default": 30,
+              "type": "number"
+            },
+            "orphanBlobDays": {
+              "default": 14,
+              "type": "number"
+            }
+          },
+          "required": [
+            "deletedSessionDays",
+            "orphanBlobDays"
+          ],
+          "additionalProperties": false
+        },
+        "perMessageBudget": {
+          "default": 110,
+          "type": "number"
+        },
+        "automaticRetrieval": {
+          "default": {
+            "maxChars": 900,
+            "minTokens": 2,
+            "maxMessageHits": 2,
+            "maxSummaryHits": 1,
+            "maxArtifactHits": 1,
+            "budgets": {
+              "session": 16,
+              "root": 12,
+              "worktree": 8,
+              "all": 6
+            }
+          },
+          "type": "object",
+          "properties": {
+            "maxChars": {
+              "default": 900,
+              "type": "number"
+            },
+            "minTokens": {
+              "default": 2,
+              "type": "number"
+            },
+            "maxMessageHits": {
+              "default": 2,
+              "type": "number"
+            },
+            "maxSummaryHits": {
+              "default": 1,
+              "type": "number"
+            },
+            "maxArtifactHits": {
+              "default": 1,
+              "type": "number"
+            },
+            "budgets": {
+              "default": {
+                "session": 16,
+                "root": 12,
+                "worktree": 8,
+                "all": 6
+              },
+              "type": "object",
+              "properties": {
+                "session": {
+                  "default": 16,
+                  "type": "number"
+                },
+                "root": {
+                  "default": 12,
+                  "type": "number"
+                },
+                "worktree": {
+                  "default": 8,
+                  "type": "number"
+                },
+                "all": {
+                  "default": 6,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "session",
+                "root",
+                "worktree",
+                "all"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "maxChars",
+            "minTokens",
+            "maxMessageHits",
+            "maxSummaryHits",
+            "maxArtifactHits",
+            "budgets"
+          ],
+          "additionalProperties": false
+        },
+        "compactContextLimit": {
+          "default": 1200,
+          "type": "number"
+        },
+        "systemHint": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "ignoreToolPrefixes",
+        "scopeDefaults",
+        "scopeProfiles",
+        "retention",
+        "perMessageBudget",
+        "automaticRetrieval",
+        "compactContextLimit",
+        "systemHint"
+      ],
+      "additionalProperties": false
+    },
     "rtk": {
       "type": "object",
       "properties": {
