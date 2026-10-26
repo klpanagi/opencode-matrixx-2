@@ -100,8 +100,16 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
     "ignoreToolPrefixes": ["ctx_"],
     "retention": { "deletedSessionDays": 30, "orphanBlobDays": 14 }
     // staleSessionDays omitted = disabled (NOT 90)
-  },
-  "mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } } // verified working form (shows as Connected under MCP)
+  }
+}
+```
+
+```jsonc
+// opencode.jsonc — context-mode transport (verified working form, shows as Connected under MCP)
+{
+  "mcp": {
+    "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } }
+  }
 }
 ```
 
