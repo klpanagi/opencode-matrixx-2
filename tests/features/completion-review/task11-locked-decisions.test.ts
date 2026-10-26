@@ -93,7 +93,10 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // The only delta is a mechanical import-path rewire
     // ("../../features/session-state" -> "../../features/session-state/state")
     // after folding the trivial session-state barrel; execution path unchanged.
-    const FROZEN_MD5 = "36bcba5dc519a7bc5c99b3a84d81cb53"
+    // NOTE (niobe rename, PR #19): hash advanced from 36bcba5dc519a7bc5c99b3a84d81cb53.
+    // The only delta is the mechanical architect -> niobe identifier rename;
+    // execution path unchanged.
+    const FROZEN_MD5 = "00cd3842c55fafcdb8b474e078f6649f"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")
@@ -108,7 +111,11 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // The only delta is REQUIRED description params in task() examples
     // (background-task titles); Niobe remains the plan EXECUTOR —
     // no reviewer role was added, so the locked decision still holds.
-    const FROZEN_MD5 = "0e320a775231fdbe8c006b1a3aad105b"
+    // NOTE (niobe rename, PR #19): hash advanced from 0e320a775231fdbe8c006b1a3aad105b.
+    // The only delta is the mechanical architect -> niobe identifier rename
+    // plus the conductor -> captain metaphor refresh; Niobe remains the plan
+    // EXECUTOR — no reviewer role was added, so the locked decision still holds.
+    const FROZEN_MD5 = "5776c640c38452c3a5f06c51439b496b"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/niobe/default.ts")
