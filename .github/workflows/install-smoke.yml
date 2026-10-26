@@ -85,8 +85,8 @@ jobs:
           echo "HOME=$HOME"
           bun run dist/cli.js install --no-tui --claude=no --openai=no --gemini=no --copilot=no 2>&1 | tail -20
           cat "$HOME/.config/opencode/opencode.json" 2>&1 | head -30
-          grep -q "opencode-matrixx-v2" "$HOME/.config/opencode/opencode.json" || (echo "plugin -v2 not registered" && cat "$HOME/.config/opencode/opencode.json" && exit 1)
-          grep -q "opencode-matrixx" "$HOME/.config/opencode/opencode.json" || (echo "plugin alias substring missing" && exit 1)
+          # install writes a file://...dist/index.js entry (no package-name string), so match dist/index.js
+          grep -q "dist/index.js" "$HOME/.config/opencode/opencode.json" || (echo "plugin entry not registered" && cat "$HOME/.config/opencode/opencode.json" && exit 1)
           echo "plugin registration OK"
           # Second run should detect already registered
           bun run dist/cli.js install --no-tui --claude=no --openai=no --gemini=no --copilot=no 2>&1 | grep -q "already registered" && echo "idempotent OK"
