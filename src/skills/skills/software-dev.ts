@@ -44,7 +44,7 @@ This skill defines a 6-phase software development pipeline with specialized role
 | 1. PLAN | Small tasks | Architect | Approach defined, files listed |
 | 2. BUILD | Never | Developer | Code written, tests pass |
 | 3. VERIFY | Never | Quality | Lint/typecheck/test/build pass |
-| 4. REVIEW | Small tasks | Quality (5-agent) | All reviewers PASS |
+| 4. REVIEW | Small tasks | Quality (6-agent) | All reviewers PASS |
 | 5. SECURE | Small + non-security | Security | No CRITICAL/HIGH findings |
 | 6. SHIP | Never | Developer | Commits + PR created |
 
@@ -123,7 +123,7 @@ If ANY fails → fix → re-run ALL.
 
 ## PHASE 4: REVIEW
 
-Fire 5-agent parallel review:
+Fire 6-agent parallel review:
 
 \`\`\`
 task(
@@ -135,7 +135,7 @@ task(
 \`\`\`
 
 **Exit criteria:**
-- [ ] All 5 reviewers PASS
+- [ ] All 6 reviewers PASS
 - [ ] No CRITICAL/MAJOR blocking issues
 
 ---
