@@ -193,6 +193,30 @@ If phase fails → STOP → fix → re-run that phase.
 
 ---
 
+## TASK INTERFACES
+
+Every task declares its interface contract with two REQUIRED-task-subfield labels. Wave 1 is guidance only — no validator enforcement; enforcement lands in Wave 2.
+
+Labels are forward-compatible: Consumes / Produces will promote to grammar in Task 6 with these exact labels, aligned with REQUIRED_TASK_SUBFIELDS voice.
+
+- **Consumes**: upstream inputs this task needs (files, APIs, types, decisions, prior task outputs). List each input with its source task.
+- **Produces**: downstream outputs this task hands off (files, APIs, contracts, evidence). List each output with its consumer task.
+
+Declare interfaces in dependency order — Consumes before Produces:
+
+\`\`\`
+Task 2 interface contract:
+  Consumes: Task 1 → src/auth/schema.ts:LoginSchema (request shape)
+  Produces: Task 3 ← src/auth/login.ts:login() (JWT session token)
+\`\`\`
+
+**Exit criteria:**
+- [ ] Every task lists Consumes (inputs + source task)
+- [ ] Every task lists Produces (outputs + consumer task)
+- [ ] No task Produces what no downstream task Consumes
+
+---
+
 ## ANTI-PATTERNS
 
 | Anti-Pattern | Correct Action |
