@@ -28,7 +28,7 @@ function skeletonHeadings(skeleton: string): string[] {
   return headings
 }
 
-/** The two skeleton H3s Plan A deliberately left out of the registry. */
+/** Two of the skeleton H3s Plan A deliberately left out of the registry (6 more custom H3s come from the Global Constraints + Review Focus bodies). */
 const SKELETON_CUSTOM_H3 = [
   "### If TDD Enabled",
   "### Agent-Executed QA Scenarios (MANDATORY — ALL tasks)",
@@ -136,7 +136,7 @@ describe("skeleton ↔ section-registry consistency guard", () => {
     //#when each H2 line is resolved against the section registry
     const h2 = skeletonHeadings(skeleton).filter((line) => line.startsWith("## "))
 
-    //#then all 8 resolve to the derived id of their canonical heading, in order
+    //#then all 10 resolve to the derived id of their canonical heading, in order
     expect(h2).toEqual(CANONICAL_SECTIONS.map((section) => `## ${section}`))
     const resolutions = h2.map((line) => resolutionOf(line))
     for (const resolution of resolutions) expect(resolution.kind).toBe("resolved")
@@ -144,15 +144,17 @@ describe("skeleton ↔ section-registry consistency guard", () => {
       "tl-dr",
       "context",
       "work-objectives",
+      "global-constraints",
       "verification-strategy",
       "execution-strategy",
+      "review-focus",
       "todos",
       "commit-strategy",
       "success-criteria",
     ])
   })
 
-  test("the skeleton emits exactly 16 distinct H3s: 14 registry ids + 2 custom", () => {
+  test("the skeleton emits exactly 22 distinct H3s: 14 registry ids + 8 custom", () => {
     //#given the rendered skeleton
     const skeleton = renderPlanSkeleton()
 
@@ -160,14 +162,15 @@ describe("skeleton ↔ section-registry consistency guard", () => {
     const h3 = [...new Set(skeletonHeadings(skeleton).filter((l) => l.startsWith("### ")))]
 
     //#then the count is asserted, not assumed
-    expect(h3).toHaveLength(16)
+    expect(h3).toHaveLength(22)
 
     //#and 14 of them resolve to a registry id
     expect(h3.filter((line) => resolutionOf(line).kind === "resolved")).toHaveLength(14)
 
-    //#and the remaining 2 are the documented escape-hatch headings
+    //#and the remaining 8 are custom, including the 2 documented escape-hatch headings
     const custom = h3.filter((line) => resolutionOf(line).kind === "custom")
-    expect(custom).toEqual(SKELETON_CUSTOM_H3)
+    expect(custom).toHaveLength(8)
+    expect(custom).toEqual(expect.arrayContaining(SKELETON_CUSTOM_H3))
   })
 
   test("the 2 escape-hatch H3s resolve to kind:custom, never ambiguous and never resolved", () => {
@@ -210,19 +213,19 @@ describe("skeleton ↔ section-registry consistency guard", () => {
     //#then multi-match is absent. `custom` is a legitimate escape hatch, not a
     //#failure — the guard is NOT a demand that every heading be registered.
     expect(offenders.map((r) => (r.kind === "ambiguous" ? r.message : ""))).toEqual([])
-    expect(headings).toHaveLength(24)
+    expect(headings).toHaveLength(32)
   })
 
   test("renderPlanSkeleton output is byte-identical to its post-slimming snapshot", () => {
     //#given the slimmed skeleton bytes (QA guidance externalized to docs/plan-qa-scenarios.md)
-    const expectedSha = "6fac99533851302d386db7403fba0d93226f30532f3a2705cd6e510a54f3a0d2"
+    const expectedSha = "d27ef609211586880fdb0d156c3709f1a70f86e1ac466d7597daf2650f82c6df"
 
     //#when the skeleton is rendered now
     const skeleton = renderPlanSkeleton()
 
     //#then the digest is unchanged — this task added a guard, not a template edit
     expect(createHash("sha256").update(skeleton).digest("hex")).toBe(expectedSha)
-    expect(skeleton).toHaveLength(11645)
+    expect(skeleton).toHaveLength(12436)
   })
 
   test("the guard is load-bearing: a near-miss heading does not resolve to the registry", () => {

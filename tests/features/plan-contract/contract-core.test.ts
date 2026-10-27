@@ -9,14 +9,16 @@ import {
 } from "../../../src/features/plan-contract"
 
 describe("plan-contract core", () => {
-  test("exposes the 8 canonical H2 sections in order", () => {
+  test("exposes the 10 canonical H2 sections in order", () => {
     //#given the canonical Oracle plan structure
     const expected = [
       "TL;DR",
       "Context",
       "Work Objectives",
+      "Global Constraints",
       "Verification Strategy (MANDATORY)",
       "Execution Strategy",
+      "Review Focus",
       "TODOs",
       "Commit Strategy",
       "Success Criteria",
@@ -26,13 +28,13 @@ describe("plan-contract core", () => {
     const sections = CANONICAL_SECTIONS
 
     //#then it matches the expected order exactly
-    expect(sections).toHaveLength(8)
+    expect(sections).toHaveLength(10)
     expect([...sections]).toEqual(expected)
     expect(sections[0]).toBe("TL;DR")
-    expect(sections[7]).toBe("Success Criteria")
+    expect(sections[9]).toBe("Success Criteria")
   })
 
-  test("lists the 7 required task subfields in order", () => {
+  test("lists the 9 required task subfields in order", () => {
     //#given the required Oracle task grammar
     const expected = [
       "What to do",
@@ -40,6 +42,8 @@ describe("plan-contract core", () => {
       "Recommended Agent Profile",
       "Parallelization",
       "References",
+      "Consumes",
+      "Produces",
       "Acceptance Criteria",
       "Agent-Executed QA Scenarios",
     ]
@@ -48,7 +52,7 @@ describe("plan-contract core", () => {
     const subfields = REQUIRED_TASK_SUBFIELDS
 
     //#then it matches exactly
-    expect(subfields).toHaveLength(7)
+    expect(subfields).toHaveLength(9)
     expect([...subfields]).toEqual(expected)
   })
 

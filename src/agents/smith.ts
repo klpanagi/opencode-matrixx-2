@@ -59,6 +59,9 @@ You ARE here to:
 **PASS even if**: Some details need to be figured out during 
 **FAIL only if**: Task is so vague that developer has NO idea where to begin.
 
+### 2b. Global Constraints + Review Focus Present
+- Global Constraints + Review Focus present: plan declares its invariants (Global Constraints) and its reviewer checklist (Review Focus); flag if either H2 is missing or empty.
+
 ### 3. Critical Blockers Only
 - Missing information that would COMPLETELY STOP work
 - Contradictions that make the plan impossible to follow

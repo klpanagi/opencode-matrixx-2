@@ -86,7 +86,7 @@ function buildOverCapContent(): string {
   return `${lines.join("\n")}\n`
 }
 
-/** 8 canonical H2 sections + 12 numbered tasks, each carrying all required subfields. */
+/** 10 canonical H2 sections + 12 numbered tasks, each carrying all required subfields. */
 function buildSelfConformantPlan(): string {
   const lines: string[] = ["# Synthesized Self-Conformant Plan", ""]
   for (const section of CANONICAL_SECTIONS) {
@@ -267,8 +267,8 @@ describe("plan-tool chain — end-to-end integration", () => {
     await expect(result).rejects.toThrow(PLAN_READ_WARN)
   })
 
-  // (g) self-conformance of this plan (8 canonical H2 sections, 12 numbered tasks).
-  test("(g) validatePlanContract reports zero missing sections, 8 H2s and 12 numbered tasks", () => {
+  // (g) self-conformance of this plan (10 canonical H2 sections, 12 numbered tasks).
+  test("(g) validatePlanContract reports zero missing sections, 10 H2s and 12 numbered tasks", () => {
     //#given this plan when present, else a synthesized 8-H2 / 12-task equivalent
     const repoFile = repoPlanPath("plan-contract-and-dedicated-tools.md")
     const usingRepo = existsSync(repoFile)
@@ -282,7 +282,7 @@ describe("plan-tool chain — end-to-end integration", () => {
 
     //#then the contract is self-conformant
     expect(result.warnings.filter((w) => w.code === "missing_section")).toEqual([])
-    expect(h2Count).toBe(8)
+    expect(h2Count).toBe(10)
     expect(numberedCount).toBe(12)
   })
 })

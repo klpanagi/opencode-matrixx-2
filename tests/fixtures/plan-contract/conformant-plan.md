@@ -1,7 +1,7 @@
 # Conformant Plan Fixture
 
-> Minimal but complete Oracle-shaped plan: 8 canonical H2 sections in order and
-> exactly one numbered task carrying all 7 required bold subfields.
+> Minimal but complete Oracle-shaped plan: 10 canonical H2 sections in order and
+> exactly one numbered task carrying all 9 required bold subfields.
 
 ## TL;DR
 
@@ -20,6 +20,10 @@ What we intend to achieve.
 - [ ] Feature implemented
 - [ ] Tests pass
 
+## Global Constraints
+
+Plan-wide rules that hold for every task.
+
 ## Verification Strategy (MANDATORY)
 
 Verification is performed by running the test suite.
@@ -27,6 +31,10 @@ Verification is performed by running the test suite.
 ## Execution Strategy
 
 A single sequential wave.
+
+## Review Focus
+
+What the per-task gate and final review must verify.
 
 ## TODOs
 
@@ -47,6 +55,14 @@ A single sequential wave.
 
   **References** (CRITICAL - Be Exhaustive):
   - `src/example.ts:1-10` - the pattern to follow.
+
+  **Consumes**:
+  - Upstream inputs this task needs.
+  - Source task for each input.
+
+  **Produces**:
+  - Downstream outputs this task hands off.
+  - Consumer task for each output.
 
   **Acceptance Criteria**:
   - `bun test` → PASS
