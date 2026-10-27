@@ -74,7 +74,7 @@ export function createStartWorkHook(ctx: PluginInput) {
         sessionID: input.sessionID,
       })
 
-      updateSessionAgent(input.sessionID, "architect") // Always switch: fixes #1298
+      updateSessionAgent(input.sessionID, "niobe") // Always switch: fixes #1298
 
       const existingState = readMissionState(ctx.directory)
       const sessionId = input.sessionID
@@ -105,7 +105,7 @@ All ${progress.total} tasks are done. Create a new plan with: /plan "your task"`
             if (existingState) {
               clearMissionState(ctx.directory)
             }
-            const newState = createMissionState(matchedPlan, sessionId, "architect")
+            const newState = createMissionState(matchedPlan, sessionId, "niobe")
             writeMissionState(ctx.directory, newState)
             
             contextInfo = `
@@ -209,7 +209,7 @@ Review stale candidates for archival; triage-empty plans need checkboxes or manu
         } else if (incompletePlans.length === 1) {
           const planPath = incompletePlans[0]
           const progress = getPlanProgress(planPath)
-          const newState = createMissionState(planPath, sessionId, "architect")
+          const newState = createMissionState(planPath, sessionId, "niobe")
           writeMissionState(ctx.directory, newState)
 
           contextInfo += `

@@ -7,7 +7,6 @@ export type {
   RegisterAgentTransformResult,
 } from "./agents.transform"
 export { applyAgentEntry, registerAgentTransform } from "./agents.transform"
-export { architectPromptMetadata, createArchitectAgent } from "./architect"
 export {
   AUDITOR_PROMPT_METADATA,
   AUDITOR_SYSTEM_PROMPT,
@@ -19,6 +18,7 @@ export type { AvailableAgent, AvailableCategory, AvailableSkill } from "./dynami
 export { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "./merovingian"
 export { createMorpheusAgent } from "./morpheus"
 export { createNeoAgent, NEO_PROMPT_METADATA } from "./neo"
+export { createNiobeAgent, niobePromptMetadata } from "./niobe"
 export { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./operator"
 export {
   ORACLE_BEHAVIORAL_SUMMARY,

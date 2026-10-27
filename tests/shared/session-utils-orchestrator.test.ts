@@ -27,29 +27,29 @@ describe("isCallerOrchestrator", () => {
   //#when the orchestrator check runs
   //then it returns false without querying the SDK
   it("returns false for a missing sessionID", async () => {
-    const { client, getCalls } = makeClient("architect")
+    const { client, getCalls } = makeClient("niobe")
 
     expect(await isCallerOrchestrator(undefined, client)).toBe(false)
     expect(getCalls()).toBe(0)
   })
 
-  //#given the in-memory session agent is known to be a non-architect agent
+  //#given the in-memory session agent is known to be a non-niobe agent
   //#when the orchestrator check runs
   //#then it resolves from memory without issuing a transcript fetch
-  it("short-circuits on the in-memory agent for a non-architect session", async () => {
-    const { client, getCalls } = makeClient("architect")
+  it("short-circuits on the in-memory agent for a non-niobe session", async () => {
+    const { client, getCalls } = makeClient("niobe")
     setSessionAgent("ses_short", "oracle")
 
     expect(await isCallerOrchestrator("ses_short", client)).toBe(false)
     expect(getCalls()).toBe(0)
   })
 
-  //#given the in-memory session agent is the architect
+  //#given the in-memory session agent is the niobe
   //#when the orchestrator check runs
   //then it returns true without issuing a transcript fetch
-  it("short-circuits on the in-memory agent for an architect session", async () => {
+  it("short-circuits on the in-memory agent for an niobe session", async () => {
     const { client, getCalls } = makeClient("oracle")
-    setSessionAgent("ses_arch", "architect")
+    setSessionAgent("ses_arch", "niobe")
 
     expect(await isCallerOrchestrator("ses_arch", client)).toBe(true)
     expect(getCalls()).toBe(0)

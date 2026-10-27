@@ -46,7 +46,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 			interactiveBashSession: { event: async () => {} },
 			matrixLoop: { event: async () => {} },
 			stopContinuationGuard: { event: async () => {} },
-			architectHook: { handler: async () => {} },
+			niobeHook: { handler: async () => {} },
 		} as unknown as DomainHooks,
 	})
 
@@ -120,7 +120,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				interactiveBashSession: { event: async () => {} },
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
-				architectHook: { handler: async () => {} },
+				niobeHook: { handler: async () => {} },
 			} as unknown as DomainHooks,
 		})
 
@@ -187,7 +187,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				interactiveBashSession: { event: async () => {} },
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
-				architectHook: { handler: async () => {} },
+				niobeHook: { handler: async () => {} },
 			} as unknown as DomainHooks,
 		})
 
@@ -277,7 +277,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				interactiveBashSession: { event: async () => {} },
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
-				architectHook: { handler: async () => {} },
+				niobeHook: { handler: async () => {} },
 			},
 		})
 
@@ -332,7 +332,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 				interactiveBashSession: { event: async () => {} },
 				matrixLoop: { event: async () => {} },
 				stopContinuationGuard: { event: async () => {} },
-				architectHook: { handler: async () => {} },
+				niobeHook: { handler: async () => {} },
 			} as unknown as DomainHooks,
 		})
 

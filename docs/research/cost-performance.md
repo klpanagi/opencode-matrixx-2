@@ -200,7 +200,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 - **Cost impact:** Hard cost caps per session/task.
 - **Performance impact:** Better task decomposition for complex requests.
 - **Complexity:** **High.** New coordination layer; significant architectural addition.
-- **Where:** `src/hooks/architect/` (1976 LOC), `src/agents/oracle/`
+- **Where:** `src/hooks/niobe/` (1976 LOC), `src/agents/oracle/`
 - **Source:** open-multi-agent/open-multi-agent
 
 ### P12. Cross-Model Peer Review (cavekit)

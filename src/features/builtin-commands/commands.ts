@@ -84,7 +84,7 @@ $ARGUMENTS
   },
   "start-work": {
     description: "(builtin) Start Morpheus work session from Oracle plan",
-    agent: "architect",
+    agent: "niobe",
     template: `<command-instruction>
 ${START_WORK_TEMPLATE}
 </command-instruction>

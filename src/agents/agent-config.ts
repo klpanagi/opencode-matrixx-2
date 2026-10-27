@@ -15,7 +15,7 @@ export { rule } from "../shared/permission-compat"
 
 /**
  * Agent mode determines UI model selection behavior:
- * - "primary": Respects user's UI-selected model (morpheus, architect)
+ * - "primary": Respects user's UI-selected model (morpheus, niobe)
  * - "subagent": Uses own fallback chain, ignores UI selection (merovingian, trinity, etc.)
  * - "all": Available in both contexts (OpenCode compatibility)
  */

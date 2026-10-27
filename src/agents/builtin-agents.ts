@@ -8,14 +8,13 @@ import { mergeCategories } from "../shared/merge-categories"
 import type { BuiltinSkill } from "../skills"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import type { AgentConfig } from "./agent-config"
-import { architectPromptMetadata, createArchitectAgent } from "./architect"
 import { AUDITOR_PROMPT_METADATA, createAuditorAgent } from "./auditor"
 import { BDD_CONTRACT_PROMPT_METADATA, createBddContractAgent } from "./bdd-contract"
-import { maybeCreateArchitectConfig } from "./builtin-agents/architect-agent"
 import { buildAvailableSkills } from "./builtin-agents/available-skills"
 import { collectPendingBuiltinAgents } from "./builtin-agents/general-agents"
 import { maybeCreateKeymakerConfig } from "./builtin-agents/keymaker-agent"
 import { maybeCreateMorpheusConfig } from "./builtin-agents/morpheus-agent"
+import { maybeCreateNiobeConfig } from "./builtin-agents/niobe-agent"
 import { CIPHER_PROMPT_METADATA, createCipherAgent } from "./cipher"
 import { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "./construct"
 import { buildCustomAgentMetadata, parseRegisteredAgentSummaries } from "./custom-agent-summaries"
@@ -24,6 +23,7 @@ import { createKeymakerAgent } from "./keymaker"
 import { createMerovingianAgent, ORACLE_PLAN_BUILDER_METADATA, ORACLE_PROMPT_METADATA } from "./merovingian"
 import { createMorpheusAgent } from "./morpheus"
 import { createNeoAgent, NEO_PROMPT_METADATA } from "./neo"
+import { createNiobeAgent, niobePromptMetadata } from "./niobe"
 import { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./operator"
 import { createSatiAgent } from "./sati"
 import { createSentinelAgent, SENTINEL_PROMPT_METADATA } from "./sentinel"
@@ -46,7 +46,7 @@ const agentSources: Partial<Record<BuiltinAgentName, AgentSource>> = {
   seraph: createSeraphAgent,
   smith: createSmithAgent,
   auditor: createAuditorAgent,
-  architect: createArchitectAgent as AgentFactory,
+  niobe: createNiobeAgent as AgentFactory,
   cipher: createCipherAgent,
   sentinel: createSentinelAgent,
   neo: createNeoAgent,
@@ -68,7 +68,7 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   seraph: seraphPromptMetadata,
   smith: smithPromptMetadata,
   auditor: AUDITOR_PROMPT_METADATA,
-  architect: architectPromptMetadata,
+  niobe: niobePromptMetadata,
   cipher: CIPHER_PROMPT_METADATA,
   sentinel: SENTINEL_PROMPT_METADATA,
   neo: NEO_PROMPT_METADATA,
@@ -194,7 +194,7 @@ export async function createBuiltinAgents(
     result[name] = config
   }
 
-  const architectConfig = maybeCreateArchitectConfig({
+  const niobeConfig = maybeCreateNiobeConfig({
     disabledAgents,
     agentOverrides,
     globalOverrideModel,
@@ -207,8 +207,8 @@ export async function createBuiltinAgents(
     directory,
     userCategories: categories,
   })
-  if (architectConfig) {
-    result.architect = architectConfig
+  if (niobeConfig) {
+    result.niobe = niobeConfig
   }
 
   return result

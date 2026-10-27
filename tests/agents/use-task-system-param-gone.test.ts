@@ -7,7 +7,7 @@
  * Today it appears in 3 shapes at 10+ anchors:
  *   - 6 `= false` defaults  (builtin-agents.ts, mouse/agent.ts, keymaker, morpheus)
  *   - 2 pass-throughs        (builtin-agents.ts)
- *   - 2 optional-param sites (architect-agent.ts, general-agents.ts)
+ *   - 2 optional-param sites (niobe-agent.ts, general-agents.ts)
  * plus 3 interpolated `| Tracking | ${useTaskSystem ? ... } |` prompt rows.
  *
  * STRUCTURE — this file currently holds the STATIC half only. Task 7 appends

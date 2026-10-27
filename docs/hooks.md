@@ -29,7 +29,7 @@
   `tool.execute.after` (19 invocations, `src/plugin/tool-execute-after.ts`).
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
-  (`oracle-md-only`, `mouse-notepad`, `architect`), plus sequential `after`
+  (`oracle-md-only`, `mouse-notepad`, `niobe`), plus sequential `after`
   work (`quality-gate` Biome, `comment-checker` CLI).
 - 8 registered hooks have factories but no call site in any current
   dispatcher (Section 2.4). They are constructed, appear in config, and cost
@@ -65,7 +65,7 @@ createHooks()                       src/create-hooks.ts
 - Continuation builds 11 entries: stop guard, two compaction helpers, the task
   enforcer (gated by canonical `tasks.enabled` via `isTaskSystemEnabled`, which
   now always resolves to `true`),
-  babysitter, background notification, architect, plan persister, and two
+  babysitter, background notification, niobe, plan persister, and two
   evolution hooks (only when `evolution.enabled` is true).
 - Skill builds 2 entries: `category-skill-reminder`, `auto-slash-command`.
 
@@ -116,8 +116,8 @@ order; hooks inside Wave 1 and Wave 2 run concurrently.
   tool call. Each guard throws on a different condition for a different tool.
 - Wave 3, MUTATOR, sequential (6): `rtkBashRewriter` (only when `rtk.enabled`)
   then `nonInteractiveEnv`, `bashFileReadGuard`, `oracleMdOnly` (mutator
-  half), `mouseNotepad`, `architectHook`. Order matters: `nonInteractiveEnv`
-  rewrites `output.args.command` first, and `architectHook` prepends outermost
+  half), `mouseNotepad`, `niobeHook`. Order matters: `nonInteractiveEnv`
+  rewrites `output.args.command` first, and `niobeHook` prepends outermost
   so its reminder sits closest to the model.
 
 `oracleMdOnly` runs twice (once per Wave 2/3): 16 unique hooks,
@@ -138,7 +138,7 @@ toolOutputTruncator (always first)
         contextWindowMonitor -> commentChecker -> directoryAgentsInjector
         -> rulesInjector -> emptyTaskResponseDetector -> agentUsageReminder
         -> categorySkillReminder -> interactiveBashSession -> editErrorRecovery
-        -> delegateTaskRetry -> architectHook -> taskResumeInfo
+        -> delegateTaskRetry -> niobeHook -> taskResumeInfo
         -> taskNotepadWriter -> hashlineReadEnhancer
         -> jsonErrorRecovery -> readImageResizer
     ])
@@ -178,14 +178,14 @@ narrows which tool calls are affected.
 | `non-interactive-env` | Prefixes bash commands with a non-interactive env setup. Exists because agents run without a TTY and need a predictable environment. | Every `bash` call. Pure regex. | MUTATOR, low |
 | `bash-file-read-guard` | Rewrites bash file reads (`cat`/`head`/redirects) into a nudge toward the `Read` tool. Exists because `Read` yields hashline anchors and guard coverage that bash reads bypass. | `bash` containing read-like patterns. Rewrites `output.message`. | MUTATOR, low |
 | `mouse-notepad` | Prepends the notepad directive to worker `task` prompts issued by the orchestrator. Exists so workers persist findings in notepads. | `task` calls from the orchestrator (SDK caller check). | MUTATOR+NETWORK, medium |
-| `architect` | Prepends the architect reminder outermost on delegated tasks. Exists to keep workers inside mission scope. | `task` calls (before side). | MUTATOR+NETWORK, medium |
+| `niobe` | Prepends the niobe reminder outermost on delegated tasks. Exists to keep workers inside mission scope. | `task` calls (before side). | MUTATOR+NETWORK, medium |
 | `rtk-bash-rewriter` | Rewrites bash into RTK-compressed equivalents. Exists to cut token spend on bash output. | `bash` when `rtk.enabled` and the binary is present; otherwise silent passthrough. | MUTATOR, low/off |
 | `quality-gate` (before) | Registers the pending call in a `Map`. Exists to pair before/after so lint runs only on changed files. | Writes/edits to lintable files. | READ_ONLY, negligible |
 | `comment-checker` (before) | Registers the pending call. Exists for the same before/after pairing for the comment CLI. | Changed files. | READ_ONLY, negligible |
 | `directory-agents-injector` (before) | No-op (`void input; void output`). Exists as a placeholder — the real work runs in `after`. | Never (in `before`). | READ_ONLY, zero |
 | `rules-injector` (before) | No-op. Same split-phase design as above. | Never (in `before`). | READ_ONLY, zero |
 
-Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/background-task-blocker/hook.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/architect/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
+Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/background-task-blocker/hook.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
 
 ### 2.2 `tool.execute.after` (18 invocations)
 
@@ -207,14 +207,14 @@ effective condition (many hooks are idle unless their condition holds).
 | `interactive-bash-session` | Tmux session bookkeeping after bash. Exists to track interactive sessions. | After `bash`; otherwise idle. |
 | `edit-error-recovery` | Injects corrective guidance on known Edit mistakes. Exists for fast recovery from `oldString` errors. | When `Edit` fails with a known pattern; otherwise idle. |
 | `delegate-task-retry` | Injects retry guidance when delegation output matches error patterns. Exists to recover failed delegations without user intervention. | When delegation output matches; otherwise idle. |
-| `architect` | Post-tool side of the orchestration hook. Exists for mission lifecycle bookkeeping. | After `task` calls. |
+| `niobe` | Post-tool side of the orchestration hook. Exists for mission lifecycle bookkeeping. | After `task` calls. |
 | `task-resume-info` | Appends resume info for task/subagent sessions. Exists for continuity across sessions. | After task/subagent sessions; always constructed (no gate besides `disabled_hooks`). |
 | `hashline-read-enhancer` | Adds hash-anchor enrichment to reads. Exists to give edits stable `LINE#ID` anchors. | After reads, when `experimental.hashline_edit` is on. |
 | `json-error-recovery` | Injects action guidance on JSON parse errors. Exists to fix malformed tool arguments. | On JSON errors; otherwise idle. |
 | `read-image-resizer` | Downscales images past token limits. Exists to keep image reads inside context budgets. | After image reads over the limit. |
 | `task-notepad-writer` | Writes a scaffolded markdown notepad per task, into `.matrixx/notepads/<planName>/` or `adhoc/`, and appends a `## Completion` stamp on completion. Exists so findings survive compaction and restarts. Keyed on a `**Task ID**` marker in the file, so it is idempotent with no in-memory state. | After a non-deduplicated `task_create`, and after a `task_update` whose `status` is `completed`; never blocks or rewrites output. |
 
-Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction.ts:59-112`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/delegate-task-retry/hook.ts`, `src/hooks/architect/architect-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
+Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction.ts:59-112`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/delegate-task-retry/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
 
 ### 2.3 Prompt, message, and session triggers
 
@@ -240,7 +240,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction
 | `background-notification` | `event` | Routes events to BackgroundManager notifications. Exists for background-task visibility. |
 | `session-notification` | `event` (called as function) | OS idle notifications with sound. Exists to alert on idle completion. |
 | `unstable-agent-babysitter` | `event` session.idle | Watches unstable agent behavior. Exists to nudge stuck agents. |
-| `architect` | `event` via `.handler` | Orchestration lifecycle (error/idle/compact/delete). Exists to maintain mission state. |
+| `niobe` | `event` via `.handler` | Orchestration lifecycle (error/idle/compact/delete). Exists to maintain mission state. |
 | `plan-persister` | `event` + compacting rehydration | Persists plan state on idle, rebuilds context after compaction. Exists so plans survive compaction. |
 | `compaction-context-injector` | compacting only | Injects background context after compaction. Exists so background results are not lost. |
 | `context-window-monitor`, `directory-agents-injector`, `rules-injector`, `agent-usage-reminder`, `category-skill-reminder`, `interactive-bash-session` | `event` (mostly session.deleted/compacted cleanup) | Per-session state cleanup beside their `after` work. Exists to avoid cross-session leaks. |
@@ -251,9 +251,9 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction
 | `evolution-compressor` | module hook | Compresses traces into distilled knowledge, budgeted per hour. Exists for async session learning; only when `evolution.enabled`. Currently has no call site (Section 2.4). |
 | `runtime-fallback` | module hook | Retries failed model calls on fallbacks with cooldown. Exists for provider resilience. Currently has no call site (Section 2.4). |
 
-Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/chat-params.ts`, `src/plugin/messages-transform.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/event.ts`, `src/plugin/event.ts` + `src/plugin/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/architect/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
+Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/chat-params.ts`, `src/plugin/messages-transform.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/event.ts`, `src/plugin/event.ts` + `src/plugin/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
 
-For orchestration behavior (architect, continuation enforcers, matrix loop)
+For orchestration behavior (niobe, continuation enforcers, matrix loop)
 see `orchestration.md`; for the task substrate see
 `task-system.md`; for full config keys see `configurations.md`.
 
@@ -328,7 +328,7 @@ Check the hook factory before assuming cost.
 Minimal-write profile (keeps guards, drops NETWORK + heavy `after` work):
 
 ```jsonc
-{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "architect", "quality-gate", "comment-checker", "preemptive-compaction"] }
+{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction"] }
 ```
 
 > Keep `secret-leak-guard` unless writes are trusted. It is the single
@@ -337,7 +337,7 @@ Minimal-write profile (keeps guards, drops NETWORK + heavy `after` work):
 Nuclear debug profile (measure raw OpenCode overhead):
 
 ```jsonc
-{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "architect", "quality-gate", "comment-checker", "preemptive-compaction", "context-mode-enforcer", "task-edit-guard", "task-continuation-enforcer", "rules-injector", "directory-agents-injector"] }
+{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction", "context-mode-enforcer", "task-edit-guard", "task-continuation-enforcer", "rules-injector", "directory-agents-injector"] }
 ```
 
 ## 4. Performance model (why `write` feels slow)
@@ -357,7 +357,7 @@ Key points:
 1. Dispatch overhead is awaits and Map writes. Cost concentrates in hooks
    that do I/O: `secretLeakGuard` spawns `gitleaks` per tool call (Wave 2),
    which dwarfs all other `before` costs combined.
-2. `oracleMdOnly`/`mouseNotepad`/`architectHook` do SDK HTTP
+2. `oracleMdOnly`/`mouseNotepad`/`niobeHook` do SDK HTTP
    (`getAgentFromSession` / `isCallerOrchestrator`) with filesystem fallback
    scans on the critical path, and `oracleMdOnly` runs twice.
 3. `after` is the longer tail: 16 sequential awaits plus Biome plus the
@@ -366,7 +366,7 @@ Key points:
 4. Even no-op hooks (`directoryAgentsInjector`, `rulesInjector` in `before`)
    cost one microtask hop each. Only `disabled_hooks` removes them.
 5. Wave 3 must stay sequential (mutation order). Parallelizing it would let
-   prompt-prefix writes stomp each other and reorder the architect reminder.
+   prompt-prefix writes stomp each other and reorder the niobe reminder.
 
 ## 5. Measuring hook cost
 

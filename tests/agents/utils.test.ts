@@ -48,7 +48,7 @@ describe("createBuiltinAgents with model overrides", () => {
     expect(agents.morpheus.request?.body?.thinking).toBeUndefined()
   })
 
-  test("Architect uses uiSelectedModel when provided", async () => {
+  test("Niobe uses uiSelectedModel when provided", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
       new Set(["openai/gpt-5.2", "anthropic/claude-sonnet-4-5"])
@@ -71,10 +71,10 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      expect(agents.architect).toBeDefined()
-      // TODO: uiSelectedModel is not currently applied to architect (production regression). Restore below when fixed.
-      expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
-      // expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2" }))
+      expect(agents.niobe).toBeDefined()
+      // TODO: uiSelectedModel is not currently applied to niobe (production regression). Restore below when fixed.
+      expect(agents.niobe.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+      // expect(agents.niobe.model).toEqual(expect.objectContaining({ providerID: "openai", id: "gpt-5.2" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -113,14 +113,14 @@ describe("createBuiltinAgents with model overrides", () => {
     }
   })
 
-  test("user config model takes priority over uiSelectedModel for architect", async () => {
+  test("user config model takes priority over uiSelectedModel for niobe", async () => {
     // #given
     const fetchSpy = spyOn(shared, "fetchAvailableModels").mockResolvedValue(
       new Set(["openai/gpt-5.2", "anthropic/claude-sonnet-4-5"])
     )
     const uiSelectedModel = "openai/gpt-5.2"
     const overrides = {
-      architect: { model: "google/antigravity-claude-opus-4-5-thinking" },
+      niobe: { model: "google/antigravity-claude-opus-4-5-thinking" },
     }
 
     try {
@@ -139,8 +139,8 @@ describe("createBuiltinAgents with model overrides", () => {
       )
 
       // #then
-      expect(agents.architect).toBeDefined()
-      expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
+      expect(agents.niobe).toBeDefined()
+      expect(agents.niobe.model).toEqual(expect.objectContaining({ providerID: "google", id: "antigravity-claude-opus-4-5-thinking" }))
     } finally {
       fetchSpy.mockRestore()
     }
@@ -294,7 +294,7 @@ describe("createBuiltinAgents with model overrides", () => {
       // TODO: customAgentSummaries not currently injected into orchestrator prompts (production regression). Restore below when fixed.
       expect(agents.morpheus.system).not.toContain("researcher")
       expect(agents.keymaker.system).not.toContain("researcher")
-      expect(agents.architect.system).not.toContain("researcher")
+      expect(agents.niobe.system).not.toContain("researcher")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -330,7 +330,7 @@ describe("createBuiltinAgents with model overrides", () => {
       // #then
       expect(agents.morpheus.system).not.toContain("hidden-agent")
       expect(agents.keymaker.system).not.toContain("hidden-agent")
-      expect(agents.architect.system).not.toContain("hidden-agent")
+      expect(agents.niobe.system).not.toContain("hidden-agent")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -366,7 +366,7 @@ describe("createBuiltinAgents with model overrides", () => {
       // #then
       expect(agents.morpheus.system).not.toContain("disabled-agent")
       expect(agents.keymaker.system).not.toContain("disabled-agent")
-      expect(agents.architect.system).not.toContain("disabled-agent")
+      expect(agents.niobe.system).not.toContain("disabled-agent")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -402,7 +402,7 @@ describe("createBuiltinAgents with model overrides", () => {
       // #then
       expect(agents.morpheus.system).not.toContain("researcher")
       expect(agents.keymaker.system).not.toContain("researcher")
-      expect(agents.architect.system).not.toContain("researcher")
+      expect(agents.niobe.system).not.toContain("researcher")
     } finally {
       fetchSpy.mockRestore()
     }
@@ -1141,22 +1141,22 @@ describe("override.category expansion in createBuiltinAgents", () => {
     expect(agents.morpheus.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
-  test("architect override with category expands category properties", async () => {
+  test("niobe override with category expands category properties", async () => {
     // #given
     const categories = {
       source: { model: "anthropic/claude-opus-4-6", variant: "max" as const }, // fixture: explicit category config for empty-tier behavior
     }
     const overrides = {
-      architect: { category: "source" },
+      niobe: { category: "source" },
     } satisfies OverrideMap
 
     // #when
     const agents = await createBuiltinAgents([], overrides, undefined, TEST_DEFAULT_MODEL, categories)
 
     // #then - source category: model=anthropic/claude-opus-4-6, variant=max
-    expect(agents.architect).toBeDefined()
-    expect(agents.architect.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
-    expect(agents.architect.model).toEqual(expect.objectContaining({ variant: "max" }))
+    expect(agents.niobe).toBeDefined()
+    expect(agents.niobe.model).toEqual(expect.objectContaining({ providerID: "anthropic", id: "claude-opus-4-6" }))
+    expect(agents.niobe.model).toEqual(expect.objectContaining({ variant: "max" }))
   })
 
   test("override with non-existent category has no effect on config", async () => {

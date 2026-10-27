@@ -4,7 +4,7 @@ import {
   splitCommands,
   unwrapWrapper,
   classifyBashCommand,
-} from "../src/hooks/architect/bash-command-policy"
+} from "../src/hooks/niobe/bash-command-policy"
 
 describe("splitCommands", () => {
   test("splits on && operator", () => {

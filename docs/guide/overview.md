@@ -57,7 +57,7 @@ For complex or critical tasks, press **Tab** to switch to Oracle (Planner) mode.
 
 2. **Plan generation** - Based on the interview, Oracle generates a detailed work plan with tasks, acceptance criteria, and guardrails. Optionally reviewed by Smith (plan reviewer) for high-accuracy validation.
 
-3. **Run `/start-work`** - The Architect takes over:
+3. **Run `/start-work`** - The Niobe takes over:
    - Distributes tasks to specialized sub-agents
    - Verifies each task completion independently
    - Accumulates learnings across tasks
@@ -75,7 +75,7 @@ For complex or critical tasks, press **Tab** to switch to Oracle (Planner) mode.
 
 ### Always Use Oracle + Orchestrator Together
 
-**Do NOT use `architect` without `/start-work`.**
+**Do NOT use `niobe` without `/start-work`.**
 
 The orchestrator is designed to execute work plans created by Oracle. Using it directly without a plan leads to unpredictable behavior.
 
@@ -87,7 +87,7 @@ The orchestrator is designed to execute work plans created by Oracle. Using it d
 4. Run /start-work → Orchestrator executes
 ```
 
-**Oracle and Architect are a pair. Always use them together.**
+**Oracle and Niobe are a pair. Always use them together.**
 
 ---
 
@@ -141,7 +141,7 @@ cheap for trivial work):
   "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/dist/matrixx.schema.json",
   "agents": {
     // Override specific agents only - rest use fallback chain
-    "architect": { "model": "opencode/kimi-k2.5-free", "variant": "max" },
+    "niobe": { "model": "opencode/kimi-k2.5-free", "variant": "max" },
     "operator": { "model": "zai-coding-plan/glm-4.7" },
     "trinity": { "model": "opencode/deepseek-v4-flash-free" },
     "construct": { "model": "opencode/qwen3.6-plus-free" }
@@ -174,7 +174,7 @@ For detailed configuration options including per-agent settings, category custom
 
 ## Next Steps
 
-- [Matrixx Orchestration](../orchestration.md) - Deep dive into Oracle → Architect → Mouse workflow
+- [Matrixx Orchestration](../orchestration.md) - Deep dive into Oracle → Niobe → Mouse workflow
 - [Ultrawork mode](../command-reference.md) - `/ultrawork` toggle and ultrawork workflow
 - [Installation Guide](./installation.md) - Detailed installation instructions
 - [Configuration Guide](../configurations.md) - Customize agents, models, and behaviors

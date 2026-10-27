@@ -1,8 +1,8 @@
 /**
- * Architect - Master Orchestrator Agent
+ * Niobe - Master Orchestrator Agent
  *
  * Orchestrates work via task() to complete ALL tasks in a todo list until fully done.
- * You are the conductor of a symphony of specialized agents.
+ * You are the captain of a crew of specialized agents.
  *
  * Routing:
  * 1. GPT models (openai/*, github-copilot/gpt-*) → gpt.ts (GPT-5.2 optimized)
@@ -17,8 +17,8 @@ import { buildCategorySkillsDelegationGuide } from "../dynamic-agent-prompt-buil
 import type { AgentMode, AgentPromptMetadata } from "../types"
 import { isGptModel } from "../types"
 
-import { getDefaultArchitectPrompt } from "./default"
-import { getGptArchitectPrompt } from "./gpt"
+import { getDefaultNiobePrompt } from "./default"
+import { getGptNiobePrompt } from "./gpt"
 import {
   buildAgentSelectionSection,
   buildCategorySection,
@@ -29,12 +29,12 @@ import {
 
 const MODE: AgentMode = "primary"
 
-export type ArchitectPromptSource = "default" | "gpt"
+export type NiobePromptSource = "default" | "gpt"
 
 /**
- * Determines which Architect prompt to use based on model.
+ * Determines which Niobe prompt to use based on model.
  */
-export function getArchitectPromptSource(model?: string): ArchitectPromptSource {
+export function getNiobePromptSource(model?: string): NiobePromptSource {
   if (model && isGptModel(model)) {
     return "gpt"
   }
@@ -49,16 +49,16 @@ export interface OrchestratorContext {
 }
 
 /**
- * Gets the appropriate Architect prompt based on model.
+ * Gets the appropriate Niobe prompt based on model.
  */
-export function getArchitectPrompt(model?: string): string {
-  const source = getArchitectPromptSource(model)
+export function getNiobePrompt(model?: string): string {
+  const source = getNiobePromptSource(model)
 
   switch (source) {
     case "gpt":
-      return getGptArchitectPrompt()
+      return getGptNiobePrompt()
     default:
-      return getDefaultArchitectPrompt()
+      return getDefaultNiobePrompt()
   }
 }
 
@@ -80,7 +80,7 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
   const skillsSection = buildSkillsSection(skills)
   const categorySkillsGuide = buildCategorySkillsDelegationGuide(availableCategories, skills)
 
-  const basePrompt = getArchitectPrompt(model)
+  const basePrompt = getNiobePrompt(model)
 
   return basePrompt
     .replace("{CATEGORY_SECTION}", categorySection)
@@ -90,16 +90,16 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
     .replace("{{CATEGORY_SKILLS_DELEGATION_GUIDE}}", categorySkillsGuide)
 }
 
-export function createArchitectAgent(ctx: OrchestratorContext): AgentConfig {
-  // No outgoing tool denies: Architect orchestrates via task(). Factory is single
+export function createNiobeAgent(ctx: OrchestratorContext): AgentConfig {
+  // No outgoing tool denies: Niobe orchestrates via task(). Factory is single
   // source of truth for outgoing-task allow (see #111 option b). Handler
   // (tool-config-handler.ts) is fill-only and must not override; incoming
-  // task(subagent_type="architect") remains rejected at subagent-resolver.ts:57
+  // task(subagent_type="niobe") remains rejected at subagent-resolver.ts:57
   // (different axis).
 
   const baseConfig: AgentConfig = {
     description:
-      "Orchestrates work via task() to complete ALL tasks in a todo list until fully done. (Architect - Matrixx)",
+      "Orchestrates work via task() to complete ALL tasks in a todo list until fully done. (Niobe - Matrixx)",
     mode: MODE,
     ...(ctx.model ? { model: parseModelRef(ctx.model) } : {}),
     request: { body: { temperature: 0.1 } },
@@ -109,12 +109,12 @@ export function createArchitectAgent(ctx: OrchestratorContext): AgentConfig {
 
   return baseConfig
 }
-createArchitectAgent.mode = MODE
+createNiobeAgent.mode = MODE
 
-export const architectPromptMetadata: AgentPromptMetadata = {
+export const niobePromptMetadata: AgentPromptMetadata = {
   category: "advisor",
   cost: "EXPENSIVE",
-  promptAlias: "Architect",
+  promptAlias: "Niobe",
   triggers: [
     {
       domain: "Todo list orchestration",

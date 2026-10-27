@@ -21,8 +21,8 @@ agents/
 │   ├── high-accuracy-mode.ts
 │   ├── identity-constraints.ts # Identity rules (301 lines)
 │   └── behavioral-summary.ts
-├── architect/                      # Master orchestrator
-│   ├── agent.ts                # Architect factory
+├── niobe/                      # Master orchestrator
+│   ├── agent.ts                # Niobe factory
 │   ├── default.ts              # Claude-optimized prompt
 │   ├── gpt.ts                  # GPT-optimized prompt
 │   └── index.ts
@@ -56,7 +56,7 @@ agents/
 | Keymaker | gpt-5.3-codex | 0.1 | gpt-5.2 (requires openai/github-copilot/venice/opencode) | EXPENSIVE |
 | Seraph | <provider>/<model> | 0.3 | <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Oracle | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Architect | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
+| Niobe | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Cipher | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Sentinel | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Merovingian | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
@@ -79,7 +79,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 | Trinity | subagent | write, edit, task | Search tools only |
 | Construct | subagent | ALL except `read` | Vision-only |
 | Mouse | subagent | — (task permitted, see carve-out) | `task_*` — owns its delegated task records |
-| Architect | primary | — (task permitted) | `task_*`, teammate — orchestration only |
+| Niobe | primary | — (task permitted) | `task_*`, teammate — orchestration only |
 | Sentinel | all | write, edit, multiedit, `task` (delegation denied, `task_*` tracking allowed) | Read-only security auditing |
 | Cipher | all | — | `task_*`, teammate — delegates per target language |
 | Keymaker | primary | — | `task_*`, teammate |
@@ -116,7 +116,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 
 - **Factory**: `createXXXAgent(model): AgentConfig`
 - **Metadata**: `XXX_PROMPT_METADATA` with category, cost, triggers
-- **Model-specific prompts**: Architect, Mouse have GPT vs Claude variants
+- **Model-specific prompts**: Niobe, Mouse have GPT vs Claude variants
 - **Dynamic prompts**: Morpheus, Keymaker use `dynamic-agent-prompt-builder.ts` to inject available tools/skills/categories
 
 ## ANTI-PATTERNS

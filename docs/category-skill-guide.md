@@ -147,7 +147,7 @@ You can create powerful specialized agents by combining Categories and Skills.
 - **load_skills**: `["frontend-ui-ux", "playwright"]`
 - **Effect**: Implements aesthetic UI and verifies rendering results directly in browser.
 
-### 🏗️ The Architect (Design Review)
+### 🏗️ The Niobe (Design Review)
 - **Category**: `red-pill`
 - **load_skills**: `[]` (pure reasoning)
 - **Effect**: Leverages the strongest available reasoning model for in-depth system architecture analysis.

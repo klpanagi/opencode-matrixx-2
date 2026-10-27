@@ -58,16 +58,16 @@ Three consumers read notepads with a non-recursive glob over `{plan-name}/*.md`:
 
 | Consumer | Line | Pattern |
 |---|---|---|
-| `src/hooks/architect/verification-reminders.ts` | 33 | `Glob(".matrixx/notepads/${planName}/*.md")` |
-| `src/agents/architect/default.ts` | 160 | `glob(".matrixx/notepads/{plan-name}/*.md")` |
-| `src/agents/architect/gpt.ts` | 124 | `READ: .matrixx/notepads/{plan-name}/*.md` |
+| `src/hooks/niobe/verification-reminders.ts` | 33 | `Glob(".matrixx/notepads/${planName}/*.md")` |
+| `src/agents/niobe/default.ts` | 160 | `glob(".matrixx/notepads/{plan-name}/*.md")` |
+| `src/agents/niobe/gpt.ts` | 124 | `READ: .matrixx/notepads/{plan-name}/*.md` |
 
 A non-recursive glob stops at the first directory level. If the writer nested its output as
 `.matrixx/notepads/<planName>/tasks/<n>-<slug>.md`, all three consumers would silently read zero notepads
-and the architect would verify against nothing. Flatness is a contract with those readers, not a style
+and the niobe would verify against nothing. Flatness is a contract with those readers, not a style
 preference.
 
-The live precedent is the repo's own `.matrixx/notepads/fix-111-architect/` bucket:
+The live precedent is the repo's own `.matrixx/notepads/fix-111-niobe/` bucket:
 
 ```
 0-recon.md  1-gate1.md  2-gate2.md  3-gate3.md
@@ -300,13 +300,13 @@ Two tasks are created in a fixture root that has no `.matrixx/plans` directory a
 Step 1 — metadata.planName = "auth-refresh", but NO plan file was ever written.
 No .matrixx/plans directory exists in this fixture root at all.
   resolved bucket: adhoc (reason: plan-file-missing)
-  → wrote .matrixx/notepads/adhoc/0-document-the-flaky-111-architect-gate.md
+  → wrote .matrixx/notepads/adhoc/0-document-the-flaky-111-niobe-gate.md
 
 Step 2 — a task with no metadata at all.
   resolved bucket: adhoc (reason: no-plan-name)
 
 Final adhoc listing (index increments by the count of existing *.md):
-  .matrixx/notepads/adhoc/0-document-the-flaky-111-architect-gate.md
+  .matrixx/notepads/adhoc/0-document-the-flaky-111-niobe-gate.md
   .matrixx/notepads/adhoc/1-spike-the-notepad-bucket-naming.md
 
 No plan bucket was created anywhere:
@@ -314,12 +314,12 @@ No plan bucket was created anywhere:
 ```
 
 Note the second listing: even though `auth-refresh` had no plan file, the writer created no
-`auth-refresh/` bucket. An empty or speculative plan directory would be a trap for the architect's glob.
+`auth-refresh/` bucket. An empty or speculative plan directory would be a trap for the niobe's glob.
 
 The first adhoc file, verbatim:
 
 ```markdown
-# Task: Document the flaky 111 architect gate
+# Task: Document the flaky 111 niobe gate
 
 **Task ID**: T-77b2c4d6-1e3f-4a58-8b90-c1d2e3f40516
 **Priority**: medium

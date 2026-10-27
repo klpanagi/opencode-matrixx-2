@@ -7,12 +7,12 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { buildOverCapBody } from "../../fixtures/plan-fixtures"
 
-import { ARCHITECT_SYSTEM_PROMPT } from "../../../src/agents/architect/default"
-import { ARCHITECT_GPT_SYSTEM_PROMPT } from "../../../src/agents/architect/gpt"
+import { NIOBE_SYSTEM_PROMPT } from "../../../src/agents/niobe/default"
+import { NIOBE_GPT_SYSTEM_PROMPT } from "../../../src/agents/niobe/gpt"
 import { CANONICAL_SECTIONS, REQUIRED_TASK_SUBFIELDS, validatePlanContract } from "../../../src/features/plan-contract"
 import { countPlanProgressFromContent, readPlanFile } from "../../../src/features/mission-state"
 import { measurePlanBytes } from "../../../src/features/mission-state/constants"
-import { buildOrchestratorReminder } from "../../../src/hooks/architect/verification-reminders"
+import { buildOrchestratorReminder } from "../../../src/hooks/niobe/verification-reminders"
 import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard/hook"
 import { PLAN_READ_WARN, PLAN_WRITE_WARN } from "../../../src/hooks/task-edit-guard/constants"
 import {
@@ -226,18 +226,18 @@ describe("plan-tool chain — end-to-end integration", () => {
     expect(existsSync(join(tmp, filePath))).toBe(false)
   })
 
-  // (e) architect prompts/reminder are bound to plan_tasks + plan_read.
-  const architectTexts: Array<{ name: string; value: string }> = [
-    { name: "ARCHITECT_SYSTEM_PROMPT", value: ARCHITECT_SYSTEM_PROMPT },
-    { name: "ARCHITECT_GPT_SYSTEM_PROMPT", value: ARCHITECT_GPT_SYSTEM_PROMPT },
+  // (e) niobe prompts/reminder are bound to plan_tasks + plan_read.
+  const niobeTexts: Array<{ name: string; value: string }> = [
+    { name: "NIOBE_SYSTEM_PROMPT", value: NIOBE_SYSTEM_PROMPT },
+    { name: "NIOBE_GPT_SYSTEM_PROMPT", value: NIOBE_GPT_SYSTEM_PROMPT },
     {
       name: "buildOrchestratorReminder",
       value: buildOrchestratorReminder("plan-contract-and-dedicated-tools", { total: 3, completed: 1 }, "ses_test"),
     },
   ]
-  for (const { name, value } of architectTexts) {
+  for (const { name, value } of niobeTexts) {
     test(`(e) ${name} names plan_tasks + plan_read and omits Read-on-plan forms`, () => {
-      //#given the architect text
+      //#given the niobe text
       //#when inspected for plan-tool binding
       //#then sanctioned plan tools are present
       expect(value).toContain("plan_tasks")

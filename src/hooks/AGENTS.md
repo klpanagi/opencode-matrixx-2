@@ -10,7 +10,7 @@ hooks/
 ├── agent-usage-reminder/         # Specialized agent hints (109 lines)
 ├── context-window-limit-recovery/ # Provider-agnostic recovery (~1100 lines)
 ├── anthropic-effort/             # Effort=max for Opus max variant (56 lines)
-├── architect/                        # Main orchestration hook (1976 lines)
+├── niobe/                        # Main orchestration hook (1976 lines)
 ├── auto-slash-command/           # Detects /command patterns (1134 lines)
 ├── auto-update-checker/          # Plugin update check (1140 lines)
 ├── background-notification/      # OS notifications (33 lines)
@@ -74,8 +74,8 @@ hooks/
 ## EXECUTION ORDER
 
 **UserPromptSubmit**: keywordDetector → autoSlashCommand → startWork
-**PreToolUse**: subagentQuestionBlocker → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → morpheusJuniorNotepad → writeExistingFileGuard → architectHook
-**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → architectHook → taskResumeInfo → taskReminder
+**PreToolUse**: subagentQuestionBlocker → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → morpheusJuniorNotepad → writeExistingFileGuard → niobeHook
+**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → niobeHook → taskResumeInfo → taskReminder
 
 ## HOW TO ADD
 

@@ -32,11 +32,11 @@ describe("injectContextDiscipline pure", () => {
 
   it("should inject compact into executors when ctx_* present", () => {
     //#given: ctx tools (runtime file or fallback)
-    const agents = makeAgents(["mouse", "cipher", "sati", "sentinel", "architect", "customBot"])
+    const agents = makeAgents(["mouse", "cipher", "sati", "sentinel", "niobe", "customBot"])
     //#when
     injectContextDiscipline(["ctx_search", "ctx_batch_execute"], agents)
     //#then: compact discipline in either form
-    for (const name of ["mouse", "cipher", "sati", "sentinel", "architect", "customBot"]) {
+    for (const name of ["mouse", "cipher", "sati", "sentinel", "niobe", "customBot"]) {
       const prompt = (agents[name] as { system: string }).system
       expect(prompt.includes("when ctx_* available") || prompt.includes("context-mode")).toBe(true)
       expect(prompt).toContain("ctx_batch_execute")

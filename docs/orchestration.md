@@ -20,7 +20,7 @@ Execution state lives in file-backed tasks. See
 |------------|----------|-------------|
 | **Simple** | Just prompt | Quick fixes, single-file changes |
 | **Complex + Lazy** | Type `ulw` or `ultrawork` | Explaining full context is tedious, let the agent figure it out |
-| **Complex + Precise** | `@plan` then `/start-work` | Multi-step work needing verifiable execution; Oracle plans, Architect executes |
+| **Complex + Precise** | `@plan` then `/start-work` | Multi-step work needing verifiable execution; Oracle plans, Niobe executes |
 
 **Decision flow:**
 
@@ -46,7 +46,7 @@ User describes work
   -> Smith reviews (high-accuracy mode)
   -> .matrixx/plans/{name}.md
        -> /start-work
-            -> Architect reads plan via plan_tasks + plan_read, builds waves
+            -> Niobe reads plan via plan_tasks + plan_read, builds waves
                  -> task(category=...) -> Mouse and specialists
                  -> verify each result independently
                  -> final report
@@ -136,16 +136,16 @@ ceiling bounds the pathological case where every round introduces a new issue
 category. Raise it when reviews genuinely need more rounds; lower it to cap
 agent burn on large plans.
 
-## Layer 2: Execution (Architect)
+## Layer 2: Execution (Niobe)
 
-Architect (`src/agents/architect/`, with multiple prompt variants) is
-the plan executor. Think conductor, not instrumentalist: it reads the plan,
+Niobe (`src/agents/niobe/`, with multiple prompt variants) is
+the plan executor. Think niobe, not instrumentalist: it reads the plan,
 decomposes it into waves, delegates each task, verifies each result, and
 reports. It does not write implementation code itself.
 
 ### /start-work and session continuity
 
-`/start-work` is the execution trigger. It carries `agent: "architect"` and
+`/start-work` is the execution trigger. It carries `agent: "niobe"` and
 follows this logic (see `src/features/builtin-commands/templates/start-work.ts`):
 
 ```
@@ -168,16 +168,16 @@ User: /start-work
 up exactly where the old one stopped. Example: Monday morning you run
 `/start-work`, finish 3 of 8 tasks, then the session ends. Monday afternoon
 you open a fresh session, run `/start-work`, see "Resuming ... 3 of 8
-tasks complete", and Architect continues from task 4.
+tasks complete", and Niobe continues from task 4.
 
-You never need to switch to Architect manually. `/start-work` handles it.
+You never need to switch to Niobe manually. `/start-work` handles it.
 Manual switching helps only in edge cases: the plan was edited by hand,
 you are debugging orchestration, you want a fresh run (delete
 `.matrixx/mission.json` first), or you manage several plans at once.
 
 ### Wave planning with the task system
 
-Architect decomposes the plan into **task waves** using `task_create` with
+Niobe decomposes the plan into **task waves** using `task_create` with
 `blockedBy` dependencies. It gets the task list from `plan_tasks` (compact
 manifest with progress and numbered tasks) and reads plan sections via
 paginated `plan_read` (offset/limit) when implementation details are needed.
@@ -333,7 +333,7 @@ is reached. `/ulw-loop` is the same loop with ultrawork mode active.
 | Command | Purpose |
 |---------|---------|
 | `@plan [request]` | Route to Oracle, start a planning session from Morpheus |
-| `/start-work` | Execute the plan (find or resume via `mission.json`, switch to Architect) |
+| `/start-work` | Execute the plan (find or resume via `mission.json`, switch to Niobe) |
 | `/matrix-loop`, `/ulw-loop`, `/cancel-loop` | Start or stop a self-referential dev loop |
 | `/ultrawork`, `/end-ultrawork` | Toggle ultrawork mode at runtime |
 | `/task-list`, `/cleanup-tasks` | Inspect and clean task state |
@@ -375,8 +375,8 @@ No plans exist in `.matrixx/plans/`, so create one with Oracle first. Or
 `mission.json` points at a stale plan, so delete `.matrixx/mission.json`
 and retry.
 
-**"I am in Architect but want normal mode back."**
-Type `exit` or start a new session. Architect is entered through
+**"I am in Niobe but want normal mode back."**
+Type `exit` or start a new session. Niobe is entered through
 `/start-work`; manual switching is rarely needed.
 
 **"@plan vs switching to Oracle, which one?"**
@@ -407,7 +407,7 @@ flowchart TB
     end
 
     subgraph Execution["Execution Layer (Orchestrator)"]
-        Orchestrator["⚡ Architect<br/>(Conductor)"]
+        Orchestrator["⚡ Niobe<br/>(Niobe)"]
     end
 
     subgraph Workers["Worker Layer (Specialized Agents)"]
@@ -475,11 +475,11 @@ stateDiagram-v2
     Done --> [*]: Guide to /start-work
 ```
 
-### Figure 3: Architect conductor loop
+### Figure 3: Niobe niobe loop
 
 ```mermaid
 flowchart LR
-    subgraph Orchestrator["Architect"]
+    subgraph Orchestrator["Niobe"]
         Read["1. Read Plan"]
         Analyze["2. Analyze Tasks"]
         Wisdom["3. Accumulate Wisdom"]
@@ -504,7 +504,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant User
-    participant Orchestrator as Architect
+    participant Orchestrator as Niobe
     participant Junior as Mouse
     participant Notepad as .matrixx/notepads/
 
@@ -550,7 +550,7 @@ work for four reasons: context overload on large tasks, cognitive drift away
 from requirements mid-task, verification gaps with no systematic completeness
 check, and the human as bottleneck requiring constant intervention. The
 layered system answers each: plans bound context per task, waves plus
-notepads hold requirements steady, Architect verifies independently, and
+notepads hold requirements steady, Niobe verifies independently, and
 file-backed state lets sessions pause and resume without babysitting.
 
 ### Oracle intent strategies
@@ -564,12 +564,12 @@ Oracle adapts its interview style to the kind of work:
 | **Mid-sized Task** | Guardrails - exact boundaries | "What must NOT be included? Hard constraints?" |
 | **Architecture** | Strategic - long-term impact | "Expected lifespan? Scale requirements?" |
 
-### What Architect can do vs must delegate
+### What Niobe can do vs must delegate
 
-Architect CAN: read files for context, run commands to verify results, use
+Niobe CAN: read files for context, run commands to verify results, use
 `lsp_diagnostics` to check for errors, search patterns with grep/glob/ast-grep.
 
-Architect MUST delegate (never do itself): writing/editing code files,
+Niobe MUST delegate (never do itself): writing/editing code files,
 fixing bugs, creating tests, git commits.
 
 ### Smith acceptance bar

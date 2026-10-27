@@ -47,11 +47,11 @@ export function collectPendingBuiltinAgents(input: {
     if (!source) continue
     if (agentName === "morpheus") continue
     if (agentName === "keymaker") continue
-    // architect is /start-work-only (issue #111 option b, 2026-09-16):
+    // niobe is /start-work-only (issue #111 option b, 2026-09-16):
     // intentionally excluded from pendingAgentConfigs/availableAgents - never task()-delegated incoming.
-    // Reachable as session agent via /start-work (updateSessionAgent(sessionID, "architect") in start-work-hook.ts:74).
-    // architectPromptMetadata retained for Morpheus referral row.
-    if (agentName === "architect") continue
+    // Reachable as session agent via /start-work (updateSessionAgent(sessionID, "niobe") in start-work-hook.ts:74).
+    // niobePromptMetadata retained for Morpheus referral row.
+    if (agentName === "niobe") continue
     if (disabledAgents.some((name) => name.toLowerCase() === agentName.toLowerCase())) continue
 
     const override = agentOverrides[agentName]

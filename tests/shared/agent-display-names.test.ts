@@ -35,15 +35,15 @@ describe("getAgentDisplayName", () => {
     expect(result).toBe("custom-agent")
   })
 
-  it("returns display name for architect", () => {
-    // given config key "architect"
-    const configKey = "architect"
+  it("returns display name for niobe", () => {
+    // given config key "niobe"
+    const configKey = "niobe"
 
     // when getAgentDisplayName called
     const result = getAgentDisplayName(configKey)
 
-    // then returns "Architect (Plan Execution Orchestrator)"
-    expect(result).toBe("Architect (Plan Execution Orchestrator)")
+    // then returns "Niobe (Plan Execution Orchestrator)"
+    expect(result).toBe("Niobe (Plan Execution Orchestrator)")
   })
 
   it("returns display name for oracle", () => {
@@ -152,7 +152,7 @@ describe("AGENT_DISPLAY_NAMES", () => {
     const expectedMappings = {
       morpheus: "Morpheus (Ultraworker)",
       keymaker: "Keymaker (Deep Agent)",
-      architect: "Architect (Plan Execution Orchestrator)",
+      niobe: "Niobe (Plan Execution Orchestrator)",
       oracle: "Oracle (Plan Builder)",
       mouse: "Mouse",
       seraph: "Seraph (Plan Consultant)",

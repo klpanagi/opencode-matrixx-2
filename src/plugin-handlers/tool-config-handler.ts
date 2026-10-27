@@ -27,7 +27,7 @@ function agentOverrides(questionEffect: "allow" | "deny"): Record<string, Permis
     operator: [rule("github_search", "allow")],
     trinity: [rule("github_search", "allow")],
     construct: [rule("task", "deny"), rule("look_at", "deny")],
-    architect: [...fullTaskPermissions],
+    niobe: [...fullTaskPermissions],
     morpheus: [rule("question", questionEffect), ...fullTaskPermissions],
     keymaker: [rule("question", questionEffect), ...fullTaskPermissions],
     oracle: [rule("question", questionEffect), ...fullTaskPermissions],

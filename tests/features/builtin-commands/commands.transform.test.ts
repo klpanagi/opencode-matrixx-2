@@ -61,7 +61,7 @@ describe("commands.transform execute", () => {
     }
     await registerCommandTransform(
       domain,
-      { "start-work": { description: "d", template: "work $ARGUMENTS", agent: "architect" } },
+      { "start-work": { description: "d", template: "work $ARGUMENTS", agent: "niobe" } },
       { session },
     )
     const def = defs.get("start-work") as unknown as {
@@ -71,7 +71,7 @@ describe("commands.transform execute", () => {
     await def.execute({ sessionID: "s1", prompt: { text: "my plan" } })
     //#then
     expect(calls.find((c) => c.op === "switchAgent")).toMatchObject({
-      args: { sessionID: "s1", agent: "architect" },
+      args: { sessionID: "s1", agent: "niobe" },
     })
     const promptCall = calls.find((c) => c.op === "prompt")
     expect(promptCall).toBeDefined()

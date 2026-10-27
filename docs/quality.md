@@ -933,7 +933,7 @@ Oracle: Creates plan with TDD instructions
   │  • QA scenarios: agent-executed verification
   │
   ▼
-/start-work → Architect executes plan
+/start-work → Niobe executes plan
   │
   ▼
 Developer agent loads tdd-enforcer skill

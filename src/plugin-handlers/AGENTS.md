@@ -17,7 +17,7 @@ plugin-handlers/
 ├── mcp-config-handler.ts              # Builtin + CC + plugin MCP merge
 ├── command-config-handler.ts          # Command/skill parallel discovery
 ├── category-config-resolver.ts        # Category lookup
-├── agent-priority-order.ts            # Agent ordering (morpheus, keymaker, oracle, architect first)
+├── agent-priority-order.ts            # Agent ordering (morpheus, keymaker, oracle, niobe first)
 ├── plan-model-inheritance.test.ts     # 3696 lines of tests
 ├── config-handler.test.ts             # 1061 lines of tests
 └── index.ts                           # Barrel exports
@@ -48,7 +48,7 @@ When `morpheus_agent.planner_enabled === true`:
 4. Oracle (if `planner_enabled`)
 5. User agents → Project agents → Plugin agents → Custom agents
 
-**Reordered** by `reorderAgentsByPriority()`: morpheus, keymaker, oracle, architect first.
+**Reordered** by `reorderAgentsByPriority()`: morpheus, keymaker, oracle, niobe first.
 
 ## TOOL PERMISSIONS
 
@@ -58,7 +58,7 @@ When `morpheus_agent.planner_enabled === true`:
 |-------|---------------------|
 | operator | github_search allowed |
 | trinity | github_search allowed |
-| architect | task, task_*, teammate allowed |
+| niobe | task, task_*, teammate allowed |
 | morpheus | task, task_*, teammate, question allowed |
 | keymaker | task, task_*, teammate, question allowed |
 | construct | Denies task, look_at |

@@ -2,10 +2,10 @@ import type { HookName, MatrixxConfig } from "../../config"
 import { resolveMemoryBackend } from "../../config/schema/memory"
 import type { BackgroundManager } from "../../features/background-agent"
 import {
-  createArchitectHook,
   createBackgroundNotificationHook,
   createCompactionContextInjector,
   createEvolutionHitlHook,
+  createNiobeHook,
   createNudgeLoopBreakerHook,
   createPlanPersister,
   createStopContinuationGuardHook,
@@ -22,7 +22,7 @@ export type ContinuationHooks = {
   unstableAgentBabysitter: ReturnType<typeof createUnstableAgentBabysitter> | null
   nudgeLoopBreaker: ReturnType<typeof createNudgeLoopBreakerHook> | null
   backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
-  architectHook: ReturnType<typeof createArchitectHook> | null
+  niobeHook: ReturnType<typeof createNiobeHook> | null
   planPersister: ReturnType<typeof createPlanPersister> | null
   evolutionHitl: ReturnType<typeof createEvolutionHitlHook> | null
 }
@@ -122,9 +122,9 @@ export function createContinuationHooks(args: {
     ? safeHook("background-notification", () => createBackgroundNotificationHook(backgroundManager))
     : null
 
-  const architectHook = isHookEnabled("architect")
-    ? safeHook("architect", () =>
-        createArchitectHook(ctx, {
+  const niobeHook = isHookEnabled("niobe")
+    ? safeHook("niobe", () =>
+        createNiobeHook(ctx, {
           directory: ctx.directory,
           backgroundManager,
           isContinuationStopped: (sessionID: string) =>
@@ -149,7 +149,7 @@ export function createContinuationHooks(args: {
     unstableAgentBabysitter,
     nudgeLoopBreaker,
     backgroundNotificationHook,
-    architectHook,
+    niobeHook,
     planPersister,
     evolutionHitl,
   }

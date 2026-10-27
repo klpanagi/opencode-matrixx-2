@@ -36,7 +36,7 @@ async function getAgentFromMessageFiles(
  * This fixes issue #927 where after interruption:
  * - In-memory map is cleared (process restart)
  * - Message files return "oracle" (oldest message from /plan)
- * - But mission.json has agent: "architect" (set by /start-work)
+ * - But mission.json has agent: "niobe" (set by /start-work)
  */
 export async function getAgentFromSession(
   sessionID: string,

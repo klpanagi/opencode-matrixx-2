@@ -68,14 +68,14 @@ Create the work plan directly - that's your job as the planning agent.`,
           || agent.name.toLowerCase() === resolvedDisplayName.toLowerCase())
 
       if (isPrimaryAgent) {
-        const architectHint =
-          isPrimaryAgent.name.toLowerCase() === "architect"
-            ? " Use /start-work to run Architect as session agent (issue #111 option b)."
+        const niobeHint =
+          isPrimaryAgent.name.toLowerCase() === "niobe"
+            ? " Use /start-work to run Niobe as session agent (issue #111 option b)."
             : "";
         return {
           agentToUse: "",
           categoryModel: undefined,
-          error: `Cannot call primary agent "${isPrimaryAgent.name}" via task. Primary agents are top-level orchestrators.${architectHint}`,
+          error: `Cannot call primary agent "${isPrimaryAgent.name}" via task. Primary agents are top-level orchestrators.${niobeHint}`,
         };
       }
 

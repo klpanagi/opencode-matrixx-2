@@ -19,7 +19,7 @@
  * The root cause of (1) is a genuine defect in `storage.ts:186`
  * (`isComplete: total === 0 || completed === total`) and this plan deliberately
  * does NOT repair it: `isComplete` has consumers far outside a review
- * (`src/hooks/architect/event-handler.ts:110-113` clears mission state on it).
+ * (`src/hooks/niobe/event-handler.ts:110-113` clears mission state on it).
  * The fix belongs downstream, here, where the consequence is a number.
  */
 import { type NotScorableCause, notScorableReason } from "./degradation-types"

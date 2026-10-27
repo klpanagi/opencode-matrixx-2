@@ -63,7 +63,7 @@ mock.module("../src/shared/opencode-storage-detection", () => ({
 const { createToolExecuteBeforeHandler } = await import("../src/plugin/tool-execute-before")
 const { createToolExecuteAfterHandler } = await import("../src/plugin/tool-execute-after")
 const { createOracleMdOnlyHook } = await import("../src/hooks/oracle-md-only/hook")
-const { createArchitectHook } = await import("../src/hooks/architect/index")
+const { createNiobeHook } = await import("../src/hooks/niobe/index")
 // PR #157 adds this module; it does not exist at the merge base, so the import
 // is optional and the script runs unmodified on both revisions.
 const { invalidateSdkMessageCache } = await import(
@@ -128,9 +128,9 @@ function makeClient(sessionBytes: number, counter: Counter) {
 }
 
 function buildHooks(ctx: unknown) {
-  // createArchitectHook returns BOTH the before and after handlers bound to a
+  // createNiobeHook returns BOTH the before and after handlers bound to a
   // shared pendingFilePaths map, exactly as create-continuation-hooks wires it.
-  const architectHook = createArchitectHook(ctx as never, {
+  const niobeHook = createNiobeHook(ctx as never, {
     directory: (ctx as { directory: string }).directory,
     backgroundManager: null,
     isContinuationStopped: () => false,
@@ -140,7 +140,7 @@ function buildHooks(ctx: unknown) {
   return {
     oracleMdOnly: createOracleMdOnlyHook(ctx as never),
     mouseNotepad: null,
-    architectHook,
+    niobeHook,
   } as never
 }
 

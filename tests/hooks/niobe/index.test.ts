@@ -12,7 +12,7 @@ import {
 } from "../../../src/features/mission-state"
 import { _resetForTesting, subagentSessions } from "../../../src/features/session-state/state"
 
-const TEST_STORAGE_ROOT = join(tmpdir(), `architect-test-storage-${randomUUID()}`)
+const TEST_STORAGE_ROOT = join(tmpdir(), `niobe-test-storage-${randomUUID()}`)
 const TEST_MESSAGE_STORAGE = join(TEST_STORAGE_ROOT, "messages")
 const TEST_PART_STORAGE = join(TEST_STORAGE_ROOT, "parts")
 
@@ -48,7 +48,7 @@ mock.module("/home/klpanagi/matrixx/src/shared/session-utils.ts", () => ({
           const msg = JSON.parse(readFileSync(pathJoin(messageDir, file), "utf-8"))
           if (msg.agent) {
             const agent = msg.agent.toLowerCase()
-            return agent === "architect"
+            return agent === "niobe"
           }
         } catch { }
       }
@@ -57,14 +57,14 @@ mock.module("/home/klpanagi/matrixx/src/shared/session-utils.ts", () => ({
   },
 }))
 
-const { createArchitectHook } = await import("../../../src/hooks/architect/architect-hook")
+const { createNiobeHook } = await import("../../../src/hooks/niobe/niobe-hook")
 const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
 
 afterAll(() => {
   mock.restore()
 })
 
-describe("architect hook", () => {
+describe("niobe hook", () => {
   let TEST_DIR: string
   let MATRIX_DIR: string
 
@@ -97,7 +97,7 @@ describe("architect hook", () => {
         },
       },
       _promptMock: promptMock,
-    } as unknown as Parameters<typeof createArchitectHook>[0] & { _promptMock: ReturnType<typeof mock> }
+    } as unknown as Parameters<typeof createNiobeHook>[0] & { _promptMock: ReturnType<typeof mock> }
   }
 
   function setupMessageStorage(sessionID: string, agent: string): void {
@@ -120,7 +120,7 @@ describe("architect hook", () => {
   }
 
   beforeEach(() => {
-    TEST_DIR = join(tmpdir(), `architect-test-${randomUUID()}`)
+    TEST_DIR = join(tmpdir(), `niobe-test-${randomUUID()}`)
     MATRIX_DIR = join(TEST_DIR, ".matrixx")
     if (!existsSync(TEST_DIR)) {
       mkdirSync(TEST_DIR, { recursive: true })
@@ -141,7 +141,7 @@ describe("architect hook", () => {
   describe("tool.execute.after handler", () => {
     test("should handle undefined output gracefully (issue #1035)", async () => {
       // given - hook and undefined output (e.g., from /review command)
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
 
       // when - calling with undefined output
       const result = await hook["tool.execute.after"](
@@ -155,7 +155,7 @@ describe("architect hook", () => {
 
     test("should ignore non-task tools", async () => {
       // given - hook and non-task tool
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Test Tool",
         output: "Original output",
@@ -172,8 +172,8 @@ describe("architect hook", () => {
       expect(output.output).toBe("Original output")
     })
 
-     test("should not transform when caller is not Architect", async () => {
-       // given - mission state exists but caller agent in message storage is not Architect
+     test("should not transform when caller is not Niobe", async () => {
+       // given - mission state exists but caller agent in message storage is not Niobe
        const sessionID = "session-non-orchestrator-test"
        setupMessageStorage(sessionID, "other-agent")
       
@@ -188,7 +188,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -207,12 +207,12 @@ describe("architect hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should append standalone verification when no mission state but caller is Architect", async () => {
-       // given - no mission state, but caller is Architect
+     test("should append standalone verification when no mission state but caller is Niobe", async () => {
+       // given - no mission state, but caller is Niobe
        const sessionID = "session-no-mission-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -233,10 +233,10 @@ describe("architect hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
-     test("should transform output when caller is Architect with mission state", async () => {
-       // given - Architect caller with mission state
+     test("should transform output when caller is Niobe with mission state", async () => {
+       // given - Niobe caller with mission state
        const sessionID = "session-transform-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [x] Task 2")
@@ -249,7 +249,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -273,9 +273,9 @@ describe("architect hook", () => {
     })
 
      test("should skip orchestrator reminder when plan is complete", async () => {
-        // given - mission state with complete plan, Architect caller
+        // given - mission state with complete plan, Niobe caller
         const sessionID = "session-complete-plan-test"
-        setupMessageStorage(sessionID, "architect")
+        setupMessageStorage(sessionID, "niobe")
        
        const planPath = join(TEST_DIR, "complete-plan.md")
        writeFileSync(planPath, "# Plan\n- [x] Task 1\n- [x] Task 2")
@@ -288,7 +288,7 @@ describe("architect hook", () => {
        }
        writeMissionState(TEST_DIR, state)
 
-       const hook = createArchitectHook(createMockPluginInput())
+       const hook = createNiobeHook(createMockPluginInput())
        const output = {
          title: "Morpheus Task",
          output: "Original output",
@@ -310,9 +310,9 @@ describe("architect hook", () => {
      })
 
      test("should append session ID to mission state if not present", async () => {
-       // given - mission state without session-append-test, Architect caller
+       // given - mission state without session-append-test, Niobe caller
        const sessionID = "session-append-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -325,7 +325,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task output",
@@ -346,9 +346,9 @@ describe("architect hook", () => {
     })
 
      test("should not duplicate existing session ID", async () => {
-       // given - mission state already has session-dup-test, Architect caller
+       // given - mission state already has session-dup-test, Niobe caller
        const sessionID = "session-dup-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -361,7 +361,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task output",
@@ -383,9 +383,9 @@ describe("architect hook", () => {
     })
 
      test("should include mission.json path and notepad path in transformed output", async () => {
-       // given - mission state, Architect caller
+       // given - mission state, Niobe caller
        const sessionID = "session-path-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
       const planPath = join(TEST_DIR, "my-feature.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2\n- [x] Task 3")
@@ -398,7 +398,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task completed",
@@ -420,9 +420,9 @@ describe("architect hook", () => {
     })
 
      test("should include session_id and checkbox instructions in reminder", async () => {
-       // given - mission state, Architect caller
+       // given - mission state, Niobe caller
        const sessionID = "session-resume-test"
-       setupMessageStorage(sessionID, "architect")
+       setupMessageStorage(sessionID, "niobe")
       
       const planPath = join(TEST_DIR, "test-plan.md")
       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
@@ -435,7 +435,7 @@ describe("architect hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createArchitectHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockPluginInput())
       const output = {
         title: "Morpheus Task",
         output: "Task completed",
@@ -460,7 +460,7 @@ describe("architect hook", () => {
       const ORCHESTRATOR_SESSION = "orchestrator-write-test"
 
        beforeEach(() => {
-         setupMessageStorage(ORCHESTRATOR_SESSION, "architect")
+         setupMessageStorage(ORCHESTRATOR_SESSION, "niobe")
        })
 
       afterEach(() => {
@@ -469,7 +469,7 @@ describe("architect hook", () => {
 
       test("should append delegation reminder when orchestrator writes outside .matrixx/", async () => {
         // given
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const output = {
           title: "Write",
           output: "File written successfully",
@@ -490,7 +490,7 @@ describe("architect hook", () => {
 
       test("should append delegation reminder when orchestrator edits outside .matrixx/", async () => {
         // given
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const output = {
           title: "Edit",
           output: "File edited successfully",
@@ -509,7 +509,7 @@ describe("architect hook", () => {
 
       test("should NOT append reminder when orchestrator writes inside .matrixx/", async () => {
         // given
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -533,7 +533,7 @@ describe("architect hook", () => {
         const nonOrchestratorSession = "non-orchestrator-session"
         setupMessageStorage(nonOrchestratorSession, "mouse")
         
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -556,7 +556,7 @@ describe("architect hook", () => {
 
       test("should NOT append reminder for read-only tools", async () => {
         // given
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const originalOutput = "File content"
         const output = {
           title: "Read",
@@ -576,7 +576,7 @@ describe("architect hook", () => {
 
       test("should handle missing filePath gracefully", async () => {
         // given
-        const hook = createArchitectHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockPluginInput())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -597,7 +597,7 @@ describe("architect hook", () => {
       describe("cross-platform path validation (Windows support)", () => {
         test("should NOT append reminder when orchestrator writes inside .matrixx\\ (Windows backslash)", async () => {
           // given
-          const hook = createArchitectHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -618,7 +618,7 @@ describe("architect hook", () => {
 
         test("should NOT append reminder when orchestrator writes inside .matrixx with mixed separators", async () => {
           // given
-          const hook = createArchitectHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -639,7 +639,7 @@ describe("architect hook", () => {
 
         test("should NOT append reminder for absolute Windows path inside .matrixx\\", async () => {
           // given
-          const hook = createArchitectHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockPluginInput())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -660,7 +660,7 @@ describe("architect hook", () => {
 
         test("should append reminder for Windows path outside .matrixx\\", async () => {
           // given
-          const hook = createArchitectHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockPluginInput())
           const output = {
             title: "Write",
             output: "File written successfully",
@@ -691,7 +691,7 @@ describe("architect hook", () => {
      beforeEach(() => {
        _resetForTesting()
        subagentSessions.clear()
-       setupMessageStorage(MAIN_SESSION_ID, "architect")
+       setupMessageStorage(MAIN_SESSION_ID, "niobe")
      })
 
     afterEach(() => {
@@ -713,7 +713,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
@@ -734,7 +734,7 @@ describe("architect hook", () => {
     test("should not inject when no mission state exists", async () => {
       // given - no mission state
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
@@ -762,7 +762,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - main session fires idle but is NOT in mission's session_ids
       await hook.handler({
@@ -790,7 +790,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
@@ -818,7 +818,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - main session fires idle
       await hook.handler({
@@ -848,7 +848,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - send abort error then idle
       await hook.handler({
@@ -889,7 +889,7 @@ describe("architect hook", () => {
        }
 
        const mockInput = createMockPluginInput()
-       const hook = createArchitectHook(mockInput, {
+       const hook = createNiobeHook(mockInput, {
          directory: TEST_DIR,
          backgroundManager: mockBackgroundManager as unknown as BackgroundManager,
        })
@@ -920,7 +920,7 @@ describe("architect hook", () => {
        writeMissionState(TEST_DIR, state)
 
        const mockInput = createMockPluginInput()
-       const hook = createArchitectHook(mockInput, {
+       const hook = createNiobeHook(mockInput, {
          directory: TEST_DIR,
          isContinuationStopped: (sessionID: string) => sessionID === MAIN_SESSION_ID,
        })
@@ -951,7 +951,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - abort error, then message update, then idle
       await hook.handler({
@@ -994,7 +994,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
@@ -1020,7 +1020,7 @@ describe("architect hook", () => {
          started_at: "2026-01-02T10:00:00Z",
          session_ids: [MAIN_SESSION_ID],
          plan_name: "test-plan",
-         agent: "architect",
+         agent: "niobe",
        }
        writeMissionState(TEST_DIR, state)
 
@@ -1029,7 +1029,7 @@ describe("architect hook", () => {
        setupMessageStorage(MAIN_SESSION_ID, "morpheus")
 
        const mockInput = createMockPluginInput()
-       const hook = createArchitectHook(mockInput)
+       const hook = createNiobeHook(mockInput)
 
        // when
        await hook.handler({
@@ -1043,7 +1043,7 @@ describe("architect hook", () => {
        expect(mockInput._promptMock).not.toHaveBeenCalled()
      })
 
-     test("should inject when last agent matches mission agent even if non-Architect", async () => {
+     test("should inject when last agent matches mission agent even if non-Niobe", async () => {
        // given - mission state expects morpheus and last agent is morpheus
        const planPath = join(TEST_DIR, "test-plan.md")
        writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
@@ -1061,7 +1061,7 @@ describe("architect hook", () => {
        setupMessageStorage(MAIN_SESSION_ID, "morpheus")
 
        const mockInput = createMockPluginInput()
-       const hook = createArchitectHook(mockInput)
+       const hook = createNiobeHook(mockInput)
 
        // when
        await hook.handler({
@@ -1091,7 +1091,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - fire multiple idle events in rapid succession (simulating infinite loop bug)
       await hook.handler({
@@ -1132,7 +1132,7 @@ describe("architect hook", () => {
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
       const mockInput = createMockPluginInput({ promptMock })
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
       let now = 0
@@ -1178,7 +1178,7 @@ describe("architect hook", () => {
       promptMock.mockImplementationOnce(() => Promise.reject(new Error("Bad Request")))
 
       const mockInput = createMockPluginInput({ promptMock })
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
       let now = 0
@@ -1214,7 +1214,7 @@ describe("architect hook", () => {
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
       const mockInput = createMockPluginInput({ promptMock })
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
       let now = 0
@@ -1260,7 +1260,7 @@ describe("architect hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const mockInput = createMockPluginInput()
-      const hook = createArchitectHook(mockInput)
+      const hook = createNiobeHook(mockInput)
 
       // when - create abort state then delete
       await hook.handler({

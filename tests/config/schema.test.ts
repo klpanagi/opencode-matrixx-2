@@ -544,14 +544,14 @@ describe("Mouse agent override", () => {
     }
   })
 
-  test("schema accepts lowercase agent names (morpheus, architect, oracle)", () => {
+  test("schema accepts lowercase agent names (morpheus, niobe, oracle)", () => {
     // given
     const config = {
       agents: {
         morpheus: {
           request: { body: { temperature: 0.1 } },
         },
-        architect: {
+        niobe: {
           request: { body: { temperature: 0.2 } },
         },
         oracle: {
@@ -567,7 +567,7 @@ describe("Mouse agent override", () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.agents?.morpheus?.request?.body?.temperature).toBe(0.1)
-      expect(result.data.agents?.architect?.request?.body?.temperature).toBe(0.2)
+      expect(result.data.agents?.niobe?.request?.body?.temperature).toBe(0.2)
       expect(result.data.agents?.oracle?.request?.body?.temperature).toBe(0.3)
     }
   })

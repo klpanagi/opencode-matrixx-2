@@ -49,6 +49,10 @@ export function normalizeMissionState(parsed: unknown): MissionState | null {
     return null
   }
   const state = parsed as MissionState & { session_id?: unknown }
+  // Back-compat: legacy missions stored agent: "architect" or "conductor" (pre-niobe renames)
+  if ((state as MissionState).agent === "architect" || (state as MissionState).agent === "conductor") {
+    (state as MissionState).agent = "niobe"
+  }
   if (!Array.isArray(state.session_ids)) {
     const legacy = state.session_id
     state.session_ids =

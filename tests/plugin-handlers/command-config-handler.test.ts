@@ -52,7 +52,7 @@ describe("applyCommandConfig", () => {
         "start-work": {
           name: "start-work",
           description: "Start work session",
-          agent: "architect",
+          agent: "niobe",
           template: "template",
         },
       },
@@ -70,8 +70,8 @@ describe("applyCommandConfig", () => {
     //#then
     const result = config.command as Record<string, Record<string, unknown>>
     // This FAILS on current source because remapCommandAgentFields
-    // converts "architect" to "Architect (Plan Execution Orchestrator)"
-    expect(result["start-work"].agent).toBe("architect")
+    // converts "niobe" to "Niobe (Plan Execution Orchestrator)"
+    expect(result["start-work"].agent).toBe("niobe")
   })
 
   test("preserves unknown agent name not in AGENT_DISPLAY_NAMES", async () => {

@@ -2,7 +2,7 @@
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
-17 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, architect, cipher, sentinel, sati, bdd-contract, neo, tank — 16 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
+17 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, niobe, cipher, sentinel, sati, bdd-contract, neo, tank — 16 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
 
 ---
 
@@ -41,7 +41,7 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | **Oracle** | Strategic planning | `claude-opus-4-6` |
 | **Seraph** | Pre-planning analysis | `claude-opus-4-6` |
 | **Smith** | Plan validation | `claude-sonnet-4-6` |
-| **Architect** | Plan execution orchestrator | `claude-sonnet-4-6` |
+| **Niobe** | Plan execution orchestrator | `claude-sonnet-4-6` |
 | **Auditor** | Post-execution plan auditor (`/plan-review`) | `claude-sonnet-4-6` |
 | **Neo** | Market-data pipeline architect/reviewer | `claude-opus-4-6` |
 | **Tank** | Resilience / silent-failure hunter | `claude-sonnet-4-6` |
@@ -108,7 +108,7 @@ Cipher is the agent you call when you need to design, build, or extend domain-sp
 
 ### Five Sub-Specializations
 
-- **Grammar Architect**: Formal grammar design (BNF/EBNF/PEG), operator precedence, disambiguation, grammar composition
+- **Grammar Architect: Formal grammar design (BNF/EBNF/PEG), operator precedence, disambiguation, grammar composition
 - **Semantic Analyst**: Type systems (structural/nominal), scope analysis, constraint checking, static analysis
 - **Toolsmith**: IDE/LSP integration, tree-sitter grammars, formatters, syntax highlighting, incremental parsing
 - **Code Generator**: Transpilers, model-to-text transformations, multi-target code generation, source maps
@@ -258,17 +258,17 @@ Sati is the dedicated frontend specialist. Self-contained execution — Sati han
 
 *Small, fast, and disposable — the hands that do the work.*
 
-Mouse is the **category-spawned delegated executor** — the worker layer in Matrixx's 3-tier orchestration architecture. When Morpheus or Architect calls `task(category="source", ...)`, the category resolver automatically sets `subagent_type="mouse"`. Mouse executes the implementation directly, without spawning further sub-agents.
+Mouse is the **category-spawned delegated executor** — the worker layer in Matrixx's 3-tier orchestration architecture. When Morpheus or Niobe calls `task(category="source", ...)`, the category resolver automatically sets `subagent_type="mouse"`. Mouse executes the implementation directly, without spawning further sub-agents.
 
 ### Why Mouse Exists
 
 The architecture separates concerns into three layers:
 
 1. **Planning Layer**: Oracle/Seraph/Smith — designs the work plan
-2. **Execution Layer**: Architect/Morpheus — orchestrates and coordinates
+2. **Execution Layer**: Niobe/Morpheus — orchestrates and coordinates
 3. **Worker Layer**: **Mouse** — executes individual tasks
 
-Workers must be **stateless and disposable**. The Architect remains in context and accumulates wisdom; Mouse receives a focused task, executes it, reports results, and is done. This preserves the Architect's context window and enables parallel execution of independent tasks.
+Workers must be **stateless and disposable**. The Niobe remains in context and accumulates wisdom; Mouse receives a focused task, executes it, reports results, and is done. This preserves the Niobe's context window and enables parallel execution of independent tasks.
 
 ### Agent Characteristics
 
@@ -306,14 +306,14 @@ Routing is driven by model-family detection in `getMousePromptSource()`: each va
 
 ### Mouse-Notepad Hook
 
-When the Architect spawns a Mouse task, the `mouse-notepad` hook automatically injects a work context directive. This tells Mouse to:
+When the Niobe spawns a Mouse task, the `mouse-notepad` hook automatically injects a work context directive. This tells Mouse to:
 
 - Record learnings to `.matrixx/notepads/{plan-name}/learnings.md`
 - Record issues, decisions, and problems encountered
 - NEVER modify the plan file (READ-ONLY)
 - Always APPEND to notepad files, never overwrite
 
-This ensures the Architect accumulates wisdom from each Mouse execution.
+This ensures the Niobe accumulates wisdom from each Mouse execution.
 
 ### Invocation
 
@@ -336,7 +336,7 @@ The 17-agent roster (3 + 4 + 3 + 5 + 2) maps to **distinct cognitive functions**
 ### The Orchestration Layer (3 agents)
 
 - **Morpheus** (user-facing orchestrator, `claude-opus-4-6`): The "face" — translates user intent into delegation decisions. Orchestration requires the strongest model for understanding nuance.
-- **Architect** (subagent orchestrator, `claude-sonnet-4-6`): Pure conductor — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
+- **Niobe** (subagent orchestrator, `claude-sonnet-4-6`): Pure orchestrator — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
 - **Keymaker** (autonomous deep worker, `claude-opus-4-6`): Goal-oriented end-to-end execution — explores via parallel Trinity/Operator agents before acting.
 
 ### The Intelligence Layer (4 agents)
@@ -385,7 +385,7 @@ graph TB
     subgraph PRIMARY["Primary Agents (mode: primary)"]
         MOR["🔴 Morpheus<br/>claude-opus-4-6<br/><i>Main Orchestrator</i>"]
         KEY["🟡 Keymaker<br/>claude-opus-4-6<br/><i>Autonomous Deep Worker</i>"]
-        ARC["🟣 Architect<br/>claude-sonnet-4-6<br/><i>Plan Execution Orchestrator</i>"]
+        ARC["🟣 Niobe<br/>claude-sonnet-4-6<br/><i>Plan Execution Orchestrator</i>"]
     end
 
     subgraph SPECIALIST["Specialist Agents (mode: all)"]

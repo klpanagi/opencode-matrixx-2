@@ -582,13 +582,13 @@ whether it is done or was never broken into tasks.
       //#given - plan path, session id, and agent type
       const planPath = "/path/to/feature.md"
       const sessionId = "ses-xyz789"
-      const agent = "architect"
+      const agent = "niobe"
 
       //#when - createMissionState is called with agent
       const state = createMissionState(planPath, sessionId, agent)
 
       //#then - state should include the agent field
-      expect(state.agent).toBe("architect")
+      expect(state.agent).toBe("niobe")
       expect(state.active_plan).toBe(planPath)
       expect(state.session_ids).toEqual([sessionId])
       expect(state.plan_name).toBe("feature")

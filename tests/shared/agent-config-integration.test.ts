@@ -7,14 +7,14 @@ describe("Agent Config Integration", () => {
   describe("Display name resolution", () => {
     test("returns correct display names for all builtin agents", () => {
       // given - lowercase config keys
-      const agents = ["morpheus", "architect", "oracle", "seraph", "smith", "merovingian", "operator", "trinity", "construct"]
+      const agents = ["morpheus", "niobe", "oracle", "seraph", "smith", "merovingian", "operator", "trinity", "construct"]
 
       // when - display names are requested
       const displayNames = agents.map((agent) => getAgentDisplayName(agent))
 
       // then - display names are correct
       expect(displayNames).toContain("Morpheus (Ultraworker)")
-      expect(displayNames).toContain("Architect (Plan Execution Orchestrator)")
+      expect(displayNames).toContain("Niobe (Plan Execution Orchestrator)")
       expect(displayNames).toContain("Oracle (Plan Builder)")
       expect(displayNames).toContain("Seraph (Plan Consultant)")
       expect(displayNames).toContain("Smith (Plan Reviewer)")
@@ -26,7 +26,7 @@ describe("Agent Config Integration", () => {
 
     test("handles lowercase keys case-insensitively", () => {
       // given - various case formats of lowercase keys
-      const keys = ["Morpheus", "Atlas", "SISYPHUS", "architect", "oracle", "PROMETHEUS"]
+      const keys = ["Morpheus", "Atlas", "SISYPHUS", "niobe", "oracle", "PROMETHEUS"]
 
       // when - display names are requested
       const displayNames = keys.map((key) => getAgentDisplayName(key))
@@ -35,7 +35,7 @@ describe("Agent Config Integration", () => {
       expect(displayNames[0]).toBe("Morpheus (Ultraworker)")
       expect(displayNames[1]).toBe("Atlas")
       expect(displayNames[2]).toBe("SISYPHUS")
-      expect(displayNames[3]).toBe("Architect (Plan Execution Orchestrator)")
+      expect(displayNames[3]).toBe("Niobe (Plan Execution Orchestrator)")
       expect(displayNames[4]).toBe("Oracle (Plan Builder)")
       expect(displayNames[5]).toBe("PROMETHEUS")
     })
@@ -66,7 +66,7 @@ describe("Agent Config Integration", () => {
 
     test("model requirements include all builtin agents", () => {
       // given - expected builtin agents
-      const expectedAgents = ["morpheus", "architect", "oracle", "seraph", "smith", "merovingian", "operator", "trinity", "construct", "keymaker", "cipher"]
+      const expectedAgents = ["morpheus", "niobe", "oracle", "seraph", "smith", "merovingian", "operator", "trinity", "construct", "keymaker", "cipher"]
 
       // when - checking AGENT_MODEL_REQUIREMENTS
       const agentKeys = Object.keys(AGENT_MODEL_REQUIREMENTS)

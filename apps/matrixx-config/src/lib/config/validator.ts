@@ -30,7 +30,7 @@ const AGENT_NAMES = new Set([
   "operator",
   "trinity",
   "construct",
-  "architect",
+  "niobe",
   "cipher",
   "sentinel",
   "sati",

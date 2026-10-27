@@ -7,13 +7,13 @@ import { log } from "../../shared/logger"
 import { HOOK_NAME } from "./hook-name"
 import { injectMissionContinuation } from "./mission-continuation-injector"
 import { getLastAgentFromSession } from "./session-last-agent"
-import type { ArchitectHookOptions, SessionState } from "./types"
+import type { NiobeHookOptions, SessionState } from "./types"
 
 const CONTINUATION_COOLDOWN_MS = 5000
 
-export function createArchitectEventHandler(input: {
+export function createNiobeEventHandler(input: {
   ctx: PluginInput
-  options?: ArchitectHookOptions
+  options?: NiobeHookOptions
   sessions: Map<string, SessionState>
   getState: (sessionID: string) => SessionState
 }): (arg: { event: { type: string; properties?: unknown } }) => Promise<void> {
@@ -90,13 +90,13 @@ export function createArchitectEventHandler(input: {
 
       const lastAgent = await getLastAgentFromSession(sessionID, ctx.client)
       const lastAgentKey = getAgentConfigKey(lastAgent ?? "")
-      const requiredAgent = getAgentConfigKey(missionState.agent ?? "architect")
+      const requiredAgent = getAgentConfigKey(missionState.agent ?? "niobe")
       const lastAgentMatchesRequired = lastAgentKey === requiredAgent
       const missionAgentWasNotExplicitlySet = missionState.agent === undefined
-      const missionAgentDefaultsToArchitect = requiredAgent === "architect"
+      const missionAgentDefaultsToNiobe = requiredAgent === "niobe"
       const lastAgentIsMorpheus = lastAgentKey === "morpheus"
-      const allowMorpheusWhenDefaultArchitect = missionAgentWasNotExplicitlySet && missionAgentDefaultsToArchitect && lastAgentIsMorpheus
-      const agentMatches = lastAgentMatchesRequired || allowMorpheusWhenDefaultArchitect
+      const allowMorpheusWhenDefaultNiobe = missionAgentWasNotExplicitlySet && missionAgentDefaultsToNiobe && lastAgentIsMorpheus
+      const agentMatches = lastAgentMatchesRequired || allowMorpheusWhenDefaultNiobe
       if (!agentMatches) {
         log(`[${HOOK_NAME}] Skipped: last agent does not match mission agent`, {
           sessionID,

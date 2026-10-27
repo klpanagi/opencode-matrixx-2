@@ -56,11 +56,11 @@ describe("category-skill-reminder hook", () => {
       clearSessionAgent(sessionID)
     })
 
-    test("should inject reminder for architect agent", async () => {
-      // given - architect agent session
+    test("should inject reminder for niobe agent", async () => {
+      // given - niobe agent session
       const hook = createHook()
-      const sessionID = "architect-session"
-      updateSessionAgent(sessionID, "Architect")
+      const sessionID = "niobe-session"
+      updateSessionAgent(sessionID, "Niobe")
 
       const output = { title: "", output: "result", metadata: {} }
 
@@ -384,7 +384,7 @@ describe("category-skill-reminder hook", () => {
       ]
       const hook = createHook(availableSkills)
       const sessionID = "user-skills"
-      updateSessionAgent(sessionID, "Architect")
+      updateSessionAgent(sessionID, "Niobe")
       const output = { title: "", output: "result", metadata: {} }
 
       // when

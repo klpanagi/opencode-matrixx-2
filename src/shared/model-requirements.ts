@@ -80,7 +80,7 @@ export const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> 
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
     ],
   },
-  architect: {
+  niobe: {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback

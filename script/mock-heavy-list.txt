@@ -2,7 +2,7 @@ tests/plugin-handlers/
 tests/hooks/compaction-context-injector/
 tests/tools/session-manager/storage.test.ts
 tests/hooks/oracle-md-only/index.test.ts
-tests/hooks/architect/index.test.ts
+tests/hooks/niobe/index.test.ts
 tests/hooks/matrix-loop/index.test.ts
 tests/hooks/start-work/index.test.ts
 tests/hooks/auto-update-checker/hook/background-update-check.test.ts

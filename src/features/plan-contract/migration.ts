@@ -61,7 +61,7 @@ export const GRANDFATHER_ALLOWLIST: readonly string[] = Object.freeze([
   "dcp-background-compression",
   "enforce-plan-tools-only-access",
   "evolution-advancement-proposal",
-  "fix-111-architect-start-work-only",
+  "fix-111-niobe-start-work-only",
   "fix-open-issues",
   "fix-plan-completion-desync",
   "input-secret-guard-plan",

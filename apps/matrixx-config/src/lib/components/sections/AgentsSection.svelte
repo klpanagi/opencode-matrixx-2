@@ -14,7 +14,7 @@
 
   const BUILTIN_AGENTS = [
     "morpheus", "keymaker", "oracle", "merovingian", "operator", "trinity",
-    "construct", "seraph", "smith", "architect", "cipher", "sentinel", "sati",
+    "construct", "seraph", "smith", "niobe", "cipher", "sentinel", "sati",
     "bdd-contract", "build", "plan", "mouse", "OpenCode-Builder",
   ] as const
 

@@ -1,13 +1,13 @@
 # Demo 1: Robot Mission DSL
 
-> **Duration:** ~8-10 min · **Agent Focus:** Oracle → Architect → Cipher
+> **Duration:** ~8-10 min · **Agent Focus:** Oracle → Niobe → Cipher
 > **Key Concepts:** Planning · TDD enforcement · Task Board · Quality Gates · Agent delegation
 
 ---
 
 ## The Pitch
 
-*"Watch how Morpheus takes an ambiguous request — 'build a Robot Mission DSL' — and produces a working, tested DSL with zero human intervention. Oracle plans it, Architect executes, Cipher builds the grammar with TDD, and quality gates verify every step."*
+*"Watch how Morpheus takes an ambiguous request — 'build a Robot Mission DSL' — and produces a working, tested DSL with zero human intervention. Oracle plans it, Niobe executes, Cipher builds the grammar with TDD, and quality gates verify every step."*
 
 ---
 
@@ -77,22 +77,22 @@ Write a test first, use TDD. Quality gates must pass.
 
 **🎙️ HINT:** *"Before a single line of code, Oracle creates the full plan, registers todos, and delegates Seraph for gap analysis. The task board is populated with atomic, verifiable items."*
 
-### Step 3: Architect Executes — Cipher Deployed (2:30-5:00)
+### Step 3: Niobe Executes — Cipher Deployed (2:30-5:00)
 
 User runs: `/start-work`
 
 > **Behind the scenes:**
-> - `/start-work` hook creates `.matrixx/mission.json` and switches session agent to `architect`
-> - Architect reads the plan, iterates through TODOs
+> - `/start-work` hook creates `.matrixx/mission.json` and switches session agent to `niobe`
+> - Niobe reads the plan, iterates through TODOs
 > - Infrastructure (Task 1): dispatched to `mouse` agent
 > - Grammar (Tasks 2-3): dispatched to `cipher` — the DSL specialist
 
 **Audience sees:**
 ```
-[Architect] Starting Wave 1...
-[Architect] Task 1: Delegating infrastructure setup → mouse agent
-[Architect] ✓ Setup complete (pytest + textX installed)
-[Architect] Task 2: Delegating grammar design → cipher agent
+[Niobe] Starting Wave 1...
+[Niobe] Task 1: Delegating infrastructure setup → mouse agent
+[Niobe] ✓ Setup complete (pytest + textX installed)
+[Niobe] Task 2: Delegating grammar design → cipher agent
   └── Cipher loaded with skills: dsl-core, dsl-metamodel, dsl-testing
 ```
 
@@ -173,7 +173,7 @@ $ python -m robot_dsl mission.txt
 | Pre-planning gap analysis | Seraph (sub-agent) | Seraph report |
 | Structured plan + todos | Oracle | Plan markdown + task board |
 | Plan validation | Smith (optional) | Validation report |
-| Mission activation | `/start-work` hook | Agent switch to architect |
+| Mission activation | `/start-work` hook | Agent switch to niobe |
 | Infrastructure setup | mouse agent | CLI output |
 | Grammar (TDD RED→GREEN) | cipher agent | Test output + code |
 | Code generation (TDD) | cipher agent | Test output + code |

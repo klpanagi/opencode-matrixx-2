@@ -61,7 +61,7 @@
   // permission, maxTokens, thinking, reasoningEffort, textVerbosity,
   // providerOptions, fallbackChain
   // Built-in agents: morpheus, keymaker, oracle, merovingian, operator,
-  // trinity, construct, seraph, smith, architect, cipher, sentinel, sati,
+  // trinity, construct, seraph, smith, niobe, cipher, sentinel, sati,
   // bdd-contract, build, plan, mouse, OpenCode-Builder
   // ─────────────────────────────────────────────────────────────────────────
   // "agents": {

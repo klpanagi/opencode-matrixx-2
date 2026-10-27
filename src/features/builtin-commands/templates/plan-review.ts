@@ -6,7 +6,7 @@ export const PLAN_REVIEW_TEMPLATE = `You are running a post-execution completion
 
 This command is the ONLY trigger for a completion review. There is no other one:
 no hook invokes it, no \`session.idle\` path invokes it, no \`progress.isComplete\`
-path invokes it, and no Architect step invokes it. A hook cannot run an agent,
+path invokes it, and no Niobe step invokes it. A hook cannot run an agent,
 so with explicit-only triggering there is deliberately NO automatic attach point.
 That is the design, not a gap. Never install one, and never offer to.
 

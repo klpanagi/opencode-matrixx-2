@@ -155,7 +155,7 @@ From `src/plugin/tool-execute-before.ts` — 3-wave execution when ANY tool runs
 |------|------|----------|---------|
 | 1 | READ-ONLY | Tracks writes for post-lint, injects context | Non-blocking |
 | 2 | **BLOCKING** | Secret scan, env guard, file overwrite guard | **Kills operation** |
-| 3 | MUTATORS | Env injection, read warnings, architect reminders | Wraps prompt |
+| 3 | MUTATORS | Env injection, read warnings, niobe reminders | Wraps prompt |
 
 **Key insight:** Wave 2 runs in parallel — **first rejection wins**. The fastest guard to find a problem kills the operation.
 

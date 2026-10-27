@@ -1,10 +1,10 @@
 import type { PluginInput } from "@opencode-ai/plugin"
-import { createArchitectEventHandler } from "./event-handler"
+import { createNiobeEventHandler } from "./event-handler"
 import { createToolExecuteAfterHandler } from "./tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./tool-execute-before"
-import type { ArchitectHookOptions, SessionState } from "./types"
+import type { NiobeHookOptions, SessionState } from "./types"
 
-export function createArchitectHook(ctx: PluginInput, options?: ArchitectHookOptions) {
+export function createNiobeHook(ctx: PluginInput, options?: NiobeHookOptions) {
   const sessions = new Map<string, SessionState>()
   const pendingFilePaths = new Map<string, string>()
 
@@ -18,7 +18,7 @@ export function createArchitectHook(ctx: PluginInput, options?: ArchitectHookOpt
   }
 
   return {
-    handler: createArchitectEventHandler({ ctx, options, sessions, getState }),
+    handler: createNiobeEventHandler({ ctx, options, sessions, getState }),
     "tool.execute.before": createToolExecuteBeforeHandler({ ctx, pendingFilePaths }),
     "tool.execute.after": createToolExecuteAfterHandler({ ctx, pendingFilePaths }),
   }

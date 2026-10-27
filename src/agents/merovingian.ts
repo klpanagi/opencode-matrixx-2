@@ -11,12 +11,12 @@ export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
   promptAlias: "Consultant",
   keyTrigger: "Task failed 2x or blocked 30m \u2192 consult Merovingian (read-only)",
   triggers: [
-    { domain: "Architecture decisions", trigger: "Multi-system tradeoffs, unfamiliar patterns" },
+    { domain: "Architecture review / second opinion", trigger: "Review existing design, multi-system tradeoffs, unfamiliar patterns (no new plan)" },
     { domain: "Self-review", trigger: "After completing significant implementation" },
     { domain: "Hard debugging", trigger: "After 2+ failed fix attempts" },
   ],
   useWhen: [
-    "Complex architecture design",
+    "Second-opinion review of existing architecture/design",
     "After completing significant work",
     "2+ failed fix attempts",
     "Unfamiliar code patterns",

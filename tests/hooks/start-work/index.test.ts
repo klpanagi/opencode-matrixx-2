@@ -382,7 +382,7 @@ describe("start-work hook", () => {
   })
 
   describe("session agent management", () => {
-    test("should update session agent to Architect when start-work command is triggered", async () => {
+    test("should update session agent to Niobe when start-work command is triggered", async () => {
       // given
       const updateSpy = spyOn(sessionState, "updateSessionAgent")
       
@@ -398,7 +398,7 @@ describe("start-work hook", () => {
       )
 
       // then
-      expect(updateSpy).toHaveBeenCalledWith("ses-oracle-to-morpheus", "architect")
+      expect(updateSpy).toHaveBeenCalledWith("ses-oracle-to-morpheus", "niobe")
       updateSpy.mockRestore()
     })
   })
