@@ -30,6 +30,7 @@ import { RtkConfigSchema } from "./rtk"
 import { RuntimeFallbackConfigSchema } from "./runtime-fallback"
 import { SecurityConfigSchema } from "./security"
 import { SkillsConfigSchema } from "./skills"
+import { SoftwareDevEnforcementConfigSchema } from "./software-dev-enforcement"
 import { TaskConfigSchema } from "./task"
 import { TasksConfigSchema } from "./tasks"
 import { TddEnforcerConfigSchema } from "./tdd-enforcer"
@@ -85,6 +86,7 @@ export const MatrixxConfigSchema = z.object({
   task: TaskConfigSchema.optional(),
 
   tdd_enforcer: TddEnforcerConfigSchema.optional(),
+  softwareDevEnforcement: SoftwareDevEnforcementConfigSchema.optional(),
   browser_automation_engine: BrowserAutomationConfigSchema.optional(),
   tmux: TmuxConfigSchema.optional(),
   morpheus: MorpheusConfigSchema.optional(),

@@ -1,5 +1,6 @@
-import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
+import type { BrowserAutomationProvider, CategoriesConfig, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements, isAnyFallbackModelAvailable } from "../../shared"
+import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../agent-builder"
 import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { createMorpheusAgent } from "../morpheus"
@@ -22,6 +23,8 @@ export function maybeCreateMorpheusConfig(input: {
   directory?: string
   userCategories?: CategoriesConfig
   availableToolNames: string[]
+  browserProvider?: BrowserAutomationProvider
+  disabledSkills?: Set<string>
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -36,6 +39,8 @@ export function maybeCreateMorpheusConfig(input: {
     availableCategories,
     mergedCategories,
     availableToolNames,
+    browserProvider,
+    disabledSkills,
   } = input
 
   const morpheusOverride = agentOverrides.morpheus
@@ -83,6 +88,11 @@ export function maybeCreateMorpheusConfig(input: {
   }
 
   morpheusConfig = applyOverrides(morpheusConfig, morpheusOverride, mergedCategories)
+
+  morpheusConfig = prependStaticSkillTemplates(morpheusConfig, ORCHESTRATOR_STATIC_SKILLS, {
+    browserProvider,
+    disabledSkills,
+  })
 
   return morpheusConfig
 }

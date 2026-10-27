@@ -3,7 +3,7 @@ import type {
   AvailableCategory,
   AvailableSkill,
 } from "../../agents/dynamic-agent-prompt-builder"
-import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements } from "../../config/schema"
+import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements, SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 
 export type OpencodeClient = PluginInput["client"]
@@ -72,6 +72,7 @@ export interface DelegateTaskToolOptions {
   mouseModel?: string
   browserProvider?: BrowserAutomationProvider
   disabledSkills?: Set<string>
+  softwareDevEnforcement?: SoftwareDevEnforcementConfigInput
   availableCategories?: AvailableCategory[]
   availableSkills?: AvailableSkill[]
   agentOverrides?: AgentOverrides

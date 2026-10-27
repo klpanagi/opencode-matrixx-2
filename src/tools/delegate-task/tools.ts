@@ -3,6 +3,7 @@ import type {
   AvailableCategory,
   AvailableSkill,
 } from "../../agents/dynamic-agent-prompt-builder"
+import { resolveSoftwareDevEnforcement, type SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import { log } from "../../shared/logger"
 import { mergeCategories } from "../../shared/merge-categories"
 import { CATEGORY_DESCRIPTIONS, isCodeWritingCategory, SHORT_CATEGORY_HINTS } from "./constants"
@@ -19,6 +20,8 @@ import {
 } from "./executor"
 import { MOUSE_AGENT } from "./mouse-agent"
 import { buildSystemContent } from "./prompt-builder"
+import { softwareDevDisabledSkillError } from "./software-dev-enforcement"
+import { resolveSoftwareDevEnforcementContent } from "./software-dev-payload"
 import { resolveTaskDescription } from "./task-title"
 import type { DelegateTaskArgs, DelegateTaskToolOptions, ToolContextWithMetadata } from "./types"
 
@@ -34,13 +37,32 @@ export type { BuildSystemContentInput, DelegateTaskToolOptions, SyncSessionCreat
 export function requireTddEnforcerForCodeWriting(
   category: string | undefined,
   loadSkills: string[],
+  options?: {
+    enforcement?: SoftwareDevEnforcementConfigInput | null
+    disabledSkills?: Set<string> | string[]
+  },
 ): string | null {
   // Construct-scope decision: enforce `source` only. `construct` also produces
   // UI code but shares prompts with design exploration, so requiring the skill
   // there would false-positive on non-code tasks. Category (not prompt sniffing)
   // is the signal. Fail-closed: an explicit global `tdd_enforcer.enabled === false`
   // opt-out does NOT exempt `source`, which by definition writes code.
+  // Precedence (spec section 8): explicit disabled_skills entry >
+  // softwareDevEnforcement.enabled=false > field values > built-in defaults.
+  const enforcement = resolveSoftwareDevEnforcement(options?.enforcement)
   if (!isCodeWritingCategory(category)) {
+    return null
+  }
+  const disabled = options?.disabledSkills
+  const isDisabled = (name: string): boolean =>
+    disabled instanceof Set ? disabled.has(name) : (disabled ?? []).includes(name)
+  if (isDisabled("tdd-enforcer")) {
+    return softwareDevDisabledSkillError("tdd-enforcer")
+  }
+  if (!enforcement.enabled) {
+    return null
+  }
+  if (enforcement.mode === "autoAppend") {
     return null
   }
   if (loadSkills.includes("tdd-enforcer")) {
@@ -184,7 +206,10 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
         throw new Error(`Invalid arguments: load_skills=null is not allowed. Pass [] if no skills needed.`)
       }
 
-      const tddError = requireTddEnforcerForCodeWriting(args.category, args.load_skills)
+      const tddError = requireTddEnforcerForCodeWriting(args.category, args.load_skills, {
+        enforcement: options.softwareDevEnforcement,
+        disabledSkills: options.disabledSkills,
+      })
       if (tddError) {
         throw new Error(tddError)
       }
@@ -197,6 +222,32 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
       })
       if (skillError) {
         return skillError
+      }
+
+      let effectiveSkillContent = skillContent
+
+      // Post-resolution software-dev enforcement: keyed off the RESOLVED
+      // (agentToUse, category) — never raw args.category for target
+      // discrimination. Enforcement content joins the skillContent input to
+      // buildSystemContent, preserving skill -> categoryAppend -> banner order.
+      const applySoftwareDevEnforcement = (
+        resolvedAgent: string,
+        resolvedCategory: string | undefined,
+      ): string | null => {
+        const enforcementResult = resolveSoftwareDevEnforcementContent(resolvedAgent, resolvedCategory, args.load_skills, {
+          enforcement: options.softwareDevEnforcement,
+          disabledSkills: options.disabledSkills,
+          browserProvider: options.browserProvider,
+        })
+        if (enforcementResult.error) {
+          return enforcementResult.error
+        }
+        if (enforcementResult.content) {
+          effectiveSkillContent = effectiveSkillContent
+            ? `${effectiveSkillContent}\n\n${enforcementResult.content}`
+            : enforcementResult.content
+        }
+        return null
       }
 
       const parentContext = await resolveParentContext(ctx, options.client)
@@ -245,6 +296,11 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
         actualModel = resolution.actualModel
         isUnstableAgent = resolution.isUnstableAgent
 
+        const postCategoryEnforcementError = applySoftwareDevEnforcement(agentToUse, args.category)
+        if (postCategoryEnforcementError) {
+          return postCategoryEnforcementError
+        }
+
         const isRunInBackgroundExplicitlyFalse = args.run_in_background === false || args.run_in_background === "false" as unknown as boolean
 
         log("[task] unstable agent detection", {
@@ -259,7 +315,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
 
         if (isUnstableAgent && isRunInBackgroundExplicitlyFalse) {
           const systemContent = buildSystemContent({
-            skillContent,
+            skillContent: effectiveSkillContent,
             categoryPromptAppend,
             agentName: agentToUse,
             category: args.category,
@@ -275,10 +331,15 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
         }
         agentToUse = resolution.agentToUse
         categoryModel = resolution.categoryModel
+
+        const postSubagentEnforcementError = applySoftwareDevEnforcement(agentToUse, undefined)
+        if (postSubagentEnforcementError) {
+          return postSubagentEnforcementError
+        }
       }
 
       const systemContent = buildSystemContent({
-        skillContent,
+        skillContent: effectiveSkillContent,
         categoryPromptAppend,
         agentName: agentToUse,
         category: args.category,

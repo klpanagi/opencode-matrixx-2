@@ -146,6 +146,8 @@ export async function applyAgentConfig(params: {
         modelRequirements: params.pluginConfig.modelRequirements,
         pluginConfig: params.pluginConfig,
         directory: params.ctx.directory,
+        browserProvider,
+        disabledSkills,
       });
     }
 

@@ -1,5 +1,6 @@
-import type { CategoryConfig } from "../../config/schema"
+import type { BrowserAutomationProvider, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements, isAnyProviderConnected } from "../../shared"
+import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../agent-builder"
 import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { createKeymakerAgent } from "../keymaker"
@@ -20,6 +21,8 @@ export function maybeCreateKeymakerConfig(input: {
   mergedCategories: Record<string, CategoryConfig>
   directory?: string
   availableToolNames: string[]
+  browserProvider?: BrowserAutomationProvider
+  disabledSkills?: Set<string>
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -33,6 +36,8 @@ export function maybeCreateKeymakerConfig(input: {
     availableCategories,
     mergedCategories,
     availableToolNames,
+    browserProvider,
+    disabledSkills,
   } = input
 
   if (disabledAgents.includes("keymaker")) return undefined
@@ -91,5 +96,10 @@ export function maybeCreateKeymakerConfig(input: {
   if (keymakerOverride) {
     keymakerConfig = mergeAgentConfig(keymakerConfig, keymakerOverride)
   }
+
+  keymakerConfig = prependStaticSkillTemplates(keymakerConfig, ORCHESTRATOR_STATIC_SKILLS, {
+    browserProvider,
+    disabledSkills,
+  })
   return keymakerConfig
 }

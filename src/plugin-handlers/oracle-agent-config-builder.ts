@@ -1,8 +1,9 @@
+import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../agents/agent-builder"
 import { type AgentConfig, parseModelRef } from "../agents/agent-config"
 import { mergeAgentConfig } from "../agents/builtin-agents/agent-overrides"
 import { createOracleSystemPrompt, ORACLE_PERMISSION } from "../agents/oracle"
 import type { AgentOverrideConfig } from "../agents/types"
-import type { CategoryConfig, ModelRequirements } from "../config/schema"
+import type { BrowserAutomationProvider, CategoryConfig, ModelRequirements } from "../config/schema"
 import {
   fetchAvailableModels,
   readConnectedProvidersCache,
@@ -20,6 +21,8 @@ export async function buildOracleAgentConfig(params: {
   modelRequirements?: ModelRequirements
   pluginConfig?: { plans?: { smith_max_review_rounds?: number } }
   directory?: string
+  browserProvider?: BrowserAutomationProvider
+  disabledSkills?: Set<string>
 }): Promise<AgentConfig> {
   const categoryConfig = params.pluginOracleOverride?.category
     ? resolveCategoryConfig(params.pluginOracleOverride.category, params.userCategories)
@@ -64,7 +67,12 @@ export async function buildOracleAgentConfig(params: {
     color: (params.configAgentPlan?.color as string) ?? "#FF5722",
   }
 
-  if (!params.pluginOracleOverride) return base
+  const withStaticSkills = prependStaticSkillTemplates(base, ORCHESTRATOR_STATIC_SKILLS, {
+    browserProvider: params.browserProvider,
+    disabledSkills: params.disabledSkills,
+  })
 
-  return mergeAgentConfig(base, params.pluginOracleOverride, params.directory)
+  if (!params.pluginOracleOverride) return withStaticSkills
+
+  return mergeAgentConfig(withStaticSkills, params.pluginOracleOverride, params.directory)
 }

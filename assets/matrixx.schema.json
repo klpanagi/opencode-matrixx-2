@@ -3897,6 +3897,57 @@
       ],
       "additionalProperties": false
     },
+    "softwareDevEnforcement": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "orchestrators": {
+          "default": [
+            "morpheus",
+            "keymaker",
+            "niobe",
+            "oracle"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executorsSubset": {
+          "default": [
+            "tdd-enforcer",
+            "git-master"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "enforceOnContinuations": {
+          "default": true,
+          "type": "boolean"
+        },
+        "mode": {
+          "default": "failClosed",
+          "type": "string",
+          "enum": [
+            "failClosed",
+            "autoAppend"
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "orchestrators",
+        "executorsSubset",
+        "enforceOnContinuations",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
     "browser_automation_engine": {
       "type": "object",
       "properties": {
