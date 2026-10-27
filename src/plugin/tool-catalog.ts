@@ -118,6 +118,7 @@ export function createToolCatalog(args: {
     mouseModel: pluginConfig.agents?.mouse?.model,
     browserProvider: skillContext.browserProvider,
     disabledSkills: skillContext.disabledSkills,
+    softwareDevEnforcement: pluginConfig.softwareDevEnforcement,
     availableCategories,
     availableSkills: skillContext.availableSkills,
     modelRequirements: pluginConfig.modelRequirements,

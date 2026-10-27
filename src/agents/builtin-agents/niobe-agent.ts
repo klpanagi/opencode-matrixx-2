@@ -1,5 +1,6 @@
-import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
+import type { BrowserAutomationProvider, CategoriesConfig, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements } from "../../shared/model-requirements"
+import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../agent-builder"
 import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { createNiobeAgent } from "../niobe"
@@ -19,6 +20,8 @@ export function maybeCreateNiobeConfig(input: {
   mergedCategories: Record<string, CategoryConfig>
   directory?: string
   userCategories?: CategoriesConfig
+  browserProvider?: BrowserAutomationProvider
+  disabledSkills?: Set<string>
 }): AgentConfig | undefined {
   const {
     disabledAgents,
@@ -32,6 +35,8 @@ export function maybeCreateNiobeConfig(input: {
     mergedCategories,
     directory,
     userCategories,
+    browserProvider,
+    disabledSkills,
   } = input
 
 
@@ -68,6 +73,11 @@ export function maybeCreateNiobeConfig(input: {
   }
 
   orchestratorConfig = applyOverrides(orchestratorConfig, orchestratorOverride, mergedCategories, directory)
+
+  orchestratorConfig = prependStaticSkillTemplates(orchestratorConfig, ORCHESTRATOR_STATIC_SKILLS, {
+    browserProvider,
+    disabledSkills,
+  })
 
   return orchestratorConfig
 }

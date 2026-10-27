@@ -166,6 +166,8 @@ export async function createBuiltinAgents(
     directory,
     userCategories: categories,
     availableToolNames,
+    browserProvider,
+    disabledSkills,
   })
   if (morpheusConfig) {
     result.morpheus = morpheusConfig
@@ -184,6 +186,8 @@ export async function createBuiltinAgents(
     mergedCategories,
     directory,
     availableToolNames,
+    browserProvider,
+    disabledSkills,
   })
   if (keymakerConfig) {
     result.keymaker = keymakerConfig
@@ -206,6 +210,8 @@ export async function createBuiltinAgents(
     mergedCategories,
     directory,
     userCategories: categories,
+    browserProvider,
+    disabledSkills,
   })
   if (niobeConfig) {
     result.niobe = niobeConfig
