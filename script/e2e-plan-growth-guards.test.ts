@@ -62,7 +62,7 @@ function testContext(dir: string): ToolContext {
 }
 
 /**
- * One Oracle-shaped task block: the five REQUIRED_TASK_SUBFIELDS (the two
+ * One Oracle-shaped task block: the seven REQUIRED_TASK_SUBFIELDS (the two
  * OPTIONAL_TASK_SUBFIELDS are deliberately absent — see the contract-slimming
  * case below) plus a QA scenario. Sized like real Oracle output, not a stub.
  */
@@ -80,6 +80,14 @@ function taskBlock(n: number): string {
     "  **References**:",
     "  - `src/widgets/widget-1.ts` — sibling implementation to mirror.",
     "  - `src/index.ts` — registry map to extend.",
+    "",
+    "  **Consumes**:",
+    "  - Upstream inputs this task needs.",
+    "  - Source task for each input.",
+    "",
+    "  **Produces**:",
+    "  - Downstream outputs this task hands off.",
+    "  - Consumer task for each output.",
     "",
     "  **Acceptance Criteria**:",
     `  - \`bun test tests/widgets/widget-${n}.test.ts\` passes.`,
