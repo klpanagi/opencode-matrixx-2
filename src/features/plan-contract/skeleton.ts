@@ -1,7 +1,7 @@
 /**
  * Plan Contract — Skeleton Generator
  *
- * Renders the canonical Oracle plan markdown skeleton. The eight H2 section
+ * Renders the canonical Oracle plan markdown skeleton. The ten H2 section
  * headings are emitted from CANONICAL_SECTIONS and the per-task subfield labels
  * from REQUIRED_TASK_SUBFIELDS, so a freshly generated plan can never drift from
  * the grammar that validatePlanContract enforces. The remaining guidance prose
@@ -11,7 +11,7 @@
 import type { PlanSection, PlanTaskSubfield } from "./constants"
 import { CANONICAL_SECTIONS, REQUIRED_TASK_SUBFIELDS } from "./constants"
 
-/** Trailer appended to a generated task block, after the seven required subfields. */
+/** Trailer appended to a generated task block, after the nine required subfields. */
 const TASK_TRAILER = `  **Commit**: YES | NO (groups with N)
   - Message: \`type(scope): desc\`
   - Files: \`path/to/file\`
@@ -66,6 +66,15 @@ const WORK_OBJECTIVES_BODY = `### Core Objective
 - [Explicit exclusion from Seraph review]
 - [AI slop pattern to avoid]
 - [Scope boundary]`
+
+const GLOBAL_CONSTRAINTS_BODY = `### Invariants
+[Rules that hold for the entire plan — never violated by any task]
+
+### Guardrails
+[Explicit exclusions from Seraph review]
+
+### Scope Boundaries
+[What is in scope / out of scope for every task]`
 
 const VERIFICATION_STRATEGY_BODY = `> **UNIVERSAL RULE: ZERO HUMAN INTERVENTION**
 >
@@ -153,6 +162,15 @@ Parallel Speedup: ~40% faster than sequential
 | 2 | 2, 3, 6 | dispatch parallel after Wave 1 completes |
 | 3 | 4 | final integration task |`
 
+const REVIEW_FOCUS_BODY = `### Reviewer Checklist
+[What the per-task lightweight gate and final review must verify]
+
+### Blocker Criteria
+[Conditions that fail review — same criteria Smith enforces]
+
+### Evidence Required
+[What each task must attach for its gate to pass]`
+
 const COMMIT_STRATEGY_BODY = `| After Task | Message | Files | Verification |
 |------------|---------|-------|--------------|
 | 1 | \`type(scope): desc\` | file.ts | npm test |`
@@ -171,8 +189,10 @@ const STATIC_SECTION_BODIES: Record<Exclude<PlanSection, "TODOs">, string> = {
   "TL;DR": TLDR_BODY,
   Context: CONTEXT_BODY,
   "Work Objectives": WORK_OBJECTIVES_BODY,
+  "Global Constraints": GLOBAL_CONSTRAINTS_BODY,
   "Verification Strategy (MANDATORY)": VERIFICATION_STRATEGY_BODY,
   "Execution Strategy": EXECUTION_STRATEGY_BODY,
+  "Review Focus": REVIEW_FOCUS_BODY,
   "Commit Strategy": COMMIT_STRATEGY_BODY,
   "Success Criteria": SUCCESS_CRITERIA_BODY,
 }
@@ -220,6 +240,10 @@ const TASK_SUBFIELD_BODIES: Record<PlanTaskSubfield, string> = {
   - Don't just list files - explain what pattern/information the executor should extract
   - Bad: \`src/utils.ts\` (vague, which utils? why?)
   - Good: \`src/utils/validation.ts:sanitizeInput()\` - Use this sanitization pattern for user input`,
+  Consumes: `  - **Consumes**: [upstream inputs this task needs — files, APIs, types, prior task outputs]
+  - [Source task for each input]`,
+  Produces: `  - **Produces**: [downstream outputs this task hands off — files, contracts, evidence]
+  - [Consumer task for each output]`,
   "Acceptance Criteria": `
   > **AGENT-EXECUTABLE VERIFICATION ONLY** — No human action permitted.
   > Every criterion MUST be verifiable by running a command or using a tool.

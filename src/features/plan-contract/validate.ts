@@ -36,6 +36,7 @@ function buildSubfieldRe(label: string): RegExp {
   return new RegExp(`^\\s*\\*\\*\\s*${escaped}(?:\\s*\\([^)]*\\))?\\s*\\*?\\*?\\s*:?`, "i")
 }
 
+// New subfields/sections flow through automatically: this loop iterates REQUIRED_TASK_SUBFIELDS and the section loop iterates CANONICAL_SECTIONS, so grammar additions need no new check code — advisory warnings only, never blocking.
 function appendMissingSubfieldWarnings(
   lines: string[],
   tasks: PlanTask[],

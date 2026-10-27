@@ -79,7 +79,7 @@ describe("parsePlanContract", () => {
     //#then the canonical sections and the single task are present
     expect(contract.sections).toContain("TODOs")
     expect(contract.sections).toContain("Success Criteria")
-    expect(contract.sections).toHaveLength(8)
+    expect(contract.sections).toHaveLength(10)
     expect(contract.tasks).toHaveLength(1)
     expect(contract.tasks[0]?.title).toBe("Implement the feature")
     expect(contract.dod).toEqual(["Feature implemented", "Tests pass"])

@@ -336,4 +336,55 @@ Edit(".matrixx/drafts/{topic-slug}.md", oldString="---\n## Previous Section", ne
 \`\`\`
 
 ---
+
+## Seraph Handoff Artifact (Lossless)
+
+**Before consulting Seraph (or when Seraph is bypassed), record a handoff block in the draft under Context → Interview Summary.** The handoff is the ONLY context Seraph (or the plan-generation step) receives about the interview — write it so nothing is lost.
+
+\`\`\`markdown
+### Seraph Handoff
+- **Goal**: [1-sentence user objective]
+- **Key Discussions**: [point 1]: [user decision]; [point 2]: [agreed approach]
+- **Research Findings**: [finding]: [implication for the plan]
+- **Gaps caught** (mirror Seraph's real gap categories — every field filled or marked N/A with why):
+  - Missed questions: [questions Seraph would still ask, or N/A]
+  - Guardrails: [explicit exclusions Seraph must enforce]
+  - Scope-creep locks: [adjacent areas declared out of scope]
+  - Assumptions needing validation: [premise + construction site checked, or UNVERIFIED CLAIM with site checked]
+  - Acceptance gaps: [criteria still vague, with owning task]
+  - Edge cases unaddressed: [edge case + handling, or N/A]
+- **Resolutions**: [gap 1]: [how resolved]; [default 1]: [what was assumed + rationale]
+- **Test Strategy Decision**: [infrastructure YES/NO; automated tests TDD/after/none; Agent-Executed QA ALWAYS]
+- **Ledger pointer**: progress tracked at \`.matrixx/evidence/{plan}/progress.md\` via plan_*/task_* tools only (never shell-redirect writes)
+- **SHIP pattern**: BUILD runs in an isolated worktree (\`git worktree add\`), SHIP merges from it; PR targets dev, never master; merge commit ONLY, never squash
+\`\`\`
+
+**Field rule**: handoff fields MUST mirror Seraph's real gap categories (missed questions, guardrails, scope-creep, acceptance gaps, edge cases, unverified premises). A Seraph review that cannot find its own categories in the handoff is a lossy handoff — fix the handoff, not Seraph.
+
+## Approach-Pick (Skipped Questions → Recorded Defaults)
+
+**When the user skips interview questions or says "just proceed", do NOT leave blanks.** Record an approach-pick:
+
+1. Apply the sensible default for each unanswered question (see the gap-handling protocol in plan-generation: AMBIGUOUS → apply default, disclose in summary).
+2. Write each default into the handoff Resolutions line WITH its rationale: **[Default]: [what was assumed] — Rationale: [why this default is safe]**.
+3. List them under "Approach-pick defaults applied" in the Interview Summary, one bullet per default.
+
+Precedent for this format — DEFAULTS A1/A2/A3: additive-optional Wave 1 (rationale: zero grammar drift risk), Wave 1 gating as prompt guidance never a blocking hook (rationale: validator stays advisory), lightweight 1-agent reviewer cost (rationale: cheapest additive plumbing, no fan-out). **Every approach-pick entry needs the same shape: DEFAULT + rationale, never a bare assumption.**
+
+**Rule**: an unanswered question with no recorded default + rationale is an open gap, not a decision. It blocks clearance.
+
+## Spike Escape Hatch (Time-Boxed Investigation)
+
+**When the path is unclear and no default is defensible** (no codebase precedent, no authoritative docs, competing plausible designs), do NOT guess and do NOT stall the interview — open a Spike:
+
+- **Time-box**: declare a fixed investigation budget up front (default 30 minutes of agent execution; state the budget in the handoff).
+- **Exit criteria** (Spike ends when ANY holds):
+  - A recommended approach with evidence (file paths, doc links, prototype output)
+  - Proof the question is undecidable from available evidence → escalate to the user with exactly two options and a recommendation
+  - Time-box expiry → synthesize best-available evidence, record the residual uncertainty as an UNVERIFIED CLAIM, proceed
+- **Record**: log the Spike (question, time-box, outcome) in the draft Interview Summary and as a ledger entry at \`.matrixx/evidence/{plan}/progress.md\` via plan_*/task_* tools.
+
+**Verification for ALL of the above is agent-executed**: the executing agent runs commands (rg, bun test, curl, Playwright) and captures evidence. Never write acceptance that requires a human to confirm, review output by eye, or interact with the deliverable.
+
+---
 `

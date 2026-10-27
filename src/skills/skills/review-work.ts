@@ -8,7 +8,7 @@ const REVIEW_WORK_SKILL_DESCRIPTION =
 export const reviewWorkSkill: BuiltinSkill = {
   name: REVIEW_WORK_SKILL_NAME,
   description: REVIEW_WORK_SKILL_DESCRIPTION,
-  template: `# Review Work - 5-Agent Parallel Review Orchestrator
+  template: `# Review Work - 6-Agent Parallel Review Orchestrator
 
 Launch 6 specialized sub-agents in parallel to review completed implementation work from every angle. All 6 must pass for the review to pass. If even ONE fails, the review fails.
 
@@ -62,9 +62,25 @@ For GOAL, CONSTRAINTS, BACKGROUND - review the full conversation history. The us
 
 ---
 
-## Phase 1: Launch 5 Agents
+## Per-Task Lightweight Reviewer Gate
 
-Launch ALL 5 in a single turn. Every agent uses \`run_in_background=true\`. No sequential launches. No waiting between them.
+For multi-task plans, run a lightweight per-task gate BEFORE dependents start — never fan out the full 6-agent panel per task.
+
+- Gate reviewer: 1 Oracle agent (spec + quality) per task. It checks the task interface contract against the exact post-Task-6 subfield labels: Consumes (upstream inputs + source task), Produces (downstream outputs + consumer task), Acceptance Criteria, and Agent-Executed QA Scenarios.
+- Wave semantics: dependents blocked until the gate passes. A task whose gate FAILS is fixed and re-gated first — no downstream task that Consumes its Produces outputs may start until the gate passes.
+- Final-only full panel: the full 6-agent parallel review (Phases 1-3 below) runs once, final-only, after ALL tasks complete. Never run the full panel per task.
+- Prompt-level gate only: the plan-contract validator stays advisory on this gate — it warns, never blocks.
+
+**Exit criteria:**
+- [ ] Every task gated by 1 Oracle (spec+quality) on Consumes / Produces / Acceptance Criteria / Agent-Executed QA Scenarios before dependents start
+- [ ] Dependents blocked until gate passes
+- [ ] Full 6-agent review runs final-only, never per task
+
+---
+
+## Phase 1: Launch 6 Agents
+
+Launch ALL 6 in a single turn. Every agent uses \`run_in_background=true\`. No sequential launches. No waiting between them.
 
 **Oracle agents receive everything in the prompt** (they cannot read files or run commands). Include DIFF + FILE_CONTENTS + all context directly in the prompt text.
 

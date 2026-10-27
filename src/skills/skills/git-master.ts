@@ -583,6 +583,18 @@ NEXT STEPS:
 
 ---
 
+## WORKTREE PROCEDURES
+
+Isolated work via git worktrees. Never contaminate the main worktree — create/use a worktree per feature branch (matches review-work convention).
+
+- Create: \`git worktree add ../<feature> -b <feature>\` — new branch in an isolated directory.
+- List / env-detect: \`git worktree list\` — detect worktree vs in-place before SHIP; the result determines merge + cleanup path.
+- Remove / cleanup: \`git worktree remove ../<feature>\` then \`git worktree prune\` — remove worktree after merge, prune stale metadata.
+
+Repo law: PR targeting dev — dev, never master. Merge commit ONLY, never squash — squash merge is disabled at repo level. This rule governs PR merges only; local history rewrite via interactive rebase / autosquash (\`--autosquash\`) remains a separate COMMIT-mode tool and never replaces the merge-commit rule.
+
+---
+
 ## Quick Reference
 
 ### Style Detection Cheat Sheet

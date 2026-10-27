@@ -55,6 +55,7 @@ import { securitySastSkill } from "./skills/security-sast"
 import { securitySecretsSkill } from "./skills/security-secrets"
 import { silentFailureDetectionSkill } from "./skills/silent-failure-detection"
 import { softwareDevSkill } from "./skills/software-dev"
+import { systematicDebuggingSkill } from "./skills/systematic-debugging"
 import { tddEnforcerSkill } from "./skills/tdd-enforcer"
 import { telegramBotSkill } from "./skills/telegram-bot"
 import { timeSeriesFundamentalsSkill } from "./skills/time-series-fundamentals"
@@ -143,6 +144,7 @@ const skillFactories: Record<string, () => BuiltinSkill> = {
   "telegram-bot": () => telegramBotSkill,
   "resilience-error-taxonomy": () => resilienceErrorTaxonomySkill,
   "silent-failure-detection": () => silentFailureDetectionSkill,
+  "systematic-debugging": () => systematicDebuggingSkill,
   "data-quality-observability": () => dataQualityObservabilitySkill,
 }
 
