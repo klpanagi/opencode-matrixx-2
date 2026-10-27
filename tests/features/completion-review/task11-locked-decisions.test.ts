@@ -63,7 +63,12 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
     // NOTE (native-v2, feat/v2-native-agent-vocabulary): re-baselined for the
     // V2 agent envelope (ModelRef/request-body/ruleset). The prompt body and
     // the pre/post-execution split are untouched — only the config shape moved.
-    const FROZEN_MD5 = "1b54ad21156a783daa0fe17f22c8322a"
+    // NOTE (matrixx-superpowers, plan-contract grammar): hash advanced from
+    // 1b54ad21156a783daa0fe17f22c8322a. The only delta is one additive
+    // "Global Constraints + Review Focus Present" checklist bullet so Smith's
+    // blocker criteria name the same new H2s the grammar emits; Smith remains
+    // the pre-execution reviewer and the pre/post split is untouched.
+    const FROZEN_MD5 = "2b592ffb75cb5634e52e6365ff929075"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/smith.ts")
