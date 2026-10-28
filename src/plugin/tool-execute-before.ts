@@ -11,6 +11,7 @@ import {
   getUltraworkState,
 } from "../features/ultrawork-state"
 import { log } from "../shared"
+import { isTaskTool } from "../shared/shell-tool-name"
 import { resolveSessionAgent } from "./session-agent-resolver"
 import type { DomainHooks } from "./setup-domains"
 import type { PluginContext } from "./types"
@@ -135,7 +136,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // This is the T1.4 optimization: removes the 5s-timeout network call
     // from the synchronous wait chain.
     let resolvePromise: Promise<string | undefined> | undefined
-    if (input.tool === "task") {
+    if (isTaskTool(input.tool)) {
       const argsObject = output.args
       const category = typeof argsObject.category === "string" ? argsObject.category : undefined
       const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
