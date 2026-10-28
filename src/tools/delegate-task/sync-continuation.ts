@@ -8,6 +8,7 @@ import { setSessionTools } from "../../shared/session-state"
 import { getDeliverableTag, isPlanFamily } from "./constants"
 import type { ExecutorContext, SessionMessage } from "./executor-types"
 import { type SyncContinuationDeps, syncContinuationDeps } from "./sync-continuation-deps"
+import { promptEnvelopeErrorOf, type SyncPromptV2Args } from "./sync-prompt-sender"
 import { buildContinuationTitle } from "./task-title"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -89,23 +90,33 @@ export async function executeSyncContinuation(
     }
     setSessionTools(continuationID as string, tools)
 
-    await promptWithModelSuggestionRetry(client, {
-      path: { id: continuationID as string },
-      body: {
-        ...(resumeAgent !== undefined ? { agent: resumeAgent } : {}),
-        ...(resumeModel !== undefined ? { model: resumeModel } : {}),
-        ...(resumeVariant !== undefined ? { variant: resumeVariant } : {}),
-        tools,
-        parts: [{ type: "text", text: args.prompt }],
-      },
-    })
-   } catch (promptError) {
-     if (toastManager) {
-       toastManager.removeTask(taskId)
-     }
-     const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
-     return `Failed to send continuation prompt: ${errorMessage}\n\nSession ID: ${continuationID}`
-   }
+    const continuationPromptArgs: SyncPromptV2Args = {
+      sessionID: continuationID as string,
+      ...(resumeAgent !== undefined ? { agent: resumeAgent } : {}),
+      ...(resumeModel !== undefined ? { model: resumeModel } : {}),
+      ...(resumeVariant !== undefined ? { variant: resumeVariant } : {}),
+      tools,
+      parts: [{ type: "text", text: args.prompt }],
+    }
+    const settled: unknown = await promptWithModelSuggestionRetry(
+      client,
+      continuationPromptArgs as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1]
+    )
+    const envelopeError = promptEnvelopeErrorOf(settled)
+    if (envelopeError !== null) {
+      if (toastManager) {
+        toastManager.removeTask(taskId)
+      }
+      const statusSuffix = envelopeError.status !== undefined ? ` (status ${envelopeError.status})` : ""
+      return `Failed to send continuation prompt: ${envelopeError.message}${statusSuffix}\n\nSession ID: ${continuationID}`
+    }
+  } catch (promptError) {
+    if (toastManager) {
+      toastManager.removeTask(taskId)
+    }
+    const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
+    return `Failed to send continuation prompt: ${errorMessage}\n\nSession ID: ${continuationID}`
+  }
 
     try {
       const pollError = await deps.pollSyncSession(ctx, client, {

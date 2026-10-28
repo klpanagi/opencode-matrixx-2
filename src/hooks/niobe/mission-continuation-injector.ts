@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log } from "../../shared/logger"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { HOOK_NAME } from "./hook-name"
 import { resolveRecentModelForSession } from "./recent-model-resolver"
 import { MISSION_CONTINUATION_PROMPT } from "./system-reminder-templates"
@@ -45,7 +46,7 @@ export async function injectMissionContinuation(input: {
 
     const model = await resolveRecentModelForSession(ctx, sessionID)
 
-    await ctx.client.session.promptAsync({
+    await promptWithModelSuggestionRetry(ctx.client, {
       path: { id: sessionID },
       body: {
         agent: agent ?? "niobe",

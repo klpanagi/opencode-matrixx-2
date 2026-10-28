@@ -42,7 +42,7 @@ bunDescribe("sendSyncPrompt", () => {
 
     //#then
     bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.question).toBe(false)
+    bunExpect(promptArgs.tools.question).toBe(false)
   })
 
   bunTest("applies agent tool restrictions for explore agent", async () => {
@@ -82,7 +82,7 @@ bunDescribe("sendSyncPrompt", () => {
 
     //#then
     bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.task).toBe(false)
+    bunExpect(promptArgs.tools.task).toBe(false)
   })
 
   bunTest("applies agent tool restrictions for librarian agent", async () => {
@@ -122,7 +122,7 @@ bunDescribe("sendSyncPrompt", () => {
 
     //#then
     bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.task).toBe(false)
+    bunExpect(promptArgs.tools.task).toBe(false)
   })
 
   bunTest("restricts task for morpheus agent", async () => {
@@ -162,7 +162,7 @@ bunDescribe("sendSyncPrompt", () => {
 
     //#then
     bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.body.tools.question).toBe(false)
+    bunExpect(promptArgs.tools.question).toBe(false)
   })
 
   bunTest("retries with promptSync for oracle when promptAsync fails with unexpected EOF", async () => {

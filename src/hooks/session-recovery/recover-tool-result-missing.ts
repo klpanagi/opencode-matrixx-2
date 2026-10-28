@@ -1,5 +1,6 @@
 import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { normalizeSDKResponse } from "../../shared"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
 import { readParts } from "./storage"
 import type { MessageData } from "./types"
@@ -66,7 +67,7 @@ export async function recoverToolResultMissing(
   }
 
   try {
-    await client.session.promptAsync({
+    await promptWithModelSuggestionRetry(client, {
       path: { id: sessionID },
       body: {
         parts: [

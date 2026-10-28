@@ -1,5 +1,6 @@
 import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { normalizeAgentName, resolveAgentForSession, resolveRegisteredAgentName } from "./agent-resolver"
 import { HOOK_NAME } from "./constants"
 import { getFallbackModelsForSession } from "./fallback-models"
@@ -138,15 +139,18 @@ export function createAutoRetryHelpers(deps: HookDeps) {
         sessionAwaitingFallbackResult.add(sessionID)
         scheduleSessionFallbackTimeout(sessionID, retryAgent)
 
-        await ctx.client.session.promptAsync({
-          path: { id: sessionID },
-          body: {
-            ...(launchAgent ? { agent: launchAgent } : {}),
-            ...retryModelPayload,
-            parts: retryParts,
-          },
-          query: { directory: ctx.directory },
-        })
+        await promptWithModelSuggestionRetry(
+          ctx.client as unknown as Parameters<typeof promptWithModelSuggestionRetry>[0],
+          {
+            path: { id: sessionID },
+            body: {
+              ...(launchAgent ? { agent: launchAgent } : {}),
+              ...retryModelPayload,
+              parts: retryParts,
+            },
+            query: { directory: ctx.directory },
+          } as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1],
+        )
         retryDispatched = true
       } else {
         log(`[${HOOK_NAME}] No user message found for auto-retry (${source})`, { sessionID })

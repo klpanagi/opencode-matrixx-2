@@ -2,6 +2,10 @@ import type { MatrixxConfig } from "../config"
 import type { BackgroundManager } from "../features/background-agent"
 
 import { createUnstableAgentBabysitterHook } from "../hooks"
+import {
+  promptSyncWithModelSuggestionRetry,
+  promptWithModelSuggestionRetry,
+} from "../shared/model-suggestion-retry"
 import { isRecord } from "../shared/record-type-guard"
 import type { PluginContext } from "./types"
 
@@ -26,10 +30,16 @@ export function createUnstableAgentBabysitter(args: {
             return []
           },
           prompt: async (promptArgs) => {
-            await ctx.client.session.promptAsync(promptArgs)
+            await promptSyncWithModelSuggestionRetry(
+              ctx.client,
+              promptArgs as unknown as Parameters<typeof promptSyncWithModelSuggestionRetry>[1],
+            )
           },
           promptAsync: async (promptArgs) => {
-            await ctx.client.session.promptAsync(promptArgs)
+            await promptWithModelSuggestionRetry(
+              ctx.client,
+              promptArgs as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1],
+            )
           },
         },
       },

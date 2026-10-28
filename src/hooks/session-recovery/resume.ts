@@ -1,4 +1,5 @@
 import type { createOpencodeClient } from "@opencode-ai/sdk"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import type { MessageData, ResumeConfig } from "./types"
 
 const RECOVERY_RESUME_TEXT = "[session recovered - continuing previous task]"
@@ -24,7 +25,7 @@ export function extractResumeConfig(userMessage: MessageData | undefined, sessio
 
 export async function resumeSession(client: Client, config: ResumeConfig): Promise<boolean> {
   try {
-    await client.session.promptAsync({
+    await promptWithModelSuggestionRetry(client, {
       path: { id: config.sessionID },
       body: {
         parts: [{ type: "text", text: RECOVERY_RESUME_TEXT }],

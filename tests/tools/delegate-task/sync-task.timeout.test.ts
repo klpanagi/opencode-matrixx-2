@@ -1,5 +1,5 @@
 /// <reference types="bun-types" />
-import { beforeEach, describe, expect, mock, test } from "bun:test"
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
 
 // Mock module-level imports before importing the unit under test
 const mockUnregisterSubagentSession = mock(() => {})
@@ -210,5 +210,124 @@ describe("executeSyncTask — no-abort-on-timeout", () => {
       expect(mockAbort).toHaveBeenCalledWith({ path: { id: "test-session-abc" } })
       expect(result).toContain("Session stalled")
     })
+  })
+})
+
+describe("executeSyncTask — hard timeout around send+poll", () => {
+  const { __setTimingConfig, __resetTimingConfig } = require("../../../src/tools/delegate-task/timing")
+  const HANG_GUARD_MS = 3000
+
+  function withHangGuard(promise: Promise<string>): Promise<string> {
+    return Promise.race([
+      promise,
+      new Promise<string>((_resolve, reject) => {
+        setTimeout(
+          () => reject(new Error("HANG: executeSyncTask did not settle within bound")),
+          HANG_GUARD_MS,
+        )
+      }),
+    ])
+  }
+
+  beforeEach(() => {
+    //#given — shrink the timing budget so the watchdog fires in milliseconds
+    __setTimingConfig({ MAX_POLL_TIME_MS: 60, POLL_INTERVAL_MS: 5 })
+  })
+
+  afterEach(() => {
+    __resetTimingConfig()
+  })
+
+  test("never-resolving send returns structured timeout error instead of hanging", async () => {
+    //#given — a send prompt promise that never resolves
+    const built = buildMockContext()
+    const deps: SyncTaskDeps = {
+      ...createMockDeps(null),
+      sendSyncPrompt: mock(() => new Promise<null>(() => {})),
+    }
+
+    //#when — executeSyncTask runs past the timing-config poll timeout
+    const result = await withHangGuard(
+      executeSyncTask(
+        defaultArgs,
+        built.ctx,
+        built.executorCtx,
+        built.parentContext,
+        "mouse",
+        undefined,
+        undefined,
+        undefined,
+        deps,
+      ),
+    )
+
+    //#then — structured error (non-null, non-empty, timeout wording + sessionID), never a hang
+    expect(result).not.toBeNull()
+    expect(typeof result).toBe("string")
+    expect(result.length).toBeGreaterThan(0)
+    expect(result).toMatch(/timed out|timeout/i)
+    expect(result).toContain(SESSION_ID)
+    expect(result).toContain("Send+poll sync task")
+    expect(built.mockAbort).not.toHaveBeenCalled()
+  })
+
+  test("never-resolving poll returns structured timeout error instead of hanging", async () => {
+    //#given — send settles but the poll promise never resolves
+    const built = buildMockContext()
+    const deps: SyncTaskDeps = {
+      ...createMockDeps(null),
+      sendSyncPrompt: mock(() => Promise.resolve(null)),
+      pollSyncSession: mock(() => new Promise<null>(() => {})),
+    }
+
+    //#when — executeSyncTask runs past the timing-config poll timeout
+    const result = await withHangGuard(
+      executeSyncTask(
+        defaultArgs,
+        built.ctx,
+        built.executorCtx,
+        built.parentContext,
+        "mouse",
+        undefined,
+        undefined,
+        undefined,
+        deps,
+      ),
+    )
+
+    //#then — same structured-error contract as the stalled-send case
+    expect(result).not.toBeNull()
+    expect(typeof result).toBe("string")
+    expect(result.length).toBeGreaterThan(0)
+    expect(result).toMatch(/timed out|timeout/i)
+    expect(result).toContain(SESSION_ID)
+    expect(result).toContain("Send+poll sync task")
+    expect(built.mockAbort).not.toHaveBeenCalled()
+  })
+
+  test("fast send+poll still completes (watchdog does not break happy path)", async () => {
+    //#given — deps that settle immediately, well under the shrunk budget
+    const built = buildMockContext()
+    const deps = createMockDeps(null, { ok: true as const, textContent: "done fast" })
+
+    //#when
+    const result = await withHangGuard(
+      executeSyncTask(
+        defaultArgs,
+        built.ctx,
+        built.executorCtx,
+        built.parentContext,
+        "mouse",
+        undefined,
+        undefined,
+        undefined,
+        deps,
+      ),
+    )
+
+    //#then — normal completion is untouched by the watchdog
+    expect(result).toContain("Task completed")
+    expect(result).toContain("done fast")
+    expect(built.mockAbort).toHaveBeenCalledTimes(1)
   })
 })

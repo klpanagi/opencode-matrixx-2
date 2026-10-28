@@ -1,6 +1,7 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import { getMainSessionID, getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import {
   buildReminder,
   extractMessages,
@@ -147,15 +148,18 @@ export function createUnstableAgentBabysitterHook(ctx: BabysitterContext, option
       const { agent, model } = await resolveMainSessionTarget(ctx, mainSessionID)
 
       try {
-        await ctx.client.session.promptAsync({
-          path: { id: mainSessionID },
-          body: {
-            ...(agent ? { agent } : {}),
-            ...(model ? { model } : {}),
-            parts: [{ type: "text", text: reminder }],
-          },
-          query: { directory: ctx.directory },
-        })
+        await promptWithModelSuggestionRetry(
+          ctx.client as unknown as Parameters<typeof promptWithModelSuggestionRetry>[0],
+          {
+            path: { id: mainSessionID },
+            body: {
+              ...(agent ? { agent } : {}),
+              ...(model ? { model } : {}),
+              parts: [{ type: "text", text: reminder }],
+            },
+            query: { directory: ctx.directory },
+          } as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1],
+        )
         reminderCooldowns.set(task.id, now)
         log(`[${HOOK_NAME}] Reminder injected`, { taskId: task.id, sessionID: mainSessionID })
       } catch (error) {
