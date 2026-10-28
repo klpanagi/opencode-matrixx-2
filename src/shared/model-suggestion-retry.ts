@@ -87,9 +87,38 @@ export async function promptWithModelSuggestionRetry(
   })
 
   try {
-    await Promise.race([promptPromise, timeoutPromise])
+    const res = await Promise.race([promptPromise, timeoutPromise])
+    if (typeof res === "object" && res !== null && "error" in res && res.error !== undefined && res.error !== null) {
+      const rawResponse = "response" in res ? res.response : undefined
+      const status =
+        typeof rawResponse === "object" && rawResponse !== null && "status" in rawResponse && rawResponse.status !== undefined
+          ? String(rawResponse.status)
+          : "unknown"
+      const sessionID = args.path.id
+      const agent = typeof args.body.agent === "string" ? args.body.agent : "unknown"
+      const detail = getErrorMessage(res.error) || "unknown error"
+      throw new Error(
+        `promptAsync failed: POST /session/${sessionID}/prompt_async sessionID=${sessionID} agent=${agent} status=${status} detail=${detail}`,
+      )
+    }
   } finally {
     if (timeoutID !== null) clearTimeout(timeoutID)
+  }
+}
+
+function throwOnSyncEnvelopeError(res: unknown, args: PromptArgs): void {
+  if (typeof res === "object" && res !== null && "error" in res && res.error !== undefined && res.error !== null) {
+    const rawResponse = "response" in res ? res.response : undefined
+    const status =
+      typeof rawResponse === "object" && rawResponse !== null && "status" in rawResponse && rawResponse.status !== undefined
+        ? String(rawResponse.status)
+        : "unknown"
+    const sessionID = args.path.id
+    const agent = typeof args.body.agent === "string" ? args.body.agent : "unknown"
+    const detail = getErrorMessage(res.error) || "unknown error"
+    throw new Error(
+      `prompt failed: POST /session/${sessionID}/message sessionID=${sessionID} agent=${agent} status=${status} detail=${detail}`,
+    )
   }
 }
 
@@ -106,8 +135,9 @@ export async function promptSyncWithModelSuggestionRetry(
   client: Client,
   args: PromptArgs,
 ): Promise<void> {
+  let res: unknown
   try {
-    await client.session.prompt(args as Parameters<typeof client.session.prompt>[0])
+    res = await client.session.prompt(args as Parameters<typeof client.session.prompt>[0])
   } catch (error) {
     const suggestion = parseModelSuggestion(error)
     if (!suggestion || !args.body.model) {
@@ -123,7 +153,7 @@ export async function promptSyncWithModelSuggestionRetry(
     const parsedSuggestion = parseModelString(suggestion.suggestion)
     const suggestionModelID = parsedSuggestion ? parsedSuggestion.modelID : suggestion.suggestion.trim()
 
-    await client.session.prompt({
+    const retryRes = await client.session.prompt({
       ...args,
       body: {
         ...args.body,
@@ -133,5 +163,8 @@ export async function promptSyncWithModelSuggestionRetry(
         },
       },
     } as Parameters<typeof client.session.prompt>[0])
+    throwOnSyncEnvelopeError(retryRes, args)
+    return
   }
+  throwOnSyncEnvelopeError(res, args)
 }
