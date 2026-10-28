@@ -20,6 +20,7 @@ import { MAX_PLAN_FILE_BYTES } from "../../features/mission-state/constants"
  * | `section_ambiguous` | selector matches >1 candidate | no — disambiguate |
  * | `size_exceeded` | a write would exceed the cap | no — shrink |
  * | `trim_required` | consecutive growing writes refused; same content will keep failing | no same-content — retry only with trimmed/deferred content |
+ * | `status_transition_rejected` | backward status jump without `forceCompletion` | no — retry forward or with force |
  *
  * RESERVED — declared here, produced by a later task:
  * - `section_stale`, `section_not_found`, `section_ambiguous` — Task 10/15
@@ -90,6 +91,7 @@ export const PLAN_ERROR_CODES = {
   sectionAmbiguous: "section_ambiguous",
   sizeExceeded: "size_exceeded",
   trimRequired: "trim_required",
+  statusTransitionRejected: "status_transition_rejected",
 } as const
 
 export type PlanErrorCode = (typeof PLAN_ERROR_CODES)[keyof typeof PLAN_ERROR_CODES]
@@ -106,6 +108,8 @@ export const PLAN_ERROR_MEANINGS: Record<PlanErrorCode, string> = {
   size_exceeded: "The resulting write would exceed MAX_PLAN_FILE_BYTES; the write was not persisted.",
   trim_required:
     "Consecutive growing writes to this path were refused for size; retrying the same content will keep failing. Retry only with smaller content (trimmed or deferred).",
+  status_transition_rejected:
+    "Backward plan-status jump without { forceCompletion: true }; status moves forward only (pending -> in_progress -> completed).",
 }
 
 export const PLAN_ERROR_RETRYABLE: Record<PlanErrorCode, boolean> = {
@@ -119,6 +123,7 @@ export const PLAN_ERROR_RETRYABLE: Record<PlanErrorCode, boolean> = {
   section_ambiguous: false,
   size_exceeded: false,
   trim_required: false,
+  status_transition_rejected: false,
 }
 
 /** Recovery hint for `file_too_large`: name a concrete next call, not "split the file". */
@@ -157,4 +162,19 @@ export function classifyReadRefusal(input: {
   if (input.errno !== null) return PLAN_ERROR_CODES.readFailed
   if (input.sizeOverCap !== null) return PLAN_ERROR_CODES.fileTooLarge
   return PLAN_ERROR_CODES.readFailed
+}
+
+/** Recovery hint for `status_transition_rejected`: forward-only order plus the explicit override. */
+export const STATUS_TRANSITION_REJECTED_HINT =
+  "Plan status moves forward only (pending -> in_progress -> completed). Retry with a forward status, or pass forceCompletion: true for an explicit human-approved backward jump."
+
+/** `{ error, message, hint, from, to }` — rejected backward status jump. */
+export function statusTransitionRejectedPayload(from: string, to: string): string {
+  return JSON.stringify({
+    error: PLAN_ERROR_CODES.statusTransitionRejected,
+    message: `Plan status transition rejected: ${from} -> ${to} (forward only without forceCompletion).`,
+    hint: STATUS_TRANSITION_REJECTED_HINT,
+    from,
+    to,
+  })
 }
