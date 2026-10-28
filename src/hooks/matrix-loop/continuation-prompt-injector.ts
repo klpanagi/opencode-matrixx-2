@@ -2,6 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { withTimeout } from "../../shared/with-timeout"
 
@@ -52,7 +53,7 @@ export async function injectContinuationPrompt(
 				: undefined
 	}
 
-	await ctx.client.session.promptAsync({
+	await promptWithModelSuggestionRetry(ctx.client, {
 		path: { id: options.sessionID },
 		body: {
 			...(agent !== undefined ? { agent } : {}),

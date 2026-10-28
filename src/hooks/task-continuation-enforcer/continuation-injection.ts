@@ -14,6 +14,7 @@ import type { Task } from "../../features/task-storage/types"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAwaitingUser } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
+import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
 import { resolveTasksConfig } from "../../shared/task-system-gating"
@@ -211,7 +212,7 @@ ${taskList}${staleNote}`
       incompleteCount: freshIncompleteCount,
     })
 
-    await ctx.client.session.promptAsync({
+    await promptWithModelSuggestionRetry(ctx.client, {
       path: { id: sessionID },
       body: {
         agent: agentName,
