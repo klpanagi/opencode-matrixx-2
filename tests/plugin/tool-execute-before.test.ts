@@ -135,6 +135,20 @@ describe("createToolExecuteBeforeHandler", () => {
       expect(output.args.subagent_type).toBe("explore")
     })
 
+    test("sets subagent_type to mouse when category is provided on subagent tool", async () => {
+      //#given
+      const ctx = createCtxWithSessionMessages()
+      const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
+      const input = { tool: "subagent", sessionID: "ses_123", callID: "call_1" }
+      const output = { args: { category: "quick", description: "Test delegation" } as Record<string, unknown> }
+
+      //#when
+      await handler(input, output)
+
+      //#then
+      expect(output.args.subagent_type).toBe("mouse")
+    })
+
     test("does not modify args for non-task tools", async () => {
       //#given
       const ctx = createCtxWithSessionMessages()

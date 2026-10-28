@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { buildEnvPrefix, log } from "../../shared"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { HOOK_NAME, NON_INTERACTIVE_ENV, SHELL_COMMAND_PATTERNS } from "./constants"
 
 export * from "./constants"
@@ -24,7 +25,7 @@ export function createNonInteractiveEnvHook(_ctx: PluginInput) {
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
-      if (input.tool.toLowerCase() !== "bash") {
+      if (!isShellTool(input.tool)) {
         return
       }
 

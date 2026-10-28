@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config"
 import { log } from "../../shared"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { RTK_BINARY_NAME, RTK_REWRITE_COMMAND } from "./constants"
 
 export function createRtkBashRewriterHook(_ctx: PluginInput, config: MatrixxConfig) {
@@ -18,8 +19,8 @@ export function createRtkBashRewriterHook(_ctx: PluginInput, config: MatrixxConf
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
-      // Only intercept bash tool (not interactive-bash)
-      if (input.tool.toLowerCase() !== "bash") {
+      // Only intercept the shell tool (bash V1 alias / shell V2 name; not interactive-bash)
+      if (!isShellTool(input.tool)) {
         return
       }
 

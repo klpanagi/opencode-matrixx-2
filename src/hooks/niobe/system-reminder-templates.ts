@@ -53,8 +53,8 @@ Tests FAILING, code has ERRORS, implementation INCOMPLETE - but they say "done".
 
 Run these commands YOURSELF - do NOT trust agent's claims:
 1. \`lsp_diagnostics\` on changed files → Must be CLEAN
-2. \`bash\` to run tests → Must PASS
-3. \`bash\` to run build/typecheck → Must succeed
+2. \`shell\` (bash alias) to run tests → Must PASS
+3. \`shell\` (bash alias) to run build/typecheck → Must succeed
 
 **STEP 2: MANUAL CODE REVIEW (NON-NEGOTIABLE — DO NOT SKIP)**
 
@@ -84,7 +84,7 @@ For EACH changed file, verify:
 |------------------|-----------|------|
 | **Frontend/UI** | Browser interaction | \`/playwright\` skill |
 | **TUI/CLI** | Run interactively | \`interactive_bash\` (tmux) |
-| **API/Backend** | Send real requests | \`bash\` with curl |
+| **API/Backend** | Send real requests | \`shell\` (bash alias) with curl |
 
 Static analysis CANNOT catch: visual bugs, animation issues, user flow breakages.
 

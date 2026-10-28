@@ -1,6 +1,7 @@
 import type { Hooks } from "@opencode-ai/plugin"
 
 import { log } from "../shared"
+import { isShellTool } from "../shared/shell-tool-name"
 
 const WARNING_MESSAGE =
   "Prefer the Read tool over `cat`/`head`/`tail` for reading file contents. " +
@@ -22,7 +23,7 @@ export function createBashFileReadGuardHook(): Hooks {
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string },
     ): Promise<void> => {
-      if (input.tool.toLowerCase() !== "bash") {
+      if (!isShellTool(input.tool)) {
         return
       }
 

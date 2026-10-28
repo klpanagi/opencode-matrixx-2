@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
 import { isCallerOrchestrator } from "../../shared/session-utils"
+import { isShellTool, isTaskTool } from "../../shared/shell-tool-name"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 import { classifyBashCommand } from "./bash-command-policy"
 import { HOOK_NAME } from "./hook-name"
@@ -43,7 +44,7 @@ export function createToolExecuteBeforeHandler(input: {
     }
 
     // Bash policy: verdict comes ONLY from classifyBashCommand (bash-command-policy); block fail-closed on deny.
-    if (toolInput.tool === "bash") {
+    if (isShellTool(toolInput.tool)) {
       const command = toolOutput.args.command as string | undefined
       if (!command) {
         return
@@ -64,7 +65,7 @@ export function createToolExecuteBeforeHandler(input: {
     }
 
     // Check task - inject single-task directive
-    if (toolInput.tool === "task") {
+    if (isTaskTool(toolInput.tool)) {
       const prompt = toolOutput.args.prompt as string | undefined
       if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
         toolOutput.args.prompt = `<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>\n${prompt}`

@@ -145,8 +145,11 @@ describe("tool.execute.before T1.1 (3-wave parallelized)", () => {
         hooks: hooks as Parameters<typeof createToolExecuteBeforeHandler>[0]["hooks"],
       })
 
-      // `bash` is the simplest path — skips task-tool and slashcommand post-hooks.
-      const input = { tool: "bash", sessionID: "ses_bench", callID: "call_1" }
+      // Dual fixture (V2 compat proof): `bash` (V1 alias) and `shell` (V2
+      // effective name) both take the simplest path — neither triggers the
+      // task-tool nor slashcommand post-hooks.
+      const bashInput = { tool: "bash", sessionID: "ses_bench", callID: "call_1" }
+      const shellInput = { tool: "shell", sessionID: "ses_bench", callID: "call_1" }
       const output = { args: { command: "ls" } as Record<string, unknown> }
 
       //#when
@@ -154,14 +157,14 @@ describe("tool.execute.before T1.1 (3-wave parallelized)", () => {
       // the first GC. Without warmup, p99 is dominated by the first GC
       // pause which lands in the 99th percentile of a 1000-iter sample.
       for (let i = 0; i < 50; i++) {
-        await handler(input, output)
+        await handler(i % 2 === 0 ? bashInput : shellInput, output)
       }
 
       const latencies = new Float64Array(ITERATIONS)
       const totalStart = performance.now()
       for (let i = 0; i < ITERATIONS; i++) {
         const start = performance.now()
-        await handler(input, output)
+        await handler(i % 2 === 0 ? bashInput : shellInput, output)
         latencies[i] = performance.now() - start
       }
       const totalMs = performance.now() - totalStart

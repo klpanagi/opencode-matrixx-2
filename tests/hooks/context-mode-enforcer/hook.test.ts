@@ -159,3 +159,46 @@ describe("context-mode-enforcer hook", () => {
     _setDisciplinePathForTesting(undefined)
   })
 })
+
+describe("context-mode-enforcer hook: shell alias (V2)", () => {
+  function runShell(contextMode: unknown, command: string) {
+    const sessionID = `ses_shell_${++seq}`
+    rmSync(resolve(tmpdir(), `matrixx-ctx-guidance-s-${sessionID}`), { recursive: true, force: true })
+    const hook = createContextModeEnforcerHook(makeConfig(contextMode))
+    const output: { args: Record<string, unknown>; message?: string } = { args: { command } }
+    const promise = hook["tool.execute.before"](
+      { tool: "shell", sessionID } as never,
+      output as never,
+    )
+    return { promise, output }
+  }
+
+  test("live-bug replay: shell cat blocked when bash is gated", async () => {
+    //#given: enforce on with V1 bash spelling in blocked_tools
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise } = runShell({ enforce: true, blocked_tools: ["bash", "grep"] }, "cat package.json")
+    //#when: shell runs a file-read command
+    //#then: throws the grep/glob block message (same as bash did)
+    await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+  })
+
+  test("shell rtk cat throws when only shell is gated", async () => {
+    //#given: enforce on with V2 shell spelling in blocked_tools
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise } = runShell({ enforce: true, blocked_tools: ["shell", "grep"] }, "rtk cat some/file")
+    //#when: shell runs a file-read command
+    //#then: throws the grep/glob block message
+    await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+    _setDisciplinePathForTesting(undefined)
+  })
+
+  test("shell grep warns when neither spelling is gated", async () => {
+    //#given: enforce on, shell not in blocked_tools
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise, output } = runShell({ enforce: true }, "grep -r foo src")
+    //#when: shell grep runs
+    //#then: warns, never throws
+    await expect(promise).resolves.toBeUndefined()
+    expect(output.message).toBeDefined()
+  })
+})

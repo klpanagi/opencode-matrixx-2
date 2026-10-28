@@ -241,6 +241,26 @@ describe("task-edit-guard: bash mutation matrix blocked on plans/tasks", () => {
     })
   }
 
+  test("blocks shell mutations like bash (V2 alias)", async () => {
+    //#given: raw shell mutation commands touching plans/tasks
+    const hook2 = createTaskEditGuardHook(ctx as unknown as PluginInput)
+    async function runShell(command: string) {
+      const input = { tool: "shell", sessionID: "ses_1", callID: "call_1" }
+      const output = { args: { command } }
+      return hook2["tool.execute.before"]?.(input, output)
+    }
+    //#when: the guard runs on shell inputs
+    //#then: it throws the raw-bash-edit block message
+    await expect(runShell(`sed -i 's/a/b/' ${tempDir}/.matrixx/plans/my-plan.md`)).rejects.toThrow(
+      "Blocked: raw bash edit to plan/task files",
+    )
+    await expect(runShell(`rm ${tempDir}/.matrixx/tasks/T-123.json`)).rejects.toThrow(
+      "Blocked: raw bash edit to plan/task files",
+    )
+    //#then: pure grep reads still pass through
+    await expect(runShell(`grep -rn "plan" ${tempDir}/.matrixx/plans/`)).resolves.toBeUndefined()
+  })
+
   test("allows pure read-only grep on plans path", async () => {
     //#given a read-only grep referencing .matrixx/plans
     //#when the guard runs

@@ -102,3 +102,21 @@ describe("document-reader-guard: bash CLI bypasses blocked", () => {
     })
   }
 })
+
+describe("document-reader-guard: shell CLI bypasses blocked (V2)", () => {
+  test("blocks shell: cat binary document", async () => {
+    //#given a shell CLI bypass on a binary document
+    //#when the guard runs
+    const result = run("shell", { command: "cat /tmp/report.pdf" })
+    //#then it throws the bash redirect
+    await expect(result).rejects.toThrow(BASH_BLOCK_MESSAGE)
+  })
+
+  test("allows shell: unrelated command", async () => {
+    //#given an unrelated shell command
+    //#when the guard runs
+    const result = run("shell", { command: "ls -la /tmp" })
+    //#then it passes through
+    await expect(result).resolves.toBeUndefined()
+  })
+})

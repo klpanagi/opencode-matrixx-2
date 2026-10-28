@@ -58,6 +58,74 @@ function hasContextModeRegistration(): boolean {
   return false
 }
 
+/**
+ * Pure evaluator for the context-mode MCP server cwd-sanity check.
+ *
+ * Root cause (verified against the external context-mode package's opencode
+ * adapter): the adapter derives its project dir as
+ * `ctx?.directory ?? process.cwd()`. A process-global MCP server (registered
+ * in the user's global opencode.jsonc) has no plugin ctx, so every project
+ * inherits the MCP server process's spawn cwd — observed running with the
+ * cwd of a different project. Matrixx cannot patch the external server; this
+ * check warns when the registration lacks an explicit cwd pin and points at
+ * the per-project registration fix.
+ */
+export function evaluateContextModeCwd(server: unknown): CheckResult {
+  const name = "context-mode-cwd"
+  if (typeof server !== "object" || server === null) {
+    return {
+      name,
+      status: "pass",
+      message: "context-mode MCP server not registered — no cwd to sanity-check",
+    }
+  }
+  const cwd = (server as Record<string, unknown>).cwd
+  if (typeof cwd === "string" && cwd.trim().length > 0) {
+    return {
+      name,
+      status: "pass",
+      message: "context-mode MCP server pins an explicit cwd",
+      detail: `cwd: ${cwd.trim()}`,
+    }
+  }
+  return {
+    name,
+    status: "warn",
+    message: "context-mode MCP server registered without an explicit cwd",
+    detail:
+      "A process-global MCP server inherits its spawn cwd, so ctx_execute runs " +
+      "with the wrong project directory in every other project. Register the " +
+      "context-mode MCP server per-project (.opencode/opencode.json mcp entry) " +
+      "so each project gets a server with the right cwd, or pin cwd explicitly.",
+  }
+}
+
+function loadContextModeMcpServer(): unknown {
+  const dir = getOpenCodeConfigDir({ binary: "opencode" })
+  for (const name of ["opencode.jsonc", "opencode.json"]) {
+    const p = join(dir, name)
+    if (!existsSync(p)) continue
+    try {
+      const c = readFileSync(p, "utf-8")
+      const parsed = parseJsoncSafe<Record<string, unknown>>(c)
+      if (!parsed.data || parsed.errors.length > 0) continue
+      const mcp = parsed.data.mcp
+      if (typeof mcp !== "object" || mcp === null) continue
+      const servers = (mcp as Record<string, unknown>).servers
+      if (typeof servers !== "object" || servers === null) continue
+      const server = (servers as Record<string, unknown>)["context-mode"]
+      if (server !== undefined) return server
+    } catch {}
+  }
+  return undefined
+}
+
+export const contextModeCwdCheck: DoctorCheck = {
+  name: "context-mode-cwd",
+  category: "integrations",
+  check: (): CheckResult => evaluateContextModeCwd(loadContextModeMcpServer()),
+}
+
 export const contextModeCheck: DoctorCheck = {
   name: "context-mode-integration",
   category: "integrations",

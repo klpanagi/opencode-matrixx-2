@@ -212,3 +212,20 @@ describe("createRtkBashRewriterHook", () => {
     Bun.which = originalWhich; Bun.spawn = originalSpawn
   })
 })
+
+describe("createRtkBashRewriterHook shell alias (V2)", () => {
+  test("rewrites shell tool commands like bash", async () => {
+    //#given: rtk binary present with a successful rewrite
+    const originalWhich = Bun.which; const originalSpawn = Bun.spawn
+    Bun.which = (() => "/usr/bin/rtk") as any; Bun.spawn = spawnMock(0, "rtk git status")
+    const config = { rtk: { enabled: true } } as MatrixxConfig
+    const hook = createRtkBashRewriterHook({} as any, config)
+    const input = { tool: "shell", sessionID: "test", callID: "1" }
+    const output = { args: { command: "git status" } }
+    //#when: the shell tool runs
+    await hook["tool.execute.before"](input, output)
+    //#then: the command is rewritten
+    expect(output.args.command).toBe("rtk git status")
+    Bun.which = originalWhich; Bun.spawn = originalSpawn
+  })
+})
