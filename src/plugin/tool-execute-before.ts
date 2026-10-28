@@ -48,6 +48,7 @@ export function createToolExecuteBeforeHandler(args: {
   const envFileWriteGuardHook = hooks.envFileWriteGuard?.["tool.execute.before"]
   const writeExistingFileGuardHook = hooks.writeExistingFileGuard?.["tool.execute.before"]
   const taskEditGuardHook = hooks.taskEditGuard?.["tool.execute.before"]
+  const softwareDevEnforcementHook = hooks.softwareDevEnforcement?.["tool.execute.before"]
   const knowledgeHubGuardHook = hooks.knowledgeHubGuard?.["tool.execute.before"]
   const knowledgeHubSearchNudgeHook = (hooks as Record<string, { "tool.execute.before"?: (input: unknown, output: unknown) => Promise<void> }>).knowledgeHubSearchNudge?.["tool.execute.before"]
   const docsLookupGuardHook = (hooks as Record<string, { "tool.execute.before"?: (input: unknown, output: unknown) => Promise<void> }>).docsLookupGuard?.["tool.execute.before"]
@@ -115,16 +116,16 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
       backgroundTaskBlockerHook?.(input, output),
     ])
 
-    // Wave 3 (7 hooks): MUTATOR — must run sequentially to preserve
+    // Wave 3 (8 hooks): MUTATOR — must run sequentially to preserve
     //   mutation order. Specifically:
-  //   - 3 hooks CONCAT to output.args.prompt (oracleMdOnly,
-  //     mouseNotepad, niobeHook). Parallel writes would stomp
+  //   - 4 hooks CONCAT to output.args.prompt (oracleMdOnly,
+    //     mouseNotepad, niobeHook, softwareDevEnforcement). Parallel writes would stomp
     //     each other (both read prompt from the same starting state).
     //   - nonInteractiveEnv REWRITES output.args.command (line 58) and
     //     REPLACES output.message; running it before other mutators is
     //     required so that downstream hooks see the rewritten command.
-    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook
-    //     is critical: niobeHook's prepended <system-reminder> must be
+    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook -> softwareDevEnforcement
+    //     is critical: softwareDevEnforcement's prepended <system-reminder> must be
     //     the outermost (closest to the model), oracleMdOnly's
     //     prepended PLANNING_CONSULT_WARNING the innermost (closest to the
     //     user prompt). Reversing the order would change semantics.
@@ -160,6 +161,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     await oracleMdOnlyHook?.(input, output)
     await mouseNotepadHook?.(input, output)
     await niobeHookHook?.(input, output)
+    await softwareDevEnforcementHook?.(input, output) // software-dev-enforcement: native subagent guard (append-only, Wave-3 outermost)
 
     const wave3Message = typeof output.message === "string" ? output.message : undefined
     if (preexistingMessage && preexistingMessage !== wave3Message && !wave3Message?.startsWith(preexistingMessage)) {
