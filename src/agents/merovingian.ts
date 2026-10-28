@@ -1,9 +1,16 @@
 import { denyActions } from "../shared/permission-compat"
+import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../skills/skills/market-data-robustness-review"
+import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../skills/skills/resilience-failure-hunting"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
 
 const MODE: AgentMode = "subagent"
+
+const MEROVINGIAN_SKILLS = [
+  MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME,
+  RESILIENCE_FAILURE_HUNTING_SKILL_NAME,
+]
 
 export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
   category: "advisor",
@@ -14,12 +21,16 @@ export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
     { domain: "Architecture review / second opinion", trigger: "Review existing design, multi-system tradeoffs, unfamiliar patterns (no new plan)" },
     { domain: "Self-review", trigger: "After completing significant implementation" },
     { domain: "Hard debugging", trigger: "After 2+ failed fix attempts" },
+    { domain: "Market-Data Pipeline Review", trigger: "Design or review of an exchange-ingestion → bus → consumer pipeline, backpressure, scalability, or exchange-failure robustness" },
+    { domain: "Silent-Failure Hunting", trigger: "Swallowed/silent failure, error-handling review, transient-vs-fatal classification — what failure here would look like success?" },
   ],
   useWhen: [
     "Second-opinion review of existing architecture/design",
     "After completing significant work",
     "2+ failed fix attempts",
     "Unfamiliar code patterns",
+    "Reviewing an exchange-ingestion → bus → consumer pipeline for robustness (market-data pipeline review)",
+    "Hunting silent failures and auditing error handling (transient-vs-fatal classification)",
     "Security/performance concerns",
     "Multi-system tradeoffs",
   ],
@@ -171,11 +182,12 @@ Your response goes directly to the user with no intermediate processing. Make yo
 </delivery>`
 
 export function createMerovingianAgent(model: string): AgentConfig {
-  const base: AgentConfig = {
+  const base: AgentConfig & { skills: string[] } = {
     description:
       "Read-only consultation agent. High-IQ reasoning specialist for debugging hard problems and high-difficulty architecture design. (Merovingian - Matrixx)",
     mode: MODE,
     model: parseModelRef(model),
+    skills: MEROVINGIAN_SKILLS,
     request: { body: { temperature: 0.1 } },
     permissions: denyActions(["edit", "subagent", "task"]),
     system: ORACLE_SYSTEM_PROMPT,
