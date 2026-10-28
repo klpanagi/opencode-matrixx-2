@@ -43,7 +43,9 @@ export {
   PLAN_NAME_METADATA_KEY,
   SLUG_MAX_LENGTH,
 } from "./constants"
+export { createNotepadAppendTool, MAX_NOTEPAD_APPEND_BYTES } from "./notepad-append"
 export { createNotepadCreateTool } from "./notepad-create"
+export { createNotepadListTool } from "./notepad-list"
 export { createNotepadReadTool } from "./notepad-read"
 export type {
   NotepadBucketReason,
