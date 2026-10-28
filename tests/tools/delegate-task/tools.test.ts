@@ -1181,8 +1181,8 @@ describe("morpheus-task", () => {
 
        const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -1331,8 +1331,8 @@ describe("morpheus-task", () => {
        
        const mockManager = { launch: async () => ({}) }
        
-      const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+      const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
        
@@ -1550,9 +1550,9 @@ describe("morpheus-task", () => {
     //#then prompt should include variant from previous message
     expect(promptMock).toHaveBeenCalled()
     const callArgs = promptMock.mock.calls[0][0]
-    expect(callArgs.body.variant).toBe("max")
-    expect(callArgs.body.agent).toBe("mouse")
-    expect(callArgs.body.model).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6" })
+    expect(callArgs.variant).toBe("max")
+    expect(callArgs.agent).toBe("mouse")
+    expect(callArgs.model).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6" })
   }, { timeout: 10000 })
 
   test("session_id with background=true should return immediately without waiting", async () => {
@@ -1803,8 +1803,8 @@ describe("morpheus-task", () => {
 
        const mockManager = { launch: async () => ({}) }
        
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
        
@@ -2754,8 +2754,8 @@ const tool = createDelegateTask({
 
        const mockManager = { launch: async () => ({}) }
        
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
        
@@ -3407,8 +3407,8 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -3472,8 +3472,8 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -3534,8 +3534,8 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -3602,8 +3602,8 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -3667,8 +3667,8 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
 
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
 
@@ -3738,8 +3738,8 @@ const tool = createDelegateTask({
       
        const mockManager = { launch: async () => ({}) }
        
-       const promptMock = async (input: { body: CapturedPromptBody }) => {
-         promptBody = input.body
+       const promptMock = async (input: CapturedPromptBody) => {
+         promptBody = input
          return { data: {} }
        }
        
@@ -3791,7 +3791,7 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       let promptBody: CapturedPromptBody = {}
-      const promptMock = async (input: { body: CapturedPromptBody }) => { promptBody = input.body; return { data: {} } }
+      const promptMock = async (input: CapturedPromptBody) => { promptBody = input; return { data: {} } }
        const mockClient = {
          app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
@@ -3829,12 +3829,12 @@ const tool = createDelegateTask({
         session: {
           get: async () => ({ data: { directory: "/project" } }),
           create: async () => ({ data: { id: "ses_oracle_no_delegate" } }),
-          prompt: async (input: { body: CapturedPromptBody }) => {
-            promptBody = input.body
+          prompt: async (input: CapturedPromptBody) => {
+            promptBody = input
             return { data: {} }
           },
-          promptAsync: async (input: { body: CapturedPromptBody }) => {
-            promptBody = input.body
+          promptAsync: async (input: CapturedPromptBody) => {
+            promptBody = input
             return { data: {} }
           },
           messages: async () => ({

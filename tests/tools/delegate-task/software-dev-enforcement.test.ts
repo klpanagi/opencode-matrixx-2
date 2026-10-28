@@ -13,8 +13,8 @@ function createSyncHarness() {
   const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
   let promptBody: { system?: string } = {}
 
-  const promptMock = async (input: { body: { system?: string } }) => {
-    promptBody = input.body
+  const promptMock = async (input: { system?: string }) => {
+    promptBody = input
     return { data: {} }
   }
 
