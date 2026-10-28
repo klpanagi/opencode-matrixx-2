@@ -13,7 +13,7 @@ import {
 } from "./constants"
 import { shouldShowGuidance } from "./guidance-throttle"
 
-const BASH_FILE_READ_RE = /^\s*(cat|head|tail)\s+/
+const BASH_FILE_READ_RE = /^\s*(rtk\s+)?(cat|head|tail)(\s|$)/
 const BASH_GREP_RE = /\bgrep\b/
 const CURL_WGET_RE = /\b(curl|wget)\b/
 const INLINE_HTTP_RE = /https?:\/\//
