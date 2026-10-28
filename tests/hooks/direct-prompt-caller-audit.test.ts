@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { readdirSync, readFileSync, statSync } from "node:fs"
+import { join, relative } from "node:path"
 
 /**
  * Audit: no direct `session.promptAsync` callers may remain outside the
@@ -10,8 +10,8 @@ import { join } from "node:path"
  * which surfaces resolved `{ error }` envelopes as structured throws instead
  * of passing silently.
  *
- * Source of truth: .matrixx/evidence/task-6-audit.txt
- * (captured via `rg -n "session.promptAsync" src/`).
+ * Source of truth: live in-test scan of `src/` (pure-TS recursive walk,
+ * no external process, no gitignored evidence file — CI-safe).
  */
 
 // Files whose `session.promptAsync` occurrences are legitimate:
@@ -22,19 +22,40 @@ const ALLOWLISTED_FILES = new Set(["src/shared/model-suggestion-retry.ts"])
 // This excludes comments, docs, type-only mentions, and mock object keys.
 const DIRECT_CALL_PATTERN = /\.promptAsync\s*\(/
 
-function parseAuditLines(raw: string): string[] {
-  return raw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+function collectTsFiles(dir: string, out: string[]): void {
+  for (const entry of readdirSync(dir)) {
+    const abs = join(dir, entry)
+    if (statSync(abs).isDirectory()) {
+      collectTsFiles(abs, out)
+    } else if (abs.endsWith(".ts") && !abs.endsWith(".test.ts")) {
+      out.push(abs)
+    }
+  }
+}
+
+function scanPromptAsyncOccurrences(): string[] {
+  const srcRoot = join(process.cwd(), "src")
+  const files: string[] = []
+  collectTsFiles(srcRoot, files)
+  const lines: string[] = []
+  for (const abs of files) {
+    const rel = relative(process.cwd(), abs)
+    const content = readFileSync(abs, "utf8")
+    const split = content.split("\n")
+    for (let i = 0; i < split.length; i++) {
+      const text = split[i]
+      if (text !== undefined && text.includes("session.promptAsync")) {
+        lines.push(`${rel}:${i + 1}:${text.trim()}`)
+      }
+    }
+  }
+  return lines.sort()
 }
 
 describe("direct-prompt-caller-audit", () => {
   it("flags every non-allowlisted direct session.promptAsync caller", () => {
-    //#given a captured rg audit of session.promptAsync occurrences in src/
-    const auditPath = join(process.cwd(), ".matrixx/evidence/task-6-audit.txt")
-    const raw = readFileSync(auditPath, "utf8")
-    const lines = parseAuditLines(raw)
+    //#given a live in-test scan of session.promptAsync occurrences in src/
+    const lines = scanPromptAsyncOccurrences()
     expect(lines.length).toBeGreaterThan(0)
 
     //#when filtering to actual call sites outside the allowlist
