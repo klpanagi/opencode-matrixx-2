@@ -8,8 +8,24 @@ import { isPollTimeoutOutcome } from "../../shared/poll-timeout-outcome"
 import { getDeliverableTag } from "./constants"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
+import { formatEmptySessionError, getEmptyRetryBackoffMs, isSessionEmpty } from "./sync-empty-retry"
 import { type SyncTaskDeps, syncTaskDeps } from "./sync-task-deps"
+import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
+
+async function withHardTimeout<T>(work: Promise<T>, ms: number, onTimeout: () => T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      work,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(onTimeout()), ms)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
+}
 
 export async function executeSyncTask(
   args: DelegateTaskArgs,
@@ -90,33 +106,91 @@ export async function executeSyncTask(
       storeToolMetadata(ctx.sessionID, ctx.callID, syncTaskMeta)
     }
 
-    const promptError = await deps.sendSyncPrompt(client, {
-      sessionID,
-      agentToUse,
-      args,
-      systemContent,
-      categoryModel,
-      toastManager,
-      taskId,
-    })
-    if (promptError) {
-      return promptError
-    }
+    // Outer hard timeout: a hung send/poll SDK await never settles, and the
+    // poll loop's own budget only bounds its iterations — not a stuck await.
+    // Derived from MAX_POLL_TIME_MS with one poll interval of grace so a
+    // healthy in-flight poll wins the race and keeps its structured outcome.
+    const syncTiming = getTimingConfig()
+    const hardTimeoutMs = Math.max(syncTiming.MAX_POLL_TIME_MS, 50) + syncTiming.POLL_INTERVAL_MS
+    let hardTimedOut = false
+    const hardTimeoutError = (): string =>
+      formatDetailedError(
+        new Error(
+          `Sync task timed out: send+poll pipeline did not settle within ${hardTimeoutMs}ms for session ${sessionID}`
+        ),
+        {
+          operation: "Send+poll sync task",
+          args,
+          sessionID,
+          agent: agentToUse,
+          category: args.category,
+        }
+      )
 
     try {
-      const pollError = await deps.pollSyncSession(ctx, client, {
-        sessionID,
-        agentToUse,
-        toastManager,
-        taskId,
-        hasActiveChildBackgroundTasks: () => {
-          const children = executorCtx.manager.getTasksByParentSession(sessionID)
-          return children.some(t => t.status === "running" || t.status === "pending")
-        },
-      })
-      if (pollError) {
-        pollTimedOut = isPollTimeoutOutcome(pollError)
-        return pollError
+      // One send+poll attempt under the hard timeout. The retry-once policy
+      // below reuses this verbatim — same timeout semantics per attempt.
+      const runSendPoll = (): Promise<string | null> =>
+        withHardTimeout(
+          (async (): Promise<string | null> => {
+            const sendError = await deps.sendSyncPrompt(client, {
+              sessionID,
+              agentToUse,
+              args,
+              systemContent,
+              categoryModel,
+              toastManager,
+              taskId,
+            })
+            if (sendError) return sendError
+            return deps.pollSyncSession(ctx, client, {
+              sessionID,
+              agentToUse,
+              toastManager,
+              taskId,
+              hasActiveChildBackgroundTasks: () => {
+                const children = executorCtx.manager.getTasksByParentSession(sessionID)
+                return children.some(t => t.status === "running" || t.status === "pending")
+              },
+            })
+          })(),
+          hardTimeoutMs,
+          () => {
+            hardTimedOut = true
+            return hardTimeoutError()
+          }
+        )
+
+      const classifyPromptError = (promptError: string): string => {
+        if (hardTimedOut) {
+          // Watchdog fired: the subagent session is likely still running —
+          // keep it alive (no abort) so the caller can resume via session_id.
+          pollTimedOut = true
+        } else {
+          pollTimedOut = isPollTimeoutOutcome(promptError)
+        }
+        return promptError
+      }
+
+      let promptError = await runSendPoll()
+
+      // Retry-once-on-empty: the pipeline reported success (null promptError)
+      // but the session has ZERO messages — the model silently produced
+      // nothing. Retry the prompt exactly once after a short backoff; if the
+      // retry is also empty, surface a structured error (never null/empty).
+      if (!promptError && (await isSessionEmpty(client, sessionID))) {
+        log("[task] Empty sync response - retrying prompt once", { sessionID })
+        await new Promise((resolve) => setTimeout(resolve, getEmptyRetryBackoffMs()))
+        hardTimedOut = false
+        promptError = await runSendPoll()
+        if (!promptError && (await isSessionEmpty(client, sessionID))) {
+          log("[task] Empty sync response after retry - surfacing structured error", { sessionID })
+          return formatEmptySessionError(args, sessionID, agentToUse)
+        }
+      }
+
+      if (promptError) {
+        return classifyPromptError(promptError)
       }
 
       const result = await deps.fetchSyncResult(client, sessionID, undefined, {
