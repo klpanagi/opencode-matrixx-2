@@ -11,7 +11,7 @@ src/
 ├── index.ts                          # V2-native { id, setup } entry → setup-domains
 ├── plugin-config.ts                  # Config loading orchestration (user + project merge, 180 lines)
 ├── plugin-state.ts                   # Model cache state (context limits, anthropic 1M flag, 12 lines)
-├── agents/                           # 17 AI agents (32 files) — see agents/AGENTS.md
+├── agents/                           # 13 AI agents (32 files) — see agents/AGENTS.md
 ├── cli/                              # CLI installer, doctor (107+ files) — see cli/AGENTS.md
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Background agents, commands (23 dirs) — see features/AGENTS.md

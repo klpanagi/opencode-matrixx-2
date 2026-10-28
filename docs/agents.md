@@ -2,7 +2,7 @@
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
-17 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, niobe, cipher, sentinel, sati, bdd-contract, neo, tank — 16 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
+13 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati — 12 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
 
 ---
 
@@ -33,7 +33,7 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | Agent | Role | Model |
 |-------|------|-------|
 | **Keymaker** | Autonomous deep worker | `claude-opus-4-6` |
-| **Merovingian** | Architecture and debugging | `claude-sonnet-4-6` |
+| **Merovingian** | Architecture and debugging; market-data + silent-failure review (skills) | `claude-sonnet-4-6` |
 | **Operator** | Docs, OSS search, codebase exploration | `claude-haiku-4-5` |
 | **Trinity** | Fast codebase grep | `claude-haiku-4-5` |
 | **Cipher** | DSL engineering | `claude-opus-4-6` |
@@ -42,14 +42,10 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | **Seraph** | Pre-planning analysis | `claude-opus-4-6` |
 | **Smith** | Plan validation | `claude-sonnet-4-6` |
 | **Niobe** | Plan execution orchestrator | `claude-sonnet-4-6` |
-| **Auditor** | Post-execution plan auditor (`/plan-review`) | `claude-sonnet-4-6` |
-| **Neo** | Market-data pipeline architect/reviewer | `claude-opus-4-6` |
-| **Tank** | Resilience / silent-failure hunter | `claude-sonnet-4-6` |
 | **Sati** | Frontend specialist (components, a11y, perf, testing) | `claude-sonnet-4-6` |
 | **Sentinel** | Security auditor | `claude-sonnet-4-6` |
-| **BDD Contract** | BDD contract authoring (Gherkin → Contract JSON) | provider-resolved fallback chain |
 
-The 17 names in scope (16 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Sixteen are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model-requirements.ts`.
+The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Twelve are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model-requirements.ts`.
 
 ### Built-in Capabilities
 
@@ -331,7 +327,7 @@ task(category="source", load_skills=[...])
 
 ## Agent Roster by Layer
 
-The 17-agent roster (3 + 4 + 3 + 5 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
+The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
 
 ### The Orchestration Layer (3 agents)
 
@@ -339,20 +335,18 @@ The 17-agent roster (3 + 4 + 3 + 5 + 2) maps to **distinct cognitive functions**
 - **Niobe** (subagent orchestrator, `claude-sonnet-4-6`): Pure orchestrator — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
 - **Keymaker** (autonomous deep worker, `claude-opus-4-6`): Goal-oriented end-to-end execution — explores via parallel Trinity/Operator agents before acting.
 
-### The Intelligence Layer (4 agents)
+### The Intelligence Layer (3 agents)
 
 - **Merovingian** (strategic advisor, `claude-sonnet-4-6`): Read-only consultation for hard architecture decisions and debugging.
-- **Auditor** (post-execution plan auditor, `claude-sonnet-4-6`): Measures completeness/complexity/effort of an executed plan. Invoked only by `/plan-review`, never automatic.
 - **Oracle** (planner, `claude-opus-4-6`): Interview-mode plan generation. Structured output with RED-GREEN-REFACTOR built into plans (see [Quality, Part B](quality.md)).
 - **Seraph** (pre-planning, `claude-opus-4-6`): Classifies intent BEFORE Oracle plans. Prevents AI failure patterns (ambiguity, scope creep, false assumptions).
 
-### The Review Layer (3 agents)
+### The Review Layer (2 agents)
 
 - **Smith** (plan reviewer, `claude-sonnet-4-6`): Approval-biased validator. Outputs [OKAY] or [REJECT] — no "looks good but..." cop-outs.
-- **Tank** (resilience hunter, `claude-sonnet-4-6`): Read-only silent-failure hunter — swallowed exceptions, log-and-default paths, bare gather calls. Requires an explicit success/failure discriminator on every external call.
 - **Sentinel** (security auditor, `claude-sonnet-4-6`): Read-only, 9 security skills (`security-core`, `security-secrets`, `security-sast`, `security-dast`, `security-dependencies`, `security-api`, `security-crypto`, `security-infra`, `security-review`, verified in `src/agents/sentinel.ts`). Security needs dedicated attention, not an afterthought.
 
-### The Specialist Layer (5 agents)
+### The Specialist Layer (3 agents)
 
 - **Sati** (frontend specialist, `claude-sonnet-4-6`): Self-contained with 8 frontend skills + browser verification. It doesn't delegate — it does the full-stack frontend work itself.
 - **Cipher** (DSL engineering, `claude-opus-4-6`): 11 DSL skills for grammar design, parser engineering, code generation. Niche but critical for language work.
@@ -363,10 +357,9 @@ The 17-agent roster (3 + 4 + 3 + 5 + 2) maps to **distinct cognitive functions**
 - **Operator** (librarian, `claude-haiku-4-5`): External research with mandatory citations. Cheap cost signals: use liberally for documentation lookup.
 - **Trinity** (codebase explorer, `claude-haiku-4-5`): Read-only grep/AST/LSP. Fire in parallel, use as a peer tool.
 
-### BDD Contract Agent
+### BDD Contract Skill
 
-- **Neo** (market-data architect, `claude-opus-4-6`): End-to-end review of exchange-ingestion → bus → consumer pipelines against robustness invariants. Read-only verdict with evidence-backed violations.
-- **bdd-contract** (provider-resolved fallback chain): BDD contract generation from Gherkin files (see `/bdd-contract` in the [Command Reference](command-reference.md)).
+- **bdd-contract** (skill): BDD contract generation from Gherkin files (see `/bdd-contract` in the [Command Reference](command-reference.md)).
 
 ### Design Rationale
 
@@ -398,8 +391,6 @@ graph TB
         MER["🏛️ Merovingian<br/>claude-sonnet-4-6<br/><i>Architecture & Debugging</i>"]
         SER["👁️ Seraph<br/>claude-opus-4-6<br/><i>Pre-Planning Analysis</i>"]
         SMI["⚔️ Smith<br/>claude-sonnet-4-6<br/><i>Plan Validation</i>"]
-        AUD["🔍 Auditor<br/>claude-sonnet-4-6<br/><i>Post-Execution Audit</i>"]
-        TNK["🛡️ Tank<br/>claude-sonnet-4-6<br/><i>Silent-Failure Hunter</i>"]
         SEN["🛡️ Sentinel<br/>claude-sonnet-4-6<br/><i>Security Auditor</i><br/>9 skills"]
     end
 
@@ -407,8 +398,6 @@ graph TB
         TRI["⚡ Trinity<br/>claude-haiku-4-5<br/><i>Codebase Grep</i>"]
         OPR["📚 Operator<br/>claude-haiku-4-5<br/><i>Docs & OSS Search</i>"]
         CON["👀 Construct<br/>claude-sonnet-4-6<br/><i>Multimodal Analysis</i>"]
-        NEO["📈 Neo<br/>claude-opus-4-6<br/><i>Market-Data Review</i>"]
-        BDD["📝 BDD-Contract<br/>fallback chain<br/><i>Gherkin → Contract</i>"]
     end
 
     subgraph EXECUTOR["Dynamic Executor"]
@@ -446,10 +435,6 @@ graph TB
     style CON fill:#d35400,color:#fff
     style SAT fill:#e91e63,color:#fff
     style SEN fill:#2c3e50,color:#fff
-    style AUD fill:#16a085,color:#fff
-    style TNK fill:#7f8c8d,color:#fff
-    style NEO fill:#2980b9,color:#fff
-    style BDD fill:#8e44ad,color:#fff
     style MOU fill:#7f8c8d,color:#fff
 ```
 

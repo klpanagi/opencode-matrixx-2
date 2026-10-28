@@ -95,9 +95,9 @@ describe("/plan-review command template", () => {
   test("names every shipped pipeline stage in the plan's order", () => {
     //#given the template text
     //#when the pipeline steps are read
-    //#then gather, auditor, rubric, render, report-path appear
+    //#then gather, merovingian, rubric, render, report-path appear
     expect(PLAN_REVIEW_TEMPLATE).toMatch(/gatherCompletionReviewInputs/)
-    expect(PLAN_REVIEW_TEMPLATE).toMatch(/auditor/)
+    expect(PLAN_REVIEW_TEMPLATE).toMatch(/merovingian/)
     expect(PLAN_REVIEW_TEMPLATE).toMatch(/scoreRubric|evaluateReview/)
     expect(PLAN_REVIEW_TEMPLATE).toMatch(/writeReviewReport/)
     expect(PLAN_REVIEW_TEMPLATE).toMatch(/buildReviewDirCommand/)
