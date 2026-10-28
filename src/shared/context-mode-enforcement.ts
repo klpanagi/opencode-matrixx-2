@@ -1,6 +1,7 @@
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import { homedir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { getOpenCodeCacheDir } from "./data-path"
 
 /** Canonical default — hook, constants, and schema must all agree on this. */
@@ -81,26 +82,87 @@ export function willBlockGrepGlob(contextMode: ContextModeConfigInput | undefine
 }
 
 export function resolveContextModeDisciplinePath(): string | null {
-  if (_disciplinePathOverride !== undefined) return _disciplinePathOverride
+  return resolveContextModeDisciplineInfo().path
+}
+
+const contextModeRequire = createRequire(import.meta.url)
+
+/**
+ * Walk up from a resolved file inside the context-mode package until a
+ * directory containing a package.json with `"name": "context-mode"` is
+ * found. Returns that directory, or null when no matching root exists.
+ * Pure and unit-testable - every filesystem failure returns null (fail-open).
+ */
+export function deriveContextModeRootFromFile(resolvedFilePath: string): string | null {
   try {
-    const resolved = require.resolve("context-mode/configs/opencode/AGENTS.md")
-    if (existsSync(resolved)) return resolved
+    let dir = dirname(resolvedFilePath)
+    while (true) {
+      try {
+        const raw = readFileSync(join(dir, "package.json"), "utf-8")
+        const pkg = JSON.parse(raw) as { name?: unknown }
+        if (pkg && pkg.name === "context-mode") return dir
+      } catch {}
+      const parent = dirname(dir)
+      if (parent === dir) return null
+      dir = parent
+    }
+  } catch {
+    return null
+  }
+}
+
+function readContextModeVersion(packageRoot: string | null): string | null {
+  if (packageRoot === null) return null
+  try {
+    const raw = readFileSync(join(packageRoot, "package.json"), "utf-8")
+    const pkg = JSON.parse(raw) as { version?: unknown }
+    return typeof pkg.version === "string" ? pkg.version : null
+  } catch {
+    return null
+  }
+}
+
+function resolveDisciplineCandidate(): { path: string; root: string | null } | null {
+  try {
+    const resolved = contextModeRequire.resolve("context-mode/configs/opencode/AGENTS.md")
+    if (existsSync(resolved)) return { path: resolved, root: deriveContextModeRootFromFile(resolved) }
+  } catch {}
+  try {
+    const entry = contextModeRequire.resolve("context-mode")
+    const root = deriveContextModeRootFromFile(entry)
+    if (root !== null) {
+      const p = join(root, "configs/opencode/AGENTS.md")
+      if (existsSync(p)) return { path: p, root }
+    }
   } catch {}
   try {
     const cacheDir = getOpenCodeCacheDir()
     const p = join(cacheDir, "packages/context-mode@latest/node_modules/context-mode/configs/opencode/AGENTS.md")
-    if (existsSync(p)) return p
+    if (existsSync(p)) return { path: p, root: deriveContextModeRootFromFile(p) }
   } catch {}
   try {
     const base = process.env.XDG_CACHE_HOME ?? join(homedir(), ".cache")
     const p = join(base, "opencode/packages/context-mode@latest/node_modules/context-mode/configs/opencode/AGENTS.md")
-    if (existsSync(p)) return p
+    if (existsSync(p)) return { path: p, root: deriveContextModeRootFromFile(p) }
   } catch {}
   try {
     const p2 = join(homedir(), ".cache/opencode/packages/context-mode@latest/node_modules/context-mode/configs/opencode/AGENTS.md")
-    if (existsSync(p2)) return p2
+    if (existsSync(p2)) return { path: p2, root: deriveContextModeRootFromFile(p2) }
   } catch {}
   return null
+}
+
+export function resolveContextModeDisciplineInfo(): { path: string | null; version: string | null } {
+  if (_disciplinePathOverride !== undefined) {
+    if (_disciplinePathOverride === null) return { path: null, version: null }
+    return {
+      path: _disciplinePathOverride,
+      version: readContextModeVersion(deriveContextModeRootFromFile(_disciplinePathOverride)),
+    }
+  }
+  const found = resolveDisciplineCandidate()
+  if (found === null) return { path: null, version: null }
+  return { path: found.path, version: readContextModeVersion(found.root) }
 }
 
 export function hasWorkingSubstitute(): boolean {

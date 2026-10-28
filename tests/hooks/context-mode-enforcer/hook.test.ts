@@ -109,4 +109,53 @@ describe("context-mode-enforcer hook", () => {
     await expect(promise).resolves.toBeUndefined()
     expect(output.message).toBeUndefined()
   })
+
+  test("rtk cat triggers the bash file-read path (soft warn)", async () => {
+    //#given: warn-only mode, bash not gated
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise, output } = runHook({ enforce: false }, "bash", { command: "rtk cat some/file" })
+    //#when: rtk cat runs
+    //#then: soft file-read warning, no throw
+    await expect(promise).resolves.toBeUndefined()
+    expect(output.message).toBeDefined()
+  })
+
+  test("rtk cat throws when enforce on with bash gated", async () => {
+    //#given: enforce on, bash in blocked_tools
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise } = runHook({ enforce: true, blocked_tools: ["bash", "grep"] }, "bash", { command: "rtk cat some/file" })
+    //#when: rtk cat runs
+    //#then: throws the grep/glob block message
+    await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+  })
+
+  test("rtk head and rtk tail are detected as file reads", async () => {
+    //#given: enforce on, bash gated
+    _setDisciplinePathForTesting(FAKE_PATH)
+    //#when: rtk head / rtk tail run
+    //#then: both throw the grep/glob block message
+    for (const cmd of ["rtk head some/file", "rtk tail some/file"]) {
+      const { promise } = runHook({ enforce: true, blocked_tools: ["bash", "grep"] }, "bash", { command: cmd })
+      await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+    }
+  })
+
+  test("rtk grep throws under enforce with bash gated", async () => {
+    //#given: enforce on, bash in blocked_tools
+    _setDisciplinePathForTesting(FAKE_PATH)
+    const { promise } = runHook({ enforce: true, blocked_tools: ["bash", "grep"] }, "bash", { command: "rtk grep foo" })
+    //#when: rtk grep runs
+    //#then: throws, same as bare grep
+    await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+  })
+
+  test("bash file-read block still throws when substitute missing", async () => {
+    //#given: enforce on, bash gated, but no working substitute
+    _setDisciplinePathForTesting(null)
+    const { promise } = runHook({ enforce: true, blocked_tools: ["bash", "grep"] }, "bash", { command: "rtk cat some/file" })
+    //#when: rtk cat runs
+    //#then: still throws — the bash file-read block does NOT require a substitute
+    await expect(promise).rejects.toThrow(BLOCK_MESSAGE_GREP_GLOB)
+    _setDisciplinePathForTesting(undefined)
+  })
 })

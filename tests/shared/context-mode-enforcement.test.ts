@@ -1,10 +1,15 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
+import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import {
   _setDisciplinePathForTesting,
   CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS,
+  deriveContextModeRootFromFile,
   hasGrepGlobToolNames,
+  resolveContextModeDisciplineInfo,
   resolveContextModeEnforcement,
   resolveGrepGlobUsable,
   willBlockGrepGlob,
@@ -98,5 +103,61 @@ describe("context-mode-enforcement", () => {
     //#when: checked
     //#then: hook must let grep/glob through
     expect(willBlockGrepGlob({ enforce: true })).toBe(false)
+  })
+
+  test("willBlockGrepGlob degrades to warn-only when substitute missing", () => {
+    //#given: enforce on with grep in blocked_tools but no working substitute
+    _setDisciplinePathForTesting(null)
+    //#when: checked with grep explicitly gated
+    //#then: warn-only — returns false so enforcement never hard-blocks
+    expect(willBlockGrepGlob({ enforce: true, blocked_tools: ["grep", "glob", "webfetch"] })).toBe(false)
+  })
+
+  test("deriveContextModeRootFromFile finds package root", () => {
+    //#given: a fixture mimicking an installed context-mode package
+    const base = join(tmpdir(), "opencode", "ctxmode-fixture")
+    const root = join(base, "node_modules", "context-mode")
+    const pluginFile = join(root, "build", "adapters", "opencode", "plugin.js")
+    rmSync(base, { recursive: true, force: true })
+    mkdirSync(join(root, "build", "adapters", "opencode"), { recursive: true })
+    writeFileSync(join(root, "package.json"), JSON.stringify({ name: "context-mode", version: "1.0.169" }))
+    writeFileSync(pluginFile, "export {};\n")
+    //#when: deriving the root from the resolved entry file
+    const got = deriveContextModeRootFromFile(pluginFile)
+    //#then: the package root is returned
+    expect(got).toBe(root)
+    rmSync(base, { recursive: true, force: true })
+  })
+
+  test("deriveContextModeRootFromFile returns null with no matching package.json", () => {
+    //#given: a path whose ancestors have no context-mode package.json
+    const base = join(tmpdir(), "opencode", "ctxmode-nopkg")
+    const deep = join(base, "a", "b")
+    rmSync(base, { recursive: true, force: true })
+    mkdirSync(deep, { recursive: true })
+    writeFileSync(join(deep, "file.js"), "export {};\n")
+    //#when: deriving the root
+    //#then: null — no matching root found
+    expect(deriveContextModeRootFromFile(join(deep, "file.js"))).toBeNull()
+    rmSync(base, { recursive: true, force: true })
+  })
+
+  test("resolveContextModeDisciplineInfo honors the testing override", () => {
+    //#given: an explicit override path
+    _setDisciplinePathForTesting(FAKE_PATH)
+    //#when: info resolved
+    const info = resolveContextModeDisciplineInfo()
+    //#then: path is the override
+    expect(info.path).toBe(FAKE_PATH)
+    _setDisciplinePathForTesting(undefined)
+  })
+
+  test("resolveContextModeDisciplineInfo reports nulls when substitute missing", () => {
+    //#given: no working substitute
+    _setDisciplinePathForTesting(null)
+    //#when: info resolved
+    const info = resolveContextModeDisciplineInfo()
+    //#then: both path and version are null
+    expect(info).toEqual({ path: null, version: null })
   })
 })
