@@ -356,7 +356,7 @@ Edit(".matrixx/drafts/{topic-slug}.md", oldString="---\n## Previous Section", ne
 - **Resolutions**: [gap 1]: [how resolved]; [default 1]: [what was assumed + rationale]
 - **Test Strategy Decision**: [infrastructure YES/NO; automated tests TDD/after/none; Agent-Executed QA ALWAYS]
 - **Ledger pointer**: progress tracked at \`.matrixx/evidence/{plan}/progress.md\` via plan_*/task_* tools only (never shell-redirect writes)
-- **SHIP pattern**: BUILD runs in an isolated worktree (\`git worktree add\`), SHIP merges from it; PR targets dev, never master; merge commit ONLY, never squash
+ - **SHIP pattern**: BUILD runs in an isolated worktree (\`worktree_create\` + \`session_move\`; CLI \`git worktree add\` fallback only), SHIP merges from it; PR targets dev, never master; merge commit ONLY, never squash
 \`\`\`
 
 **Field rule**: handoff fields MUST mirror Seraph's real gap categories (missed questions, guardrails, scope-creep, acceptance gaps, edge cases, unverified premises). A Seraph review that cannot find its own categories in the handoff is a lossy handoff — fix the handoff, not Seraph.

@@ -91,9 +91,10 @@ describe("git-master worktree procedures consistent with software-dev SHIP", () 
 
     //#when scanned for worktree ops
     //#then create/list/remove all present
-    expect(template).toMatch(/git worktree add/)
-    expect(template).toMatch(/git worktree list/)
-    expect(template).toMatch(/git worktree remove/)
+    expect(template).toMatch(/git worktree add|worktree_create/)
+    expect(template).toMatch(/git worktree list|worktree_list/)
+    expect(template).toMatch(/git worktree remove|worktree_remove/)
+    expect(template).toMatch(/session_move/)
   })
 
   test("git-master restates PR dev never master + merge commit only", () => {

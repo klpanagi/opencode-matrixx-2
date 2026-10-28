@@ -136,7 +136,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // This is the T1.4 optimization: removes the 5s-timeout network call
     // from the synchronous wait chain.
     let resolvePromise: Promise<string | undefined> | undefined
-    if (isTaskTool(input.tool)) {
+    if (input.tool !== "slashcommand" && isTaskTool(input.tool)) { // T1.6: slashcommand is never a task tool; skip normalize+lowercase
       const argsObject = output.args
       const category = typeof argsObject.category === "string" ? argsObject.category : undefined
       const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
