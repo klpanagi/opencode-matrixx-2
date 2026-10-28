@@ -11,7 +11,6 @@ export const AGENT_DISPLAY_NAMES: Record<string, string> = {
   mouse: "Mouse",
   seraph: "Seraph (Plan Consultant)",
   smith: "Smith (Plan Reviewer)",
-  auditor: "Auditor (Post-Execution Plan Reviewer)",
   merovingian: "Merovingian (Consultation Expert)",
   operator: "operator",
   sentinel: "Sentinel (Security Auditor)",
@@ -19,8 +18,6 @@ export const AGENT_DISPLAY_NAMES: Record<string, string> = {
   trinity: "trinity",
   construct: "construct",
   cipher: "Cipher (DSL Expert)",
-  neo: "Neo",
-  tank: "Tank",
 }
 
 /**

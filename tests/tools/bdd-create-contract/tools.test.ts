@@ -100,7 +100,7 @@ describe("bdd_create_contract tool", () => {
 const mockContext: ToolContext = {
   sessionID: "s",
   messageID: "m",
-  agent: "bdd-contract",
+  agent: "mouse",
   directory: process.cwd(),
   worktree: process.cwd(),
   abort: new AbortController().signal,

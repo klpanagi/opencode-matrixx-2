@@ -9,7 +9,8 @@
  *
  * SIX DECISIONS:
  *   1. `src/agents/smith.ts` is byte-frozen — Smith is the PRE-execution
- *      reviewer; `auditor` is the POST-execution one. They coexist.
+ *      reviewer; the POST-execution reviewer (ex-`auditor`) was consolidated
+ *      into merovingian skills (see decision-1b). Smith stands alone.
  *   2. `src/hooks/niobe/event-handler.ts` is byte-frozen.
  *   3. No hook / plugin-handler / plugin module reaches the reviewer.
  *   4. The plan-file size cap is defined EXACTLY ONCE, value unchanged.
@@ -30,7 +31,7 @@
  * what this file asserts. See the comment at the cap test for the full note.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { tmpdir } from "node:os"
 import { join, relative, resolve } from "node:path"
@@ -78,16 +79,14 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
     expect(actual).toBe(FROZEN_MD5)
   })
 
-  test("Smith and Auditor are DISTINCT agents, both present", () => {
-    //#given both agent sources
+  test("Smith stands alone — auditor.ts is gone (consolidated into merovingian skills)", () => {
+    //#given the agent sources post-consolidation
     const smith = readFileSync(join(SRC, "agents/smith.ts"), "utf-8")
-    const auditor = readFileSync(join(SRC, "agents/auditor.ts"), "utf-8")
 
-    //#when their declared names are compared
-    //#then the new agent did not take over Smith's identity
+    //#when the old post-execution reviewer path is probed
+    //#then Smith is intact and auditor.ts no longer exists on disk
     expect(smith).toContain("smith")
-    expect(auditor).toContain("auditor")
-    expect(auditor).not.toBe(smith)
+    expect(existsSync(join(SRC, "agents/auditor.ts"))).toBe(false)
   })
 })
 

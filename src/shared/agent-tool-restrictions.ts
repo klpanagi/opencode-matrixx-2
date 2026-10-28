@@ -33,26 +33,6 @@ const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
     task: false,
   },
 
-  auditor: {
-    write: false,
-    edit: false,
-    task: false,
-  },
-
-  neo: {
-    write: false,
-    edit: false,
-    multiedit: false,
-    task: false,
-  },
-
-  tank: {
-    write: false,
-    edit: false,
-    multiedit: false,
-    task: false,
-  },
-
   construct: {
     read: true,
   },

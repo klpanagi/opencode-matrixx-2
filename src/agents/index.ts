@@ -7,17 +7,11 @@ export type {
   RegisterAgentTransformResult,
 } from "./agents.transform"
 export { applyAgentEntry, registerAgentTransform } from "./agents.transform"
-export {
-  AUDITOR_PROMPT_METADATA,
-  AUDITOR_SYSTEM_PROMPT,
-  createAuditorAgent,
-} from "./auditor"
 export { createBuiltinAgents } from "./builtin-agents"
 export { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "./construct"
 export type { AvailableAgent, AvailableCategory, AvailableSkill } from "./dynamic-agent-prompt-builder"
 export { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "./merovingian"
 export { createMorpheusAgent } from "./morpheus"
-export { createNeoAgent, NEO_PROMPT_METADATA } from "./neo"
 export { createNiobeAgent, niobePromptMetadata } from "./niobe"
 export { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./operator"
 export {
@@ -32,6 +26,5 @@ export {
 } from "./oracle"
 export { createSeraphAgent, SERAPH_SYSTEM_PROMPT, seraphPromptMetadata } from "./seraph"
 export { createSmithAgent, SMITH_SYSTEM_PROMPT, smithPromptMetadata } from "./smith"
-export { createTankAgent, TANK_PROMPT_METADATA } from "./tank"
 export { createTrinityAgent, TRINITY_PROMPT_METADATA } from "./trinity"
 export * from "./types"

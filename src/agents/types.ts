@@ -129,14 +129,10 @@ export type BuiltinAgentName =
   | "construct"
   | "seraph"
   | "smith"
-  | "auditor"
   | "niobe"
   | "cipher"
   | "sentinel"
   | "sati"
-  | "bdd-contract"
-  | "neo"
-  | "tank"
 
 type OverridableAgentName =
   | "build"

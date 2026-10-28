@@ -10,14 +10,10 @@ export const BuiltinAgentNameSchema = z.enum([
   "construct",
   "seraph",
   "smith",
-  "auditor",
   "niobe",
   "cipher",
   "sentinel",
   "sati",
-  "bdd-contract",
-  "neo",
-  "tank",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([
@@ -63,6 +59,7 @@ export const BuiltinSkillNameSchema = z.enum([
   "ccxt-pro-websockets",
   "market-data-bus",
   "market-data-architecture",
+  "market-data-robustness-review",
   "crypto-market-structure",
   "time-series-fundamentals",
   "influxdb-timeseries",
@@ -70,6 +67,7 @@ export const BuiltinSkillNameSchema = z.enum([
   "telegram-bot",
   "resilience-error-taxonomy",
   "silent-failure-detection",
+  "resilience-failure-hunting",
   "data-quality-observability",
 ])
 

@@ -21,7 +21,7 @@ import type {
   ParseFeatureResult,
 } from "./types"
 
-const ENRICH_AGENT = "bdd-contract"
+const ENRICH_AGENT = "mouse"
 const ENRICH_POLL_TIMEOUT_MS = 600_000
 const ENRICH_POLL_INTERVAL_MS = 250
 
