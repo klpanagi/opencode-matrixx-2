@@ -20,11 +20,13 @@ const PlanFrontMatterSchema = z.object({
   /**
    * Lifecycle status. Forward-only: pending -> in_progress -> completed.
    * A backward jump (e.g. completed -> in_progress) is rejected by
-   * {@link isPlanStatusTransitionAllowed} unless the caller passes the
-   * explicit `{ forceCompletion: true }` override. The schema itself
-   * constrains the VALUE to this enum; the ORDER invariant lives in the
-   * transition helper because Zod validates one snapshot, not a pair of
-   * snapshots (before/after).
+   * {@link isPlanStatusTransitionAllowed} (consumed on the `plan_update`
+   * write path via `extractStatusEdit` + `adjudicate` in
+   * `src/tools/plan/status-transition.ts`) with `status_transition_rejected`
+   * unless the caller passes the explicit `{ forceCompletion: true }`
+   * override. The schema itself constrains the VALUE to this enum; the ORDER
+   * invariant lives in the transition helper because Zod validates one
+   * snapshot, not a pair of snapshots (before/after).
    */
   status: z.enum(["pending", "in_progress", "completed"]),
   revision: z.number().int().nonnegative(),
@@ -85,20 +87,33 @@ export type PlanContract = z.infer<typeof PlanContractSchema>
  */
 export const PLAN_STATUS_ORDER = ["pending", "in_progress", "completed"] as const
 
-/** Explicit override that permits an otherwise-rejected backward jump. */
+/**
+ * Transition options for {@link isPlanStatusTransitionAllowed}.
+ *
+ * Consumed on the `plan_update` write path via
+ * `src/tools/plan/status-transition.ts`: `extractStatusEdit` extracts the
+ * intended before/after pair and `adjudicate` forwards these options through
+ * to this helper. The write-path argument contract is `ForceCompletionOptions`
+ * in `status-transition.ts`, structurally identical to this interface, so it
+ * passes straight through to `isPlanStatusTransitionAllowed`. A backward jump
+ * rejected here surfaces as `status_transition_rejected` (see
+ * `PLAN_ERROR_CODES` in `src/tools/plan/error-codes.ts`).
+ */
 export interface PlanStatusTransitionOptions {
   /** When true, a backward jump is honored instead of rejected. */
   forceCompletion?: boolean
 }
 
 /**
- * Forward-only transition rule (documented invariant, enforced here).
+ * Forward-only transition rule (enforced on the `plan_update` write path).
  *
- * Returns true when moving from `from` to `to` is allowed: same-status or
- * forward steps always pass; a backward step passes ONLY with
- * `{ forceCompletion: true }`. Unknown statuses (outside the enum) return
- * false — the schema rejects them at parse time and this guard rejects them
- * at transition time.
+ * Consumed by `adjudicate` in `src/tools/plan/status-transition.ts` after
+ * `extractStatusEdit` extracts the before/after pair; a rejection surfaces as
+ * `status_transition_rejected`. Returns true when moving from `from` to `to`
+ * is allowed: same-status or forward steps always pass; a backward step passes
+ * ONLY with `{ forceCompletion: true }` (the `ForceCompletionOptions` escape
+ * hatch). Unknown statuses (outside the enum) return false — the schema
+ * rejects them at parse time and this guard rejects them at transition time.
  */
 export function isPlanStatusTransitionAllowed(
   from: string,
@@ -118,7 +133,7 @@ export interface PlanCompletionGateInput {
   allChecked: boolean
   /** Authoritative front-matter `status` value. */
   status: string
-  /** Explicit human override; when true the gate passes regardless. */
+  /** Explicit override; when true the gate passes regardless. */
   forceCompletion?: boolean
 }
 
@@ -129,7 +144,7 @@ export interface PlanCompletionGateInput {
  * `status === \"completed\"`). Any mismatch (checked but status lagging, or
  * status completed while boxes remain open) evaluates to false so the caller
  * can surface a WARN advisory — never silently auto-complete. The explicit
- * human flag `{ forceCompletion: true }` overrides the gate and returns true.
+ * override flag `{ forceCompletion: true }` overrides the gate and returns true.
  */
 export function isPlanComplete(input: PlanCompletionGateInput): boolean {
   if (input.forceCompletion === true) return true

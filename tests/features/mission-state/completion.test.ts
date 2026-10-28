@@ -20,7 +20,6 @@ describe("resolvePlanCompletion", () => {
     //#then verdict is complete
     expect(result.verdict).toBe("complete")
     expect(result.checkbox.isComplete).toBe(true)
-    expect(result.overrideApplied).toBe(false)
   })
 
   test("mismatch-warn when boxes done but status lags", () => {
@@ -32,7 +31,6 @@ describe("resolvePlanCompletion", () => {
 
     //#then mismatch warns, never complete
     expect(result.verdict).toBe("mismatch-warn")
-    expect(result.overrideApplied).toBe(false)
   })
 
   test("mismatch-warn when status completed but boxes open", () => {
@@ -57,16 +55,16 @@ describe("resolvePlanCompletion", () => {
     expect(result.verdict).toBe("incomplete")
   })
 
-  test("override flag forces complete", () => {
-    //#given open boxes but explicit human override
+  test("dead override flag has no effect", () => {
+    //#given open boxes with pending status plus a stale override claim
     const content = PART_DONE
+    const claimed = { status: "pending", forceCompletion: true }
 
-    //#when resolving with forceCompletion
-    const result = resolvePlanCompletion(content, { status: "pending", forceCompletion: true })
+    //#when resolving with the removed forceCompletion path
+    const result = resolvePlanCompletion(content, claimed)
 
-    //#then complete via override
-    expect(result.verdict).toBe("complete")
-    expect(result.overrideApplied).toBe(true)
+    //#then the claim is ignored: incomplete, never forced complete
+    expect(result.verdict).toBe("incomplete")
   })
 
   test("triage-never-complete: zero-task plans never verdict-complete", () => {
@@ -92,6 +90,19 @@ describe("resolvePlanCompletion", () => {
 
     //#when + then
     expect(result.status).toBeNull()
+    expect(result.verdict).not.toBe("complete")
+  })
+
+  test("forceCompletion claim with completed status still warns, never forces", () => {
+    //#given open boxes claiming completed plus a stale forceCompletion claim
+    const content = PART_DONE
+    const claimed = { status: "completed", forceCompletion: true }
+
+    //#when resolving with the dead front-matter path
+    const result = resolvePlanCompletion(content, claimed)
+
+    //#then the claim is ignored: mismatch-warn, never forced complete
+    expect(result.verdict).toBe("mismatch-warn")
     expect(result.verdict).not.toBe("complete")
   })
 })

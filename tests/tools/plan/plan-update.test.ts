@@ -177,3 +177,225 @@ describe("plan_update contract validation + write guards", () => {
     expect(afterSecond).toContain("# Second Edit")
   })
 })
+
+
+describe("plan_update status-transition enforcement", () => {
+  let testDir2: string
+  let ctx2: ToolContext
+  let createTool2: ReturnType<typeof createPlanCreateTool>
+  let readTool2: ReturnType<typeof createPlanReadTool>
+  let updateTool2: ReturnType<typeof createPlanUpdateTool>
+
+  beforeEach(() => {
+    testDir2 = join(tmpdir(), `plan-status-gate-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    mkdirSync(join(testDir2, ".matrixx/plans"), { recursive: true })
+    ctx2 = testContext(testDir2)
+    createTool2 = createPlanCreateTool()
+    readTool2 = createPlanReadTool()
+    updateTool2 = createPlanUpdateTool()
+  })
+
+  afterEach(() => {
+    if (existsSync(testDir2)) {
+      rmSync(testDir2, { recursive: true, force: true })
+    }
+  })
+
+  function statusPlan(status: string, body = "- [ ] 1. Do the thing"): string {
+    return `---\nstatus: ${status}\nrevision: 1\n---\n# Plan\n\n${body}\n`
+  }
+
+  async function statusAnchor2(fileName: string): Promise<string> {
+    const read = JSON.parse(await readTool2.execute({ filePath: `.matrixx/plans/${fileName}` }, ctx2))
+    const row = (read.hashline as string).split("\n").find((line: string) => line.includes("status:"))
+    if (!row) throw new Error("no status row in hashline")
+    return row.split("|")[0] as string
+  }
+
+  async function bodyAnchor2(fileName: string, needle: string): Promise<string> {
+    const read = JSON.parse(await readTool2.execute({ filePath: `.matrixx/plans/${fileName}` }, ctx2))
+    const row = (read.hashline as string).split("\n").find((line: string) => line.includes(needle))
+    if (!row) throw new Error(`no hashline row contains: ${needle}`)
+    return row.split("|")[0] as string
+  }
+
+  test("forward status edit succeeds", async () => {
+    //#given a pending plan
+    await createTool2.execute({ filePath: ".matrixx/plans/forward-plan.md", content: statusPlan("pending") }, ctx2)
+    const anchor = await statusAnchor2("forward-plan.md")
+
+    //#when the status advances forward to in_progress
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/forward-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["status: in_progress"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the write succeeds and the new status is persisted
+    expect(res.success).toBe(true)
+    expect(res.error).toBeUndefined()
+    expect(parsePlanFrontMatter(readFileSync(planPath(testDir2, "forward-plan.md"), "utf-8"))?.status).toBe("in_progress")
+  })
+
+  test("backward status edit without flag is rejected", async () => {
+    //#given a completed plan
+    await createTool2.execute({ filePath: ".matrixx/plans/back-plan.md", content: statusPlan("completed", "- [x] 1. Done") }, ctx2)
+    const anchor = await statusAnchor2("back-plan.md")
+
+    //#when a backward jump to pending is attempted without forceCompletion
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/back-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["status: pending"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the write is refused with status_transition_rejected naming from/to
+    expect(res.error).toBe("status_transition_rejected")
+    expect(res.from).toBe("completed")
+    expect(res.to).toBe("pending")
+    expect(res.message).toContain("completed")
+    expect(res.message).toContain("pending")
+    expect(typeof res.hint).toBe("string")
+  })
+
+  test("non-status edit is unaffected", async () => {
+    //#given a completed plan
+    await createTool2.execute({ filePath: ".matrixx/plans/body-plan.md", content: statusPlan("completed", "- [x] 1. Done\n\nNotes here") }, ctx2)
+    const anchor = await bodyAnchor2("body-plan.md", "Notes here")
+
+    //#when only the body text changes
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/body-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["Notes updated"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the edit still succeeds
+    expect(res.success).toBe(true)
+    expect(readFileSync(planPath(testDir2, "body-plan.md"), "utf-8")).toContain("Notes updated")
+  })
+
+  test("completed status with unchecked boxes still succeeds (advisory only)", async () => {
+    //#given a pending plan with unchecked boxes
+    await createTool2.execute({ filePath: ".matrixx/plans/mismatch-plan.md", content: statusPlan("pending", "- [ ] 1. Open work") }, ctx2)
+    const anchor = await statusAnchor2("mismatch-plan.md")
+
+    //#when the status jumps forward to completed while boxes stay open
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/mismatch-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["status: completed"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the write stays allowed (advisory only, never a block)
+    expect(res.success).toBe(true)
+    expect(res.error).toBeUndefined()
+    expect(parsePlanFrontMatter(readFileSync(planPath(testDir2, "mismatch-plan.md"), "utf-8"))?.status).toBe("completed")
+  })
+
+  test("file with no front-matter plus completed edit is allowed", async () => {
+    //#given a plan file without front-matter
+    await createTool2.execute({ filePath: ".matrixx/plans/nofm-plan.md", content: "# Title\nline2\n" }, ctx2)
+
+    //#when an edit prepends a completed front-matter block (pending -> completed)
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/nofm-plan.md", edits: [{ op: "prepend", lines: ["---", "status: completed", "revision: 1", "---"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the write is allowed as the forward pending -> completed path
+    expect(res.success).toBe(true)
+    expect(res.error).toBeUndefined()
+  })
+
+  test("rejected backward jump leaves file byte-identical", async () => {
+    //#given a completed plan and its exact pre-edit bytes
+    await createTool2.execute({ filePath: ".matrixx/plans/identical-plan.md", content: statusPlan("completed", "- [x] 1. Done") }, ctx2)
+    const target = planPath(testDir2, "identical-plan.md")
+    const before = readFileSync(target, "utf-8")
+    const anchor = await statusAnchor2("identical-plan.md")
+
+    //#when an injected backward jump to in_progress is attempted without the flag
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/identical-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["status: in_progress"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the write is refused and the file bytes are unchanged
+    expect(res.error).toBe("status_transition_rejected")
+    expect(readFileSync(target, "utf-8")).toBe(before)
+  })
+
+  test("backward jump with absent flag is rejected (explicit)", async () => {
+    //#given a completed plan
+    await createTool2.execute({ filePath: ".matrixx/plans/absent-flag-plan.md", content: statusPlan("completed", "- [x] 1. Done") }, ctx2)
+    const anchor = await statusAnchor2("absent-flag-plan.md")
+
+    //#when a backward jump is attempted with no forceCompletion key at all
+    const res = JSON.parse(
+      await updateTool2.execute(
+        { filePath: ".matrixx/plans/absent-flag-plan.md", edits: [{ op: "replace", pos: anchor, lines: ["status: pending"] }] },
+        ctx2,
+      ),
+    )
+
+    //#then the gate still rejects
+    expect(res.error).toBe("status_transition_rejected")
+    expect(res.from).toBe("completed")
+    expect(res.to).toBe("pending")
+  })
+
+  test("backward jump with forceCompletion:false is still rejected", async () => {
+    //#given a completed plan
+    await createTool2.execute({ filePath: ".matrixx/plans/false-flag-plan.md", content: statusPlan("completed", "- [x] 1. Done") }, ctx2)
+    const anchor = await statusAnchor2("false-flag-plan.md")
+
+    //#when a backward jump is attempted with forceCompletion:false
+    const res = JSON.parse(
+      await updateTool2.execute(
+        {
+          filePath: ".matrixx/plans/false-flag-plan.md",
+          edits: [{ op: "replace", pos: anchor, lines: ["status: pending"] }],
+          forceCompletion: false,
+        },
+        ctx2,
+      ),
+    )
+
+    //#then the gate still rejects
+    expect(res.error).toBe("status_transition_rejected")
+    expect(res.from).toBe("completed")
+    expect(res.to).toBe("pending")
+  })
+
+  test("backward jump with forceCompletion:true succeeds end-to-end", async () => {
+    //#given a completed plan
+    await createTool2.execute({ filePath: ".matrixx/plans/true-flag-plan.md", content: statusPlan("completed", "- [x] 1. Done") }, ctx2)
+    const anchor = await statusAnchor2("true-flag-plan.md")
+
+    //#when a backward jump is attempted with forceCompletion:true
+    const res = JSON.parse(
+      await updateTool2.execute(
+        {
+          filePath: ".matrixx/plans/true-flag-plan.md",
+          edits: [{ op: "replace", pos: anchor, lines: ["status: pending"] }],
+          forceCompletion: true,
+        },
+        ctx2,
+      ),
+    )
+
+    //#then the override is honored and the new status persists
+    expect(res.success).toBe(true)
+    expect(res.error).toBeUndefined()
+    expect(parsePlanFrontMatter(readFileSync(planPath(testDir2, "true-flag-plan.md"), "utf-8"))?.status).toBe("pending")
+  })
+})

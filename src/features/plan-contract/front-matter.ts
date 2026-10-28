@@ -10,23 +10,30 @@
  * `todoCompleted`, `updatedAt` and `sessionId`, and is NEVER removed. Front-matter
  * is ADDITIVE over that comment, not a replacement.
  *
- * WHO MAY WRITE: the human owner via the `plan_update` tool ONLY. Agents and
- * hooks MUST NEVER write `status` (or any front-matter field) directly — they
- * propose transitions through plan content/edits and surface advisories; the
- * human applies the status change. Direct programmatic status writes risk the
- * silent-failure class where `status` and checkbox state diverge unnoticed.
+ * WRITE PATH: `status` (and all front-matter fields) is written through the
+ * `plan_update` tool. Ownership is enforced by TRANSITION ORDER, not caller
+ * identity (PluginContext carries no caller identity, so ownership by caller
+ * identity is unenforceable): forward transitions (pending -> in_progress ->
+ * completed) are legal, backward transitions are hard-rejected by
+ * `plan_update` with `status_transition_rejected` unless the explicit escape
+ * hatch `{ forceCompletion: true }` is passed. A `completed` status with
+ * unchecked boxes stays advisory-only (WARN), never a hard rejection, so
+ * `status` and checkbox state cannot diverge silently.
  *
  * TRANSITIONS (forward-only, see `schema.ts`):
  * `pending -> in_progress -> completed`. A backward jump (e.g.
  * `completed -> in_progress`) is rejected by `isPlanStatusTransitionAllowed`
+ * (via `extractStatusEdit` + `adjudicate` in
+ * `src/tools/plan/status-transition.ts`) with `status_transition_rejected`
  * unless the caller passes the explicit `{ forceCompletion: true }` override.
  * Same-status rewrites are idempotent and always allowed.
  *
  * AND-GATE vs OVERRIDE (completion rule): a plan counts as complete ONLY when
  * (every numbered checkbox checked AND `status === \"completed\"`), evaluated
  * by `isPlanComplete`. Any mismatch evaluates to false so the caller surfaces
- * a WARN advisory instead of silently auto-completing. The explicit human flag
- * `forceCompletion: true` overrides the gate (advisory records the override).
+ * a WARN advisory instead of silently auto-completing. The explicit override
+ * flag `forceCompletion: true` overrides the gate (advisory records the
+ * override).
  *
  * Serialization is IDEMPOTENT: `parse(serialize(parse(content)))` equals
  * `parse(content)`, and `serialize(parse(serialize(fm)))` equals

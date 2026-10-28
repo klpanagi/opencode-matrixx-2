@@ -11,11 +11,15 @@ import {
   validatePlanContract,
 } from "../../features/plan-contract"
 import type { PluginContext } from "../../plugin/types"
+import { applyHashlineEditsWithReport } from "../hashline-edit/edit-operations"
+import { canonicalizeFileText, restoreFileText } from "../hashline-edit/file-text-canonicalization"
 import { executeHashlineEditTool } from "../hashline-edit/hashline-edit-executor"
+import { normalizeHashlineEdits } from "../hashline-edit/normalize-edits"
 import { MAX_PLAN_FILE_BYTES } from "./constants"
-import { PLAN_ERROR_CODES } from "./error-codes"
+import { PLAN_ERROR_CODES, statusTransitionRejectedPayload } from "./error-codes"
 import { enforcePlanCap, type PostApplyHook } from "./plan-write-guard"
 import { type RawSectionEdit, resolveSectionScopedEdits, sectionWritePayload } from "./section-edit"
+import { adjudicate, extractStatusEdit } from "./status-transition"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
 const DEFAULT_FRONT_MATTER: PlanFrontMatter = { status: "pending", revision: 1 }
@@ -60,6 +64,10 @@ export function createPlanUpdateTool(ctx?: PluginContext, postApply?: PostApplyH
           }),
         )
         .describe("Array of edit operations to apply. After a section-scoped write the response carries `section` (the first targeted section's recomputed id/level/headingText/startLine/endLine/bytes/contentHash) and `sections` (every section's recomputed startLine/endLine/contentHash)"),
+      forceCompletion: tool.schema
+        .boolean()
+        .optional()
+        .describe("Explicit human-approved override for a backward plan-status jump (completed -> in_progress, completed -> pending, in_progress -> pending). Forward or same-status jumps never need it. When true a backward jump is honored instead of rejected with status_transition_rejected."),
     },
     execute: async (args, context) => {
       try {
@@ -111,6 +119,31 @@ export function createPlanUpdateTool(ctx?: PluginContext, postApply?: PostApplyH
         const scoped = resolveSectionScopedEdits(originalContent, edits as RawSectionEdit[])
         if (scoped.kind === "error") return JSON.stringify(scoped.body)
         const effectiveEdits = scoped.edits
+        // Pre-edit status-transition gate: simulate the write in memory, then
+        // adjudicate any front-matter status change. A backward jump is refused
+        // here — before any disk write — so the file stays byte-identical.
+        try {
+          const envelope = canonicalizeFileText(originalContent)
+          const normalized = normalizeHashlineEdits(effectiveEdits as never)
+          const simulated = applyHashlineEditsWithReport(envelope.content, normalized).content
+          const postEditSimulated = restoreFileText(simulated, envelope)
+          const injected = shouldMigrate(postEditSimulated) && editTouchesCanonicalRegion(edits, originalContent)
+          const proposedNext = injected
+            ? `${serializePlanFrontMatter(DEFAULT_FRONT_MATTER)}${postEditSimulated}`
+            : postEditSimulated
+          const transition = extractStatusEdit(originalContent, proposedNext)
+          const forceCompletion = (args as Record<string, unknown>).forceCompletion
+          const verdict = adjudicate(transition, {
+            forceCompletion: forceCompletion === true,
+          })
+          if (!verdict.allowed) {
+            return statusTransitionRejectedPayload(verdict.from, verdict.to)
+          }
+        } catch {
+          // Simulation-only failure (e.g. hash mismatch): fall through to the
+          // real executor so it reports the authoritative error.
+          void 0
+        }
         const result = await executeHashlineEditTool({ filePath: resolved, edits: effectiveEdits as never }, context as never)
         if (!result.startsWith("Updated")) {
           return result
