@@ -28,12 +28,23 @@ export interface ContextModeConfigInput {
 export function resolveContextModeEnforcement(
   contextMode: ContextModeConfigInput | undefined,
 ): ContextModeEnforcement {
+  const lowered = (contextMode?.blocked_tools ?? [...CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS]).map((t) =>
+    t.toLowerCase(),
+  )
+  // OPTION A (bash/shell alias expansion): OpenCode V2 renamed the shell tool
+  // `bash` -> `shell`, but V1 user configs still list `bash`. Expand the
+  // internal set so that if EITHER spelling is present, BOTH are gated. This
+  // keeps every existing `.has("bash")` / `.includes("bash")` check shape
+  // working unchanged while also gating the V2 `shell` effective tool name.
+  // Defaults ([grep, glob, webfetch]) contain neither spelling — unchanged.
+  const blockedTools =
+    lowered.includes("bash") || lowered.includes("shell")
+      ? [...new Set([...lowered, "bash", "shell"])]
+      : lowered
   return {
     enabled: contextMode?.enabled ?? true,
     enforce: contextMode?.enforce ?? false,
-    blockedTools: (contextMode?.blocked_tools ?? [...CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS]).map((t) =>
-      t.toLowerCase(),
-    ),
+    blockedTools,
   }
 }
 

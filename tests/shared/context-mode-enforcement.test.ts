@@ -152,6 +152,28 @@ describe("context-mode-enforcement", () => {
     _setDisciplinePathForTesting(undefined)
   })
 
+  test("blocked_tools [bash] gates shell and vice versa (V2 alias)", () => {
+    //#given: a V1 config listing only bash, and one listing only shell
+    //#when: resolved
+    const fromBash = resolveContextModeEnforcement({ enforce: true, blocked_tools: ["bash"] })
+    const fromShell = resolveContextModeEnforcement({ enforce: true, blocked_tools: ["shell"] })
+    //#then: both spellings are gated in either direction
+    expect(fromBash.blockedTools).toContain("bash")
+    expect(fromBash.blockedTools).toContain("shell")
+    expect(fromShell.blockedTools).toContain("bash")
+    expect(fromShell.blockedTools).toContain("shell")
+  })
+
+  test("defaults contain neither bash nor shell", () => {
+    //#given: no config
+    //#when: resolved
+    const got = resolveContextModeEnforcement(undefined)
+    //#then: defaults unchanged — neither shell spelling gated
+    expect(got.blockedTools).toEqual(["grep", "glob", "webfetch"])
+    expect(got.blockedTools).not.toContain("bash")
+    expect(got.blockedTools).not.toContain("shell")
+  })
+
   test("resolveContextModeDisciplineInfo reports nulls when substitute missing", () => {
     //#given: no working substitute
     _setDisciplinePathForTesting(null)

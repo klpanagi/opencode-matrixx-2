@@ -4009,6 +4009,7 @@
               "grep",
               "glob",
               "bash",
+              "shell",
               "webfetch"
             ]
           }

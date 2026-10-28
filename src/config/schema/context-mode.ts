@@ -1,7 +1,8 @@
 import { z } from "zod"
 import { CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS } from "../../shared/context-mode-enforcement"
 
-const BlockedToolNameSchema = z.enum(["read", "grep", "glob", "bash", "webfetch"])
+// "bash" is retained as a deprecated alias for V1 configs; "shell" is the V2 effective tool name.
+const BlockedToolNameSchema = z.enum(["read", "grep", "glob", "bash", "shell", "webfetch"])
 
 export const ContextModeConfigSchema = z.object({
   enabled: z.boolean().default(true),
