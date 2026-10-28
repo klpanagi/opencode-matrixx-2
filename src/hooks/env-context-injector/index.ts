@@ -1,5 +1,7 @@
+import type { PluginInput } from "@opencode-ai/plugin"
 import type { Message, Part } from "@opencode-ai/sdk"
 import { createEnvContext } from "../../agents/env-context"
+import { notifyInjection } from "../../shared/injection-notifier"
 
 interface MessageWithParts {
   info: Message
@@ -24,7 +26,7 @@ type MessagesTransformHook = {
  * prefix caching (Anthropic prompt caching, DeepSeek KV cache, OpenAI
  * auto-cache).
  */
-export function createEnvContextInjectorHook(): MessagesTransformHook {
+export function createEnvContextInjectorHook(ctx?: PluginInput): MessagesTransformHook {
   return {
     "experimental.chat.messages.transform": async (_input, output) => {
       const { messages } = output
@@ -57,11 +59,21 @@ export function createEnvContextInjectorHook(): MessagesTransformHook {
           messageID: lastUserMessage.info.id,
           sessionID: (lastUserMessage.info as { sessionID?: string }).sessionID ?? "",
         } as Part)
-        return
+      } else {
+        const textPart = lastUserMessage.parts[textPartIndex] as { text: string; type: string }
+        textPart.text = `${textPart.text}\n\n${envContext}`
       }
 
-      const textPart = lastUserMessage.parts[textPartIndex] as { text: string; type: string }
-      textPart.text = `${textPart.text}\n\n${envContext}`
+      const sessionID = (lastUserMessage.info as { sessionID?: string }).sessionID
+      if (ctx && sessionID) {
+        await notifyInjection(ctx, {
+          sessionID,
+          injector: "env-context-injector",
+          hash: envContext,
+          title: "Context injection",
+          message: "Environment context applied",
+        })
+      }
     },
   }
 }

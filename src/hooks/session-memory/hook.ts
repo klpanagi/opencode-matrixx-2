@@ -1,14 +1,13 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { NativeMemoryConfig } from "../../config/schema/memory"
 import { appendMemoryEntry, isSyntheticMessage, type MemoryEntryInput } from "../../features/session-memory"
+import { notifyInjection } from "../../shared/injection-notifier"
 import { log } from "../../shared/logger"
 
 const HOOK_NAME = "session-memory"
 
-/** In-memory staging cap — bounds hot-path memory, never grows unbounded. */
 export const MAX_PENDING_ENTRIES = 50
 
-/** Per-entry text cap in the hot path — full budgets apply at recall/render. */
 export const MAX_CAPTURE_CHARS = 2000
 
 export interface SessionMemoryHookOptions {
@@ -30,19 +29,14 @@ function isIgnoredTool(toolName: string, ignoreToolPrefixes: string[]): boolean 
   return ignoreToolPrefixes.some((prefix) => toolName.startsWith(prefix))
 }
 
-/**
- * Light session-memory hook (PostToolUse + event only).
- * Active only when the resolved memory backend is native; callers pass
- * the native sub-object (`memory.native`).
- *
- * Hot path (`tool.execute.after`) does NO JSONL read/write — it stages
- * entries in a bounded in-memory buffer. Flush to disk happens only on
- * `session.idle` / `session.compacted` events (off the hot path).
- *
- * Disabled (`memory.enabled !== true`) = no-op handlers, never throws.
- * External `lcm_*` / `supermemory*` tool calls observed while the native
- * backend is active log a one-time double-capture warning (still staged).
- */
+function hashSnippet(value: string): string {
+  let hash = 5381
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash + value.charCodeAt(i)) | 0
+  }
+  return (hash >>> 0).toString(16)
+}
+
 export function createSessionMemoryHook(
   ctx: PluginInput,
   options: SessionMemoryHookOptions = {},
@@ -95,6 +89,15 @@ export function createSessionMemoryHook(
     }
     for (let i = pending.length - 1; i >= 0; i--) {
       if (pending[i]?.sessionId === sessionID) pending.splice(i, 1)
+    }
+    if (due.length > 0) {
+      void notifyInjection(ctx, {
+        sessionID,
+        injector: "session-memory",
+        hash: hashSnippet(due.map((entry) => entry.text).join("|").slice(0, 4000)),
+        title: "Context injection",
+        message: "Session memory saved",
+      })
     }
   }
 

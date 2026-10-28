@@ -7,6 +7,7 @@ import { type ContextCollector, contextCollector } from "../../features/context-
 import { expandHubPath } from "../../features/knowledge-hub/loader";
 import { getMainSessionID } from "../../features/session-state/state";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
+import { notifyInjection } from "../../shared/injection-notifier";
 import { log } from "../../shared/logger";
 
 // Conservative cap for a hub index file (~22KB expected).
@@ -124,6 +125,13 @@ export function createKnowledgeHubInjectorHook(ctx: PluginInput, options: Knowle
       priority: "high",
     });
     log("[knowledge-hub-injector] router registered", { sessionID, blocks: blocks.length });
+    await notifyInjection(ctx, {
+      sessionID,
+      injector: "knowledge-hub-injector",
+      hash: blocks.join("\n\n"),
+      title: "Context injection",
+      message: "Knowledge hub applied",
+    });
   };
 
   const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
