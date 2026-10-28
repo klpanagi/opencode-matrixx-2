@@ -78,7 +78,7 @@ task(
 
 ## PHASE 2: BUILD (TDD)
 
-Worktree-first: create/use an isolated worktree before implementing (\`git worktree add ../<feature> -b <feature>\` — match git-master conventions). Run all BUILD + VERIFY work inside the worktree; never contaminate the main worktree.
+Worktree-first (native): create an isolated worktree via \`worktree_create({ name: "<feature>" })\` and use the returned absolute \`directory\` (never assume \`../<feature>\` layout). Then \`session_move({ directory })\` into it (record a move-back owner for success AND failure). Run all BUILD + VERIFY work inside the worktree; never contaminate the main worktree. CLI fallback (\`git worktree add\`) only when native tools are unavailable — never mix native and CLI in one run (single-path rule).
 
 For each file in dependency order:
 
@@ -174,9 +174,9 @@ task(
 - [ ] Clean atomic commits
 - [ ] PR targeting dev branch (dev, never master)
 - [ ] CI passes
-- [ ] env-detect: worktree vs in-place recorded (\`git worktree list\`)
+- [ ] env-detect: worktree vs in-place recorded (\`worktree_list\` directory match; \`git worktree list\` CLI-fallback only)
 - [ ] merge-verify: checks green before merge (lint + typecheck + test + build pass)
-- [ ] cleanup: worktree removed after merge (\`git worktree remove\` + \`git worktree prune\`)
+- [ ] cleanup: worktree removed after merge (\`worktree_remove({ directory: <absolute> })\`, no prune; \`force\` only on user confirmation; CLI \`git worktree remove\` + \`git worktree prune\` fallback only)
 - [ ] Merge commit ONLY — never squash (squash merge is disabled)
 
 ---
@@ -276,13 +276,13 @@ When blocked, record a ruling in the ledger and proceed — never stall silently
 
 Worktree-first: BUILD runs in an isolated worktree, SHIP merges from it. Never build directly in the main worktree when a worktree can isolate the change.
 
-- Create/use: \`git worktree add ../<feature> -b <feature>\` (or \`opencode worktree_create\` where available) — match git-master conventions. Run BUILD + VERIFY inside the worktree.
-- env-detect: detect worktree vs in-place before SHIP (\`git worktree list\` — worktree vs in-place determines merge + cleanup path).
+- Create/use (native-first): \`worktree_create({ name: "<feature>" })\` — use returned absolute \`directory\`, never assume \`../<feature>\`; then \`session_move({ directory })\` with move-back owner. Run BUILD + VERIFY inside the worktree. CLI fallback (\`git worktree add\`) only when native unavailable — single-path rule (native XOR CLI, never mixed).
+- env-detect: detect worktree vs in-place before SHIP via \`worktree_list\` directory match (worktree vs in-place determines merge + cleanup path; \`git worktree list\` CLI-fallback only).
 - merge-verify: checks green before merge — lint + typecheck + test + build all pass before merge, PR targets dev.
-- cleanup: remove worktree after merge (\`git worktree remove ../<feature>\` then \`git worktree prune\`).
+- cleanup: remove worktree after merge via \`worktree_remove({ directory: <absolute> })\` (no prune; \`force\` only on user confirmation; CLI \`git worktree remove\` + \`git worktree prune\` fallback only).
 
 **Exit criteria:**
-- [ ] BUILD ran in a worktree (\`git worktree add\` used) or in-place justified
+- [ ] BUILD ran in a worktree (\`worktree_create\` used; \`git worktree add\` CLI-fallback only) or in-place justified
 - [ ] env-detect recorded (worktree vs in-place)
 - [ ] merge-verify: checks green before merge
 - [ ] cleanup: worktree removed after merge

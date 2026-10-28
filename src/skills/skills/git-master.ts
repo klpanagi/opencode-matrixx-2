@@ -585,11 +585,11 @@ NEXT STEPS:
 
 ## WORKTREE PROCEDURES
 
-Isolated work via git worktrees. Never contaminate the main worktree — create/use a worktree per feature branch (matches review-work convention).
+Isolated work via native worktrees. Never contaminate the main worktree — create/use a worktree per feature branch (matches review-work convention). Prefer native tools; CLI fallback only when native unavailable — single-path rule (native XOR CLI, never mixed).
 
-- Create: \`git worktree add ../<feature> -b <feature>\` — new branch in an isolated directory.
-- List / env-detect: \`git worktree list\` — detect worktree vs in-place before SHIP; the result determines merge + cleanup path.
-- Remove / cleanup: \`git worktree remove ../<feature>\` then \`git worktree prune\` — remove worktree after merge, prune stale metadata.
+- Create: \`worktree_create({ name: "<feature>" })\` — use returned absolute \`directory\`, then \`session_move({ directory })\` with move-back owner (CLI fallback \`git worktree add ../<feature> -b <feature>\` only).
+- List / env-detect: \`worktree_list\` — detect worktree vs in-place before SHIP by matching returned directories; the result determines merge + cleanup path (CLI \`git worktree list\` fallback only).
+- Remove / cleanup: \`worktree_remove({ directory: <absolute> })\` — remove worktree after merge, no prune; \`force\` only on user confirmation (CLI \`git worktree remove ../<feature>\` then \`git worktree prune\` fallback only).
 
 Repo law: PR targeting dev — dev, never master. Merge commit ONLY, never squash — squash merge is disabled at repo level. This rule governs PR merges only; local history rewrite via interactive rebase / autosquash (\`--autosquash\`) remains a separate COMMIT-mode tool and never replaces the merge-commit rule.
 
