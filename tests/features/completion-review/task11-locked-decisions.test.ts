@@ -119,7 +119,12 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // The only delta is the mechanical architect -> niobe identifier rename
     // plus the conductor -> captain metaphor refresh; Niobe remains the plan
     // EXECUTOR — no reviewer role was added, so the locked decision still holds.
-    const FROZEN_MD5 = "5776c640c38452c3a5f06c51439b496b"
+    // NOTE (notepad-tools, PR #28): hash advanced from 5776c640c38452c3a5f06c51439b496b.
+    // The only delta is the notepad protocol rewrite: raw bash/glob/Read
+    // notepad instructions replaced with notepad_create/list/read/append tool
+    // calls. Niobe remains the plan EXECUTOR — no reviewer role was added, so
+    // the locked decision still holds.
+    const FROZEN_MD5 = "fdef0a46b7097166f48d6748ab022885"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/niobe/default.ts")

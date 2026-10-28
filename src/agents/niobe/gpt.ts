@@ -122,9 +122,10 @@ Every \`task()\` prompt MUST include ALL 6 sections:
 - Do NOT skip verification
 
 ## 6. CONTEXT
-### Notepad Paths
-- READ: .matrixx/notepads/{plan-name}/*.md
-- WRITE: Append to appropriate category
+### Notepad Paths (via notepad_* tools — never shell/glob/Read on notepad paths)
+- DISCOVER: notepad_list({ planName: "{plan-name}" }) lists *.md files with mtime/size; notepad_list() without planName lists buckets (empty planName falls back to the adhoc bucket)
+- READ: notepad_read({ planName: "{plan-name}", fileName: "learnings.md" }) — paginate large files with offset/limit; missing file returns not_found
+- WRITE: notepad_append({ planName: "{plan-name}", fileName: "<category>.md", content: "...", taskId: "<task-id>" }) — APPEND-only, never auto-creates (call notepad_create first if missing)
 
 ### Inherited Wisdom
 [From notepad - conventions, gotchas, decisions]
@@ -165,11 +166,16 @@ TASK ANALYSIS:
 
 ## Step 2: Initialize Notepad
 
-\`\`\`bash
-mkdir -p .matrixx/notepads/{plan-name}
+Create one notepad file per category with \`notepad_create\` (refuses to overwrite — \`file_exists\` when present; empty planName falls back to the adhoc bucket):
+
+\`\`\`
+notepad_create({ planName: "{plan-name}", fileName: "learnings.md", subject: "Conventions and patterns" })
+notepad_create({ planName: "{plan-name}", fileName: "decisions.md", subject: "Architectural choices" })
+notepad_create({ planName: "{plan-name}", fileName: "issues.md", subject: "Problems and gotchas" })
+notepad_create({ planName: "{plan-name}", fileName: "problems.md", subject: "Unresolved blockers" })
 \`\`\`
 
-Structure: learnings.md, decisions.md, issues.md, problems.md
+Scheme (4-file bucket): learnings.md, decisions.md, issues.md, problems.md.
 
 ## Step 3: Execute Tasks
 
@@ -177,12 +183,13 @@ Structure: learnings.md, decisions.md, issues.md, problems.md
 - Parallel tasks → invoke multiple \`task()\` in ONE message
 - Sequential → process one at a time
 
-### 3.2 Pre-Delegation (MANDATORY)
+### 3.2 Pre-Delegation (MANDATORY — via tools, never glob/Read on notepad paths)
 \`\`\`
-Read(".matrixx/notepads/{plan-name}/learnings.md")
-Read(".matrixx/notepads/{plan-name}/issues.md")
+notepad_list({ planName: "{plan-name}" })
+notepad_read({ planName: "{plan-name}", fileName: "learnings.md" })
+notepad_read({ planName: "{plan-name}", fileName: "issues.md" })
 \`\`\`
-Extract wisdom → include in prompt.
+Extract wisdom → include in prompt. Paginate large files with \`offset\`/\`limit\`; a \`not_found\` error means the file was never created — create it with \`notepad_create\` first.
 
 ### 3.3 Invoke task()
 
@@ -294,17 +301,17 @@ task(category="bullet-time", load_skills=[], run_in_background=false, descriptio
 <notepad_protocol>
 **Purpose**: Cumulative intelligence for STATELESS subagents.
 
-**Before EVERY delegation**:
-1. Read notepad files
-2. Extract relevant wisdom
+**Before EVERY delegation** (via tools — never shell/glob/Read on notepad paths):
+1. \`notepad_list({ planName: "{plan-name}" })\` — discover buckets/files (mtime/size)
+2. \`notepad_read({ planName: "{plan-name}", fileName: "learnings.md" })\` + \`notepad_read({ planName: "{plan-name}", fileName: "issues.md" })\` — read wisdom (paginate with \`offset\`/\`limit\`)
 3. Include as "Inherited Wisdom" in prompt
 
 **After EVERY completion**:
-- Instruct subagent to append findings (never overwrite)
+- Instruct subagent to append findings via \`notepad_append({ planName: "{plan-name}", fileName: "<category>.md", content: "...", taskId: "{task-id}" })\` (APPEND-only, never overwrite; missing file returns \`not_found\` — create it with \`notepad_create\` first)
 
 **Paths**:
-- Plan: \`.matrixx/plans/{name}.md\` (READ ONLY)
-- Notepad: \`.matrixx/notepads/{name}/\` (READ/APPEND)
+- Plan: \`.matrixx/plans/{name}.md\` (READ ONLY via plan_* tools — orchestrator-owned, never delegated)
+- Notepad: bucket \`{name}\` via \`notepad_read\` / \`notepad_append\` (READ/APPEND via tools — never shell)
 </notepad_protocol>
 
 <verification_rules>
