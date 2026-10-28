@@ -22,6 +22,12 @@ export { createHandoffTools } from "./handoff/tools"
 export { interactive_bash, startBackgroundCheck as startTmuxCheck } from "./interactive-bash"
 export { createKnowledgeHubConfirmTool } from "./knowledge-hub-confirm/tools"
 export { createMarketSymbolValidatorTool } from "./market-symbol-validator/tools"
+export {
+  createNotepadAppendTool,
+  createNotepadCreateTool,
+  createNotepadListTool,
+  createNotepadReadTool,
+} from "./notepad"
 export { createPdfExtractFiguresTool } from "./pdf-extract-figures/tools"
 export { createPlanCreateTool } from "./plan/plan-create"
 export { createPlanDeleteTool } from "./plan/plan-delete"

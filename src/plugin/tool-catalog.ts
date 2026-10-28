@@ -27,6 +27,10 @@ import {
   createKnowledgeHubConfirmTool,
   createLookAt,
   createMarketSymbolValidatorTool,
+  createNotepadAppendTool,
+  createNotepadCreateTool,
+  createNotepadListTool,
+  createNotepadReadTool,
   createPdfExtractFiguresTool,
   createPlanCreateTool,
   createPlanDeleteTool,
@@ -165,6 +169,13 @@ export function createToolCatalog(args: {
     plan_tasks: createPlanTasksTool(ctx, planCap),
   }
 
+  const notepadToolsRecord: Record<string, ToolDefinition> = {
+    notepad_create: createNotepadCreateTool(ctx),
+    notepad_read: createNotepadReadTool(ctx),
+    notepad_append: createNotepadAppendTool(ctx),
+    notepad_list: createNotepadListTool(ctx),
+  }
+
   const assemblyEnabled = pluginConfig.assembly?.enabled !== false
   const assemblyTool = assemblyEnabled
     ? createAssemblyTool({
@@ -198,6 +209,7 @@ export function createToolCatalog(args: {
     ...taskToolsRecord,
     ...hashlineToolsRecord,
     ...planToolsRecord,
+    ...notepadToolsRecord,
     ...(assemblyTool ? { assembly: assemblyTool } : {}),
     ...bddToolsRecord,
     ...evolutionRecord,
