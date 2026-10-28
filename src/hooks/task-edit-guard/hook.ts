@@ -1,6 +1,7 @@
 import type { Hooks, PluginInput } from "@opencode-ai/plugin"
 
 import { log } from "../../shared"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { BLOCKED_PATTERNS, HOOK_NAME, PLAN_READ_WARN, PLAN_WRITE_WARN } from "./constants"
 
 export function createTaskEditGuardHook(ctx: PluginInput): Hooks {
@@ -44,7 +45,7 @@ export function createTaskEditGuardHook(ctx: PluginInput): Hooks {
         return
       }
 
-      if (tool !== "bash") return
+      if (!isShellTool(tool)) return
 
       const args = output.args as unknown as Record<string, unknown>
       const cmd = args?.command as string | undefined

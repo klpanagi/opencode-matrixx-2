@@ -125,6 +125,22 @@ describe("createKnowledgeHubGuardHook", () => {
   });
 });
 
+describe("knowledge-hub-guard shell alias (V2)", () => {
+  test("blocks destructive shell targeting hub paths like bash", async () => {
+    //#given a hub and a shell rm touching it
+    const root = makeHubRoot();
+    const hook = createKnowledgeHubGuardHook(makeCtx(tmpdir()), { hubs: [makeHub(root)] });
+    const target = path.join(root, "notes.md");
+    //#when shell removes the hub file
+    const blocked = hook["tool.execute.before"](
+      { tool: "shell", sessionID: "ses-1", callID: "c1" },
+      { args: { command: `rm ${target}` } },
+    );
+    //#then it throws
+    await expect(blocked).rejects.toThrow('knowledge hub "kb"');
+  });
+});
+
 describe("hub write approvals", () => {
   test("approval allows the exact path", async () => {
     //#given a hub, a blocked target, and a recorded approval

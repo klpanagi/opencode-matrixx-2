@@ -2,6 +2,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 
 export const JSON_ERROR_TOOL_EXCLUDE_LIST = [
   "bash",
+  "shell",
   "read",
   "glob",
   "grep",

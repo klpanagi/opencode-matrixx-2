@@ -319,3 +319,22 @@ describe("non-interactive-env hook", () => {
     })
   })
 })
+
+describe("non-interactive-env hook shell alias (V2)", () => {
+  test("#given shell git command #when hook executes #then prepends export statement", async () => {
+    const hook = createNonInteractiveEnvHook({} as Parameters<typeof createNonInteractiveEnvHook>[0])
+    const output: { args: Record<string, unknown>; message?: string } = {
+      args: { command: "git commit -m 'test'" },
+    }
+
+    await hook["tool.execute.before"](
+      { tool: "shell", sessionID: "test", callID: "1" },
+      output
+    )
+
+    const cmd = output.args.command as string
+    expect(cmd).toStartWith("export ")
+    expect(cmd).toContain("GIT_EDITOR=:")
+    expect(cmd).toContain("; git commit -m 'test'")
+  })
+})

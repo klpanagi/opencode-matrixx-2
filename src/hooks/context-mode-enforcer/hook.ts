@@ -3,6 +3,7 @@ import type { Hooks } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config"
 import { log } from "../../shared"
 import { hasWorkingSubstitute, resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
+import { isShellTool } from "../../shared/shell-tool-name"
 import {
   BASH_ROUTED_MESSAGE,
   BLOCK_MESSAGE_GREP_GLOB,
@@ -51,7 +52,7 @@ export function createContextModeEnforcerHook(pluginConfig: MatrixxConfig): Hook
       const isRead = tool === "read"
       const isGrepGlob = tool === "grep" || tool === "glob"
       const isWebfetch = tool === "webfetch"
-      const isBash = tool === "bash"
+      const isBash = isShellTool(tool)
 
       if (isBash) {
         const command = output.args.command
@@ -62,7 +63,7 @@ export function createContextModeEnforcerHook(pluginConfig: MatrixxConfig): Hook
         const isBuildTool = BUILD_TOOL_RE.test(command)
         if (!isFileRead && !isGrep && !isFetchShaped && !isBuildTool) return
 
-        const bashGated = blockedTools.has("bash")
+        const bashGated = [...blockedTools].some(isShellTool)
 
         if (isFileRead || isGrep) {
           if (enforce && bashGated) {

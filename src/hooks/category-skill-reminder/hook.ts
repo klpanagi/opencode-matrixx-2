@@ -23,6 +23,7 @@ const DELEGATABLE_WORK_TOOLS = new Set([
   "edit",
   "write",
   "bash",
+  "shell",
   "read",
   "grep",
   "glob",
@@ -33,6 +34,7 @@ const DELEGATABLE_WORK_TOOLS = new Set([
  */
 const DELEGATION_TOOLS = new Set([
    "task",
+   "subagent",
 ])
 
 interface ToolExecuteInput {

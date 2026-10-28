@@ -1,6 +1,7 @@
 import type { Hooks, PluginInput } from "@opencode-ai/plugin"
 
 import { log } from "../../shared"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { BASH_BLOCK_MESSAGE, BINARY_EXTENSIONS, BLOCKED_PATTERNS, HOOK_NAME, READ_BLOCK_MESSAGE } from "./constants"
 
 function getFilePath(args: Record<string, unknown>): string | undefined {
@@ -20,7 +21,7 @@ export function createDocumentReaderGuardHook(ctx: PluginInput): Hooks {
       output: { args: Record<string, unknown>; message?: string },
     ): Promise<void> => {
       const tool = input.tool?.toLowerCase()
-      if (tool !== "read" && tool !== "bash") return
+      if (tool !== "read" && !isShellTool(tool)) return
 
       if (tool === "read") {
         const filePath = getFilePath(output.args as unknown as Record<string, unknown>)

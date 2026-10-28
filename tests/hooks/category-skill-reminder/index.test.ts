@@ -417,3 +417,55 @@ describe("category-skill-reminder hook", () => {
     })
   })
 })
+
+describe("category-skill-reminder shell/subagent aliases (V2)", () => {
+  function createV2Hook(availableSkills: AvailableSkill[] = []) {
+    const ctx = {
+      client: {
+        tui: {
+          showToast: async () => {},
+        },
+      },
+    } as unknown as PluginInput
+    return createCategorySkillReminderHook(ctx, availableSkills)
+  }
+
+  test("should inject reminder after 3 shell tool calls like bash", async () => {
+    //#given - morpheus agent session with shell tool calls
+    const hook = createV2Hook()
+    const sessionID = "shell-reminder-session"
+    updateSessionAgent(sessionID, "Morpheus")
+
+    const output = { title: "", output: "result", metadata: {} }
+
+    //#when - 3 shell tool calls are made
+    await hook["tool.execute.after"]({ tool: "shell", sessionID, callID: "1" }, output)
+    await hook["tool.execute.after"]({ tool: "shell", sessionID, callID: "2" }, output)
+    await hook["tool.execute.after"]({ tool: "shell", sessionID, callID: "3" }, output)
+
+    //#then - reminder should be injected
+    expect(output.output).toContain("[Category+Skill Reminder]")
+
+    clearSessionAgent(sessionID)
+  })
+
+  test("should NOT inject reminder if subagent is used like task", async () => {
+    //#given - morpheus agent that uses subagent
+    const hook = createV2Hook()
+    const sessionID = "subagent-delegation-session"
+    updateSessionAgent(sessionID, "Morpheus")
+
+    const output = { title: "", output: "result", metadata: {} }
+
+    //#when - subagent is used, then more tool calls
+    await hook["tool.execute.after"]({ tool: "subagent", sessionID, callID: "1" }, output)
+    await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "2" }, output)
+    await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "3" }, output)
+    await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "4" }, output)
+
+    //#then - reminder should NOT be injected (delegation was used)
+    expect(output.output).not.toContain("[Category+Skill Reminder]")
+
+    clearSessionAgent(sessionID)
+  })
+})

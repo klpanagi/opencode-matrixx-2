@@ -4,6 +4,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import picomatch from "picomatch"
 import type { LoadedHub } from "../../features/knowledge-hub/loader"
 import { log } from "../../shared/logger"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { isHubWriteApproved } from "./approvals"
 
 const HOOK_NAME = "knowledge-hub-guard"
@@ -113,7 +114,7 @@ export function createKnowledgeHubGuardHook(ctx: PluginInput, options: Knowledge
     )
   }
 
-  const checkBash = (command: string, sessionID: string): void => {
+  const checkBash = (command: string, tool: string, sessionID: string): void => {
     if (!DESTRUCTIVE_BASH_RE.test(command)) {
       return
     }
@@ -132,7 +133,7 @@ export function createKnowledgeHubGuardHook(ctx: PluginInput, options: Knowledge
       const abs = resolveTarget(token, projectDir)
       const hub = findBlockingHub(abs)
       if (hub) {
-        deny(hub, abs, "bash", sessionID)
+        deny(hub, abs, tool, sessionID)
       }
     }
   }
@@ -143,10 +144,10 @@ export function createKnowledgeHubGuardHook(ctx: PluginInput, options: Knowledge
       output: { args: Record<string, unknown> },
     ): Promise<void> => {
       const tool = input.tool?.toLowerCase()
-      if (tool === "bash") {
+      if (isShellTool(tool)) {
         const command = output.args?.command as string | undefined
         if (typeof command === "string" && command.length > 0) {
-          checkBash(command, input.sessionID)
+          checkBash(command, input.tool, input.sessionID)
         }
         return
       }

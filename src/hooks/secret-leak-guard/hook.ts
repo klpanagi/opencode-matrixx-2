@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 
 import { log } from "../../shared"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { isGitCommitOrPush, isGitPush } from "./git-command-detector"
 import { runGitleaksPrePushScan, runGitleaksStagedScan } from "./gitleaks-runner"
 import { extractRemoteBranch, formatFindings } from "./result-formatter"
@@ -22,7 +23,7 @@ export function createSecretLeakGuardHook(ctx: PluginInput, config?: SecretLeakG
       output: { args: Record<string, unknown> }
     ): Promise<void> => {
       if (!enabled) return
-      if (input.tool.toLowerCase() !== "bash") return
+      if (!isShellTool(input.tool)) return
 
       const command = output.args.command as string | undefined
       if (!command) return
