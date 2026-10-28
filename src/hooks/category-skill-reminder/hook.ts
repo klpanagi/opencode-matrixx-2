@@ -3,22 +3,15 @@ import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
+import { notifyInjection } from "../../shared/injection-notifier"
 import { buildReminderMessage } from "./formatter"
 
-/**
- * Target agents that should receive category+skill reminders.
- * These are orchestrator agents that delegate work to specialized agents.
- */
 const TARGET_AGENTS = new Set([
   "morpheus",
   "mouse",
   "niobe",
 ])
 
-/**
- * Tools that indicate the agent is doing work that could potentially be delegated.
- * When these tools are used, we remind the agent about the category+skill system.
- */
 const DELEGATABLE_WORK_TOOLS = new Set([
   "edit",
   "write",
@@ -29,9 +22,6 @@ const DELEGATABLE_WORK_TOOLS = new Set([
   "glob",
 ])
 
-/**
- * Tools that indicate the agent is already using delegation properly.
- */
 const DELEGATION_TOOLS = new Set([
    "task",
    "subagent",
@@ -56,8 +46,16 @@ interface SessionState {
   toolCallCount: number
 }
 
+function hashSnippet(value: string): string {
+  let hash = 5381
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash + value.charCodeAt(i)) | 0
+  }
+  return (hash >>> 0).toString(16)
+}
+
 export function createCategorySkillReminderHook(
-  _ctx: PluginInput,
+  ctx: PluginInput,
   availableSkills: AvailableSkill[] = []
 ) {
   const sessionStates = new Map<string, SessionState>()
@@ -113,6 +111,13 @@ export function createCategorySkillReminderHook(
       log("[category-skill-reminder] Reminder injected", {
         sessionID,
         toolCallCount: state.toolCallCount,
+      })
+      await notifyInjection(ctx, {
+        sessionID,
+        injector: "category-skill-reminder",
+        hash: hashSnippet(reminderMessage),
+        title: "Context injection",
+        message: "Delegation guidance applied",
       })
     }
   }

@@ -1,4 +1,5 @@
-import { log } from "../../shared"
+import type { PluginInput } from "@opencode-ai/plugin"
+import { log, notifyInjection } from "../../shared"
 import { isSystemDirective, sanitizeKnownTags } from "../../shared/system-directive"
 import { DOMAIN_HINT_MARKER } from "./constants"
 import { buildDomainHint, detectDomainSkills } from "./detector"
@@ -19,7 +20,7 @@ type MessagesTransformOutput = { messages: TransformMessage[] }
  * compact, capped hint naming the matching skills. Pure routing — no file IO,
  * never blocks, and idempotent via the `[domain-skills]` marker.
  */
-export function createDomainKeywordDetectorHook() {
+export function createDomainKeywordDetectorHook(ctx?: PluginInput) {
   return {
     "experimental.chat.messages.transform": async (
       _input: Record<string, never>,
@@ -48,6 +49,17 @@ export function createDomainKeywordDetectorHook() {
       textPart.text = `${buildDomainHint(skills)}\n\n---\n\n${originalText}`
 
       log("[domain-keyword-detector] Injected domain skills", { skills })
+
+      const sessionID = (lastUserMessage.info as { sessionID?: string }).sessionID
+      if (ctx && sessionID) {
+        await notifyInjection(ctx, {
+          sessionID,
+          injector: "domain-keyword-detector",
+          hash: skills.join(","),
+          title: "Context injection",
+          message: "Domain hint applied",
+        })
+      }
     },
   }
 }

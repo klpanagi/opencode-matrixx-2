@@ -7,11 +7,13 @@ import { createUnifiedPostReadProcessor } from "./injector";
 
 const DEFAULT_TRACKED_TOOLS = ["read", "write", "edit", "multiedit"];
 
-export function createPostReadInjectorHook(ctx: PluginInput, options?: { trackedTools?: string[] }) {
+export function createPostReadInjectorHook(ctx: PluginInput, options?: { trackedTools?: string[]; injectorId?: string }) {
   const truncator = createDynamicTruncator(ctx);
   const { processFilePathForInjection, clearSessionCache } = createUnifiedPostReadProcessor({
     workspaceDirectory: ctx.directory,
     truncator,
+    ctx,
+    injectorId: options?.injectorId ?? "post-read-injector",
   });
   const tracked = (options?.trackedTools ?? DEFAULT_TRACKED_TOOLS).map((tool) => tool.toLowerCase());
 

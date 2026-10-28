@@ -3391,6 +3391,19 @@
       "properties": {
         "force_enable": {
           "type": "boolean"
+        },
+        "injection_notices": {
+          "type": "object",
+          "properties": {
+            "persistent": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "persistent"
+          ],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

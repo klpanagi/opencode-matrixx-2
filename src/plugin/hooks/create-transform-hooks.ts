@@ -63,7 +63,7 @@ export function createTransformHooks(args: {
   const domainKeywordDetector = isHookEnabled("domain-keyword-detector")
     ? safeCreateHook(
         "domain-keyword-detector",
-        () => createDomainKeywordDetectorHook(),
+        () => createDomainKeywordDetectorHook(ctx),
         { enabled: safeHookEnabled },
       )
     : null
@@ -86,7 +86,7 @@ export function createTransformHooks(args: {
   const envContextInjector = isHookEnabled("env-context-injector")
     ? safeCreateHook(
         "env-context-injector",
-        () => createEnvContextInjectorHook(),
+        () => createEnvContextInjectorHook(ctx),
         { enabled: safeHookEnabled },
       )
     : null
@@ -134,10 +134,10 @@ export function createTransformHooks(args: {
     dcpNudgeSanitizer,
     toolPairValidator,
     designIntentPreserver,
-    contextModeRouting: createContextModeSystemTransformHook(pluginConfig),
+    contextModeRouting: createContextModeSystemTransformHook(pluginConfig, ctx),
     // Unconditional construction mirroring contextModeRouting above: the internal
     // `active` check (resolver: enabled && binaryPresent && hookEnabled) gates
     // per-call, so enablement flows via the `hookEnabled` param (D5).
-    rtkRouting: createRtkSystemTransformHook(pluginConfig, { hookEnabled: isHookEnabled("rtk-bash-rewriter") }),
+    rtkRouting: createRtkSystemTransformHook(pluginConfig, { hookEnabled: isHookEnabled("rtk-bash-rewriter") }, ctx),
   }
 }

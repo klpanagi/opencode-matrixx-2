@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import type { PluginInput } from "@opencode-ai/plugin";
+import { notifyInjection } from "../../shared/injection-notifier";
 import { AGENTS_FILENAME } from "../directory-agents-injector/constants";
 import {
   loadInjectedPaths,
@@ -33,6 +35,14 @@ export type UnifiedTruncator = {
   ) => Promise<{ result: string; truncated: boolean }>;
 };
 
+function hashSnippet(value: string): string {
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash + value.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(16);
+}
+
 function resolveUnifiedFilePath(rootDirectory: string, filePath: string): string | null {
   if (!filePath) return null;
   if (filePath.startsWith("/")) return filePath;
@@ -43,6 +53,8 @@ export function createUnifiedPostReadProcessor(deps: {
   workspaceDirectory: string;
   truncator: UnifiedTruncator;
   onVisitDir?: (dir: string) => void;
+  ctx?: PluginInput;
+  injectorId?: string;
 }): {
   processFilePathForInjection: (
     filePath: string,
@@ -149,6 +161,16 @@ export function createUnifiedPostReadProcessor(deps: {
     output.output += buildDirectoryContextBlock(sections);
     if (agentsDirty) saveInjectedPaths(sessionID, agentsCache);
     if (rulesDirty) saveInjectedRules(sessionID, rulesCache);
+    if (deps.ctx) {
+      const injector = deps.injectorId ?? "post-read-injector";
+      await notifyInjection(deps.ctx, {
+        sessionID,
+        injector,
+        hash: hashSnippet(sections.join("\n---\n")),
+        title: "Context injection",
+        message: "Directory context applied",
+      });
+    }
   }
 
   return { processFilePathForInjection, clearSessionCache };
