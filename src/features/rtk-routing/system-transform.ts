@@ -3,6 +3,7 @@ import type { Hooks } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config"
 import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
 import { resolveRtkEnforcement } from "../../shared/rtk-enforcement"
+import { isShellTool } from "../../shared/shell-tool-name"
 import { buildRtkRoutingBlock, containsRtkMarker } from "./routing-block"
 
 export const HOOK_NAME = "rtk-routing"
@@ -19,17 +20,17 @@ export interface RtkSystemTransformOptions {
 }
 
 /**
- * Default bash probe backed by the single existing available-tool-names
+ * Default shell probe backed by the single existing available-tool-names
  * signal (set once at startup by index.ts via setAvailableToolNames).
- * Suppresses only when affirmatively known to lack bash: a non-empty
- * registry without "bash" means no agent can run shell commands, so the
- * discipline block is noise. An empty registry means identity/tooling is
+ * Suppresses only when affirmatively known to lack shell: a non-empty
+ * registry without "bash"/"shell" means no agent can run shell commands, so
+ * the discipline block is noise. An empty registry means identity/tooling is
  * unknown — default to INJECT in that case.
  */
 function defaultHasBash(): boolean {
   const names = getAvailableToolNames()
   if (names.length === 0) return true
-  return names.includes("bash")
+  return names.some(isShellTool)
 }
 
 /**

@@ -16,7 +16,7 @@ export const MATRIXX_RTK_MARKER = "<rtk_discipline>"
 export function buildRtkRoutingBlock(): string {
   return `${MATRIXX_RTK_MARKER}
   Prefer \`rtk <cmd>\` for all supported commands (git, ls, cat, head, tail, grep, rg, find, wc, etc.).
-  The rtk-bash-rewriter hook auto-rewrites eligible bash commands; do not disable or bypass it.
+  The rtk-bash-rewriter hook auto-rewrites eligible shell commands; do not disable or bypass it.
   If a command is not rewritten, prefix it with \`rtk\` manually when an rtk equivalent exists.
   Never run a raw command when an rtk equivalent is available.
 </rtk_discipline>`

@@ -9,6 +9,7 @@ import {
 import { createContextModeSystemTransformHook as createCtxHook } from "../../../src/features/context-mode-routing/system-transform"
 import { containsRtkMarker, MATRIXX_RTK_MARKER } from "../../../src/features/rtk-routing/routing-block"
 import { createRtkSystemTransformHook } from "../../../src/features/rtk-routing/system-transform"
+import { setAvailableToolNames } from "../../../src/plugin-handlers/agent-config-handler"
 
 function model() {
   return { providerID: "anthropic", modelID: "claude-opus-4-6" } as never
@@ -214,5 +215,72 @@ describe("rtk + ctx coexistence", () => {
     expect(containsContextModeMarker(output.system)).toBe(true)
     expect(containsRtkMarker([output.system[2]])).toBe(false)
     expect(containsContextModeMarker([output.system[1]])).toBe(false)
+  })
+})
+
+describe("createRtkSystemTransformHook default shell probe (V2)", () => {
+  test("registry [shell] injects the routing block like [bash]", async () => {
+    //#given: rtk active with only the V2 shell tool registered
+    setAvailableToolNames(["shell"])
+    try {
+      const hook = createRtkSystemTransformHook(rtkConfig(true), {
+        which: () => "/usr/bin/rtk",
+      })
+      const output = { system: ["sys-a"] }
+      //#when: the transform runs
+      await hook({ sessionID: "ses_1", model: model() }, output)
+      //#then: the block is injected
+      expect(output.system).toHaveLength(2)
+      expect(output.system[1]).toContain(MATRIXX_RTK_MARKER)
+    } finally {
+      setAvailableToolNames([])
+    }
+  })
+
+  test("registry [bash] still injects (V1 compat)", async () => {
+    //#given: rtk active with only the V1 bash tool registered
+    setAvailableToolNames(["bash"])
+    try {
+      const hook = createRtkSystemTransformHook(rtkConfig(true), {
+        which: () => "/usr/bin/rtk",
+      })
+      const output = { system: ["sys-a"] }
+      //#when: the transform runs
+      await hook({ sessionID: "ses_1", model: model() }, output)
+      //#then: the block is injected
+      expect(output.system).toHaveLength(2)
+    } finally {
+      setAvailableToolNames([])
+    }
+  })
+
+  test("empty registry injects (fail-open preserved)", async () => {
+    //#given: unknown tooling (empty registry)
+    setAvailableToolNames([])
+    const hook = createRtkSystemTransformHook(rtkConfig(true), {
+      which: () => "/usr/bin/rtk",
+    })
+    const output = { system: ["sys-a"] }
+    //#when: the transform runs
+    await hook({ sessionID: "ses_1", model: model() }, output)
+    //#then: the block is injected
+    expect(output.system).toHaveLength(2)
+  })
+
+  test("non-empty registry without shell suppresses (warn-when-neither preserved)", async () => {
+    //#given: tools registered but no shell capability
+    setAvailableToolNames(["read", "grep"])
+    try {
+      const hook = createRtkSystemTransformHook(rtkConfig(true), {
+        which: () => "/usr/bin/rtk",
+      })
+      const output = { system: ["sys-a"] }
+      //#when: the transform runs
+      await hook({ sessionID: "ses_1", model: model() }, output)
+      //#then: the block is suppressed
+      expect(output.system).toEqual(["sys-a"])
+    } finally {
+      setAvailableToolNames([])
+    }
   })
 })
