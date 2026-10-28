@@ -198,6 +198,13 @@ ctx stats
 >
 > `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-mode-routing/routing-block.ts`).
 >
+
+#### MCP registration & working directory (cwd)
+
+Register the context-mode MCP server **per-project** (project `.opencode/opencode.json` `mcp` entry) so each project gets a server with the right cwd, or pin `cwd` explicitly. Do NOT rely on a single process-global registration (user `~/.config/opencode/opencode.jsonc`) without a `cwd` pin.
+
+Root cause: context-mode's opencode adapter (`node_modules/context-mode/build/adapters/opencode/plugin.js`) derives its project dir as `ctx?.directory ?? process.cwd()`. Registered as a process-global MCP server, there is no plugin ctx, so the project dir falls back to the MCP server process's spawn cwd — a different project (observed: `subscription_monitor`). Hence `ctx_execute` runs with the wrong cwd in every other project. Matrixx does not patch the external package; `matrixx doctor` warns (`context-mode-cwd` check) when the registration lacks an explicit `cwd`.
+>
 > Session-memory hygiene: entries whose text starts with a `SYNTHETIC_MESSAGE_PREFIXES` value (`<task-notification>`, `<system-reminder>`, `<context_guidance>`, `<tool-result>`) are filtered on memory write (`appendMemoryEntry`, hook staging) and recall (`recall`/`isSyntheticCandidate`) paths only — routing and enforcement are unaffected.
 
 #### Configuration
@@ -216,7 +223,7 @@ Matrixx gate `context_mode` (default `enabled:true`) + external plugin `plugin: 
   "context_mode": {
     "enabled": true,                    // false = hide discipline, disable enforcer
     "enforce": false,                   // true = block grep/glob (hard), false = warn (soft)
-    "blocked_tools": ["grep", "glob"]   // tools to gate (add "read"/"bash" to also cover those)
+    "blocked_tools": ["grep", "glob"]   // tools to gate (add "read"/"shell" to also cover those)
   }
 }
 ```

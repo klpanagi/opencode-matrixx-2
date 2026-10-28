@@ -80,8 +80,8 @@ import { mcpPrerequisitesCheck } from "../../../src/cli/doctor/checks/mcp"
 import { ALL_CHECKS, getChecksByCategory, getCategories } from "../../../src/cli/doctor/checks"
 
 describe("check registry", () => {
-  test("ALL_CHECKS has 12 entries", () => {
-    expect(ALL_CHECKS.length).toBe(12)
+  test("ALL_CHECKS has 13 entries", () => {
+    expect(ALL_CHECKS.length).toBe(13)
   })
 
   test("getCategories returns 6 unique categories including integrations", () => {
@@ -100,7 +100,7 @@ describe("check registry", () => {
     expect(auth.length).toBe(1)
     expect(auth[0].name).toBe("authentication")
     const integrations = getChecksByCategory("integrations")
-    expect(integrations.length).toBe(6)
+    expect(integrations.length).toBe(7)
   })
 
   test("every check has name, category, check function", () => {

@@ -1,7 +1,7 @@
 import type { DoctorCheck } from "../types"
 import { authCheck } from "./auth"
 import { configValidationCheck } from "./config"
-import { contextModeCheck } from "./context-mode"
+import { contextModeCheck, contextModeCwdCheck } from "./context-mode"
 import { dcpCheck } from "./dcp"
 import { dockerCheck } from "./docker"
 import { headroomCheck } from "./headroom"
@@ -23,6 +23,7 @@ export const ALL_CHECKS: DoctorCheck[] = [
   rtkCheck,
   dcpCheck,
   contextModeCheck,
+  contextModeCwdCheck,
   tmuxCheck,
   dockerCheck,
 ]
@@ -37,7 +38,7 @@ export function getCategories(): string[] {
 
 export { authCheck } from "./auth"
 export { configValidationCheck } from "./config"
-export { contextModeCheck } from "./context-mode"
+export { contextModeCheck, contextModeCwdCheck } from "./context-mode"
 export { dcpCheck } from "./dcp"
 export { dockerCheck } from "./docker"
 export { headroomCheck } from "./headroom"

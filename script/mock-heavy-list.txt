@@ -41,3 +41,5 @@ tests/tools/delegate-task/timing.test.ts
 tests/shared/opencode-http-api.test.ts
 tests/hooks/runtime-fallback/index.test.ts
 tests/tools/task/task-create-batch.test.ts
+tests/hooks/secret-leak-guard/hook.test.ts
+tests/hooks/niobe/tool-execute-before.test.ts

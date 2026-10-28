@@ -101,7 +101,7 @@ await Promise.allSettled([
 
 | Hook | Trigger (independent of others) |
 |------|--------------------------------|
-| secretLeakGuard | `tool === "bash"` AND `git commit`/`git push` |
+| secretLeakGuard | `isShellTool(tool)` (bash/shell) AND `git commit`/`git push` |
 | envFileWriteGuard | `tool ∈ {write, edit, multiedit}` AND path matches sensitive pattern |
 | writeExistingFileGuard | `tool === "write"` AND `existsSync(path)` |
 | oracleMdOnly | agent is Oracle AND `tool ∈ BLOCKED_TOOLS` AND path outside `.matrixx/*.md` |
@@ -110,7 +110,7 @@ await Promise.allSettled([
 > to 30 s timeout per `gitleaks-runner.ts:20`). If a real commit/push command
 > is in flight, this dominates Wave 2 latency. Consider pre-checking the
 > command string before scheduling into `Promise.all` (e.g. skip Wave 2
-> entirely when `input.tool !== "bash"`).
+> entirely when `!isShellTool(input.tool)`).
 
 ### Wave 3 — `MUTATOR` (4 hooks, **sequential** to preserve mutation order)
 
