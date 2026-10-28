@@ -45,7 +45,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 - **🎨 Frontend** — React components derived from UI annotations
 - **⚙️ Backend** — Typed API services with Zod validation
 
-| All of this is driven by matrixx's built-in agents and skills — no human-in-loop required. The `bdd-contract` agent enriches the parsed Contract, and **Morpheus** (with `bdd-frontend`, `bdd-backend`, `bdd-tests` skills) generates the test, frontend, and backend artifacts. |
+| All of this is driven by matrixx's built-in agents and skills — no human-in-loop required. The `bdd-contract` skill enriches the parsed Contract, and **Morpheus** (with `bdd-frontend`, `bdd-backend`, `bdd-tests` skills) generates the test, frontend, and backend artifacts. |
 
 ---
 
@@ -95,7 +95,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 | **No `stories_2_tdd` bundling** | Agents do the work natively; no legacy code import |
 | **5 separate slash commands** | No subcommand routing infrastructure needed |
 | **Deterministic tools first, agents second** | Tools (bdd_parse_gherkin, bdd_create_contract) do the parsing work; agents enrich on top |
-|| **1 new EXPENSIVE agent** | `bdd-contract` is the only specialist — Morpheus (the matrixx orchestrator) handles tests/frontend/backend via skills |
+|| **Skills, not specialist agents** | The `bdd-contract` skill enriches the Contract — Morpheus (the matrixx orchestrator) handles tests/frontend/backend via skills |
 
 ---
 
@@ -169,7 +169,7 @@ There are **5 slash commands**, each accessible from the matrixx chat prompt:
 2. Parses it with `@cucumber/gherkin` (deterministic AST)
 3. Extracts Gherkin comments as structured annotations (`@api:*`, `@ui:*`, `@state:*`, `@assumption:`)
 4. Produces `.contract.json` next to the source file
-5. The `bdd-contract` agent enriches the contract with semantic insights
+5. The `bdd-contract` skill enriches the contract with semantic insights
 
 **Output**: `<feature-path>.contract.json`
 
@@ -367,11 +367,11 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 
 ### Agent Reference
 
-#### New Agent (1 EXPENSIVE)
+#### BDD Contract Skill
 
 | Agent | Cost | Mode | Skill | Purpose |
 |-------|------|------|-------|---------|
-| **bdd-contract** | EXPENSIVE | `all` | `bdd-contract` | Enrich parsed Contract JSON with business semantics, naming, and intent |
+| **bdd-contract** (skill) | — | — | `bdd-contract` | Enrich parsed Contract JSON with business semantics, naming, and intent |
 
 #### Reused Agent
 
@@ -393,7 +393,7 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 
 #### Agent Architecture
 
-| The `bdd-contract` agent follows the **Cipher template** (see `src/agents/cipher.ts`): |
+| The `bdd-contract` skill follows the **Cipher template** (see `src/skills/skills/bdd-contract.ts`): |
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -413,7 +413,7 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 └──────────────────────────────────────────────────────────┘
 ```
 
-| `bdd-contract` is registered in `agentSources` and `agentMetadata` in `src/agents/builtin-agents.ts`, discoverable via the agent menu (mode: `"all"`). The `bdd-frontend` / `bdd-backend` / `bdd-tests` skills are auto-loaded into Morpheus via `buildAvailableSkills()` and surfaced through the dynamic prompt builder — no specialist wrapper agents are needed. |
+| The `bdd-contract` skill is auto-loaded alongside `bdd-frontend` / `bdd-backend` / `bdd-tests` via `buildAvailableSkills()` into Morpheus via `buildAvailableSkills()` and surfaced through the dynamic prompt builder — no specialist wrapper agents are needed. |
 
 ---
 
@@ -434,7 +434,7 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 
 #### Annotation Types (LLM-inferred)
 
-Annotations are NOT placed in `.feature` files. The `.feature` file must be 100% pure Gherkin. The bdd-contract agent infers all annotations from the feature content via LLM reasoning and writes them into the Contract JSON.
+Annotations are NOT placed in `.feature` files. The `.feature` file must be 100% pure Gherkin. The bdd-contract skill infers all annotations from the feature content via LLM reasoning and writes them into the Contract JSON.
 
 | Annotation Field | Inferred From |
 |------------------|----------------|
@@ -457,7 +457,7 @@ Annotations are NOT placed in `.feature` files. The `.feature` file must be 100%
 **`bdd_create_contract`**
 - Input: parsed AST JSON + source file path + options
 - Output: `<feature-path>.contract.json` written alongside the source file (with empty annotations)
-- Steps: walks GherkinDocument AST, validates against `ContractSchema`. Annotations are LEFT EMPTY — the bdd-contract agent fills them via LLM inference from feature content
+- Steps: walks GherkinDocument AST, validates against `ContractSchema`. Annotations are LEFT EMPTY — the bdd-contract skill fills them via LLM inference from feature content
 - Annotation parsing lives in `src/tools/bdd-create-contract/tools.ts`; contract types in `src/features/bdd/schema.ts` + `src/features/bdd/types.ts`
 - TDD: 9 tests (valid contract, schema validation, force flag, malformed input, data tables, outlines, rules, empty annotations)
 
@@ -583,8 +583,6 @@ src/
 │   ├── bdd-validate-contract/ ← bdd_validate_contract tool (createBddValidateContractTool)
 │   └── bdd-pipeline/          ← bdd_pipeline_run tool (pipeline-runner, subagent-runner, feature-resolver, analysis-report)
 ├── agents/
-│   ├── bdd-contract.ts        ← BDD contract specialist agent (only new agent)
-│   ├── bdd-contract.test.ts   ← 12 agent tests
 │   ├── morpheus.ts            ← Matrixx orchestrator (runs bdd-tests, bdd-frontend, bdd-backend)
 ├── skills/skills/
 │   ├── bdd-contract.ts        ← BDD contract skill (template prompt)

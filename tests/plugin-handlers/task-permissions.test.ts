@@ -1,7 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { createNiobeAgent } from "../../src/agents/niobe"
-import { createBddContractAgent } from "../../src/agents/bdd-contract"
 import { createCipherAgent } from "../../src/agents/cipher"
 import { createKeymakerAgent } from "../../src/agents/keymaker"
 import { createMouseAgentWithOverrides } from "../../src/agents/mouse/agent"
@@ -31,7 +30,6 @@ async function realAgentResult(): Promise<Record<string, unknown>> {
     oracle,
     cipher: createCipherAgent(MODEL),
     sentinel: createSentinelAgent(MODEL),
-    "bdd-contract": createBddContractAgent(MODEL),
     mouse: createMouseAgentWithOverrides(undefined, MODEL),
   }
 }

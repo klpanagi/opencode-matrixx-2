@@ -30,7 +30,7 @@ That is the design, not a gap. Never install one, and never offer to.
    \`evaluateAdmission({ progress, admission })\` from the gathered facts. It reads
    T2's output and re-reads nothing.
 
-4. **Delegate the MODEL dimensions to the \`auditor\` agent.** Pass it the
+4. **Delegate the MODEL dimensions to the \`merovingian\` agent.** Pass it the
    gathered context and the report skeleton. It supplies dimensions 2, 3, 4, 6
    and 8. It must never write the report into the plan file.
 

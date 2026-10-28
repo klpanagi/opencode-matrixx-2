@@ -51,7 +51,7 @@ Run these steps in this exact order per iteration:
 - Iteration cap reached: iterations == --max-iterations (default 3).
 
 When any stop condition fires, stop immediately. No post-review step follows:
-the auditor agent is invoked ONLY by the explicit \`/plan-review\` command,
+the merovingian agent is invoked ONLY by the explicit \`/plan-review\` command,
 never automatically and never as part of this loop.
 
 ## Report Contract (same as audit)

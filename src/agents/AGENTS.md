@@ -2,9 +2,9 @@
 
 ## OVERVIEW
 
-17 AI agents with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
+13 AI agents with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
 
-`Smith` is the **pre-execution** reviewer (binary `[OKAY]`/`[REJECT]`, max 3 blockers). `Auditor` is the **post-execution** reviewer (Summary / Score / Complexity / Required Effort), invoked **only** by the explicit `/plan-review` command — never automatically (including never as a post-step of `/quality-assurance` or any other command loop), and never on a hook, idle, or completion trigger.
+`Smith` is the **pre-execution** reviewer (binary `[OKAY]`/`[REJECT]`, max 3 blockers).
 
 ## STRUCTURE
 ```
@@ -30,7 +30,6 @@ agents/
 ├── sentinel.ts                 # Security auditor (220 lines)
 ├── merovingian.ts              # High-IQ consultation
 ├── smith.ts                    # Plan validator (244 lines) — pre-execution reviewer
-├── auditor.ts                  # Post-execution plan auditor (147 lines) — /plan-review only, never automatic
 ├── construct.ts        # Media analyzer (58 lines)
 ├── sati.ts                     # Frontend specialist
 ├── trinity.ts                  # Codebase search
@@ -61,7 +60,6 @@ agents/
 | Sentinel | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Merovingian | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Smith | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Auditor | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Construct | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Sati | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
 | Mouse | <provider>/<model> | 0.1 | (user-configurable via tier) | EXPENSIVE |
@@ -83,8 +81,6 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 | Sentinel | all | write, edit, multiedit, `task` (delegation denied, `task_*` tracking allowed) | Read-only security auditing |
 | Cipher | all | — | `task_*`, teammate — delegates per target language |
 | Keymaker | primary | — | `task_*`, teammate |
-| Bdd-contract | all | — | `task_*`, teammate |
-| Auditor | subagent | write, edit, task | Read-only post-execution measurement; reports go to `.matrixx/reviews/`, never into the plan |
 
 ## THINKING / REASONING
 
@@ -95,7 +91,6 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 | Oracle | 32k budget tokens | reasoningEffort: "medium" |
 | Seraph | 32k budget tokens | — |
 | Smith | 32k budget tokens | reasoningEffort: "medium" |
-| Auditor | 32k budget tokens | reasoningEffort: "medium" |
 | Sentinel | 32k budget tokens | reasoningEffort: "medium" |
 | Mouse | 32k budget tokens | reasoningEffort: "medium" |
 

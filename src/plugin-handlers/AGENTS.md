@@ -64,7 +64,6 @@ When `morpheus_agent.planner_enabled === true`:
 | construct | Denies task, look_at |
 | cipher | task, task_*, teammate allowed (derived, `mode: "all"`) |
 | sentinel | task_* allowed, task denied (self-declared read-only) |
-| bdd-contract | task, task_*, teammate allowed (derived, `mode: "all"`) |
 
 ## INTEGRATION
 

@@ -8,8 +8,6 @@ import { mergeCategories } from "../shared/merge-categories"
 import type { BuiltinSkill } from "../skills"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import type { AgentConfig } from "./agent-config"
-import { AUDITOR_PROMPT_METADATA, createAuditorAgent } from "./auditor"
-import { BDD_CONTRACT_PROMPT_METADATA, createBddContractAgent } from "./bdd-contract"
 import { buildAvailableSkills } from "./builtin-agents/available-skills"
 import { collectPendingBuiltinAgents } from "./builtin-agents/general-agents"
 import { maybeCreateKeymakerConfig } from "./builtin-agents/keymaker-agent"
@@ -22,14 +20,12 @@ import type { AvailableCategory } from "./dynamic-agent-prompt-builder"
 import { createKeymakerAgent } from "./keymaker"
 import { createMerovingianAgent, ORACLE_PLAN_BUILDER_METADATA, ORACLE_PROMPT_METADATA } from "./merovingian"
 import { createMorpheusAgent } from "./morpheus"
-import { createNeoAgent, NEO_PROMPT_METADATA } from "./neo"
 import { createNiobeAgent, niobePromptMetadata } from "./niobe"
 import { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./operator"
 import { createSatiAgent } from "./sati"
 import { createSentinelAgent, SENTINEL_PROMPT_METADATA } from "./sentinel"
 import { createSeraphAgent, seraphPromptMetadata } from "./seraph"
 import { createSmithAgent, smithPromptMetadata } from "./smith"
-import { createTankAgent, TANK_PROMPT_METADATA } from "./tank"
 import { createTrinityAgent, TRINITY_PROMPT_METADATA } from "./trinity"
 import type { AgentFactory, AgentOverrides, AgentPromptMetadata, BuiltinAgentName } from "./types"
 
@@ -45,14 +41,10 @@ const agentSources: Partial<Record<BuiltinAgentName, AgentSource>> = {
   construct: createConstructAgent,
   seraph: createSeraphAgent,
   smith: createSmithAgent,
-  auditor: createAuditorAgent,
   niobe: createNiobeAgent as AgentFactory,
   cipher: createCipherAgent,
   sentinel: createSentinelAgent,
-  neo: createNeoAgent,
-  tank: createTankAgent,
   sati: createSatiAgent,
-  "bdd-contract": createBddContractAgent,
 }
 
 /**
@@ -67,13 +59,9 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   construct: CONSTRUCT_PROMPT_METADATA,
   seraph: seraphPromptMetadata,
   smith: smithPromptMetadata,
-  auditor: AUDITOR_PROMPT_METADATA,
   niobe: niobePromptMetadata,
   cipher: CIPHER_PROMPT_METADATA,
   sentinel: SENTINEL_PROMPT_METADATA,
-  neo: NEO_PROMPT_METADATA,
-  tank: TANK_PROMPT_METADATA,
-  "bdd-contract": BDD_CONTRACT_PROMPT_METADATA,
 }
 
 export async function createBuiltinAgents(

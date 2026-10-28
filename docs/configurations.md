@@ -247,7 +247,7 @@ Or disable via `disabled_agents` in `~/.config/opencode/matrixx.json` or `.openc
 }
 ```
 
-Available agents: `morpheus`, `oracle`, `merovingian`, `operator`, `trinity`, `construct`, `seraph`, `smith`, `niobe`, `cipher`, `sati`, `sentinel`, `keymaker`, `bdd-contract` (+ aliases `build`, `plan`, `mouse`, `OpenCode-Builder` via `agent_definitions` overrides)
+Available agents: `morpheus`, `oracle`, `merovingian`, `operator`, `trinity`, `construct`, `seraph`, `smith`, `niobe`, `cipher`, `sati`, `sentinel`, `keymaker` (+ aliases `build`, `plan`, `mouse`, `OpenCode-Builder` via `agent_definitions` overrides)
 
 ## Built-in Skills
 

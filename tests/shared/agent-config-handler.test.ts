@@ -72,15 +72,18 @@ describe("injectContextDiscipline pure", () => {
     expect(prompt).toContain("LSP/ast_grep")
   })
 
-  it("should inject explore into bdd-contract when present", () => {
-    //#given: bdd-contract via plugin
-    const agents = makeAgents(["bdd-contract"])
+  it("should give compact (not explore) to executor agents in the 13-agent roster", () => {
+    //#given: the 13-agent roster after consolidation (17 -> 13, bdd-contract now a skill)
+    const agents = makeAgents(["cipher", "sati", "sentinel", "niobe"])
     //#when
     injectContextDiscipline(["ctx_search"], agents)
-    //#then: bdd-contract gets explore
-    const prompt = (agents["bdd-contract"] as { system: string }).system
-    expect(prompt).toContain("when available")
-    expect(prompt).toContain("ctx_search")
+    //#then: compact discipline, not the explore branch
+    for (const name of ["cipher", "sati", "sentinel", "niobe"]) {
+      const prompt = (agents[name] as { system: string }).system
+      expect(prompt).toContain("### Context Discipline (when ctx_* available)")
+      expect(prompt).toContain("ctx_search")
+      expect(prompt).not.toContain("### Context Discipline (when available)")
+    }
   })
 
   it("should inject headroom when headroom_* present", () => {

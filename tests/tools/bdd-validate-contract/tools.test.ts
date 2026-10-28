@@ -20,7 +20,7 @@ const MISSING_PATH = path.join(TMP_DIR, "does-not-exist.contract.json")
 const mockContext: ToolContext = {
   sessionID: "s",
   messageID: "m",
-  agent: "bdd-contract",
+  agent: "mouse",
   directory: process.cwd(),
   worktree: process.cwd(),
   abort: new AbortController().signal,

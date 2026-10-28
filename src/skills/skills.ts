@@ -35,6 +35,7 @@ import { grafanaDashboardsSkill } from "./skills/grafana-dashboards"
 import { influxdbTimeseriesSkill } from "./skills/influxdb-timeseries"
 import { marketDataArchitectureSkill } from "./skills/market-data-architecture"
 import { marketDataBusSkill } from "./skills/market-data-bus"
+import { marketDataRobustnessReviewSkill } from "./skills/market-data-robustness-review"
 import { matrixxSelfConfigSkill } from "./skills/matrixx-self-config"
 import { agentBrowserSkill, playwrightSkill } from "./skills/playwright"
 import { playwrightCliSkill } from "./skills/playwright-cli"
@@ -42,6 +43,7 @@ import { pythonAsyncioSkill } from "./skills/python-asyncio"
 import { qualityGateSkill } from "./skills/quality-gate"
 import { removeAiSlopsSkill } from "./skills/remove-ai-slops"
 import { resilienceErrorTaxonomySkill } from "./skills/resilience-error-taxonomy"
+import { resilienceFailureHuntingSkill } from "./skills/resilience-failure-hunting"
 import { reviewWorkSkill } from "./skills/review-work"
 import { securityApiSkill } from "./skills/security-api"
 import { securityAuditSkill } from "./skills/security-audit"
@@ -137,12 +139,14 @@ const skillFactories: Record<string, () => BuiltinSkill> = {
   "ccxt-pro-websockets": () => ccxtProWebsocketsSkill,
   "market-data-bus": () => marketDataBusSkill,
   "market-data-architecture": () => marketDataArchitectureSkill,
+  "market-data-robustness-review": () => marketDataRobustnessReviewSkill,
   "crypto-market-structure": () => cryptoMarketStructureSkill,
   "time-series-fundamentals": () => timeSeriesFundamentalsSkill,
   "influxdb-timeseries": () => influxdbTimeseriesSkill,
   "grafana-dashboards": () => grafanaDashboardsSkill,
   "telegram-bot": () => telegramBotSkill,
   "resilience-error-taxonomy": () => resilienceErrorTaxonomySkill,
+  "resilience-failure-hunting": () => resilienceFailureHuntingSkill,
   "silent-failure-detection": () => silentFailureDetectionSkill,
   "systematic-debugging": () => systematicDebuggingSkill,
   "data-quality-observability": () => dataQualityObservabilitySkill,
