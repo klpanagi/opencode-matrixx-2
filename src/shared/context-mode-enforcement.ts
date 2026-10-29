@@ -65,11 +65,16 @@ export function resolveGrepGlobUsable(toolNames: readonly string[], contextMode?
   return !willBlockGrepGlob(cfg)
 }
 
-let _disciplinePathOverride: string | null | undefined 
-let _contextModeForPrompts: ContextModeConfigInput | undefined 
+let _disciplinePathOverride: string | null | undefined
+let _contextModeForPrompts: ContextModeConfigInput | undefined
+let _ctxToolsOverride: boolean | null = null
 
 export function _setDisciplinePathForTesting(p: string | null | undefined): void {
   _disciplinePathOverride = p
+}
+
+export function _setCtxToolsForTesting(present: boolean | null): void {
+  _ctxToolsOverride = present
 }
 
 export function setContextModeForPrompts(contextMode: ContextModeConfigInput | undefined): void {
@@ -83,6 +88,7 @@ export function getContextModeForPrompts(): ContextModeConfigInput | undefined {
 export function _resetContextModeEnforcementForTesting(): void {
   _disciplinePathOverride = undefined
   _contextModeForPrompts = undefined
+  _ctxToolsOverride = null
 }
 
 export function willBlockGrepGlob(contextMode: ContextModeConfigInput | undefined): boolean {
@@ -178,4 +184,19 @@ export function resolveContextModeDisciplineInfo(): { path: string | null; versi
 
 export function hasWorkingSubstitute(): boolean {
   return resolveContextModeDisciplinePath() !== null
+}
+
+/**
+ * SINGLE-OWNER predicate for ctx-tool presence.
+ * Default absent (false) so production without an override is fail-open
+ * (warn-only). Tests simulate presence via `_setCtxToolsForTesting(true)`.
+ */
+export function isCtxToolsAvailable(): boolean {
+  if (_ctxToolsOverride !== null) return _ctxToolsOverride
+  return false
+}
+
+/** Alias kept for prompt-builder readability — same single owner. */
+export function hasCtxToolsForPrompts(): boolean {
+  return isCtxToolsAvailable()
 }

@@ -12,7 +12,7 @@ import {
 } from "../../../src/hooks/context-mode-enforcer/constants"
 import { _resetGuidanceThrottleForTesting } from "../../../src/hooks/context-mode-enforcer/guidance-throttle"
 import { createContextModeEnforcerHook } from "../../../src/hooks/context-mode-enforcer/hook"
-import { _resetContextModeEnforcementForTesting, _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
 
 const WORKING_SUBSTITUTE = "/nonexistent-fake/AGENTS.md"
 
@@ -83,8 +83,9 @@ describe("context-mode-enforcer routing + throttle", () => {
     })
 
     test("throws only when enforce AND a working substitute exists", async () => {
-      //#given: enforce on, substitute present
+      //#given: enforce on, substitute present, ctx tools present
       _setDisciplinePathForTesting(WORKING_SUBSTITUTE)
+      _setCtxToolsForTesting(true)
       const { promise } = runHook({ enforce: true }, "webfetch", { url: "https://example.com" })
 
       //#when: webfetch runs

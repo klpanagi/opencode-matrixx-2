@@ -14,6 +14,7 @@ import {
 } from "../src/agents/dynamic-agent-prompt-builder"
 import {
   _resetContextModeEnforcementForTesting,
+  _setCtxToolsForTesting,
   _setDisciplinePathForTesting,
 } from "../src/shared/context-mode-enforcement"
 
@@ -26,6 +27,7 @@ const FULL_TEXT = "### Context Discipline (ALWAYS)"
  */
 function setSubstitute(present: boolean): void {
   _setDisciplinePathForTesting(present ? "/nonexistent/context-mode/AGENTS.md" : null)
+  _setCtxToolsForTesting(present ? true : null)
   _resetDisciplineCacheForTesting()
 }
 

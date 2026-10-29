@@ -125,7 +125,8 @@ export class HashlineMismatchError extends Error {
     const output: string[] = []
     output.push(
       `${mismatches.length} line${mismatches.length > 1 ? "s have" : " has"} changed since last read. ` +
-        "Use updated {line_number}#{hash_id} references below (>>> marks changed lines)."
+        "Use updated {line_number}#{hash_id} references below (>>> marks changed lines). " +
+        "Re-read the file (or the plan section) to get fresh LINE#ID anchors and retry with them — the edit was NOT applied."
     )
     output.push("")
 

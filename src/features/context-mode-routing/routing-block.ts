@@ -10,6 +10,8 @@
  * upstream tool-namer indirection collapses to direct references here.
  */
 
+import { isCtxToolsAvailable } from "../../shared/context-mode-enforcement"
+
 export const MATRIXX_CONTEXT_MODE_MARKER = "<context_window_protection>"
 
 /**
@@ -18,6 +20,7 @@ export const MATRIXX_CONTEXT_MODE_MARKER = "<context_window_protection>"
  * before inserting, using {@link containsContextModeMarker}.
  */
 export function buildContextModeRoutingBlock(): string {
+  if (!isCtxToolsAvailable()) return buildFallbackRoutingBlock();
   return `${MATRIXX_CONTEXT_MODE_MARKER}
   <priority_instructions>
     Every byte a tool returns enters your conversation memory and costs reasoning capacity for the rest of the session. The context-mode tools let you do the work in a sandbox and surface only the derived answer — the raw bytes stay out. Think-in-Code: program the analysis, do not compute it by reading raw data into your conversation.
@@ -73,6 +76,43 @@ export function buildContextModeRoutingBlock(): string {
 
     After /clear or /compact: knowledge base preserved. Tell user: "context-mode knowledge base preserved. Use \`ctx purge\` to start fresh."
   </ctx_commands>
+</context_window_protection>`
+}
+
+export function buildFallbackRoutingBlock(): string {
+  return `${MATRIXX_CONTEXT_MODE_MARKER}
+  <priority_instructions>
+    Every byte a tool returns enters your conversation memory and costs reasoning capacity for the rest of the session. The sandbox indexer is unavailable in this environment, so work directly with local tools and keep raw bytes out of the conversation by summarizing. Think-in-Code: program the analysis, do not compute it by reading raw data into your conversation.
+  </priority_instructions>
+
+  <tool_selection_hierarchy>
+    0. MEMORY: re-read prior decisions, errors, plans, user prompts before asking the user.
+    1. GATHER: shell running ripgrep for codebase search; batch related scans in one round trip.
+    2. FOLLOW-UP: grep / glob for follow-up hits across files already found.
+    3. PROCESSING: shell pipelines for filter, count, aggregate, parse, transform. Only what you need enters your conversation; the raw bytes stay out.
+  </tool_selection_hierarchy>
+
+  <when_not_to_use>
+    - You intend to PROCESS the output (filter, count, parse, aggregate) using shell pipelines. Shell stays correct when you intend to OBSERVE a short fixed output (git status on a clean tree, whoami, pwd) or when you MUTATE state (git, mkdir, rm, mv, navigation).
+    - You want to analyze, summarize, or extract from a file using shell tools plus read. Read is CORRECT when you intend to Edit the file (Edit needs the exact bytes in your conversation to match against; hashline IDs for Edit on non-plan paths, .matrixx/plans/*.md must use plan_read/plan_update).
+    - Raw grep/glob is the available search path here: use grep / glob for codebase search and rtk for file reads (rtk cat / head / tail). Keep hits small and summarize.
+    - WebFetch is allowed with small pages: prefer direct fetch and summarize; no index is available.
+  </when_not_to_use>
+
+  <file_writing_policy>
+    File writes use the native Write or Edit tool. Shell subprocesses do not persist edits to the host filesystem.
+    Applies to all file types: code, configs, plans, specs, YAML, JSON, markdown.
+  </file_writing_policy>
+
+  <output_constraints>
+    <artifact_policy>
+      Write artifacts (code, configs, PRDs) to files. Return only: file path + 1-line description.
+    </artifact_policy>
+  </output_constraints>
+
+  <session_continuity>
+    Skills, roles, and decisions captured earlier in this session are a memory aid, not a standing order. Treat them as context that may help: the user most recent message always takes precedence. If a captured directive conflicts with what the user now asks, follow the user; a past phrase does not bind you.
+  </session_continuity>
 </context_window_protection>`
 }
 

@@ -78,6 +78,12 @@ import { runtimeDepsCheck } from "../../../src/cli/doctor/checks/runtime"
 import { optionalToolsCheck } from "../../../src/cli/doctor/checks/optional"
 import { mcpPrerequisitesCheck } from "../../../src/cli/doctor/checks/mcp"
 import { ALL_CHECKS, getChecksByCategory, getCategories } from "../../../src/cli/doctor/checks"
+import { getOpenCodeConfigDir } from "../../../src/shared/opencode-config-dir"
+import {
+  _resetContextModeEnforcementForTesting,
+  _setCtxToolsForTesting,
+  _setDisciplinePathForTesting,
+} from "../../../src/shared/context-mode-enforcement"
 
 describe("check registry", () => {
   test("ALL_CHECKS has 13 entries", () => {
@@ -306,3 +312,62 @@ describe("integration checks", () => {
     expect(["pass", "warn"]).toContain(result.status)
   })
 })
+
+describe("contextModeCheck substitute-file + ctx-tools lines", () => {
+  afterEach(() => {
+    _resetContextModeEnforcementForTesting()
+  })
+
+  async function loadRegisteredCheck() {
+    const dir = getOpenCodeConfigDir({ binary: "opencode" })
+    const configPath = join(dir, "opencode.jsonc")
+    mockFiles.add(configPath)
+    mockFileContents.set(configPath, JSON.stringify({ plugin: ["context-mode"] }))
+    return (await import("../../../src/cli/doctor/checks/context-mode")).contextModeCheck
+  }
+
+  test("passes with all four green lines when discipline resolves and ctx tools available", async () => {
+    const contextModeCheck = await loadRegisteredCheck()
+    _setDisciplinePathForTesting("/fake/discipline/AGENTS.md")
+    _setCtxToolsForTesting(true)
+    const result = await contextModeCheck.check()
+    expect(result.status).toBe("pass")
+    expect(result.message).toContain("context-mode plugin registered")
+    expect(result.detail).toContain("Cache:")
+    expect(result.detail).toContain("Substitute-File: /fake/discipline/AGENTS.md")
+    expect(result.detail).toContain("Ctx-Tools: available")
+    expect(result.detail).toContain("Plan tools:")
+  })
+
+  test("warns with ctx-tools fail-open line when ctx tools absent", async () => {
+    const contextModeCheck = await loadRegisteredCheck()
+    _setDisciplinePathForTesting("/fake/discipline/AGENTS.md")
+    _setCtxToolsForTesting(false)
+    const result = await contextModeCheck.check()
+    expect(result.status).toBe("warn")
+    expect(result.detail).toContain("Substitute-File: /fake/discipline/AGENTS.md")
+    expect(result.detail).toContain("Ctx-Tools: unavailable")
+    expect(result.detail).toContain("fail-opens (warn-only)")
+  })
+
+  test("warns with substitute-file missing line when discipline not found", async () => {
+    const contextModeCheck = await loadRegisteredCheck()
+    _setDisciplinePathForTesting(null)
+    _setCtxToolsForTesting(true)
+    const result = await contextModeCheck.check()
+    expect(result.status).toBe("warn")
+    expect(result.detail).toContain("Substitute-File: not found")
+    expect(result.detail).toContain("Ctx-Tools: available")
+  })
+
+  test("warns with both lines when discipline and ctx tools absent", async () => {
+    const contextModeCheck = await loadRegisteredCheck()
+    _setDisciplinePathForTesting(null)
+    _setCtxToolsForTesting(false)
+    const result = await contextModeCheck.check()
+    expect(result.status).toBe("warn")
+    expect(result.detail).toContain("Substitute-File: not found")
+    expect(result.detail).toContain("Ctx-Tools: unavailable")
+  })
+})
+

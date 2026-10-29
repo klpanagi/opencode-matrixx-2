@@ -82,7 +82,12 @@ function sectionFirstBodyLine(entry: PlanSectionIndexEntry): number | null {
   return entry.startLine + 1 < entry.endLine ? entry.startLine + 1 : null
 }
 
-function staleBody(selector: string, expected: string, actual: string): Record<string, unknown> {
+function staleBody(selector: string, expected: string, actual: string, refused: RawSectionEdit): Record<string, unknown> {
+  const retryEdit: Record<string, unknown> = { op: refused.op, section: selector, contentHash: actual }
+  if (refused.lines !== undefined) retryEdit.lines = refused.lines
+  if (typeof refused.pos === "string") retryEdit.pos = refused.pos
+  if (typeof refused.end === "string") retryEdit.end = refused.end
+  if (typeof refused.sectionIndex === "number") retryEdit.sectionIndex = refused.sectionIndex
   return errorBody(
     PLAN_ERROR_CODES.sectionStale,
     `Section "${selector}" changed since it was read — supplied contentHash ${expected}, recomputed ${actual}`,
@@ -91,6 +96,7 @@ function staleBody(selector: string, expected: string, actual: string): Record<s
       expectedHash: expected,
       actualHash: actual,
       hint: "Re-read the section with plan_read and retry with the fresh contentHash — the edit was NOT applied",
+      retryEdit,
     },
   )
 }
@@ -175,7 +181,7 @@ export function resolveSectionScopedEdits(content: string, rawEdits: RawSectionE
     if ("failure" in located) return { kind: "error", body: located.failure }
     const { entry } = located
     if (typeof edit.contentHash === "string" && edit.contentHash !== entry.contentHash) {
-      return { kind: "error", body: staleBody(selector, edit.contentHash, entry.contentHash) }
+      return { kind: "error", body: staleBody(selector, edit.contentHash, entry.contentHash, edit) }
     }
     const converted = convertEdit(edit, entry, lines, selector)
     if (!converted.ok) return { kind: "error", body: converted.failure }

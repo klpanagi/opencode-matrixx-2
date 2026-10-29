@@ -36,25 +36,63 @@ export function availableSectionIds(entries: PlanSectionIndexEntry[]): string[] 
   return [...new Set(entries.map((entry) => entry.id))]
 }
 
+/** Case-insensitive label key: strip every non-alphanumeric so "tldr" matches "tl-dr" / "TL;DR". */
+function labelKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "")
+}
+
+/**
+ * Header-label alias fallback (ADDITIVE forgiveness): when the selector misses an
+ * exact id match, compare its label key against each entry's id AND heading text.
+ * Label wins when exactly one entry resolves; collisions stay fail-closed. Only
+ * runs on an exact miss, so an existing id is never shadowed by an alias.
+ */
+function aliasEntry(entries: PlanSectionIndexEntry[], selector: string): PlanSectionIndexEntry | null {
+  const want = labelKey(selector.trim())
+  if (want.length === 0) return null
+  const matched = entries.filter(
+    (entry) => labelKey(entry.id) === want || labelKey(entry.headingText) === want,
+  )
+  if (matched.length === 1) return matched[0] as PlanSectionIndexEntry
+  return null
+}
+
 /** Resolve a selector to exactly ONE entry, failing closed on duplicates. */
 export function locateSectionEntry(
   entries: PlanSectionIndexEntry[],
   selector: string,
   sectionIndex: number | undefined,
 ): { entry: PlanSectionIndexEntry } | { failure: Record<string, unknown> } {
+  if (selector.trim().toLowerCase() === "preamble") {
+    return {
+      failure: errorBody(
+        PLAN_ERROR_CODES.validationError,
+        'The preamble (bytes before the first ##/### heading) is not a section — address a section id from plan_read(section=...) output instead (e.g. "tl-dr", "todos"). Nothing was applied.',
+        { selector, argument: "section", hint: 'Run plan_read without section (or with offset/limit) to see the preamble bytes, then write to a real section id such as "tl-dr".' },
+      ),
+    }
+  }
   const resolution = resolveSectionSelector(selector)
   if (resolution.kind === "ambiguous") {
     return { failure: errorBody(PLAN_ERROR_CODES.sectionAmbiguous, resolution.message, { selector }) }
   }
   const id = resolution.kind === "resolved" ? resolution.entry.id : resolution.id
-  const occurrences = entries.filter((entry) => entry.id === id)
+  let occurrences = entries.filter((entry) => entry.id === id)
+  if (occurrences.length === 0) {
+    const aliased = aliasEntry(entries, selector)
+    if (aliased) occurrences = entries.filter((entry) => entry.id === aliased.id)
+  }
   if (occurrences.length === 0) {
     const ids = availableSectionIds(entries)
     return {
       failure: errorBody(
         PLAN_ERROR_CODES.sectionNotFound,
         `Section "${selector}" resolves to no heading in this plan. Available sections: ${ids.join(", ")}`,
-        { selector, availableSections: ids },
+        {
+          selector,
+          availableSections: ids,
+          hint: "Re-derive the section id from plan_read(section=...) output — heading labels resolve case-insensitively after this fix",
+        },
       ),
     }
   }
