@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import { handleArchive } from "./archive-handler"
 import { HANDOFF_DESCRIPTION } from "./constants"
 import { type HandoffCreateArgs, handleCreate } from "./create-handler"
@@ -41,6 +42,7 @@ type HandoffToolArgs = {
  * this dispatcher stays small and each handler can evolve independently.
  */
 export function createHandoffTools(ctx: PluginInput): Record<string, ToolDefinition> {
+  const stateRoot = stateRootFromPluginContext(ctx)
   const handoff: ToolDefinition = tool({
     description: HANDOFF_DESCRIPTION,
     args: {
@@ -122,14 +124,14 @@ export function createHandoffTools(ctx: PluginInput): Record<string, ToolDefinit
               explicit_constraints: args.explicit_constraints,
               context_for_continuation: args.context_for_continuation,
             }
-            return await handleCreate(createArgs, ctx, context)
+            return await handleCreate(createArgs, { directory: ctx.directory, stateDirectory: stateRoot }, context)
           }
           case "read":
-            return handleRead(ctx.directory)
+            return handleRead(stateRoot)
           case "list":
-            return handleList(ctx.directory)
+            return handleList(stateRoot)
           case "archive":
-            return handleArchive(ctx.directory)
+            return handleArchive(stateRoot)
           default: {
             // Exhaustiveness check: the zod enum should make this unreachable.
             const _exhaustive: never = args.action

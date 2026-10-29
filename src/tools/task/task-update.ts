@@ -11,6 +11,7 @@ import {
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import { log } from "../../shared/logger";
+import { stateRootFromToolContext } from "../../shared/state-root"
 import { TASK_ID_PATTERN } from "./constants";
 import type { TaskObject } from "./types";
 import { TaskObjectSchema, TaskUpdateInputSchema } from "./types";
@@ -82,10 +83,7 @@ async function handleUpdate(
       return JSON.stringify({ error: "invalid_task_id" });
     }
 
-    const directory =
-      ((context as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-      ((ctx as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-      process.cwd()
+    const directory = stateRootFromToolContext(context, ctx)
     const taskDir = getTaskDir(config, directory)
     const lock = await acquireLockWithRetry(taskDir)
 

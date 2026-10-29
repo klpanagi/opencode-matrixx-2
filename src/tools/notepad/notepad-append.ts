@@ -33,10 +33,7 @@ export function createNotepadAppendTool(ctx?: PluginContext): ToolDefinition {
             hint: "Split the content into smaller appends.",
           })
         }
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const validation = validateNotepadFilePath(fileName, planName ?? null, directory)
         if ("error" in validation) {
           return JSON.stringify({ error: validation.error, message: validation.message })

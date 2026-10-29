@@ -19,10 +19,7 @@ export function createNotepadCreateTool(ctx?: PluginContext): ToolDefinition {
       try {
         const planName = args.planName as string | undefined
         const fileName = args.fileName as string
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const validation = validateNotepadFilePath(fileName, planName, directory)
         if ("error" in validation) {
           return JSON.stringify({ error: validation.error, message: validation.message })

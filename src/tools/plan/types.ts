@@ -1,12 +1,11 @@
 import { basename, isAbsolute, join, relative, resolve } from "node:path"
 import { isAllowedFile } from "../../hooks/oracle-md-only/path-policy"
+import { stateRootFromToolContext } from "../../shared/state-root"
 import type { RawHashlineEdit } from "../hashline-edit/normalize-edits"
 import { PLAN_FILENAME_KEBAB_REGEX, PLANS_DIR } from "./constants"
 
-export function resolveDirectory(contextDirectory: unknown, ctxDirectory: unknown): string {
-  if (typeof contextDirectory === "string" && contextDirectory.trim() !== "") return contextDirectory
-  if (typeof ctxDirectory === "string" && ctxDirectory.trim() !== "") return ctxDirectory
-  return process.cwd()
+export function resolveDirectory(context: unknown, ctx: unknown): string {
+  return stateRootFromToolContext(context, ctx)
 }
 
 export function validatePlanFilePath(filePath: string, directory: string): { resolved: string } | { error: string } {

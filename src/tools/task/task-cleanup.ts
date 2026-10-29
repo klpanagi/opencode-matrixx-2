@@ -6,6 +6,7 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir } from "../../features/task-storage/storage"
 import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enforcer/staleness"
 import { log } from "../../shared/logger"
+import { stateRootFromToolContext } from "../../shared/state-root"
 
 const TERMINAL_STATUSES = new Set(["completed", "deleted"])
 const ACTIVE_STATUSES = new Set(["pending", "in_progress"])
@@ -81,10 +82,7 @@ Returns counts: {deleted, remaining, deletedIds}`,
           olderThanMs = parsed
         }
 
-        const directory =
-          ((context as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-          ((ctx as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-          process.cwd()
+        const directory = stateRootFromToolContext(context, ctx)
         const taskDir = getTaskDir(config, directory)
 
         if (!existsSync(taskDir)) {

@@ -9,6 +9,7 @@ import {
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import { log } from "../../shared/logger";
+import { stateRootFromToolContext } from "../../shared/state-root"
 import { createOneTask } from "./create-one";
 import type {
   CreatedTaskSummary,
@@ -142,10 +143,7 @@ async function handleCreate(
       return JSON.stringify({ error: "validation_error", message: parsed.message })
     }
 
-    const directory =
-      ((context as Record<string, unknown>)?.directory as string | undefined) ??
-      ((ctx as Record<string, unknown>)?.directory as string | undefined) ??
-      process.cwd()
+    const directory = stateRootFromToolContext(context, ctx)
 
     try {
       migrateLegacyTasksIfNeeded(config, directory)

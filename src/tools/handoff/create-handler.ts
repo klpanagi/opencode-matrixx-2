@@ -37,12 +37,13 @@ export type HandoffCreateArgs = {
  */
 export async function handleCreate(
   args: HandoffCreateArgs,
-  ctx: { directory: string },
+  ctx: { directory: string; stateDirectory?: string },
   context: ToolContext
 ): Promise<string> {
   //#given - session id from the OpenCode runtime, or the documented fallback
   const sessionID = context.sessionID || "unknown"
   const timestamp = new Date().toISOString()
+  const handoffDir = ctx.stateDirectory ?? ctx.directory
   const gitHead = await getGitHead(ctx.directory)
   const git_head = gitHead ?? { sha: UNKNOWN_GIT_SHA }
 
@@ -80,10 +81,10 @@ export async function handleCreate(
   const content = `---\n${yamlStr}---\n\n${body}\n`
 
   //#then - write through the storage helper; bail with an error on I/O failure
-  const ok = writeHandoffFile(ctx.directory, content)
+  const ok = writeHandoffFile(handoffDir, content)
   if (!ok) {
-    return `Error: failed to write handoff file at ${getHandoffFilePath(ctx.directory)}`
+    return `Error: failed to write handoff file at ${getHandoffFilePath(handoffDir)}`
   }
 
-  return `Handoff written to ${getHandoffFilePath(ctx.directory)} (session: ${sessionID}, topics: ${args.topics.join(", ")})`
+  return `Handoff written to ${getHandoffFilePath(handoffDir)} (session: ${sessionID}, topics: ${args.topics.join(", ")})`
 }

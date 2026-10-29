@@ -4,6 +4,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import { stateRootFromToolContext } from "../../shared/state-root"
 import type { TaskObject, TaskStatus } from "./types"
 import { TaskObjectSchema } from "./types"
 
@@ -32,10 +33,7 @@ Optional \`parentID\` filter: when provided, returns only tasks whose parentID m
     },
     execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
       const parentID = args.parentID as string | undefined
-      const directory =
-        ((context as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-        ((ctx as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-        process.cwd()
+      const directory = stateRootFromToolContext(context, ctx)
       const taskDir = getTaskDir(config, directory)
 
       if (!existsSync(taskDir)) {
