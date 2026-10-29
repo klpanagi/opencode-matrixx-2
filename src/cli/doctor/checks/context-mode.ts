@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { resolveContextModeDisciplineInfo } from "../../../shared/context-mode-enforcement"
+import { isCtxToolsAvailable, resolveContextModeDisciplineInfo } from "../../../shared/context-mode-enforcement"
 import { getOmoOpenCodeCacheDir } from "../../../shared/data-path"
 import { parseJsoncSafe } from "../../../shared/jsonc-parser"
 import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
@@ -151,12 +151,18 @@ export const contextModeCheck: DoctorCheck = {
       }
     }
     const discipline = resolveContextModeDisciplineInfo()
-    const disciplineLine = discipline.path ? `Discipline: ${discipline.path}${discipline.version ? ` (v${discipline.version})` : ""}` : "Discipline: not found — fallback table in use"
+    const substituteLine = discipline.path
+      ? `Substitute-File: ${discipline.path}${discipline.version ? ` (v${discipline.version})` : ""}`
+      : "Substitute-File: not found — fallback table in use; enforcer treats grep/glob as unblocked"
+    const ctxTools = isCtxToolsAvailable()
+    const ctxToolsLine = ctxTools
+      ? "Ctx-Tools: available"
+      : "Ctx-Tools: unavailable — enforcer fail-opens (warn-only)"
     return {
       name: "context-mode-integration",
-      status: "pass",
+      status: !discipline.path || !ctxTools ? "warn" : "pass",
       message: `context-mode plugin registered${hasCache ? ", cache present" : " (cache not yet created)"}${discipline.version ? `, discipline v${discipline.version}` : ""}`,
-      detail: `Cache: ${cacheDir}\n${disciplineLine}\nPlan tools: plan_create/read/update/list/delete (unconditional)`,
+      detail: `Cache: ${cacheDir}\n${substituteLine}\n${ctxToolsLine}\nPlan tools: plan_create/read/update/list/delete (unconditional)`,
     }
   },
 }

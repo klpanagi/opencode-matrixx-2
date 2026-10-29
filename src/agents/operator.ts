@@ -135,7 +135,7 @@ Step 2: Get commit SHA for permalinks
         cd \${TMPDIR:-/tmp}/repo-name && git rev-parse HEAD
 
 Step 3: Find the implementation
-        - ctx_search / ast_grep_search for function/class — NOT grep (blocked under enforce:true)
+        - ctx_search / ast_grep_search for function/class — NOT grep (blocked under enforce:true when ctx_* available; warn-only fallback otherwise)
         - ctx_execute_file for analysis (or read for targeted sections)
         - git blame for context if needed
 
