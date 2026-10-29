@@ -55,6 +55,7 @@ import { createAvailableCategories } from "./available-categories"
 import { createChatMessageHandler } from "./chat-message"
 import { createChatParamsHandler } from "./chat-params"
 import { createEventHandler } from "./event"
+import { createEventPump } from "./event-pump"
 import type { ContinuationHooks } from "./hooks/create-continuation-hooks"
 import { createContinuationHooks } from "./hooks/create-continuation-hooks"
 import type { SessionHooks } from "./hooks/create-session-hooks"
@@ -548,20 +549,14 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
 function startDomainEventPump(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }, controller: AbortController): void {
   const handler = input.bridge.event
   if (!handler) return
-  const stream = input.ctx.event.subscribe({ signal: controller.signal })
-  void (async () => {
-    try {
-      for await (const event of stream) {
-        await guard(`event:${event.type}`, () => handler(toV1Event(event)))
-      }
-    } catch (error) {
-      if (!controller.signal.aborted) {
-        log("[matrixx] event stream ended", {
-          error: error instanceof Error ? error.message : String(error),
-        })
-      }
-    }
-  })()
+  createEventPump({
+    subscribe: (o) => input.ctx.event.subscribe({ signal: o.signal }),
+    handler,
+    signal: controller.signal,
+    guard,
+    log,
+    toV1Event,
+  }).start()
 }
 
 async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }): Promise<V2Registration[]> {
