@@ -234,7 +234,8 @@ task(subagent_type="trinity", run_in_background=true, load_skills=[], descriptio
 // Reference Grep (external)
 task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
 task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
-// Continue working immediately. Collect with background_output when needed.
+// Continue working immediately ONLY for independent work. If a downstream agent or your next step CONSUMES background results, you MUST wait first: background_wait_all + background_output per task_id BEFORE firing the consumer.
+// Dependency rule: search-tasks (trinity plus operator) are producers; consultant-tasks (seraph, oracle, smith) are consumers. Producers must complete via background_wait_all plus background_output BEFORE consumers fire. Never fire a consumer on UNVERIFIED premises.
 
 // WRONG: Sequential or blocking
 result = task(..., run_in_background=false)  // Never wait synchronously for explore/librarian
@@ -242,7 +243,7 @@ result = task(..., run_in_background=false)  // Never wait synchronously for exp
 
 ### Background Result Collection:
 1. Launch parallel agents → receive task_ids
-2. Continue immediate work
+2. Continue immediate work ONLY on independent tasks; if the next step consumes background results, wait first (background_wait_all + background_output)
 3. When results needed: \`background_output(task_id="...")\`
 4. BEFORE final answer:
    a. \`background_wait_all(timeout=30000)\` — wait for all background tasks to finish
