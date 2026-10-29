@@ -2,7 +2,7 @@ import type { Hooks } from "@opencode-ai/plugin"
 
 import type { MatrixxConfig } from "../../config"
 import { log } from "../../shared"
-import { hasWorkingSubstitute, resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
+import { hasWorkingSubstitute, isCtxToolsAvailable, resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
 import { isShellTool } from "../../shared/shell-tool-name"
 import {
   BASH_ROUTED_MESSAGE,
@@ -99,9 +99,14 @@ export function createContextModeEnforcerHook(pluginConfig: MatrixxConfig): Hook
 
       if (isWebfetch) {
         if (!isBlocked) return
-        if (enforce && hasWorkingSubstitute()) {
+        if (enforce && hasWorkingSubstitute() && isCtxToolsAvailable()) {
           log(`[${HOOK_NAME}] BLOCKED webfetch`, { sessionID: input.sessionID })
           throw new Error(WEBFETCH_BLOCK_MESSAGE)
+        }
+        if (enforce && hasWorkingSubstitute() && !isCtxToolsAvailable()) {
+          log(`[${HOOK_NAME}] downgraded webfetch block to warn-only (ctx tools absent)`, {
+            sessionID: input.sessionID,
+          })
         }
         if (!shouldShowGuidance(input.sessionID, GUIDANCE_WEBFETCH)) return
         output.message = WEBFETCH_BLOCK_MESSAGE
@@ -119,9 +124,14 @@ export function createContextModeEnforcerHook(pluginConfig: MatrixxConfig): Hook
 
       if (isGrepGlob) {
         if (!isBlocked) return
-        if (enforce && hasWorkingSubstitute()) {
+        if (enforce && hasWorkingSubstitute() && isCtxToolsAvailable()) {
           log(`[${HOOK_NAME}] BLOCKED ${tool}`, { sessionID: input.sessionID })
           throw new Error(BLOCK_MESSAGE_GREP_GLOB)
+        }
+        if (enforce && hasWorkingSubstitute() && !isCtxToolsAvailable()) {
+          log(`[${HOOK_NAME}] downgraded ${tool} block to warn-only (ctx tools absent)`, {
+            sessionID: input.sessionID,
+          })
         }
         if (!shouldShowGuidance(input.sessionID, GUIDANCE_GREP_GLOB)) return
         output.message = WARN_MESSAGE_READ

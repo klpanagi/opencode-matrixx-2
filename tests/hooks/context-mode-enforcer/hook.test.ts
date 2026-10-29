@@ -1,13 +1,13 @@
 /// <reference types="bun-types" />
 
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import type { MatrixxConfig } from "../../../src/config"
 import { BLOCK_MESSAGE_GREP_GLOB } from "../../../src/hooks/context-mode-enforcer/constants"
 import { createContextModeEnforcerHook } from "../../../src/hooks/context-mode-enforcer/hook"
-import { _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
 
 const FAKE_PATH = "/nonexistent-fake/AGENTS.md"
 
@@ -31,6 +31,9 @@ function runHook(contextMode: unknown, tool: string, args: Record<string, unknow
 }
 
 describe("context-mode-enforcer hook", () => {
+  afterEach(() => {
+    _resetContextModeEnforcementForTesting()
+  })
   test("block message names the working substitute", () => {
     //#given: the block message
     //#when: inspected
@@ -42,8 +45,9 @@ describe("context-mode-enforcer hook", () => {
   })
 
   test("blocks grep when enforced with a working substitute", async () => {
-    //#given: enforce on, substitute taught
+    //#given: enforce on, substitute taught, ctx tools present
     _setDisciplinePathForTesting(FAKE_PATH)
+    _setCtxToolsForTesting(true)
     const { promise } = runHook({ enforce: true }, "grep")
     //#when: grep runs
     //#then: throws naming the substitute
