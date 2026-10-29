@@ -124,7 +124,8 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // notepad instructions replaced with notepad_create/list/read/append tool
     // calls. Niobe remains the plan EXECUTOR — no reviewer role was added, so
     // the locked decision still holds.
-    const FROZEN_MD5 = "fdef0a46b7097166f48d6748ab022885"
+    // NOTE (subagent-misfire fix): hash advanced from fdef0a46b7097166f48d6748ab022885. The only delta is the delegation wording fix: "category OR agent" → "category OR subagent_type" + NEVER-native-subagent sentence; Niobe remains the plan EXECUTOR — no reviewer role was added, so the locked decision still holds.
+    const FROZEN_MD5 = "fe3dc21a0f7f8160d2af3ab533e962ff"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/niobe/default.ts")
