@@ -7,7 +7,7 @@ import type { ToolPermission } from "../../features/hook-message-injector"
 import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"
-import { normalizeSDKResponse } from "../../shared"
+import { normalizeSDKResponse, stateRootFromPluginContext } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAwaitingUser } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
@@ -109,7 +109,9 @@ export async function handleSessionIdle(args: {
   let total = 0
   let taskDir = ""
   try {
-    taskDir = getTaskDir(config, ctx.directory)
+    const stateRoot = stateRootFromPluginContext(ctx)
+    taskDir = getTaskDir(config, stateRoot)
+    log(`[${HOOK_NAME}] state root resolved`, { sessionID, stateRoot, sessionDirectory: ctx.directory, taskDir })
     if (!existsSync(taskDir)) {
       log(`[${HOOK_NAME}] No task dir`, { sessionID, taskDir })
       return

@@ -10,6 +10,7 @@ import {
 import { resetMessageCursor } from "../shared"
 import { log } from "../shared/logger"
 import { lspManager } from "../tools"
+import { DEDUPLICATE_WINDOW_MS } from "./event-pump"
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
 import { normalizeSessionStatusToIdle } from "./session-status-normalizer"
 import type { DomainHooks, DomainManagers } from "./setup-domains"
@@ -56,21 +57,20 @@ export function createEventHandler(args: {
 
   const recentSyntheticIdles = new Map<string, number>()
   const recentRealIdles = new Map<string, number>()
-  const DEDUP_WINDOW_MS = 500
 
   return async (input): Promise<void> => {
     pruneRecentSyntheticIdles({
       recentSyntheticIdles,
       recentRealIdles,
       now: Date.now(),
-      dedupWindowMs: DEDUP_WINDOW_MS,
+      dedupWindowMs: DEDUPLICATE_WINDOW_MS,
     })
 
     if (input.event.type === "session.idle") {
       const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined
       if (sessionID) {
         const emittedAt = recentSyntheticIdles.get(sessionID)
-        if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+        if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
           recentSyntheticIdles.delete(sessionID)
           return
         }
@@ -84,7 +84,7 @@ export function createEventHandler(args: {
     if (syntheticIdle) {
       const sessionID = (syntheticIdle.event.properties as Record<string, unknown>)?.sessionID as string
       const emittedAt = recentRealIdles.get(sessionID)
-      if (emittedAt && Date.now() - emittedAt < DEDUP_WINDOW_MS) {
+      if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
         recentRealIdles.delete(sessionID)
         return
       }
