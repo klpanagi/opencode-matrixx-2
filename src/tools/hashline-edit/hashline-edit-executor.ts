@@ -160,7 +160,7 @@ export async function executeHashlineEditTool(args: HashlineEditArgs, context: T
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (error instanceof HashlineMismatchError) {
-      return `Error: hash mismatch - ${message}\nTip: reuse LINE#ID entries from the latest read/edit output, or batch related edits in one call.`
+      return `Error: hash mismatch - ${message}\nTip: reuse LINE#ID entries from the latest read/edit output, or batch related edits in one call. Re-read for fresh anchors and retry — nothing was applied.`
     }
     return `Error: ${message}`
   }

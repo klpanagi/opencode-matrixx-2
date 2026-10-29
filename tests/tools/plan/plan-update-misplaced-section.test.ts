@@ -13,7 +13,7 @@ import {
 } from "./plan-update-section-fixtures"
 
 const PLAN_REL = ".matrixx/plans/section-plan.md"
-const MISTAKEN_FIELDS = ["section", "sectionIndex", "contentHash"] as const
+const MISTAKEN_FIELDS = ["sectionIndex", "contentHash"] as const
 
 describe("plan_update rejects section/contentHash at the top level", () => {
   let testDir: string
@@ -28,6 +28,44 @@ describe("plan_update rejects section/contentHash at the top level", () => {
 
   afterEach(() => {
     removePlanDir(testDir)
+  })
+
+  test("a top-level section alone folds into section-less edits (T5 forgiveness)", async () => {
+    //#given a plan on disk and a resolving top-level section with section-less edits
+    const path = planFile(testDir, "section-plan.md")
+    const beforeMd5 = md5OfFile(path)
+
+    //#when the caller puts section at the top level only
+    const res = JSON.parse(
+      await updateTool.execute(
+        { filePath: PLAN_REL, section: "todos", edits: [{ op: "append", lines: ["- [ ] folded"] }] },
+        ctx,
+      ),
+    )
+
+    //#then the write succeeds via folding (ungated but section-scoped, not silent)
+    expect(res.error).toBeUndefined()
+    expect(res.success).toBe(true)
+    expect(md5OfFile(path)).not.toBe(beforeMd5)
+    expect(readPlan(testDir, "section-plan.md")).toContain("folded")
+  })
+
+  test("a non-resolving top-level section stays validation_error (distinct from section_not_found)", async () => {
+    //#given a top-level section naming no heading
+    const path = planFile(testDir, "section-plan.md")
+    const beforeMd5 = md5OfFile(path)
+
+    //#when submitted with section-less edits
+    const res = JSON.parse(
+      await updateTool.execute(
+        { filePath: PLAN_REL, section: "deleted-section", edits: [{ op: "append", lines: ["- [ ] nope"] }] },
+        ctx,
+      ),
+    )
+
+    //#then fail-closed validation_error (not section_not_found), nothing written
+    expect(res.error).toBe("validation_error")
+    expect(md5OfFile(planFile(testDir, "section-plan.md"))).toBe(beforeMd5)
   })
 
   for (const field of MISTAKEN_FIELDS) {

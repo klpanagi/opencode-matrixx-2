@@ -19,6 +19,8 @@ import { MAX_PLAN_FILE_BYTES } from "./constants"
 import { PLAN_ERROR_CODES, statusTransitionRejectedPayload } from "./error-codes"
 import { enforcePlanCap, type PostApplyHook } from "./plan-write-guard"
 import { type RawSectionEdit, resolveSectionScopedEdits, sectionWritePayload } from "./section-edit"
+import { buildSectionIndex } from "./section-index"
+import { locateSectionEntry } from "./section-locate"
 import { adjudicate, extractStatusEdit } from "./status-transition"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
@@ -81,7 +83,25 @@ export function createPlanUpdateTool(ctx?: PluginContext, postApply?: PostApplyH
         // but UNGATED write — the contentHash gate never consulted — so the
         // misplacement is refused here, before any file is read or edited.
         const misplaced = MISPLACED_SECTION_FIELDS.filter((f) => (args as Record<string, unknown>)[f] !== undefined)
-        if (misplaced.length > 0) {
+        const topSection = (args as Record<string, unknown>).section
+        const topSectionIndex = (args as Record<string, unknown>).sectionIndex as number | undefined
+        const topContentHash = (args as Record<string, unknown>).contentHash
+        // ADDITIVE forgiveness: a top-level `section` (+ optional contentHash/
+        // sectionIndex) folds into section-less edits when it resolves. Anything
+        // else stays a fail-closed validation_error before any file is read.
+        // Folding covers a top-level `section` ALONE (no top-level contentHash/
+        // sectionIndex): it names the target span without a gate, so folding it
+        // into each section-less edit is unambiguous. A top-level contentHash or
+        // sectionIndex stays fail-closed validation_error — the gate/occurrence
+        // must live on the edit it guards (see the misplaced-section suite).
+        const foldCandidate =
+          misplaced.length > 0 &&
+          typeof topSection === "string" &&
+          topSection.trim() !== "" &&
+          topContentHash === undefined &&
+          topSectionIndex === undefined &&
+          (edits as Array<Record<string, unknown>>).every((e) => (e as Record<string, unknown>).section === undefined)
+        if (misplaced.length > 0 && !foldCandidate) {
           return JSON.stringify({
             error: PLAN_ERROR_CODES.validationError,
             message: `${misplaced.join(" / ")} must be supplied INSIDE an edit object in edits[], not as top-level arguments. Example: edits: [{ op: "replace", pos: "10#AB", lines: [...], section: "todos", contentHash: "<from plan_read(section)>" }]`,
@@ -114,9 +134,28 @@ export function createPlanUpdateTool(ctx?: PluginContext, postApply?: PostApplyH
           return JSON.stringify({ error: "file_not_found", message: `File not found: ${resolved}` })
         }
         const originalContent = readFileSync(resolved, "utf-8")
+        // Top-level folding decision happens AFTER the file is read so a
+        // non-resolving top-level section keeps the validation_error shape
+        // (distinct from section_not_found) instead of folding into a miss.
+        let activeEdits = edits as RawSectionEdit[]
+        if (foldCandidate) {
+          const probe = locateSectionEntry(buildSectionIndex(originalContent), (topSection as string).trim(), topSectionIndex)
+          if ("failure" in probe) {
+            return JSON.stringify({
+              error: PLAN_ERROR_CODES.validationError,
+              message: `${misplaced.join(" / ")} must be supplied INSIDE an edit object in edits[], not as top-level arguments. Example: edits: [{ op: "replace", pos: "10#AB", lines: [...], section: "todos", contentHash: "<from plan_read(section)>" }]`,
+            })
+          }
+          activeEdits = (edits as RawSectionEdit[]).map((e) => ({
+            ...e,
+            section: (topSection as string).trim(),
+            ...(topContentHash !== undefined && e.contentHash === undefined ? { contentHash: topContentHash as string } : {}),
+            ...(topSectionIndex !== undefined && e.sectionIndex === undefined ? { sectionIndex: topSectionIndex } : {}),
+          }))
+        }
         // Section-scoped writes resolve their span from the file as it is RIGHT
         // NOW — a fresh parse per call, never a persisted line number.
-        const scoped = resolveSectionScopedEdits(originalContent, edits as RawSectionEdit[])
+        const scoped = resolveSectionScopedEdits(originalContent, activeEdits)
         if (scoped.kind === "error") return JSON.stringify(scoped.body)
         const effectiveEdits = scoped.edits
         // Pre-edit status-transition gate: simulate the write in memory, then

@@ -74,23 +74,56 @@ function availableIds(entries: PlanSectionIndexEntry[]): string {
  * the corpus — and picking the first match silently would make the read
  * non-deterministic.
  */
+/** Case-insensitive label key: strip every non-alphanumeric so "tldr" matches "tl-dr" / "TL;DR". */
+function labelKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "")
+}
+
+/**
+ * Header-label alias fallback (ADDITIVE forgiveness, read-path mirror of
+ * section-locate.ts): on an exact id miss, compare against each entry's id AND
+ * heading text. Label wins when exactly one entry resolves.
+ */
+function aliasEntry(entries: PlanSectionIndexEntry[], selector: string): PlanSectionIndexEntry | null {
+  const want = labelKey(selector.trim())
+  if (want.length === 0) return null
+  const matched = entries.filter(
+    (entry) => labelKey(entry.id) === want || labelKey(entry.headingText) === want,
+  )
+  if (matched.length === 1) return matched[0] as PlanSectionIndexEntry
+  return null
+}
+
 function locateEntry(
   entries: PlanSectionIndexEntry[],
   selector: string,
   sectionIndex: number | undefined,
 ): { entry: PlanSectionIndexEntry } | { failure: Record<string, unknown> } {
+  if (selector.trim().toLowerCase() === "preamble") {
+    return {
+      failure: errorBody(
+        PLAN_ERROR_CODES.validationError,
+        'The preamble (bytes before the first ##/### heading) is not a section — address a section id from plan_read(section=...) output instead (e.g. "tl-dr", "todos"). Nothing was applied.',
+        { selector, argument: "section", hint: 'Run plan_read without section (or with offset/limit) to see the preamble bytes, then read a real section id such as "tl-dr".' },
+      ),
+    }
+  }
   const resolution = resolveSectionSelector(selector)
   if (resolution.kind === "ambiguous") {
     return { failure: errorBody(PLAN_ERROR_CODES.sectionAmbiguous, resolution.message, { selector }) }
   }
   const id = resolution.kind === "resolved" ? resolution.entry.id : resolution.id
-  const occurrences = entries.filter((entry) => entry.id === id)
+  let occurrences = entries.filter((entry) => entry.id === id)
+  if (occurrences.length === 0) {
+    const aliased = aliasEntry(entries, selector)
+    if (aliased) occurrences = entries.filter((entry) => entry.id === aliased.id)
+  }
   if (occurrences.length === 0) {
     return {
       failure: errorBody(
         PLAN_ERROR_CODES.sectionNotFound,
         `Section "${selector}" resolves to no heading in this plan. Available sections: ${availableIds(entries)}`,
-        { selector },
+        { selector, hint: "Re-derive the section id from plan_read(section=...) output — heading labels resolve case-insensitively after this fix" },
       ),
     }
   }
