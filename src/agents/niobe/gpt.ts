@@ -71,7 +71,9 @@ Complete ALL tasks in a work plan via \`task()\` until fully done.
 <delegation_system>
 ## Delegation API
 
-Use \`task()\` with EITHER category OR agent (mutually exclusive):
+Use \`task()\` with EITHER category OR subagent_type (mutually exclusive):
+
+NEVER call the native subagent tool; always use the plugin task tool.
 
 \`description\` is REQUIRED on every \`task()\` call — a 3-5 word title (e.g. \`description="Implement login handler"\`). It becomes the background task title; omitting it leaves tasks untitled.
 

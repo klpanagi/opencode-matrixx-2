@@ -11,6 +11,7 @@
 
 import type { CategoryConfig } from "../../config/schema"
 import { mergeCategories } from "../../shared/merge-categories"
+import { denyActions } from "../../shared/permission-compat"
 import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { buildCategorySkillsDelegationGuide } from "../dynamic-agent-prompt-builder"
@@ -91,7 +92,7 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
 }
 
 export function createNiobeAgent(ctx: OrchestratorContext): AgentConfig {
-  // No outgoing tool denies: Niobe orchestrates via task(). Factory is single
+  // Sole deny is native subagent: Niobe orchestrates via task(). Factory is single
   // source of truth for outgoing-task allow (see #111 option b). Handler
   // (tool-config-handler.ts) is fill-only and must not override; incoming
   // task(subagent_type="niobe") remains rejected at subagent-resolver.ts:57
@@ -103,6 +104,7 @@ export function createNiobeAgent(ctx: OrchestratorContext): AgentConfig {
     mode: MODE,
     ...(ctx.model ? { model: parseModelRef(ctx.model) } : {}),
     request: { body: { temperature: 0.1 } },
+    permissions: denyActions(["subagent"]),
     system: buildDynamicOrchestratorPrompt(ctx),
     color: "#10B981",
   }
