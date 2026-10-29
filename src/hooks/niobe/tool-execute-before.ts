@@ -64,8 +64,20 @@ export function createToolExecuteBeforeHandler(input: {
       return
     }
 
-    // Check task - inject single-task directive
+    // Check task - inject single-task directive; hard-block native subagent from orchestrator
     if (isTaskTool(toolInput.tool)) {
+      if (toolInput.tool === "subagent") {
+        const promptForMessage = (toolOutput.args.prompt as string | undefined) ?? ""
+        log(`[${HOOK_NAME}] BLOCKED orchestrator native subagent call`, {
+          sessionID: toolInput.sessionID,
+          tool: toolInput.tool,
+        })
+        throw new Error(
+          "Blocked: orchestrator must delegate via the plugin task tool. " +
+            "Use task with category/subagent_type instead of native subagent for: " +
+            promptForMessage.slice(0, 120),
+        )
+      }
       const prompt = toolOutput.args.prompt as string | undefined
       if (prompt && !prompt.includes(SYSTEM_DIRECTIVE_PREFIX)) {
         toolOutput.args.prompt = `<system-reminder>${SINGLE_TASK_DIRECTIVE}</system-reminder>\n${prompt}`
