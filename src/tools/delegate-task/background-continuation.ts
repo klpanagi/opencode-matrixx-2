@@ -1,4 +1,5 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { jsonSafeMetadata } from "../../shared"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
@@ -26,7 +27,7 @@ export async function executeBackgroundContinuation(
       parentTools: getSessionTools(parentContext.sessionID),
     })
 
-    const bgContMeta = {
+    const bgContMeta = jsonSafeMetadata({
       title: buildContinuationTitle(args.description),
       metadata: {
         prompt: args.prompt,
@@ -39,7 +40,7 @@ export async function executeBackgroundContinuation(
         sessionId: task.sessionID,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(bgContMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, bgContMeta)

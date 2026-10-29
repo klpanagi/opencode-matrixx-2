@@ -1,5 +1,5 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration, normalizeSDKResponse } from "../../shared"
+import { formatDuration, jsonSafeMetadata, normalizeSDKResponse } from "../../shared"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext, SessionMessage } from "./executor-types"
@@ -54,7 +54,7 @@ export async function executeUnstableAgentTask(
       })
     }
 
-    const bgTaskMeta = {
+    const bgTaskMeta = jsonSafeMetadata({
       title: args.description,
       metadata: {
         prompt: args.prompt,
@@ -66,7 +66,7 @@ export async function executeUnstableAgentTask(
         sessionId: sessionID,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(bgTaskMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, bgTaskMeta)

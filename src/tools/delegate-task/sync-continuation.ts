@@ -1,7 +1,7 @@
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration, getMessageDir, normalizeSDKResponse } from "../../shared"
+import { formatDuration, getMessageDir, jsonSafeMetadata, normalizeSDKResponse } from "../../shared"
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
 import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { setSessionTools } from "../../shared/session-state"
@@ -62,7 +62,7 @@ export async function executeSyncContinuation(
       resumeVariant = resumeMessage?.model?.variant
     }
 
-    const syncContMeta = {
+    const syncContMeta = jsonSafeMetadata({
       title: buildContinuationTitle(args.description),
       metadata: {
         prompt: args.prompt,
@@ -76,7 +76,7 @@ export async function executeSyncContinuation(
         sync: true,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(syncContMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, syncContMeta)

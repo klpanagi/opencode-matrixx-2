@@ -12,7 +12,7 @@
 
 import type { ToolDefinition } from "@opencode-ai/plugin"
 import { z } from "zod"
-import { log } from "../shared"
+import { jsonSafeMetadata, log } from "../shared"
 import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "./opencode-types"
 import type { ToolsRecord } from "./types"
 
@@ -51,7 +51,7 @@ function buildV1ToolContext(context: V2ToolContext, deps: ToolBridgeDeps) {
     worktree: deps.worktree,
     abort: context.signal,
     metadata: (input: { title?: string; metadata?: Record<string, unknown> }): void => {
-      const payload: Record<string, unknown> = { ...(input.metadata ?? {}) }
+      const payload: Record<string, unknown> = jsonSafeMetadata({ ...(input.metadata ?? {}) })
       if (input.title !== undefined) payload.title = input.title
       void context.progress(payload).catch(() => undefined)
     },

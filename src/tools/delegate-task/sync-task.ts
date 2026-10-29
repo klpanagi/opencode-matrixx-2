@@ -2,7 +2,7 @@ import { registerSubagentSession, unregisterSubagentSession } from "../../featur
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration } from "../../shared"
+import { formatDuration, jsonSafeMetadata } from "../../shared"
 import { log } from "../../shared/logger"
 import { isPollTimeoutOutcome } from "../../shared/poll-timeout-outcome"
 import { getDeliverableTag } from "./constants"
@@ -87,7 +87,7 @@ export async function executeSyncTask(
       })
     }
 
-    const syncTaskMeta = {
+    const syncTaskMeta = jsonSafeMetadata({
       title: args.description,
       metadata: {
         prompt: args.prompt,
@@ -100,7 +100,7 @@ export async function executeSyncTask(
         sync: true,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(syncTaskMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, syncTaskMeta)
