@@ -2,14 +2,17 @@
 
 import { afterAll, beforeEach, describe, expect, it } from "bun:test"
 import { injectContextDiscipline } from "../../src/plugin-handlers/agent-config-handler"
-import { _setDisciplinePathForTesting } from "../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../src/shared/context-mode-enforcement"
 
 // T8: with the context-mode package installed the appended block is the
 // pointer (full routing arrives via the <context_window_protection> transform).
 // Pinning the package as absent exercises the kept static fallback, which is
 // what the assertions below pin.
-beforeEach(() => _setDisciplinePathForTesting(null))
-afterAll(() => _setDisciplinePathForTesting(undefined))
+beforeEach(() => {
+  _setDisciplinePathForTesting(null)
+  _setCtxToolsForTesting(null)
+})
+afterAll(() => _resetContextModeEnforcementForTesting())
 
 function makeAgents(names: string[]): Record<string, Record<string, unknown>> {
   const agents: Record<string, Record<string, unknown>> = {}
@@ -186,6 +189,7 @@ describe("injectContextDiscipline pure", () => {
   it("should append the pointer instead of the static table when the package is installed", () => {
     //#given: the context-mode package resolves a discipline file
     _setDisciplinePathForTesting("/nonexistent/context-mode/AGENTS.md")
+    _setCtxToolsForTesting(true)
     const agents = makeAgents(["cipher", "trinity"])
 
     //#when

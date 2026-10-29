@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import {
   _resetDisciplineCacheForTesting,
   buildCompactContextDisciplineSection,
@@ -11,6 +11,8 @@ import { createContextModeEnforcerHook } from "../../src/hooks/context-mode-enfo
 import type { MatrixxConfig } from "../../src/config"
 import { injectContextDiscipline } from "../../src/plugin-handlers/agent-config-handler"
 import {
+  _resetContextModeEnforcementForTesting,
+  _setCtxToolsForTesting,
   _setDisciplinePathForTesting,
   resolveGrepGlobUsable,
   setContextModeForPrompts,
@@ -40,9 +42,13 @@ async function hookThrows(tool: string): Promise<string | null> {
 }
 
 describe("B-prime prompt/hook agreement", () => {
+  afterEach(() => {
+    _resetContextModeEnforcementForTesting()
+  })
   test("enforced subagent is never blocked without a taught substitute", async () => {
     //#given: enforce on with a working substitute
     _setDisciplinePathForTesting(FAKE_PATH)
+    _setCtxToolsForTesting(true)
     setContextModeForPrompts({ enforce: true })
     const agents = makeAgents(["trinity", "mouse"])
     //#when: discipline injected and grep attempted
