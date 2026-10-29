@@ -1,5 +1,6 @@
 import { readConnectedProvidersCache, readProviderModelsCache } from "../../shared/connected-providers-cache"
 import { log } from "../../shared/logger"
+import { unwrapList } from "../../shared/unwrap-list"
 import type { OpencodeClient } from "./types"
 
 function addFromProviderModels(
@@ -45,16 +46,16 @@ export async function getAvailableModelsForDelegateTask(client: OpencodeClient):
 
   try {
     const result = await modelList()
-    const rows = Array.isArray(result)
-      ? result
-      : ((result as { data?: unknown }).data as Array<{ provider?: string; id?: string }> | undefined) ?? []
+    const rows = unwrapList<{ provider?: string; providerID?: string; id?: string; modelID?: string }>(result)
 
     const connected = new Set(connectedProviders)
     const out = new Set<string>()
     for (const row of rows) {
-      if (!row?.provider || !row?.id) continue
-      if (!connected.has(row.provider)) continue
-      out.add(`${row.provider}/${row.id}`)
+      const provider = row?.providerID ?? row?.provider
+      const id = row?.modelID ?? row?.id
+      if (!provider || !id) continue
+      if (!connected.has(provider)) continue
+      out.add(`${provider}/${id}`)
     }
     return out
   } catch (err) {

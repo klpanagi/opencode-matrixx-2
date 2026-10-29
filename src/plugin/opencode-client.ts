@@ -12,7 +12,7 @@
  * rather than throw.
  */
 
-import { log } from "../shared"
+import { log, unwrapList } from "../shared"
 import type { V2Context } from "./opencode-types"
 
 export type V1ClientArgs = {
@@ -109,7 +109,7 @@ export function createClientShim(ctx: V2Context): Record<string, unknown> {
   })
 
   const app = group("app", {
-    agents: async () => ok(await ctx.agent.list()),
+    agents: async () => ok(unwrapList(await ctx.agent.list())),
     get: async () => ok({ name: ctx.app.name, version: ctx.app.version }),
     log: fallback("app.log"),
     init: fallback("app.init"),

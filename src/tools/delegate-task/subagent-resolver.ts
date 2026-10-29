@@ -1,4 +1,4 @@
-import { normalizeSDKResponse } from "../../shared"
+import { unwrapList } from "../../shared"
 import { getAgentConfigKey, getAgentDisplayName } from "../../shared/agent-display-names"
 import { log } from "../../shared/logger"
 import { getAgentModelRequirements } from "../../shared/model-requirements"
@@ -49,10 +49,8 @@ Create the work plan directly - that's your job as the planning agent.`,
 
   try {
     const agentsResult = await client.app.agents()
-    type AgentInfo = { name: string; mode?: "subagent" | "primary" | "all"; model?: { providerID: string; modelID: string } }
-    const agents = normalizeSDKResponse(agentsResult, [] as AgentInfo[], {
-      preferResponseOnMissingData: true,
-    })
+    type AgentInfo = { id?: string; name: string; mode?: "subagent" | "primary" | "all"; model?: { providerID: string; modelID: string } }
+    const agents = unwrapList<AgentInfo>(agentsResult)
 
     const callableAgents = agents.filter((a) => a.mode !== "primary")
 

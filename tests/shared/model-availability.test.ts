@@ -79,7 +79,7 @@ describe("fetchAvailableModels", () => {
   it("#given connectedProviders unknown but client can list #when fetchAvailableModels called with client #then returns models from API filtered by connected providers", async () => {
     const client = {
       provider: {
-        list: async () => ({ data: { connected: ["openai"] } }),
+        list: async () => ({ location: {}, data: [{ id: "openai", activation: "enabled" }] }),
       },
       model: {
         list: async () => ({
@@ -108,7 +108,7 @@ describe("fetchAvailableModels", () => {
   it("#given cache missing but client can list #when fetchAvailableModels called with connectedProviders #then returns models from API", async () => {
     const client = {
       provider: {
-        list: async () => ({ data: { connected: ["openai", "google"] } }),
+        list: async () => ({ location: {}, data: [{ id: "openai", activation: "enabled" }, { id: "google", activation: "enabled" }] }),
       },
       model: {
         list: async () => ({
@@ -394,7 +394,7 @@ describe("getConnectedProviders", () => {
 		const mockClient = {
 			provider: {
 				list: async () => ({
-					data: { connected: ["anthropic", "opencode", "google"] }
+					data: [{ id: "anthropic", activation: "enabled" }, { id: "opencode", activation: "auto" }, { id: "google", activation: "enabled" }]
 				})
 			}
 		}
@@ -425,7 +425,7 @@ describe("getConnectedProviders", () => {
 	it("should return empty array when no providers connected", async () => {
 		const mockClient = {
 			provider: {
-				list: async () => ({ data: { connected: [] } })
+				list: async () => ({ location: {}, data: [] })
 			}
 		}
 
@@ -457,10 +457,10 @@ describe("getConnectedProviders", () => {
 	// given SDK client with missing data.connected
 	// when provider.list returns without connected field
 	// then returns empty array
-	it("should return empty array when data.connected is undefined", async () => {
+	it("should return empty array when envelope has no data array", async () => {
 		const mockClient = {
 			provider: {
-				list: async () => ({ data: {} })
+				list: async () => ({ location: {} })
 			}
 		}
 
