@@ -57,6 +57,12 @@ function group<T extends Record<string, unknown>>(name: string, members: T): T {
 
 const idOf = (args?: V1ClientArgs): string => args?.path?.id ?? ""
 
+function extractMessages(result: unknown): unknown[] {
+  if (Array.isArray(result)) return result
+  const messages = (result as { messages?: unknown } | undefined)?.messages
+  return Array.isArray(messages) ? messages : []
+}
+
 /**
  * Builds the V1-shaped client used by matrixx's existing hooks and tools.
  * Callers cast the result to the V1 `client` type; the surface here is
@@ -64,7 +70,7 @@ const idOf = (args?: V1ClientArgs): string => args?.path?.id ?? ""
  */
 export function createClientShim(ctx: V2Context): Record<string, unknown> {
   const session = group("session", {
-    messages: async (args?: V1ClientArgs) => ok(await ctx.session.context({ sessionID: idOf(args) })),
+    messages: async (args?: V1ClientArgs) => ok(extractMessages(await ctx.session.context({ sessionID: idOf(args) }))),
     context: async (args?: V1ClientArgs) => ok(await ctx.session.context({ sessionID: idOf(args) })),
     list: async (args?: V1ClientArgs) => ok(await ctx.session.list(args?.query)),
     get: async (args?: V1ClientArgs) => ok(await ctx.session.get({ sessionID: idOf(args) })),
