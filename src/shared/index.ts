@@ -56,6 +56,15 @@ export * from "./session-directory-resolver"
 export * from "./session-utils"
 export * from "./shell-env"
 export * from "./shell-tool-name"
+export {
+  isLinkedWorktree,
+  MATRIX_STATE_DIR,
+  resolveStateRoot,
+  type StateRootCandidates,
+  stateExists,
+  stateRootFromPluginContext,
+  stateRootFromToolContext,
+} from "./state-root"
 export * from "./status-types"
 export * from "./system-directive"
 export * from "./tmux/constants"

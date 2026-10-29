@@ -65,17 +65,14 @@ export function createPlanReadTool(ctx?: PluginContext, cap: number = MAX_PLAN_F
     execute: async (args, context) => {
       try {
         const filePath = args.filePath as string
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const validation = validatePlanFilePath(filePath, directory)
         if ("error" in validation) {
-          return JSON.stringify({ error: "invalid_file_path", message: validation.error })
+          return JSON.stringify({ error: "invalid_file_path", message: validation.error, stateRoot: directory })
         }
         const resolved = validation.resolved
         if (!existsSync(resolved)) {
-          return JSON.stringify({ error: "file_not_found", message: `File not found: ${resolved}` })
+          return JSON.stringify({ error: "file_not_found", message: `File not found: ${resolved}`, resolved, stateRoot: directory })
         }
         const selector = typeof args.section === "string" ? args.section.trim() : ""
         const paginated = args.offset !== undefined || args.limit !== undefined

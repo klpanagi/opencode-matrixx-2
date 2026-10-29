@@ -4,6 +4,7 @@ import { subagentSessions } from "../../features/session-state/state"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import { HOOK_NAME } from "./hook-name"
 import { injectMissionContinuation } from "./mission-continuation-injector"
 import { getLastAgentFromSession } from "./session-last-agent"
@@ -18,6 +19,7 @@ export function createNiobeEventHandler(input: {
   getState: (sessionID: string) => SessionState
 }): (arg: { event: { type: string; properties?: unknown } }) => Promise<void> {
   const { ctx, options, sessions, getState } = input
+  const stateRoot = stateRootFromPluginContext(ctx)
 
   return async ({ event }): Promise<void> => {
     const props = event.properties as Record<string, unknown> | undefined
@@ -41,7 +43,7 @@ export function createNiobeEventHandler(input: {
       log(`[${HOOK_NAME}] session.idle`, { sessionID })
 
       // Read mission state FIRST to check if this session is part of an active mission
-      const missionState = readMissionState(ctx.directory)
+      const missionState = readMissionState(stateRoot)
       const isMissionSession = missionState?.session_ids?.includes(sessionID) ?? false
 
       const isBackgroundTaskSession = subagentSessions.has(sessionID)
@@ -110,7 +112,7 @@ export function createNiobeEventHandler(input: {
       const progress = getPlanProgress(missionState.active_plan)
       if (progress.isComplete) {
         log(`[${HOOK_NAME}] Mission complete`, { sessionID, plan: missionState.plan_name })
-        clearMissionState(ctx.directory)
+        clearMissionState(stateRoot)
         return
       }
 

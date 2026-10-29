@@ -26,10 +26,7 @@ export function createPlanListTool(ctx?: PluginContext, cap: number = MAX_PLAN_F
     args: {},
     execute: async (_args, context) => {
       try {
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const plansDir = join(directory, PLANS_DIR)
         if (!existsSync(plansDir)) {
           return JSON.stringify({ plans: [] })

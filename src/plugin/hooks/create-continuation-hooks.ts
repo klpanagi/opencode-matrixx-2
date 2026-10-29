@@ -12,6 +12,7 @@ import {
   createTaskContinuationEnforcer,
 } from "../../hooks"
 import { bindSafeHook } from "../../shared/safe-create-hook"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import type { PluginContext } from "../types"
 import { createUnstableAgentBabysitter } from "../unstable-agent-babysitter"
 
@@ -125,7 +126,7 @@ export function createContinuationHooks(args: {
   const niobeHook = isHookEnabled("niobe")
     ? safeHook("niobe", () =>
         createNiobeHook(ctx, {
-          directory: ctx.directory,
+          directory: stateRootFromPluginContext(ctx),
           backgroundManager,
           isContinuationStopped: (sessionID: string) =>
             stopContinuationGuard?.isStopped(sessionID) ?? false,
@@ -135,7 +136,7 @@ export function createContinuationHooks(args: {
 
   const planPersister = isHookEnabled("plan-persister")
     ? safeHook("plan-persister", () =>
-        createPlanPersister(ctx, { directory: ctx.directory }))
+        createPlanPersister(ctx, { directory: stateRootFromPluginContext(ctx) }))
     : null
 
   const evolutionHitl = evolutionEnabled && isHookEnabled("evolution-hitl")

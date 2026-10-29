@@ -24,13 +24,10 @@ export function createPlanCreateTool(ctx?: PluginContext, cap: number = MAX_PLAN
         if (typeof content !== "string") {
           return JSON.stringify({ error: "validation_error", message: "content is required" })
         }
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const validation = validatePlanFilePath(filePath, directory)
         if ("error" in validation) {
-          return JSON.stringify({ error: "invalid_file_path", message: validation.error })
+          return JSON.stringify({ error: "invalid_file_path", message: validation.error, stateRoot: directory })
         }
         const resolved = validation.resolved
         ensurePlanDir(directory)

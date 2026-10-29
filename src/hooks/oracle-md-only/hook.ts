@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { log } from "../../shared/logger"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 import { isOracleAgent } from "./agent-matcher"
 import { getAgentFromSession } from "./agent-resolution"
@@ -10,12 +11,13 @@ import { isAllowedFile } from "./path-policy"
 const TASK_TOOLS = ["task"]
 
 export function createOracleMdOnlyHook(ctx: PluginInput) {
+  const stateRoot = stateRootFromPluginContext(ctx)
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
-      const agentName = await getAgentFromSession(input.sessionID, ctx.directory, ctx.client)
+      const agentName = await getAgentFromSession(input.sessionID, stateRoot, ctx.client)
 
       if (!isOracleAgent(agentName)) {
         return
@@ -46,7 +48,7 @@ export function createOracleMdOnlyHook(ctx: PluginInput) {
         return
       }
 
-       if (!isAllowedFile(filePath, ctx.directory)) {
+       if (!isAllowedFile(filePath, stateRoot)) {
          log(`[${HOOK_NAME}] Blocked: Oracle can only write to .matrixx/*.md`, {
            sessionID: input.sessionID,
            tool: toolName,

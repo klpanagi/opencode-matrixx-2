@@ -19,10 +19,7 @@ export function createNotepadListTool(ctx?: PluginContext): ToolDefinition {
     execute: async (args, context) => {
       try {
         const planName = args.planName as string | undefined
-        const directory = resolveDirectory(
-          (context as Record<string, unknown>)?.directory,
-          (ctx as unknown as Record<string, unknown>)?.directory,
-        )
+        const directory = resolveDirectory(context, ctx)
         const root = resolve(join(directory, MATRIXX_DIR_NAME, NOTEPADS_SUBDIR))
         if (planName === undefined || planName === null || planName === "") {
           if (!existsSync(root)) return JSON.stringify({ buckets: [] })

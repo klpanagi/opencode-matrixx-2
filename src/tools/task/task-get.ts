@@ -3,6 +3,7 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import { stateRootFromToolContext } from "../../shared/state-root"
 import { TASK_ID_PATTERN } from "./constants"
 import { TaskGetInputSchema, TaskObjectSchema } from "./types"
 
@@ -31,10 +32,7 @@ Returns null if the task does not exist or the file is invalid.`,
           return JSON.stringify({ error: "invalid_task_id" })
         }
 
-        const directory =
-          ((context as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-          ((ctx as unknown as Record<string, unknown>)?.directory as string | undefined) ??
-          process.cwd()
+        const directory = stateRootFromToolContext(context, ctx)
         const taskDir = getTaskDir(config, directory)
         const taskPath = join(taskDir, `${taskId}.json`)
 

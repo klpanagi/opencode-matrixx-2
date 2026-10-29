@@ -13,6 +13,7 @@ import {
 } from "../../features/mission-state"
 import { updateSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import { classifyPlans, formatPlanListLine } from "./plan-filter"
 
 export const HOOK_NAME = "start-work" as const
@@ -50,6 +51,7 @@ function findPlanByName(plans: string[], requestedName: string): string | null {
 }
 
 export function createStartWorkHook(ctx: PluginInput) {
+  const stateRoot = stateRootFromPluginContext(ctx)
   return {
     "chat.message": async (
       input: StartWorkHookInput,
@@ -76,7 +78,7 @@ export function createStartWorkHook(ctx: PluginInput) {
 
       updateSessionAgent(input.sessionID, "niobe") // Always switch: fixes #1298
 
-      const existingState = readMissionState(ctx.directory)
+      const existingState = readMissionState(stateRoot)
       const sessionId = input.sessionID
       const timestamp = new Date().toISOString()
 
@@ -89,7 +91,7 @@ export function createStartWorkHook(ctx: PluginInput) {
           sessionID: input.sessionID,
         })
         
-        const allPlans = findOraclePlans(ctx.directory)
+        const allPlans = findOraclePlans(stateRoot)
         const matchedPlan = findPlanByName(allPlans, explicitPlanName)
         
         if (matchedPlan) {
@@ -103,10 +105,10 @@ The requested plan "${getPlanName(matchedPlan)}" has been completed.
 All ${progress.total} tasks are done. Create a new plan with: /plan "your task"`
           } else {
             if (existingState) {
-              clearMissionState(ctx.directory)
+              clearMissionState(stateRoot)
             }
             const newState = createMissionState(matchedPlan, sessionId, "niobe")
-            writeMissionState(ctx.directory, newState)
+            writeMissionState(stateRoot, newState)
             
             contextInfo = `
 ## Auto-Selected Plan
@@ -152,7 +154,7 @@ No incomplete plans available. Create a new plan with: /plan "your task"`
         const progress = getPlanProgress(existingState.active_plan)
         
         if (!progress.isComplete) {
-          appendSessionId(ctx.directory, sessionId)
+          appendSessionId(stateRoot, sessionId)
           contextInfo = `
 ## Active Work Session Found
 
@@ -166,7 +168,7 @@ No incomplete plans available. Create a new plan with: /plan "your task"`
 The current session (${sessionId}) has been added to session_ids.
 Read the plan file and continue from the first unchecked task.`
         } else {
-          rotateMissionIfComplete(ctx.directory)
+          rotateMissionIfComplete(stateRoot)
           contextInfo = `
 ## Previous Work Complete
 
@@ -176,7 +178,7 @@ Looking for new plans...`
       }
 
       if ((!existingState && !explicitPlanName) || (existingState && !explicitPlanName && getPlanProgress(existingState.active_plan).isComplete)) {
-        const plans = findOraclePlans(ctx.directory)
+        const plans = findOraclePlans(stateRoot)
         const { actionable: incompletePlans, staleCandidates, triage } = classifyPlans(plans)
         
         if (plans.length === 0) {
@@ -210,7 +212,7 @@ Review stale candidates for archival; triage-empty plans need checkboxes or manu
           const planPath = incompletePlans[0]
           const progress = getPlanProgress(planPath)
           const newState = createMissionState(planPath, sessionId, "niobe")
-          writeMissionState(ctx.directory, newState)
+          writeMissionState(stateRoot, newState)
 
           contextInfo += `
 
