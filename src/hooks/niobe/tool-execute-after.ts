@@ -4,6 +4,7 @@ import { collectGitDiffStats } from "../../shared/git-worktree/collect-git-diff-
 import { formatFileChanges } from "../../shared/git-worktree/format-file-changes"
 import { log } from "../../shared/logger"
 import { isCallerOrchestrator } from "../../shared/session-utils"
+import { stateRootFromPluginContext } from "../../shared/state-root"
 import { HOOK_NAME } from "./hook-name"
 import { isMatrixPath } from "./matrix-path"
 import { extractSessionIdFromOutput } from "./subagent-session-id"
@@ -17,6 +18,7 @@ export function createToolExecuteAfterHandler(input: {
   pendingFilePaths: Map<string, string>
 }): (toolInput: ToolExecuteAfterInput, toolOutput: ToolExecuteAfterOutput) => Promise<void> {
   const { ctx, pendingFilePaths } = input
+  const stateRoot = stateRootFromPluginContext(ctx)
 
   return async (toolInput, toolOutput): Promise<void> => {
     // Guard against undefined output (e.g., from /review command - see issue #1035)
@@ -62,7 +64,7 @@ export function createToolExecuteAfterHandler(input: {
       const fileChanges = formatFileChanges(gitStats)
       const subagentSessionId = extractSessionIdFromOutput(toolOutput.output)
 
-      const missionState = readMissionState(ctx.directory)
+      const missionState = readMissionState(stateRoot)
       if (missionState) {
         const progress = getPlanProgress(missionState.active_plan)
 
@@ -73,7 +75,7 @@ export function createToolExecuteAfterHandler(input: {
         }
 
         if (toolInput.sessionID && !missionState.session_ids?.includes(toolInput.sessionID)) {
-          appendSessionId(ctx.directory, toolInput.sessionID)
+          appendSessionId(stateRoot, toolInput.sessionID)
           log(`[${HOOK_NAME}] Appended session to mission`, {
             sessionID: toolInput.sessionID,
             plan: missionState.plan_name,

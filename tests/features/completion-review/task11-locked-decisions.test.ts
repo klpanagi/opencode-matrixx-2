@@ -100,7 +100,13 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // NOTE (niobe rename, PR #19): hash advanced from 36bcba5dc519a7bc5c99b3a84d81cb53.
     // The only delta is the mechanical architect -> niobe identifier rename;
     // execution path unchanged.
-    const FROZEN_MD5 = "00cd3842c55fafcdb8b474e078f6649f"
+    // NOTE (state-root-canonical, fix/state-root-canonical): hash advanced from
+    // 00cd3842c55fafcdb8b474e078f6649f. The only delta is the mission-state
+    // directory rewire — readMissionState/clearMissionState now receive the
+    // resolved project state root instead of ctx.directory, so a session moved
+    // into a linked worktree still reads the project mission.json. Execution
+    // path unchanged; Niobe remains the plan EXECUTOR.
+    const FROZEN_MD5 = "87a265b4ddba2b0ac57a71951e29f947"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")
