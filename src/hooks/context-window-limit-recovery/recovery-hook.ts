@@ -1,13 +1,13 @@
 // Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive compression belongs to DCP (/dcp-compress). Do not add proactive thresholds here. Cap API calls 2.
 
 import type { ExperimentalConfig } from "../../config"
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import { notify } from "../../shared/notify"
 import type { NativePluginContext } from "../../shared/session-context-source"
 import { executeCompact, getLastAssistant } from "./executor"
 import { parseTokenLimitError } from "./parser"
 import type { AutoCompactState, ParsedTokenLimitError } from "./types"
-
 export interface AnthropicContextWindowLimitRecoveryOptions {
   experimental?: ExperimentalConfig
 }
@@ -32,8 +32,8 @@ export function createAnthropicContextWindowLimitRecoveryHook(
   const experimental = options?.experimental
   const pendingCompactionTimeoutBySession = new Map<string, ReturnType<typeof setTimeout>>()
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined

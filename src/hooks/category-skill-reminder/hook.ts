@@ -54,6 +54,7 @@ function hashSnippet(value: string): string {
   return (hash >>> 0).toString(16)
 }
 
+import type { V2Event } from "../../plugin/context"
 export function createCategorySkillReminderHook(
   ctx: PluginInput,
   availableSkills: AvailableSkill[] = []
@@ -122,8 +123,8 @@ export function createCategorySkillReminderHook(
     }
   }
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined

@@ -1,4 +1,5 @@
 import { subagentSessions } from "../../features/session-state/state";
+import type { V2Event } from "../../plugin/context";
 import { log } from "../../shared/logger";
 import type { NativePluginContext } from "../../shared/session-context-source";
 import { buildSessionReminderMessage } from "./constants";
@@ -18,13 +19,6 @@ interface ToolExecuteOutput {
   title: string;
   output: string;
   metadata: unknown;
-}
-
-interface EventInput {
-  event: {
-    type: string;
-    properties?: unknown;
-  };
 }
 
 export function createInteractiveBashSessionHook(ctx: NativePluginContext) {
@@ -103,8 +97,8 @@ export function createInteractiveBashSessionHook(ctx: NativePluginContext) {
     }
   };
 
-  const eventHandler = async ({ event }: EventInput) => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

@@ -17,6 +17,7 @@ const INDEX_MAX_TOKENS = 6000;
 const ROUTER_DIRECTIVE =
   "Consult these hubs before websearch/webfetch; open files via @hub/path on demand, never bulk-read.";
 
+import type { V2Event } from "../../plugin/context"
 export interface KnowledgeHubInjectorOptions {
   hubs?: KnowledgeHub[];
   getHubs?: () => KnowledgeHub[];
@@ -134,8 +135,8 @@ export function createKnowledgeHubInjectorHook(ctx: PluginInput, options: Knowle
     });
   };
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

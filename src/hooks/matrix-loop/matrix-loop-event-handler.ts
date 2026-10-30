@@ -43,11 +43,12 @@ async function handleVerificationFailure(
 	}
 }
 
+import type { V2Event } from "../../plugin/context"
 export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: MatrixLoopEventHandlerOptions) {
 	const inFlightSessions = new Set<string>()
 
-	return async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-		const props = event.properties as Record<string, unknown> | undefined
+	return async (event: V2Event): Promise<void> => {
+		const props = event.data as Record<string, unknown> | undefined
 
 		if (event.type === "session.idle") {
 			const sessionID = props?.sessionID as string | undefined

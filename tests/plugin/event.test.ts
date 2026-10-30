@@ -3,16 +3,17 @@ import type { MatrixxConfig } from "../../src/config"
 import type { DomainHooks } from "../../src/plugin/setup-domains"
 import type { DomainManagers } from "../../src/plugin/setup-domains"
 import { createEventHandler } from "../../src/plugin/event"
+import type { V2Event } from "../../src/plugin/context"
 import type { PluginContext } from "../../src/plugin/types"
 
-type EventInput = { event: { type: string; properties?: Record<string, unknown> } }
+type EventInput = V2Event
 
 	describe("createEventHandler - idle deduplication", () => {
 	it("Order A (status→idle): synthetic idle deduped - real idle not dispatched again", async () => {
 		//#given
 		const dispatchCalls: EventInput[] = []
 		const mockDispatchToHooks = async (input: EventInput) => {
-			if (input.event.type === "session.idle") {
+			if (input.type === "session.idle") {
 				dispatchCalls.push(input)
 			}
 		}
@@ -54,28 +55,24 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		//#when - session.status with idle (generates synthetic idle first)
 		await eventHandler({
-			event: {
 				type: "session.status",
-				properties: {
+				data: {
 					sessionID: sessionId,
 					status: { type: "idle" },
 				},
-			},
 		})
 
 		//#then - synthetic idle dispatched once
 		expect(dispatchCalls.length).toBe(1)
-		expect(dispatchCalls[0].event.type).toBe("session.idle")
-		expect(dispatchCalls[0].event.properties?.sessionID).toBe(sessionId)
+		expect(dispatchCalls[0].type).toBe("session.idle")
+		expect(dispatchCalls[0].data?.sessionID).toBe(sessionId)
 
 		//#when - real session.idle arrives
 		await eventHandler({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: sessionId,
 				},
-			},
 		})
 
 		//#then - real idle deduped, no additional dispatch
@@ -86,7 +83,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		//#given
 		const dispatchCalls: EventInput[] = []
 		const mockDispatchToHooks = async (input: EventInput) => {
-			if (input.event.type === "session.idle") {
+			if (input.type === "session.idle") {
 				dispatchCalls.push(input)
 			}
 		}
@@ -128,28 +125,24 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		//#when - real session.idle arrives first
 		await eventHandler({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: sessionId,
 				},
-			},
 		})
 
 		//#then - real idle dispatched once
 		expect(dispatchCalls.length).toBe(1)
-		expect(dispatchCalls[0].event.type).toBe("session.idle")
-		expect(dispatchCalls[0].event.properties?.sessionID).toBe(sessionId)
+		expect(dispatchCalls[0].type).toBe("session.idle")
+		expect(dispatchCalls[0].data?.sessionID).toBe(sessionId)
 
 		//#when - session.status with idle (generates synthetic idle)
 		await eventHandler({
-			event: {
 				type: "session.status",
-				properties: {
+				data: {
 					sessionID: sessionId,
 					status: { type: "idle" },
 				},
-			},
 		})
 
 		//#then - synthetic idle deduped, no additional dispatch
@@ -193,42 +186,34 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		// Trigger some synthetic idles
 		await eventHandler({
-			event: {
 				type: "session.status",
-				properties: {
+				data: {
 					sessionID: "ses_stale_1",
 					status: { type: "idle" },
 				},
-			},
 		})
 
 		await eventHandler({
-			event: {
 				type: "session.status",
-				properties: {
+				data: {
 					sessionID: "ses_stale_2",
 					status: { type: "idle" },
 				},
-			},
 		})
 
 		// Trigger some real idles
 		await eventHandler({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: "ses_stale_3",
 				},
-			},
 		})
 
 		await eventHandler({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: "ses_stale_4",
 				},
-			},
 		})
 
 		//#when - wait for dedup window to expire (600ms > 500ms)
@@ -236,9 +221,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		// Trigger any event to trigger pruning
 		await eventHandler({
-			event: {
 				type: "message.updated",
-			},
 		})
 
 		//#then - both maps should be pruned (no dedup should occur for new events)
@@ -282,16 +265,14 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		})
 
 		await eventHandlerWithMock({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: "ses_stale_1",
 				},
-			},
 		})
 
 		expect(dispatchCalls.length).toBe(1)
-		expect(dispatchCalls[0].event.type).toBe("session.idle")
+		expect(dispatchCalls[0].type).toBe("session.idle")
 	})
 
 	it("dedup only applies within window - outside window both dispatch", async () => {
@@ -313,7 +294,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 			hooks: {
 				autoUpdateChecker: {
 					event: async (input: EventInput) => {
-						if (input.event.type === "session.idle") {
+						if (input.type === "session.idle") {
 							dispatchCalls.push(input)
 						}
 					},
@@ -340,13 +321,11 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		//#when - synthetic idle first
 		await eventHandler({
-			event: {
 				type: "session.status",
-				properties: {
+				data: {
 					sessionID: sessionId,
 					status: { type: "idle" },
 				},
-			},
 		})
 
 		//#then - synthetic dispatched
@@ -357,18 +336,16 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 
 		//#when - real idle arrives outside window
 		await eventHandler({
-			event: {
 				type: "session.idle",
-				properties: {
+				data: {
 					sessionID: sessionId,
 				},
-			},
 		})
 
 		//#then - real idle dispatched (outside dedup window)
 		expect(dispatchCalls.length).toBe(2)
-		expect(dispatchCalls[0].event.type).toBe("session.idle")
-		expect(dispatchCalls[1].event.type).toBe("session.idle")
+		expect(dispatchCalls[0].type).toBe("session.idle")
+		expect(dispatchCalls[1].type).toBe("session.idle")
 	})
 })
 
@@ -391,8 +368,8 @@ describe("createEventHandler - DCP loop-breaker dispatch", () => {
 			} as unknown as DomainManagers,
 			hooks: {
 				nudgeLoopBreaker: {
-					event: async (input: { event: { type: string; properties?: unknown } }) => {
-						seen.push(input.event.type)
+					event: async (event: V2Event) => {
+						seen.push(event.type)
 					},
 				},
 			} as unknown as DomainHooks,
@@ -400,10 +377,8 @@ describe("createEventHandler - DCP loop-breaker dispatch", () => {
 
 		//#when
 		await eventHandler({
-			event: {
 				type: "session.next.step.ended",
-				properties: { sessionID: "ses_loop" },
-			},
+				data: { sessionID: "ses_loop" },
 		})
 
 		//#then

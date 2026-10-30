@@ -1,4 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin"
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import { getCachedVersion, getLocalDevVersion } from "./checker"
 import { runBackgroundUpdateCheck } from "./hook/background-update-check"
@@ -7,7 +8,6 @@ import { updateAndShowConnectedProvidersCacheStatus } from "./hook/connected-pro
 import { showModelCacheWarningIfNeeded } from "./hook/model-cache-warning"
 import { showLocalDevToast, showVersionToast } from "./hook/startup-toasts"
 import type { AutoUpdateCheckerOptions } from "./types"
-
 export function createAutoUpdateCheckerHook(ctx: PluginInput, options: AutoUpdateCheckerOptions = {}) {
   const { showStartupToast = true, isMorpheusEnabled = false, autoUpdate = true } = options
   const isCliRunMode = process.env.OPENCODE_CLI_RUN_MODE === "true"
@@ -26,12 +26,12 @@ export function createAutoUpdateCheckerHook(ctx: PluginInput, options: AutoUpdat
   let hasChecked = false
 
   return {
-    event: ({ event }: { event: { type: string; properties?: unknown } }) => {
+    event: (event: V2Event) => {
       if (event.type !== "session.created") return
       if (isCliRunMode) return
       if (hasChecked) return
 
-      const props = event.properties as { info?: { parentID?: string } } | undefined
+      const props = event.data as { info?: { parentID?: string } } | undefined
       if (props?.info?.parentID) return
 
       hasChecked = true

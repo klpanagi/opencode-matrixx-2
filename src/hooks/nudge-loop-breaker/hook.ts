@@ -1,3 +1,4 @@
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import type { NativePluginContext } from "../../shared/session-context-source"
 import {
@@ -24,9 +25,7 @@ export interface NudgeLoopBreakerOptions {
   onCorrective?: (sessionID: string, backoff: number) => void
 }
 
-type EventInput = { event: { type: string; properties?: unknown } }
-
-export type NudgeLoopBreakerHook = { event: (input: EventInput) => Promise<void> }
+export type NudgeLoopBreakerHook = { event: (event: V2Event) => Promise<void> }
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value === "object" && value !== null && !Array.isArray(value)) {
@@ -87,8 +86,8 @@ export function createNudgeLoopBreakerHook(
   }
 
   return {
-    event: async ({ event }) => {
-      const props = asRecord(event.properties)
+    event: async (event: V2Event) => {
+      const props = asRecord(event.data)
       const sessionID = readString(props, SESSION_ID_KEYS) ?? "unknown"
       const state = sessions.get(sessionID) ?? createNudgeLoopState()
       sessions.set(sessionID, state)

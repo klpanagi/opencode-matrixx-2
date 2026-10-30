@@ -17,10 +17,11 @@ import { applyFilteredSync } from "./task-sync"
 
 const HOOK_NAME = "plan-persister"
 
+import type { V2Event } from "../../plugin/context"
 export interface PlanPersister {
   buildRehydrationContext: (sessionID: string) => string | null
   capture: (sessionID: string) => Promise<void>
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
 }
 
 export function createPlanPersister(
@@ -65,17 +66,17 @@ export function createPlanPersister(
     })
   }
 
-  const event = async ({ event: evt }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-    const props = evt.properties as Record<string, unknown> | undefined
+  const event = async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
-    if (evt.type === "session.idle") {
+    if (event.type === "session.idle") {
       const sessionID = props?.sessionID as string | undefined
       if (!sessionID) return
       await capture(sessionID)
       return
     }
 
-    if (evt.type === "session.compacted") {
+    if (event.type === "session.compacted") {
       const sessionID = (props?.sessionID ?? (props?.info as { id?: string } | undefined)?.id) as string | undefined
       if (!sessionID) return
       // On compaction, capture latest state before it's lost

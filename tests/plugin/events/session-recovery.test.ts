@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test"
 import { _resetForTesting, setMainSession } from "../../../src/features/session-state/state"
-import { deliverThroughPump } from "./harness"
+import { deliverThroughDispatch } from "./harness"
 
 describe("event consumer: session-recovery", () => {
   afterEach(() => {
@@ -28,8 +28,8 @@ describe("event consumer: session-recovery", () => {
     const error = { name: "ProviderAuthError" }
 
     // when a recoverable session.error is delivered through the pump
-    const result = await deliverThroughPump({
-      event: { type: "session.error", properties: { sessionID, messageID: "msg_fixture", error } },
+    const result = await deliverThroughDispatch({
+      event: { type: "session.error", data: { sessionID, messageID: "msg_fixture", error } },
       ctx,
       hooks: {
         sessionRecovery: {
@@ -65,8 +65,8 @@ describe("event consumer: session-recovery", () => {
     }
 
     // when a recoverable error arrives for a non-main session
-    const result = await deliverThroughPump({
-      event: { type: "session.error", properties: { sessionID: "ses_recovery_fixture", error: { name: "E" } } },
+    const result = await deliverThroughDispatch({
+      event: { type: "session.error", data: { sessionID: "ses_recovery_fixture", error: { name: "E" } } },
       ctx,
       hooks: {
         sessionRecovery: { isRecoverableError: () => true, handleSessionRecovery: async () => true },
@@ -94,8 +94,8 @@ describe("event consumer: session-recovery", () => {
     }
 
     // when the error is delivered
-    await deliverThroughPump({
-      event: { type: "session.error", properties: { sessionID, error: { name: "Unknown" } } },
+    await deliverThroughDispatch({
+      event: { type: "session.error", data: { sessionID, error: { name: "Unknown" } } },
       ctx,
       hooks: {
         sessionRecovery: { isRecoverableError: () => false, handleSessionRecovery: async () => true },

@@ -45,10 +45,8 @@ function makeMessage(role: "user" | "assistant", id: string): MessageWithParts {
 
 function stepEnded(text: string) {
   return {
-    event: {
-      type: "session.next.step.ended",
-      properties: { sessionID: SESSION, assistantMessageID: "msg_x", text },
-    },
+    type: "session.next.step.ended",
+      data: { sessionID: SESSION, assistantMessageID: "msg_x", text },
   }
 }
 

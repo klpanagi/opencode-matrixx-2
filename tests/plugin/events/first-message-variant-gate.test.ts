@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test"
 import { _resetForTesting } from "../../../src/features/session-state/state"
-import { deliverThroughPump } from "./harness"
+import { deliverThroughDispatch } from "./harness"
 
 type SessionInfo = { id?: string; title?: string; parentID?: string }
 
@@ -23,8 +23,8 @@ describe("event consumer: first-message-variant-gate", () => {
     }
 
     // when a session is created
-    const result = await deliverThroughPump({
-      event: { type: "session.created", properties: { info: { id: "ses_gate_fixture", title: "Fixture" } } },
+    const result = await deliverThroughDispatch({
+      event: { type: "session.created", data: { info: { id: "ses_gate_fixture", title: "Fixture" } } },
       firstMessageVariantGate: gate,
     })
 
@@ -49,8 +49,8 @@ describe("event consumer: first-message-variant-gate", () => {
     }
 
     // when a session is deleted
-    await deliverThroughPump({
-      event: { type: "session.deleted", properties: { info: { id: "ses_gate_fixture" } } },
+    await deliverThroughDispatch({
+      event: { type: "session.deleted", data: { info: { id: "ses_gate_fixture" } } },
       firstMessageVariantGate: gate,
     })
 

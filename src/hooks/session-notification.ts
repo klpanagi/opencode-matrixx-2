@@ -29,6 +29,8 @@ interface SessionNotificationConfig {
   /** Maximum number of sessions to track before cleanup (default: 100) */
   maxTrackedSessions?: number
 }
+
+import type { V2Event } from "../plugin/context"
 export function createSessionNotification(
   ctx: PluginInput,
   config: SessionNotificationConfig = {},
@@ -72,10 +74,10 @@ export function createSessionNotification(
     playSound: playSessionNotificationSound,
   })
 
-  return async ({ event }: { event: { type: string; properties?: unknown } }) => {
+  return async (event: V2Event) => {
     if (currentPlatform === "unsupported") return
 
-    const props = event.properties as Record<string, unknown> | undefined
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.created") {
       const info = props?.info as Record<string, unknown> | undefined

@@ -7,7 +7,7 @@
  *
  * Domain setup functions build `Hooks` fragments directly; `registerDomains`
  * applies them onto the V2 context with the same adapters the bridge used
- * (`toV2Tool`, `toV1Event`, per-domain `transform` registrars).
+ * (`emitToolInfo` plus per-domain `transform` registrars).
  *
  * Still load-bearing below this module (owned by later TODOs):
  * - the V1 `PluginContext` substrate (`./types`) every hook/tool is written against
@@ -56,7 +56,7 @@ import { createAvailableCategories } from "./available-categories"
 import { createChatMessageHandler } from "./chat-message"
 import { createChatParamsHandler } from "./chat-params"
 import { createEventHandler } from "./event"
-import { createEventPump } from "./event-pump"
+import { createEventDispatcher } from "./event-dispatch"
 import type { ContinuationHooks } from "./hooks/create-continuation-hooks"
 import { createContinuationHooks } from "./hooks/create-continuation-hooks"
 import type { SessionHooks } from "./hooks/create-session-hooks"
@@ -69,15 +69,13 @@ import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
 import { createMessagesTransformHandler } from "./messages-transform"
 import { createNativePluginContext } from "./native-context"
-import { toV1Event } from "./opencode-events"
-import { toV2Tool } from "./opencode-tools"
-import type {
-  V2Context,
+import { emitToolInfo } from "./opencode-tools"
+import type { 
+  V2Context,V2Event, 
   V2Registration,
   V2SessionContextEvent,
   V2SystemPart,
-  V2ToolEditor,
-} from "./opencode-types"
+  V2ToolEditor,} from "./context"
 import { createSkillContext } from "./skill-context"
 import { createToolCatalog } from "./tool-catalog"
 import { createToolDefinitionHandler } from "./tool-definition"
@@ -410,7 +408,9 @@ export async function setupDomains(ctx: V2Context): Promise<{
     tool: toolsResult.filteredTools,
     ...chat,
     config: managers.configHandler,
-    event,
+    // Native pump delivers raw V2Event (see startDomainEventPump); the SDK
+    // Hooks.event envelope shape is legacy-static only. No runtime change.
+    event: event as unknown as Hooks["event"],
     ...tool,
     ...compaction,
   }
@@ -429,7 +429,7 @@ export async function setupDomains(ctx: V2Context): Promise<{
  */
 type DomainBridgeHandlers = {
   tool?: ToolsRecord | undefined
-  event?: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event?: (event: V2Event) => Promise<void>
   config?: (input: Record<string, unknown>) => Promise<void>
   "chat.message"?: (
     input: Record<string, unknown>,
@@ -534,7 +534,7 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
   const registration = await guard("tool.transform", () =>
     ctx.tool.transform((editor: V2ToolEditor) => {
       for (const [name, definition] of Object.entries(tools)) {
-        const tool = toV2Tool(name, definition, deps)
+        const tool = emitToolInfo(name, definition as never, deps)
         if (tool) editor.add(tool)
       }
       for (const [name, override] of overrides) {
@@ -552,14 +552,11 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
 function startDomainEventPump(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }, controller: AbortController): void {
   const handler = input.bridge.event
   if (!handler) return
-  createEventPump({
-    subscribe: (o) => input.ctx.event.subscribe({ signal: o.signal }),
-    handler,
-    signal: controller.signal,
-    guard,
-    log,
-    toV1Event,
-  }).start()
+  const dispatcher = createEventDispatcher({ handler, guard, log })
+  dispatcher.start(
+    (options) => input.ctx.event.subscribe({ signal: options.signal }) as AsyncIterable<V2Event>,
+    controller.signal,
+  )
 }
 
 async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }): Promise<V2Registration[]> {

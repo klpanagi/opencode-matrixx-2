@@ -23,6 +23,7 @@
  */
 
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
+import type { V2Event } from "../../plugin/context"
 import { getAgentToolRestrictions, log } from "../../shared"
 import { delay } from "../../shared/delay"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
@@ -571,11 +572,8 @@ export class BackgroundManager {
    * Completion is detected from native session lifecycle events only —
    * no polling, no reconcile probes.
    */
-  handleEvent(event: {
-    type: string
-    properties?: Record<string, unknown>
-  }): void {
-    const props = event.properties ?? {}
+  handleEvent(event: V2Event): void {
+    const props = (event.data as Record<string, unknown> | undefined) ?? {}
     const sessionID =
       typeof props.sessionID === "string" ? props.sessionID : undefined
     if (!sessionID) return

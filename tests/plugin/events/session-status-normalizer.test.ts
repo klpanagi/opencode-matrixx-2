@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test"
 import { _resetForTesting } from "../../../src/features/session-state/state"
-import { deliverThroughPump, recordingEventHook } from "./harness"
-import type { EventInput } from "./harness"
+import { deliverThroughDispatch, recordingEventHook, type EventInput } from "./harness"
 
 describe("event consumer: session-status-normalizer", () => {
   afterEach(() => {
@@ -13,15 +12,15 @@ describe("event consumer: session-status-normalizer", () => {
     const received: EventInput[] = []
 
     // when an idle session status is delivered
-    const result = await deliverThroughPump({
-      event: { type: "session.status", properties: { sessionID: "ses_idle_fixture", status: { type: "idle" } } },
+    const result = await deliverThroughDispatch({
+      event: { type: "session.status", data: { sessionID: "ses_idle_fixture", status: { type: "idle" } } },
       hooks: { rulesInjector: recordingEventHook(received) },
     })
 
     // then the original status and the synthesized idle both arrive in order
     expect(result.delivered).toBe(1)
-    expect(received.map((item) => item.event.type)).toEqual(["session.status", "session.idle"])
-    expect(received[1].event.properties?.sessionID).toBe("ses_idle_fixture")
+    expect(received.map((item) => item.type)).toEqual(["session.status", "session.idle"])
+    expect(received[1].data?.sessionID).toBe("ses_idle_fixture")
   })
 
   it("a non-idle status is delivered once and never synthesized", async () => {
@@ -29,13 +28,13 @@ describe("event consumer: session-status-normalizer", () => {
     const received: EventInput[] = []
 
     // when a busy session status is delivered
-    await deliverThroughPump({
-      event: { type: "session.status", properties: { sessionID: "ses_idle_fixture", status: { type: "busy" } } },
+    await deliverThroughDispatch({
+      event: { type: "session.status", data: { sessionID: "ses_idle_fixture", status: { type: "busy" } } },
       hooks: { rulesInjector: recordingEventHook(received) },
     })
 
     // then only the original event arrives
-    expect(received.map((item) => item.event.type)).toEqual(["session.status"])
+    expect(received.map((item) => item.type)).toEqual(["session.status"])
   })
 })
 

@@ -1,4 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin";
+import type { V2Event } from "../../plugin/context";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 
 export interface ToolExecuteInput {
@@ -15,13 +16,6 @@ export interface ToolExecuteOutput {
 
 export interface ToolExecuteBeforeOutput {
   args: unknown;
-}
-
-export interface EventInput {
-  event: {
-    type: string;
-    properties?: unknown;
-  };
 }
 
 type DynamicTruncator = ReturnType<typeof createDynamicTruncator>;
@@ -67,8 +61,8 @@ export function createDirectoryInjectorHook(
     void output;
   };
 
-  const eventHandler = async ({ event }: EventInput) => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

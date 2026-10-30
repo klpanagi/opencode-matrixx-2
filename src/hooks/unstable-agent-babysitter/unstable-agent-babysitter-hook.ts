@@ -84,13 +84,14 @@ async function getThinkingSummary(ctx: BabysitterContext, sessionID: string): Pr
   }
 }
 
+import type { V2Event } from "../../plugin/context"
 export function createUnstableAgentBabysitterHook(ctx: BabysitterContext, options: BabysitterOptions) {
   const reminderCooldowns = new Map<string, number>()
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
+  const eventHandler = async (event: V2Event) => {
     if (event.type !== "session.idle") return
 
-    const props = event.properties as Record<string, unknown> | undefined
+    const props = event.data as Record<string, unknown> | undefined
     const sessionID = props?.sessionID as string | undefined
     if (!sessionID) return
 

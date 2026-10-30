@@ -1,4 +1,5 @@
 import type { PluginInput } from "@opencode-ai/plugin";
+import type { V2Event } from "../../plugin/context";
 import { AGENT_TOOLS, MAX_AGENT_USAGE_REMINDERS, REMINDER_MESSAGE, TARGET_TOOLS } from "./constants";
 import {
   clearAgentUsageState,
@@ -17,13 +18,6 @@ interface ToolExecuteOutput {
   title: string;
   output: string;
   metadata: unknown;
-}
-
-interface EventInput {
-  event: {
-    type: string;
-    properties?: unknown;
-  };
 }
 
 export function createAgentUsageReminderHook(_ctx: PluginInput) {
@@ -88,8 +82,8 @@ export function createAgentUsageReminderHook(_ctx: PluginInput) {
     saveAgentUsageState(state);
   };
 
-  const eventHandler = async ({ event }: EventInput) => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

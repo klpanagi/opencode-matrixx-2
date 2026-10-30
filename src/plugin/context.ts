@@ -1,13 +1,34 @@
 /**
- * Minimal structural surface of the OpenCode V2 plugin API consumed by the
- * matrixx V2 adapter.
+ * Canonical plugin context for the matrixx V2 adapter (`MatrixxContext`)
+ * plus the promise-flavor domain shapes every consumer is written against.
  *
- * We intentionally do not import `@opencode/plugin`: `Plugin.define` is an
- * identity helper and the loader only validates that the default export is an
- * object with `id` plus `setup` (see packages/core/src/plugin/module.ts). Local
- * structural types keep the port free of a runtime dependency that must match
- * the host OpenCode version exactly.
+ * Renamed from `context.ts` (task 23): the file now carries the
+ * canonical `MatrixxContext` name instead of the `V2*` prefix, and the
+ * context includes the platform fields the core reads (`directory`,
+ * `worktree`, `project`, `$`) plus the host `notify` sink.
+ *
+ * Every domain member is the promise-flavor shape verified against runtime
+ * v2.1.4 by the Phase 0 probes (P1/P1b/P2/P4/P4b/P5):
+ * - P1/P1b: `agent.list()` answers a `{location, data}` envelope while
+ *   `agent.transform((e) => e.list())` re-registers and returns the
+ *   `Registration` — hence the tolerant `list(input?)` plus the
+ *   `transform(...) => Promise<V2Registration>` pair.
+ * - P2: `session.context()` requires a real sessionID and answers flat V2
+ *   messages — no `{data}` envelope, no `info`/`parts` wrapper.
+ * - P3/P4: `session.messages` and `config` are absent on the host context,
+ *   so neither appears here (a `config` member must FAIL typecheck).
+ * - P4b: the default model resolves via `model.transform(...)`, not
+ *   `config.get` — the model domain keeps the same transform shape.
+ * - P5: the tool list carries per-tool `options` (`codemode: false` for
+ *   the direct-only entry) — hence `options?` on `V2ToolInfo`.
+ *
+ * Type-only module: no runtime code. The old `definePlugin` identity helper
+ * lived here only to mirror `@opencode/plugin`; the host validates the
+ * default export structurally (`{ id, setup }`), so `src/index.ts` exports
+ * that literal directly.
  */
+
+import type { NotifySink } from "../shared/notify"
 
 export type Cleanup = () => unknown
 
@@ -232,10 +253,22 @@ export interface V2AgentTransformDomain {
   reload(): Promise<void>
 }
 
-export interface V2Context {
+export interface MatrixxContext {
   readonly app: V2App
   readonly location: V2Location
   readonly options: Record<string, unknown>
+  /**
+   * Platform fields the core needs. `createNativePluginContext` derives
+   * them from `location` today; they are first-class here so consumers can
+   * read them off the context directly.
+   */
+  readonly directory: string
+  readonly worktree: string
+  readonly project: V2Project
+  /** Bun shell API (`import { $ } from "bun"`), threaded for tool/exec use. */
+  readonly $: typeof import("bun").$
+  /** Host notification sink (authoritative type lives in shared/notify). */
+  readonly notify: NotifySink
   readonly session: V2SessionDomain
   readonly tool: V2ToolDomain
   readonly event: {
@@ -263,17 +296,8 @@ export interface V2Context {
   }
 }
 
-export interface V2PluginDefinition {
-  readonly id: string
-  setup(context: V2Context): Promise<Cleanup | undefined> | Cleanup | undefined
-}
-
 /**
- * Identity helper mirroring `Plugin.define` from `@opencode/plugin`.
- * That package is not resolvable in this toolchain; the host validates the
- * default export structurally (`{ id, setup }`), so this keeps the entry
- * explicit without adding a dependency.
+ * Pre-rename alias kept so the Task 24 migration can land incrementally:
+ * existing importers keep compiling on the path change alone.
  */
-export function definePlugin(definition: V2PluginDefinition): V2PluginDefinition {
-  return definition
-}
+export type V2Context = MatrixxContext

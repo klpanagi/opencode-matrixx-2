@@ -1,6 +1,7 @@
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import { subagentSessions } from "../../features/session-state/state"
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import type { NativePluginContext } from "../../shared/session-context-source"
 import { DEFAULT_SKIP_AGENTS, HOOK_NAME } from "./constants"
@@ -15,7 +16,7 @@ export function createTaskContinuationHandler(args: {
   skipAgents?: string[]
   isContinuationStopped?: (sessionID: string) => boolean
   config?: Partial<MatrixxConfig>
-}): (input: { event: { type: string; properties?: unknown } }) => Promise<void> {
+}): (event: V2Event) => Promise<void> {
   const {
     ctx,
     sessionStateStore,
@@ -25,8 +26,8 @@ export function createTaskContinuationHandler(args: {
     config,
   } = args
 
-  return async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined
+  return async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.error") {
       const sessionID = props?.sessionID as string | undefined

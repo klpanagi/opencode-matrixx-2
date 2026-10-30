@@ -1,6 +1,6 @@
 import { $ } from "bun"
 import type { NativePluginContext } from "../shared/session-context-source"
-import type { V2Context } from "./opencode-types"
+import type { V2Context } from "./context"
 
 /**
  * Builds the native plugin context the matrixx core runs against.

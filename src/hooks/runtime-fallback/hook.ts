@@ -9,6 +9,7 @@ declare function setInterval(callback: () => void, delay?: number): RuntimeFallb
 declare function clearInterval(interval: RuntimeFallbackInterval): void
 declare function clearTimeout(timeout: RuntimeFallbackTimeout): void
 
+import type { V2Event } from "../../plugin/context"
 export function createRuntimeFallbackHook(
   ctx: RuntimeFallbackPluginInput,
   options?: RuntimeFallbackOptions
@@ -54,16 +55,16 @@ export function createRuntimeFallbackHook(
     }
   }
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
+  const eventHandler = async (event: V2Event) => {
     ensureInterval()
 
     if (event.type === "message.updated") {
       if (!config.enabled) return
-      const props = event.properties as Record<string, unknown> | undefined
+      const props = event.data as Record<string, unknown> | undefined
       await messageUpdateHandler(props)
       return
     }
-    await baseEventHandler({ event })
+    await baseEventHandler(event)
   }
 
   const dispose = () => {

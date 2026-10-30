@@ -7,18 +7,15 @@
  * `./plugin/setup-domains`, which build `Hooks` fragments directly and
  * register them onto the V2 context — no factory, no bridge in between.
  *
- * NOTE: `Plugin.define` from `@opencode/plugin` names the same `{id, setup}`
- * object; that package is not resolvable in this toolchain, so the entry
- * uses the structurally identical `definePlugin` helper from
- * `./plugin/opencode-types` instead of adding a dependency.
+ * NOTE: the host validates the default export structurally
+ * (`{ id, setup }`), so no `definePlugin` helper is needed.
  */
 
-import type { Cleanup, V2Context } from "./plugin/opencode-types"
-import { definePlugin } from "./plugin/opencode-types"
+import type { Cleanup, MatrixxContext } from "./plugin/context"
 import { registerDomains, setupDomains } from "./plugin/setup-domains"
 import { log } from "./shared"
 
-async function setup(ctx: V2Context): Promise<Cleanup> {
+async function setup(ctx: MatrixxContext): Promise<Cleanup> {
   log("[matrixx] setup", {
     directory: ctx.location?.directory,
     opencode: ctx.app?.version,
@@ -35,10 +32,10 @@ async function setup(ctx: V2Context): Promise<Cleanup> {
   }
 }
 
-export default definePlugin({
+export default {
   id: "matrixx",
   setup,
-})
+}
 
 export type {
   AgentName,

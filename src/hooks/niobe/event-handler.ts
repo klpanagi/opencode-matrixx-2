@@ -1,5 +1,6 @@
 import { clearMissionState, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { subagentSessions } from "../../features/session-state/state"
+import type { V2Event } from "../../plugin/context"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"
@@ -17,12 +18,12 @@ export function createNiobeEventHandler(input: {
   options?: NiobeHookOptions
   sessions: Map<string, SessionState>
   getState: (sessionID: string) => SessionState
-}): (arg: { event: { type: string; properties?: unknown } }) => Promise<void> {
+}): (event: V2Event) => Promise<void> {
   const { ctx, options, sessions, getState } = input
   const stateRoot = stateRootFromPluginContext(ctx)
 
-  return async ({ event }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined
+  return async (event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.error") {
       const sessionID = props?.sessionID as string | undefined

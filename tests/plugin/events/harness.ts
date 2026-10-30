@@ -1,12 +1,11 @@
 import type { MatrixxConfig } from "../../../src/config"
 import { createEventHandler } from "../../../src/plugin/event"
-import { createEventPump } from "../../../src/plugin/event-pump"
-import { toV1Event } from "../../../src/plugin/opencode-events"
+import type { V2Event } from "../../../src/plugin/context"
 import type { DomainHooks, DomainManagers } from "../../../src/plugin/setup-domains"
 import type { PluginContext } from "../../../src/plugin/types"
 
-export type EventInput = { event: { type: string; properties?: Record<string, unknown> } }
-type EventFn = (input: EventInput) => Promise<void>
+export type EventInput = V2Event
+type EventFn = (event: V2Event) => Promise<void>
 
 function inertEventHook(): { event: EventFn } {
   return { event: async () => {} }
@@ -48,16 +47,16 @@ export function inertHooks(overrides: Record<string, unknown> = {}): DomainHooks
   return hooks as unknown as DomainHooks
 }
 
-export type PumpRunOptions = {
-  event: EventInput["event"]
+export type DispatchRunOptions = {
+  event: V2Event
   hooks?: Record<string, unknown>
   ctx?: Record<string, unknown>
   firstMessageVariantGate?: unknown
 }
 
-export type PumpRunResult = { delivered: number }
+export type DispatchRunResult = { delivered: number }
 
-export async function deliverThroughPump(options: PumpRunOptions): Promise<PumpRunResult> {
+export async function deliverThroughDispatch(options: DispatchRunOptions): Promise<DispatchRunResult> {
   const eventHandler = createEventHandler({
     ctx: (options.ctx ?? {
       directory: "/tmp",
@@ -72,41 +71,23 @@ export async function deliverThroughPump(options: PumpRunOptions): Promise<PumpR
     hooks: inertHooks(options.hooks ?? {}),
   })
 
-  const events = [options.event]
-  const pump = createEventPump({
-    subscribe: async function* () {
-      for (const event of events) {
-        yield event as unknown as { type: string } & Record<string, unknown>
-      }
-    },
-    handler: async (envelope) => {
-      await eventHandler(envelope)
-    },
-    signal: new AbortController().signal,
-    guard: async (_label, fn) => fn(),
-    toV1Event: (event) => toV1Event(event as never),
-  })
-
-  pump.start()
-  for (let attempt = 0; attempt < 200 && pump.stats().delivered === 0; attempt += 1) {
-    await new Promise<void>((resolve) => setTimeout(resolve, 2))
-  }
-  pump.stop()
-  return { delivered: pump.stats().delivered }
+  await eventHandler(options.event)
+  return { delivered: 1 }
 }
 
-export function recordingEventHook(received: EventInput[]): { event: EventFn } {
+
+export function recordingEventHook(received: V2Event[]): { event: EventFn } {
   return {
-    event: async (input) => {
-      received.push(input)
+    event: async (event) => {
+      received.push(event)
     },
   }
 }
 
-export function recordingHandlerHook(received: EventInput[]): { handler: EventFn } {
+export function recordingHandlerHook(received: V2Event[]): { handler: EventFn } {
   return {
-    handler: async (input) => {
-      received.push(input)
+    handler: async (event) => {
+      received.push(event)
     },
   }
 }

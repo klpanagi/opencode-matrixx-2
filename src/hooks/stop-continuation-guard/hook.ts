@@ -15,8 +15,9 @@ interface StopContinuationGuardOptions {
   isAwaitingUser?: (sessionID: string) => boolean
 }
 
+import type { V2Event } from "../../plugin/context"
 export interface StopContinuationGuard {
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
   "chat.message": (input: { sessionID?: string }) => Promise<void>
   stop: (sessionID: string) => Promise<void>
   isStopped: (sessionID: string) => boolean
@@ -65,12 +66,8 @@ export function createStopContinuationGuardHook(
     log(`[${HOOK_NAME}] Continuation guard cleared for session`, { sessionID })
   }
 
-  const event = async ({
-    event,
-  }: {
-    event: { type: string; properties?: unknown }
-  }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined
@@ -93,7 +90,7 @@ export function createStopContinuationGuardHook(
   }
 
   return {
-    event,
+    event: eventHandler,
     "chat.message": chatMessage,
     stop,
     isStopped,

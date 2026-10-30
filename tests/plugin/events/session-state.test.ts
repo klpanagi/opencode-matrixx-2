@@ -4,7 +4,7 @@ import {
   getMainSessionID,
   getSessionAgent,
 } from "../../../src/features/session-state/state"
-import { deliverThroughPump } from "./harness"
+import { deliverThroughDispatch } from "./harness"
 
 describe("event consumer: session-state", () => {
   afterEach(() => {
@@ -16,8 +16,8 @@ describe("event consumer: session-state", () => {
     expect(getMainSessionID()).toBeUndefined()
 
     // when a top-level session is created
-    const result = await deliverThroughPump({
-      event: { type: "session.created", properties: { info: { id: "ses_main_fixture", title: "Fixture" } } },
+    const result = await deliverThroughDispatch({
+      event: { type: "session.created", data: { info: { id: "ses_main_fixture", title: "Fixture" } } },
     })
 
     // then it becomes the main session
@@ -27,13 +27,13 @@ describe("event consumer: session-state", () => {
 
   it("session.created ignores a child session", async () => {
     // given an existing main session
-    await deliverThroughPump({
-      event: { type: "session.created", properties: { info: { id: "ses_parent_fixture" } } },
+    await deliverThroughDispatch({
+      event: { type: "session.created", data: { info: { id: "ses_parent_fixture" } } },
     })
 
     // when a child session is created
-    await deliverThroughPump({
-      event: { type: "session.created", properties: { info: { id: "ses_child_fixture", parentID: "ses_parent_fixture" } } },
+    await deliverThroughDispatch({
+      event: { type: "session.created", data: { info: { id: "ses_child_fixture", parentID: "ses_parent_fixture" } } },
     })
 
     // then main-session tracking is unchanged
@@ -46,10 +46,10 @@ describe("event consumer: session-state", () => {
     expect(getSessionAgent(sessionID)).toBeUndefined()
 
     // when the message update is delivered
-    await deliverThroughPump({
+    await deliverThroughDispatch({
       event: {
         type: "message.updated",
-        properties: { info: { id: "msg_fixture", sessionID, role: "user", agent: "oracle" } },
+        data: { info: { id: "msg_fixture", sessionID, role: "user", agent: "oracle" } },
       },
     })
 
@@ -62,10 +62,10 @@ describe("event consumer: session-state", () => {
     const sessionID = "ses_assistant_fixture"
 
     // when an assistant message arrives carrying an agent
-    await deliverThroughPump({
+    await deliverThroughDispatch({
       event: {
         type: "message.updated",
-        properties: { info: { id: "msg_fixture", sessionID, role: "assistant", agent: "oracle" } },
+        data: { info: { id: "msg_fixture", sessionID, role: "assistant", agent: "oracle" } },
       },
     })
 

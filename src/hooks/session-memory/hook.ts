@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { NativeMemoryConfig } from "../../config/schema/memory"
 import { appendMemoryEntry, isSyntheticMessage, type MemoryEntryInput } from "../../features/session-memory"
+import type { V2Event } from "../../plugin/context"
 import { notifyInjection } from "../../shared/injection-notifier"
 import { log } from "../../shared/logger"
 
@@ -20,7 +21,7 @@ export interface SessionMemoryHook {
     input: { tool: string; sessionID: string; callID: string },
     output: { title: string; output: string; metadata: unknown },
   ) => Promise<void>
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
   flush: (sessionID: string) => void
   pendingCount: () => number
 }
@@ -101,14 +102,10 @@ export function createSessionMemoryHook(
     }
   }
 
-  const event = async ({
-    event: evt,
-  }: {
-    event: { type: string; properties?: unknown }
-  }): Promise<void> => {
+  const event = async (event: V2Event): Promise<void> => {
     if (!enabled) return
-    if (evt.type !== "session.idle" && evt.type !== "session.compacted") return
-    const props = evt.properties as Record<string, unknown> | undefined
+    if (event.type !== "session.idle" && event.type !== "session.compacted") return
+    const props = event.data as Record<string, unknown> | undefined
     const sessionID =
       (props?.sessionID as string | undefined) ??
       ((props?.info as { id?: string } | undefined)?.id as string | undefined)

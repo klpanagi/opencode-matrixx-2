@@ -1,10 +1,11 @@
-type EventInput = { event: { type: string; properties?: Record<string, unknown> } }
+import type { V2Event } from "./context"
+
 type SessionStatus = { type: string }
 
-export function normalizeSessionStatusToIdle(input: EventInput): EventInput | null {
-	if (input.event.type !== "session.status") return null
+export function normalizeSessionStatusToIdle(input: V2Event): V2Event | null {
+	if (input.type !== "session.status") return null
 
-	const props = input.event.properties
+	const props = input.data as Record<string, unknown> | undefined
 	if (!props) return null
 
 	const status = props.status as SessionStatus | undefined
@@ -14,9 +15,7 @@ export function normalizeSessionStatusToIdle(input: EventInput): EventInput | nu
 	if (!sessionID) return null
 
 	return {
-		event: {
-			type: "session.idle",
-			properties: { sessionID },
-		},
+		type: "session.idle",
+		data: { sessionID },
 	}
 }

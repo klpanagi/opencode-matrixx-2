@@ -1,23 +1,22 @@
 import { describe, expect, it } from "bun:test"
-import { deliverThroughPump, recordingEventHook, recordingHandlerHook } from "./harness"
+import { deliverThroughDispatch, recordingEventHook, recordingHandlerHook, type EventInput } from "./harness"
 
-type EventInput = { event: { type: string; properties?: Record<string, unknown> } }
 
 describe("event consumer: session-memory", () => {
   it("session.idle reaches session memory", async () => {
     // given a recording stand-in for the session-memory consumer
     const received: EventInput[] = []
-    // when one session.idle is delivered through the current pump path
-    const result = await deliverThroughPump({
-      event: { type: "session.idle", properties: { sessionID: "ses_fixture" } },
+    // when one session.idle is delivered through the current dispatch path
+    const result = await deliverThroughDispatch({
+      event: { type: "session.idle", data: { sessionID: "ses_fixture" } },
       hooks: {
       sessionMemory: recordingEventHook(received),
       },
     })
-    // then the pump delivered it and this consumer saw the payload
+    // then dispatch delivered it and this consumer saw the payload
     expect(result.delivered).toBe(1)
     expect(received.length).toBe(1)
-    expect(received[0].event.type).toBe("session.idle")
-    expect(received[0].event.properties?.sessionID).toBe("ses_fixture")
+    expect(received[0].type).toBe("session.idle")
+    expect(received[0].data?.sessionID).toBe("ses_fixture")
   })
 })
