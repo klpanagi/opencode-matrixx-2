@@ -13,6 +13,7 @@
 import type { ToolDefinition } from "@opencode-ai/plugin"
 import { z } from "zod"
 import { jsonSafeMetadata, log } from "../shared"
+import { TASK_TOOL_OPTIONS } from "../tools/delegate-task/tool-options"
 import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "./opencode-types"
 import type { ToolsRecord } from "./types"
 
@@ -21,6 +22,14 @@ export interface ToolBridgeDeps {
   worktree: string
   assertPermission?: (input: Record<string, unknown>) => Promise<void>
   context?: unknown
+}
+
+/**
+ * Per-tool registration options. Only the delegate-task tool is direct-only;
+ * every other tool stays reachable from code mode.
+ */
+const REGISTRATION_OPTIONS: Record<string, Record<string, unknown>> = {
+  task: TASK_TOOL_OPTIONS,
 }
 
 function normalizeResult(result: unknown): V2ToolResult {
@@ -82,10 +91,12 @@ export function toV2Tool(
 ): V2ToolInfo | undefined {
   const input = toInputSchema(name, definition.args)
   if (input === undefined) return undefined
+  const options = REGISTRATION_OPTIONS[name]
   return {
     name,
     description: definition.description,
     input,
+    ...(options === undefined ? {} : { options }),
     execute: async (rawInput: unknown, context: V2ToolContext): Promise<V2ToolResult> => {
       const result = await definition.execute(
         rawInput as never,
