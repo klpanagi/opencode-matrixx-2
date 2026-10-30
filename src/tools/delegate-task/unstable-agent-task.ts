@@ -1,6 +1,6 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration, jsonSafeMetadata, normalizeSDKResponse } from "../../shared"
-import type { SessionMessage } from "../../shared/session-message"
+import { formatDuration, jsonSafeMetadata } from "../../shared"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
@@ -94,22 +94,9 @@ export async function executeUnstableAgentTask(
         break
       }
 
-      const statusResult = await client.session.status()
-      const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
-      const sessionStatus = allStatuses[sessionID]
-
-      if (sessionStatus && sessionStatus.type !== "idle") {
-        stablePolls = 0
-        lastMsgCount = 0
-        continue
-      }
-
       if (Date.now() - pollStart < timingCfg.MIN_STABILITY_TIME_MS) continue
 
-      const messagesCheck = await client.session.messages({ path: { id: sessionID } })
-      const msgs = normalizeSDKResponse(messagesCheck, [] as Array<unknown>, {
-        preferResponseOnMissingData: true,
-      })
+      const msgs = await fetchSessionMessages(client, sessionID)
       const currentMsgCount = msgs.length
 
       if (currentMsgCount === lastMsgCount) {
@@ -139,10 +126,7 @@ session_id: ${sessionID}
 </task_metadata>`
     }
 
-    const messagesResult = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(messagesResult, [] as SessionMessage[], {
-      preferResponseOnMissingData: true,
-    })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const assistantMessages = messages
       .filter((m) => isAssistant(m))

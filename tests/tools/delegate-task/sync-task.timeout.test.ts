@@ -44,9 +44,20 @@ function buildMockContext() {
   const mockAbort = mock(() => Promise.resolve())
   const client = {
     session: {
-      abort: mockAbort,
+      interrupt: mockAbort,
       status: mock(() => Promise.resolve({})),
-      messages: mock(() => Promise.resolve({})),
+      context: mock(() =>
+        Promise.resolve({
+          messages: [
+            {
+              id: "msg_001",
+              type: "assistant",
+              time: { created: 1 },
+              content: [{ type: "text", text: "ok" }],
+            },
+          ],
+        }),
+      ),
     },
     config: { get: mock(() => Promise.resolve({})) },
   }
@@ -182,7 +193,7 @@ describe("executeSyncTask — no-abort-on-timeout", () => {
 
       //#then
       expect(mockAbort).toHaveBeenCalledTimes(1)
-      expect(mockAbort).toHaveBeenCalledWith({ path: { id: SESSION_ID } })
+      expect(mockAbort).toHaveBeenCalledWith({ sessionID: SESSION_ID })
       expect(result).toContain("task completed successfully")
     })
   })
@@ -207,7 +218,7 @@ describe("executeSyncTask — no-abort-on-timeout", () => {
 
       //#then — abort IS called for non-timeout errors
       expect(mockAbort).toHaveBeenCalledTimes(1)
-      expect(mockAbort).toHaveBeenCalledWith({ path: { id: "test-session-abc" } })
+      expect(mockAbort).toHaveBeenCalledWith({ sessionID: "test-session-abc" })
       expect(result).toContain("Session stalled")
     })
   })

@@ -5,7 +5,7 @@ import {
   describeLastMessageParts,
   describeMessageShape
 } from "../../../src/tools/delegate-task/diagnostic-shape"
-import type { OpencodeClient } from "../../../src/tools/delegate-task/types"
+import type { NativeClient } from "../../../src/tools/delegate-task/types"
 
 // Assembled from fragments so the retired wording never appears verbatim in the tree
 // (acceptance 6.1 greps src and tests and must find zero matches).
@@ -14,12 +14,14 @@ const RETIRED_PHRASES = [
   ["nested", "inside", "execute/code-mode"].join(" "),
 ]
 
-function clientReturning(messages: unknown[]): OpencodeClient {
+function clientReturning(messages: unknown[]): NativeClient {
   return {
     session: {
-      messages: async () => ({ data: messages })
-    }
-  } as unknown as OpencodeClient
+      context: async () => ({ messages })
+    },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
+  } as unknown as NativeClient
 }
 
 function args() {

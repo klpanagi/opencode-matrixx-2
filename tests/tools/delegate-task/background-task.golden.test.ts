@@ -43,7 +43,7 @@ describe("golden: background task launch block", () => {
       run_in_background: true,
       load_skills: [],
     }
-    const executorCtx = { manager, client: { session: { messages: async () => ({ data: [] }) } }, directory: "/tmp" }
+    const executorCtx = { manager, client: { session: { context: async () => ({ messages: [] }) } }, directory: "/tmp" }
     const parentContext = { sessionID: "parent-session", messageID: "parent-message" }
 
     //#when
@@ -98,7 +98,7 @@ describe("golden: background task launch block", () => {
       run_in_background: true,
       load_skills: [],
     }
-    const executorCtx = { manager, client: { session: { messages: async () => ({ data: [] }) } }, directory: "/tmp" }
+    const executorCtx = { manager, client: { session: { context: async () => ({ messages: [] }) } }, directory: "/tmp" }
     const parentContext = { sessionID: "parent-session", messageID: "parent-message" }
 
     //#when

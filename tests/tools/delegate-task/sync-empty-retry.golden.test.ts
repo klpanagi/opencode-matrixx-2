@@ -4,7 +4,11 @@ import { loadCorpus } from "../../fixtures/messages/loader"
 import { isSessionEmpty } from "../../../src/tools/delegate-task/sync-empty-retry"
 
 function clientReturning(payload: unknown) {
-  return { session: { messages: async () => ({ data: payload }) } } as never
+  return {
+    session: { context: async () => ({ messages: payload }) },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
+  } as never
 }
 
 describe("golden: isSessionEmpty", () => {
@@ -31,7 +35,7 @@ describe("golden: isSessionEmpty", () => {
 
   test("returns false, never throws, for a null payload", async () => {
     //#given a client that returns null instead of a data envelope
-    const client = { session: { messages: async () => null } } as never
+    const client = { session: { context: async () => null } } as never
 
     //#when
     const empty = await isSessionEmpty(client, "ses_golden")
@@ -42,7 +46,7 @@ describe("golden: isSessionEmpty", () => {
 
   test("returns false, never throws, for a string payload", async () => {
     //#given a client that returns a bare string
-    const client = { session: { messages: async () => "not a list" } } as never
+    const client = { session: { context: async () => "not a list" } } as never
 
     //#when
     const empty = await isSessionEmpty(client, "ses_golden")
@@ -55,7 +59,7 @@ describe("golden: isSessionEmpty", () => {
     //#given a client whose session.messages rejects
     const client = {
       session: {
-        messages: async () => {
+        context: async () => {
           throw new Error("boom")
         },
       },

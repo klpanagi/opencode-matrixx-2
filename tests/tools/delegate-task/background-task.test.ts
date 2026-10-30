@@ -60,7 +60,7 @@ describe("executeBackgroundTask - pending placeholder regression", () => {
     }
 
     const mockClient = {
-      session: { messages: mock(() => Promise.resolve({ data: [] })) },
+      session: { context: mock(() => Promise.resolve({ messages: [] })) },
     } as unknown as PluginInput["client"]
 
     const executorCtx = {

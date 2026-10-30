@@ -46,6 +46,7 @@ import {
 import { setContextModeForPrompts } from "../shared/context-mode-enforcement"
 import { switchProfile } from "../shared/dcp-switch-profile"
 import { createFirstMessageVariantGate } from "../shared/first-message-variant"
+import type { NativePluginContext } from "../shared/session-context-source"
 import { resolveTasksConfig } from "../shared/task-system-gating"
 import type { BuiltinSkill } from "../skills"
 import { registerSkillTransform } from "../skills/skills.transform"
@@ -152,7 +153,7 @@ export type SetupToolsDomainResult = {
 
 /** Tool domain: skill context, categories, and the filtered tool registry. */
 export async function setupToolsDomain(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   managers: Pick<DomainManagers, "backgroundManager">
   systemDefaultModel?: () => Promise<string | undefined>

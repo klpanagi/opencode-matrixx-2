@@ -20,18 +20,18 @@ function createSyncHarness() {
 
   const mockClient = {
     session: {
-      get: async () => ({ data: { directory: "/project" } }),
-      create: async () => ({ data: { id: "ses_sde_wiring" } }),
+      get: async () => ({ directory: "/project" }),
+      create: async () => ({ id: "ses_sde_wiring" }),
       prompt: promptMock,
       promptAsync: promptMock,
-      messages: async () => ({
-        data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+      context: async () => ({
+        messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
       }),
       status: async () => ({ data: {} }),
-      abort: mock(() => Promise.resolve())
+      interrupt: mock(() => Promise.resolve())
     },
     config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-    app: { agents: async () => ({ data: [] }) }
+    agent: { list: async () => ({ data: [] }) }
   }
 
   const tool = createDelegateTask({

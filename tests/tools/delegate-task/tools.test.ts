@@ -292,17 +292,17 @@ describe("morpheus-task", () => {
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -356,17 +356,17 @@ describe("morpheus-task", () => {
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -421,17 +421,17 @@ describe("morpheus-task", () => {
         })
       }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) },
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -486,17 +486,17 @@ describe("morpheus-task", () => {
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -544,17 +544,17 @@ describe("morpheus-task", () => {
       
        const mockManager = { launch: async () => ({ id: "task-123", status: "pending", description: "Test task", agent: "mouse", sessionID: "test-session" }) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) }, // No model configured
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -594,15 +594,15 @@ describe("morpheus-task", () => {
       
        const mockManager = { launch: async () => ({ id: "task-123" }) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) }, // No model configured
          model: { list: async () => [] }, // No available models
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -660,17 +660,17 @@ describe("morpheus-task", () => {
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "trinity", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "trinity", mode: "subagent" }] }) },
          config: { get: async () => ({}) },
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -1059,14 +1059,14 @@ describe("morpheus-task", () => {
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -1126,15 +1126,15 @@ describe("morpheus-task", () => {
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-opus-4-6" }] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -1188,19 +1188,19 @@ describe("morpheus-task", () => {
        }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-opus-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_default_variant" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_default_variant" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
            }),
            status: async () => ({ data: { "ses_sync_default_variant": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -1247,14 +1247,14 @@ describe("morpheus-task", () => {
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve())
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -1289,14 +1289,14 @@ describe("morpheus-task", () => {
        
        const mockManager = { launch: async () => ({}) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -1339,18 +1339,18 @@ describe("morpheus-task", () => {
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "test-session" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "test-session" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
       
@@ -1408,12 +1408,12 @@ describe("morpheus-task", () => {
          session: {
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async (args?: { path?: { id?: string } }) => {
-             const sessionID = args?.path?.id
+           context: async (args?: { sessionID?: string }) => {
+             const sessionID = args?.sessionID
              // Only track calls for the target session (ses_continue_test),
              // not for parent-session calls from resolveParentContext
              if (sessionID !== "ses_continue_test") {
-               return { data: [] }
+               return { messages: [] }
              }
              messagesCallCount++
              const now = Date.now()
@@ -1430,11 +1430,11 @@ describe("morpheus-task", () => {
              ]
 
              if (messagesCallCount === 1) {
-               return { data: beforeContinuation }
+               return { messages: beforeContinuation }
              }
 
              return {
-               data: [
+               messages: [
                  ...beforeContinuation,
                  {
                    id: "msg_003", type: "user", time: { created: now + 2 },
@@ -1448,11 +1448,11 @@ describe("morpheus-task", () => {
              }
            },
            status: async () => ({ data: { "ses_continue_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [] })
+         agent: {
+           list: async () => ({ data: [] })
         }
       }
      
@@ -1497,8 +1497,8 @@ describe("morpheus-task", () => {
       session: {
         prompt: promptMock,
         promptAsync: promptMock,
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             {
               id: "msg_001",
                 type: "user",
@@ -1514,11 +1514,11 @@ describe("morpheus-task", () => {
           ]
         }),
         status: async () => ({ data: { "ses_var_test": { type: "idle" } } }),
-        abort: mock(() => Promise.resolve())
+        interrupt: mock(() => Promise.resolve())
       },
       config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-      app: {
-        agents: async () => ({ data: [] })
+      agent: {
+        list: async () => ({ data: [] })
       }
     }
 
@@ -1574,10 +1574,10 @@ describe("morpheus-task", () => {
        session: {
          prompt: async () => ({ data: {} }),
          promptAsync: async () => ({ data: {} }),
-         messages: async () => ({
-           data: []
+         context: async () => ({
+           messages: []
          }),
-         abort: mock(() => Promise.resolve())
+         interrupt: mock(() => Promise.resolve())
        },
        config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) }
      }
@@ -1627,17 +1627,17 @@ describe("morpheus-task", () => {
 
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_error_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_error_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+         agent: {
+           list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
          }
        }
        
@@ -1684,12 +1684,12 @@ describe("morpheus-task", () => {
       
        const mockClient = {
           session: {
-            get: async () => ({ data: { directory: "/project" } }),
-            create: async () => ({ data: { id: "ses_sync_success" } }),
+            get: async () => ({ directory: "/project" }),
+            create: async () => ({ id: "ses_sync_success" }),
             prompt: async () => ({ data: {} }),
             promptAsync: async () => ({ data: {} }),
-            messages: async () => ({
-              data: [
+            context: async () => ({
+              messages: [
                 {
                   id: "msg_001", type: "user", time: { created: Date.now() },
                   content: [{ type: "text", text: "Do something" }]
@@ -1701,11 +1701,11 @@ describe("morpheus-task", () => {
               ]
             }),
             status: async () => ({ data: { "ses_sync_success": { type: "idle" } } }),
-            abort: mock(() => Promise.resolve())
+            interrupt: mock(() => Promise.resolve())
           },
           config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-          app: {
-            agents: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+          agent: {
+            list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
           }
         }
         
@@ -1752,17 +1752,17 @@ describe("morpheus-task", () => {
 
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_agent_notfound" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_agent_notfound" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+         agent: {
+           list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
          }
        }
        
@@ -1809,18 +1809,18 @@ describe("morpheus-task", () => {
        
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: { agents: async () => ({ data: [] }) }
+         agent: { list: async () => ({ data: [] }) }
        }
 
       const tool = createDelegateTask({
@@ -1877,21 +1877,21 @@ describe("morpheus-task", () => {
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_unstable_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_unstable_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
+           context: async () => ({
+             messages: [
                { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Unstable task completed successfully" }] }
              ]
            }),
            status: async () => ({ data: { "ses_unstable_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -1947,14 +1947,14 @@ describe("morpheus-task", () => {
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -2009,20 +2009,20 @@ describe("morpheus-task", () => {
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_unstable_minimax" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_unstable_minimax" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
+           context: async () => ({
+             messages: [
                { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Minimax task completed successfully" }] }
              ]
            }),
            status: async () => ({ data: { "ses_unstable_minimax": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -2080,18 +2080,18 @@ describe("morpheus-task", () => {
        }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_non_gemini" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_non_gemini" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done sync" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done sync" }] }]
            }),
            status: async () => ({ data: { "ses_sync_non_gemini": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -2147,21 +2147,21 @@ describe("morpheus-task", () => {
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_artistry_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_artistry_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
+           context: async () => ({
+             messages: [
                { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Artistry result here" }] }
              ]
            }),
            status: async () => ({ data: { "ses_artistry_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -2219,21 +2219,21 @@ describe("morpheus-task", () => {
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_writing_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_writing_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
+           context: async () => ({
+             messages: [
                { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Writing result here" }] }
              ]
            }),
            status: async () => ({ data: { "ses_writing_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -2291,20 +2291,20 @@ describe("morpheus-task", () => {
       }
       
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_custom_unstable" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_custom_unstable" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Custom unstable result" }] }
             ]
           }),
           status: async () => ({ data: { "ses_custom_unstable": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
       
@@ -2368,14 +2368,14 @@ describe("morpheus-task", () => {
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve())
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -2434,15 +2434,15 @@ describe("morpheus-task", () => {
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -2503,14 +2503,14 @@ const tool = createDelegateTask({
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve())
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -2569,15 +2569,15 @@ const tool = createDelegateTask({
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -2635,14 +2635,14 @@ const tool = createDelegateTask({
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve())
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -2701,14 +2701,14 @@ const tool = createDelegateTask({
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve())
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
         }
       }
 
@@ -2761,18 +2761,18 @@ const tool = createDelegateTask({
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_browser_provider" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_browser_provider" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -2814,18 +2814,18 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_no_browser_provider" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_no_browser_provider" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3246,9 +3246,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3267,9 +3267,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3287,9 +3287,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3307,16 +3307,16 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_ok" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_ok" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
+           context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
            status: async () => ({ data: { "ses_ok": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
         const tool = createDelegateTask({ manager: { launch: async () => ({}), getTasksByParentSession: () => [], hasInFlightNotificationForParent: () => false }, client: mockClient })
@@ -3353,8 +3353,8 @@ const tool = createDelegateTask({
       }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "trinity", mode: "subagent", model: { providerID: "anthropic", modelID: "claude-haiku-4-5" } },
              ]
@@ -3362,11 +3362,11 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "ses_explore_model" } }),
+           create: async () => ({ id: "ses_explore_model" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3414,8 +3414,8 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "anthropic", modelID: "claude-opus-4-6" } },
              ]
@@ -3423,15 +3423,15 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_oracle_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_oracle_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
            }),
            status: async () => ({ data: { "ses_oracle_model": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3479,8 +3479,8 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "trinity", mode: "subagent" },
              ]
@@ -3488,15 +3488,15 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_no_model_agent" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_no_model_agent" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_no_model_agent": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3541,8 +3541,8 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "openai", modelID: "gpt-5.2" } },
              ]
@@ -3550,15 +3550,15 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_override_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_override_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_override_model": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3609,8 +3609,8 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "openai", modelID: "gpt-5.2" } },
              ]
@@ -3618,15 +3618,15 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_variant_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_variant_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_variant_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3674,8 +3674,8 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent" }, // no model field
              ]
@@ -3683,15 +3683,15 @@ const tool = createDelegateTask({
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_fallback_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_fallback_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_fallback_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3745,18 +3745,18 @@ const tool = createDelegateTask({
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_plan_delegate" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_plan_delegate" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }]
            }),
            status: async () => ({ data: { "ses_plan_delegate": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        
@@ -3794,16 +3794,16 @@ const tool = createDelegateTask({
       let promptBody: CapturedPromptBody = {}
       const promptMock = async (input: CapturedPromptBody) => { promptBody = input; return { data: {} } }
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_oracle_task" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_oracle_task" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
+           context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
            status: async () => ({ data: { "ses_oracle_task": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
@@ -3825,11 +3825,11 @@ const tool = createDelegateTask({
       
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+        agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_oracle_no_delegate" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_oracle_no_delegate" }),
           prompt: async (input: CapturedPromptBody) => {
             promptBody = input
             return { data: {} }
@@ -3838,11 +3838,11 @@ const tool = createDelegateTask({
             promptBody = input
             return { data: {} }
           },
-          messages: async () => ({
-            data: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
+          context: async () => ({
+            messages: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
           }),
           status: async () => ({ data: { "ses_oracle_no_delegate": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
       
@@ -3883,22 +3883,22 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ id: SYSTEM_DEFAULT_MODEL }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-          create: async (input: { body: { title?: string } }) => {
-             createBody = input.body
-             return { data: { id: "ses_title_test" } }
+           get: async () => ({ directory: "/project" }),
+          create: async (input: { title?: string }) => {
+             createBody = input
+             return { id: "ses_title_test" }
            },
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
            }),
            status: async () => ({ data: { "ses_title_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve())
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -3936,19 +3936,19 @@ const tool = createDelegateTask({
 
         const mockManager = { launch: async () => ({}), getTasksByParentSession: () => [], hasInFlightNotificationForParent: () => false }
         const mockClient = {
-          app: { agents: async () => ({ data: [] }) },
+          agent: { list: async () => ({ data: [] }) },
           config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
           model: { list: async () => [{ id: SYSTEM_DEFAULT_MODEL }] },
           session: {
-            get: async () => ({ data: { directory: "/project" } }),
-            create: async () => ({ data: { id: "ses_metadata_test" } }),
+            get: async () => ({ directory: "/project" }),
+            create: async () => ({ id: "ses_metadata_test" }),
             prompt: async () => ({ data: {} }),
             promptAsync: async () => ({ data: {} }),
-            messages: async () => ({
-              data: [{ type: "assistant", content: [{ type: "text", text: "Task completed" }] }]
+            context: async () => ({
+              messages: [{ type: "assistant", content: [{ type: "text", text: "Task completed" }] }]
             }),
             status: async () => ({ data: { "ses_metadata_test": { type: "idle" } } }),
-            abort: mock(() => Promise.resolve())
+            interrupt: mock(() => Promise.resolve())
           }
         }
 
@@ -3996,15 +3996,15 @@ const tool = createDelegateTask({
         })
       }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve())
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
          }
        }
 
@@ -4056,15 +4056,15 @@ const tool = createDelegateTask({
         hasInFlightNotificationForParent: () => false
       }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_default_bg" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_default_bg" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               {
                 id: "msg_001", type: "user", time: { created: Date.now() },
                 content: [{ type: "text", text: "Do something" }]
@@ -4076,7 +4076,7 @@ const tool = createDelegateTask({
             ]
           }),
           status: async () => ({ data: { "ses_default_bg": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve())
+          interrupt: mock(() => Promise.resolve())
         }
       }
 

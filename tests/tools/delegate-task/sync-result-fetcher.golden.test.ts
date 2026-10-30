@@ -8,7 +8,11 @@ import { fetchSyncResult } from "../../../src/tools/delegate-task/sync-result-fe
 const FENCE = String.fromCharCode(96).repeat(3)
 
 function clientReturning(payload: unknown) {
-  return { session: { messages: async () => ({ data: payload }) } } as never
+  return {
+    session: { context: async () => ({ messages: payload }) },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
+  } as never
 }
 
 function clone(messages: unknown[]): SessionMessage[] {

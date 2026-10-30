@@ -16,7 +16,7 @@ function createArgs(overrides?: Partial<DelegateTaskArgs>): DelegateTaskArgs {
 
 function createCtx(agentsFn: () => Promise<unknown>): ExecutorContext {
   return {
-    client: { app: { agents: agentsFn } },
+    client: { agent: { list: agentsFn } },
     manager: {},
     directory: "/tmp/test",
   } as unknown as ExecutorContext

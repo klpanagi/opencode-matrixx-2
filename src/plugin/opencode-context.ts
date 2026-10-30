@@ -7,12 +7,16 @@
  */
 
 import { $ } from "bun"
+import type { ListDomain, NativePluginContext, SessionDomainLike } from "../shared/session-context-source"
 import { createClientShim } from "./opencode-client"
 import type { V2Context } from "./opencode-types"
 import type { PluginContext } from "./types"
 
 export interface V1ContextView {
   client: PluginContext["client"]
+  session: SessionDomainLike
+  agent: ListDomain
+  model: ListDomain
   project: unknown
   directory: string
   worktree: string
@@ -26,7 +30,7 @@ export interface V1ContextView {
  * `directory`/`worktree` come from the V2 location; the HTTP client is replaced
  * by the in-process shim; `$` is the Bun shell the plugin runtime provides.
  */
-export function createV1PluginContext(ctx: V2Context): PluginContext {
+export function createV1PluginContext(ctx: V2Context): NativePluginContext {
   const location = ctx.location
   const directory = location?.directory ?? process.cwd()
   const canonical = location?.project?.canonical
@@ -35,6 +39,9 @@ export function createV1PluginContext(ctx: V2Context): PluginContext {
 
   const view: V1ContextView = {
     client: createClientShim(ctx) as unknown as PluginContext["client"],
+    session: ctx.session,
+    agent: ctx.agent,
+    model: ctx.model,
     project: {
       id: location?.project?.id ?? "matrixx",
       worktree,
@@ -47,5 +54,5 @@ export function createV1PluginContext(ctx: V2Context): PluginContext {
     $,
   }
 
-  return view as unknown as PluginContext
+  return view as unknown as NativePluginContext
 }

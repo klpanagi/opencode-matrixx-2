@@ -50,8 +50,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
   test("removes toast when fetchSyncResult throws", async () => {
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -112,8 +112,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
   test("removes toast when pollSyncSession throws", async () => {
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -175,8 +175,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
     //#given - mock successful completion with messages growing after anchor
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -238,8 +238,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -301,8 +301,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -361,8 +361,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
     //#given - mock session messages with agent info on the last assistant message
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 }, agent: "oracle" },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn", agent: "oracle", providerID: "openai", modelID: "gpt-5.2",
@@ -415,8 +415,8 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
     //#given - mock session messages without any agent info
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",

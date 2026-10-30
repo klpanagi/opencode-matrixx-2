@@ -1,8 +1,8 @@
-import { normalizeSDKResponse } from "../../shared"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
-import type { OpencodeClient } from "./types"
+import type { NativeClient } from "./types"
 
 /**
  * Extract all text (text + reasoning parts) from a session message.
@@ -64,22 +64,12 @@ type FetchSyncResultOptions = {
 }
 
 export async function fetchSyncResult(
-  client: OpencodeClient,
+  client: NativeClient,
   sessionID: string,
   anchorMessageCount?: number,
   options?: FetchSyncResultOptions
 ): Promise<{ ok: true; textContent: string } | { ok: false; error: string }> {
-  const messagesResult = await client.session.messages({
-    path: { id: sessionID },
-  })
-
-  if ((messagesResult as { error?: unknown }).error) {
-    return { ok: false, error: `Error fetching result: ${(messagesResult as { error: unknown }).error}\n\nSession ID: ${sessionID}` }
-  }
-
-  const messages = normalizeSDKResponse(messagesResult, [] as SessionMessage[], {
-    preferResponseOnMissingData: true,
-  })
+  const messages = await fetchSessionMessages(client, sessionID)
 
   const messagesAfterAnchor = anchorMessageCount !== undefined ? messages.slice(anchorMessageCount) : messages
 

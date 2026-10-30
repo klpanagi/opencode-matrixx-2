@@ -45,9 +45,9 @@ function buildHarness(messagesImpl: () => Promise<unknown>) {
   const mockMessages = mock(messagesImpl)
   const client = {
     session: {
-      abort: mockAbort,
+      interrupt: mockAbort,
       status: mock(() => Promise.resolve({})),
-      messages: mockMessages
+      context: mockMessages
     },
     config: { get: mock(() => Promise.resolve({})) }
   }
@@ -113,7 +113,7 @@ describe("executeSyncTask - retry-once-on-empty", () => {
 
   test("(A) success but 0 messages -> exactly 1 retry happens, then structured error", async () => {
     //#given - pipeline reports success (null promptError) but the session stays empty
-    const h = buildHarness(async () => ({ data: [] }))
+    const h = buildHarness(async () => ({ messages: [] }))
 
     //#when
     const result = await executeSyncTask(
@@ -137,7 +137,7 @@ describe("executeSyncTask - retry-once-on-empty", () => {
   test("(B) success with >=1 messages -> NO retry", async () => {
     //#given - session has a user + assistant message, so no empty-response retry is needed
     const h = buildHarness(async () => ({
-      data: [
+      messages: [
         { id: "msg_001", type: "user", time: { created: 1000 } },
         {
           id: "msg_002", type: "assistant", time: { created: 2000 },
@@ -160,7 +160,7 @@ describe("executeSyncTask - retry-once-on-empty", () => {
 
   test("(C) already-retried (second consecutive empty) -> no second retry", async () => {
     //#given - session stays empty across both attempts
-    const h = buildHarness(async () => ({ data: [] }))
+    const h = buildHarness(async () => ({ messages: [] }))
 
     //#when
     const result = await executeSyncTask(

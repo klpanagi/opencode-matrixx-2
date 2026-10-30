@@ -1,12 +1,12 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type {
   AvailableCategory,
   AvailableSkill,
 } from "../../agents/dynamic-agent-prompt-builder"
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements, SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
+import type { NativeDomains } from "../../shared/session-context-source"
 
-export type OpencodeClient = PluginInput["client"]
+export type NativeClient = NativeDomains
 
 export interface DelegateTaskArgs {
   description: string
@@ -55,7 +55,7 @@ export interface SyncSessionCreatedEvent {
 
 export interface DelegateTaskToolOptions {
   manager: BackgroundManager
-  client: OpencodeClient
+  client: NativeClient
   directory: string
   /**
    * Test hook: bypass global cache reads (Bun runs tests in parallel).

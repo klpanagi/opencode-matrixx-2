@@ -1,27 +1,23 @@
-import type { OpencodeClient } from "./types"
+import type { NativeClient } from "./types"
 
 export async function createSyncSession(
-  client: OpencodeClient,
+  client: NativeClient,
   input: { parentSessionID: string; agentToUse: string; description: string; defaultDirectory: string }
 ): Promise<{ ok: true; sessionID: string; parentDirectory: string } | { ok: false; error: string }> {
-  const parentSession = client.session.get
-    ? await client.session.get({ path: { id: input.parentSessionID } }).catch(() => null)
-    : null
-  const parentDirectory = parentSession?.data?.directory ?? input.defaultDirectory
+  const parentSession = (await client.session
+    .get({ sessionID: input.parentSessionID })
+    .catch(() => null)) as { directory?: string } | null
+  const parentDirectory = parentSession?.directory ?? input.defaultDirectory
 
-  const createResult = await client.session.create({
-    body: {
+  try {
+    const created = (await client.session.create({
       parentID: input.parentSessionID,
       title: `${input.description} (@${input.agentToUse} subagent)`,
-    },
-    query: {
-      directory: parentDirectory,
-    },
-  })
+    })) as { id: string }
 
-  if (createResult.error) {
-    return { ok: false, error: `Failed to create session: ${createResult.error}` }
+    return { ok: true, sessionID: created.id, parentDirectory }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { ok: false, error: `Failed to create session: ${message}` }
   }
-
-  return { ok: true, sessionID: createResult.data.id, parentDirectory }
 }

@@ -19,8 +19,10 @@ function clientReturning(payload: unknown) {
   return {
     session: {
       status: async () => ({ data: { ses_golden: { type: "idle" } } }),
-      messages: async () => ({ data: payload }),
+      context: async () => ({ messages: payload }),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
 }
 

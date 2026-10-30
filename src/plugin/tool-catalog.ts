@@ -6,6 +6,7 @@ import type {
 import type { MatrixxConfig } from "../config"
 import { resolvePlanCap } from "../features/mission-state/constants"
 import { filterDisabledTools } from "../shared/disabled-tools"
+import type { NativePluginContext } from "../shared/session-context-source"
 import { isTaskSystemEnabled } from "../shared/task-system-gating"
 import {
   builtinTools,
@@ -65,7 +66,7 @@ import {
   shouldEnablePresetTools,
   shouldEnableSessionCleanup,
 } from "./tool-policy"
-import type { PluginContext, ToolsRecord } from "./types"
+import type { ToolsRecord } from "./types"
 
 export type ToolCatalogResult = {
   filteredTools: ToolsRecord
@@ -73,7 +74,7 @@ export type ToolCatalogResult = {
 }
 
 export function createToolCatalog(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
@@ -116,7 +117,7 @@ export function createToolCatalog(args: {
 
   const delegateTask = createDelegateTask({
     manager: managers.backgroundManager,
-    client: ctx.client,
+    client: ctx,
     directory: ctx.directory,
     userCategories: pluginConfig.categories,
     globalModel: pluginConfig.global_model,

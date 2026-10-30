@@ -235,7 +235,7 @@ session_id: ${sessionID}
       // On poll timeout the session is still running — keep it alive so the
       // caller can resume via session_id.
       if (!pollTimedOut) {
-        client.session.abort({ path: { id: syncSessionID } }).catch((err) => { log("[delegate-task] Sync session abort failed:", err) })
+        client.session.interrupt({ sessionID: syncSessionID }).catch((err) => { log("[delegate-task] Sync session interrupt failed:", err) })
       }
     }
   }

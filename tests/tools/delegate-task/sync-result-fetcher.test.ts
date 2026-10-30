@@ -7,8 +7,8 @@ describe("fetchSyncResult", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 },
@@ -37,8 +37,8 @@ describe("fetchSyncResult", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 },
@@ -67,8 +67,8 @@ describe("fetchSyncResult", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 },
@@ -95,8 +95,8 @@ describe("fetchSyncResult", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             { id: "msg_001", type: "user", time: { created: 1000 } },
             {
               id: "msg_002", type: "assistant", time: { created: 2000 },
@@ -130,8 +130,8 @@ describe("fetchSyncResult", () => {
 
     const mockClient = {
       session: {
-        messages: async () => ({
-          data: []
+        context: async () => ({
+          messages: []
         })
       }
     }

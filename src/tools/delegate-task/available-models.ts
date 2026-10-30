@@ -1,7 +1,7 @@
 import { readConnectedProvidersCache, readProviderModelsCache } from "../../shared/connected-providers-cache"
 import { log } from "../../shared/logger"
 import { unwrapList } from "../../shared/unwrap-list"
-import type { OpencodeClient } from "./types"
+import type { NativeClient } from "./types"
 
 function addFromProviderModels(
   out: Set<string>,
@@ -16,7 +16,7 @@ function addFromProviderModels(
   }
 }
 
-export async function getAvailableModelsForDelegateTask(client: OpencodeClient): Promise<Set<string>> {
+export async function getAvailableModelsForDelegateTask(client: NativeClient): Promise<Set<string>> {
   const providerModelsCache = readProviderModelsCache()
 
   if (providerModelsCache?.models) {
@@ -36,16 +36,8 @@ export async function getAvailableModelsForDelegateTask(client: OpencodeClient):
     return new Set()
   }
 
-  const modelList = (client as unknown as { model?: { list?: () => Promise<unknown> } })
-    ?.model
-    ?.list
-
-  if (!modelList) {
-    return new Set()
-  }
-
   try {
-    const result = await modelList()
+    const result = await client.model.list()
     const rows = unwrapList<{ provider?: string; providerID?: string; id?: string; modelID?: string }>(result)
 
     const connected = new Set(connectedProviders)
@@ -59,7 +51,7 @@ export async function getAvailableModelsForDelegateTask(client: OpencodeClient):
     }
     return out
   } catch (err) {
-    log("[delegate-task] client.model.list failed", { error: String(err) })
+    log("[delegate-task] model.list failed", { error: String(err) })
     return new Set()
   }
 }

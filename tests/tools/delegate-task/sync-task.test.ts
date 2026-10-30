@@ -63,8 +63,8 @@ describe("executeSyncTask - cleanup on error paths", () => {
   test("cleans up toast and subagentSessions when fetchSyncResult returns ok: false", async () => {
     const mockClient = {
       session: {
-        create: async () => ({ data: { id: "ses_test_12345678" } }),
-        abort: mock(() => Promise.resolve()),
+        create: async () => ({ id: "ses_test_12345678" }),
+        interrupt: mock(() => Promise.resolve()),
       },
     }
 
@@ -114,8 +114,8 @@ describe("executeSyncTask - cleanup on error paths", () => {
   test("cleans up toast and subagentSessions when pollSyncSession returns error", async () => {
     const mockClient = {
       session: {
-        create: async () => ({ data: { id: "ses_test_12345678" } }),
-        abort: mock(() => Promise.resolve()),
+        create: async () => ({ id: "ses_test_12345678" }),
+        interrupt: mock(() => Promise.resolve()),
       },
     }
 
@@ -165,8 +165,8 @@ describe("executeSyncTask - cleanup on error paths", () => {
   test("cleans up toast and subagentSessions on successful completion", async () => {
     const mockClient = {
       session: {
-        create: async () => ({ data: { id: "ses_test_12345678" } }),
-        abort: mock(() => Promise.resolve()),
+        create: async () => ({ id: "ses_test_12345678" }),
+        interrupt: mock(() => Promise.resolve()),
       },
     }
 

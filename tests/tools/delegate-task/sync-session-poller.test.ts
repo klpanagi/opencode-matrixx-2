@@ -37,8 +37,8 @@ describe("pollSyncSession", () => {
       const _pollCount = 0
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
               {
                 id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "stop",
@@ -69,11 +69,11 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 2) {
               return {
-                data: [
+                messages: [
                   { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
                     id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
@@ -83,7 +83,7 @@ describe("pollSyncSession", () => {
               }
             }
             return {
-              data: [
+              messages: [
                 { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
                   id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
@@ -121,11 +121,11 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 1) {
               return {
-                data: [
+                messages: [
                   { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
                     id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "unknown",
@@ -135,7 +135,7 @@ describe("pollSyncSession", () => {
               }
             }
             return {
-              data: [
+              messages: [
                 { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
                   id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "unknown",
@@ -173,11 +173,11 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 1) {
               return {
-                data: [
+                messages: [
                   { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
                     id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -188,7 +188,7 @@ describe("pollSyncSession", () => {
               }
             }
             return {
-              data: [
+              messages: [
                 { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
                   id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -226,7 +226,7 @@ describe("pollSyncSession", () => {
       const { pollSyncSession } = require("../../../src/tools/delegate-task/sync-session-poller")
       const mockClient = {
         session: {
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} })
         }
       }
@@ -259,8 +259,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
             ]
           }),
@@ -283,7 +283,7 @@ describe("pollSyncSession", () => {
   })
 
    describe("non-idle session status", () => {
-     test("skips message check when session is not idle", async () => {
+     test("never consults a status domain and completes from messages", async () => {
        //#given
        const { pollSyncSession } = require("../../../src/tools/delegate-task/sync-session-poller")
 
@@ -291,10 +291,10 @@ describe("pollSyncSession", () => {
        let _messageCallCount = 0
        const mockClient = {
          session: {
-           messages: async () => {
+           context: async () => {
              _messageCallCount++
              return {
-               data: [
+               messages: [
                  { id: "msg_001", type: "user", time: { created: 1000 } },
                  {
                    id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -321,9 +321,9 @@ describe("pollSyncSession", () => {
          taskId: undefined
        })
 
-       //#then - should have waited for idle before checking messages
+       //#then - completion comes from the message stream; the status branch is gone
        expect(result).toBeNull()
-       expect(statusCallCount).toBeGreaterThanOrEqual(3)
+       expect(statusCallCount).toBe(0)
      })
    })
 
@@ -492,8 +492,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
             ]
           }),
@@ -527,8 +527,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
               {
                 id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
@@ -567,8 +567,8 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
               {
                 id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "stop",
@@ -611,8 +611,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
               {
                 id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
@@ -651,8 +651,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { type: "user", time: { created: 1000 } },
               {
                 type: "assistant", time: { created: 2000 }, finish: "end_turn",
@@ -689,8 +689,8 @@ describe("pollSyncSession", () => {
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               { id: "msg_001", type: "user", time: { created: 1000 } },
             ]
           }),
@@ -725,11 +725,11 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 2) {
               return {
-                data: [
+                messages: [
                   { type: "user" },
                   {
                     type: "assistant", finish: "end_turn",
@@ -740,7 +740,7 @@ describe("pollSyncSession", () => {
             }
             if (callCount <= 4) {
               return {
-                data: [
+                messages: [
                   { type: "user" },
                   {
                     type: "assistant", finish: "end_turn",
@@ -755,7 +755,7 @@ describe("pollSyncSession", () => {
               }
             }
             return {
-              data: [
+              messages: [
                   { type: "user" },
                   {
                     type: "assistant", finish: "end_turn",

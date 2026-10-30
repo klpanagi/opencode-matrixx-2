@@ -1,10 +1,10 @@
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import type { OpencodeClient } from "./types"
+import type { NativeClient } from "./types"
 
 export interface ExecutorContext {
   manager: BackgroundManager
-  client: OpencodeClient
+  client: NativeClient
   directory: string
   userCategories?: CategoriesConfig
   mouseModel?: string
