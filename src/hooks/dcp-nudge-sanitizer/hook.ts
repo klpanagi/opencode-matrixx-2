@@ -10,7 +10,16 @@
  * reorders the `plugin` array so Matrixx runs after DCP.
  */
 
-import type { Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy part shape (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `@opencode-ai/sdk` part types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
 
 import type { MatrixxContext } from "../../plugin/context"
 import { sanitizeKnownTags } from "../../shared/system-directive"

@@ -1,6 +1,21 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { Message, Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `@opencode-ai/sdk` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string
+  sessionID?: string
+  role?: string
+  [key: string]: unknown
+}
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
 
 import { buildContextDisciplineSection } from "../../src/agents/dynamic-agent-prompt-builder"
 import { getModelDirectives } from "../../src/agents/model-directives"

@@ -74,7 +74,7 @@ import { createToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
 import type { Hooks } from "./legacy-hooks"
-import { createMessagesTransformHandler } from "./messages-transform"
+import { registerMessageHooks } from "./message-hooks"
 import { createNativePluginContext } from "./native-context"
 import { createSkillContext } from "./skill-context"
 import { createToolCatalog } from "./tool-catalog"
@@ -198,7 +198,6 @@ export function setupChatHooks(args: {
   Hooks,
   | "chat.message"
   | "chat.params"
-  | "experimental.chat.messages.transform"
   | "experimental.chat.system.transform"
 > {
   const { ctx, pluginConfig, firstMessageVariantGate, hooks } = args
@@ -212,10 +211,6 @@ export function setupChatHooks(args: {
     }),
 
     "chat.params": createChatParamsHandler({ anthropicEffort: hooks.anthropicEffort }),
-
-    "experimental.chat.messages.transform": createMessagesTransformHandler({
-      hooks,
-    }),
 
     "experimental.chat.system.transform": async (input, output): Promise<void> => {
       await hooks.contextModeRouting(input, output)
@@ -443,10 +438,6 @@ type DomainBridgeHandlers = {
       options?: Record<string, unknown>
     },
   ) => Promise<void>
-  "experimental.chat.messages.transform"?: (
-    input: Record<string, unknown>,
-    output: { messages: unknown[] },
-  ) => Promise<void>
   "experimental.chat.system.transform"?: (
     input: Record<string, unknown>,
     output: { system: string[] },
@@ -615,11 +606,7 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
     }
   }
 
-  if (
-    hooks["chat.params"] ||
-    hooks["experimental.chat.system.transform"] ||
-    hooks["experimental.chat.messages.transform"]
-  ) {
+  if (hooks["chat.params"] || hooks["experimental.chat.system.transform"]) {
     const registration = await guard("session.hook(context)", () =>
       ctx.session.hook("context", async (event) => {
         // `context` fires for the primary turn only (per-kind dispatch in the
@@ -627,16 +614,16 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
         // routing discipline reaches primary turns, not auxiliary requests.
         await guard("chat.params", () => applyChatParams(event))
         await guard("system.transform", () => applySystemTransform(event))
-        // Stage 4: V2 `messages` are flat `Message[]` while the V1 transform
-        // expects `{ info, parts }[]`. Registering the V1 handler here would
-        // inject V1-shaped entries into a V2 request, so it stays deferred.
-        if (hooks["experimental.chat.messages.transform"]) {
-          log("[matrixx] messages transform deferred to Stage 4 (V2 messages are flat; V1 transform expects {info, parts}[])")
-        }
       }),
     )
     if (registration) registrations.push(registration)
   }
+
+  // Task 25: native per-hook message registrations (flat-Message[] bodies land in Task 26).
+  const messageHookRegistrations = await guard("registerMessageHooks", () =>
+    registerMessageHooks(ctx),
+  )
+  if (messageHookRegistrations) registrations.push(...messageHookRegistrations)
 
   if (hooks["experimental.session.compacting"]) {
     const handler = hooks["experimental.session.compacting"]

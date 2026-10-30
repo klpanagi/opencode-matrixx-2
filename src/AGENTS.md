@@ -64,7 +64,7 @@ src/
 | `tool` | filteredTools | All registered tools |
 | `chat.params` | createChatParamsHandler | Anthropic effort level |
 | `chat.message` | createChatMessageHandler | First message variant, session setup |
-| `experimental.chat.messages.transform` | createMessagesTransformHandler | Context injection, keyword detection |
+| `session.hook("context" \| "compaction" \| "generate")` | registerMessageHooks | Context injection, keyword detection |
 | `config` | configHandler | Agent/MCP/command registration |
 | `event` | createEventHandler | Session lifecycle |
 | `tool.execute.before` | createToolExecuteBeforeHandler | Pre-tool hooks |

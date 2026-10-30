@@ -1,6 +1,23 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-import type { Message, Part } from "@opencode-ai/sdk";
+
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `@opencode-ai/sdk` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string;
+  sessionID?: string;
+  role?: string;
+  [key: string]: unknown
+};
+type Part = {
+  type?: string;
+  text?: string;
+  [key: string]: unknown
+};
+
 import type { KnowledgeHub } from "../../config/schema/knowledge";
 import { type ContextCollector, contextCollector } from "../../features/context-injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
