@@ -1,0 +1,38 @@
+[
+  {
+    "id": "msg_v2_user_1",
+    "type": "user",
+    "time": { "created": 1730000000000 },
+    "text": "Summarize the failing test.",
+    "files": [],
+    "agents": [],
+    "skills": []
+  },
+  {
+    "id": "msg_v2_asst_1",
+    "type": "assistant",
+    "time": { "created": 1730000001000 },
+    "agent": "oracle",
+    "model": { "providerID": "anthropic", "modelID": "claude-sonnet-4-6" },
+    "content": [{ "type": "text", "text": "The assertion compares 1 to 2." }],
+    "finish": "stop"
+  },
+  {
+    "id": "msg_v2_user_2",
+    "type": "user",
+    "time": { "created": 1730000002000 },
+    "text": "Thanks. Is it a flake?",
+    "files": [],
+    "agents": [],
+    "skills": []
+  },
+  {
+    "id": "msg_v2_asst_2",
+    "type": "assistant",
+    "time": { "created": 1730000003000 },
+    "agent": "oracle",
+    "model": { "providerID": "anthropic", "modelID": "claude-sonnet-4-6" },
+    "content": [{ "type": "text", "text": "No, the fixture drifted." }],
+    "finish": "stop"
+  }
+]

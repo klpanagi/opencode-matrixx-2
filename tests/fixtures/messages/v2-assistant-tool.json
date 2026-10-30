@@ -1,0 +1,38 @@
+[
+  {
+    "id": "msg_v2_tool_user_1",
+    "type": "user",
+    "time": { "created": 1730000010000 },
+    "text": "Run the test suite.",
+    "files": [],
+    "agents": [],
+    "skills": []
+  },
+  {
+    "id": "msg_v2_tool_asst_1",
+    "type": "assistant",
+    "time": { "created": 1730000011000 },
+    "agent": "oracle",
+    "model": { "providerID": "anthropic", "modelID": "claude-sonnet-4-6" },
+    "content": [
+      {
+        "type": "tool",
+        "id": "call_01",
+        "name": "bash",
+        "state": { "status": "completed", "input": { "command": "bun test" }, "output": "1 pass" },
+        "time": { "created": 1730000011500, "ran": 1730000011600, "completed": 1730000012000 }
+      },
+      { "type": "text", "text": "The suite passes." }
+    ],
+    "finish": "stop"
+  },
+  {
+    "id": "msg_v2_tool_asst_2",
+    "type": "assistant",
+    "time": { "created": 1730000013000 },
+    "agent": "oracle",
+    "model": { "providerID": "anthropic", "modelID": "claude-sonnet-4-6" },
+    "content": [{ "type": "text", "text": "Done." }],
+    "finish": "stop"
+  }
+]
