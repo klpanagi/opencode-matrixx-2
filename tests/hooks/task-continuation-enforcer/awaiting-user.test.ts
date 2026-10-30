@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
@@ -39,7 +39,7 @@ function makeCtx(
   toastMock: ReturnType<typeof mock>,
   messages: Array<unknown>,
   promptMock?: ReturnType<typeof mock>,
-): PluginInput {
+): MatrixxContext {
   setNotifySink(toastMock)
   return {
     directory: dir,
@@ -47,7 +47,7 @@ function makeCtx(
       context: async () => messages,
       prompt: promptMock ?? (async () => ({})),
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 function markAwaitingUser(store: ReturnType<typeof createSessionStateStore>, sessionID: string): void {

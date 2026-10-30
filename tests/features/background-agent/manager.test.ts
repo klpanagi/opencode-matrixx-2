@@ -6,7 +6,7 @@ import * as fs from "node:fs"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { _resetTaskToastManagerForTesting, initTaskToastManager } from "../../../src/features/task-toast-manager/manager"
 import type { ConcurrencyManager } from "../../../src/features/background-agent/concurrency"
 import { MIN_IDLE_TIME_MS } from "../../../src/features/background-agent/constants"
@@ -190,7 +190,7 @@ function createBackgroundManager(): BackgroundManager {
     agent: { list: async () => [] },
     model: { list: async () => [] },
   }
-  return new BackgroundManager({ ...native, directory: tmpdir() } as unknown as PluginInput)
+  return new BackgroundManager({ ...native, directory: tmpdir() } as unknown as MatrixxContext)
 }
 
 function getConcurrencyManager(manager: BackgroundManager): ConcurrencyManager {
@@ -256,7 +256,7 @@ function createToastRemoveTaskTracker(): { removeTaskCalls: string[]; resetToast
   _resetTaskToastManagerForTesting()
   const toastManager = initTaskToastManager({
     tui: { showToast: async () => {} },
-  } as unknown as PluginInput["client"])
+  } as unknown as MatrixxContext["client"])
   const removeTaskCalls: string[] = []
   const originalRemoveTask = toastManager.removeTask.bind(toastManager)
   toastManager.removeTask = (taskId: string): void => {
@@ -531,7 +531,7 @@ describe("BackgroundManager.resume model persistence", () => {
        agent: { list: async () => [] },
        model: { list: async () => [] },
      }
-     manager = new BackgroundManager({ ...native, directory: tmpdir() } as unknown as PluginInput)
+     manager = new BackgroundManager({ ...native, directory: tmpdir() } as unknown as MatrixxContext)
      stubNotifyParentSession(manager)
    })
 

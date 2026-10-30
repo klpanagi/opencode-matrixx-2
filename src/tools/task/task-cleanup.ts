@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir } from "../../features/task-storage/storage"
 import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enforcer/staleness"
@@ -45,8 +45,8 @@ function getTaskTimestamp(task: unknown): number {
 
 export function createTaskCleanupTool(
   config: Partial<MatrixxConfig>,
-  ctx?: PluginInput,
-): ToolDefinition {
+  ctx?: MatrixxContext,
+): MatrixxToolDefinition {
   return tool({
     description: `[TRACKING — local progress records only. Spawns nothing, executes nothing.]
 Delete reclaimable task files from storage.

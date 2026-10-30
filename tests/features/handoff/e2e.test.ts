@@ -16,20 +16,20 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { getHandoffConsumedFilePath, getHandoffFilePath } from "../../../src/features/handoff"
 import { validateHandoffYaml } from "../../../src/features/handoff/validate"
 
-/** Minimal PluginInput mock — only `directory` is consumed by the handoff tool. */
-function makeCtx(directory: string): PluginInput {
+/** Minimal MatrixxContext mock — only `directory` is consumed by the handoff tool. */
+function makeCtx(directory: string): MatrixxContext {
   return {
-    client: {} as PluginInput["client"],
+    client: {} as MatrixxContext["client"],
     directory,
-    project: {} as PluginInput["project"],
+    project: {} as MatrixxContext["project"],
     worktree: directory,
     serverUrl: new URL("http://localhost:0"),
-    $: {} as PluginInput["$"],
-  } as PluginInput
+    $: {} as MatrixxContext["$"],
+  } as MatrixxContext
 }
 
 function makeContext(sessionID: string, directory: string) {

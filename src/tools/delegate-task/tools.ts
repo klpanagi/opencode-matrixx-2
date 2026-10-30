@@ -1,4 +1,4 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type {
   AvailableCategory,
   AvailableSkill,
@@ -75,7 +75,7 @@ export function requireTddEnforcerForCodeWriting(
   )
 }
 
-export function createDelegateTask(options: DelegateTaskToolOptions): ToolDefinition {
+export function createDelegateTask(options: DelegateTaskToolOptions): MatrixxToolDefinition {
   const { userCategories } = options
 
   const allCategories = mergeCategories(userCategories)

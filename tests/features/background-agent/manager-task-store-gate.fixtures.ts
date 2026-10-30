@@ -9,7 +9,7 @@
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import type { MatrixxConfig } from "../../../src/config/schema"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
@@ -40,7 +40,7 @@ function makeClient(directory: string) {
 
 export function makeManager(directory: string, pluginConfig?: Partial<MatrixxConfig>): BackgroundManager {
   return new BackgroundManager(
-    { ...makeClient(directory), directory } as unknown as PluginInput,
+    { ...makeClient(directory), directory } as unknown as MatrixxContext,
     undefined,
     pluginConfig ? { pluginConfig } : undefined,
   )

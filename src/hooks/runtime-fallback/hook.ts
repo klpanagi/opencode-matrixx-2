@@ -3,7 +3,7 @@ import { createChatMessageHandler } from "./chat-message-handler"
 import { DEFAULT_CONFIG } from "./constants"
 import { createEventHandler } from "./event-handler"
 import { createMessageUpdateHandler } from "./message-update-handler"
-import type { HookDeps, RuntimeFallbackHook, RuntimeFallbackInterval, RuntimeFallbackOptions, RuntimeFallbackPluginInput, RuntimeFallbackTimeout } from "./types"
+import type { HookDeps, RuntimeFallbackContext, RuntimeFallbackHook, RuntimeFallbackInterval, RuntimeFallbackOptions, RuntimeFallbackTimeout } from "./types"
 
 declare function setInterval(callback: () => void, delay?: number): RuntimeFallbackInterval
 declare function clearInterval(interval: RuntimeFallbackInterval): void
@@ -11,7 +11,7 @@ declare function clearTimeout(timeout: RuntimeFallbackTimeout): void
 
 import type { V2Event } from "../../plugin/context"
 export function createRuntimeFallbackHook(
-  ctx: RuntimeFallbackPluginInput,
+  ctx: RuntimeFallbackContext,
   options?: RuntimeFallbackOptions
 ): RuntimeFallbackHook {
   const config = {

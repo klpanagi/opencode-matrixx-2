@@ -11,12 +11,11 @@ import { resetMessageCursor } from "../shared"
 import { log } from "../shared/logger"
 import type { NativePluginContext } from "../shared/session-context-source"
 import { lspManager } from "../tools"
+import type { MatrixxContext, V2Event } from "./context"
 import { DEDUPLICATE_WINDOW_MS } from "./event-dispatch"
-import type { V2Event } from "./context"
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
 import { normalizeSessionStatusToIdle } from "./session-status-normalizer"
 import type { DomainHooks, DomainManagers } from "./setup-domains"
-import type { PluginContext } from "./types"
 
 type FirstMessageVariantGate = {
   markSessionCreated: (sessionInfo: { id?: string; title?: string; parentID?: string } | undefined) => void
@@ -24,7 +23,7 @@ type FirstMessageVariantGate = {
 }
 
 export function createEventHandler(args: {
-  ctx: PluginContext & NativePluginContext
+  ctx: MatrixxContext & NativePluginContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   managers: DomainManagers

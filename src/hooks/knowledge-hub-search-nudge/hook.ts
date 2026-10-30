@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { LoadedHub } from "../../features/knowledge-hub/loader"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
 
 const HOOK_NAME = "knowledge-hub-search-nudge"
@@ -16,7 +16,7 @@ function buildNudge(hubs: LoadedHub[]): string {
   return `Check knowledge hub(s) ${names} before searching the web; resolve files via @hub/path on demand, never bulk-read.`
 }
 
-export function createKnowledgeHubSearchNudgeHook(ctx: PluginInput, options: KnowledgeHubSearchNudgeOptions = {}) {
+export function createKnowledgeHubSearchNudgeHook(ctx: MatrixxContext, options: KnowledgeHubSearchNudgeOptions = {}) {
   void ctx
   let warnedOnce = false
 

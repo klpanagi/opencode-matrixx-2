@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { stateRootFromPluginContext } from "../../shared/state-root"
 import { handleArchive } from "./archive-handler"
 import { HANDOFF_DESCRIPTION } from "./constants"
@@ -41,9 +41,9 @@ type HandoffToolArgs = {
  * (`create-handler`, `read-handler`, `archive-handler`, `list-handler`) so
  * this dispatcher stays small and each handler can evolve independently.
  */
-export function createHandoffTools(ctx: PluginInput): Record<string, ToolDefinition> {
+export function createHandoffTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
   const stateRoot = stateRootFromPluginContext(ctx)
-  const handoff: ToolDefinition = tool({
+  const handoff: MatrixxToolDefinition = tool({
     description: HANDOFF_DESCRIPTION,
     args: {
       action: tool.schema

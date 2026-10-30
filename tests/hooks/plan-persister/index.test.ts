@@ -8,7 +8,7 @@ import { describe, expect, it } from "bun:test"
 import { existsSync, mkdirSync, openSync, readFileSync, readSync, closeSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 import { parseMetadataComment } from "../../../src/features/mission-state/plan-storage"
@@ -22,7 +22,7 @@ function tmpDir(): string {
   return d
 }
 
-function createMockContext(): PluginInput {
+function createMockContext(): MatrixxContext {
   const client = createOpencodeClient({ directory: "/tmp/test" })
   return {
     client,
@@ -38,7 +38,7 @@ function createMockContext(): PluginInput {
  * Build a context whose `session.todo` always throws and counts invocations.
  * The spy exists purely to prove the hook never reaches the legacy read.
  */
-function createThrowingTodoContext(): { ctx: PluginInput; invocations: () => number } {
+function createThrowingTodoContext(): { ctx: MatrixxContext; invocations: () => number } {
   const client = createOpencodeClient({ directory: "/tmp/test" })
   type SessionTodoOptions = Parameters<typeof client.session.todo>[0]
   type SessionTodoResult = ReturnType<typeof client.session.todo>
@@ -47,7 +47,7 @@ function createThrowingTodoContext(): { ctx: PluginInput; invocations: () => num
     calls += 1
     throw new Error("session.todo must never be called")
   }
-  const ctx: PluginInput = {
+  const ctx: MatrixxContext = {
     client,
     project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
     directory: "/tmp/test",

@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { runSg } from "./cli"
 import { CLI_LANGUAGES } from "./constants"
 import { getPatternHint } from "./pattern-hints"
@@ -18,8 +18,8 @@ async function showOutputToUser(context: unknown, output: string): Promise<void>
   await ctx.metadata?.({ metadata: { output } })
 }
 
-export function createAstGrepTools(ctx: PluginInput): Record<string, ToolDefinition> {
-  const ast_grep_search: ToolDefinition = tool({
+export function createAstGrepTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const ast_grep_search: MatrixxToolDefinition = tool({
     description: AST_GREP_SEARCH_DESCRIPTION,
     args: {
       pattern: tool.schema.string().describe(AST_GREP_SEARCH_PATTERN_PARAM),
@@ -57,7 +57,7 @@ export function createAstGrepTools(ctx: PluginInput): Record<string, ToolDefinit
     },
   })
 
-  const ast_grep_replace: ToolDefinition = tool({
+  const ast_grep_replace: MatrixxToolDefinition = tool({
     description: AST_GREP_REPLACE_DESCRIPTION,
     args: {
       pattern: tool.schema.string().describe("AST pattern to match"),

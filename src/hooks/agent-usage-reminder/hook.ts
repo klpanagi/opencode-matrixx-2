@@ -1,5 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin";
-import type { V2Event } from "../../plugin/context";
+import type { MatrixxContext, V2Event } from "../../plugin/context";
 import { AGENT_TOOLS, MAX_AGENT_USAGE_REMINDERS, REMINDER_MESSAGE, TARGET_TOOLS } from "./constants";
 import {
   clearAgentUsageState,
@@ -20,7 +19,7 @@ interface ToolExecuteOutput {
   metadata: unknown;
 }
 
-export function createAgentUsageReminderHook(_ctx: PluginInput) {
+export function createAgentUsageReminderHook(_ctx: MatrixxContext) {
   const sessionStates = new Map<string, AgentUsageState>();
 
   function getOrCreateState(sessionID: string): AgentUsageState {

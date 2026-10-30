@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { z } from "zod"
-import { emitToolInfo } from "../../src/plugin/opencode-tools"
+import { emitToolInfo } from "../../src/tools/shared/define-tool"
 
 // The delegate-task tool spawns a nested agent, which the host cannot do from
 // inside a code-mode execute block: the call returns an empty string. It must

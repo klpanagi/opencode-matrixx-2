@@ -1,6 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../../plugin/context";
 import { createPostReadInjectorHook } from "../post-read-injector/hook";
 
-export function createRulesInjectorHook(ctx: PluginInput) {
+export function createRulesInjectorHook(ctx: MatrixxContext) {
   return createPostReadInjectorHook(ctx, { trackedTools: ["read", "write", "edit", "multiedit"] });
 }

@@ -7,10 +7,10 @@
  */
 
 import { existsSync } from "node:fs"
-import type { PluginInput } from "@opencode-ai/plugin"
 import { readMissionState } from "../../features/mission-state"
 import { buildRehydrationContext } from "../../features/mission-state/rehydrate"
 import type { PlanPersistenceOptions } from "../../features/mission-state/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import { collectLinkedTodos } from "./task-link"
 import { applyFilteredSync } from "./task-sync"
@@ -25,7 +25,7 @@ export interface PlanPersister {
 }
 
 export function createPlanPersister(
-  _ctx: PluginInput,
+  _ctx: MatrixxContext,
   options: PlanPersistenceOptions,
 ): PlanPersister {
   const { directory } = options

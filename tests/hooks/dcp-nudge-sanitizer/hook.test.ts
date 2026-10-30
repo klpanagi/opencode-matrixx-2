@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Message, Part } from "@opencode-ai/sdk"
 
-import type { PluginContext } from "../../../src/plugin/types"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createDcpNudgeSanitizerHook } from "../../../src/hooks/dcp-nudge-sanitizer/hook"
 
 type MessageWithParts = { info: Message; parts: Part[] }
@@ -29,7 +29,7 @@ function countNudges(parts: Part[]): number {
 const NUDGE = "<instruction name=iteration_nudge>use the compress tool on it now</instruction>"
 
 async function runSanitizer(messages: MessageWithParts[]): Promise<MessageWithParts[]> {
-  const hook = createDcpNudgeSanitizerHook({} as PluginContext)
+  const hook = createDcpNudgeSanitizerHook({} as MatrixxContext)
   await hook["experimental.chat.messages.transform"]?.({} as Record<string, never>, { messages })
   return messages
 }

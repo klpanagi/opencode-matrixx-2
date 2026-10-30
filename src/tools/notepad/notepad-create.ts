@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { atomicWrite } from "../../features/mission-state/plan-storage"
 import { renderNotepad } from "../../hooks/task-notepad-writer/constants"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
 import { validateNotepadFilePath } from "./validation"
 
-export function createNotepadCreateTool(ctx?: PluginContext): ToolDefinition {
+export function createNotepadCreateTool(ctx?: MatrixxContext): MatrixxToolDefinition {
   return tool({
     description: `Create a notepad file under .matrixx/notepads/<bucket>/<file>.md.\nValidated via validateNotepadFilePath (kebab-case .md, no absolute paths, no .. escape).\nEmpty planName falls back to the adhoc bucket. Refuses to overwrite: file_exists when present.`,
     args: {

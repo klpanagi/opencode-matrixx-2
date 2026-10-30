@@ -176,14 +176,14 @@ test("returns null (not undefined) when key is missing", () => {
 ### Hook or Tool (Matrixx-specific)
 \`\`\`typescript
 // Hook tests use mock plugin contexts
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 
-function buildMockContext(overrides?: Partial<PluginInput>): PluginInput {
+function buildMockContext(overrides?: Partial<MatrixxContext>): MatrixxContext {
   return {
     directory: "/tmp/test-project",
     // ... minimal required fields
     ...overrides,
-  } as PluginInput
+  } as MatrixxContext
 }
 
 test("hook injects env var when git command detected", async () => {

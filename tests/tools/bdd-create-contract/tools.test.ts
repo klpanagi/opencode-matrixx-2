@@ -3,7 +3,7 @@ import crypto from "node:crypto"
 import * as fs from "node:fs"
 import { generateMessages } from "@cucumber/gherkin"
 import { SourceMediaType } from "@cucumber/messages"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { ContractSchema } from "../../../src/features/bdd/schema"
 import { createBddCreateContractTool } from "../../../src/tools/bdd-create-contract/tools"
 
@@ -97,7 +97,7 @@ describe("bdd_create_contract tool", () => {
     writtenFiles.clear()
   })
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "s",
   messageID: "m",
   agent: "mouse",

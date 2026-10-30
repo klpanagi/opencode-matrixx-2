@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../plugin/context";
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool";
 import { z } from "zod";
 import type { MatrixxConfig } from "../../config/schema";
 import {
@@ -23,8 +23,8 @@ function parseTaskId(id: string): string | null {
 
 export function createTaskUpdateTool(
   config: Partial<MatrixxConfig>,
-  ctx?: PluginInput,
-): ToolDefinition {
+  ctx?: MatrixxContext,
+): MatrixxToolDefinition {
    return tool({
      description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Update an existing task with new values.
@@ -73,7 +73,7 @@ Properly managed dependencies enable maximum parallel execution.`,
 async function handleUpdate(
   args: Record<string, unknown>,
   config: Partial<MatrixxConfig>,
-  ctx: PluginInput | undefined,
+  ctx: MatrixxContext | undefined,
   context: { sessionID: string },
 ): Promise<string> {
   try {

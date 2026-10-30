@@ -3,19 +3,19 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import type { ToolContext } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
 import { CONTEXT_TRUNCATION_MARKER } from "../../../src/features/evolution/store/query";
 import { resolveProjectIdentity } from "../../../src/features/evolution/store/project-identity";
 import { EVOLUTION_QUERY_ACTIONS, GET_CONTEXT_CHAR_CAP } from "../../../src/tools/evolution/constants";
 import { createEvolutionTool } from "../../../src/tools/evolution/tools";
 
-function makeCtx(directory: string): PluginInput {
-  return { directory, client: {} } as unknown as PluginInput;
+function makeCtx(directory: string): MatrixxContext {
+  return { directory, client: {} } as unknown as MatrixxContext;
 }
 
-function makeToolContext(directory: string): ToolContext {
-  return { sessionID: "ses-evolution", directory } as unknown as ToolContext;
+function makeToolContext(directory: string): MatrixxToolContext {
+  return { sessionID: "ses-evolution", directory } as unknown as MatrixxToolContext;
 }
 
 function makeProject(): string {

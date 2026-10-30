@@ -1,5 +1,5 @@
-import type { ToolContext } from "@opencode-ai/plugin/tool"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import type { MatrixxToolContext } from "../shared/define-tool"
 import { countLineDiffs, generateUnifiedDiff } from "./diff-utils"
 import { applyHashlineEditsWithReport } from "./edit-operations"
 import { canonicalizeFileText, restoreFileText } from "./file-text-canonicalization"
@@ -14,7 +14,7 @@ interface HashlineEditArgs {
   rename?: string
 }
 
-type ToolContextWithCallID = ToolContext & {
+type ToolContextWithCallID = MatrixxToolContext & {
   callID?: string
   callId?: string
   call_id?: string
@@ -80,7 +80,7 @@ function buildSuccessMeta(
   }
 }
 
-export async function executeHashlineEditTool(args: HashlineEditArgs, context: ToolContext): Promise<string> {
+export async function executeHashlineEditTool(args: HashlineEditArgs, context: MatrixxToolContext): Promise<string> {
   try {
     const metadataContext = context as ToolContextWithMetadata
     const filePath = args.filePath

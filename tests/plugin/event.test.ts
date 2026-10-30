@@ -4,7 +4,7 @@ import type { DomainHooks } from "../../src/plugin/setup-domains"
 import type { DomainManagers } from "../../src/plugin/setup-domains"
 import { createEventHandler } from "../../src/plugin/event"
 import type { V2Event } from "../../src/plugin/context"
-import type { PluginContext } from "../../src/plugin/types"
+import type { MatrixxContext } from "../../src/plugin/context"
 
 type EventInput = V2Event
 

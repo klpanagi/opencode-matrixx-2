@@ -2,19 +2,19 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { startCountdown } from "../../../src/hooks/task-continuation-enforcer/countdown"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { setNotifySink } from "../../../src/shared/notify"
 
-function makeCtx(dir: string, notifyMock: ReturnType<typeof mock>): PluginInput {
+function makeCtx(dir: string, notifyMock: ReturnType<typeof mock>): MatrixxContext {
   setNotifySink(notifyMock)
   return {
     directory: dir,
     session: {
       context: async () => [],
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 describe("task-continuation countdown", () => {

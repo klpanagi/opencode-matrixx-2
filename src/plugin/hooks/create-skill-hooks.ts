@@ -3,7 +3,7 @@ import type { HookName } from "../../config"
 import { createAutoSlashCommandHook, createCategorySkillReminderHook } from "../../hooks"
 import { bindSafeHook } from "../../shared/safe-create-hook"
 import type { BuiltinSkill } from "../../skills"
-import type { PluginContext } from "../types"
+import type { MatrixxContext } from "../context"
 
 export type SkillHooks = {
   categorySkillReminder: ReturnType<typeof createCategorySkillReminderHook> | null
@@ -11,7 +11,7 @@ export type SkillHooks = {
 }
 
 export function createSkillHooks(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
   builtinSkills: BuiltinSkill[]

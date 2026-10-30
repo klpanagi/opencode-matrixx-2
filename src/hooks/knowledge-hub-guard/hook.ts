@@ -1,8 +1,8 @@
 import * as os from "node:os"
 import * as path from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import picomatch from "picomatch"
 import type { LoadedHub } from "../../features/knowledge-hub/loader"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import { isShellTool } from "../../shared/shell-tool-name"
 import { isHubWriteApproved } from "./approvals"
@@ -67,7 +67,7 @@ function isExcluded(hub: LoadedHub, absPath: string): boolean {
   })
 }
 
-export function createKnowledgeHubGuardHook(ctx: PluginInput, options: KnowledgeHubGuardOptions = {}) {
+export function createKnowledgeHubGuardHook(ctx: MatrixxContext, options: KnowledgeHubGuardOptions = {}) {
   const projectDir = ctx.directory
   let cached: LoadedHub[] | null = null
   let warnedOnce = false

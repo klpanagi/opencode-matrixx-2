@@ -3,7 +3,7 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 
@@ -14,7 +14,7 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
   writeFileSync(join(dir, ".matrixx", "tasks", `${id}.json`), JSON.stringify(task))
 }
 
-function makeInjectionCtx(dir: string): { ctx: PluginInput; promptAsync: ReturnType<typeof mock> } {
+function makeInjectionCtx(dir: string): { ctx: MatrixxContext; promptAsync: ReturnType<typeof mock> } {
   const promptAsync = mock(async () => ({} as never))
   const ctx = {
     directory: dir,
@@ -22,7 +22,7 @@ function makeInjectionCtx(dir: string): { ctx: PluginInput; promptAsync: ReturnT
       context: async () => [],
       prompt: promptAsync,
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
   return { ctx, promptAsync }
 }
 

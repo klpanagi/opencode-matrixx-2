@@ -1,11 +1,11 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createJsonErrorRecoveryHook } from "../../src/hooks/json-error-recovery/hook"
 
 function makeHook() {
-  return createJsonErrorRecoveryHook({} as unknown as PluginInput)
+  return createJsonErrorRecoveryHook({} as unknown as MatrixxContext)
 }
 
 async function run(tool: string, outputText: string) {

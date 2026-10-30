@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { writeFileSync } from "node:fs"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { setNotifySink } from "../../../src/shared/notify"
@@ -16,7 +16,7 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
 }
 
 function makeCanonicalRootCtx(worktree: string, directory: string): {
-  ctx: PluginInput
+  ctx: MatrixxContext
   toastMock: ReturnType<typeof mock>
 } {
   const toastMock = mock(async () => ({} as never))
@@ -27,7 +27,7 @@ function makeCanonicalRootCtx(worktree: string, directory: string): {
     session: {
       context: async () => [],
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
   return { ctx, toastMock }
 }
 

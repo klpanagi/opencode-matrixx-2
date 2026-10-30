@@ -1,7 +1,7 @@
 import { existsSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { log } from "../../shared"
 
 const PYTHON_SCRIPT = `#!/usr/bin/env python3
@@ -215,8 +215,8 @@ async function runExtraction(args: PdfExtractFiguresArgs): Promise<string> {
   return stdout
 }
 
-export function createPdfExtractFiguresTool(): Record<string, ToolDefinition> {
-  const pdf_extract_figures: ToolDefinition = tool({
+export function createPdfExtractFiguresTool(): Record<string, MatrixxToolDefinition> {
+  const pdf_extract_figures: MatrixxToolDefinition = tool({
     description:
       "Extract embedded images/figures from PDF files using PyMuPDF. " +
       "Returns structured metadata (page number, dimensions, format, file size, position) " +

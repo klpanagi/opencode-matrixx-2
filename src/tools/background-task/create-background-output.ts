@@ -1,4 +1,4 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type { BackgroundTask } from "../../features/background-agent"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
@@ -42,7 +42,7 @@ function appendTimeoutNote(output: string, timeoutMs: number): string {
   return `${output}\n\n> **Timed out waiting** after ${timeoutMs}ms. Task is still running; showing latest available output.`
 }
 
-export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): ToolDefinition {
+export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): MatrixxToolDefinition {
   return tool({
     description: BACKGROUND_OUTPUT_DESCRIPTION,
     args: {

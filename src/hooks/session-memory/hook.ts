@@ -1,7 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { NativeMemoryConfig } from "../../config/schema/memory"
 import { appendMemoryEntry, isSyntheticMessage, type MemoryEntryInput } from "../../features/session-memory"
-import type { V2Event } from "../../plugin/context"
+import type { MatrixxContext, V2Event } from "../../plugin/context"
 import { notifyInjection } from "../../shared/injection-notifier"
 import { log } from "../../shared/logger"
 
@@ -39,7 +38,7 @@ function hashSnippet(value: string): string {
 }
 
 export function createSessionMemoryHook(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   options: SessionMemoryHookOptions = {},
 ): SessionMemoryHook {
   const enabled = options.memory?.enabled ?? false

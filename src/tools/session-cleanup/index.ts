@@ -1,4 +1,4 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { log } from "../../shared"
 import { isRecord } from "../../shared/record-type-guard"
 import type { SessionDomainLike } from "../../shared/session-facade"
@@ -88,7 +88,7 @@ function summarize(rows: SessionRow[], apply: boolean): string {
   return `Deleting ${rows.length} leaked session(s)...`
 }
 
-export function createSessionCleanupTool(ctx: SessionCleanupContext): ToolDefinition {
+export function createSessionCleanupTool(ctx: SessionCleanupContext): MatrixxToolDefinition {
   return tool({
     description: SESSION_CLEANUP_DESCRIPTION,
     args: {

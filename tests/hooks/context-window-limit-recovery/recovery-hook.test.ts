@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 const executeCompactMock = mock(async () => {})
 const getLastAssistantMock = mock(async () => ({
@@ -29,11 +29,11 @@ afterAll(() => {
   mock.restore()
 })
 
-function createMockContext(): PluginInput {
+function createMockContext(): MatrixxContext {
   return {
     session: { context: async () => [] },
     directory: "/tmp",
-  } as PluginInput
+  } as MatrixxContext
 }
 
 function setupDelayedTimeoutMocks(): {

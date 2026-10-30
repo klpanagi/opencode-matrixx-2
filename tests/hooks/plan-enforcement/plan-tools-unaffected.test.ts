@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -20,14 +20,14 @@ import { createPlanUpdateTool } from "../../../src/tools/plan/plan-update"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-plan-enforcement",
     messageID: "test-message-plan-enforcement",
     agent: "test-agent",
     abort: TEST_ABORT.signal,
     directory: testDir,
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("plan_* tools unaffected by enforcement", () => {

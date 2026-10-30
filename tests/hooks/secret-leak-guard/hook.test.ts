@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 const stagedSpy = mock(() => Promise.resolve({ available: false, findings: [] }))
 const prePushSpy = mock(() => Promise.resolve({ available: false, findings: [] }))
@@ -14,7 +14,7 @@ mock.module("../../../src/hooks/secret-leak-guard/gitleaks-runner", () => ({
 import { createSecretLeakGuardHook } from "../../../src/hooks/secret-leak-guard/hook"
 
 function makeHook() {
-  return createSecretLeakGuardHook({ directory: "/tmp" } as unknown as PluginInput)
+  return createSecretLeakGuardHook({ directory: "/tmp" } as unknown as MatrixxContext)
 }
 
 async function run(tool: string, command: string) {

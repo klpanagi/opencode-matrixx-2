@@ -1,6 +1,6 @@
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
-
 import type { MatrixxConfig } from "../../config"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
 import { notifyInjection } from "../../shared/injection-notifier"
 import { resolveRtkEnforcement } from "../../shared/rtk-enforcement"
@@ -79,7 +79,7 @@ function defaultHasBash(): boolean {
 export function createRtkSystemTransformHook(
   pluginConfig: MatrixxConfig,
   opts?: RtkSystemTransformOptions,
-  ctx?: PluginInput,
+  ctx?: MatrixxContext,
 ): SystemTransformHandler {
   const { active } = resolveRtkEnforcement(pluginConfig.rtk, {
     hookEnabled: opts?.hookEnabled,

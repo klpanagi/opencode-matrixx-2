@@ -1,4 +1,4 @@
-import type { Hooks } from "@opencode-ai/plugin"
+import type { Hooks } from "../plugin/legacy-hooks"
 
 import { log } from "../shared"
 import { isShellTool } from "../shared/shell-tool-name"

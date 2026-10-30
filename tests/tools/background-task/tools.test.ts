@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import type { BackgroundManager, BackgroundTask } from "../../../src/features/background-agent"
 import { clearPendingStore, consumeToolMetadata } from "../../../src/features/tool-metadata-store"
 import type { SessionContextCarrier } from "../../../src/shared/session-context-source"
@@ -11,7 +11,7 @@ import { createBackgroundCancel, createBackgroundOutput } from "../../../src/too
 
 const _projectDir = "/Users/yeongyu/local-workspaces/matrixx"
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "test-session",
   messageID: "test-message",
   agent: "test-agent",
@@ -65,7 +65,7 @@ describe("background_output full_session", () => {
     const ctxWithCallId = {
       ...mockContext,
       callID: "call-1"
-    } as unknown as ToolContext
+    } as unknown as MatrixxToolContext
 
     // #when
     await tool.execute({ task_id: "task-1" }, ctxWithCallId)
@@ -92,7 +92,7 @@ describe("background_output full_session", () => {
     const ctxWithCallId = {
       ...mockContext,
       callID: "call-1"
-    } as unknown as ToolContext
+    } as unknown as MatrixxToolContext
 
     // #when
     await tool.execute({ task_id: "task-1" }, ctxWithCallId)

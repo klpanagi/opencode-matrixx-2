@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
 import { getSessionModel } from "../../shared/session-state"
 import { isReadTool } from "../../shared/tool-guards"
@@ -119,7 +119,7 @@ function resolveFilename(attachment: ImageAttachment, index: number): string {
   return `image-${index + 1}`
 }
 
-export function createReadImageResizerHook(_ctx: PluginInput) {
+export function createReadImageResizerHook(_ctx: MatrixxContext) {
   return {
     "tool.execute.after": async (
       input: { tool: string; sessionID: string; callID: string },

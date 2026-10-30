@@ -2,7 +2,7 @@ import type { MatrixxConfig } from "../../../src/config"
 import { createEventHandler } from "../../../src/plugin/event"
 import type { V2Event } from "../../../src/plugin/context"
 import type { DomainHooks, DomainManagers } from "../../../src/plugin/setup-domains"
-import type { PluginContext } from "../../../src/plugin/types"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 export type EventInput = V2Event
 type EventFn = (event: V2Event) => Promise<void>
@@ -61,7 +61,7 @@ export async function deliverThroughDispatch(options: DispatchRunOptions): Promi
     ctx: (options.ctx ?? {
       directory: "/tmp",
       client: { session: { prompt: async () => ({}) } },
-    }) as unknown as PluginContext,
+    }) as unknown as MatrixxContext,
     pluginConfig: {} as unknown as MatrixxConfig,
     firstMessageVariantGate: (options.firstMessageVariantGate ?? {
       markSessionCreated: () => {},

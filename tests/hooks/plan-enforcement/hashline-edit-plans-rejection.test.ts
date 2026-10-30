@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createHashlineEditTool } from "../../../src/tools/hashline-edit/tools"
 import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computation"
 
@@ -15,7 +15,7 @@ import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computati
  * non-plan files keep working.
  */
 
-function createMockContext(): ToolContext {
+function createMockContext(): MatrixxToolContext {
   return {
     sessionID: "test",
     messageID: "test",
@@ -23,7 +23,7 @@ function createMockContext(): ToolContext {
     abort: new AbortController().signal,
     metadata: () => {},
     ask: async () => {},
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("createHashlineEditTool: PLANS_DIR rejection", () => {

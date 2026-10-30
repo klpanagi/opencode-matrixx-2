@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 
@@ -14,7 +14,7 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
 }
 
 function makeCanonicalRootCtx(worktree: string, directory: string): {
-  ctx: PluginInput
+  ctx: MatrixxContext
   promptAsync: ReturnType<typeof mock>
 } {
   const promptAsync = mock(async () => ({} as never))
@@ -25,7 +25,7 @@ function makeCanonicalRootCtx(worktree: string, directory: string): {
       context: async () => [],
       prompt: promptAsync,
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
   return { ctx, promptAsync }
 }
 

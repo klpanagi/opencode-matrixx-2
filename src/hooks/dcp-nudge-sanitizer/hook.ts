@@ -12,7 +12,7 @@
 
 import type { Part } from "@opencode-ai/sdk"
 
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { sanitizeKnownTags } from "../../shared/system-directive"
 import { guardCompressDirective, NUDGE_MARKERS, normalizeNudgeText } from "./constants"
 
@@ -68,7 +68,7 @@ export function sanitizeNudgeParts(messages: MessageWithParts[]): void {
   }
 }
 
-export function createDcpNudgeSanitizerHook(_ctx: PluginContext): MessagesTransformHook {
+export function createDcpNudgeSanitizerHook(_ctx: MatrixxContext): MessagesTransformHook {
   return {
     "experimental.chat.messages.transform": async (_input, output) => {
       sanitizeNudgeParts(output.messages)

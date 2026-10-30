@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 
 /**
  * Known Edit tool error patterns that indicate the AI made a mistake
@@ -36,7 +36,7 @@ DO NOT attempt another edit until you've read and verified the file state.
  *
  * @see https://github.com/sst/opencode/issues/4718
  */
-export function createEditErrorRecoveryHook(_ctx: PluginInput) {
+export function createEditErrorRecoveryHook(_ctx: MatrixxContext) {
   return {
     "tool.execute.after": async (
       input: { tool: string; sessionID: string; callID: string },

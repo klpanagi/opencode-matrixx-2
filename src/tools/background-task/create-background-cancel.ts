@@ -1,10 +1,10 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"
 import type { BackgroundCancelArgs } from "./types"
 
-export function createBackgroundCancel(manager: BackgroundManager, _client: SessionContextCarrier): ToolDefinition {
+export function createBackgroundCancel(manager: BackgroundManager, _client: SessionContextCarrier): MatrixxToolDefinition {
   return tool({
     description: BACKGROUND_CANCEL_DESCRIPTION,
     args: {

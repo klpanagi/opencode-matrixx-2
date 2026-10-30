@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import { getHandlePath } from "../../features/background-agent/handle-index"
 import { formatReviveOutcome, formatUnrevivable } from "../../shared/revive-outcome"
 import { BACKGROUND_REVIVE_DESCRIPTION } from "./constants"
@@ -62,7 +62,7 @@ function resolveFailure(
 export function createBackgroundRevive(
   manager: BackgroundReviveManager,
   directory: string,
-): ToolDefinition {
+): MatrixxToolDefinition {
   return tool({
     description: BACKGROUND_REVIVE_DESCRIPTION,
     args: {

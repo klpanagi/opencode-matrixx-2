@@ -1,7 +1,8 @@
-import { z } from "zod";
 import type { ZodType } from "zod";
+import { z } from "zod";
+import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "../../plugin/context"
 import { jsonSafeMetadata, log } from "../../shared";
-import type { V2ToolContext, V2ToolResult } from "../../plugin/context";
+import { TASK_TOOL_OPTIONS } from "../delegate-task/tool-options";
 
 /** Tool execution result: a plain string or a structured payload. */
 export type MatrixxToolResult =
@@ -89,7 +90,7 @@ export function defineTool<TArgs extends Record<string, ZodType>>(
 export function toInputSchema(name: string, args: unknown): Record<string, unknown> {
   if (!isPlainObjectRecord(args)) {
     throw new Error(
-      `emitToolInfo("${name}"): args must be a plain object of Zod schemas, got ` +
+      `toInputSchema("${name}"): args must be a plain object of Zod schemas, got ` +
         (Array.isArray(args) ? "array" : String(args === null ? "null" : typeof args)),
     );
   }
@@ -105,7 +106,7 @@ export function toInputSchema(name: string, args: unknown): Record<string, unkno
       error: error instanceof Error ? error.message : String(error),
     });
     throw new Error(
-      `emitToolInfo("${name}"): failed to convert args to JSON Schema: ` +
+      `toInputSchema("${name}"): failed to convert args to JSON Schema: ` +
         (error instanceof Error ? error.message : String(error)),
     );
   }
@@ -159,3 +160,65 @@ export function buildMatrixxToolContext(
     },
   };
 }
+
+/**
+ * Deps needed to bridge a Matrixx tool definition onto the V2 tool registry.
+ * Relocated verbatim from the deleted `src/plugin/opencode-tools.ts` (task 24)
+ * so the V2 `Tool.Info` translation survives and R1 still holds.
+ */
+export interface ToolBridgeDeps {
+  directory: string;
+  worktree: string;
+  assertPermission?: (input: Record<string, unknown>) => Promise<void>;
+  context?: unknown;
+}
+
+const REGISTRATION_OPTIONS: Record<string, Record<string, unknown>> = {
+  task: TASK_TOOL_OPTIONS,
+};
+
+export function emitToolInfo(
+  name: string,
+  definition: MatrixxToolDefinition,
+  deps: ToolBridgeDeps,
+): V2ToolInfo | undefined {
+  if (!isPlainObjectRecord(definition.args)) {
+    throw new Error(
+      `emitToolInfo("${name}"): args must be a plain object of Zod schemas, got ` +
+        (Array.isArray(definition.args) ? "array" : String(definition.args === null ? "null" : typeof definition.args)),
+    );
+  }
+  let input: Record<string, unknown>;
+  try {
+    input = toInputSchema(name, definition.args);
+  } catch {
+    return undefined;
+  }
+  const options = REGISTRATION_OPTIONS[name];
+  return {
+    name,
+    description: definition.description,
+    input,
+    ...(options === undefined ? {} : { options }),
+    execute: async (rawInput: unknown, context: V2ToolContext) => {
+      const result = await definition.execute(
+        rawInput as never,
+        buildMatrixxToolContext(context, deps) as never,
+      );
+      return normalizeResult(result);
+    },
+  };
+}
+
+export function emitToolInfos(
+  tools: Record<string, MatrixxToolDefinition>,
+  deps: ToolBridgeDeps,
+): V2ToolInfo[] {
+  const converted: V2ToolInfo[] = [];
+  for (const [name, definition] of Object.entries(tools)) {
+    const tool = emitToolInfo(name, definition, deps);
+    if (tool) converted.push(tool);
+  }
+  return converted;
+}
+

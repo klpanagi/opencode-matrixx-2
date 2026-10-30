@@ -6,7 +6,7 @@ import type { SessionStateStore } from "../../../src/hooks/task-continuation-enf
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continuation-guard/hook"
 
-function makeMockPluginInput(): unknown {
+function makeMockMatrixxContext(): unknown {
   return {
     directory: "/tmp/test-project",
     session: {
@@ -40,7 +40,7 @@ function makeGuardWithStore(
   bgManager: MockBackgroundManager,
   store: SessionStateStore,
 ): ReturnType<typeof createStopContinuationGuardHook> {
-  return createStopContinuationGuardHook(makeMockPluginInput() as never, {
+  return createStopContinuationGuardHook(makeMockMatrixxContext() as never, {
     backgroundManager: bgManager,
     isAwaitingUser: (sessionID: string) =>
       isAwaitingUserState(store.getExistingState(sessionID)),

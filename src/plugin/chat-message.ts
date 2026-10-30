@@ -10,8 +10,8 @@ import {
   resolveVariantForModel,
 } from "../shared/agent-variant"
 import { notify } from "../shared/notify"
+import type { MatrixxContext } from "./context"
 import type { DomainHooks } from "./setup-domains"
-import type { PluginContext } from "./types"
 
 type FirstMessageVariantGate = {
   shouldOverride: (sessionID: string) => boolean
@@ -35,7 +35,7 @@ function isStartWorkHookOutput(value: unknown): value is StartWorkHookOutput {
 }
 
 export function createChatMessageHandler(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   hooks: DomainHooks

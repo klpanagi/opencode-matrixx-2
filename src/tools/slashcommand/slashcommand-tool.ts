@@ -1,4 +1,4 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { log } from "../../shared"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
@@ -32,7 +32,7 @@ async function discoverPluginCommands(client?: ReturnType<typeof createOpencodeC
   }
 }
 
-export function createSlashcommandTool(options: SlashcommandToolOptions = {}): ToolDefinition {
+export function createSlashcommandTool(options: SlashcommandToolOptions = {}): MatrixxToolDefinition {
   let cachedCommands: CommandInfo[] | null = options.commands ?? null
   let cachedSkills: BuiltinSkill[] | null = options.skills ?? null
   let cachedPluginCommands: CommandInfo[] | null = null
@@ -127,4 +127,4 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): T
   })
 }
 
-export const slashcommand: ToolDefinition = createSlashcommandTool()
+export const slashcommand: MatrixxToolDefinition = createSlashcommandTool()

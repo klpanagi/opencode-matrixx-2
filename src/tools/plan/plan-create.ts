@@ -1,16 +1,16 @@
 import { existsSync } from "node:fs"
 import { basename } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { countPlanProgressFromContent } from "../../features/mission-state"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { atomicWrite, ensurePlanDir, upsertMetadataComment } from "../../features/mission-state/plan-storage"
 import { validatePlanContract } from "../../features/plan-contract"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { MAX_PLAN_FILE_BYTES } from "./constants"
 import { planSizeExceededFields } from "./error-codes"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
-export function createPlanCreateTool(ctx?: PluginContext, cap: number = MAX_PLAN_FILE_BYTES): ToolDefinition {
+export function createPlanCreateTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
   return tool({
     description: `Create a new plan file under .matrixx/plans/*.md.\nValidated via isAllowedFile(join(directory,PLANS_DIR), filePath) + .md + kebab-case.\nUses atomicWrite (.tmp.pid+rename) + upsertMetadataComment. Warns if file already exists.`,
     args: {

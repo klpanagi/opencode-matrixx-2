@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 const ORCHESTRATOR_FLAG_KEY = "__niobeToolExecuteBeforeOrchestrator"
 
@@ -19,7 +19,7 @@ mock.module("../../../src/shared/session-utils", () => ({
 import { createToolExecuteBeforeHandler } from "../../../src/hooks/niobe/tool-execute-before"
 
 function makeHandler() {
-  const ctx = { client: {} } as unknown as PluginInput
+  const ctx = { client: {} } as unknown as MatrixxContext
   return createToolExecuteBeforeHandler({ ctx, pendingFilePaths: new Map() })
 }
 

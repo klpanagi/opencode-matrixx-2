@@ -2,17 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import type { ToolContext } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
 import { isHubWriteApproved } from "../../../src/hooks/knowledge-hub-guard/approvals";
 import { createKnowledgeHubConfirmTool } from "../../../src/tools/knowledge-hub-confirm/tools";
 
-function makeCtx(directory: string): PluginInput {
-  return { directory, client: {} } as unknown as PluginInput;
+function makeCtx(directory: string): MatrixxContext {
+  return { directory, client: {} } as unknown as MatrixxContext;
 }
 
-function makeToolContext(sessionID: string, directory: string): ToolContext {
-  return { sessionID, directory } as unknown as ToolContext;
+function makeToolContext(sessionID: string, directory: string): MatrixxToolContext {
+  return { sessionID, directory } as unknown as MatrixxToolContext;
 }
 
 describe("createKnowledgeHubConfirmTool", () => {

@@ -3,16 +3,16 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createSessionManagerTools } from "../../../src/tools/session-manager/tools"
 import { readSessionTodos } from "../../../src/tools/session-manager/storage"
 
 const projectDir = "/Users/yeongyu/local-workspaces/matrixx"
 
-const mockCtx = { directory: projectDir } as PluginInput
+const mockCtx = { directory: projectDir } as MatrixxContext
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "test-session",
   messageID: "test-message",
   agent: "test-agent",
@@ -105,7 +105,7 @@ describe("session-manager tools", () => {
     )
 
     //#when the tools are built for that directory and the read is invoked
-    const scoped = createSessionManagerTools({ directory: dir } as PluginInput)
+    const scoped = createSessionManagerTools({ directory: dir } as MatrixxContext)
     const accepted = await scoped.session_read.execute(
       { session_id: "ses_test123", include_todos: true },
       mockContext

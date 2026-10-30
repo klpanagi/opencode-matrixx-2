@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import { resolve as resolvePath } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { type Contract, ContractSchema } from "../../features/bdd/schema"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
@@ -27,7 +27,7 @@ const ENRICH_POLL_INTERVAL_MS = 250
 
 export function createBddPipelineTool(opts: {
   manager: BackgroundManager
-}): ToolDefinition {
+}): MatrixxToolDefinition {
   const { manager } = opts
   const parseTool = createBddParseGherkinTool()
   const createTool = createBddCreateContractTool()
@@ -101,8 +101,8 @@ export function createBddPipelineTool(opts: {
 
 function makeDeps(args: {
   manager: BackgroundManager
-  parseTool: ToolDefinition
-  createTool: ToolDefinition
+  parseTool: MatrixxToolDefinition
+  createTool: MatrixxToolDefinition
   parentSessionID: string
   parentMessageID: string
   parentAgent: string

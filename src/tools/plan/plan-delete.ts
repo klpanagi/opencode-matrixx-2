@@ -1,9 +1,9 @@
 import { existsSync, unlinkSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
-import type { PluginContext } from "../../plugin/types"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
-export function createPlanDeleteTool(ctx?: PluginContext): ToolDefinition {
+export function createPlanDeleteTool(ctx?: MatrixxContext): MatrixxToolDefinition {
   return tool({
     description: `Delete a plan file under .matrixx/plans/*.md. Scoped unlink inside PLANS_DIR, refuses outside paths.`,
     args: {

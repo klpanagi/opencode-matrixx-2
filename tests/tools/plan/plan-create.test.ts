@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import {
   countPlanProgressFromContent,
   MAX_PLAN_FILE_BYTES,
@@ -14,7 +14,7 @@ import { createPlanCreateTool } from "../../../src/tools/plan/plan-create"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-plan-create",
     messageID: "test-message-plan-create",

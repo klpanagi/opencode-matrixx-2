@@ -7,7 +7,7 @@ export interface RuntimeFallbackInterval {
 
 export type RuntimeFallbackTimeout = object | number
 
-export interface RuntimeFallbackPluginInput {
+export interface RuntimeFallbackContext {
   session: SessionDomainLike
   directory: string
 }
@@ -44,7 +44,7 @@ export interface RuntimeFallbackHook {
 }
 
 export interface HookDeps {
-  ctx: RuntimeFallbackPluginInput
+  ctx: RuntimeFallbackContext
   config: Required<RuntimeFallbackConfig>
   options: RuntimeFallbackOptions | undefined
   pluginConfig: MatrixxConfig | undefined

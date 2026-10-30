@@ -11,7 +11,7 @@ describe("matrix-loop event handler", () => {
 	let messagesCalls: Array<{ sessionID: string }>
 	let mockSessionMessages: Array<{ info?: { role?: string }; parts?: Array<{ type: string; text?: string }> }>
 
-	function createMockPluginInput() {
+	function createMockMatrixxContext() {
 		messagesCalls = []
 		return {
 			session: {
@@ -51,7 +51,7 @@ describe("matrix-loop event handler", () => {
 		mockSessionMessages = [
 			{ type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
 		]
-		const hook = createMatrixLoopHook(createMockPluginInput(), {
+		const hook = createMatrixLoopHook(createMockMatrixxContext(), {
 			getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
 			verification: { enabled: true, timeoutMs: 1000 },
 		})

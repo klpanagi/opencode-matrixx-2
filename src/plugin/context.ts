@@ -29,6 +29,7 @@
  */
 
 import type { NotifySink } from "../shared/notify"
+import type { MatrixxToolDefinition } from "../tools/shared/define-tool"
 
 export type Cleanup = () => unknown
 
@@ -297,7 +298,9 @@ export interface MatrixxContext {
 }
 
 /**
- * Pre-rename alias kept so the Task 24 migration can land incrementally:
- * existing importers keep compiling on the path change alone.
+ * Registry of tool definitions keyed by tool name.
+ *
+ * Relocated from the deleted V1 substrate module (`./types`, task 24);
+ * the definition shape is the task 23 `MatrixxToolDefinition`.
  */
-export type V2Context = MatrixxContext
+export type ToolsRecord = Record<string, MatrixxToolDefinition>

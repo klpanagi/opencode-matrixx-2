@@ -44,7 +44,6 @@ export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/too
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { lspManager }
 
-import type { ToolDefinition } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../features/background-agent"
 import type { SessionContextCarrier } from "../shared/session-context-source"
 import {
@@ -54,6 +53,7 @@ import {
   createBackgroundRevive,
   createBackgroundWaitAll,
 } from "./background-task"
+import type { MatrixxToolDefinition } from "./shared/define-tool"
 
 export { createAssemblyTool } from "./assembly/tools"
 export { createDelegateTask, resolveSystemDefaultModel } from "./delegate-task"
@@ -71,7 +71,7 @@ export function createBackgroundTools(
   manager: BackgroundManager,
   client: SessionContextCarrier,
   directory: string,
-): Record<string, ToolDefinition> {
+): Record<string, MatrixxToolDefinition> {
   const outputManager: BackgroundOutputManager = manager
   return {
     background_output: createBackgroundOutput(outputManager, client),
@@ -81,7 +81,7 @@ export function createBackgroundTools(
   }
 }
 
-export const builtinTools: Record<string, ToolDefinition> = {
+export const builtinTools: Record<string, MatrixxToolDefinition> = {
   lsp_goto_definition,
   lsp_find_references,
   lsp_symbols,

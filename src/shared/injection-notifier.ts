@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../plugin/context"
 import { log } from "./logger"
 import { createSystemDirective } from "./system-directive"
 
@@ -27,7 +27,7 @@ export function buildInjectionNotice(message: string): string {
   return `${prefix}${body}`
 }
 
-export async function notifyInjection(ctx: PluginInput, options: NotifyInjectionOptions): Promise<void> {
+export async function notifyInjection(ctx: MatrixxContext, options: NotifyInjectionOptions): Promise<void> {
   try {
     const key = `${options.injector}:${options.hash}`
     if (lastKeyBySession.get(options.sessionID) === key) return

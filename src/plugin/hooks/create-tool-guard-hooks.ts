@@ -34,7 +34,7 @@ import {
   OPENCODE_NATIVE_AGENTS_INJECTION_VERSION,
 } from "../../shared"
 import { bindSafeHook } from "../../shared/safe-create-hook"
-import type { PluginContext } from "../types"
+import type { MatrixxContext } from "../context"
 
 export type ToolGuardHooks = {
   backgroundTaskBlocker: ReturnType<typeof createBackgroundTaskBlockerHook> | null
@@ -65,7 +65,7 @@ export type ToolGuardHooks = {
 }
 
 export function createToolGuardHooks(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext
   pluginConfig: MatrixxConfig
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean

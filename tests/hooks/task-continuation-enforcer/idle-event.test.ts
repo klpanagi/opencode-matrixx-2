@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { registerSubagentSession, unregisterSubagentSession } from "../../../src/features/session-state/state"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { handleNonIdleEvent } from "../../../src/hooks/task-continuation-enforcer/non-idle-events"
@@ -19,13 +19,13 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
   )
 }
 
-function makeIdleCtx(dir: string): PluginInput {
+function makeIdleCtx(dir: string): MatrixxContext {
   return {
     directory: dir,
     session: {
       context: async () => [],
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 describe("task-continuation idle-event", () => {
@@ -56,7 +56,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s2", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { session_scoped: false } } } })
@@ -76,7 +76,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s3", sessionStateStore: store, skipAgents: [] })
@@ -96,7 +96,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     await handleSessionIdle({ ctx, sessionID: "s4", sessionStateStore: store, skipAgents: [] })
     const firstCalls = (toastMock as unknown as { mock: { calls: unknown[] } }).mock.calls.length
@@ -118,7 +118,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     await handleSessionIdle({ ctx, sessionID: "s5", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { session_scoped: false } } } })
     expect(store.getState("s5").countdownTimer).toBeDefined()
@@ -144,7 +144,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const config = { morpheus: { tasks: { stale_after_hours: 2 } } }
     //#when
@@ -168,7 +168,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s-mixed", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { stale_after_hours: 2, session_scoped: false } } } })
@@ -188,7 +188,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "my-session", sessionStateStore: store, skipAgents: [] })
@@ -208,7 +208,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     registerSubagentSession("sub-session", "my-session")
     //#when
@@ -231,7 +231,7 @@ describe("task-continuation idle-event", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "my-session", sessionStateStore: store, skipAgents: [] })

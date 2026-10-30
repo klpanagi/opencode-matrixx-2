@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { emitToolInfo } from "../../src/plugin/opencode-tools";
+import { emitToolInfo } from "../../src/tools/shared/define-tool";
 import {
   defineTool,
   normalizeResult,

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createDashboardFluxValidatorTool } from "../../src/tools/dashboard-flux-validator/tools"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "dashboard-flux-validator")
@@ -10,7 +10,7 @@ type Finding = { rule: string; severity: string; file: string; line: number; exc
 type Result = { status: 0 | 1 | 2; findings: Finding[]; summary: { total: number } }
 
 async function validate(path: string): Promise<Result> {
-  const tool = createDashboardFluxValidatorTool({ directory: FIXTURES } as unknown as PluginInput)
+  const tool = createDashboardFluxValidatorTool({ directory: FIXTURES } as unknown as MatrixxContext)
   const output = await tool.dashboard_flux_validate.execute({ path })
   return JSON.parse(output) as Result
 }

@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 import { isReadTool, isWriteTool } from "../../shared/tool-guards"
 import { computeLineHash } from "../../tools/hashline-edit/hash-computation"
 
@@ -160,7 +160,7 @@ async function appendWriteHashlineOutput(output: { output: string; metadata: unk
 }
 
 export function createHashlineReadEnhancerHook(
-  _ctx: PluginInput,
+  _ctx: MatrixxContext,
   config: HashlineReadEnhancerConfig
 ) {
   return {

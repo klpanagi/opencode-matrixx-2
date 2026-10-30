@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import type { BackgroundTask, BackgroundTaskStatus } from "../../../src/features/background-agent/types"
 import type { SessionContextCarrier } from "../../../src/shared/session-context-source"
@@ -24,7 +24,7 @@ const ALL_STATUSES: BackgroundTaskStatus[] = [
   "statusUncertain",
 ]
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "test-session",
   messageID: "test-message",
   agent: "test-agent",

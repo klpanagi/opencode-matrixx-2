@@ -1,10 +1,11 @@
 import { existsSync } from "node:fs"
 import { isAbsolute, join, normalize, resolve, sep } from "node:path"
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 
 import { log } from "../../shared"
 
-export function createWriteExistingFileGuardHook(ctx: PluginInput): Hooks {
+export function createWriteExistingFileGuardHook(ctx: MatrixxContext): Hooks {
   return {
     "tool.execute.before": async (input, output) => {
       const toolName = input.tool?.toLowerCase()

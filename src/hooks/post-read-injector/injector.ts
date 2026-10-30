@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../../plugin/context";
 import { notifyInjection } from "../../shared/injection-notifier";
 import { AGENTS_FILENAME } from "../directory-agents-injector/constants";
 import {
@@ -53,7 +53,7 @@ export function createUnifiedPostReadProcessor(deps: {
   workspaceDirectory: string;
   truncator: UnifiedTruncator;
   onVisitDir?: (dir: string) => void;
-  ctx?: PluginInput;
+  ctx?: MatrixxContext;
   injectorId?: string;
 }): {
   processFilePathForInjection: (

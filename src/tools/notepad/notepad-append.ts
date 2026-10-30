@@ -1,13 +1,13 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
-import type { PluginContext } from "../../plugin/types"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
 import { NOTEPAD_ERROR_CODES } from "./constants"
 import { validateNotepadFilePath } from "./validation"
 
 export const MAX_NOTEPAD_APPEND_BYTES = 40_000
 
-export function createNotepadAppendTool(ctx?: PluginContext): ToolDefinition {
+export function createNotepadAppendTool(ctx?: MatrixxContext): MatrixxToolDefinition {
   return tool({
     description: "Append a timestamped section to an existing notepad file under .matrixx/notepads/<bucket>/*.md. APPEND-only via appendFileSync — never overwrites, never auto-creates (missing file returns not_found).",
     args: {

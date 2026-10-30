@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin";
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../plugin/context";
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool";
 import { z } from "zod";
 import type { MatrixxConfig } from "../../config/schema";
 import {
@@ -29,8 +29,8 @@ const BATCH_KEYS = Object.keys(TaskCreateBatchInputSchema.shape)
 
 export function createTaskCreateTool(
   config: Partial<MatrixxConfig>,
-  ctx?: PluginInput,
-): ToolDefinition {
+  ctx?: MatrixxContext,
+): MatrixxToolDefinition {
   return tool({
     description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Create a new task with auto-generated ID and threadID recording.
@@ -134,7 +134,7 @@ function parseCreateArgs(args: Record<string, unknown>): ParseOutcome {
 async function handleCreate(
   args: Record<string, unknown>,
   config: Partial<MatrixxConfig>,
-  ctx: PluginInput | undefined,
+  ctx: MatrixxContext | undefined,
   context: { sessionID: string },
 ): Promise<string> {
   try {

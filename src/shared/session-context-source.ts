@@ -7,7 +7,7 @@
  * their existing `.catch(...)` handling.
  */
 
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../plugin/context"
 import type { SessionDomainLike } from "./session-facade"
 import type { SessionMessage } from "./session-message"
 
@@ -29,7 +29,7 @@ export type NativeDomains = {
   model: ListDomain
 }
 
-export type NativePluginContext = PluginInput & NativeDomains
+export type NativePluginContext = MatrixxContext & NativeDomains
 
 export type NativeContext = {
   session: SessionContextDomain

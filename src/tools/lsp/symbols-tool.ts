@@ -1,11 +1,11 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 
 import { DEFAULT_MAX_SYMBOLS } from "./constants"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatDocumentSymbol, formatSymbolInfo } from "./lsp-formatters"
 import type { DocumentSymbol, SymbolInfo } from "./types"
 
-export const lsp_symbols: ToolDefinition = tool({
+export const lsp_symbols: MatrixxToolDefinition = tool({
   description:
     "Get symbols from file (document) or search across workspace. Use scope='document' for file outline, scope='workspace' for project-wide symbol search.",
   args: {

@@ -1,6 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import { getSessionAgent } from "../../features/session-state/state"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { notifyInjection } from "../../shared/injection-notifier"
@@ -56,7 +56,7 @@ function hashSnippet(value: string): string {
 
 import type { V2Event } from "../../plugin/context"
 export function createCategorySkillReminderHook(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   availableSkills: AvailableSkill[] = []
 ) {
   const sessionStates = new Map<string, SessionState>()

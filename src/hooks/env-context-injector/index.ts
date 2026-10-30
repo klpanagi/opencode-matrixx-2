@@ -1,6 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { Message, Part } from "@opencode-ai/sdk"
 import { createEnvContext } from "../../agents/env-context"
+import type { MatrixxContext } from "../../plugin/context"
 import { notifyInjection } from "../../shared/injection-notifier"
 
 interface MessageWithParts {
@@ -26,7 +26,7 @@ type MessagesTransformHook = {
  * prefix caching (Anthropic prompt caching, DeepSeek KV cache, OpenAI
  * auto-cache).
  */
-export function createEnvContextInjectorHook(ctx?: PluginInput): MessagesTransformHook {
+export function createEnvContextInjectorHook(ctx?: MatrixxContext): MessagesTransformHook {
   return {
     "experimental.chat.messages.transform": async (_input, output) => {
       const { messages } = output

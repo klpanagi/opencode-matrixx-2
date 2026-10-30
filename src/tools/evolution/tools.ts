@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../plugin/context";
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool";
 import { type EvolutionWriterConfig, EvolutionWriterConfigSchema } from "../../config/schema/evolution";
 import { KNOWLEDGE_KINDS } from "../../features/evolution/schema";
 import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store/trace-store";
@@ -112,13 +112,13 @@ async function handleStatus(store: TraceStore, writer: EvolutionWriter, evolutio
  * retrieval actions `search` and `get_context`, filtered through the T4a
  * retrieval contract and scoped to the current project.
  */
-export function createEvolutionTool(ctx: PluginInput, options?: EvolutionToolOptions): Record<string, ToolDefinition> {
+export function createEvolutionTool(ctx: MatrixxContext, options?: EvolutionToolOptions): Record<string, MatrixxToolDefinition> {
   const projectRoot = ctx.directory ?? process.cwd();
   const writerConfig = options?.writerConfig ?? EvolutionWriterConfigSchema.parse({});
   const pendingDir = path.resolve(projectRoot, PENDING_DIR);
   const evolutionDir = path.resolve(projectRoot, EVOLUTION_DIR);
 
-  const evolution: ToolDefinition = tool({
+  const evolution: MatrixxToolDefinition = tool({
     description: EVOLUTION_DESCRIPTION,
     args: {
       action: tool.schema

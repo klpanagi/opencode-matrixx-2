@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, mock } from "bun:test"
 import * as fs from "node:fs"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createBddParseGherkinTool } from "../../../src/tools/bdd-parse-gherkin/tools"
 
 const _originalReadFileSync = fs.readFileSync.bind(fs)
@@ -35,7 +35,7 @@ afterAll(() => {
   mock.restore()
 })
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "s",
   messageID: "m",
   agent: "mouse",

@@ -1,6 +1,5 @@
-import type { Hooks } from "@opencode-ai/plugin"
-
 import type { MatrixxConfig } from "../../config"
+import type { Hooks } from "../../plugin/legacy-hooks"
 import { log } from "../../shared"
 import { hasWorkingSubstitute, isCtxToolsAvailable, resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
 import { isShellTool } from "../../shared/shell-tool-name"

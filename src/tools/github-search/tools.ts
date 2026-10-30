@@ -1,11 +1,11 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { githubSearch } from "./cli"
 import { MAX_LIMIT } from "./constants"
 import { formatGithubSearchResult } from "./result-formatter"
 
-export function createGithubSearchTools(_ctx: PluginInput): Record<string, ToolDefinition> {
-  const github_search: ToolDefinition = tool({
+export function createGithubSearchTools(_ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const github_search: MatrixxToolDefinition = tool({
     description:
       "Search public GitHub code using local CLIs only (gh, git, rg). " +
       "No third-party remote services. " +

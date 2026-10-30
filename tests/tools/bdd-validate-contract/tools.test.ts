@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { ContractSchema } from "../../../src/features/bdd/schema"
 import { createBddValidateContractTool } from "../../../src/tools/bdd-validate-contract/tools"
 
@@ -17,7 +17,7 @@ const INVALID_CONTRACT_PATH = path.join(TMP_DIR, "invalid.contract.json")
 const MALFORMED_JSON_PATH = path.join(TMP_DIR, "malformed.contract.json")
 const MISSING_PATH = path.join(TMP_DIR, "does-not-exist.contract.json")
 
-const mockContext: ToolContext = {
+const mockContext: MatrixxToolContext = {
   sessionID: "s",
   messageID: "m",
   agent: "mouse",

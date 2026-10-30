@@ -1,4 +1,4 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import type { AssemblyConfig } from "../../config/schema/assembly"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { executeAssembly } from "./assembly-executor"
@@ -12,7 +12,7 @@ export interface AssemblyToolOptions {
 
 export function createAssemblyTool(
   options: AssemblyToolOptions,
-): ToolDefinition {
+): MatrixxToolDefinition {
   return tool({
     description: TOOL_DESCRIPTION,
     args: {

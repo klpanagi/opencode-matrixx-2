@@ -1,11 +1,11 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 
 import { DEFAULT_MAX_DIAGNOSTICS } from "./constants"
 import { withLspClient } from "./lsp-client-wrapper"
 import { filterDiagnosticsBySeverity, formatDiagnostic } from "./lsp-formatters"
 import type { Diagnostic } from "./types"
 
-export const lsp_diagnostics: ToolDefinition = tool({
+export const lsp_diagnostics: MatrixxToolDefinition = tool({
   description: "Get errors, warnings, hints from language server BEFORE running build.",
   args: {
     filePath: tool.schema.string(),

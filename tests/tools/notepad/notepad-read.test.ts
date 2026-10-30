@@ -4,13 +4,13 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createNotepadCreateTool } from "../../../src/tools/notepad/notepad-create"
 import { createNotepadReadTool } from "../../../src/tools/notepad/notepad-read"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-notepad-read",
     messageID: "test-message-notepad-read",

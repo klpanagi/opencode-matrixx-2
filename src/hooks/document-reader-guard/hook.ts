@@ -1,4 +1,5 @@
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/shell-tool-name"
@@ -14,7 +15,7 @@ function isBinaryDocument(filePath: string): boolean {
   return (BINARY_EXTENSIONS as readonly string[]).some((ext) => normalized.endsWith(ext))
 }
 
-export function createDocumentReaderGuardHook(ctx: PluginInput): Hooks {
+export function createDocumentReaderGuardHook(ctx: MatrixxContext): Hooks {
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },

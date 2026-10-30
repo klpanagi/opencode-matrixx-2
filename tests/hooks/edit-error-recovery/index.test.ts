@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createEditErrorRecoveryHook, EDIT_ERROR_PATTERNS, EDIT_ERROR_REMINDER } from "../../../src/hooks/edit-error-recovery/hook"
 
 describe("createEditErrorRecoveryHook", () => {
   let hook: ReturnType<typeof createEditErrorRecoveryHook>
 
   beforeEach(() => {
-    hook = createEditErrorRecoveryHook({} as unknown as PluginInput)
+    hook = createEditErrorRecoveryHook({} as unknown as MatrixxContext)
   })
 
   describe("tool.execute.after", () => {

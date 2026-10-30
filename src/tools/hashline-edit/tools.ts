@@ -1,4 +1,4 @@
-import { type ToolContext, type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolContext, type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { executeHashlineEditTool } from "./hashline-edit-executor"
 import type { RawHashlineEdit } from "./normalize-edits"
 import { HASHLINE_EDIT_DESCRIPTION } from "./tool-description"
@@ -14,7 +14,7 @@ function isPlansPath(filePath: string): boolean {
   return filePath.toLowerCase().replace(/\\/g, "/").includes(".matrixx/plans")
 }
 
-export function createHashlineEditTool(): ToolDefinition {
+export function createHashlineEditTool(): MatrixxToolDefinition {
   return tool({
     description: HASHLINE_EDIT_DESCRIPTION,
     args: {
@@ -40,7 +40,7 @@ export function createHashlineEditTool(): ToolDefinition {
         )
         .describe("Array of edit operations to apply (empty when delete=true)"),
     },
-    execute: async (args: HashlineEditArgs, context: ToolContext) => {
+    execute: async (args: HashlineEditArgs, context: MatrixxToolContext) => {
       if (isPlansPath(args.filePath) || (args.rename !== undefined && isPlansPath(args.rename))) {
         throw new Error(
           "Blocked: hashline-edit cannot modify files inside .matrixx/plans. " +

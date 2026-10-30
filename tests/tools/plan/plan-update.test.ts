@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -13,14 +13,14 @@ import { createPlanUpdateTool } from "../../../src/tools/plan/plan-update"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-plan-update",
     messageID: "test-message-plan-update",
     agent: "test-agent",
     abort: TEST_ABORT.signal,
     directory: testDir,
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 function planPath(dir: string, fileName: string): string {
@@ -34,7 +34,7 @@ function frontMatterFences(content: string): number {
 
 describe("plan_update contract validation + write guards", () => {
   let testDir: string
-  let ctx: ToolContext
+  let ctx: MatrixxToolContext
   let createTool: ReturnType<typeof createPlanCreateTool>
   let readTool: ReturnType<typeof createPlanReadTool>
   let updateTool: ReturnType<typeof createPlanUpdateTool>
@@ -181,7 +181,7 @@ describe("plan_update contract validation + write guards", () => {
 
 describe("plan_update status-transition enforcement", () => {
   let testDir2: string
-  let ctx2: ToolContext
+  let ctx2: MatrixxToolContext
   let createTool2: ReturnType<typeof createPlanCreateTool>
   let readTool2: ReturnType<typeof createPlanReadTool>
   let updateTool2: ReturnType<typeof createPlanUpdateTool>

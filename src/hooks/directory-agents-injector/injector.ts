@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../../plugin/context";
 
 import type { createDynamicTruncator } from "../../shared/dynamic-truncator";
 import { notifyInjection } from "../../shared/injection-notifier";
@@ -28,7 +28,7 @@ function getSessionCache(
 }
 
 export async function processFilePathForAgentsInjection(input: {
-  ctx: PluginInput;
+  ctx: MatrixxContext;
   truncator: DynamicTruncator;
   sessionCaches: Map<string, Set<string>>;
   filePath: string;

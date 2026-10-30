@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "bun:test"
 import { createInputSecretGuardHook } from "../../../src/hooks/input-secret-guard/hook"
 import { clearAll } from "../../../src/hooks/input-secret-guard/session-allow-cache"
 import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 type ToastCall = { level: string; message: string }
 
@@ -13,7 +14,7 @@ function mockCtx(capture?: { toasts: ToastCall[] }) {
   })
   return {
     directory: "/tmp",
-  } as unknown as import("@opencode-ai/plugin").PluginInput
+  } as unknown as MatrixxContext
 }
 
 const SYNTHETIC_OPENAI = "sk-proj-abcdefghij12345678901234567890"

@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../plugin/context";
 import { isRecord } from "./record-type-guard"
 import type { SessionContextCarrier } from "./session-context-source"
 import { fetchSessionMessages } from "./session-context-source"
@@ -23,7 +23,7 @@ interface AssistantMessageInfo {
 	};
 }
 
-type MessageSource = PluginInput | SessionContextCarrier
+type MessageSource = MatrixxContext | SessionContextCarrier
 
 function asSessionCarrier(ctx: MessageSource): SessionContextCarrier | undefined {
 	if (typeof ctx !== "object" || ctx === null) return undefined

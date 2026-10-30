@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 import { buildEnvPrefix, log } from "../../shared"
 import { isShellTool } from "../../shared/shell-tool-name"
 import { HOOK_NAME, NON_INTERACTIVE_ENV, SHELL_COMMAND_PATTERNS } from "./constants"
@@ -19,7 +19,7 @@ function detectBannedCommand(command: string): string | undefined {
   return undefined
 }
 
-export function createNonInteractiveEnvHook(_ctx: PluginInput) {
+export function createNonInteractiveEnvHook(_ctx: MatrixxContext) {
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },

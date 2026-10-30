@@ -13,9 +13,9 @@ import {
 import { log } from "../shared"
 import type { SessionContextCarrier } from "../shared/session-context-source"
 import { isTaskTool } from "../shared/shell-tool-name"
+import type { MatrixxContext } from "./context"
 import { resolveSessionAgent } from "./session-agent-resolver"
 import type { DomainHooks } from "./setup-domains"
-import type { PluginContext } from "./types"
 
 // Module-level regex constants for the slashcommand branches. Precompiled
 // once at module load (Task T1.6) so the regex template `.compile()` cost
@@ -28,7 +28,7 @@ const MAX_ITERATIONS_RE = /--max-iterations=(\d+)/i
 const COMPLETION_PROMISE_RE = /--completion-promise=["']?([^"'\s]+)["']?/i
 
 export function createToolExecuteBeforeHandler(args: {
-  ctx: PluginContext & SessionContextCarrier
+  ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
 }): (
   input: { tool: string; sessionID: string; callID: string },

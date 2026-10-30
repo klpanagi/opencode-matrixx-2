@@ -1,9 +1,9 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../plugin/context"
 import { clearConfigLoadErrors, getConfigLoadErrors } from "../../../shared/config-errors"
 import { log } from "../../../shared/logger"
 import { notify } from "../../../shared/notify"
 
-export async function showConfigErrorsIfAny(_ctx: PluginInput): Promise<void> {
+export async function showConfigErrorsIfAny(_ctx: MatrixxContext): Promise<void> {
   const errors = getConfigLoadErrors()
   if (errors.length === 0) return
 

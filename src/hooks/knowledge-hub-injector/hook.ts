@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
 import type { Message, Part } from "@opencode-ai/sdk";
 import type { KnowledgeHub } from "../../config/schema/knowledge";
 import { type ContextCollector, contextCollector } from "../../features/context-injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
 import { getMainSessionID } from "../../features/session-state/state";
+import type { MatrixxContext } from "../../plugin/context";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 import { notifyInjection } from "../../shared/injection-notifier";
 import { log } from "../../shared/logger";
@@ -43,7 +43,7 @@ function readQuiet(filePath: string): string | null {
   }
 }
 
-export function createKnowledgeHubInjectorHook(ctx: PluginInput, options: KnowledgeHubInjectorOptions = {}) {
+export function createKnowledgeHubInjectorHook(ctx: MatrixxContext, options: KnowledgeHubInjectorOptions = {}) {
   const workspaceDir = ctx.directory;
   const pinnedFiles = options.pinnedFiles ?? [];
   const collector = options.collector ?? contextCollector;

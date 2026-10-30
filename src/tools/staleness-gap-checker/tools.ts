@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { isAbsolute, join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { analyzeSamples, parseNdjson } from "./checker"
 import { STALENESS_GAP_CHECK_DESCRIPTION } from "./constants"
 import type { StalenessResult } from "./types"
@@ -27,8 +27,8 @@ function errorResult(message: string): StalenessResult {
 
 const timestampSchema = tool.schema.union([tool.schema.number(), tool.schema.string()])
 
-export function createStalenessGapCheckerTool(ctx: PluginInput): Record<string, ToolDefinition> {
-  const staleness_gap_check: ToolDefinition = tool({
+export function createStalenessGapCheckerTool(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const staleness_gap_check: MatrixxToolDefinition = tool({
     description: STALENESS_GAP_CHECK_DESCRIPTION,
     args: {
       samples: tool.schema

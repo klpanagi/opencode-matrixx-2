@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 import { log, notifyInjection } from "../../shared"
 import { isSystemDirective, sanitizeKnownTags } from "../../shared/system-directive"
 import { DOMAIN_HINT_MARKER } from "./constants"
@@ -20,7 +20,7 @@ type MessagesTransformOutput = { messages: TransformMessage[] }
  * compact, capped hint naming the matching skills. Pure routing — no file IO,
  * never blocks, and idempotent via the `[domain-skills]` marker.
  */
-export function createDomainKeywordDetectorHook(ctx?: PluginInput) {
+export function createDomainKeywordDetectorHook(ctx?: MatrixxContext) {
   return {
     "experimental.chat.messages.transform": async (
       _input: Record<string, never>,

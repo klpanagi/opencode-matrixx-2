@@ -1,5 +1,5 @@
 import * as fs from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
 import { ContractSchema } from "../../features/bdd/schema"
 
 /**
@@ -64,7 +64,7 @@ function extractScenario(s: Record<string, unknown>): Record<string, unknown> {
 }
 
 /** Create a tool that produces a Contract JSON from a parsed Gherkin AST. */
-export function createBddCreateContractTool(): ToolDefinition {
+export function createBddCreateContractTool(): MatrixxToolDefinition {
   return tool({
       description:
         "Create a structured contract JSON from a parsed Gherkin AST. " +

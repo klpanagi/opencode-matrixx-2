@@ -8,7 +8,7 @@
 // plugin bundle is therefore the wrong path and aborts silently.
 //
 // This module re-exports ONLY pure tool factories. No plugin closure, no
-// `startTmuxCheck`, no `injectServerAuthIntoClient`, no config loading, no
+// `startTmuxCheck`, no client-auth injection, no config loading, no
 // manager/hook construction at module scope. Safe to `await import()` from
 // `ctx_execute` (language: javascript) or a `bun` bench script:
 //

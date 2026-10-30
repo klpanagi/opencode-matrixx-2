@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../plugin/context"
 
 // Actionable replacement for an empty task result: the call completed but produced no
 // output. The orchestrator can fix and retry — the two causes below cover every observed
@@ -13,7 +13,7 @@ Likely causes:
 Next: re-issue the delegation as a direct tool call; if the output is still empty, read the delegate-task entries in /tmp/matrixx.log for this session.
 Call shape reminders: load_skills is REQUIRED (pass [] when no skills are needed, and "tdd-enforcer" for code-writing categories); provide EITHER category OR subagent_type; "mouse" is reached through a category, never as subagent_type.`
 
-export function createEmptyTaskResponseDetectorHook(_ctx: PluginInput) {
+export function createEmptyTaskResponseDetectorHook(_ctx: MatrixxContext) {
   return {
     "tool.execute.after": async (
       input: { tool: string; sessionID: string; callID: string },

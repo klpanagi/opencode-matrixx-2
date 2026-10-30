@@ -1,11 +1,11 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { runRgFiles } from "./cli"
 import { resolveGrepCliWithAutoInstall } from "./constants"
 import { formatGlobResult } from "./result-formatter"
 
-export function createGlobTools(ctx: PluginInput): Record<string, ToolDefinition> {
-  const glob: ToolDefinition = tool({
+export function createGlobTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const glob: MatrixxToolDefinition = tool({
     description:
       "Fast file pattern matching tool with safety limits (60s timeout, 100 file limit). " +
       "Supports glob patterns like \"**/*.js\" or \"src/**/*.ts\". " +

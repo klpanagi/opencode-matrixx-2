@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createMarketSymbolValidatorTool } from "../../src/tools/market-symbol-validator/tools"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "market-symbol-validator")
@@ -10,7 +10,7 @@ type Finding = { rule: string; severity: string; file: string; line: number; sym
 type Result = { status: 0 | 1 | 2; findings: Finding[]; summary: { total: number } }
 
 async function validate(args: Record<string, unknown>): Promise<Result> {
-  const tool = createMarketSymbolValidatorTool({ directory: FIXTURES } as unknown as PluginInput)
+  const tool = createMarketSymbolValidatorTool({ directory: FIXTURES } as unknown as MatrixxContext)
   const output = await tool.market_symbol_validate.execute(args)
   return JSON.parse(output) as Result
 }

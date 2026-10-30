@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 
 // ---------------------------------------------------------------------------
 // Mock fs BEFORE importing the module under test (mirrors dcp-switch-profile)
@@ -25,7 +25,7 @@ mock.module("node:fs", () => ({
 import { _resetPresetStateForTesting } from "../../../src/features/preset-state/manager"
 import { createPresetTool } from "../../../src/tools/preset/tools"
 
-const mockContext: ToolContext = { sessionID: "test-session" } as ToolContext
+const mockContext: MatrixxToolContext = { sessionID: "test-session" } as MatrixxToolContext
 
 const PLUGIN_CONFIG = {
   model_presets: {

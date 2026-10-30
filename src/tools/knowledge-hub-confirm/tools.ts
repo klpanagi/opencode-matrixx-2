@@ -1,6 +1,6 @@
 import * as path from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { approveHubWrite, HUB_WRITE_APPROVAL_TTL_MS } from "../../hooks/knowledge-hub-guard/approvals"
 import { log } from "../../shared/logger"
 
@@ -15,7 +15,7 @@ const HOOK_NAME = "knowledge-hub-guard"
  * for the resolved absolute path, then the agent retries the blocked write
  * and the guard lets it through.
  */
-export function createKnowledgeHubConfirmTool(ctx: PluginInput): ToolDefinition {
+export function createKnowledgeHubConfirmTool(ctx: MatrixxContext): MatrixxToolDefinition {
   return tool({
     description:
       "Record user confirmation for a knowledge-hub write. Call only after the user " +

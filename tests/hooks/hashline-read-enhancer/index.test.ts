@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createHashlineReadEnhancerHook } from "../../../src/hooks/hashline-read-enhancer/hook"
 import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computation"
 
 //#given - Test setup helpers
-function createMockContext(): PluginInput {
+function createMockContext(): MatrixxContext {
   return {
-    client: {} as unknown as PluginInput["client"],
+    client: {} as unknown as MatrixxContext["client"],
     directory: "/test",
   }
 }
@@ -22,7 +22,7 @@ function createMockConfig(enabled: boolean): TestConfig {
 }
 
 describe("createHashlineReadEnhancerHook", () => {
-  let mockCtx: PluginInput
+  let mockCtx: MatrixxContext
   const sessionID = "test-session-123"
 
   beforeEach(() => {

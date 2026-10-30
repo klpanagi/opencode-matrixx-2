@@ -118,7 +118,7 @@ describe("F5 — nudge loop-breaker throttles repeated DSML-echo turns", () => {
 describe("F5 — sanitizer caps sticky nudges at one across the transcript", () => {
   test("reduces multiple nudge parts to exactly one", async () => {
     //#given
-    const hook = createDcpNudgeSanitizerHook({} as PluginContext)
+    const hook = createDcpNudgeSanitizerHook({} as MatrixxContext)
     const first = makeMessage("assistant", "msg_1")
     first.parts = [textPart("real assistant answer"), textPart(NUDGE), textPart(NUDGE)]
     const second = makeMessage("assistant", "msg_2")

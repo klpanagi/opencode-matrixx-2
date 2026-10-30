@@ -10,7 +10,7 @@
  * (`emitToolInfo` plus per-domain `transform` registrars).
  *
  * Still load-bearing below this module (owned by later TODOs):
- * - the V1 `PluginContext` substrate (`./types`) every hook/tool is written against
+ * - the V1 `MatrixxContext` substrate (`./types`) every hook/tool is written against
  * - the 6-phase config pipeline (`../plugin-handlers/config-handler`) that feeds the config draft
  * - the unified compaction hook (Task 8)
  *
@@ -19,13 +19,12 @@
  * the tmux pane mirror is gone.
  */
 
-import type { Hooks } from "@opencode-ai/plugin"
 import { registerAgentTransform } from "../agents/agents.transform"
 import type {
   AvailableCategory,
   AvailableSkill,
 } from "../agents/dynamic-agent-prompt-builder"
-import type { HookName, MatrixxConfig } from "../config"
+import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
 import type { BrowserAutomationProvider } from "../config/schema/browser-automation"
 import type { BackgroundManager } from "../features/background-agent"
 import { BackgroundManager as BackgroundManagerImpl } from "../features/background-agent"
@@ -52,9 +51,16 @@ import { registerSkillTransform } from "../skills/skills.transform"
 import { startTmuxCheck } from "../tools"
 import { resolveSystemDefaultModel } from "../tools/delegate-task/default-model"
 import { setPollTimeoutMs } from "../tools/delegate-task/timing"
+import { emitToolInfo } from "../tools/shared/define-tool"
 import { createAvailableCategories } from "./available-categories"
 import { createChatMessageHandler } from "./chat-message"
 import { createChatParamsHandler } from "./chat-params"
+import type { MatrixxContext, ToolsRecord, 
+  V2Event, 
+  V2Registration,
+  V2SessionContextEvent,
+  V2SystemPart,
+  V2ToolEditor} from "./context"
 import { createEventHandler } from "./event"
 import { createEventDispatcher } from "./event-dispatch"
 import type { ContinuationHooks } from "./hooks/create-continuation-hooks"
@@ -67,21 +73,14 @@ import type { ToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import { createToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
+import type { Hooks } from "./legacy-hooks"
 import { createMessagesTransformHandler } from "./messages-transform"
 import { createNativePluginContext } from "./native-context"
-import { emitToolInfo } from "./opencode-tools"
-import type { 
-  V2Context,V2Event, 
-  V2Registration,
-  V2SessionContextEvent,
-  V2SystemPart,
-  V2ToolEditor,} from "./context"
 import { createSkillContext } from "./skill-context"
 import { createToolCatalog } from "./tool-catalog"
 import { createToolDefinitionHandler } from "./tool-definition"
 import { createToolExecuteAfterHandler } from "./tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./tool-execute-before"
-import type { PluginContext, TmuxConfig, ToolsRecord } from "./types"
 
 /** Managers owned by the composition root (moved from `create-managers.ts`). */
 export type DomainManagers = {
@@ -191,7 +190,7 @@ export async function setupToolsDomain(args: {
 
 /** Chat domain: message, params, and message/system transforms. */
 export function setupChatHooks(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   hooks: DomainHooks
@@ -227,7 +226,7 @@ export function setupChatHooks(args: {
 
 /** Tool domain: execute guards and tool definition passthrough. */
 export function setupToolHooks(args: {
-  ctx: PluginContext & SessionContextCarrier
+  ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
 }): Pick<Hooks, "tool.execute.before" | "tool.execute.after" | "tool.definition"> {
   const { ctx, hooks } = args
@@ -287,7 +286,7 @@ export function setupCompactionHooks(args: {
  * Builds managers, tools, hooks, and the `Hooks` fragments the V2
  * registration below consumes.
  */
-export async function setupDomains(ctx: V2Context): Promise<{
+export async function setupDomains(ctx: MatrixxContext): Promise<{
   directory: string
   worktree: string
   hooks: Hooks
@@ -471,7 +470,7 @@ type DomainBridgeHandlers = {
 }
 
 export interface RegisterDomainsInput {
-  ctx: V2Context
+  ctx: MatrixxContext
   hooks: Hooks
   directory: string
   worktree: string

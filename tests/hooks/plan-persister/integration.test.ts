@@ -2,7 +2,7 @@
  * Integration test: plan persistence round-trip.
  *
  * Simulates: plan creation → work → session.idle writes →
- * process restart (new PluginInput) → rehydration context matches original state.
+ * process restart (new MatrixxContext) → rehydration context matches original state.
  *
  * Progress is driven by mission-linked task files, the only source the
  * plan-persister hook reads.
@@ -11,7 +11,7 @@ import { describe, expect, it } from "bun:test"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createOpencodeClient } from "@opencode-ai/sdk"
 import { parseMetadataComment, readPlanFile } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
@@ -22,7 +22,7 @@ function tmpDir(): string {
   return d
 }
 
-function makeMockContext(): PluginInput {
+function makeMockContext(): MatrixxContext {
   const client = createOpencodeClient({ directory: "/tmp/test" })
   return {
     client,
@@ -79,7 +79,7 @@ function writeLinkedTask(
 
 /**
  * Scenario: Plan is generated → agent works through steps → session.idle
- * persists progress → process restarts (new PluginInput) → rehydration
+ * persists progress → process restarts (new MatrixxContext) → rehydration
  * correctly reads the persisted plan file.
  */
 describe("plan persistence round-trip", () => {
@@ -138,7 +138,7 @@ describe("plan persistence round-trip", () => {
     expect(afterStep2).toContain("- [x] Configure database")
     expect(afterStep2).toContain("- [ ] Deploy to staging")
 
-    // Phase 4: Simulate process restart — fresh PluginInput, no in-memory state
+    // Phase 4: Simulate process restart — fresh MatrixxContext, no in-memory state
     // The plan file on disk should have all the state we need
     const freshHook = createPlanPersister(makeMockContext(), { directory: dir })
 

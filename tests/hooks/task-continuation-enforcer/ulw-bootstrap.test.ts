@@ -2,19 +2,19 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { setNotifySink } from "../../../src/shared/notify"
 
-function makeCtx(dir: string, bgTasks: Array<{ status: string }> = []): PluginInput {
+function makeCtx(dir: string, bgTasks: Array<{ status: string }> = []): MatrixxContext {
   return {
     directory: dir,
     session: { context: async () => [] },
     backgroundManager: {
       getTasksByParentSession: () => bgTasks,
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 describe("ulw bootstrap", () => {
@@ -27,7 +27,7 @@ describe("ulw bootstrap", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const bg = { getTasksByParentSession: () => [{ status: "completed" }] } as never
     await handleSessionIdle({ ctx, sessionID: "ulw1", sessionStateStore: store, backgroundManager: bg, skipAgents: [] })
@@ -60,7 +60,7 @@ describe("ulw bootstrap", () => {
         tui: { showToast: toastMock },
         session: { messages: async () => ({ data: [] } as unknown as never) as never },
       },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const bg2 = { getTasksByParentSession: () => [{ status: "completed" }] } as never
     await handleSessionIdle({ ctx: ctx2, sessionID: "ulw3", sessionStateStore: store, backgroundManager: bg2, skipAgents: [] })
@@ -81,7 +81,7 @@ describe("ulw bootstrap", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const bg4 = { getTasksByParentSession: () => [{ status: "completed" }] } as never
     await handleSessionIdle({ ctx, sessionID: "ulw4", sessionStateStore: store, backgroundManager: bg4, skipAgents: [] })
@@ -115,7 +115,7 @@ describe("ulw bootstrap", () => {
     const ctx = {
       directory: dir,
       session: { context: async () => [] },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const bg = {
       getTasksByParentSession: () => [

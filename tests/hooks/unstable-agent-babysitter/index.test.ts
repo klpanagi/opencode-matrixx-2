@@ -5,7 +5,7 @@ import { createUnstableAgentBabysitterHook } from "../../../src/hooks/unstable-a
 
 type BabysitterContext = Parameters<typeof createUnstableAgentBabysitterHook>[0]
 
-function createMockPluginInput(options: {
+function createMockMatrixxContext(options: {
   messagesBySession: Record<string, unknown[]>
   promptCalls: Array<{ input: unknown }>
 }): BabysitterContext {
@@ -57,7 +57,7 @@ describe("unstable-agent-babysitter hook", () => {
     // #given
     setMainSession("main-1")
     const promptCalls: Array<{ input: unknown }> = []
-    const ctx = createMockPluginInput({
+    const ctx = createMockMatrixxContext({
       messagesBySession: {
         "main-1": [
           { type: "user", agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } },
@@ -90,7 +90,7 @@ describe("unstable-agent-babysitter hook", () => {
     // #given
     setMainSession("main-1")
     const promptCalls: Array<{ input: unknown }> = []
-    const ctx = createMockPluginInput({
+    const ctx = createMockMatrixxContext({
       messagesBySession: {
         "main-1": [
           { type: "user", agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } },
@@ -125,7 +125,7 @@ describe("unstable-agent-babysitter hook", () => {
     // #given
     setMainSession("main-1")
     const promptCalls: Array<{ input: unknown }> = []
-    const ctx = createMockPluginInput({
+    const ctx = createMockMatrixxContext({
       messagesBySession: { "main-1": [] },
       promptCalls,
     })
@@ -148,7 +148,7 @@ describe("unstable-agent-babysitter hook", () => {
     // #given
     setMainSession("main-1")
     const promptCalls: Array<{ input: unknown }> = []
-    const ctx = createMockPluginInput({
+    const ctx = createMockMatrixxContext({
       messagesBySession: { "main-1": [], "bg-1": [] },
       promptCalls,
     })

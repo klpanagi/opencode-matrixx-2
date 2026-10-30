@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../plugin/context"
 import {
   hasConnectedProvidersCache,
   updateConnectedProvidersCache,
@@ -6,7 +6,7 @@ import {
 import { log } from "../../../shared/logger"
 import { notify } from "../../../shared/notify"
 
-export async function updateAndShowConnectedProvidersCacheStatus(_ctx: PluginInput): Promise<void> {
+export async function updateAndShowConnectedProvidersCacheStatus(_ctx: MatrixxContext): Promise<void> {
   const hadCache = hasConnectedProvidersCache()
 
   updateConnectedProvidersCache().catch((err) => { log("[auto-update] Provider cache update failed:", err) })

@@ -11,7 +11,7 @@ import { describe, expect, it } from "bun:test"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createOpencodeClient } from "@opencode-ai/sdk"
 import { parseMetadataComment } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
@@ -25,7 +25,7 @@ function stripMetadata(content: string): string {
   return content.replace(/\n\n<!-- plan-persister:[\s\S]*?-->\n$/, "")
 }
 
-function makeMockContext(): PluginInput {
+function makeMockContext(): MatrixxContext {
   const client = createOpencodeClient({ directory: "/tmp/test" })
   return {
     client,

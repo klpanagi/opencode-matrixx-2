@@ -1,6 +1,6 @@
 import { isAbsolute, join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { DEFAULT_GLOBS, SILENT_FAILURE_SCAN_DESCRIPTION } from "./constants"
 import { scanPath } from "./scanner"
 import type { ScanSeverity, SilentFailureScanResult } from "./types"
@@ -16,8 +16,8 @@ function errorResult(message: string): SilentFailureScanResult {
   }
 }
 
-export function createSilentFailureScannerTool(ctx: PluginInput): Record<string, ToolDefinition> {
-  const silent_failure_scan: ToolDefinition = tool({
+export function createSilentFailureScannerTool(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const silent_failure_scan: MatrixxToolDefinition = tool({
     description: SILENT_FAILURE_SCAN_DESCRIPTION,
     args: {
       path: tool.schema

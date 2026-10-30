@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import type { AvailableSkill } from "../../../src/agents/dynamic-agent-prompt-builder"
 import { _resetForTesting, clearSessionAgent, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
@@ -21,18 +21,18 @@ describe("category-skill-reminder hook", () => {
     logSpy?.mockRestore()
   })
 
-  function createMockPluginInput() {
+  function createMockMatrixxContext() {
     return {
       client: {
         tui: {
           showToast: async () => {},
         },
       },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
   }
 
   function createHook(availableSkills: AvailableSkill[] = []) {
-    return createCategorySkillReminderHook(createMockPluginInput(), availableSkills)
+    return createCategorySkillReminderHook(createMockMatrixxContext(), availableSkills)
   }
 
   describe("target agent detection", () => {
@@ -426,7 +426,7 @@ describe("category-skill-reminder shell/subagent aliases (V2)", () => {
           showToast: async () => {},
         },
       },
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
     return createCategorySkillReminderHook(ctx, availableSkills)
   }
 

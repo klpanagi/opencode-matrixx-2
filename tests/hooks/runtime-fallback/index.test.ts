@@ -34,7 +34,7 @@ describe("runtime-fallback", () => {
     mock.restore()
   })
 
-  function createMockPluginInput(overrides?: {
+  function createMockMatrixxContext(overrides?: {
     session?: {
       context?: (args: unknown) => Promise<unknown>
       prompt?: (args: unknown) => Promise<unknown>
@@ -93,7 +93,7 @@ describe("runtime-fallback", () => {
   describe("session.error handling", () => {
     test("should detect retryable error with status code 429", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-123"
 
       //#when
@@ -119,7 +119,7 @@ describe("runtime-fallback", () => {
 
     test("should detect retryable error with status code 503", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-503"
 
       //#when
@@ -144,7 +144,7 @@ describe("runtime-fallback", () => {
 
     test("should skip non-retryable errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-400"
 
       //#when
@@ -169,7 +169,7 @@ describe("runtime-fallback", () => {
 
     test("should log missing API key errors with classification details", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-missing-api-key"
 
       //#when
@@ -209,7 +209,7 @@ describe("runtime-fallback", () => {
 
     test("should trigger fallback for missing API key errors when fallback models are configured", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["openai/gpt-5.4"]),
       })
@@ -246,7 +246,7 @@ describe("runtime-fallback", () => {
 
     test("should NOT trigger fallback for quota exhaustion without auto-retry signal", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["zai-coding-plan/glm-5.1"]),
       })
@@ -281,7 +281,7 @@ describe("runtime-fallback", () => {
 
     test("should log when no fallback models configured", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig(),
         pluginConfig: {},
       })
@@ -311,7 +311,7 @@ describe("runtime-fallback", () => {
   describe("disabled hook", () => {
     test("should not process events when disabled", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ enabled: false }),
       })
       const sessionID = "test-session-disabled"
@@ -333,7 +333,7 @@ describe("runtime-fallback", () => {
   describe("session lifecycle", () => {
     test("should create state on session.created", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-create"
       const model = "anthropic/claude-opus-4-5"
 
@@ -353,7 +353,7 @@ describe("runtime-fallback", () => {
 
     test("should cleanup state on session.deleted", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-delete"
 
       //#when
@@ -379,7 +379,7 @@ describe("runtime-fallback", () => {
 
     test("should handle session.error without prior session.created", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-no-create"
 
       //#when
@@ -403,7 +403,7 @@ describe("runtime-fallback", () => {
   describe("message.updated handling", () => {
     test("should handle assistant message errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-message-updated"
 
       //#when
@@ -428,7 +428,7 @@ describe("runtime-fallback", () => {
 
     test("should skip non-assistant message errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-message-user"
 
       //#when
@@ -453,7 +453,7 @@ describe("runtime-fallback", () => {
 
     test("should trigger fallback on Copilot auto-retry signal in message.updated", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["openai/gpt-5.4"]),
       })
@@ -495,7 +495,7 @@ describe("runtime-fallback", () => {
 
     test("should NOT trigger fallback on auto-retry signal when timeout_seconds is 0", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false, timeout_seconds: 0 }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["anthropic/claude-opus-4-7"]),
       })
@@ -539,7 +539,7 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: unknown[] = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
             context: async () => [{ type: "user", text: "continue" }],
             prompt: async (args) => {
@@ -594,7 +594,7 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: unknown[] = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
             context: async () => [{ type: "user", text: "continue" }],
             prompt: async (args) => {
@@ -660,7 +660,7 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: Array<Record<string, unknown>> = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
             context: async () => [{ type: "user", text: "continue" }],
             prompt: async (args) => {
@@ -712,7 +712,7 @@ describe("runtime-fallback", () => {
   describe("custom error codes", () => {
     test("should support custom retry_on_errors configuration", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ retry_on_errors: [500, 502] }),
       })
       const sessionID = "test-session-custom"

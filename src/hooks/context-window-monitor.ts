@@ -1,7 +1,8 @@
 // Boundary: 70% warn (read-only) → single compaction hook (setup-domains) → context-window-limit-recovery (reactive, error-parse only). Proactive compression belongs to DCP (/dcp-compress). Shared: context-limits.ts + token-cache.ts.
-import type { PluginInput } from "@opencode-ai/plugin"
+
 import type { MatrixxConfig } from "../config"
 import type { ExperimentalConfig } from "../config/schema/experimental"
+import type { MatrixxContext } from "../plugin/context"
 import {
   ANTHROPIC_DISPLAY_LIMIT,
   DEFAULT_ANTHROPIC_ACTUAL_LIMIT,
@@ -37,7 +38,7 @@ interface CachedTokenState {
 
 import type { V2Event } from "../plugin/context"
 export function createContextWindowMonitorHook(
-  _ctx: PluginInput,
+  _ctx: MatrixxContext,
   pluginConfig?: MatrixxConfig | { experimental?: ExperimentalConfig },
 ) {
   const warningThreshold = resolveWarningThreshold(pluginConfig?.experimental)

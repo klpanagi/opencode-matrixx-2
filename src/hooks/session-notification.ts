@@ -1,4 +1,3 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../config/schema"
 import {
   getMainSessionID,
@@ -6,6 +5,7 @@ import {
   subagentSessions,
 } from "../features/session-state/state"
 import { hasIncompleteTasksForSession } from "../features/task-session-scope"
+import type { MatrixxContext } from "../plugin/context"
 import { createIdleNotificationScheduler } from "./session-notification-scheduler"
 import {
   detectPlatform,
@@ -32,7 +32,7 @@ interface SessionNotificationConfig {
 
 import type { V2Event } from "../plugin/context"
 export function createSessionNotification(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   config: SessionNotificationConfig = {},
   /**
    * The plugin config is a separate parameter, not part of `SessionNotificationConfig`:
@@ -57,7 +57,7 @@ export function createSessionNotification(
     ...config,
   }
 
-  const hasIncompleteTaskWork = async (_ctx: PluginInput, sessionID: string): Promise<boolean> =>
+  const hasIncompleteTaskWork = async (_ctx: MatrixxContext, sessionID: string): Promise<boolean> =>
     hasIncompleteTasksForSession({
       config: pluginConfig,
       directory: ctx.directory,

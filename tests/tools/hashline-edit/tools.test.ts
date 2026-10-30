@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { canonicalizeFileText } from "../../../src/tools/hashline-edit/file-text-canonicalization"
 import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computation"
 import { createHashlineEditTool } from "../../../src/tools/hashline-edit/tools"
 
-function createMockContext(): ToolContext {
+function createMockContext(): MatrixxToolContext {
   return {
     sessionID: "test",
     messageID: "test",
@@ -15,7 +15,7 @@ function createMockContext(): ToolContext {
     abort: new AbortController().signal,
     metadata: mock(() => {}),
     ask: async () => {},
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("createHashlineEditTool", () => {

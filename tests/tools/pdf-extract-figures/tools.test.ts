@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 
 // ---------------------------------------------------------------------------
 // Helpers for Bun.spawn / Bun.spawnSync mocking
@@ -70,7 +70,7 @@ import { createPdfExtractFiguresTool } from "../../../src/tools/pdf-extract-figu
 // Helpers
 // ---------------------------------------------------------------------------
 
-const mockContext: ToolContext = { sessionID: "test-session" } as ToolContext
+const mockContext: MatrixxToolContext = { sessionID: "test-session" } as MatrixxToolContext
 
 type AnyRecord = Record<string, unknown>
 

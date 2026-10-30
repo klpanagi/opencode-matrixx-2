@@ -1,10 +1,11 @@
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/shell-tool-name"
 import { BLOCKED_PATTERNS, HOOK_NAME, PLAN_READ_WARN, PLAN_WRITE_WARN } from "./constants"
 
-export function createTaskEditGuardHook(ctx: PluginInput): Hooks {
+export function createTaskEditGuardHook(ctx: MatrixxContext): Hooks {
   return {
     "tool.execute.before": async (input, output: { args: Record<string, unknown>; message?: string }): Promise<void> => {
       const tool = input.tool?.toLowerCase()

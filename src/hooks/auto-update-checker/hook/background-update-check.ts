@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../plugin/context"
 import { getOpenCodeConfigPaths } from "../../../shared"
 import { log } from "../../../shared/logger"
 import { invalidatePackage } from "../cache"
@@ -40,7 +40,7 @@ async function runBunInstallSafe(): Promise<boolean> {
 }
 
 export async function runBackgroundUpdateCheck(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   autoUpdate: boolean,
   getToastMessage: (isUpdate: boolean, latestVersion?: string) => string
 ): Promise<void> {

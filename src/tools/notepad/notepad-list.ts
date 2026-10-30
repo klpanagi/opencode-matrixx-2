@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
-import type { PluginContext } from "../../plugin/types"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
 import {
   MATRIXX_DIR_NAME,
@@ -10,7 +10,7 @@ import {
 } from "./constants"
 import { validateBucketName } from "./validation"
 
-export function createNotepadListTool(ctx?: PluginContext): ToolDefinition {
+export function createNotepadListTool(ctx?: MatrixxContext): MatrixxToolDefinition {
   return tool({
     description: "List notepad buckets under .matrixx/notepads/ (no args) or *.md files inside a bucket (planName). File entries carry mtime/size, mirroring plan_list.",
     args: {

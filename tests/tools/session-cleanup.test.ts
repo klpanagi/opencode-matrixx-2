@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { MatrixxConfigSchema } from "../../src/config"
 import { shouldEnableSessionCleanup } from "../../src/plugin/tool-policy"
 import { createSessionCleanupTool } from "../../src/tools/session-cleanup"
@@ -38,8 +38,8 @@ function createTracker(sessions: MockSession[], deleteFails?: (id: string) => bo
   return tracker
 }
 
-function createCtx(client: unknown, directory = "/home/klpanagi/matrixx"): PluginInput {
-  return { session: (client as { session: unknown }).session, directory } as unknown as PluginInput
+function createCtx(client: unknown, directory = "/home/klpanagi/matrixx"): MatrixxContext {
+  return { session: (client as { session: unknown }).session, directory } as unknown as MatrixxContext
 }
 
 async function run(

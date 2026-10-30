@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import {
   countPlanProgressFromContent,
   type PlanProgress,
@@ -9,7 +9,7 @@ import {
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { MAX_PLAN_FILE_BYTES } from "../../features/mission-state/constants"
 import { parsePlanFrontMatter } from "../../features/plan-contract"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { PLAN_FILENAME_KEBAB_REGEX, PLANS_DIR } from "./constants"
 import { resolveDirectory } from "./types"
 
@@ -20,7 +20,7 @@ interface SkippedPlan {
   reason: string
 }
 
-export function createPlanListTool(ctx?: PluginContext, cap: number = MAX_PLAN_FILE_BYTES): ToolDefinition {
+export function createPlanListTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
   return tool({
     description: `List plan files under .matrixx/plans/*.md. Filters *.md with kebab-case, sorts by mtime. Each entry carries \`size\` (bytes) and \`overCap\`. An over-cap plan is still listed — never skipped, never an error — because it is the plan that needs repair: read it with plan_read \`offset\`/\`limit\` or a \`section\` selector, then shrink it with plan_update. The cap is ${cap.toLocaleString("en-US")} bytes. A \`.md\` file whose filename is not kebab-case is not counted; when that happens the response gains \`skipped\`, a list of \`{ name, reason }\` naming the offending file and the rule it broke. The key is absent when nothing is skipped.`,
     args: {},

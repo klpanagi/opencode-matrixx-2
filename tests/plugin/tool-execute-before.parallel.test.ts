@@ -31,7 +31,7 @@ import * as sessionAgentResolver from "../../src/plugin/session-agent-resolver"
 import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
 
 type CreatedHooks = Parameters<typeof createToolExecuteBeforeHandler>[0]["hooks"]
-type PluginContext = Parameters<typeof createToolExecuteBeforeHandler>[0]["ctx"]
+type MatrixxContext = Parameters<typeof createToolExecuteBeforeHandler>[0]["ctx"]
 
 const FAST_FAIL_HOOK_NAMES = [
   // Wave 1: READ_ONLY
@@ -153,7 +153,7 @@ describe("tool.execute.before — T1.6 slashcommand regex precompilation", () =>
         startLoop: () => {},
         cancelLoop: () => {},
       }
-      const ctx: PluginContext = { client: {} } as PluginContext
+      const ctx: MatrixxContext = { client: {} } as MatrixxContext
       const handler = createToolExecuteBeforeHandler({ ctx, hooks })
 
       const input = {
@@ -213,7 +213,7 @@ describe("tool.execute.before — T1.6 slashcommand regex precompilation", () =>
     try {
       const spies = {} as Record<FastFailHookName, ReturnType<typeof spyOn>>
       const hooks = buildStubHooks(spies)
-      const ctx: PluginContext = { client: {} } as PluginContext
+      const ctx: MatrixxContext = { client: {} } as MatrixxContext
       const handler = createToolExecuteBeforeHandler({ ctx, hooks })
 
       const input = {
@@ -248,7 +248,7 @@ describe("tool.execute.before — T1.1 parallel safety", () => {
       //#given
       const spies = {} as Record<FastFailHookName, ReturnType<typeof spyOn>>
       const hooks = buildStubHooks(spies)
-      const ctx: PluginContext = { client: {} } as PluginContext
+      const ctx: MatrixxContext = { client: {} } as MatrixxContext
       const handler = createToolExecuteBeforeHandler({ ctx, hooks })
 
       const N = 100
@@ -329,7 +329,7 @@ describe("tool.execute.before — T1.4 resolveSessionAgent overlap", () => {
         return "resolved-agent"
       })
 
-      const ctx: PluginContext = { client: {} } as PluginContext
+      const ctx: MatrixxContext = { client: {} } as MatrixxContext
       const handler = createToolExecuteBeforeHandler({ ctx, hooks })
 
       const input = { tool: "task", sessionID: "ses_x", callID: "call_x" }
