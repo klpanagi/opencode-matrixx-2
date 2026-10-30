@@ -4,6 +4,7 @@ import { existsSync, closeSync, openSync, readSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
+import { resetNotifySink, setNotifySink } from "../../src/shared/notify"
 import {
   TASK_SYSTEM_DEFAULT,
   bindTaskSystemDeprecationToast,
@@ -196,26 +197,25 @@ describe("task-system gating collapse", () => {
 
   describe("startup toast", () => {
     test("one toast is emitted for the whole session", () => {
-      //#given a client that records toasts
-      const toasts: string[] = []
-      bindTaskSystemDeprecationToast({
-        tui: {
-          showToast: (input: unknown) => {
-            const body = (input as { body?: { message?: string } }).body
-            toasts.push(body?.message ?? "")
-            return Promise.resolve()
-          },
-        },
+      //#given a notify sink that records warnings
+      const notices: Array<{ level: string; message: string }> = []
+      setNotifySink((level, message) => {
+        notices.push({ level, message })
       })
+      try {
+        bindTaskSystemDeprecationToast({})
 
-      //#when two legacy configs are resolved
-      const config = { tasks: { enabled: false } }
-      resolveTasksConfig(config)
-      resolveTasksConfig(config)
+        //#when two legacy configs are resolved
+        const config = { tasks: { enabled: false } }
+        resolveTasksConfig(config)
+        resolveTasksConfig(config)
 
-      //#then exactly one toast was shown
-      expect(toasts.length).toBe(1)
-      expect(toasts[0]).toContain("tasks.enabled")
+        //#then exactly one warning was emitted
+        expect(notices.length).toBe(1)
+        expect(notices[0].message).toContain("tasks.enabled")
+      } finally {
+        resetNotifySink()
+      }
     })
 
     test("a missing tui client does not throw", () => {

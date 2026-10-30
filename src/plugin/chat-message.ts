@@ -9,7 +9,7 @@ import {
   resolveAgentVariant,
   resolveVariantForModel,
 } from "../shared/agent-variant"
-import { log } from "../shared/logger"
+import { notify } from "../shared/notify"
 import type { DomainHooks } from "./setup-domains"
 import type { PluginContext } from "./types"
 
@@ -43,7 +43,7 @@ export function createChatMessageHandler(args: {
   input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
   output: ChatMessageHandlerOutput
 ) => Promise<void> {
-  const { ctx, pluginConfig, firstMessageVariantGate, hooks } = args
+  const { pluginConfig, firstMessageVariantGate, hooks } = args
 
   return async (
     input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
@@ -92,17 +92,7 @@ export function createChatMessageHandler(args: {
     await hooks.runtimeFallback?.["chat.message"]?.(input, output)
 
     if (!hasConnectedProvidersCache()) {
-      ctx.client.tui
-        .showToast({
-          body: {
-            title: "⚠️ Provider Cache Missing",
-            message:
-              "Model filtering disabled. RESTART OpenCode to enable full functionality.",
-            variant: "warning" as const,
-            duration: 6000,
-          },
-        })
-        .catch((err) => { log("[plugin] Provider cache toast failed:", err) })
+      notify("warn", "Provider Cache Missing: Model filtering disabled. RESTART OpenCode to enable full functionality.")
     }
 
     if (hooks.matrixLoop) {

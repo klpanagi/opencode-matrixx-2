@@ -1,12 +1,4 @@
-interface NormalizeSDKResponseOptions {
-  preferResponseOnMissingData?: boolean
-}
-
-export function normalizeSDKResponse<TData>(
-  response: unknown,
-  fallback: TData,
-  options?: NormalizeSDKResponseOptions,
-): TData {
+export function normalizeSDKResponse<TData>(response: unknown, fallback: TData): TData {
   if (response === null || response === undefined) {
     return fallback
   }
@@ -21,15 +13,7 @@ export function normalizeSDKResponse<TData>(
       return data as TData
     }
 
-    if (options?.preferResponseOnMissingData === true) {
-      return response as TData
-    }
-
     return fallback
-  }
-
-  if (options?.preferResponseOnMissingData === true) {
-    return response as TData
   }
 
   return fallback

@@ -12,19 +12,17 @@ describe("event consumer: session-recovery", () => {
     const sessionID = "ses_recovery_fixture"
     setMainSession(sessionID)
     const prompts: Array<{
-      path?: { id?: string }
-      body?: { parts?: Array<{ type: string; text?: string }> }
+      sessionID?: string
+      parts?: Array<{ type: string; text?: string }>
     }> = []
     const seenErrors: unknown[] = []
     const ctx = {
       directory: "/tmp",
-      client: {
-        session: {
-          prompt: async (args: { path?: { id?: string }; body?: { parts?: Array<{ type: string; text?: string }> } }) => {
+      session: {
+          prompt: async (args: { sessionID?: string; parts?: Array<{ type: string; text?: string }> }) => {
             prompts.push(args)
             return {}
           },
-        },
       },
     }
     const error = { name: "ProviderAuthError" }
@@ -48,8 +46,8 @@ describe("event consumer: session-recovery", () => {
     expect(result.delivered).toBe(1)
     expect(seenErrors).toEqual([error])
     expect(prompts.length).toBe(1)
-    expect(prompts[0].path?.id).toBe(sessionID)
-    expect(prompts[0].body?.parts?.[0]?.text).toBe("continue")
+    expect(prompts[0].sessionID).toBe(sessionID)
+    expect(prompts[0].parts?.[0]?.text).toBe("continue")
   })
 
   it("does not resume a session that is not the main session", async () => {
@@ -58,13 +56,11 @@ describe("event consumer: session-recovery", () => {
     const prompts: unknown[] = []
     const ctx = {
       directory: "/tmp",
-      client: {
-        session: {
+      session: {
           prompt: async (args: unknown) => {
             prompts.push(args)
             return {}
           },
-        },
       },
     }
 
@@ -89,13 +85,11 @@ describe("event consumer: session-recovery", () => {
     const prompts: unknown[] = []
     const ctx = {
       directory: "/tmp",
-      client: {
-        session: {
+      session: {
           prompt: async (args: unknown) => {
             prompts.push(args)
             return {}
           },
-        },
       },
     }
 

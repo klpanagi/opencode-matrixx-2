@@ -9,6 +9,7 @@ import {
 } from "../features/session-state/state"
 import { resetMessageCursor } from "../shared"
 import { log } from "../shared/logger"
+import type { NativePluginContext } from "../shared/session-context-source"
 import { lspManager } from "../tools"
 import { DEDUPLICATE_WINDOW_MS } from "./event-pump"
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
@@ -22,7 +23,7 @@ type FirstMessageVariantGate = {
 }
 
 export function createEventHandler(args: {
-  ctx: PluginContext
+  ctx: PluginContext & NativePluginContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   managers: DomainManagers
@@ -153,11 +154,10 @@ export function createEventHandler(args: {
           sessionID === getMainSessionID() &&
           !hooks.stopContinuationGuard?.isStopped(sessionID)
         ) {
-          await ctx.client.session
+          await ctx.session
             .prompt({
-              path: { id: sessionID },
-              body: { parts: [{ type: "text", text: "continue" }] },
-              query: { directory: ctx.directory },
+              sessionID,
+              parts: [{ type: "text", text: "continue" }],
             })
             .catch((err) => { log("[plugin] Session prompt failed:", err) })
         }

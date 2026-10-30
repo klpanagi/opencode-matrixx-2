@@ -24,14 +24,14 @@ function createTracker(sessions: MockSession[], deleteFails?: (id: string) => bo
     session: {
       list: async () => {
         tracker.listed += 1
-        return { data: sessions }
+        return sessions
       },
-      delete: async (opts: { path: { id: string }; query?: { directory?: string } }) => {
-        if (deleteFails?.(opts.path.id)) {
+      remove: async (opts: { sessionID: string }) => {
+        if (deleteFails?.(opts.sessionID)) {
           return { error: "delete exploded" }
         }
-        tracker.deleted.push(opts.path.id)
-        return { data: true }
+        tracker.deleted.push(opts.sessionID)
+        return true
       },
     },
   }
@@ -39,7 +39,7 @@ function createTracker(sessions: MockSession[], deleteFails?: (id: string) => bo
 }
 
 function createCtx(client: unknown, directory = "/home/klpanagi/matrixx"): PluginInput {
-  return { client, directory } as unknown as PluginInput
+  return { session: (client as { session: unknown }).session, directory } as unknown as PluginInput
 }
 
 async function run(
@@ -115,19 +115,19 @@ describe("session_cleanup tool", () => {
   //#given sessions spanning several project directories
   //#when a match is deleted
   //#then its own directory is sent as the query so the server resolves the right project
-  it("deletes using each session's own directory", async () => {
-    const seenDirectories: Array<string | undefined> = []
+  it("removes by sessionID through the native session domain", async () => {
+    const seen: unknown[] = []
     const client = {
       session: {
-        list: async () => ({ data: [{ id: "s1", title: "evolution-compressor", directory: "/other" }] }),
-        delete: async (opts: { query?: { directory?: string } }) => {
-          seenDirectories.push(opts.query?.directory)
-          return { data: true }
+        list: async () => [{ id: "s1", title: "evolution-compressor", directory: "/other" }],
+        remove: async (opts: unknown) => {
+          seen.push(opts)
+          return true
         },
       },
     }
     await run(client, { apply: true })
-    expect(seenDirectories).toEqual(["/other"])
+    expect(seen).toEqual([{ sessionID: "s1" }])
   })
 
   //#given the list call fails because the server is unreachable
@@ -139,7 +139,7 @@ describe("session_cleanup tool", () => {
         list: async () => {
           throw new TypeError("Unable to connect. Is the computer able to access the url?")
         },
-        delete: async () => ({ data: true }),
+        remove: async () => true,
       },
     }
     const output = await run(client, { apply: true })
@@ -171,8 +171,8 @@ describe("session_cleanup tool", () => {
   it("treats 404 on delete as already cleaned", async () => {
     const client = {
       session: {
-        list: async () => ({ data: [{ id: "gone", title: "evolution-compressor", directory: "/proj" }] }),
-        delete: async () => ({ error: "404 Not Found" }),
+        list: async () => [{ id: "gone", title: "evolution-compressor", directory: "/proj" }],
+        remove: async () => ({ error: "404 Not Found" }),
       },
     }
     const output = await run(client, { apply: true })

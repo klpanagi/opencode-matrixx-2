@@ -18,7 +18,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		}
 
 		const eventHandler = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},
@@ -92,7 +92,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		}
 
 		const eventHandler = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},
@@ -159,7 +159,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 	it("both maps pruned on every event", async () => {
 		//#given
 		const eventHandler = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},
@@ -245,7 +245,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		// We verify by checking that a new idle event for same session is dispatched
 		const dispatchCalls: EventInput[] = []
 		const eventHandlerWithMock = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},
@@ -298,7 +298,7 @@ type EventInput = { event: { type: string; properties?: Record<string, unknown> 
 		//#given
 		const dispatchCalls: EventInput[] = []
 		const eventHandler = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},
@@ -377,7 +377,7 @@ describe("createEventHandler - DCP loop-breaker dispatch", () => {
 		//#given
 		const seen: string[] = []
 		const eventHandler = createEventHandler({
-			ctx: {} as unknown as PluginContext,
+			ctx: {} as unknown as Parameters<typeof createEventHandler>[0]["ctx"],
 			pluginConfig: {} as unknown as MatrixxConfig,
 			firstMessageVariantGate: {
 				markSessionCreated: () => {},

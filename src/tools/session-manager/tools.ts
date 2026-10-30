@@ -1,6 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import type { MatrixxConfig } from "../../config/schema"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import {
   SESSION_INFO_DESCRIPTION,
   SESSION_LIST_DESCRIPTION,
@@ -34,11 +34,11 @@ const MAX_SESSIONS_TO_SCAN = 50
 import { withTimeout } from "../../shared/with-timeout"
 
 export function createSessionManagerTools(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   pluginConfig?: Partial<MatrixxConfig>
 ): Record<string, ToolDefinition> {
-  // Initialize storage client for SDK-based operations (beta mode)
-  setStorageClient(ctx.client)
+  // Thread the native session carrier into storage for beta-mode operations
+  if (ctx.session) setStorageClient(ctx)
   setStorageDirectory(ctx.directory)
   setStorageConfig(pluginConfig)
 

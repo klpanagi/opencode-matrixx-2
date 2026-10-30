@@ -14,7 +14,7 @@ function createClient(messagesResponse: unknown): Client {
 
 function createCtx(messagesResponse: unknown): TruncatorCtx {
   return {
-    client: { session: { messages: async () => messagesResponse } },
+    session: { context: async () => messagesResponse },
   } as unknown as TruncatorCtx
 }
 
@@ -32,7 +32,7 @@ describe("context-window-limit-recovery golden (flat V2 messages)", () => {
 
   it("derives no context-window usage from a flat V2 transcript", async () => {
     // given a flat V2 transcript served by the session client
-    const truncator = createDynamicTruncator(createCtx({ data: loadCorpus("v2-flat") }))
+    const truncator = createDynamicTruncator(createCtx({ messages: loadCorpus("v2-flat") }))
 
     // when deriving token usage
     const usage = await truncator.getUsage("ses_golden")
@@ -43,7 +43,7 @@ describe("context-window-limit-recovery golden (flat V2 messages)", () => {
 
   it("passes a short output through untouched when usage is unknown", async () => {
     // given a flat V2 transcript and a short output
-    const truncator = createDynamicTruncator(createCtx({ data: loadCorpus("v2-flat") }))
+    const truncator = createDynamicTruncator(createCtx({ messages: loadCorpus("v2-flat") }))
     const output = "line one\nline two\nline three"
 
     // when truncating against the session

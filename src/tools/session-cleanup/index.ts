@@ -1,8 +1,16 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
 import { log } from "../../shared"
-import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
 import { isRecord } from "../../shared/record-type-guard"
+import type { SessionDomainLike } from "../../shared/session-facade"
+import { unwrapList } from "../../shared/unwrap-list"
+
+type SessionCleanupSession = SessionDomainLike & {
+  remove?(input: { sessionID: string }): Promise<unknown>
+}
+
+type SessionCleanupContext = {
+  session: SessionCleanupSession
+}
 
 export const SESSION_CLEANUP_DESCRIPTION = `Delete leaked Matrixx-created sessions from the OpenCode session list.
 
@@ -46,7 +54,7 @@ function isLeakTitle(title: string, includeLookAt: boolean): boolean {
  * re-validated rather than trusted.
  */
 function collectLeaked(payload: unknown, includeLookAt: boolean): SessionRow[] {
-  const sessions = normalizeSDKResponse<unknown[]>(payload, [])
+  const sessions = unwrapList<unknown>(payload)
   const leaked: SessionRow[] = []
   for (const entry of sessions) {
     if (!isRecord(entry)) continue
@@ -80,7 +88,7 @@ function summarize(rows: SessionRow[], apply: boolean): string {
   return `Deleting ${rows.length} leaked session(s)...`
 }
 
-export function createSessionCleanupTool(ctx: PluginInput): ToolDefinition {
+export function createSessionCleanupTool(ctx: SessionCleanupContext): ToolDefinition {
   return tool({
     description: SESSION_CLEANUP_DESCRIPTION,
     args: {
@@ -100,7 +108,7 @@ export function createSessionCleanupTool(ctx: PluginInput): ToolDefinition {
       try {
         // list() is intentionally NOT scoped by directory: leaked sessions can
         // belong to any project, and the tool deletes them wherever they live.
-        const listed = await ctx.client.session.list()
+        const listed = await ctx.session.list()
         const leaked = collectLeaked(listed, includeLookAt)
 
         if (leaked.length === 0) return summarize(leaked, apply)
@@ -110,10 +118,11 @@ export function createSessionCleanupTool(ctx: PluginInput): ToolDefinition {
         let deleted = 0
         for (const row of leaked) {
           try {
-            const result = await ctx.client.session.delete({
-              path: { id: row.id },
-              ...(row.directory ? { query: { directory: row.directory } } : {}),
-            })
+            if (typeof ctx.session.remove !== "function") {
+              failures.push(`${row.id}: native session remove is unavailable`)
+              continue
+            }
+            const result = await ctx.session.remove({ sessionID: row.id })
             if (isRecord(result) && result.error !== undefined && result.error !== null) {
               if (isNotFound(result.error)) {
                 deleted += 1

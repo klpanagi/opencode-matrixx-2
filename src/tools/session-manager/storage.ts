@@ -1,14 +1,14 @@
 import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import { readSessionTasks } from "../../features/task-session-scope"
-import { normalizeSDKResponse } from "../../shared"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { SessionMessage as FlatSessionMessage } from "../../shared/session-message"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
+import type { SessionDomainLike } from "../../shared/session-facade"
 import { contentOf, idOf, roleOf, timeOf } from "../../shared/session-message"
+import { unwrapList } from "../../shared/unwrap-list"
 import { MESSAGE_STORAGE, PART_STORAGE, SESSION_STORAGE, TRANSCRIPT_DIR } from "./constants"
 import { normalizeDirForCompare } from "./path-normalize"
 import type { SessionInfo, SessionMessage, SessionMetadata, TodoItem } from "./types"
@@ -17,19 +17,19 @@ interface GetMainSessionsOptions {
   directory?: string
 }
 
-// SDK client reference for beta mode
-let sdkClient: PluginInput["client"] | null = null
+// Native session carrier for beta mode
+let sessionCarrier: (SessionContextCarrier & { session: SessionDomainLike }) | null = null
 
 let storageDirectory: string | undefined
 
 let pluginConfig: Partial<MatrixxConfig> | undefined
 
-export function setStorageClient(client: PluginInput["client"]): void {
-  sdkClient = client
+export function setStorageClient(carrier: SessionContextCarrier & { session: SessionDomainLike }): void {
+  sessionCarrier = carrier
 }
 
 export function resetStorageClient(): void {
-  sdkClient = null
+  sessionCarrier = null
 }
 
 /**
@@ -65,10 +65,9 @@ function directoriesEqual(a: string, b: string): boolean {
 
 export async function getMainSessions(options: GetMainSessionsOptions): Promise<SessionMetadata[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.list()
-      const sessions = normalizeSDKResponse(response, [] as SessionMetadata[])
+      const sessions = unwrapList<SessionMetadata>(await sessionCarrier.session.list())
       const annotated = sessions.map((s) => (s.parentID ? { ...s, isChild: true } : s));
       if (options.directory) {
         return annotated
@@ -117,10 +116,9 @@ export async function getMainSessions(options: GetMainSessionsOptions): Promise<
 
 export async function getAllSessions(): Promise<string[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.list()
-      const sessions = normalizeSDKResponse(response, [] as SessionMetadata[])
+      const sessions = unwrapList<SessionMetadata>(await sessionCarrier.session.list())
       return sessions.map((s) => s.id)
     } catch {
       return []
@@ -158,9 +156,8 @@ export async function getAllSessions(): Promise<string[]> {
 export { getMessageDir } from "../../shared/opencode-message-dir"
 
 export async function sessionExists(sessionID: string): Promise<boolean> {
-  if (isSqliteBackend() && sdkClient) {
-    const response = await sdkClient.session.list()
-    const sessions = normalizeSDKResponse(response, [] as Array<{ id?: string }>)
+  if (isSqliteBackend() && sessionCarrier) {
+    const sessions = unwrapList<Array<{ id?: string }>[number]>(await sessionCarrier.session.list())
     return sessions.some((s) => s.id === sessionID)
   }
   return getMessageDir(sessionID) !== null
@@ -168,10 +165,9 @@ export async function sessionExists(sessionID: string): Promise<boolean> {
 
 export async function readSessionMessages(sessionID: string): Promise<SessionMessage[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.messages({ path: { id: sessionID } })
-      const rawMessages = normalizeSDKResponse(response, [] as FlatSessionMessage[])
+      const rawMessages = await fetchSessionMessages(sessionCarrier, sessionID)
       const messages: SessionMessage[] = rawMessages
         .filter((m) => idOf(m))
         .map((m) => {

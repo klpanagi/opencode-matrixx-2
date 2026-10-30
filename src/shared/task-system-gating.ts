@@ -1,6 +1,7 @@
 import type { MatrixxConfig } from "../config/schema"
 import type { TasksConfig } from "../config/schema/tasks"
 import { warn } from "./logger"
+import { notify } from "./notify"
 
 export const TASK_SYSTEM_DEFAULT = true as const
 
@@ -39,41 +40,21 @@ const NEW_TASK_SYSTEM_WARNING =
   "new_task_system_enabled is now ignored. It is the oldest alias of the " +
   "removed legacy todo system toggle. Remove it from your matrixx.json."
 
-interface ToastClient {
-  tui?: {
-    showToast?: (input: unknown) => Promise<unknown>;
-  };
-}
-
 let toastSink: ((message: string) => void) | undefined;
 let hasWarnedAboutLegacyKeys = false;
 
-function isToastClient(value: unknown): value is ToastClient {
-  return typeof value === "object" && value !== null;
-}
-
 /**
- * Point the one-time deprecation toast at an OpenCode client. Pass
- * `undefined` to detach. Failures are swallowed — a toast is never worth a
- * broken config load.
+ * Arm the one-time deprecation notice. Pass `undefined` to detach. The notice
+ * is delivered through `notify`, so any configured sink receives it. Nothing
+ * here throws — a notice is never worth a broken config load.
  */
-export function bindTaskSystemDeprecationToast(client: unknown): void {
-  if (!isToastClient(client) || typeof client.tui?.showToast !== "function") {
+export function bindTaskSystemDeprecationToast(_client?: unknown): void {
+  if (_client === undefined) {
     toastSink = undefined;
     return;
   }
-  const tui = client.tui;
   toastSink = (message: string) => {
-    void tui.showToast
-      ?.call(tui, {
-        body: {
-          title: "Matrixx config deprecation",
-          message,
-          variant: "warning",
-          duration: 10000,
-        },
-      })
-      .catch(() => undefined);
+    notify("warn", `Matrixx config deprecation: ${message}`);
   };
 }
 

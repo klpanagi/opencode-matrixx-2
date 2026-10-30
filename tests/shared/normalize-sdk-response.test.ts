@@ -36,17 +36,6 @@ describe("normalizeSDKResponse", () => {
     expect(result).toEqual([{ id: "2" }])
   })
 
-  it("returns response when data missing and preferResponseOnMissingData is true", () => {
-    //#given
-    const response = { value: "legacy" }
-
-    //#when
-    const result = normalizeSDKResponse(response, { value: "fallback" }, { preferResponseOnMissingData: true })
-
-    //#then
-    expect(result).toEqual({ value: "legacy" })
-  })
-
   it("returns fallback for null response", () => {
     //#given
     const response = null

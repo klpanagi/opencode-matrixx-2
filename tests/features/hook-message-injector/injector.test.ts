@@ -20,6 +20,8 @@ vi.mock("../../../src/shared/opencode-storage-detection", () => ({
 //#region Test Helpers
 
 function createMockClient(messages: Array<{
+  agent?: string
+  model?: { providerID?: string; modelID?: string; variant?: string }
   info?: {
     agent?: string
     model?: { providerID?: string; modelID?: string; variant?: string }
@@ -29,12 +31,12 @@ function createMockClient(messages: Array<{
   }
 }>): {
   session: {
-    messages: (opts: { path: { id: string } }) => Promise<{ data: typeof messages }>
+    context: (opts: { sessionID: string }) => Promise<typeof messages>
   }
 } {
   return {
     session: {
-      messages: async () => ({ data: messages }),
+      context: async () => messages,
     },
   }
 }
@@ -44,7 +46,7 @@ function createMockClient(messages: Array<{
 describe("findNearestMessageWithFieldsFromSDK", () => {
   it("returns message with all fields when available", async () => {
     const mockClient = createMockClient([
-      { info: { agent: "morpheus", model: { providerID: "anthropic", modelID: "claude-opus-4" } } },
+      { agent: "morpheus", model: { providerID: "anthropic", modelID: "claude-opus-4" } },
     ])
 
     const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -72,8 +74,8 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
 
   it("returns nearest (most recent) message with all fields", async () => {
     const mockClient = createMockClient([
-      { info: { agent: "old-agent", model: { providerID: "old", modelID: "model" } } },
-      { info: { agent: "new-agent", model: { providerID: "new", modelID: "model" } } },
+      { agent: "old-agent", model: { providerID: "old", modelID: "model" } },
+      { agent: "new-agent", model: { providerID: "new", modelID: "model" } },
     ])
 
     const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -83,7 +85,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
 
   it("falls back to message with partial fields", async () => {
     const mockClient = createMockClient([
-      { info: { agent: "partial-agent" } },
+      { agent: "partial-agent" },
     ])
 
     const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -93,8 +95,8 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
 
   it("returns null when no messages have useful fields", async () => {
     const mockClient = createMockClient([
-      { info: {} },
-      { info: {} },
+      {},
+      {},
     ])
 
     const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -113,7 +115,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
   it("returns null on SDK error", async () => {
     const mockClient = {
       session: {
-        messages: async () => {
+        context: async () => {
           throw new Error("SDK error")
         },
       },
@@ -127,9 +129,9 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
   it("includes tools when available", async () => {
     const mockClient = createMockClient([
       {
+        agent: "morpheus",
+        model: { providerID: "anthropic", modelID: "claude-opus-4" },
         info: {
-          agent: "morpheus",
-          model: { providerID: "anthropic", modelID: "claude-opus-4" },
           tools: { edit: true, write: false },
         },
       },
@@ -144,8 +146,8 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
 describe("findFirstMessageWithAgentFromSDK", () => {
   it("returns agent from first message", async () => {
     const mockClient = createMockClient([
-      { info: { agent: "first-agent" } },
-      { info: { agent: "second-agent" } },
+      { agent: "first-agent" },
+      { agent: "second-agent" },
     ])
 
     const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -155,8 +157,8 @@ describe("findFirstMessageWithAgentFromSDK", () => {
 
   it("skips messages without agent field", async () => {
     const mockClient = createMockClient([
-      { info: {} },
-      { info: { agent: "first-real-agent" } },
+      {},
+      { agent: "first-real-agent" },
     ])
 
     const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -166,8 +168,8 @@ describe("findFirstMessageWithAgentFromSDK", () => {
 
   it("returns null when no messages have agent", async () => {
     const mockClient = createMockClient([
-      { info: {} },
-      { info: {} },
+      {},
+      {},
     ])
 
     const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
@@ -178,7 +180,7 @@ describe("findFirstMessageWithAgentFromSDK", () => {
   it("returns null on SDK error", async () => {
     const mockClient = {
       session: {
-        messages: async () => {
+        context: async () => {
           throw new Error("SDK error")
         },
       },

@@ -1,5 +1,5 @@
 /**
- * Per-sessionID cache for `client.session.messages()` results.
+ * Per-sessionID cache for native session context reads.
  *
  * Why this exists: the full transcript fetch is a 5s-timeout SDK/HTTP round trip
  * that scales with SESSION LENGTH, not with the work of the tool being called.
