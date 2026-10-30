@@ -1,4 +1,5 @@
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../config"
+import type { SessionDomainLike } from "../../shared/session-context-source"
 
 export interface RuntimeFallbackInterval {
   unref: () => void
@@ -7,31 +8,7 @@ export interface RuntimeFallbackInterval {
 export type RuntimeFallbackTimeout = object | number
 
 export interface RuntimeFallbackPluginInput {
-  client: {
-    session: {
-      abort: (input: { path: { id: string } }) => Promise<unknown>
-      messages: (input: { path: { id: string }; query: { directory: string } }) => Promise<unknown>
-      promptAsync: (input: {
-        path: { id: string }
-        body: {
-          agent?: string
-          model: { providerID: string; modelID: string }
-          parts: Array<{ type: "text"; text: string }>
-        }
-        query: { directory: string }
-      }) => Promise<unknown>
-    }
-    tui: {
-      showToast: (input: {
-        body: {
-          title: string
-          message: string
-          variant: "success" | "error" | "info" | "warning"
-          duration: number
-        }
-      }) => Promise<unknown>
-    }
-  }
+  session: SessionDomainLike
   directory: string
 }
 

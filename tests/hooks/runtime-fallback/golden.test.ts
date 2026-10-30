@@ -6,7 +6,7 @@ import { hasVisibleAssistantResponse } from "../../../src/hooks/runtime-fallback
 
 function createCtx(messagesResponse: unknown): Parameters<ReturnType<typeof hasVisibleAssistantResponse>>[0] {
   return {
-    client: { session: { messages: async () => messagesResponse } },
+    session: { context: async () => messagesResponse },
     directory: "/tmp/golden",
   } as unknown as Parameters<ReturnType<typeof hasVisibleAssistantResponse>>[0]
 }
@@ -60,7 +60,7 @@ describe("runtime-fallback golden (flat V2 messages)", () => {
 
   it("reports a visible assistant response for a flat V2 transcript", async () => {
     // given a flat V2 transcript served by the session client
-    const ctx = createCtx({ data: loadCorpus("v2-flat") })
+    const ctx = createCtx(loadCorpus("v2-flat"))
 
     // when asking whether the assistant produced a visible response
     const visible = await hasVisibleAssistantResponse(neverAutoRetry)(ctx, "ses_golden", undefined)

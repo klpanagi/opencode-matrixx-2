@@ -8,7 +8,7 @@ type TruncatorCtx = Parameters<typeof createDynamicTruncator>[0]
 
 function createClient(messagesResponse: unknown): Client {
   return {
-    session: { messages: async () => messagesResponse },
+    session: { context: async () => messagesResponse },
   } as unknown as Client
 }
 
@@ -21,7 +21,7 @@ function createCtx(messagesResponse: unknown): TruncatorCtx {
 describe("context-window-limit-recovery golden (flat V2 messages)", () => {
   it("finds the last assistant message in a flat V2 transcript", async () => {
     // given a flat V2 transcript wrapped in the SDK data envelope
-    const client = createClient({ data: loadCorpus("v2-flat") })
+    const client = createClient(loadCorpus("v2-flat"))
 
     // when locating the last assistant message
     const assistant = await getLastAssistant("ses_golden", client, "/tmp/golden")
@@ -55,7 +55,7 @@ describe("context-window-limit-recovery golden (flat V2 messages)", () => {
 
   it("finds no assistant message in a V1-shaped transcript", async () => {
     // given a V1-shaped transcript wrapped in the SDK data envelope
-    const client = createClient({ data: loadCorpus("v1-shaped") })
+    const client = createClient(loadCorpus("v1-shaped"))
 
     // when locating the last assistant message
     const assistant = await getLastAssistant("ses_contract", client, "/tmp/golden")

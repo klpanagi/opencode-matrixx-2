@@ -1,6 +1,6 @@
-import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { SessionMessage } from "../../shared/session-message"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, idOf } from "../../shared/session-message"
 import {
   findEmptyMessageByIndex,
@@ -15,9 +15,6 @@ import { PLACEHOLDER_TEXT } from "./message-builder"
 import { incrementEmptyContentAttempt } from "./state"
 import type { AutoCompactState } from "./types"
 
-function showToast(client: Client, title: string, message: string, variant: string, duration: number) {
-  return client.tui.showToast({ body: { title, message, variant, duration } } as never).catch((err) => log("[auto-compact] Toast failed:", err))
-}
 
 async function fixFile(sessionID: string, messageIndex?: number): Promise<{ fixed: boolean; ids: string[] }> {
   const ids: string[] = []
@@ -57,9 +54,7 @@ async function fixSdk(client: Client, sessionID: string): Promise<{ fixed: boole
 
 async function findEmptyMessagesSdk(client: Client, sessionID: string): Promise<string[]> {
   try {
-    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: SessionMessage[] }
-    const typedRes = res as { data?: SessionMessage[] }
-    const msgs = typedRes.data ?? []
+    const msgs = await fetchSessionMessages(client, sessionID)
     const empty: string[] = []
     for (const m of msgs) {
       const id = idOf(m)
@@ -84,9 +79,9 @@ export async function fixEmptyMessages(params: { sessionID: string; autoCompactS
   const result = isSqliteBackend() ? await fixSdk(params.client, params.sessionID) : await fixFile(params.sessionID, params.messageIndex)
   if (!result.fixed) {
     const emptyCount = isSqliteBackend() ? (await findEmptyMessagesSdk(params.client, params.sessionID)).length : findEmptyMessages(params.sessionID).length
-    if (emptyCount === 0) await showToast(params.client, "Empty Content Error", "No empty messages found in storage. Cannot auto-recover.", "error", 5000)
+    if (emptyCount === 0) notify("error", "Empty Content Error: No empty messages found in storage. Cannot auto-recover.")
     return false
   }
-  await showToast(params.client, "Session Recovery", `Fixed ${result.ids.length} empty message(s). Retrying...`, "warning", 3000)
+  notify("warn", `Session Recovery: Fixed ${result.ids.length} empty message(s). Retrying...`)
   return true
 }

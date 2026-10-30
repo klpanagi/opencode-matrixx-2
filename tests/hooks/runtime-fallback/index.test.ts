@@ -36,27 +36,16 @@ describe("runtime-fallback", () => {
 
   function createMockPluginInput(overrides?: {
     session?: {
-      messages?: (args: unknown) => Promise<unknown>
-      promptAsync?: (args: unknown) => Promise<unknown>
-      abort?: (args: unknown) => Promise<unknown>
+      context?: (args: unknown) => Promise<unknown>
+      prompt?: (args: unknown) => Promise<unknown>
+      interrupt?: (args: unknown) => Promise<unknown>
     }
   }) {
     return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string; message: string; variant: string; duration: number } }) => {
-            toastCalls.push({
-              title: opts.body.title,
-              message: opts.body.message,
-              variant: opts.body.variant,
-            })
-          },
-        },
-        session: {
-          messages: overrides?.session?.messages ?? (async () => ({ data: [] })),
-          promptAsync: overrides?.session?.promptAsync ?? (async () => ({})),
-          abort: overrides?.session?.abort ?? (async () => ({})),
-        },
+      session: {
+        context: overrides?.session?.context ?? (async () => []),
+        prompt: overrides?.session?.prompt ?? (async () => ({})),
+        interrupt: overrides?.session?.interrupt ?? (async () => ({})),
       },
       directory: "/test/dir",
     } as unknown as Parameters<RuntimeFallbackModule["createRuntimeFallbackHook"]>[0]
@@ -552,15 +541,8 @@ describe("runtime-fallback", () => {
       const hook = createRuntimeFallbackHook(
         createMockPluginInput({
           session: {
-            messages: async () => ({
-              data: [
-                {
-                  type: "user",
-                  text: "continue",
-                },
-              ],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args)
               return {}
             },
@@ -614,15 +596,8 @@ describe("runtime-fallback", () => {
       const hook = createRuntimeFallbackHook(
         createMockPluginInput({
           session: {
-            messages: async () => ({
-              data: [
-                {
-                  type: "user",
-                  text: "continue",
-                },
-              ],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args)
               return {}
             },
@@ -687,10 +662,8 @@ describe("runtime-fallback", () => {
       const hook = createRuntimeFallbackHook(
         createMockPluginInput({
           session: {
-            messages: async () => ({
-              data: [{ type: "user", text: "continue" }],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args as Record<string, unknown>)
               return {}
             },
@@ -721,10 +694,7 @@ describe("runtime-fallback", () => {
 
       //#then
       expect(promptCalls).toHaveLength(1)
-      const promptBody = promptCalls[0]?.body as {
-        model?: { providerID?: string; modelID?: string }
-        variant?: string
-      } | undefined
+      const promptBody = promptCalls[0]
       expect(promptBody?.model).toEqual({ providerID: "openai", modelID: "gpt-5.4" })
       expect(promptBody?.variant).toBe("high")
 

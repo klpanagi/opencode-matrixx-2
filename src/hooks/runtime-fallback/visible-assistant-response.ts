@@ -1,4 +1,4 @@
-import { isRecord } from "../../shared/record-type-guard"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, isAssistant, roleOf } from "../../shared/session-message"
 import type { extractAutoRetrySignal } from "./error-classifier"
 import type { SessionMessage, SessionMessagePart } from "./session-messages"
@@ -35,10 +35,7 @@ export function hasVisibleAssistantResponse(extractAutoRetrySignalFn: typeof ext
     _info: Record<string, unknown> | undefined,
   ): Promise<boolean> => {
     try {
-      const messagesResponse = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
+      const messagesResponse = await fetchSessionMessages(ctx, sessionID)
       const messages = extractSessionMessages(messagesResponse)
       if (!messages || messages.length === 0) return false
 

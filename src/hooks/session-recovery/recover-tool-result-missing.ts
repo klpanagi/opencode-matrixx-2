@@ -1,12 +1,12 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk"
-import { normalizeSDKResponse } from "../../shared"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { SessionDomainLike } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, idOf } from "../../shared/session-message"
 import { readParts } from "./storage"
 import type { MessageData } from "./types"
 
-type Client = ReturnType<typeof createOpencodeClient>
+type Client = { session: SessionDomainLike }
 
 interface RawPart {
   type?: string
@@ -39,8 +39,7 @@ export async function recoverToolResultMissing(
   if (toolUseIds.length === 0 && messageID) {
     if (isSqliteBackend()) {
       try {
-        const response = await client.session.messages({ path: { id: sessionID } })
-        const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+        const messages = await fetchSessionMessages(client, sessionID)
         const target = messages.find((m) => idOf(m) === messageID)
         toolUseIds = target ? extractToolUseIds(target) : []
       } catch {
@@ -56,16 +55,14 @@ export async function recoverToolResultMissing(
   }
 
   try {
-    await promptWithModelSuggestionRetry(client, {
-      path: { id: sessionID },
-      body: {
-        parts: [
-          {
-            type: "text",
-            text: "Tool operations were interrupted. " + toolUseIds.length + " tool call(s) did not complete. Please acknowledge and continue.",
-          },
-        ],
-      },
+    await promptNativeWithModelSuggestionRetry(client.session, {
+      sessionID,
+      parts: [
+        {
+          type: "text",
+          text: `Tool operations were interrupted. ${toolUseIds.length} tool call(s) did not complete. Please acknowledge and continue.`,
+        },
+      ],
     })
 
     return true

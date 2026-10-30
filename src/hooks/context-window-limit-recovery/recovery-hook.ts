@@ -1,7 +1,9 @@
 // Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive compression belongs to DCP (/dcp-compress). Do not add proactive thresholds here. Cap API calls 2.
-import type { PluginInput } from "@opencode-ai/plugin"
+
 import type { ExperimentalConfig } from "../../config"
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { executeCompact, getLastAssistant } from "./executor"
 import { parseTokenLimitError } from "./parser"
 import type { AutoCompactState, ParsedTokenLimitError } from "./types"
@@ -23,7 +25,7 @@ function createRecoveryState(): AutoCompactState {
 
 
 export function createAnthropicContextWindowLimitRecoveryHook(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   options?: AnthropicContextWindowLimitRecoveryOptions,
 ) {
   const autoCompactState = createRecoveryState()
@@ -65,21 +67,12 @@ export function createAnthropicContextWindowLimitRecoveryHook(
 
         if (autoCompactState.compactionInProgress.has(sessionID)) return
 
-        const lastAssistant = await getLastAssistant(sessionID, ctx.client, ctx.directory)
+        const lastAssistant = await getLastAssistant(sessionID, ctx)
         const lastModel = lastAssistant?.model as { providerID?: string; modelID?: string } | undefined
         const providerID = parsed.providerID ?? lastModel?.providerID
         const modelID = parsed.modelID ?? lastModel?.modelID
 
-        await ctx.client.tui
-          .showToast({
-            body: {
-              title: "Context Limit Hit",
-              message: "Truncating large tool outputs and recovering...",
-              variant: "warning" as const,
-              duration: 3000,
-            },
-          })
-          .catch((err) => { log("[auto-compact] Toast failed:", err) })
+        notify("warn", "Context Limit Hit: Truncating large tool outputs and recovering...")
 
         const timeoutID = setTimeout(() => {
           pendingCompactionTimeoutBySession.delete(sessionID)
@@ -87,7 +80,7 @@ export function createAnthropicContextWindowLimitRecoveryHook(
             sessionID,
             { providerID, modelID },
             autoCompactState,
-            ctx.client,
+            ctx,
             ctx.directory,
             experimental,
           )
@@ -129,7 +122,7 @@ export function createAnthropicContextWindowLimitRecoveryHook(
       }
 
       const errorData = autoCompactState.errorDataBySession.get(sessionID)
-      const lastAssistant = await getLastAssistant(sessionID, ctx.client, ctx.directory)
+      const lastAssistant = await getLastAssistant(sessionID, ctx)
 
       if (lastAssistant?.summary === true) {
         autoCompactState.pendingCompact.delete(sessionID)
@@ -140,22 +133,13 @@ export function createAnthropicContextWindowLimitRecoveryHook(
       const providerID = errorData?.providerID ?? lastModel?.providerID
       const modelID = errorData?.modelID ?? lastModel?.modelID
 
-      await ctx.client.tui
-        .showToast({
-          body: {
-            title: "Auto Compact",
-            message: "Token limit exceeded. Attempting recovery...",
-            variant: "warning" as const,
-            duration: 3000,
-          },
-        })
-        .catch((err) => { log("[auto-compact] Toast failed:", err) })
+      notify("warn", "Auto Compact: Token limit exceeded. Attempting recovery...")
 
       await executeCompact(
         sessionID,
         { providerID, modelID },
         autoCompactState,
-        ctx.client,
+        ctx,
         ctx.directory,
         experimental,
       )

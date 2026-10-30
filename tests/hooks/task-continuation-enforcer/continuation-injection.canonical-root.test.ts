@@ -21,12 +21,9 @@ function makeCanonicalRootCtx(worktree: string, directory: string): {
   const ctx = {
     worktree,
     directory,
-    client: {
-      tui: { showToast: mock(async () => ({} as never)) },
-      session: {
-        messages: async () => ({ data: [] } as unknown as never) as never,
-        promptAsync,
-      },
+    session: {
+      context: async () => [],
+      prompt: promptAsync,
     },
   } as unknown as PluginInput
   return { ctx, promptAsync }
@@ -41,8 +38,8 @@ const resolvedInfo = {
 const unionConfig = { morpheus: { tasks: { session_scoped: false } } }
 
 function promptText(promptAsync: ReturnType<typeof mock>): string {
-  const arg = promptAsync.mock.calls[0][0] as { body: { parts: Array<{ text: string }> } }
-  return arg.body.parts[0].text
+  const arg = promptAsync.mock.calls[0][0] as { parts: Array<{ text: string }> }
+  return arg.parts[0].text
 }
 
 describe("continuation-injection canonical root", () => {

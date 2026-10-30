@@ -1,15 +1,15 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import { subagentSessions } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { DEFAULT_SKIP_AGENTS, HOOK_NAME } from "./constants"
 import { handleSessionIdle } from "./idle-event"
 import { handleNonIdleEvent } from "./non-idle-events"
 import type { SessionStateStore } from "./session-state"
 
 export function createTaskContinuationHandler(args: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   sessionStateStore: SessionStateStore
   backgroundManager?: BackgroundManager
   skipAgents?: string[]

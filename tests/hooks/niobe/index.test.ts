@@ -70,29 +70,29 @@ describe("niobe hook", () => {
 
   function createMockPluginInput(overrides?: { promptMock?: ReturnType<typeof mock> }) {
     const promptMock = overrides?.promptMock ?? mock(() => Promise.resolve())
-    const messagesMock = mock(({ path }: { path: { id: string } }) => {
-      const sessionID = path.id
+    const messagesMock = mock((input: { sessionID?: string; path?: { id: string } }) => {
+      const sessionID = input.sessionID ?? input.path?.id ?? ""
       const messageDir = join(TEST_MESSAGE_STORAGE, sessionID)
-      if (!existsSync(messageDir)) return Promise.resolve({ data: [] })
+      if (!existsSync(messageDir)) return Promise.resolve([] as unknown[])
       const { readdirSync, readFileSync } = require("node:fs")
       try {
         const files = readdirSync(messageDir).filter((f: string) => f.endsWith(".json"))
         const messages = files.map((f: string) => {
           try { return JSON.parse(readFileSync(join(messageDir, f), "utf-8")) } catch { return null }
         }).filter(Boolean)
-        return Promise.resolve({ data: messages.map((m: Record<string, unknown>) => ({
-          info: { ...m }
-        })) })
+        return Promise.resolve(messages)
       } catch {
-        return Promise.resolve({ data: [] })
+        return Promise.resolve([] as unknown[])
       }
     })
     return {
       directory: TEST_DIR,
+      session: {
+        context: messagesMock,
+        prompt: promptMock,
+      },
       client: {
         session: {
-          prompt: promptMock,
-          promptAsync: promptMock,
           messages: messagesMock,
         },
       },
@@ -726,9 +726,9 @@ describe("niobe hook", () => {
       // then - should call prompt with continuation
       expect(mockInput._promptMock).toHaveBeenCalled()
       const callArgs = mockInput._promptMock.mock.calls[0][0]
-      expect(callArgs.path.id).toBe(MAIN_SESSION_ID)
-      expect(callArgs.body.parts[0].text).toContain("incomplete tasks")
-      expect(callArgs.body.parts[0].text).toContain("2 remaining")
+      expect(callArgs.sessionID).toBe(MAIN_SESSION_ID)
+      expect(callArgs.parts[0].text).toContain("incomplete tasks")
+      expect(callArgs.parts[0].text).toContain("2 remaining")
     })
 
     test("should not inject when no mission state exists", async () => {
@@ -1006,8 +1006,8 @@ describe("niobe hook", () => {
 
       // then - should include progress
       const callArgs = mockInput._promptMock.mock.calls[0][0]
-      expect(callArgs.body.parts[0].text).toContain("2/4 completed")
-      expect(callArgs.body.parts[0].text).toContain("2 remaining")
+      expect(callArgs.parts[0].text).toContain("2/4 completed")
+      expect(callArgs.parts[0].text).toContain("2 remaining")
     })
 
      test("should not inject when last agent does not match mission agent", async () => {
@@ -1074,7 +1074,7 @@ describe("niobe hook", () => {
        // then - should call prompt for morpheus
        expect(mockInput._promptMock).toHaveBeenCalled()
        const callArgs = mockInput._promptMock.mock.calls[0][0]
-       expect(callArgs.body.agent).toBe("morpheus")
+       expect(callArgs.agent).toBe("morpheus")
      })
 
     test("should debounce rapid continuation injections (prevent infinite loop)", async () => {

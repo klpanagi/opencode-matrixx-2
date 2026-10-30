@@ -5,6 +5,7 @@ import * as sessionState from "../../../src/features/session-state/state"
 import { _resetForTesting, clearSessionAgent, setMainSession, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
 import { createKeywordDetectorHook } from "../../../src/hooks/keyword-detector/hook"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 
 describe("keyword-detector message transform", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>
@@ -22,17 +23,12 @@ describe("keyword-detector message transform", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     getMainSessionSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
   function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+    return { directory: "/tmp/test" } as unknown as PluginInput
   }
 
   test("should prepend ultrawork message to text part", async () => {
@@ -112,20 +108,16 @@ describe("keyword-detector session filtering", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
   function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
     const toastCalls = options.toastCalls ?? []
-    return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string } }) => {
-            toastCalls.push(opts.body.title)
-          },
-        },
-      },
-    } as unknown as PluginInput
+    setNotifySink((_level, message) => {
+      toastCalls.push(message)
+    })
+    return { directory: "/tmp/test" } as unknown as PluginInput
   }
 
   test("should skip non-ultrawork keywords in non-main session (using mainSessionID check)", async () => {
@@ -172,7 +164,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - ultrawork should still work (variant set to max)
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should allow all keywords in main session", async () => {
@@ -217,7 +209,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - all keywords should work
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should not override existing variant", async () => {
@@ -239,7 +231,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - existing variant should remain
     expect(output.message.variant).toBe("low")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 })
 
@@ -257,20 +249,16 @@ describe("keyword-detector word boundary", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
   function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
     const toastCalls = options.toastCalls ?? []
-    return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string } }) => {
-            toastCalls.push(opts.body.title)
-          },
-        },
-      },
-    } as unknown as PluginInput
+    setNotifySink((_level, message) => {
+      toastCalls.push(message)
+    })
+    return { directory: "/tmp/test" } as unknown as PluginInput
   }
 
   test("should NOT trigger ultrawork on partial matches like 'StatefulWidget' containing 'ulw'", async () => {
@@ -292,7 +280,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls).not.toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
   })
 
   test("should trigger ultrawork on standalone 'ulw' keyword", async () => {
@@ -314,7 +302,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should be triggered
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should NOT trigger ultrawork on file references containing 'ulw' substring", async () => {
@@ -336,7 +324,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls).not.toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
   })
 })
 
@@ -354,17 +342,12 @@ describe("keyword-detector system-reminder filtering", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
   function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+    return { directory: "/tmp/test" } as unknown as PluginInput
   }
 
   test("should NOT trigger search mode from keywords inside <system-reminder> tags", async () => {
@@ -545,17 +528,12 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
   function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+    return { directory: "/tmp/test" } as unknown as PluginInput
   }
 
   test("should skip ultrawork injection when agent is oracle", async () => {

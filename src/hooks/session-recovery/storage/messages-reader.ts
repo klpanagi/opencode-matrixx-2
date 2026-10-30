@@ -1,12 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { isSqliteBackend, normalizeSDKResponse } from "../../../shared"
+import { isSqliteBackend } from "../../../shared"
 import { getMessageDir } from "../../../shared/opencode-message-dir"
 import { isRecord } from "../../../shared/record-type-guard"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
 import type { StoredMessageMeta } from "../types"
 
-type OpencodeClient = PluginInput["client"]
 
 function normalizeSDKMessage(
   sessionID: string,
@@ -56,15 +56,11 @@ export function readMessages(sessionID: string): StoredMessageMeta[] {
 }
 
 export async function readMessagesFromSDK(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string
 ): Promise<StoredMessageMeta[]> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const data = normalizeSDKResponse(response, [] as unknown[], {
-      preferResponseOnMissingData: true,
-    })
-    if (!Array.isArray(data)) return []
+    const data = await fetchSessionMessages(client, sessionID)
 
     const messages = data
       .map((msg): StoredMessageMeta | null => normalizeSDKMessage(sessionID, msg))

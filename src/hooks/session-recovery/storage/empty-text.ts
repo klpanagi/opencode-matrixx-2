@@ -1,14 +1,15 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { isSqliteBackend, log, normalizeSDKResponse, patchPart } from "../../../shared"
+import { isSqliteBackend, log, patchPart } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
 import { contentOf, idOf } from "../../../shared/session-message"
 import { PART_STORAGE } from "../constants"
-import type { MessageData, StoredPart, StoredTextPart } from "../types"
+import type { StoredPart, StoredTextPart } from "../types"
 import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
-type OpencodeClient = PluginInput["client"]
+type OpencodeClient = SessionContextCarrier
 
 export function replaceEmptyTextParts(messageID: string, replacementText: string): boolean {
   if (isSqliteBackend()) {
@@ -50,8 +51,7 @@ export async function replaceEmptyTextPartsAsync(
   replacementText: string
 ): Promise<boolean> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const targetMsg = messages.find((m) => idOf(m) === messageID)
     if (!targetMsg) return false
@@ -101,8 +101,7 @@ export async function findMessagesWithEmptyTextPartsFromSDK(
   sessionID: string
 ): Promise<string[]> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
     const result: string[] = []
 
     for (const msg of messages) {

@@ -17,24 +17,22 @@ function createMockCtx(overrides?: {
 
 	return {
 		ctx: {
-			client: {
-				session: {
-					create: async (opts: unknown) => {
-						calls.create.push(opts)
-						if (overrides?.createError) throw overrides.createError
-						return overrides?.createResult ?? { data: { id: "verify-session-1" } }
-					},
-					prompt: async (opts: unknown) => {
-						calls.prompt.push(opts)
-						return overrides?.promptResult ?? {}
-					},
-					messages: async (opts: unknown) => {
-						calls.messages.push(opts)
-						if (overrides?.messagesError) throw overrides.messagesError
-						return { data: overrides?.messagesResult ?? [] }
-					},
-					delete: async () => {},
+			session: {
+				create: async (opts: unknown) => {
+					calls.create.push(opts)
+					if (overrides?.createError) throw overrides.createError
+					return overrides?.createResult ?? { id: "verify-session-1" }
 				},
+				prompt: async (opts: unknown) => {
+					calls.prompt.push(opts)
+					return overrides?.promptResult ?? {}
+				},
+				context: async (opts: unknown) => {
+					calls.messages.push(opts)
+					if (overrides?.messagesError) throw overrides.messagesError
+					return overrides?.messagesResult ?? []
+				},
+				remove: async () => {},
 			},
 			directory: "/tmp/test",
 		} as unknown as Parameters<typeof verifyCompletion>[0],
@@ -196,13 +194,14 @@ describe("completion-verifier", () => {
 		expect(calls.prompt.length).toBe(1)
 
 		const promptCall = calls.prompt[0] as {
-			path: { id: string }
-			body: { agent: string; parts: Array<{ type: string; text: string }> }
+			sessionID: string
+			agent: string
+			parts: Array<{ type: string; text: string }>
 		}
-		expect(promptCall.body.agent).toBe("merovingian")
-		expect(promptCall.body.parts[0].text).toContain("Build a REST API")
-		expect(promptCall.body.parts[0].text).toContain("3 iteration(s)")
-		expect(promptCall.body.parts[0].text).toContain("DONE")
+		expect(promptCall.agent).toBe("merovingian")
+		expect(promptCall.parts[0].text).toContain("Build a REST API")
+		expect(promptCall.parts[0].text).toContain("3 iteration(s)")
+		expect(promptCall.parts[0].text).toContain("DONE")
 	})
 
 	//#given a session create returns error in result (not throw)

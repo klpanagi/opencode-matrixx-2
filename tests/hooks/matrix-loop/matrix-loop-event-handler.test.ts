@@ -14,24 +14,14 @@ describe("matrix-loop event handler", () => {
 	function createMockPluginInput() {
 		messagesCalls = []
 		return {
-			client: {
-				session: {
-					prompt: async () => {
-						return {}
-					},
-					promptAsync: async () => {
-						return {}
-					},
-					messages: async (opts: { path: { id: string } }) => {
-						messagesCalls.push({ sessionID: opts.path.id })
-						return { data: mockSessionMessages }
-					},
-					create: async () => ({ data: { id: "verify-session-1" } }),
-					delete: async () => ({}),
+			session: {
+				prompt: async () => ({}),
+				context: async (opts: { sessionID: string }) => {
+					messagesCalls.push({ sessionID: opts.sessionID })
+					return mockSessionMessages
 				},
-				tui: {
-					showToast: async () => ({}),
-				},
+				create: async () => ({ id: "verify-session-1" }),
+				remove: async () => ({}),
 			},
 			directory: TEST_DIR,
 		} as unknown as Parameters<typeof createMatrixLoopHook>[0]

@@ -1,8 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-
-import { normalizeSDKResponse } from "../../shared"
 import { hasPendingQuestionMessage } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 
 const HOOK_NAME = "stop-continuation-guard"
 
@@ -25,7 +24,7 @@ export interface StopContinuationGuard {
 }
 
 export function createStopContinuationGuardHook(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   options?: StopContinuationGuardOptions
 ): StopContinuationGuard {
   const stoppedSessions = new Set<string>()
@@ -33,11 +32,7 @@ export function createStopContinuationGuardHook(
   const isSessionAwaitingUser = async (sessionID: string): Promise<boolean> => {
     if (options?.isAwaitingUser?.(sessionID)) return true
     try {
-      const resp = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
-      return hasPendingQuestionMessage(normalizeSDKResponse(resp, [] as Array<unknown>))
+      return hasPendingQuestionMessage(await fetchSessionMessages(ctx, sessionID))
     } catch (error) {
       log(`[${HOOK_NAME}] Messages fetch failed, assuming not awaiting user`, { sessionID, error: String(error) })
       return false

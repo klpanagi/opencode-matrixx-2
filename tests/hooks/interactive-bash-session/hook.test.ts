@@ -7,14 +7,12 @@ import { createInteractiveBashSessionHook } from "../../../src/hooks/interactive
 
 function makeMockCtx() {
   const abortCalls: string[] = []
-  const client = {
-    session: {
-      abort: async ({ path }: { path: { id: string } }) => {
-        abortCalls.push(path.id)
-      },
+  const session = {
+    interrupt: async ({ sessionID }: { sessionID: string }) => {
+      abortCalls.push(sessionID)
     },
   }
-  return { ctx: { client, directory: "/tmp" } as never, abortCalls }
+  return { ctx: { session, directory: "/tmp" } as never, abortCalls }
 }
 
 function cleanupStorage(sessionIDs: string[]) {

@@ -9,12 +9,10 @@ import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continu
 function makeMockPluginInput(): unknown {
   return {
     directory: "/tmp/test-project",
-    client: {
-      tui: { showToast: async () => ({}) },
-      session: {
-        messages: async () => ({ data: [] }),
-        promptAsync: async () => ({}),
-      },
+    session: {
+      context: async () => ({ messages: [] }),
+      prompt: async () => ({}),
+      interrupt: async () => ({}),
     },
   } as unknown
 }

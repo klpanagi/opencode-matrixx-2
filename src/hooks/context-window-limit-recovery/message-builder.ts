@@ -1,8 +1,8 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { ContentPart, SessionMessage } from "../../shared/session-message"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { ContentPart, } from "../../shared/session-message"
 import { contentOf, idOf, isAssistant } from "../../shared/session-message"
 import { findEmptyMessages, injectTextPart, replaceEmptyTextParts } from "../session-recovery/storage"
 import { replaceEmptyTextPartsAsync } from "../session-recovery/storage/empty-text"
@@ -10,7 +10,7 @@ import { injectTextPartAsync } from "../session-recovery/storage/text-part-injec
 
 export const PLACEHOLDER_TEXT = "[user interrupted]"
 
-type OpencodeClient = PluginInput["client"]
+type OpencodeClient = SessionContextCarrier
 
 function hasSdkContent(parts: ReadonlyArray<ContentPart>): boolean {
   if (parts.length === 0) return false
@@ -29,8 +29,7 @@ function hasSdkContent(parts: ReadonlyArray<ContentPart>): boolean {
 
 async function findEmptyIdsSdk(client: OpencodeClient, sessionID: string): Promise<string[]> {
   try {
-    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: SessionMessage[] }
-    const msgs = normalizeSDKResponse(res, [] as SessionMessage[], { preferResponseOnMissingData: true })
+    const msgs = await fetchSessionMessages(client, sessionID)
     const empty: string[] = []
     for (const m of msgs) {
       const id = idOf(m)
@@ -64,11 +63,9 @@ export async function sanitizeEmptyMessagesBeforeSummarize(sessionID: string, cl
   return fixed
 }
 
-export async function getLastAssistant(sessionID: string, client: OpencodeClient, directory: string): Promise<Record<string, unknown> | null> {
+export async function getLastAssistant(sessionID: string, client: SessionContextCarrier): Promise<Record<string, unknown> | null> {
   try {
-    const resp = await client.session.messages({ path: { id: sessionID }, query: { directory } })
-    const data = (resp as { data?: unknown[] }).data
-    if (!Array.isArray(data)) return null
+    const data = await fetchSessionMessages(client, sessionID)
     const last = [...data].reverse().find((m) => isAssistant(m))
     if (!last) return null
     return last as Record<string, unknown>

@@ -1,13 +1,13 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { deletePart, isSqliteBackend, log, normalizeSDKResponse } from "../../../shared"
-import type { SessionMessage } from "../../../shared/session-message"
+import { deletePart, isSqliteBackend, log } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
 import { contentOf, idOf } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import type { StoredPart } from "../types"
 
-type OpencodeClient = PluginInput["client"]
+type OpencodeClient = SessionContextCarrier
 
 export function stripThinkingParts(messageID: string): boolean {
   if (isSqliteBackend()) {
@@ -42,8 +42,7 @@ export async function stripThinkingPartsAsync(
   messageID: string
 ): Promise<boolean> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as SessionMessage[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const targetMsg = messages.find((m) => idOf(m) === messageID)
     if (!targetMsg) return false

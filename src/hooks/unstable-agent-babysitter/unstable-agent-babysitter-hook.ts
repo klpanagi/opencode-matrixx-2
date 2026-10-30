@@ -1,7 +1,9 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import { getMainSessionID, getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import type { SessionDomainLike } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import {
   buildReminder,
   extractMessages,
@@ -20,30 +22,7 @@ type BabysittingConfig = {
 }
 
 type BabysitterContext = {
-  directory: string
-  client: {
-    session: {
-      messages: (args: { path: { id: string } }) => Promise<{ data?: unknown } | unknown[]>
-      prompt: (args: {
-        path: { id: string }
-        body: {
-          parts: Array<{ type: "text"; text: string }>
-          agent?: string
-          model?: { providerID: string; modelID: string }
-        }
-        query?: { directory?: string }
-      }) => Promise<unknown>
-      promptAsync: (args: {
-        path: { id: string }
-        body: {
-          parts: Array<{ type: "text"; text: string }>
-          agent?: string
-          model?: { providerID: string; modelID: string }
-        }
-        query?: { directory?: string }
-      }) => Promise<unknown>
-    }
-  }
+  session: SessionDomainLike
 }
 
 type BabysitterOptions = {
@@ -60,10 +39,7 @@ async function resolveMainSessionTarget(
   let model: { providerID: string; modelID: string } | undefined
 
   try {
-    const messagesResp = await ctx.client.session.messages({
-      path: { id: sessionID },
-    })
-    const messages = extractMessages(messagesResp)
+    const messages = extractMessages(await fetchSessionMessages(ctx, sessionID))
     for (let i = messages.length - 1; i >= 0; i--) {
       const info = getMessageInfo(messages[i])
       if (info?.agent || info?.model || (info?.providerID && info?.modelID)) {
@@ -81,10 +57,7 @@ async function resolveMainSessionTarget(
 
 async function getThinkingSummary(ctx: BabysitterContext, sessionID: string): Promise<string | null> {
   try {
-    const messagesResp = await ctx.client.session.messages({
-      path: { id: sessionID },
-    })
-    const messages = extractMessages(messagesResp)
+    const messages = extractMessages(await fetchSessionMessages(ctx, sessionID))
     const chunks: string[] = []
 
     for (const message of messages) {
@@ -148,18 +121,12 @@ export function createUnstableAgentBabysitterHook(ctx: BabysitterContext, option
       const { agent, model } = await resolveMainSessionTarget(ctx, mainSessionID)
 
       try {
-        await promptWithModelSuggestionRetry(
-          ctx.client as unknown as Parameters<typeof promptWithModelSuggestionRetry>[0],
-          {
-            path: { id: mainSessionID },
-            body: {
-              ...(agent ? { agent } : {}),
-              ...(model ? { model } : {}),
-              parts: [{ type: "text", text: reminder }],
-            },
-            query: { directory: ctx.directory },
-          } as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1],
-        )
+        await promptNativeWithModelSuggestionRetry(ctx.session, {
+          sessionID: mainSessionID,
+          ...(agent ? { agent } : {}),
+          ...(model ? { model } : {}),
+          parts: [{ type: "text", text: reminder }],
+        })
         reminderCooldowns.set(task.id, now)
         log(`[${HOOK_NAME}] Reminder injected`, { taskId: task.id, sessionID: mainSessionID })
       } catch (error) {

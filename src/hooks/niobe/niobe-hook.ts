@@ -1,10 +1,10 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { createNiobeEventHandler } from "./event-handler"
 import { createToolExecuteAfterHandler } from "./tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./tool-execute-before"
 import type { NiobeHookOptions, SessionState } from "./types"
 
-export function createNiobeHook(ctx: PluginInput, options?: NiobeHookOptions) {
+export function createNiobeHook(ctx: NativePluginContext, options?: NiobeHookOptions) {
   const sessions = new Map<string, SessionState>()
   const pendingFilePaths = new Map<string, string>()
 

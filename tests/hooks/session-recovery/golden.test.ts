@@ -10,7 +10,8 @@ function createPromptSpy(): { client: Client; calls: unknown[] } {
   const calls: unknown[] = []
   const client = {
     session: {
-      promptAsync: async (args: unknown) => {
+      context: async () => [],
+      prompt: async (args: unknown) => {
         calls.push(args)
         return {}
       },

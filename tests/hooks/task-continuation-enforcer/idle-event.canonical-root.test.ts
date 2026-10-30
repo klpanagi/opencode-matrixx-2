@@ -6,6 +6,7 @@ import { writeFileSync } from "node:fs"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
+import { setNotifySink } from "../../../src/shared/notify"
 
 function writeValidTask(dir: string, id: string, status = "pending", threadID?: string): void {
   const task: Record<string, unknown> = { id, subject: `task ${id}`, description: "d", status, blocks: [], blockedBy: [] }
@@ -19,14 +20,12 @@ function makeCanonicalRootCtx(worktree: string, directory: string): {
   toastMock: ReturnType<typeof mock>
 } {
   const toastMock = mock(async () => ({} as never))
+  setNotifySink(toastMock)
   const ctx = {
     worktree,
     directory,
-    client: {
-      tui: { showToast: toastMock },
-      session: {
-        messages: async () => ({ data: [] } as unknown as never) as never,
-      },
+    session: {
+      context: async () => [],
     },
   } as unknown as PluginInput
   return { ctx, toastMock }
@@ -51,9 +50,7 @@ describe("idle-event canonical root", () => {
     })
     //#then
     expect(toastMock).toHaveBeenCalledTimes(1)
-    const body = (
-      toastMock.mock.calls[0]?.[0] as { body?: { message?: string } } | undefined
-    )?.body?.message
+    const body = toastMock.mock.calls[0]?.[1] as string | undefined
     expect(body).toContain("(1 tasks remaining)")
     expect(store.getState("s-canon").countdownTimer).toBeDefined()
     store.shutdown()
@@ -79,9 +76,7 @@ describe("idle-event canonical root", () => {
     })
     //#then
     expect(toastMock).toHaveBeenCalledTimes(1)
-    const body = (
-      toastMock.mock.calls[0]?.[0] as { body?: { message?: string } } | undefined
-    )?.body?.message
+    const body = toastMock.mock.calls[0]?.[1] as string | undefined
     expect(body).toContain("(1 tasks remaining)")
     expect(body).not.toContain("(2 tasks remaining)")
     store.shutdown()
@@ -130,9 +125,7 @@ describe("idle-event canonical root", () => {
     })
     //#then
     expect(toastMock).toHaveBeenCalledTimes(1)
-    const body = (
-      toastMock.mock.calls[0]?.[0] as { body?: { message?: string } } | undefined
-    )?.body?.message
+    const body = toastMock.mock.calls[0]?.[1] as string | undefined
     expect(body).toContain("(1 tasks remaining)")
     store.shutdown()
     rmSync(root, { recursive: true, force: true })

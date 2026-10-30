@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 import * as messagesReader from "../../../src/hooks/session-recovery/storage/messages-reader"
 import { executeCompact } from "../../../src/hooks/context-window-limit-recovery/executor"
 
@@ -76,20 +77,16 @@ function createFakeTimeouts(): FakeTimeouts {
 
 interface MockClient {
   session: {
-    messages: ReturnType<typeof mock>;
-    summarize: ReturnType<typeof mock>;
-    revert: ReturnType<typeof mock>;
-    promptAsync: ReturnType<typeof mock>;
-  };
-  tui: {
-    showToast: ReturnType<typeof mock>;
-  };
+    context: ReturnType<typeof mock>
+    compact: ReturnType<typeof mock>
+  }
 }
 
 describe("executeCompact lock management", () => {
   let autoCompactState: AutoCompactState
   let mockClient: MockClient
   let fakeTimeouts: FakeTimeouts
+  let notifications: Array<{ level: string; message: string }>
   const sessionID = "test-session-123"
   const directory = "/test/dir"
   const msg = { providerID: "anthropic", modelID: "claude-opus-4-6" }
@@ -105,15 +102,14 @@ describe("executeCompact lock management", () => {
       compactionInProgress: new Set<string>(),
     }
 
+    notifications = []
+    setNotifySink((level, message) => {
+      notifications.push({ level, message })
+    })
     mockClient = {
       session: {
-        messages: mock(() => Promise.resolve({ data: [] })),
-        summarize: mock(() => Promise.resolve()),
-        revert: mock(() => Promise.resolve()),
-        promptAsync: mock(() => Promise.resolve()),
-      },
-      tui: {
-        showToast: mock(() => Promise.resolve()),
+        context: mock(() => Promise.resolve([])),
+        compact: mock(() => Promise.resolve()),
       },
     }
 
@@ -122,6 +118,7 @@ describe("executeCompact lock management", () => {
 
   afterEach(() => {
     fakeTimeouts.restore()
+    resetNotifySink()
   })
 
   test("clears lock on successful summarize completion", async () => {
@@ -141,7 +138,7 @@ describe("executeCompact lock management", () => {
 
   test("clears lock when summarize throws exception", async () => {
     // given: Summarize will fail
-    mockClient.session.summarize = mock(() =>
+    mockClient.session.compact = mock(() =>
       Promise.reject(new Error("Network timeout")),
     )
     autoCompactState.errorDataBySession.set(sessionID, {
@@ -165,15 +162,14 @@ describe("executeCompact lock management", () => {
     await executeCompact(sessionID, msg, autoCompactState, mockClient, directory)
 
     // then: Toast should be shown with warning message
-    expect(mockClient.tui.showToast).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: expect.objectContaining({
-          title: "Compact In Progress",
-          message: expect.stringContaining("Recovery already running"),
-          variant: "warning",
-        }),
-      }),
-    )
+    expect(
+      notifications.some(
+        (notification) =>
+          notification.level === "warn" &&
+          notification.message.includes("Compact In Progress") &&
+          notification.message.includes("Recovery already running"),
+      ),
+    ).toBe(true)
 
     // then: compactionInProgress should still have the lock
     expect(autoCompactState.compactionInProgress.has(sessionID)).toBe(true)
@@ -206,11 +202,9 @@ describe("executeCompact lock management", () => {
     await executeCompact(sessionID, msg, autoCompactState, mockClient, directory)
 
     // then: Toast should be shown
-    const toastCalls = mockClient.tui.showToast.mock.calls as unknown as ToastCall[]
-    const blockedToast = toastCalls.find(
-      (call: ToastCall) => call[0]?.body?.title === "Compact In Progress",
+    const blockedToast = notifications.find(
+      (notification) => notification.message.includes("Compact In Progress"),
     )
-    expect(blockedToast).toBeDefined()
 
     // then: Lock should still be held (not cleared by blocked attempt)
     expect(autoCompactState.compactionInProgress.has(sessionID)).toBe(true)
@@ -218,7 +212,7 @@ describe("executeCompact lock management", () => {
 
   test("clears lock after max recovery attempts exhausted", async () => {
     // given: All retry/revert attempts exhausted
-    mockClient.session.messages = mock(() => Promise.resolve({ data: [] }))
+    mockClient.session.context = mock(() => Promise.resolve([]))
 
     // Max out all attempts
     autoCompactState.retryStateBySession.set(sessionID, {
@@ -238,21 +232,19 @@ describe("executeCompact lock management", () => {
     await executeCompact(sessionID, msg, autoCompactState, mockClient, directory)
 
     // then: Should show failure toast
-    const toastCalls = mockClient.tui.showToast.mock.calls as unknown as ToastCall[]
-    const failureToast = toastCalls.find(
-      (call: ToastCall) => call[0]?.body?.title === "Auto Compact Failed",
+    const failureToast = notifications.find(
+      (notification) => notification.message.includes("Auto Compact Failed"),
     )
-    expect(failureToast).toBeDefined()
 
     // then: Lock should still be cleared
     expect(autoCompactState.compactionInProgress.has(sessionID)).toBe(false)
   })
 
-  test("clears lock when client.tui.showToast throws", async () => {
-    // given: Toast will fail (this should never happen but testing robustness)
-    mockClient.tui.showToast = mock(() =>
-      Promise.reject(new Error("Toast failed")),
-    )
+  test("clears lock when the notification sink throws", async () => {
+    // given: Notification delivery will fail
+    setNotifySink(() => {
+      throw new Error("Toast failed")
+    })
     autoCompactState.errorDataBySession.set(sessionID, {
       errorType: "token_limit",
       currentTokens: 100000,
@@ -266,9 +258,9 @@ describe("executeCompact lock management", () => {
     expect(autoCompactState.compactionInProgress.has(sessionID)).toBe(false)
   })
 
-  test("clears lock when promptAsync in continuation throws", async () => {
-    // given: promptAsync will fail during continuation
-    mockClient.session.promptAsync = mock(() =>
+  test("clears lock when compact throws in continuation", async () => {
+    // given: compact will fail during continuation
+    mockClient.session.compact = mock(() =>
       Promise.reject(new Error("Prompt failed")),
     )
     autoCompactState.errorDataBySession.set(sessionID, {

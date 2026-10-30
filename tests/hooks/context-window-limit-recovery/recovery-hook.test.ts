@@ -31,14 +31,7 @@ afterAll(() => {
 
 function createMockContext(): PluginInput {
   return {
-    client: {
-      session: {
-        messages: mock(() => Promise.resolve({ data: [] })),
-      },
-      tui: {
-        showToast: mock(() => Promise.resolve()),
-      },
-    },
+    session: { context: async () => [] },
     directory: "/tmp",
   } as PluginInput
 }

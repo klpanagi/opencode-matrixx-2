@@ -1,5 +1,6 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -17,36 +18,17 @@ describe("matrix-loop", () => {
 
   function createMockPluginInput() {
     return {
-      client: {
-        session: {
-          prompt: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-            promptCalls.push({
-              sessionID: opts.path.id,
-              text: opts.body.parts[0].text,
-            })
-            return {}
-          },
-          promptAsync: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-            promptCalls.push({
-              sessionID: opts.path.id,
-              text: opts.body.parts[0].text,
-            })
-            return {}
-          },
-          messages: async (opts: { path: { id: string } }) => {
-            messagesCalls.push({ sessionID: opts.path.id })
-            return mockMessagesApiResponseShape === "array" ? mockSessionMessages : { data: mockSessionMessages }
-          },
+      session: {
+        prompt: async (opts: { sessionID: string; parts: Array<{ type: string; text: string }> }) => {
+          promptCalls.push({
+            sessionID: opts.sessionID,
+            text: opts.parts[0].text,
+          })
+          return {}
         },
-        tui: {
-          showToast: async (opts: { body: { title: string; message: string; variant: string } }) => {
-            toastCalls.push({
-              title: opts.body.title,
-              message: opts.body.message,
-              variant: opts.body.variant,
-            })
-            return {}
-          },
+        context: async (opts: { sessionID: string }) => {
+          messagesCalls.push({ sessionID: opts.sessionID })
+          return mockSessionMessages
         },
       },
       directory: TEST_DIR,
@@ -59,6 +41,14 @@ describe("matrix-loop", () => {
     messagesCalls = []
     mockSessionMessages = []
     mockMessagesApiResponseShape = "data"
+    setNotifySink((level, message) => {
+      const separator = message.indexOf(": ")
+      toastCalls.push({
+        title: separator >= 0 ? message.slice(0, separator) : message,
+        message: separator >= 0 ? message.slice(separator + 2) : message,
+        variant: level === "warn" ? "warning" : level,
+      })
+    })
 
     if (!existsSync(TEST_DIR)) {
       mkdirSync(TEST_DIR, { recursive: true })
@@ -69,6 +59,7 @@ describe("matrix-loop", () => {
 
   afterEach(() => {
     clearState(TEST_DIR)
+    resetNotifySink()
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true })
     }
@@ -979,47 +970,28 @@ Original task: Build something`
       sessionDeleteCalls = []
 
       return {
-        client: {
-          session: {
-            prompt: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-              promptCalls.push({
-                sessionID: opts.path.id,
-                text: opts.body.parts[0].text,
-              })
-              return {}
-            },
-            promptAsync: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-              promptCalls.push({
-                sessionID: opts.path.id,
-                text: opts.body.parts[0].text,
-              })
-              return {}
-            },
-            messages: async (opts: { path: { id: string } }) => {
-              messagesCalls.push({ sessionID: opts.path.id })
-              if (opts.path.id === "verify-session-1") {
-                return { data: verificationMessages }
-              }
-              return mockMessagesApiResponseShape === "array" ? mockSessionMessages : { data: mockSessionMessages }
-            },
-            create: async (opts: { body: { parentID?: string; title?: string } }) => {
-              sessionCreateCalls.push({ parentID: opts.body.parentID, title: opts.body.title })
-              return { data: { id: "verify-session-1" } }
-            },
-            delete: async (opts: { path: { id: string } }) => {
-              sessionDeleteCalls.push({ id: opts.path.id })
-              return {}
-            },
+        session: {
+          prompt: async (opts: { sessionID: string; parts: Array<{ type: string; text: string }> }) => {
+            promptCalls.push({
+              sessionID: opts.sessionID,
+              text: opts.parts[0].text,
+            })
+            return {}
           },
-          tui: {
-            showToast: async (opts: { body: { title: string; message: string; variant: string } }) => {
-              toastCalls.push({
-                title: opts.body.title,
-                message: opts.body.message,
-                variant: opts.body.variant,
-              })
-              return {}
-            },
+          context: async (opts: { sessionID: string }) => {
+            messagesCalls.push({ sessionID: opts.sessionID })
+            if (opts.sessionID === "verify-session-1") {
+              return verificationMessages
+            }
+            return mockSessionMessages
+          },
+          create: async (opts: { parentID?: string; title?: string }) => {
+            sessionCreateCalls.push({ parentID: opts.parentID, title: opts.title })
+            return { id: "verify-session-1" }
+          },
+          remove: async (opts: { sessionID: string }) => {
+            sessionDeleteCalls.push({ id: opts.sessionID })
+            return {}
           },
         },
         directory: TEST_DIR,
@@ -1171,14 +1143,11 @@ Original task: Build something`
       let apiCallCount = 0
       const errorMock = {
         ...createMockPluginInput(),
-        client: {
-          ...createMockPluginInput().client,
-          session: {
-            ...createMockPluginInput().client.session,
-            messages: async () => {
-              apiCallCount++
-              throw new Error("API timeout")
-            },
+        session: {
+          ...createMockPluginInput().session,
+          context: async () => {
+            apiCallCount++
+            throw new Error("API timeout")
           },
         },
       }

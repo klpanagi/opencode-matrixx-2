@@ -1,14 +1,14 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk"
-import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { SessionDomainLike } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, idOf, isAssistant } from "../../shared/session-message"
 import { THINKING_TYPES } from "./constants"
 import { findMessagesWithThinkingBlocks, stripThinkingParts } from "./storage"
 import { stripThinkingPartsAsync } from "./storage/thinking-strip"
 import type { MessageData } from "./types"
 
-type Client = ReturnType<typeof createOpencodeClient>
+type Client = { session: SessionDomainLike }
 
 export async function recoverThinkingDisabledViolation(
   client: Client,
@@ -39,8 +39,7 @@ async function recoverThinkingDisabledViolationFromSDK(
   sessionID: string
 ): Promise<boolean> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const messageIDsWithThinking: string[] = []
     for (const msg of messages) {

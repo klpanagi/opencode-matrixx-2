@@ -168,7 +168,16 @@ describe("createHostLlmCall session hygiene", () => {
     })
 
     //#when the llm call runs
-    const call = createHostLlmCall({ client: client as never, directory: "/tmp" })
+    const call = createHostLlmCall({
+      ctx: {
+        client,
+        directory: "/tmp",
+        session: {
+          prompt: (args: unknown) => client.session.prompt(args),
+          context: async () => client.session.messages({}),
+        },
+      } as never,
+    })
     const result = await call("summarize this")
 
     //#then text is returned and the session was deleted
@@ -189,7 +198,16 @@ describe("createHostLlmCall session hygiene", () => {
     })
 
     //#when the llm call runs
-    const call = createHostLlmCall({ client: client as never, directory: "/tmp" })
+    const call = createHostLlmCall({
+      ctx: {
+        client,
+        directory: "/tmp",
+        session: {
+          prompt: (args: unknown) => client.session.prompt(args),
+          context: async () => client.session.messages({}),
+        },
+      } as never,
+    })
     const caught = await call("summarize this").then(
       () => null,
       (err: unknown) => err,

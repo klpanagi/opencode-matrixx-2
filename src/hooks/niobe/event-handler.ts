@@ -1,9 +1,9 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { clearMissionState, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { subagentSessions } from "../../features/session-state/state"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { stateRootFromPluginContext } from "../../shared/state-root"
 import { HOOK_NAME } from "./hook-name"
 import { injectMissionContinuation } from "./mission-continuation-injector"
@@ -13,7 +13,7 @@ import type { NiobeHookOptions, SessionState } from "./types"
 const CONTINUATION_COOLDOWN_MS = 5000
 
 export function createNiobeEventHandler(input: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   options?: NiobeHookOptions
   sessions: Map<string, SessionState>
   getState: (sessionID: string) => SessionState

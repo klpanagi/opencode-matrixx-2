@@ -12,8 +12,8 @@ import {
   createTaskContinuationEnforcer,
 } from "../../hooks"
 import { bindSafeHook } from "../../shared/safe-create-hook"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { stateRootFromPluginContext } from "../../shared/state-root"
-import type { PluginContext } from "../types"
 import { createUnstableAgentBabysitter } from "../unstable-agent-babysitter"
 
 export type ContinuationHooks = {
@@ -34,7 +34,7 @@ type SessionRecovery = {
 } | null
 
 export function createContinuationHooks(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean

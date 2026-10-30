@@ -2,20 +2,17 @@
 import { beforeEach, describe, expect, test } from "bun:test"
 import { createInputSecretGuardHook } from "../../../src/hooks/input-secret-guard/hook"
 import { clearAll } from "../../../src/hooks/input-secret-guard/session-allow-cache"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 
-type ToastCall = { title: string; message: string; variant: string }
+type ToastCall = { level: string; message: string }
 
 function mockCtx(capture?: { toasts: ToastCall[] }) {
   const toasts = capture?.toasts ?? []
+  setNotifySink((level, message) => {
+    toasts.push({ level, message })
+  })
   return {
     directory: "/tmp",
-    client: {
-      tui: {
-        showToast: async (arg: { body: { title: string; message: string; variant: string } }) => {
-          toasts.push(arg.body)
-        },
-      },
-    },
   } as unknown as import("@opencode-ai/plugin").PluginInput
 }
 
@@ -24,7 +21,10 @@ const SYNTHETIC_AKIA = "AKIAIOSFODNN7EXAMPLE"
 const WARN_TEXT = "api_key= hunter2notarealsecretvalue123"
 
 describe("createInputSecretGuardHook", () => {
-  beforeEach(() => clearAll())
+  beforeEach(() => {
+    clearAll()
+    resetNotifySink()
+  })
 
   test("throws on blocklist with redacted preview not containing raw secret", async () => {
     //#given
@@ -65,7 +65,7 @@ describe("createInputSecretGuardHook", () => {
     expect(capture.toasts.length).toBe(1)
     expect(capture.toasts[0].message).not.toContain(SYNTHETIC_AKIA)
     expect(capture.toasts[0].message).toContain("…")
-    expect(capture.toasts[0].title).toContain("Potential secret")
+    expect(capture.toasts[0].message).toContain("Potential secret")
   })
 
   test("enabled false does not throw even with secret", async () => {

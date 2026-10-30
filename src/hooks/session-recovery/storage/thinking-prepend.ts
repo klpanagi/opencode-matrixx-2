@@ -1,14 +1,14 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { isSqliteBackend, log, normalizeSDKResponse, patchPart } from "../../../shared"
+import { isSqliteBackend, log, patchPart } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
 import { contentOf, idOf, isAssistant } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
-import type { MessageData } from "../types"
 import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
-type OpencodeClient = PluginInput["client"]
+type OpencodeClient = SessionContextCarrier
 
 function findLastThinkingContent(sessionID: string, beforeMessageID: string): string {
   const messages = readMessages(sessionID)
@@ -74,8 +74,7 @@ async function findLastThinkingContentFromSDK(
   beforeMessageID: string
 ): Promise<string> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const currentIndex = messages.findIndex((m) => idOf(m) === beforeMessageID)
     if (currentIndex === -1) return ""

@@ -1,6 +1,6 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk"
-import { normalizeSDKResponse } from "../../shared"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { SessionDomainLike } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, idOf, isAssistant } from "../../shared/session-message"
 import { THINKING_TYPES } from "./constants"
 import { extractMessageIndex } from "./detect-error-type"
@@ -8,7 +8,7 @@ import { findMessageByIndexNeedingThinking, findMessagesWithOrphanThinking, prep
 import { prependThinkingPartAsync } from "./storage/thinking-prepend"
 import type { MessageData } from "./types"
 
-type Client = ReturnType<typeof createOpencodeClient>
+type Client = { session: SessionDomainLike }
 
 function toPartsWithIds(message: unknown): Array<{ id: string; type: string }> {
   return contentOf(message).filter(
@@ -85,8 +85,7 @@ async function findMessagesWithOrphanThinkingFromSDK(
 ): Promise<string[]> {
   let messages: MessageData[]
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    messages = await fetchSessionMessages(client, sessionID)
   } catch {
     return []
   }
@@ -117,8 +116,7 @@ async function findMessageByIndexNeedingThinkingFromSDK(
 ): Promise<string | null> {
   let messages: MessageData[]
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    messages = await fetchSessionMessages(client, sessionID)
   } catch {
     return null
   }

@@ -36,12 +36,9 @@ function makeInjectionCtx(dir: string): { ctx: PluginInput; promptAsync: ReturnT
 	const promptAsync = mock(async () => ({} as never))
 	const ctx = {
 		directory: dir,
-		client: {
-			tui: { showToast: mock(async () => ({} as never)) },
-			session: {
-				messages: async () => ({ data: [] } as unknown as never) as never,
-				promptAsync,
-			},
+		session: {
+			context: async () => [],
+			prompt: promptAsync,
 		},
 	} as unknown as PluginInput
 	return { ctx, promptAsync }

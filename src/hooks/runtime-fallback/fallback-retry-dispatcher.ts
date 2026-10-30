@@ -1,4 +1,5 @@
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
 import type { AutoRetryHelpers } from "./auto-retry"
 import { HOOK_NAME } from "./constants"
 import { prepareFallback } from "./fallback-state"
@@ -25,16 +26,9 @@ export async function dispatchFallbackRetry(
   )
 
   if (result.success && deps.config.notify_on_fallback) {
-    await deps.ctx.client.tui
-      .showToast({
-        body: {
-          title: "Model Fallback",
-          message: `Switching to ${result.newModel?.split("/").pop() || result.newModel} for next request`,
-          variant: "warning",
-          duration: 5000,
-        },
-      })
-      .catch((err) => { log("[runtime-fallback] Fallback notification toast failed:", err) })
+  if (result.success && deps.config.notify_on_fallback) {
+    notify("warn", `Model Fallback: Switching to ${result.newModel?.split("/").pop() || result.newModel} for next request`)
+  }
   }
 
   if (result.success && result.newModel) {

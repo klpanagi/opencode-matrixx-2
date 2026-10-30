@@ -5,19 +5,12 @@ import { readParts } from "../../../../src/hooks/session-recovery/storage/parts-
 
 function createMockClient(handlers: {
   messages?: (sessionID: string) => unknown[]
-  message?: (sessionID: string, messageID: string) => unknown
 }) {
   return {
     session: {
-      messages: async (opts: { path: { id: string } }) => {
+      context: async (opts: { sessionID: string }) => {
         if (handlers.messages) {
-          return { data: handlers.messages(opts.path.id) }
-        }
-        throw new Error("not implemented")
-      },
-      message: async (opts: { path: { id: string; messageID: string } }) => {
-        if (handlers.message) {
-          return { data: handlers.message(opts.path.id, opts.path.messageID) }
+          return handlers.messages(opts.sessionID)
         }
         throw new Error("not implemented")
       },
@@ -37,8 +30,8 @@ describe("session-recovery storage SDK readers", () => {
     expect(result).toEqual([])
   })
 
-  it("readPartsFromSDK returns stored parts from SDK response", async () => {
-    //#given a client that returns a message with parts
+  it("readPartsFromSDK returns its documented empty array, because the V1 per-message read never resolved data", async () => {
+    //#given a native context that carries messages for the session
     const sessionID = "ses_test"
     const messageID = "msg_test"
     const storedParts = [
@@ -46,14 +39,14 @@ describe("session-recovery storage SDK readers", () => {
     ]
 
     const client = createMockClient({
-      message: (_sid, _mid) => ({ parts: storedParts }),
+      messages: () => [{ id: messageID, content: storedParts }],
     }) as Parameters<typeof readPartsFromSDK>[0]
 
     //#when readPartsFromSDK is called
     const result = await readPartsFromSDK(client, sessionID, messageID)
 
-    //#then it returns the parts
-    expect(result).toEqual(storedParts)
+    //#then it still reports no parts, matching the dead V1 fallback
+    expect(result).toEqual([])
   })
 
   it("readMessagesFromSDK normalizes and sorts messages", async () => {

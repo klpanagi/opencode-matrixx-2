@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs"
-import type { PluginInput } from "@opencode-ai/plugin"
 import { escapeRegExp as escapeRegex } from "../../shared/escape-regexp"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, isAssistant } from "../../shared/session-message"
 import { withTimeout } from "../../shared/with-timeout"
@@ -41,7 +42,7 @@ export function detectCompletionInTranscript(
 }
 
 export async function detectCompletionInSessionMessages(
-	ctx: PluginInput,
+	ctx: NativePluginContext,
 	options: {
 		sessionID: string
 		promise: string
@@ -53,7 +54,7 @@ export async function detectCompletionInSessionMessages(
 	try {
 		const messageArray: OpenCodeSessionMessage[] = options.preFetchedMessages
 			? options.preFetchedMessages
-			: await fetchSessionMessages(ctx, options.sessionID, options.directory, options.apiTimeoutMs)
+			: await withTimeout(fetchSessionMessages(ctx, options.sessionID), options.apiTimeoutMs)
 
 		const assistantMessages = messageArray.filter((msg) => isAssistant(msg))
 		if (assistantMessages.length === 0) return false
@@ -84,27 +85,3 @@ export async function detectCompletionInSessionMessages(
 	}
 }
 
-async function fetchSessionMessages(
-	ctx: PluginInput,
-	sessionID: string,
-	directory: string,
-	apiTimeoutMs: number,
-): Promise<OpenCodeSessionMessage[]> {
-	const response = await withTimeout(
-		ctx.client.session.messages({
-			path: { id: sessionID },
-			query: { directory },
-		}),
-		apiTimeoutMs,
-	)
-
-	const messagesResponse: unknown = response
-	const responseData =
-		typeof messagesResponse === "object" && messagesResponse !== null && "data" in messagesResponse
-			? (messagesResponse as { data?: unknown }).data
-			: undefined
-
-	if (Array.isArray(messagesResponse)) return messagesResponse as OpenCodeSessionMessage[]
-	if (Array.isArray(responseData)) return responseData as OpenCodeSessionMessage[]
-	return []
-}

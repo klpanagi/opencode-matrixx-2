@@ -4,10 +4,8 @@ import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continu
 describe("stop-continuation-guard", () => {
   function createMockPluginInput() {
     return {
-      client: {
-        tui: {
-          showToast: async () => ({}),
-        },
+      session: {
+        context: async () => [],
       },
       directory: "/tmp/test",
     } as never

@@ -1,6 +1,8 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { ExperimentalConfig } from "../../config"
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { idOf } from "../../shared/session-message"
 import type { RecoveryErrorType } from "./detect-error-type"
 import { detectErrorType } from "./detect-error-type"
@@ -8,7 +10,6 @@ import { recoverThinkingBlockOrder } from "./recover-thinking-block-order"
 import { recoverThinkingDisabledViolation } from "./recover-thinking-disabled-violation"
 import { recoverToolResultMissing } from "./recover-tool-result-missing"
 import { extractResumeConfig, findLastUserMessage, resumeSession } from "./resume"
-import type { MessageData } from "./types"
 
 interface MessageInfo {
   id?: string
@@ -29,7 +30,7 @@ export interface SessionRecoveryHook {
   setOnRecoveryCompleteCallback: (callback: (sessionID: string) => void) => void
 }
 
-export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRecoveryOptions): SessionRecoveryHook {
+export function createSessionRecoveryHook(ctx: NativePluginContext, options?: SessionRecoveryOptions): SessionRecoveryHook {
   const processingErrors = new Set<string>()
   const experimental = options?.experimental
   let onAbortCallback: ((sessionID: string) => void) | null = null
@@ -65,13 +66,9 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
         onAbortCallback(sessionID)
       }
 
-      await ctx.client.session.abort({ path: { id: sessionID } }).catch((err) => { log("[session-recovery] Session abort failed:", err) })
+      await ctx.session.interrupt({ sessionID }).catch((err) => { log("[session-recovery] Session abort failed:", err) })
 
-      const messagesResp = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
-      const msgs = (messagesResp as { data?: MessageData[] }).data
+      const msgs = await fetchSessionMessages(ctx, sessionID)
 
       const failedMsg = msgs?.find((m) => idOf(m) === assistantMsgID)
       if (!failedMsg) {
@@ -91,34 +88,25 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
         "assistant_prefill_unsupported": "Prefill not supported; continuing without recovery.",
       }
 
-      await ctx.client.tui
-        .showToast({
-          body: {
-            title: toastTitles[errorType],
-            message: toastMessages[errorType],
-            variant: "warning",
-            duration: 3000,
-          },
-        })
-        .catch((err) => { log("[session-recovery] Recovery toast failed:", err) })
+      notify("warn", `${toastTitles[errorType]}: ${toastMessages[errorType]}`)
 
       let success = false
 
       if (errorType === "tool_result_missing") {
-        success = await recoverToolResultMissing(ctx.client, sessionID, failedMsg)
+        success = await recoverToolResultMissing(ctx, sessionID, failedMsg)
       } else if (errorType === "thinking_block_order") {
-        success = await recoverThinkingBlockOrder(ctx.client, sessionID, failedMsg, ctx.directory, info.error)
+        success = await recoverThinkingBlockOrder(ctx, sessionID, failedMsg, ctx.directory, info.error)
         if (success && experimental?.auto_resume) {
           const lastUser = findLastUserMessage(msgs ?? [])
           const resumeConfig = extractResumeConfig(lastUser, sessionID)
-          await resumeSession(ctx.client, resumeConfig)
+          await resumeSession(ctx, resumeConfig)
         }
       } else if (errorType === "thinking_disabled_violation") {
-        success = await recoverThinkingDisabledViolation(ctx.client, sessionID, failedMsg)
+        success = await recoverThinkingDisabledViolation(ctx, sessionID, failedMsg)
         if (success && experimental?.auto_resume) {
           const lastUser = findLastUserMessage(msgs ?? [])
           const resumeConfig = extractResumeConfig(lastUser, sessionID)
-          await resumeSession(ctx.client, resumeConfig)
+          await resumeSession(ctx, resumeConfig)
         }
       } else if (errorType === "assistant_prefill_unsupported") {
         success = false

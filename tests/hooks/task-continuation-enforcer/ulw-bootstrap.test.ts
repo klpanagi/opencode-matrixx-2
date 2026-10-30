@@ -5,14 +5,12 @@ import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
+import { setNotifySink } from "../../../src/shared/notify"
 
 function makeCtx(dir: string, bgTasks: Array<{ status: string }> = []): PluginInput {
   return {
     directory: dir,
-    client: {
-      tui: { showToast: mock(async () => ({} as never)) as never },
-      session: { messages: async () => ({ data: [] } as unknown as never) as never },
-    },
+    session: { context: async () => [] },
     backgroundManager: {
       getTasksByParentSession: () => bgTasks,
     },
@@ -25,12 +23,10 @@ describe("ulw bootstrap", () => {
   test("does not bootstrap when task dir is absent even with bg-task history", async () => {
     const dir = mkdtempSync(join(tmpdir(), "ulw-boot-"))
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
+      session: { context: async () => [] },
     } as unknown as PluginInput
     const store = createSessionStateStore()
     const bg = { getTasksByParentSession: () => [{ status: "completed" }] } as never
@@ -81,12 +77,10 @@ describe("ulw bootstrap", () => {
       JSON.stringify({ id: "T-done", subject: "done", description: "d", status: "completed", blocks: [], blockedBy: [], threadID: "ulw4" }),
     )
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
+      session: { context: async () => [] },
     } as unknown as PluginInput
     const store = createSessionStateStore()
     const bg4 = { getTasksByParentSession: () => [{ status: "completed" }] } as never
@@ -117,12 +111,10 @@ describe("ulw bootstrap", () => {
   test("does not bootstrap when explorer and worker bg tasks mix", async () => {
     const dir = mkdtempSync(join(tmpdir(), "ulw-boot-"))
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
+      session: { context: async () => [] },
     } as unknown as PluginInput
     const store = createSessionStateStore()
     const bg = {

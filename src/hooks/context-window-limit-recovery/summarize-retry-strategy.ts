@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
 import type { Client } from "./client"
 import { fixEmptyMessages } from "./empty-content-recovery"
 import { sanitizeEmptyMessagesBeforeSummarize } from "./message-builder"
@@ -33,17 +33,7 @@ export async function runSummarizeRetryStrategy(params: {
         return
       }
     } else {
-      await params.client.tui
-        .showToast({
-          body: {
-            title: "Recovery Failed",
-            message:
-              "Max recovery attempts (3) reached for empty content error. Please start a new session.",
-            variant: "error",
-            duration: 10000,
-          },
-        })
-        .catch((err) => { log("[auto-compact] Toast failed:", err) })
+      notify("error", "Recovery Failed: Max recovery attempts (3) reached for empty content error. Please start a new session.")
       return
     }
   }
@@ -64,23 +54,9 @@ export async function runSummarizeRetryStrategy(params: {
       try {
         await sanitizeEmptyMessagesBeforeSummarize(params.sessionID, params.client)
 
-        await params.client.tui
-          .showToast({
-            body: {
-              title: "Auto Compact",
-              message: `Summarizing session (attempt ${retryState.attempt}/${RETRY_CONFIG.maxAttempts})...`,
-              variant: "warning",
-              duration: 3000,
-            },
-          })
-          .catch((err) => { log("[auto-compact] Toast failed:", err) })
+        notify("warn", `Auto Compact: Summarizing session (attempt ${retryState.attempt}/${RETRY_CONFIG.maxAttempts})...`)
 
-        const summarizeBody = { providerID, modelID, auto: true }
-        await params.client.session.summarize({
-          path: { id: params.sessionID },
-          body: summarizeBody as never,
-          query: { directory: params.directory },
-        })
+        await params.client.session.compact({ sessionID: params.sessionID })
         return
       } catch {
         const delay =
@@ -94,28 +70,10 @@ export async function runSummarizeRetryStrategy(params: {
         return
       }
     } else {
-      await params.client.tui
-        .showToast({
-          body: {
-            title: "Summarize Skipped",
-            message: "Missing providerID or modelID.",
-            variant: "warning",
-            duration: 3000,
-          },
-        })
-        .catch((err) => { log("[auto-compact] Toast failed:", err) })
+      notify("warn", "Summarize Skipped: Missing providerID or modelID.")
     }
   }
 
   clearSessionState(params.autoCompactState, params.sessionID)
-  await params.client.tui
-    .showToast({
-      body: {
-        title: "Auto Compact Failed",
-        message: "All recovery attempts failed. Please start a new session.",
-        variant: "error",
-        duration: 5000,
-      },
-    })
-    .catch((err) => { log("[auto-compact] Toast failed:", err) })
+  notify("error", "Auto Compact Failed: All recovery attempts failed. Please start a new session.")
 }

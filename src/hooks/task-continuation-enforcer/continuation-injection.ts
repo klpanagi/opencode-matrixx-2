@@ -1,6 +1,5 @@
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import {
@@ -15,9 +14,10 @@ import { stateRootFromPluginContext } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAwaitingUser } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { resolveTasksConfig } from "../../shared/task-system-gating"
 import { TaskObjectSchema } from "../../tools/task/types"
 import {
@@ -41,7 +41,7 @@ function hasWritePermission(tools: Record<string, ToolPermission> | undefined): 
 }
 
 export async function injectContinuation(args: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   sessionID: string
   backgroundManager?: BackgroundManager
   skipAgents?: string[]
@@ -215,14 +215,11 @@ ${taskList}${staleNote}`
       incompleteCount: freshIncompleteCount,
     })
 
-    await promptWithModelSuggestionRetry(ctx.client, {
-      path: { id: sessionID },
-      body: {
-        agent: agentName,
-        ...(model !== undefined ? { model } : {}),
-        parts: [{ type: "text", text: prompt }],
-      },
-      query: { directory: ctx.directory },
+    await promptNativeWithModelSuggestionRetry(ctx.session, {
+      sessionID,
+      agent: agentName,
+      ...(model !== undefined ? { model } : {}),
+      parts: [{ type: "text", text: prompt }],
     })
 
     log(`[${HOOK_NAME}] Injection successful`, { sessionID })

@@ -3,8 +3,6 @@ import type { BackgroundTask } from "../../../src/features/background-agent"
 import { _resetForTesting, setMainSession } from "../../../src/features/session-state/state"
 import { createUnstableAgentBabysitterHook } from "../../../src/hooks/unstable-agent-babysitter/index"
 
-const projectDir = process.cwd()
-
 type BabysitterContext = Parameters<typeof createUnstableAgentBabysitterHook>[0]
 
 function createMockPluginInput(options: {
@@ -13,19 +11,12 @@ function createMockPluginInput(options: {
 }): BabysitterContext {
   const { messagesBySession, promptCalls } = options
   return {
-    directory: projectDir,
-    client: {
-      session: {
-        messages: async ({ path }: { path: { id: string } }) => ({
-          data: messagesBySession[path.id] ?? [],
-        }),
-        prompt: async (input: unknown) => {
-          promptCalls.push({ input })
-        },
-        promptAsync: async (input: unknown) => {
-          promptCalls.push({ input })
-        },
+    session: {
+      context: async ({ sessionID }: { sessionID: string }) => messagesBySession[sessionID] ?? [],
+      prompt: async (input: unknown) => {
+        promptCalls.push({ input })
       },
+      interrupt: async () => ({}),
     },
   }
 }
@@ -69,10 +60,10 @@ describe("unstable-agent-babysitter hook", () => {
     const ctx = createMockPluginInput({
       messagesBySession: {
         "main-1": [
-          { info: { agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } } },
+          { type: "user", agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } },
         ],
         "bg-1": [
-          { info: { role: "assistant" }, parts: [{ type: "thinking", thinking: "deep thought" }] },
+          { type: "assistant", content: [{ type: "thinking", thinking: "deep thought" }] },
         ],
       },
       promptCalls,
@@ -88,8 +79,8 @@ describe("unstable-agent-babysitter hook", () => {
 
     // #then
     expect(promptCalls.length).toBe(1)
-    const payload = promptCalls[0].input as { body?: { parts?: Array<{ text?: string }> } }
-    const text = payload.body?.parts?.[0]?.text ?? ""
+    const payload = promptCalls[0].input as { parts?: Array<{ text?: string }> }
+    const text = payload.parts?.[0]?.text ?? ""
     expect(text).toContain("background_output")
     expect(text).toContain("background_cancel")
     expect(text).toContain("deep thought")
@@ -102,10 +93,10 @@ describe("unstable-agent-babysitter hook", () => {
     const ctx = createMockPluginInput({
       messagesBySession: {
         "main-1": [
-          { info: { agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } } },
+          { type: "user", agent: "morpheus", model: { providerID: "openai", modelID: "gpt-4" } },
         ],
         "bg-1": [
-          { info: { role: "assistant" }, parts: [{ type: "thinking", thinking: "minimax thought" }] },
+          { type: "assistant", content: [{ type: "thinking", thinking: "minimax thought" }] },
         ],
       },
       promptCalls,
@@ -123,8 +114,8 @@ describe("unstable-agent-babysitter hook", () => {
 
     // #then
     expect(promptCalls.length).toBe(1)
-    const payload = promptCalls[0].input as { body?: { parts?: Array<{ text?: string }> } }
-    const text = payload.body?.parts?.[0]?.text ?? ""
+    const payload = promptCalls[0].input as { parts?: Array<{ text?: string }> }
+    const text = payload.parts?.[0]?.text ?? ""
     expect(text).toContain("background_output")
     expect(text).toContain("background_cancel")
     expect(text).toContain("minimax thought")

@@ -24,16 +24,20 @@ function hasData(value: unknown): value is { data?: unknown } {
 
 export function getMessageInfo(value: unknown): MessageInfo | undefined {
   if (!isRecord(value)) return undefined
-  if (!isRecord(value.info)) return undefined
-  const info = value.info
+  const info = isRecord(value.info) ? value.info : value
   const modelValue = isRecord(info.model)
     ? info.model
     : undefined
   const model = modelValue && typeof modelValue.providerID === "string" && typeof modelValue.modelID === "string"
     ? { providerID: modelValue.providerID, modelID: modelValue.modelID }
     : undefined
+  const role = typeof info.role === "string"
+    ? info.role
+    : typeof info.type === "string"
+      ? info.type
+      : undefined
   return {
-    role: typeof info.role === "string" ? info.role : undefined,
+    role,
     agent: typeof info.agent === "string" ? info.agent : undefined,
     model,
     providerID: typeof info.providerID === "string" ? info.providerID : undefined,
@@ -43,8 +47,12 @@ export function getMessageInfo(value: unknown): MessageInfo | undefined {
 
 export function getMessageParts(value: unknown): MessagePart[] {
   if (!isRecord(value)) return []
-  if (!Array.isArray(value.parts)) return []
-  return value.parts.filter(isRecord).map((part) => ({
+  const rawParts = Array.isArray(value.parts)
+    ? value.parts
+    : Array.isArray(value.content)
+      ? value.content
+      : []
+  return rawParts.filter(isRecord).map((part) => ({
     type: typeof part.type === "string" ? part.type : undefined,
     text: typeof part.text === "string" ? part.text : undefined,
     thinking: typeof part.thinking === "string" ? part.thinking : undefined,
