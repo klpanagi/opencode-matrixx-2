@@ -83,6 +83,8 @@ export interface DelegateTaskToolOptions {
   /** Active preset name from plugin config (`active_preset`). */
   activePreset?: string
   onSyncSessionCreated?: (event: SyncSessionCreatedEvent) => Promise<void>
+  /** Resolves the live system default model (provider/model); absence falls back to category resolution. */
+  systemDefaultModel?: () => Promise<string | undefined>
 }
 
 export interface BuildSystemContentInput {

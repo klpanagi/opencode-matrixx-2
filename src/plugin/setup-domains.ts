@@ -50,6 +50,7 @@ import { resolveTasksConfig } from "../shared/task-system-gating"
 import type { BuiltinSkill } from "../skills"
 import { registerSkillTransform } from "../skills/skills.transform"
 import { startTmuxCheck } from "../tools"
+import { resolveSystemDefaultModel } from "../tools/delegate-task/default-model"
 import { setPollTimeoutMs } from "../tools/delegate-task/timing"
 import { createAvailableCategories } from "./available-categories"
 import { createChatMessageHandler } from "./chat-message"
@@ -154,8 +155,9 @@ export async function setupToolsDomain(args: {
   ctx: PluginContext
   pluginConfig: MatrixxConfig
   managers: Pick<DomainManagers, "backgroundManager">
+  systemDefaultModel?: () => Promise<string | undefined>
 }): Promise<SetupToolsDomainResult> {
-  const { ctx, pluginConfig, managers } = args
+  const { ctx, pluginConfig, managers, systemDefaultModel } = args
 
   const pollTimeout = resolveTasksConfig(pluginConfig).pollTimeoutMs
   if (pollTimeout !== undefined) {
@@ -175,6 +177,7 @@ export async function setupToolsDomain(args: {
     managers,
     skillContext,
     availableCategories,
+    systemDefaultModel,
   })
 
   return {
@@ -334,6 +337,7 @@ export async function setupDomains(ctx: V2Context): Promise<{
     ctx: v1ctx,
     pluginConfig,
     managers,
+    systemDefaultModel: () => resolveSystemDefaultModel(ctx),
   })
 
   // Store tool names for use when building agent prompts

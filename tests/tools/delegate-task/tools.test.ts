@@ -1142,6 +1142,7 @@ describe("morpheus-task", () => {
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
          availableModelsOverride: createTestAvailableModels(),
        })
@@ -1207,6 +1208,7 @@ describe("morpheus-task", () => {
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
       })
 
       const toolContext = {
@@ -2384,6 +2386,7 @@ describe("morpheus-task", () => {
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
         // userCategories: undefined - use DEFAULT_CATEGORIES only
         // mouseModel: undefined
         connectedProvidersOverride: null,
@@ -2715,6 +2718,7 @@ const tool = createDelegateTask({
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
         mouseModel: "openai/gpt-5.2",
         userCategories: {
           "my-custom": { temperature: 0.5 },

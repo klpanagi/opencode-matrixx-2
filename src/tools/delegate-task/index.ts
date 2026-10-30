@@ -3,6 +3,7 @@ export { autoScoreComplexity } from "./complexity-scorer"
 // Complexity exports for P3 per-task complexity routing
 export type { ComplexityInput, ComplexityLevel } from "./complexity-types"
 export * from "./constants"
+export { resolveSystemDefaultModel, type SystemDefaultModelSource } from "./default-model"
 export {
   isSoftwareDevExecutorTarget,
   isSoftwareDevOrchestratorTarget,

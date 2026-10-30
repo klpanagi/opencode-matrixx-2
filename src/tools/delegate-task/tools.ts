@@ -265,8 +265,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
 
       let systemDefaultModel: string | undefined
       try {
-        const openCodeConfig = await options.client.config.get()
-        systemDefaultModel = (openCodeConfig as { data?: { model?: string } })?.data?.model
+        systemDefaultModel = await options.systemDefaultModel?.()
       } catch {
         systemDefaultModel = undefined
       }

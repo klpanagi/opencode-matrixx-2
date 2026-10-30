@@ -142,10 +142,6 @@ export function createClientShim(ctx: V2Context): Record<string, unknown> {
     openHelp: fallback("tui.openHelp"),
   })
 
-  const config = group("config", {
-    get: fallback("config.get"),
-  })
-
   return group("client", {
     session,
     app,
@@ -154,7 +150,6 @@ export function createClientShim(ctx: V2Context): Record<string, unknown> {
     command,
     permission,
     tui,
-    config,
     find: fallback("find"),
     file: fallback("file"),
   })

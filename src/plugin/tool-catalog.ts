@@ -78,8 +78,9 @@ export function createToolCatalog(args: {
   managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
+  systemDefaultModel?: () => Promise<string | undefined>
 }): ToolCatalogResult {
-  const { ctx, pluginConfig, managers, skillContext, availableCategories } = args
+  const { ctx, pluginConfig, managers, skillContext, availableCategories, systemDefaultModel } = args
 
   const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx.client, ctx.directory)
 
@@ -130,6 +131,7 @@ export function createToolCatalog(args: {
     modelPresets: pluginConfig.model_presets,
     activePreset: pluginConfig.active_preset,
     agentOverrides: pluginConfig.agents,
+    systemDefaultModel,
   })
 
   const skillTool = createSkillTool({

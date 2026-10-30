@@ -58,7 +58,7 @@ import {
 type OpencodeClient = PluginInput["client"]
 
 export { createAssemblyTool } from "./assembly/tools"
-export { createDelegateTask } from "./delegate-task"
+export { createDelegateTask, resolveSystemDefaultModel } from "./delegate-task"
 export { createHashlineEditTool } from "./hashline-edit"
 export { createLookAt } from "./look-at/tools"
 export {
