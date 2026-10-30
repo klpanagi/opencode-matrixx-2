@@ -4,7 +4,9 @@ import { describe, expect, test } from "bun:test"
 import type { ToolContext } from "@opencode-ai/plugin/tool"
 import type { BackgroundManager, BackgroundTask } from "../../../src/features/background-agent"
 import { clearPendingStore, consumeToolMetadata } from "../../../src/features/tool-metadata-store"
-import type { BackgroundCancelClient, BackgroundOutputClient, BackgroundOutputManager } from "../../../src/tools/background-task/tools"
+import type { SessionContextCarrier } from "../../../src/shared/session-context-source"
+import type { SessionMessage } from "../../../src/shared/session-message"
+import type { BackgroundCancelClient, BackgroundOutputManager } from "../../../src/tools/background-task/tools"
 import { createBackgroundCancel, createBackgroundOutput } from "../../../src/tools/background-task/tools"
 
 const _projectDir = "/Users/yeongyu/local-workspaces/matrixx"
@@ -22,16 +24,14 @@ function createMockManager(task: BackgroundTask): BackgroundOutputManager {
   }
 }
 
-function createMockClient(messagesBySession: Record<string, BackgroundOutputMessage[]>): BackgroundOutputClient {
-  const emptyMessages: BackgroundOutputMessage[] = []
-  const client = {
+function createMockClient(messagesBySession: Record<string, SessionMessage[]>): SessionContextCarrier {
+  return {
     session: {
-      messages: async ({ path }: { path: { id: string } }) => ({
-        data: messagesBySession[path.id] ?? emptyMessages
+      context: async ({ sessionID }: { sessionID: string }) => ({
+        messages: messagesBySession[sessionID] ?? []
       })
     }
-  } satisfies BackgroundOutputClient
-  return client
+  }
 }
 
 function createTask(overrides: Partial<BackgroundTask> = {}): BackgroundTask {

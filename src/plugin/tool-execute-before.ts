@@ -11,6 +11,7 @@ import {
   getUltraworkState,
 } from "../features/ultrawork-state"
 import { log } from "../shared"
+import type { SessionContextCarrier } from "../shared/session-context-source"
 import { isTaskTool } from "../shared/shell-tool-name"
 import { resolveSessionAgent } from "./session-agent-resolver"
 import type { DomainHooks } from "./setup-domains"
@@ -27,7 +28,7 @@ const MAX_ITERATIONS_RE = /--max-iterations=(\d+)/i
 const COMPLETION_PROMISE_RE = /--completion-promise=["']?([^"'\s]+)["']?/i
 
 export function createToolExecuteBeforeHandler(args: {
-  ctx: PluginContext
+  ctx: PluginContext & SessionContextCarrier
   hooks: DomainHooks
 }): (
   input: { tool: string; sessionID: string; callID: string },
@@ -146,7 +147,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
       if (category) {
         argsObject.subagent_type = "mouse"
       } else if (!subagentType && sessionId) {
-        resolvePromise = resolveSessionAgent(ctx.client, sessionId)
+        resolvePromise = resolveSessionAgent(ctx, sessionId)
       }
     }
 

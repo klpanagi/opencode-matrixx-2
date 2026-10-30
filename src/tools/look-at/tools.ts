@@ -1,7 +1,10 @@
 import { basename } from "node:path"
 import { pathToFileURL } from "node:url"
-import { type PluginInput, type ToolDefinition, tool } from "@opencode-ai/plugin"
-import { log, promptSyncWithModelSuggestionRetry } from "../../shared"
+import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { log } from "../../shared"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { fetchSessionMessages, type NativePluginContext } from "../../shared/session-context-source"
+import type { SessionMessage } from "../../shared/session-message"
 import { extractLatestAssistantText } from "./assistant-message-extractor"
 import { CONSTRUCT_AGENT, LOOK_AT_DESCRIPTION } from "./constants"
 import type { LookAtArgsWithAlias } from "./look-at-arguments"
@@ -16,7 +19,7 @@ import type { LookAtArgs } from "./types"
 
 export { normalizeArgs, validateArgs } from "./look-at-arguments"
 
-export function createLookAt(ctx: PluginInput): ToolDefinition {
+export function createLookAt(ctx: NativePluginContext): ToolDefinition {
   return tool({
     description: LOOK_AT_DESCRIPTION,
     args: {
@@ -71,23 +74,16 @@ Be thorough on what was requested, concise on everything else.
 If the requested information is not found, clearly state what is missing.`
 
       log(`[look_at] Creating session with parent: ${toolContext.sessionID}`)
-      const parentSession = await ctx.client.session.get({
-        path: { id: toolContext.sessionID },
-      }).catch(() => null)
-      const parentDirectory = parentSession?.data?.directory ?? ctx.directory
-
-      const createResult = await ctx.client.session.create({
-        body: {
+      let created: { id?: string }
+      try {
+        created = (await ctx.session.create({
           parentID: toolContext.sessionID,
           title: `look_at: ${args.goal.substring(0, 50)}`,
-        },
-        query: { directory: parentDirectory },
-      })
-
-      if (createResult.error) {
-        log(`[look_at] Session create error:`, createResult.error)
-        const errorStr = String(createResult.error)
-        if (errorStr.toLowerCase().includes("unauthorized")) {
+        })) as { id?: string }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        log(`[look_at] Session create error:`, message)
+        if (message.toLowerCase().includes("unauthorized")) {
           return `Error: Failed to create session (Unauthorized). This may be due to:
 1. OAuth token restrictions (e.g., Claude Code credentials are restricted to Claude Code only)
 2. Provider authentication issues
@@ -95,35 +91,37 @@ If the requested information is not found, clearly state what is missing.`
 
 Try using a different provider or API key authentication.
 
-Original error: ${createResult.error}`
+Original error: ${message}`
         }
-        return `Error: Failed to create session: ${createResult.error}`
+        return `Error: Failed to create session: ${message}`
       }
 
-      const sessionID = createResult.data.id
+      if (!created.id) {
+        return "Error: Failed to create session: API returned no session ID"
+      }
+
+      const sessionID = created.id
       log(`[look_at] Created session: ${sessionID}`)
 
       const { agentModel, agentVariant } = await resolveMultimodalLookerAgentMetadata(ctx)
 
       log(`[look_at] Sending prompt with ${isBase64Input ? "base64 image" : "file"} to session ${sessionID}`)
       try {
-        await promptSyncWithModelSuggestionRetry(ctx.client, {
-          path: { id: sessionID },
-          body: {
-            agent: CONSTRUCT_AGENT,
-            tools: {
-              task: false,
+        await promptNativeWithModelSuggestionRetry(ctx.session, {
+          sessionID,
+          agent: CONSTRUCT_AGENT,
+          tools: {
+            task: false,
 
-              look_at: false,
-              read: false,
-            },
-            parts: [
-              { type: "text", text: prompt },
-              filePart,
-            ],
-            ...(agentModel ? { model: { providerID: agentModel.providerID, modelID: agentModel.modelID } } : {}),
-            ...(agentVariant ? { variant: agentVariant } : {}),
+            look_at: false,
+            read: false,
           },
+          parts: [
+            { type: "text", text: prompt },
+            filePart,
+          ],
+          ...(agentModel ? { model: { providerID: agentModel.providerID, modelID: agentModel.modelID } } : {}),
+          ...(agentVariant ? { variant: agentVariant } : {}),
         })
       } catch (promptError) {
         log(`[look_at] Prompt error (ignored, will still fetch messages):`, promptError)
@@ -131,16 +129,14 @@ Original error: ${createResult.error}`
 
       log(`[look_at] Fetching messages from session ${sessionID}...`)
 
-      const messagesResult = await ctx.client.session.messages({
-        path: { id: sessionID },
-      })
-
-      if (messagesResult.error) {
-        log(`[look_at] Messages error:`, messagesResult.error)
-        return `Error: Failed to get messages: ${messagesResult.error}`
+      let messages: SessionMessage[]
+      try {
+        messages = await fetchSessionMessages(ctx, sessionID)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        log(`[look_at] Messages error:`, message)
+        return `Error: Failed to get messages: ${message}`
       }
-
-      const messages = messagesResult.data
       log(`[look_at] Got ${messages.length} messages`)
 
       const responseText = extractLatestAssistantText(messages)

@@ -4,7 +4,8 @@ import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
-import type { BackgroundOutputClient, BackgroundOutputManager } from "./clients"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import type { BackgroundOutputManager } from "./clients"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"
@@ -41,7 +42,7 @@ function appendTimeoutNote(output: string, timeoutMs: number): string {
   return `${output}\n\n> **Timed out waiting** after ${timeoutMs}ms. Task is still running; showing latest available output.`
 }
 
-export function createBackgroundOutput(manager: BackgroundOutputManager, client: BackgroundOutputClient): ToolDefinition {
+export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): ToolDefinition {
   return tool({
     description: BACKGROUND_OUTPUT_DESCRIPTION,
     args: {

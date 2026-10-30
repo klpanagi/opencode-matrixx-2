@@ -20,7 +20,7 @@ describe("createBackgroundOutput", () => {
 
   const mockClient = {
     session: {
-      messages: mock(() => Promise.resolve({ data: [] })),
+      context: mock(() => Promise.resolve({ messages: [] })),
     },
   } as unknown as PluginInput["client"]
 

@@ -44,18 +44,16 @@ export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/too
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { lspManager }
 
-import type { PluginInput, ToolDefinition } from "@opencode-ai/plugin"
+import type { ToolDefinition } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../features/background-agent"
+import type { SessionContextCarrier } from "../shared/session-context-source"
 import {
-  type BackgroundCancelClient,
   type BackgroundOutputManager,
   createBackgroundCancel,
   createBackgroundOutput,
   createBackgroundRevive,
   createBackgroundWaitAll,
 } from "./background-task"
-
-type OpencodeClient = PluginInput["client"]
 
 export { createAssemblyTool } from "./assembly/tools"
 export { createDelegateTask, resolveSystemDefaultModel } from "./delegate-task"
@@ -71,14 +69,13 @@ export {
 
 export function createBackgroundTools(
   manager: BackgroundManager,
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   directory: string,
 ): Record<string, ToolDefinition> {
   const outputManager: BackgroundOutputManager = manager
-  const cancelClient: BackgroundCancelClient = client
   return {
     background_output: createBackgroundOutput(outputManager, client),
-    background_cancel: createBackgroundCancel(manager, cancelClient),
+    background_cancel: createBackgroundCancel(manager, client),
     background_revive: createBackgroundRevive(manager, directory),
     background_wait_all: createBackgroundWaitAll(manager),
   }

@@ -1,8 +1,7 @@
 import type { BackgroundTask } from "../../features/background-agent"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
 import type { ContentPart, SessionMessage } from "../../shared/session-message"
 import { contentOf, roleOf } from "../../shared/session-message"
-import type { BackgroundOutputClient, BackgroundOutputMessagesResult } from "./clients"
-import { extractMessages, getErrorMessage } from "./session-messages"
 import { formatTaskStatus } from "./task-status-format"
 import { formatMessageTime } from "./time-format"
 import { truncateText } from "./truncate-text"
@@ -37,7 +36,7 @@ function extractToolResultText(part: ContentPart): string[] {
 
 export async function formatFullSession(
   task: BackgroundTask,
-  client: BackgroundOutputClient,
+  client: SessionContextCarrier,
   options: {
     includeThinking: boolean
     messageLimit?: number
@@ -50,18 +49,12 @@ export async function formatFullSession(
     return formatTaskStatus(task)
   }
 
-  const messagesResult: BackgroundOutputMessagesResult = await client.session.messages({
-    path: { id: task.sessionID },
-  })
-
-  const errorMessage = getErrorMessage(messagesResult)
-  if (errorMessage) {
-    return `Error fetching messages: ${errorMessage}`
-  }
-
-  const rawMessages = extractMessages(messagesResult)
-  if (!Array.isArray(rawMessages)) {
-    return "Error fetching messages: invalid response"
+  let rawMessages: SessionMessage[]
+  try {
+    rawMessages = await fetchSessionMessages(client, task.sessionID)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return `Error fetching messages: ${message}`
   }
 
   const sortedMessages = [...rawMessages].sort((a, b) => {

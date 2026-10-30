@@ -4,11 +4,11 @@ import { describe, expect, test } from "bun:test"
 import type { ToolContext } from "@opencode-ai/plugin/tool"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import type { BackgroundTask, BackgroundTaskStatus } from "../../../src/features/background-agent/types"
+import type { SessionContextCarrier } from "../../../src/shared/session-context-source"
 import { createBackgroundCancel } from "../../../src/tools/background-task/create-background-cancel"
 import { createBackgroundOutput } from "../../../src/tools/background-task/create-background-output"
 import type {
   BackgroundCancelClient,
-  BackgroundOutputClient,
   BackgroundOutputManager,
 } from "../../../src/tools/background-task/tools"
 import { formatTaskStatus } from "../../../src/tools/background-task/task-status-format"
@@ -53,10 +53,10 @@ function createMockManager(task: BackgroundTask): BackgroundOutputManager {
   }
 }
 
-function createMockClient(): BackgroundOutputClient {
+function createMockClient(): SessionContextCarrier {
   return {
     session: {
-      messages: async () => ({ data: [] }),
+      context: async () => ({ messages: [] }),
     },
   }
 }

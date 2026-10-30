@@ -46,7 +46,7 @@ import {
 import { setContextModeForPrompts } from "../shared/context-mode-enforcement"
 import { switchProfile } from "../shared/dcp-switch-profile"
 import { createFirstMessageVariantGate } from "../shared/first-message-variant"
-import type { NativePluginContext } from "../shared/session-context-source"
+import type { NativePluginContext, SessionContextCarrier } from "../shared/session-context-source"
 import { resolveTasksConfig } from "../shared/task-system-gating"
 import type { BuiltinSkill } from "../skills"
 import { registerSkillTransform } from "../skills/skills.transform"
@@ -230,7 +230,7 @@ export function setupChatHooks(args: {
 
 /** Tool domain: execute guards and tool definition passthrough. */
 export function setupToolHooks(args: {
-  ctx: PluginContext
+  ctx: PluginContext & SessionContextCarrier
   hooks: DomainHooks
 }): Pick<Hooks, "tool.execute.before" | "tool.execute.after" | "tool.definition"> {
   const { ctx, hooks } = args

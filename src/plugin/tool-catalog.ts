@@ -83,7 +83,7 @@ export function createToolCatalog(args: {
 }): ToolCatalogResult {
   const { ctx, pluginConfig, managers, skillContext, availableCategories, systemDefaultModel } = args
 
-  const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx.client, ctx.directory)
+  const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx, ctx.directory)
 
   const isMultimodalLookerEnabled = isConstructAgentEnabled(pluginConfig.disabled_agents)
   const toolGating = pluginConfig.tool_gating

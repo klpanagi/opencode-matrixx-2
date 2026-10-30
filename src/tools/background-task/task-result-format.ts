@@ -1,15 +1,15 @@
 import type { BackgroundTask } from "../../features/background-agent"
 import { formatDuration } from "../../shared"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
 import { consumeNewMessages } from "../../shared/session-cursor"
+import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, roleOf } from "../../shared/session-message"
-import type { BackgroundOutputClient, BackgroundOutputMessagesResult } from "./clients"
-import { extractMessages, getErrorMessage } from "./session-messages"
 
 function getTimeString(value: unknown): string {
   return typeof value === "string" ? value : ""
 }
 
-export async function formatTaskResult(task: BackgroundTask, client: BackgroundOutputClient): Promise<string> {
+export async function formatTaskResult(task: BackgroundTask, client: SessionContextCarrier): Promise<string> {
   if (task.compactedResult) {
     const duration = formatDuration(task.startedAt ?? new Date(), task.completedAt)
     return `Task Result
@@ -27,17 +27,14 @@ ${task.compactedResult}`
     return `Error: Task has no sessionID`
   }
 
-  const messagesResult: BackgroundOutputMessagesResult = await client.session.messages({
-    path: { id: task.sessionID },
-  })
-
-  const errorMessage = getErrorMessage(messagesResult)
-  if (errorMessage) {
-    return `Error fetching messages: ${errorMessage}`
+  let messages: SessionMessage[]
+  try {
+    messages = await fetchSessionMessages(client, task.sessionID)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return `Error fetching messages: ${message}`
   }
-
-  const messages = extractMessages(messagesResult)
-  if (!Array.isArray(messages) || messages.length === 0) {
+  if (messages.length === 0) {
     return `Task Result
 
 Task ID: ${task.id}
