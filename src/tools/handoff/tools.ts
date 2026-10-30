@@ -1,5 +1,6 @@
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { stateRootFromPluginContext } from "../../shared/state-root"
 import { handleArchive } from "./archive-handler"
 import { HANDOFF_DESCRIPTION } from "./constants"
@@ -43,7 +44,7 @@ type HandoffToolArgs = {
  */
 export function createHandoffTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
   const stateRoot = stateRootFromPluginContext(ctx)
-  const handoff: MatrixxToolDefinition = tool({
+  const handoff: MatrixxToolDefinition = defineTool("handoff", {
     description: HANDOFF_DESCRIPTION,
     args: {
       action: tool.schema

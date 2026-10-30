@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { atomicWrite } from "../../features/mission-state/plan-storage"
 import {
@@ -49,7 +50,7 @@ function editTouchesCanonicalRegion(edits: Array<Record<string, unknown>>, origi
 }
 
 export function createPlanUpdateTool(ctx?: MatrixxContext, postApply?: PostApplyHook, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
-  return tool({
+  return defineTool("plan_update", {
     description: `Update a plan file under .matrixx/plans/*.md via hashline edits. Delegates to executeHashlineEditTool scoped to PLANS_DIR. Requires LINE#ID anchors, validates file exists. Re-validates the contract after the edit (WARN-first warnings), rejects edits that push the file past ${cap} bytes without persisting, and injects front-matter once when absent. SECTION-SCOPED: an edit may name \`section\` instead of hand-computing line numbers — the target's line range is re-derived from a fresh parse at write time (no line number is ever persisted), and the supplied \`contentHash\` from plan_read gates the section as a whole. A changed section is refused with section_stale naming both hashes; an unknown or renamed id is section_not_found listing the ids this plan has; a repeated section needs sectionIndex.`,
     args: {
       filePath: tool.schema.string().describe("Absolute path to the file to edit (must be inside .matrixx/plans, kebab-case .md)"),

@@ -1,10 +1,11 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatApplyResult, formatPrepareRenameResult } from "./lsp-formatters"
 import type { PrepareRenameDefaultBehavior, PrepareRenameResult, WorkspaceEdit } from "./types"
 import { applyWorkspaceEdit } from "./workspace-edit"
 
-export const lsp_prepare_rename: MatrixxToolDefinition = tool({
+export const lsp_prepare_rename: MatrixxToolDefinition = defineTool("lsp_prepare_rename", {
   description: "Check if rename is valid. Use BEFORE lsp_rename.",
   args: {
     filePath: tool.schema.string(),
@@ -28,7 +29,7 @@ export const lsp_prepare_rename: MatrixxToolDefinition = tool({
   },
 })
 
-export const lsp_rename: MatrixxToolDefinition = tool({
+export const lsp_rename: MatrixxToolDefinition = defineTool("lsp_rename", {
   description: "Rename symbol across entire workspace. APPLIES changes to all files.",
   args: {
     filePath: tool.schema.string(),

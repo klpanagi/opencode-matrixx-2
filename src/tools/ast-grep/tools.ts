@@ -1,5 +1,6 @@
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runSg } from "./cli"
 import { CLI_LANGUAGES } from "./constants"
 import { getPatternHint } from "./pattern-hints"
@@ -19,7 +20,7 @@ async function showOutputToUser(context: unknown, output: string): Promise<void>
 }
 
 export function createAstGrepTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
-  const ast_grep_search: MatrixxToolDefinition = tool({
+  const ast_grep_search: MatrixxToolDefinition = defineTool("ast_grep_search", {
     description: AST_GREP_SEARCH_DESCRIPTION,
     args: {
       pattern: tool.schema.string().describe(AST_GREP_SEARCH_PATTERN_PARAM),
@@ -57,7 +58,7 @@ export function createAstGrepTools(ctx: MatrixxContext): Record<string, MatrixxT
     },
   })
 
-  const ast_grep_replace: MatrixxToolDefinition = tool({
+  const ast_grep_replace: MatrixxToolDefinition = defineTool("ast_grep_replace", {
     description: AST_GREP_REPLACE_DESCRIPTION,
     args: {
       pattern: tool.schema.string().describe("AST pattern to match"),

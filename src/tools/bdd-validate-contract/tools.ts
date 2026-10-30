@@ -1,5 +1,6 @@
 import * as fsp from "node:fs/promises"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { ContractSchema } from "../../features/bdd/schema"
 
 /**
@@ -22,7 +23,7 @@ import { ContractSchema } from "../../features/bdd/schema"
  *                                             unreadable, or not JSON
  */
 export function createBddValidateContractTool(): MatrixxToolDefinition {
-  return tool({
+  return defineTool("bdd_validate_contract", {
     description:
       "Read a contract JSON file from disk and validate it against " +
       "ContractSchema. Returns { success, contract } on pass or " +

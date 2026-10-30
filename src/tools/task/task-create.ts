@@ -1,5 +1,5 @@
 import type { MatrixxContext } from "../../plugin/context";
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { z } from "zod";
 import type { MatrixxConfig } from "../../config/schema";
 import {
@@ -31,7 +31,7 @@ export function createTaskCreateTool(
   config: Partial<MatrixxConfig>,
   ctx?: MatrixxContext,
 ): MatrixxToolDefinition {
-  return tool({
+  return defineTool("task_create", {
     description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Create a new task with auto-generated ID and threadID recording.
 

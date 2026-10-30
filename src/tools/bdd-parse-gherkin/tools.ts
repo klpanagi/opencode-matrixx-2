@@ -2,7 +2,8 @@ import crypto from "node:crypto"
 import * as fs from "node:fs"
 import { generateMessages } from "@cucumber/gherkin"
 import { SourceMediaType } from "@cucumber/messages"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 /**
  * Recursively convert a value to a plain JSON-serializable object.
@@ -25,7 +26,7 @@ function toPlainObject(value: unknown, includeSourceMap: boolean): unknown {
  * Create a tool that parses Gherkin .feature files into structured JSON AST.
  */
 export function createBddParseGherkinTool(): MatrixxToolDefinition {
-  return tool({
+  return defineTool("bdd_parse_gherkin", {
     description: `Parse a Gherkin .feature file into a structured JSON AST.
 
 Returns a JSON object with:

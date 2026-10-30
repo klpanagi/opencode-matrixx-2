@@ -1,11 +1,12 @@
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { githubSearch } from "./cli"
 import { MAX_LIMIT } from "./constants"
 import { formatGithubSearchResult } from "./result-formatter"
 
 export function createGithubSearchTools(_ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
-  const github_search: MatrixxToolDefinition = tool({
+  const github_search: MatrixxToolDefinition = defineTool("github_search", {
     description:
       "Search public GitHub code using local CLIs only (gh, git, rg). " +
       "No third-party remote services. " +

@@ -1,4 +1,5 @@
-import { type MatrixxToolContext, type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolContext, type MatrixxToolDefinition } from "../shared/define-tool"
 import { executeHashlineEditTool } from "./hashline-edit-executor"
 import type { RawHashlineEdit } from "./normalize-edits"
 import { HASHLINE_EDIT_DESCRIPTION } from "./tool-description"
@@ -15,7 +16,7 @@ function isPlansPath(filePath: string): boolean {
 }
 
 export function createHashlineEditTool(): MatrixxToolDefinition {
-  return tool({
+  return defineTool("edit", {
     description: HASHLINE_EDIT_DESCRIPTION,
     args: {
       filePath: tool.schema.string().describe("Absolute path to the file to edit"),

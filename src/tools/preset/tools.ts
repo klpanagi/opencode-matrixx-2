@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config"
 import type { ModelPreset } from "../../config/schema/model-presets"
 import { getSessionPreset, setSessionPreset } from "../../features/preset-state/manager"
@@ -146,7 +147,7 @@ function runPresetCommand(input: {
 }
 
 export function createPresetTool(options?: PresetToolOptions): Record<string, MatrixxToolDefinition> {
-  const preset: MatrixxToolDefinition = tool({
+  const preset: MatrixxToolDefinition = defineTool("preset", {
     description:
       "Manage model presets: list available presets, show a preset's model assignments, " +
       "or set the active preset for the current session. `set <name>` switches delegate-task " +

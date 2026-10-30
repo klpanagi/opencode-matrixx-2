@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { log } from "../../shared"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
@@ -77,7 +78,7 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): M
     void buildDescription()
   }
 
-  return tool({
+  return defineTool("slashcommand", {
     get description() {
       return cachedDescription ?? TOOL_DESCRIPTION_PREFIX
     },

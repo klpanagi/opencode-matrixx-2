@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config/schema"
 import type { NativePluginContext } from "../../shared/session-context-source"
 import {
@@ -42,7 +43,7 @@ export function createSessionManagerTools(
   setStorageDirectory(ctx.directory)
   setStorageConfig(pluginConfig)
 
-  const session_list: MatrixxToolDefinition = tool({
+  const session_list: MatrixxToolDefinition = defineTool("session_list", {
     description: SESSION_LIST_DESCRIPTION,
     args: {
       limit: tool.schema.number().optional().describe("Maximum number of sessions to return"),
@@ -71,7 +72,7 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_read: MatrixxToolDefinition = tool({
+  const session_read: MatrixxToolDefinition = defineTool("session_read", {
     description: SESSION_READ_DESCRIPTION,
     args: {
       session_id: tool.schema.string().describe("Session ID to read"),
@@ -107,7 +108,7 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_search: MatrixxToolDefinition = tool({
+  const session_search: MatrixxToolDefinition = defineTool("session_search", {
     description: SESSION_SEARCH_DESCRIPTION,
     args: {
       query: tool.schema.string().describe("Search query string"),
@@ -148,7 +149,7 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_info: MatrixxToolDefinition = tool({
+  const session_info: MatrixxToolDefinition = defineTool("session_info", {
     description: SESSION_INFO_DESCRIPTION,
     args: {
       session_id: tool.schema.string().describe("Session ID to inspect"),

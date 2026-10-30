@@ -1,5 +1,6 @@
 import { existsSync, statSync } from "node:fs"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { countPlanProgressFromContent, readPlanFile } from "../../features/mission-state"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { readPlanFileSpan } from "../../features/mission-state/plan-storage"
@@ -29,7 +30,7 @@ function truncationHint(shown: number, total: number): string {
 }
 
 export function createPlanTasksTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
-  return tool({
+  return defineTool("plan_tasks", {
     description: `Return a compact manifest for a plan file: filePath, progress (total/completed/remaining/isComplete/needsTriage), numbered tasks (n, title, checked, line, LINE#ID anchor) and definition-of-done lines. Does NOT emit the plan body — use plan_read for content. A plan over the ${cap}-byte cap still yields a manifest, marked degraded:true, because this tool never reads the body into your context; the manifest itself is clamped to ${MAX_PLAN_READ_RENDERED_BYTES} bytes and reports what it dropped. The cap is still enforced on every write.`,
     args: {
       filePath: tool.schema

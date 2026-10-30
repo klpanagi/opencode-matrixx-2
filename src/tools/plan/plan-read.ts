@@ -1,5 +1,6 @@
 import { existsSync, statSync } from "node:fs"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { readPlanFile, readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import type { MatrixxContext } from "../../plugin/context"
@@ -27,7 +28,7 @@ function renderHashline(lines: string[], startIndex: number): string {
 }
 
 export function createPlanReadTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
-  return tool({
+  return defineTool("plan_read", {
     description: `Read a plan file from .matrixx/plans/*.md, returning EXACTLY ONE payload for the selected format: 'hashline' (default; 1#AB|content anchors for plan_update) or 'content' (raw lines) — never both. Paginate with offset (1-based start line, inclusive) and limit (line count); returned anchors stay absolute. PRECEDENCE: section WINS over offset/limit — when both are supplied the section defines the base span and the response reports precedence:"section" plus the effective absolute startLine/endLine, so the conflict is never silent. Omit for a whole-file read. A single section over the rendered cap degrades to {truncated, outline-within-section, hint} — never a failure, never an empty payload. If the selected format's rendered payload exceeds ${MAX_PLAN_READ_RENDERED_BYTES} bytes, returns {truncated, outline, hint} with no payload — use plan_tasks for the manifest, or paginate with offset/limit. SIZE CEILING, not a wall: the ${cap}-byte cap is refused (file_too_large) for an unbounded WHOLE-FILE read only. Supply offset/limit or a section and the read is allowed past the cap, because a span is bounded by your own window; an over-large window is clamped to the ${MAX_PLAN_READ_RENDERED_BYTES}-byte rendered budget and answered with {clamped:true, limit:<effective line count>, hint} naming the effective window.`,
     args: {
       filePath: tool.schema

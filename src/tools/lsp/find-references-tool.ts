@@ -1,11 +1,12 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 import { DEFAULT_MAX_REFERENCES } from "./constants"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatLocation } from "./lsp-formatters"
 import type { Location } from "./types"
 
-export const lsp_find_references: MatrixxToolDefinition = tool({
+export const lsp_find_references: MatrixxToolDefinition = defineTool("lsp_find_references", {
   description: "Find ALL usages/references of a symbol across the entire workspace.",
   args: {
     filePath: tool.schema.string(),

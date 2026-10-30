@@ -1,6 +1,7 @@
 import { join } from "node:path"
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import { stateRootFromToolContext } from "../../shared/state-root"
@@ -13,7 +14,7 @@ function parseTaskId(id: string): string | null {
 }
 
 export function createTaskGetTool(config: Partial<MatrixxConfig>, ctx?: MatrixxContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("task_get", {
     description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Retrieve a task by ID.
 

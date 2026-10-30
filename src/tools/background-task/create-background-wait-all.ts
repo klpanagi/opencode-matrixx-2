@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { BACKGROUND_WAIT_ALL_DESCRIPTION } from "./constants"
@@ -12,7 +13,7 @@ function resolveToolCallID(ctx: ToolContextWithMetadata & { callID?: string; cal
 }
 
 export function createBackgroundWaitAll(manager: BackgroundManager): MatrixxToolDefinition {
-  return tool({
+  return defineTool("background_wait_all", {
     description: BACKGROUND_WAIT_ALL_DESCRIPTION,
     args: {
       timeout: tool.schema

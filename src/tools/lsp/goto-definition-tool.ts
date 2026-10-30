@@ -1,9 +1,10 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatLocation } from "./lsp-formatters"
 import type { Location, LocationLink } from "./types"
 
-export const lsp_goto_definition: MatrixxToolDefinition = tool({
+export const lsp_goto_definition: MatrixxToolDefinition = defineTool("lsp_goto_definition", {
   description: "Jump to symbol definition. Find WHERE something is defined.",
   args: {
     filePath: tool.schema.string(),

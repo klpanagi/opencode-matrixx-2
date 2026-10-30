@@ -1,6 +1,7 @@
 import { basename } from "node:path"
 import { pathToFileURL } from "node:url"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { fetchSessionMessages, type NativePluginContext } from "../../shared/session-context-source"
@@ -20,7 +21,7 @@ import type { LookAtArgs } from "./types"
 export { normalizeArgs, validateArgs } from "./look-at-arguments"
 
 export function createLookAt(ctx: NativePluginContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("look_at", {
     description: LOOK_AT_DESCRIPTION,
     args: {
       file_path: tool.schema.string().optional().describe("Absolute path to the file to analyze"),

@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
 import { resolve as resolvePath } from "node:path"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { type Contract, ContractSchema } from "../../features/bdd/schema"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
@@ -32,7 +33,7 @@ export function createBddPipelineTool(opts: {
   const parseTool = createBddParseGherkinTool()
   const createTool = createBddCreateContractTool()
 
-  return tool({
+  return defineTool("bdd_pipeline_run", {
     description: BDD_PIPELINE_DESCRIPTION,
     args: {
       featurePaths: tool.schema
@@ -115,7 +116,7 @@ function makeDeps(args: {
   return {
     parseFeature: async (path: string): Promise<ParseFeatureResult> => {
       const raw = await args.parseTool.execute({ filePath: path }, dummyCtx(args))
-      return JSON.parse(raw)
+      return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as ParseFeatureResult)
     },
     readFeatureSource: async (path: string): Promise<string> => {
       return fs.readFileSync(path, "utf-8")
@@ -131,7 +132,7 @@ function makeDeps(args: {
         },
         dummyCtx(args),
       )
-      return JSON.parse(raw)
+      return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as CreateContractResult)
     },
     enrichContract: async (contractPath: string): Promise<EnrichContractResult> => {
       return runEnrich(contractPath, args)

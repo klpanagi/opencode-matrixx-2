@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs"
 import { isAbsolute, join } from "node:path"
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { DASHBOARD_FLUX_VALIDATE_DESCRIPTION } from "./constants"
 import type { FluxValidationResult } from "./types"
 import { validateDashboard } from "./validator"
@@ -15,7 +16,7 @@ function errorResult(message: string): FluxValidationResult {
 }
 
 export function createDashboardFluxValidatorTool(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
-  const dashboard_flux_validate: MatrixxToolDefinition = tool({
+  const dashboard_flux_validate: MatrixxToolDefinition = defineTool("dashboard_flux_validate", {
     description: DASHBOARD_FLUX_VALIDATE_DESCRIPTION,
     args: {
       path: tool.schema

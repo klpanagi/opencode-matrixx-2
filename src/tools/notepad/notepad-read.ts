@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxContext } from "../../plugin/context"
 import { selectLines } from "../plan/plan-read-pagination"
 import { resolveDirectory } from "../plan/types"
@@ -7,7 +8,7 @@ import { NOTEPAD_ERROR_CODES } from "./constants"
 import { validateNotepadFilePath } from "./validation"
 
 export function createNotepadReadTool(ctx?: MatrixxContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("notepad_read", {
     description: `Read a notepad file from .matrixx/notepads/<bucket>/<file>.md (utf-8).\nValidated via validateNotepadFilePath. Missing file returns not_found. Paginate with offset (1-based) / limit.`,
     args: {
       planName: tool.schema.string().optional().describe("Bucket name (kebab-case). Omit for the adhoc bucket"),

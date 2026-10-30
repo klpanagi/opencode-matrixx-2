@@ -1,6 +1,7 @@
 import { isAbsolute, join } from "node:path"
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MARKET_SYMBOL_VALIDATE_DESCRIPTION } from "./constants"
 import type { SymbolFinding, SymbolValidationResult } from "./types"
 import { buildResult, validatePath, validateSymbols, validateText } from "./validator"
@@ -14,7 +15,7 @@ function errorResult(message: string): SymbolValidationResult {
 }
 
 export function createMarketSymbolValidatorTool(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
-  const market_symbol_validate: MatrixxToolDefinition = tool({
+  const market_symbol_validate: MatrixxToolDefinition = defineTool("market_symbol_validate", {
     description: MARKET_SYMBOL_VALIDATE_DESCRIPTION,
     args: {
       source: tool.schema.string().optional().describe("Inline source text to validate."),

@@ -1,10 +1,11 @@
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runRg } from "./cli"
 import { formatGrepResult } from "./result-formatter"
 
 export function createGrepTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
-  const grep: MatrixxToolDefinition = tool({
+  const grep: MatrixxToolDefinition = defineTool("grep", {
     description:
       "Fast content search tool with safety limits (60s timeout, 10MB output). " +
       "Searches file contents using regular expressions. " +

@@ -1,11 +1,12 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"
 import type { BackgroundCancelArgs } from "./types"
 
 export function createBackgroundCancel(manager: BackgroundManager, _client: SessionContextCarrier): MatrixxToolDefinition {
-  return tool({
+  return defineTool("background_cancel", {
     description: BACKGROUND_CANCEL_DESCRIPTION,
     args: {
       taskId: tool.schema.string().optional().describe("Task ID to cancel (required if all=false)"),

@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundTask } from "../../features/background-agent"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
@@ -43,7 +44,7 @@ function appendTimeoutNote(output: string, timeoutMs: number): string {
 }
 
 export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): MatrixxToolDefinition {
-  return tool({
+  return defineTool("background_output", {
     description: BACKGROUND_OUTPUT_DESCRIPTION,
     args: {
       task_id: tool.schema.string().describe("Task ID to get output from"),

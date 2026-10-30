@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import { stateRootFromToolContext } from "../../shared/state-root"
@@ -18,7 +19,7 @@ interface TaskSummary {
 }
 
 export function createTaskList(config: Partial<MatrixxConfig>, ctx?: MatrixxContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("task_list", {
     description: `[TRACKING — local progress records only. Spawns nothing, executes nothing.]
 List all active tasks with summary information.
     

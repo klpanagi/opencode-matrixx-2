@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
 import { TOOL_DESCRIPTION_NO_SKILLS, TOOL_DESCRIPTION_PREFIX } from "./constants"
 import type { SkillArgs, SkillInfo, SkillLoadOptions } from "./types"
@@ -53,7 +54,7 @@ export function createSkillTool(options: SkillLoadOptions = {}): MatrixxToolDefi
     getDescription()
   }
 
-  return tool({
+  return defineTool("skill", {
     get description() {
       return cachedDescription ?? TOOL_DESCRIPTION_PREFIX
     },

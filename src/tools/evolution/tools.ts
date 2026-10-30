@@ -1,7 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import type { MatrixxContext } from "../../plugin/context";
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { type EvolutionWriterConfig, EvolutionWriterConfigSchema } from "../../config/schema/evolution";
 import { KNOWLEDGE_KINDS } from "../../features/evolution/schema";
 import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store/trace-store";
@@ -118,7 +119,7 @@ export function createEvolutionTool(ctx: MatrixxContext, options?: EvolutionTool
   const pendingDir = path.resolve(projectRoot, PENDING_DIR);
   const evolutionDir = path.resolve(projectRoot, EVOLUTION_DIR);
 
-  const evolution: MatrixxToolDefinition = tool({
+  const evolution: MatrixxToolDefinition = defineTool("evolution", {
     description: EVOLUTION_DESCRIPTION,
     args: {
       action: tool.schema

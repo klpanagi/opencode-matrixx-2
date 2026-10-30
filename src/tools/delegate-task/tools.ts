@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type {
   AvailableCategory,
   AvailableSkill,
@@ -118,7 +119,7 @@ Prompts MUST be in English.
 
 Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the [TRACKING] family): those only write local T-{uuid} progress records and execute nothing. To get work done by another agent, use THIS tool (task).`
 
-  return tool({
+  return defineTool("task", {
     description,
     args: {
       load_skills: tool.schema.array(tool.schema.string()).describe("Skill names to inject. REQUIRED - pass [] if no skills needed."),

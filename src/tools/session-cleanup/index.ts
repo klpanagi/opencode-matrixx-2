@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared"
 import { isRecord } from "../../shared/record-type-guard"
 import type { SessionDomainLike } from "../../shared/session-facade"
@@ -89,7 +90,7 @@ function summarize(rows: SessionRow[], apply: boolean): string {
 }
 
 export function createSessionCleanupTool(ctx: SessionCleanupContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("session_cleanup", {
     description: SESSION_CLEANUP_DESCRIPTION,
     args: {
       apply: tool.schema

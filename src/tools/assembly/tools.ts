@@ -1,4 +1,5 @@
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { AssemblyConfig } from "../../config/schema/assembly"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { executeAssembly } from "./assembly-executor"
@@ -13,7 +14,7 @@ export interface AssemblyToolOptions {
 export function createAssemblyTool(
   options: AssemblyToolOptions,
 ): MatrixxToolDefinition {
-  return tool({
+  return defineTool("assembly", {
     description: TOOL_DESCRIPTION,
     args: {
       question: tool.schema.string().describe("The question or decision to reach consensus on"),

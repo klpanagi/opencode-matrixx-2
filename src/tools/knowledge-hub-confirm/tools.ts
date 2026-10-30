@@ -1,6 +1,7 @@
 import * as path from "node:path"
 import type { MatrixxContext } from "../../plugin/context"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { approveHubWrite, HUB_WRITE_APPROVAL_TTL_MS } from "../../hooks/knowledge-hub-guard/approvals"
 import { log } from "../../shared/logger"
 
@@ -16,7 +17,7 @@ const HOOK_NAME = "knowledge-hub-guard"
  * and the guard lets it through.
  */
 export function createKnowledgeHubConfirmTool(ctx: MatrixxContext): MatrixxToolDefinition {
-  return tool({
+  return defineTool("knowledge_hub_confirm", {
     description:
       "Record user confirmation for a knowledge-hub write. Call only after the user " +
       "explicitly approved the write via the question tool. Records a session-scoped " +

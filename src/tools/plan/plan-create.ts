@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs"
 import { basename } from "node:path"
-import { type MatrixxToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { countPlanProgressFromContent } from "../../features/mission-state"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { atomicWrite, ensurePlanDir, upsertMetadataComment } from "../../features/mission-state/plan-storage"
@@ -11,7 +12,7 @@ import { planSizeExceededFields } from "./error-codes"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
 export function createPlanCreateTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
-  return tool({
+  return defineTool("plan_create", {
     description: `Create a new plan file under .matrixx/plans/*.md.\nValidated via isAllowedFile(join(directory,PLANS_DIR), filePath) + .md + kebab-case.\nUses atomicWrite (.tmp.pid+rename) + upsertMetadataComment. Warns if file already exists.`,
     args: {
       filePath: tool.schema.string().describe("Path to plan file (must be inside .matrixx/plans, kebab-case .md)"),
@@ -40,7 +41,7 @@ export function createPlanCreateTool(ctx?: MatrixxContext, cap: number = MAX_PLA
         }
         const contract = validatePlanContract(content, cap)
         const id = basename(resolved, ".md")
-        const sessionId = (context as Record<string, unknown>)?.sessionID as string | undefined ?? "unknown"
+        const sessionId = (context as unknown as Record<string, unknown>)?.sessionID as string | undefined ?? "unknown"
         const { total, completed } = countPlanProgressFromContent(content)
         const meta = {
           id,
