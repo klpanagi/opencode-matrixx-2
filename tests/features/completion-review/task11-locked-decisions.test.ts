@@ -111,7 +111,12 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // migration — getLastAgentFromSession(sessionID, ctx.client) now receives
     // the native ctx directly (ctx.client died with the V1 shim); same sessionID,
     // same lookup. Execution path unchanged.
-    const FROZEN_MD5 = "a435a408839c29a94ddc8b6230355481"
+    // NOTE (v1-removal task 21, native event dispatch): hash advanced from
+    // a435a408839c29a94ddc8b6230355481. The V1 event envelope is gone —
+    // ({ event: { type, properties } }) => (event: V2Event) reading event.data,
+    // PluginInput -> NativePluginContext, and getLastAgentFromSession takes the
+    // native ctx. Execution path unchanged; Niobe remains the plan EXECUTOR.
+    const FROZEN_MD5 = "1ec435b50b9d276d2a69282f72adbb32"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")

@@ -34,7 +34,7 @@ mock.module("../../../src/shared/opencode-storage-detection", () => ({
   resetSqliteBackendCache: () => {},
 }))
 
-mock.module("/home/klpanagi/matrixx/src/shared/session-utils.ts", () => ({
+mock.module("../../../src/shared/session-utils", () => ({
   isCallerOrchestrator: async (sessionID: string | undefined) => {
     if (!sessionID) return false
     const { existsSync: fsExists, readdirSync, readFileSync } = require("node:fs")
@@ -717,10 +717,8 @@ describe("niobe hook", () => {
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt with continuation
@@ -738,10 +736,8 @@ describe("niobe hook", () => {
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -766,10 +762,8 @@ describe("niobe hook", () => {
 
       // when - main session fires idle but is NOT in mission's session_ids
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should NOT call prompt because session is not part of this mission
@@ -794,10 +788,8 @@ describe("niobe hook", () => {
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -822,10 +814,8 @@ describe("niobe hook", () => {
 
       // when - main session fires idle
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - mission state should be cleared
@@ -852,19 +842,15 @@ describe("niobe hook", () => {
 
       // when - send abort error then idle
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError", message: "aborted" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError", message: "aborted" },
         },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -896,10 +882,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should not call prompt
@@ -927,10 +911,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should not call prompt because continuation is stopped
@@ -955,25 +937,19 @@ describe("niobe hook", () => {
 
       // when - abort error, then message update, then idle
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError" },
         },
       })
       await hook.handler({
-        event: {
-          type: "message.updated",
-          properties: { info: { sessionID: MAIN_SESSION_ID, role: "user" } },
-        },
+        type: "message.updated",
+        data: { info: { sessionID: MAIN_SESSION_ID, role: "user" } },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt because abort state was cleared
@@ -998,10 +974,8 @@ describe("niobe hook", () => {
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should include progress
@@ -1033,10 +1007,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should NOT call prompt because agent does not match
@@ -1065,10 +1037,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should call prompt for morpheus
@@ -1095,22 +1065,16 @@ describe("niobe hook", () => {
 
       // when - fire multiple idle events in rapid succession (simulating infinite loop bug)
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should only call prompt ONCE due to debouncing
@@ -1140,15 +1104,15 @@ describe("niobe hook", () => {
 
       try {
         //#when - idle fires repeatedly, past cooldown each time
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
         //#then - should attempt only twice, then disable continuation
@@ -1187,7 +1151,7 @@ describe("niobe hook", () => {
       try {
         //#when - fail, succeed (reset), then fail twice (disable), then attempt again
         for (let i = 0; i < 5; i++) {
-          await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+          await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
           await flushMicrotasks()
           now += 6000
         }
@@ -1222,21 +1186,21 @@ describe("niobe hook", () => {
 
       try {
         //#when - two failures disables continuation, then compaction resets it
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
-        await hook.handler({ event: { type: "session.compacted", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.compacted", data: { sessionID: MAIN_SESSION_ID }  })
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
         //#then - 2 attempts + 1 after compaction (3 total)
@@ -1264,19 +1228,15 @@ describe("niobe hook", () => {
 
       // when - create abort state then delete
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError" },
         },
       })
       await hook.handler({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: MAIN_SESSION_ID } },
-        },
+        type: "session.deleted",
+        data: { info: { id: MAIN_SESSION_ID } },
       })
 
       // Re-create mission after deletion
@@ -1284,10 +1244,8 @@ describe("niobe hook", () => {
 
       // Trigger idle - should inject because state was cleaned up
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt because session state was cleaned

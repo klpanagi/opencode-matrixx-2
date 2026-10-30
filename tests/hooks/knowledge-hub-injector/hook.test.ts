@@ -161,7 +161,7 @@ describe("createKnowledgeHubInjectorHook", () => {
     await runTransform(hook, "ses-1");
     collector.consume("ses-1");
     //#when
-    await hook.event({ event: { type: "session.compacted", properties: { sessionID: "ses-1" } } });
+    await hook.event({  type: "session.compacted", data: { sessionID: "ses-1" }  });
     await runTransform(hook, "ses-1");
     //#then
     expect(collector.hasPending("ses-1")).toBe(true);
@@ -175,7 +175,7 @@ describe("createKnowledgeHubInjectorHook", () => {
     await runTransform(hook, "ses-1");
     collector.consume("ses-1");
     //#when
-    await hook.event({ event: { type: "session.deleted", properties: { info: { id: "ses-1" } } } });
+    await hook.event({  type: "session.deleted", data: { info: { id: "ses-1" } }  });
     await runTransform(hook, "ses-1");
     //#then
     expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER);

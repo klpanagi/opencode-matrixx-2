@@ -269,7 +269,7 @@ describe("category-skill-reminder hook", () => {
       expect(output1.output).toContain("[Category+Skill Reminder]")
 
       // when - session is deleted and new session starts
-      await hook.event({ event: { type: "session.deleted", properties: { info: { id: sessionID } } } })
+      await hook.event({  type: "session.deleted", data: { info: { id: sessionID } }  })
 
       const output2 = { title: "", output: "result2", metadata: {} }
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "4" }, output2)
@@ -295,7 +295,7 @@ describe("category-skill-reminder hook", () => {
       expect(output1.output).toContain("[Category+Skill Reminder]")
 
       // when - session is compacted
-      await hook.event({ event: { type: "session.compacted", properties: { sessionID } } })
+      await hook.event({  type: "session.compacted", data: { sessionID }  })
 
       const output2 = { title: "", output: "result2", metadata: {} }
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "4" }, output2)

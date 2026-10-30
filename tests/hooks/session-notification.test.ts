@@ -125,10 +125,8 @@ describe("session-notification", () => {
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // Wait for any pending timers
@@ -150,10 +148,8 @@ describe("session-notification", () => {
 
     // when - non-main session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: otherSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: otherSessionID },
     })
 
     // Wait for any pending timers
@@ -175,10 +171,8 @@ describe("session-notification", () => {
 
     // when - main session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for idle confirmation delay + buffer
@@ -201,10 +195,8 @@ describe("session-notification", () => {
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // Wait for any pending timers
@@ -228,18 +220,14 @@ describe("session-notification", () => {
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // when - unknown session goes idle (not main, not in subagentSessions)
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: unknownSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: unknownSessionID },
     })
 
     // Wait for any pending timers
@@ -261,18 +249,14 @@ describe("session-notification", () => {
 
     // when - session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // when - activity happens before delay completes
     await hook({
-      event: {
-        type: "tool.execute.before",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "tool.execute.before",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for original delay to pass
@@ -288,11 +272,9 @@ describe("session-notification", () => {
 
     // when - session.created event fires
     await hook({
-      event: {
-        type: "session.created",
-        properties: {
-          info: { id: "new-session", title: "Test Session" },
-        },
+      type: "session.created",
+      data: {
+        info: { id: "new-session", title: "Test Session" },
       },
     })
 
@@ -309,11 +291,9 @@ describe("session-notification", () => {
 
     // when - session.deleted event fires
     await hook({
-      event: {
-        type: "session.deleted",
-        properties: {
-          info: { id: "deleted-session" },
-        },
+      type: "session.deleted",
+      data: {
+        info: { id: "deleted-session" },
       },
     })
 
@@ -336,18 +316,14 @@ describe("session-notification", () => {
 
     // when - session goes idle, then message.updated fires
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     await hook({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: { sessionID: mainSessionID, role: "user", finish: false },
-        },
+      type: "message.updated",
+      data: {
+        info: { sessionID: mainSessionID, role: "user", finish: false },
       },
     })
 
@@ -370,17 +346,13 @@ describe("session-notification", () => {
 
     // when - session goes idle, then tool.execute.before fires
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     await hook({
-      event: {
-        type: "tool.execute.before",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "tool.execute.before",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for idle delay to pass
@@ -402,20 +374,16 @@ describe("session-notification", () => {
 
     // when - session goes idle twice
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for first notification
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for second potential notification
@@ -439,10 +407,8 @@ describe("session-notification", () => {
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -464,10 +430,8 @@ describe("session-notification", () => {
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -489,10 +453,8 @@ describe("session-notification", () => {
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -524,7 +486,7 @@ describe("session-notification", () => {
 
     //#when
     await hook({
-      event: { type: "session.idle", properties: { sessionID } },
+       type: "session.idle", data: { sessionID } ,
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -560,7 +522,7 @@ describe("session-notification", () => {
 
       //#when
       await hook({
-        event: { type: "session.idle", properties: { sessionID } },
+         type: "session.idle", data: { sessionID } ,
       })
       await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -590,7 +552,7 @@ describe("session-notification", () => {
     )
 
     //#when
-    await hook({ event: { type: "session.idle", properties: { sessionID } } })
+    await hook({  type: "session.idle", data: { sessionID }  })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     //#then
@@ -616,7 +578,7 @@ describe("session-notification", () => {
 
     //#when
     await expect(
-      hook({ event: { type: "session.idle", properties: { sessionID } } })
+      hook({  type: "session.idle", data: { sessionID }  })
     ).resolves.toBeUndefined()
     await new Promise((resolve) => setTimeout(resolve, 100))
 

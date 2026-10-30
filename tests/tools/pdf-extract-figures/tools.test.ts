@@ -1,4 +1,9 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
+import { createRequire } from "node:module"
+// Unmockable real fs handle (see preset/dcp suites): the mock below must stay
+// transparent for every path this suite does not own.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
+import * as fs from "node:fs"
 import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 
 // ---------------------------------------------------------------------------
@@ -42,21 +47,41 @@ let mockTempDir = "/tmp/mock-matrixx-pdf-extract-abc123"
 // Mock node:fs BEFORE importing module under test
 // ---------------------------------------------------------------------------
 const mockExistsSync = mock((path: string) => {
-  return mockFilesExist.has(path)
+  if (mockFilesExist.has(path)) return true
+  if (typeof path === "string" && (path.startsWith("/path/to/") || path.startsWith("/nonexistent/"))) return false
+  return realFs.existsSync(path)
 })
 
 const mockWriteFileSync = mock((path: string, data: string) => {
-  capturedWritePath = path
-  capturedWriteContent = data
+  if (typeof path === "string" && path.startsWith(mockTempDir)) {
+    capturedWritePath = path
+    capturedWriteContent = data
+    return
+  }
+  return realFs.writeFileSync(path, data)
 })
 
-const mockMkdtempSync = mock((_prefix: string) => mockTempDir)
+const mockMkdtempSync = mock((prefix: string) => {
+  if (typeof prefix === "string" && prefix.includes("matrixx-pdf-extract")) return mockTempDir
+  return realFs.mkdtempSync(prefix)
+})
 
-const mockUnlinkSync = mock((_path: string) => {})
+const mockUnlinkSync = mock((path: string) => {
+  // Transparent outside this suite's mock temp dir: the mock.module registry
+  // is process-wide, so later suites must observe real unlink behavior.
+  if (typeof path === "string" && path.startsWith(mockTempDir)) return
+  return realFs.unlinkSync(path)
+})
 
-const mockRmdirSync = mock((_path: string) => {})
+const mockRmdirSync = mock((path: string) => {
+  if (typeof path === "string" && path.startsWith(mockTempDir)) return
+  return realFs.rmdirSync(path)
+})
 
 mock.module("node:fs", () => ({
+  // Transparent for every other fs user in the shared test process: only the
+  // five helpers above are stubbed, the rest stay real.
+  ...fs,
   existsSync: mockExistsSync,
   writeFileSync: mockWriteFileSync,
   mkdtempSync: mockMkdtempSync,
@@ -104,6 +129,8 @@ function makeSpawnSyncResult(exitCode: number): SpawnSyncResult {
 // ---------------------------------------------------------------------------
 
 afterAll(() => {
+  // Leave the process-wide mock.module registry in a transparent state.
+  mockFilesExist = new Set()
   mock.restore()
 })
 

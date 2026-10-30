@@ -26,12 +26,16 @@
  * Uses spyOn (not `mock.module()`) to keep the test isolated from
  * CI's mock-heavy test list (see AGENTS.md "Tests that MUST be isolated").
  */
-import { describe, expect, spyOn, test } from "bun:test"
+import { afterEach, describe, expect, mock, spyOn, test } from "bun:test"
 import * as sessionAgentResolver from "../../src/plugin/session-agent-resolver"
 import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
 
 type CreatedHooks = Parameters<typeof createToolExecuteBeforeHandler>[0]["hooks"]
 type MatrixxContext = Parameters<typeof createToolExecuteBeforeHandler>[0]["ctx"]
+
+afterEach(() => {
+  mock.restore()
+})
 
 const FAST_FAIL_HOOK_NAMES = [
   // Wave 1: READ_ONLY

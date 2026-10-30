@@ -59,7 +59,7 @@ describe("matrix-loop event handler", () => {
 
 		// when - session.idle event triggers both detection AND verification
 		await hook.event({
-			event: { type: "session.idle", properties: { sessionID: "session-123" } },
+			 type: "session.idle", data: { sessionID: "session-123" } ,
 		})
 
 		// then - session.messages called exactly ONCE (H4: shared between detector + verifier)

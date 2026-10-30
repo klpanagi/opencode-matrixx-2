@@ -75,7 +75,7 @@ describe("unstable-agent-babysitter hook", () => {
     })
 
     // #when
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "main-1" } } })
+    await hook.event({  type: "session.idle", data: { sessionID: "main-1" }  })
 
     // #then
     expect(promptCalls.length).toBe(1)
@@ -110,7 +110,7 @@ describe("unstable-agent-babysitter hook", () => {
     })
 
     // #when
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "main-1" } } })
+    await hook.event({  type: "session.idle", data: { sessionID: "main-1" }  })
 
     // #then
     expect(promptCalls.length).toBe(1)
@@ -138,7 +138,7 @@ describe("unstable-agent-babysitter hook", () => {
     })
 
     // #when
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "main-1" } } })
+    await hook.event({  type: "session.idle", data: { sessionID: "main-1" }  })
 
     // #then
     expect(promptCalls.length).toBe(0)
@@ -162,8 +162,8 @@ describe("unstable-agent-babysitter hook", () => {
     Date.now = () => now
 
     // #when
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "main-1" } } })
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "main-1" } } })
+    await hook.event({  type: "session.idle", data: { sessionID: "main-1" }  })
+    await hook.event({  type: "session.idle", data: { sessionID: "main-1" }  })
 
     // #then
     expect(promptCalls.length).toBe(1)

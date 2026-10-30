@@ -217,10 +217,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - continuation should be injected
@@ -246,10 +244,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -296,18 +292,14 @@ describe("matrix-loop", () => {
       hook.startLoop("session-123", "Test task")
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID: "session-123", error: new Error("test") },
-        },
+        type: "session.error",
+        data: { sessionID: "session-123", error: new Error("test") },
       })
 
       // when - session goes idle immediately
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -321,10 +313,8 @@ describe("matrix-loop", () => {
 
       // when - session deleted
       await hook.event({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: "session-123" } },
-        },
+        type: "session.deleted",
+        data: { info: { id: "session-123" } },
       })
 
       // then - state should be cleared
@@ -338,10 +328,8 @@ describe("matrix-loop", () => {
 
       // when - different session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-456" },
       })
 
       // then - no continuation injected
@@ -371,10 +359,8 @@ describe("matrix-loop", () => {
 
       // when - a new session goes idle (different from the orphaned session in state)
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "new-session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "new-session-456" },
       })
 
       // then - orphaned state should be cleared
@@ -406,10 +392,8 @@ describe("matrix-loop", () => {
 
       // when - a different session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "new-session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "new-session-456" },
       })
 
       // then - state should NOT be cleared (original session still active)
@@ -442,10 +426,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -464,10 +446,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle (transcriptPath now derived from sessionID via getTranscriptPath)
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed, no continuation
@@ -489,10 +469,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed via API detection, no continuation
@@ -519,10 +497,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed via API detection, no continuation
@@ -556,10 +532,8 @@ describe("matrix-loop", () => {
 
       //#when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       //#then - completion promise in reasoning is ignored, continuation injected
@@ -578,10 +552,10 @@ describe("matrix-loop", () => {
 
       // when - multiple idle events
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - iteration incremented correctly
@@ -599,7 +573,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - continuation includes original task and promise
@@ -615,12 +589,10 @@ describe("matrix-loop", () => {
 
       // when - user aborts (Ctrl+C)
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: "session-123",
-            error: { name: "MessageAbortedError", message: "User aborted" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: "session-123",
+          error: { name: "MessageAbortedError", message: "User aborted" },
         },
       })
 
@@ -635,12 +607,10 @@ describe("matrix-loop", () => {
 
       // when - user aborts (Ctrl+C)
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: "session-123",
-            error: { name: "MessageAbortedError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: "session-123",
+          error: { name: "MessageAbortedError" },
         },
       })
 
@@ -649,7 +619,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle immediately (should work, no recovery mode)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - continuation should be injected (not blocked by recovery)
@@ -672,7 +642,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - loop should complete (promise found within last 3 assistant messages)
@@ -697,7 +667,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - loop should complete (scans all assistant messages backwards)
@@ -723,7 +693,7 @@ describe("matrix-loop", () => {
 
       // when - session B goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-B" } },
+         type: "session.idle", data: { sessionID: "session-B" } ,
       })
 
       // then - continuation should be injected for session B
@@ -743,10 +713,10 @@ describe("matrix-loop", () => {
       
       // Simulate some iterations
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
       expect(hook.getState()?.iteration).toBe(3)
       expect(promptCalls.length).toBe(2)
@@ -763,7 +733,7 @@ describe("matrix-loop", () => {
       // when - session goes idle
       promptCalls = [] // Reset to check new continuation
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
 
       // then - continuation should use new task
@@ -794,10 +764,8 @@ Output <promise>DONE</promise> when fully complete`
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should CONTINUE (user message completion promise is instructional, not actual)
@@ -825,10 +793,8 @@ Original task: Build something`
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should CONTINUE (continuation prompt text is not actual completion)
@@ -855,10 +821,8 @@ Original task: Build something`
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should complete (tool_result contains actual completion output)
@@ -881,10 +845,8 @@ Original task: Build something`
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - should complete via transcript (API not called when transcript succeeds)
@@ -904,7 +866,7 @@ Original task: Build something`
       hook.startLoop("test-id", "Build API", { ultrawork: true })
 
       // when - idle event triggered
-      await hook.event({ event: { type: "session.idle", properties: { sessionID: "test-id" } } })
+      await hook.event({  type: "session.idle", data: { sessionID: "test-id" }  })
 
       // then - ultrawork toast shown
       const completionToast = toastCalls.find(t => t.title === "ULTRAWORK LOOP COMPLETE!")
@@ -922,7 +884,7 @@ Original task: Build something`
       hook.startLoop("test-id", "Build API")
 
       // when - idle event triggered
-      await hook.event({ event: { type: "session.idle", properties: { sessionID: "test-id" } } })
+      await hook.event({  type: "session.idle", data: { sessionID: "test-id" }  })
 
       // then - regular toast shown
       expect(toastCalls.some(t => t.title === "Matrix Loop Complete!")).toBe(true)
@@ -935,7 +897,7 @@ Original task: Build something`
 
       // when - session goes idle (continuation triggered)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - prompt should start with "ultrawork "
@@ -950,7 +912,7 @@ Original task: Build something`
 
       // when - session goes idle (continuation triggered)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - prompt should NOT start with "ultrawork "
@@ -1016,7 +978,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API", { ultrawork: true })
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(sessionCreateCalls.length).toBe(0)
@@ -1042,7 +1004,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).toBeNull()
@@ -1072,7 +1034,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).not.toBeNull()
@@ -1108,7 +1070,7 @@ Original task: Build something`
       writeState(TEST_DIR, state)
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).toBeNull()
@@ -1128,7 +1090,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(sessionCreateCalls.length).toBe(0)
@@ -1160,7 +1122,7 @@ Original task: Build something`
       // when - session goes idle (API will throw)
       const startTime = Date.now()
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
       const elapsed = Date.now() - startTime
 

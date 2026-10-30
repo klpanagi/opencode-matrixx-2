@@ -1,4 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
+import { appendFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+// Shared log file (mirrors src/shared/logger.ts): the per-test logger mock below is
+// process-wide, so captured calls also forward to the real file.
+const LOG_FILE = join(tmpdir(), "matrixx.log")
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../../src/config"
 import * as loggerModule from "../../../src/shared/logger"
 import { SessionCategoryRegistry } from "../../../src/hooks/runtime-fallback/session-category-registry"
@@ -22,6 +28,11 @@ describe("runtime-fallback", () => {
       ...loggerModule,
       log: (msg: string, data?: unknown) => {
         logCalls.push({ msg, data })
+        // Transparent from birth: also forward to the real log file so later
+        // suites that assert on /tmp/matrixx.log keep working.
+        try {
+          appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg} ${data !== undefined ? JSON.stringify(data) : ""}\n`)
+        } catch {}
       },
     }))
 
@@ -33,6 +44,7 @@ describe("runtime-fallback", () => {
     SessionCategoryRegistry.clear()
     mock.restore()
   })
+
 
   function createMockMatrixxContext(overrides?: {
     session?: {
@@ -98,17 +110,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429, message: "Rate limit exceeded" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429, message: "Rate limit exceeded" } },
       })
 
       //#then
@@ -124,17 +132,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "openai/gpt-5.4" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "openai/gpt-5.4" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 503, message: "Service unavailable" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 503, message: "Service unavailable" } },
       })
 
       //#then
@@ -149,17 +153,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 400, message: "Bad request" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 400, message: "Bad request" } },
       })
 
       //#then
@@ -174,22 +174,18 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: {
-              name: "AI_LoadAPIKeyError",
-              message:
-                "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
-            },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: {
+            name: "AI_LoadAPIKeyError",
+            message:
+              "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
           },
         },
       })
@@ -218,22 +214,18 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: {
-              name: "AI_LoadAPIKeyError",
-              message:
-                "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
-            },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: {
+            name: "AI_LoadAPIKeyError",
+            message:
+              "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
           },
         },
       })
@@ -255,19 +247,15 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "kimi-for-coding/k2p5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "kimi-for-coding/k2p5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { message: "You've reached your usage limit for this month. Please upgrade to continue." },
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { message: "You've reached your usage limit for this month. Please upgrade to continue." },
         },
       })
 
@@ -289,17 +277,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429, message: "Rate limit" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429, message: "Rate limit" } },
       })
 
       //#then
@@ -318,10 +302,8 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429 } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429 } },
       })
 
       //#then
@@ -339,10 +321,8 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model } },
       })
 
       //#then
@@ -358,17 +338,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: sessionID } },
-        },
+        type: "session.deleted",
+        data: { info: { id: sessionID } },
       })
 
       //#then
@@ -384,13 +360,11 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { statusCode: 429 },
-            model: "anthropic/claude-opus-4-5",
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { statusCode: 429 },
+          model: "anthropic/claude-opus-4-5",
         },
       })
 
@@ -408,15 +382,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              error: { statusCode: 429, message: "Rate limit" },
-              model: "anthropic/claude-opus-4-5",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            error: { statusCode: 429, message: "Rate limit" },
+            model: "anthropic/claude-opus-4-5",
           },
         },
       })
@@ -433,15 +405,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "user",
-              error: { statusCode: 429 },
-              model: "anthropic/claude-opus-4-5",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "user",
+            error: { statusCode: 429 },
+            model: "anthropic/claude-opus-4-5",
           },
         },
       })
@@ -463,23 +433,19 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "github-copilot/claude-opus-4.7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "github-copilot/claude-opus-4.7" } },
       })
 
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              model: "github-copilot/claude-opus-4.7",
-              status:
-                "Too Many Requests: quota exceeded [retrying in ~2 weeks attempt #1]",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            model: "github-copilot/claude-opus-4.7",
+            status:
+              "Too Many Requests: quota exceeded [retrying in ~2 weeks attempt #1]",
           },
         },
       })
@@ -505,22 +471,18 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "openai/gpt-5.3-codex" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "openai/gpt-5.3-codex" } },
       })
 
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              model: "openai/gpt-5.3-codex",
-              status: "The usage limit has been reached [retrying in 27s attempt #6]",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            model: "openai/gpt-5.3-codex",
+            status: "The usage limit has been reached [retrying in 27s attempt #6]",
           },
         },
       })
@@ -559,23 +521,19 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 476,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 476,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
           },
         },
       })
@@ -614,38 +572,32 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 476,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 476,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
           },
         },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 475,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 55s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 475,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 55s attempt #1]",
           },
         },
       })
@@ -683,12 +635,10 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { statusCode: 429, message: "Rate limit exceeded" },
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { statusCode: 429, message: "Rate limit exceeded" },
         },
       })
 
@@ -719,17 +669,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "test-model" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "test-model" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 500 } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 500 } },
       })
 
       //#then

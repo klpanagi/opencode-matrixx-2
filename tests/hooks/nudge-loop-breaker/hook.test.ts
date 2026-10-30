@@ -10,10 +10,8 @@ type Activation = { sessionID: string; backoff: number }
 
 function stepEnded(text: string, sessionID = SESSION) {
   return {
-    event: {
-      type: "session.next.step.ended",
-      properties: { sessionID, assistantMessageID: "msg_x", text },
-    },
+    type: "session.next.step.ended",
+    data: { sessionID, assistantMessageID: "msg_x", text },
   }
 }
 
@@ -100,7 +98,7 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
     await hook.event({
-      event: { type: "session.next.tool.success", properties: { sessionID: SESSION, tool: "compress" } },
+       type: "session.next.tool.success", data: { sessionID: SESSION, tool: "compress" } ,
     })
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
@@ -120,7 +118,7 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
     await hook.event({
-      event: { type: "message.updated", properties: { sessionID: SESSION, info: { role: "user" } } },
+       type: "message.updated", data: { sessionID: SESSION, info: { role: "user" } } ,
     })
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))

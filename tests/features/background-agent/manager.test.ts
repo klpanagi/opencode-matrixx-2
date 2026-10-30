@@ -626,7 +626,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: {
           name: "UnknownError",
@@ -660,7 +660,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: { name: "UnknownError", message: "boom" },
       },
@@ -693,7 +693,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: { name: "UnknownError", message: "should not matter" },
       },
@@ -715,7 +715,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     const handler = () =>
       manager.handleEvent({
         type: "session.error",
-        properties: {
+        data: {
           sessionID: "ses_unknown",
           error: { name: "UnknownError", message: "Model not found" },
         },
@@ -856,7 +856,7 @@ describe("findNearestMessageExcludingCompaction reads each file once", () => {
           }
           return realReadFileSync(...(args as Parameters<typeof realReadFileSync>))
         },
-        readdirSync: (path: string) => realReaddirSync(path),
+        readdirSync: (...args: unknown[]) => realReaddirSync(...(args as Parameters<typeof realReaddirSync>)),
       }
       return wrapped as unknown as typeof realFsNs
     })

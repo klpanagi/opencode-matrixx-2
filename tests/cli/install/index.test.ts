@@ -1,6 +1,11 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
+import { createRequire } from "node:module"
 import { join } from "node:path"
 import { homedir } from "node:os"
+// Unmockable real fs: mock.module("node:fs") below is process-wide in bun.
+// createRequire bypasses the mock registry so afterAll can hand later
+// suites a transparent registry again.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
 
 // ---------------------------------------------------------------------------
 // Mock state for node:fs
@@ -51,6 +56,10 @@ beforeEach(() => {
 })
 
 afterAll(() => {
+  // mock.module("node:fs") above outlives mock.restore() and leaves a
+  // virtual fs (existsSync false for real paths, writes swallowed) behind.
+  // Re-register a transparent registry so later suites observe real fs.
+  mock.module("node:fs", () => realFs)
   mock.restore()
 })
 

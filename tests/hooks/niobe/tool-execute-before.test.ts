@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 
-import { describe, expect, mock, test } from "bun:test"
+import { afterAll, describe, expect, mock, test } from "bun:test"
 import type { MatrixxContext } from "../../../src/plugin/context"
 
 const ORCHESTRATOR_FLAG_KEY = "__niobeToolExecuteBeforeOrchestrator"
@@ -17,6 +17,11 @@ mock.module("../../../src/shared/session-utils", () => ({
 }))
 
 import { createToolExecuteBeforeHandler } from "../../../src/hooks/niobe/tool-execute-before"
+
+afterAll(() => {
+  mock.restore()
+  setOrchestrator(true)
+})
 
 function makeHandler() {
   const ctx = { client: {} } as unknown as MatrixxContext

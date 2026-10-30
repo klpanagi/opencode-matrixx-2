@@ -28,20 +28,18 @@ describe("context-window-monitor", () => {
 
     // Simulate message.updated event with token info
     await hook.event({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            role: "assistant",
-            sessionID,
-            providerID: "anthropic",
-            finish: true,
-            tokens: {
-              input: 50000,
-              output: 1000,
-              reasoning: 0,
-              cache: { read: 10000, write: 0 },
-            },
+      type: "message.updated",
+      data: {
+        info: {
+          role: "assistant",
+          sessionID,
+          providerID: "anthropic",
+          finish: true,
+          tokens: {
+            input: 50000,
+            output: 1000,
+            reasoning: 0,
+            cache: { read: 10000, write: 0 },
           },
         },
       },
@@ -84,20 +82,18 @@ describe("context-window-monitor", () => {
 
     // 700K input + 10K cache read = 710K, which is 71% of 1M limit
     await hook.event({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            role: "assistant",
-            sessionID,
-            providerID: "anthropic",
-            finish: true,
-            tokens: {
-              input: 700000,
-              output: 1000,
-              reasoning: 0,
-              cache: { read: 10000, write: 0 },
-            },
+      type: "message.updated",
+      data: {
+        info: {
+          role: "assistant",
+          sessionID,
+          providerID: "anthropic",
+          finish: true,
+          tokens: {
+            input: 700000,
+            output: 1000,
+            reasoning: 0,
+            cache: { read: 10000, write: 0 },
           },
         },
       },
@@ -119,20 +115,18 @@ describe("context-window-monitor", () => {
     const sessionID = "ses_vertex_anthropic_high_usage"
 
     await hook.event({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            role: "assistant",
-            sessionID,
-            providerID: "google-vertex-anthropic",
-            finish: true,
-            tokens: {
-              input: 700000,
-              output: 1000,
-              reasoning: 0,
-              cache: { read: 10000, write: 0 },
-            },
+      type: "message.updated",
+      data: {
+        info: {
+          role: "assistant",
+          sessionID,
+          providerID: "google-vertex-anthropic",
+          finish: true,
+          tokens: {
+            input: 700000,
+            output: 1000,
+            reasoning: 0,
+            cache: { read: 10000, write: 0 },
           },
         },
       },
@@ -158,26 +152,22 @@ describe("context-window-monitor", () => {
 
     // Cache some data
     await hook.event({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            role: "assistant",
-            sessionID,
-            providerID: "anthropic",
-            finish: true,
-            tokens: { input: 150000, output: 0, reasoning: 0, cache: { read: 10000, write: 0 } },
-          },
+      type: "message.updated",
+      data: {
+        info: {
+          role: "assistant",
+          sessionID,
+          providerID: "anthropic",
+          finish: true,
+          tokens: { input: 150000, output: 0, reasoning: 0, cache: { read: 10000, write: 0 } },
         },
       },
     })
 
     // Delete session
     await hook.event({
-      event: {
-        type: "session.deleted",
-        properties: { info: { id: sessionID } },
-      },
+      type: "session.deleted",
+      data: { info: { id: sessionID } },
     })
 
     // After deletion, no reminder should fire (cache gone, reminded set gone)
@@ -197,16 +187,14 @@ describe("context-window-monitor", () => {
     const sessionID = "ses_openai"
 
     await hook.event({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: {
-            role: "assistant",
-            sessionID,
-            providerID: "openai",
-            finish: true,
-            tokens: { input: 200000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-          },
+      type: "message.updated",
+      data: {
+        info: {
+          role: "assistant",
+          sessionID,
+          providerID: "openai",
+          finish: true,
+          tokens: { input: 200000, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
         },
       },
     })

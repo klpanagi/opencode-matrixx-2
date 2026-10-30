@@ -1,6 +1,9 @@
 import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test"
 import * as realFs from "node:fs"
+import { accessSync as realAccessSync } from "node:fs"
 import * as realFsPromises from "node:fs/promises"
+import { dirname, join } from "node:path"
+import { AGENTS_FILENAME, AGENTS_INJECTOR_STORAGE } from "../../../src/hooks/directory-agents-injector/constants"
 
 // Capture real readFile via require before mock.module replaces it
 // (mirrors the original readFileSync capture pattern)
@@ -12,14 +15,36 @@ const realReadFile: typeof realFsPromises.readFile = require("node:fs/promises")
 const realReadFileSync: typeof realFs.readFileSync = require("node:fs").readFileSync
 
 const readFileMock = mock(async (path: string, encoding: string) => {
-  if (typeof path === "string" && path.endsWith("AGENTS.md")) return "# AGENTS"
+  // Scoped to this suite's fake /repo/ fixtures: every other path delegates to
+  // the real fs so sibling suites sharing this process keep working.
+  if (typeof path === "string" && path.startsWith("/repo/") && path.endsWith("AGENTS.md")) return "# AGENTS"
   return realReadFile(path, encoding as BufferEncoding)
 })
 const readFileSyncMock = mock((path: string, encoding: string) => {
-  if (typeof path === "string" && path.endsWith("AGENTS.md")) return "# AGENTS"
+  if (typeof path === "string" && path.startsWith("/repo/") && path.endsWith("AGENTS.md")) return "# AGENTS"
   return realReadFileSync(path, encoding as BufferEncoding)
 })
-const findAgentsMdUpMock = mock((_: { startDir: string; rootDir: string }) => [] as string[])
+// Transparent base: replicates src/.../finder.ts (leaf-first walk, root skipped,
+// access-checked) so sibling suites linking the finder later observe real
+// behavior. Tests override per-test via mockReturnValueOnce; never references
+// the mocked module, so no self-recursion.
+const findAgentsMdUpMock = mock((input: { startDir: string; rootDir: string }) => {
+  const found: string[] = []
+  let current = input.startDir
+  for (;;) {
+    const isRootDir = current === input.rootDir
+    if (!isRootDir) {
+      const agentsPath = join(current, AGENTS_FILENAME)
+      try { realAccessSync(agentsPath); found.push(agentsPath) } catch {}
+    }
+    if (isRootDir) break
+    const parent = dirname(current)
+    if (parent === current) break
+    if (!parent.startsWith(input.rootDir)) break
+    current = parent
+  }
+  return found.reverse()
+})
 const resolveFilePathMock = mock((_: string, path: string) => path)
 const loadInjectedPathsMock = mock((_: string) => new Set<string>())
 const saveInjectedPathsMock = mock((_: string, __: Set<string>) => {})
@@ -42,6 +67,14 @@ mock.module("../../../src/hooks/directory-agents-injector/finder", () => ({
 mock.module("../../../src/hooks/directory-agents-injector/storage", () => ({
   loadInjectedPaths: loadInjectedPathsMock,
   saveInjectedPaths: saveInjectedPathsMock,
+  // Passthrough so sibling suites importing clearInjectedPaths still link.
+  // Implemented inline (no reference to the mocked module, so no self-recursion).
+  clearInjectedPaths: (sessionID: string) => {
+    try {
+      const filePath = join(AGENTS_INJECTOR_STORAGE, `${sessionID}.json`)
+      if (realFs.existsSync(filePath)) realFs.unlinkSync(filePath)
+    } catch {}
+  },
 }))
 
 const { processFilePathForAgentsInjection } = await import("../../../src/hooks/directory-agents-injector/injector")

@@ -71,10 +71,8 @@ describe("stop-continuation-guard", () => {
 
     // when - session is deleted
     await guard.event({
-      event: {
-        type: "session.deleted",
-        properties: { info: { id: sessionID } },
-      },
+      type: "session.deleted",
+      data: { info: { id: sessionID } },
     })
 
     // then - session should no longer be stopped (cleaned up)
@@ -91,10 +89,8 @@ describe("stop-continuation-guard", () => {
 
     // when - one session is deleted
     await guard.event({
-      event: {
-        type: "session.deleted",
-        properties: { info: { id: session2 } },
-      },
+      type: "session.deleted",
+      data: { info: { id: session2 } },
     })
 
     // then - other session should remain stopped

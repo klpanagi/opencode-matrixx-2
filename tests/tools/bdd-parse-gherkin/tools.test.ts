@@ -24,10 +24,14 @@ mock.module("node:fs", () => ({
     if (path === "/test/valid.feature") return VALID_FEATURE
     if (path === "/test/empty.feature") return EMPTY_FEATURE
     if (path === "/test/malformed.feature") return MALFORMED_FEATURE
-    // Non-existent file
-    const err = new Error(`ENOENT: no such file or directory, open '${path}'`) as NodeJS.ErrnoException
-    err.code = "ENOENT"
-    throw err
+    if (typeof path === "string" && path.startsWith("/test/")) {
+      // Non-existent file (scoped to this suite's fixture namespace so the
+      // mock stays transparent to every other suite in the process)
+      const err = new Error(`ENOENT: no such file or directory, open '${path}'`) as NodeJS.ErrnoException
+      err.code = "ENOENT"
+      throw err
+    }
+    return _originalReadFileSync(path as never, _encoding as never) as never
   },
 }))
 

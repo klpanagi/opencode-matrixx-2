@@ -1,5 +1,11 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import { readFileSync as realReadFileSync } from "node:fs"
+import { createRequire } from "node:module"
+// Unmockable handle: mock.module("node:fs") below poisons plain `import ... from
+// "node:fs"` bindings (live binding resolves to the mock, so delegating through
+// it recurses). createRequire bypasses the mock registry, keeping delegation safe
+// for sibling suites that share this process.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
+const realReadFileSync = realFs.readFileSync as (path: string, encoding: BufferEncoding) => string
 import { homedir } from "node:os"
 import { join } from "node:path"
 import { BUILTIN_DCP_PROFILES, DcpConfigSchema } from "../../src/config/schema/dcp"
@@ -10,18 +16,22 @@ import { BUILTIN_DCP_PROFILES, DcpConfigSchema } from "../../src/config/schema/d
 
 let capturedWriteData: string | null = null
 let writeCount = 0
-const mockExistsSync = mock((_path: string) => true)
-// DCP target mirrored from src/shared/dcp-switch-profile.ts (read-only routing key;
-// this suite never reads the real home file — the DCP path always throws or returns
-// canned content, every other path delegates to the real readFileSync so sibling
-// suites sharing this process keep working).
+const DCP_PLUGIN_DIR = join(homedir(), ".config", "opencode", "node_modules", "@tarquinen", "opencode-dcp")
 const dcpTargetPath = join(homedir(), ".config", "opencode", "dcp.jsonc")
+function defaultExistsBehavior(path: string): boolean {
+  if (typeof path === "string" && (path === dcpTargetPath || path === DCP_PLUGIN_DIR)) return true
+  return realFs.existsSync(path)
+}
+const mockExistsSync = mock(defaultExistsBehavior)
 function defaultReadBehavior(path: string, encoding: BufferEncoding): string {
   if (path !== dcpTargetPath) return realReadFileSync(path, encoding)
   throw new Error("ENOENT: no such file or directory")
 }
 const mockReadFileSync = mock(defaultReadBehavior)
-const mockWriteFileSync = mock((_path: string, data: string) => {
+const mockWriteFileSync = mock((path: string, data: string) => {
+  if (typeof path === "string" && path !== dcpTargetPath) {
+    return (realFs.writeFileSync as (p: string, d: string) => void)(path, data)
+  }
   capturedWriteData = data
   writeCount += 1
 })
@@ -51,6 +61,11 @@ type AnyRecord = Record<string, unknown>
 // ---------------------------------------------------------------------------
 
 afterAll(() => {
+  // mock.module("node:fs") above is process-wide and outlives mock.restore():
+  // leave the shared registry in the delegating default state so later suites
+  // observe real-fs behavior for paths this suite does not own.
+  mockExistsSync.mockImplementation(defaultExistsBehavior)
+  mockReadFileSync.mockImplementation(defaultReadBehavior)
   mock.restore()
 })
 

@@ -1,4 +1,9 @@
 import { afterAll, afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
+import { createRequire } from "node:module"
+// Unmockable real fs: the per-test mock.module("node:fs") below is process-wide.
+// createRequire bypasses the mock registry so afterAll can hand later
+// suites a transparent registry again.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
 
 let mockBunSpawnSyncCalls: Array<{ cmd: string[] }> = []
 let mockBunSpawnSyncResults: Array<{ exitCode: number; stdout: string; stderr: string }> = []
@@ -60,6 +65,9 @@ afterEach(() => {
 
 afterAll(() => {
   Bun.spawnSync = origSpawnSync
+  // The per-test mock.module("node:fs") outlives mock.restore(): re-register a
+  // transparent registry so later suites observe real fs.
+  mock.module("node:fs", () => realFs)
   mock.restore()
   for (const key of Object.keys(process.env)) {
     if (ENV_PROVIDER_PATTERN.test(key)) delete process.env[key]
