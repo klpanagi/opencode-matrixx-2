@@ -1,4 +1,3 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { z } from "zod"
 import { log } from "../../shared"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
@@ -7,9 +6,9 @@ import { discoverCommandsSync } from "./command-discovery"
 import { formatCommandList, formatLoadedCommand } from "./command-output-formatter"
 import { skillToCommandInfo } from "./skill-command-converter"
 import { buildDescriptionFromItems, TOOL_DESCRIPTION_PREFIX } from "./slashcommand-description"
-import type { CommandInfo, SlashcommandToolOptions } from "./types"
+import type { CommandInfo, PluginCommandClient, SlashcommandToolOptions } from "./types"
 
-async function discoverPluginCommands(client?: ReturnType<typeof createOpencodeClient>): Promise<CommandInfo[]> {
+async function discoverPluginCommands(client?: PluginCommandClient): Promise<CommandInfo[]> {
   if (!client) return []
 
   try {

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import type { AgentConfig } from "@opencode-ai/sdk"
+import type { AgentConfig } from "../../src/agents/agent-config"
 import * as shared from "../../src/shared"
 import * as connectedProvidersCache from "../../src/shared/connected-providers-cache"
 import * as modelAvailability from "../../src/shared/model-availability"

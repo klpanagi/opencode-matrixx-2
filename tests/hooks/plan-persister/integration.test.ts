@@ -12,7 +12,6 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
-import { createOpencodeClient } from "@opencode-ai/sdk"
 import { parseMetadataComment, readPlanFile } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
 
@@ -23,15 +22,7 @@ function tmpDir(): string {
 }
 
 function makeMockContext(): MatrixxContext {
-  const client = createOpencodeClient({ directory: "/tmp/test" })
-  return {
-    client,
-    project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
-    directory: "/tmp/test",
-    worktree: "/tmp/test",
-    serverUrl: new URL("http://localhost"),
-    $: Bun.$,
-  }
+  return { directory: "/tmp/test", worktree: "/tmp/test" } as unknown as MatrixxContext
 }
 
 function setupMission(dir: string, planName: string, planPath: string): void {
@@ -112,7 +103,7 @@ describe("plan persistence round-trip", () => {
     //#when
     // Simulate session.idle after step 1
     await hook1.event({
-      event: { type: "session.idle", properties: { sessionID: "integration-session" } },
+      type: "session.idle", data: { sessionID: "integration-session" },
     })
     await new Promise((resolve) => setTimeout(resolve, 10))
 
@@ -128,7 +119,7 @@ describe("plan persistence round-trip", () => {
     const hook2 = createPlanPersister(makeMockContext(), { directory: dir })
 
     await hook2.event({
-      event: { type: "session.idle", properties: { sessionID: "integration-session" } },
+      type: "session.idle", data: { sessionID: "integration-session" },
     })
     await new Promise((resolve) => setTimeout(resolve, 10))
 

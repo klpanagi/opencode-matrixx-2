@@ -7,18 +7,20 @@
  * `MatrixxToolDefinition`); tasks 25-27 replace these fragments with native
  * `session.hook(...)` registrations and then this module goes away.
  */
-import type {
-  Auth,
-  Event,
-  Message,
-  Model,
-  Part,
-  Permission,
-  Provider,
-  Config as SDKConfig,
-  UserMessage,
-} from "@opencode-ai/sdk"
-import type { Model as ModelV2, Provider as ProviderV2 } from "@opencode-ai/sdk/v2"
+// Task 28: local structural aliases (the V1 SDK is no longer a dependency).
+// Each alias mirrors only what the hook map below references.
+export type Auth = Record<string, unknown>
+export type Event = Record<string, unknown> & { type?: string }
+export type Message = Record<string, unknown>
+export type Model = Record<string, unknown> & { providerID?: string; modelID?: string }
+export type Part = { type: string; text?: string; [key: string]: unknown }
+export type Permission = Record<string, unknown>
+export type Provider = Record<string, unknown>
+export type SDKConfig = Record<string, unknown>
+export type UserMessage = Record<string, unknown>
+export type ModelV2 = Record<string, unknown>
+export type ProviderV2 = Record<string, unknown>
+
 import type { MatrixxToolDefinition } from "../tools/shared/define-tool"
 
 export type ProviderContext = {
@@ -175,4 +177,3 @@ export interface Hooks {
   ) => Promise<void>
 }
 
-export type { Auth, Model, ModelV2, Provider, ProviderV2 }

@@ -9,7 +9,6 @@ import { existsSync, mkdirSync, openSync, readFileSync, readSync, closeSync, sta
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
-import { createOpencodeClient } from "@opencode-ai/sdk"
 
 import { parseMetadataComment } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
@@ -23,15 +22,7 @@ function tmpDir(): string {
 }
 
 function createMockContext(): MatrixxContext {
-  const client = createOpencodeClient({ directory: "/tmp/test" })
-  return {
-    client,
-    project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
-    directory: "/tmp/test",
-    worktree: "/tmp/test",
-    serverUrl: new URL("http://localhost"),
-    $: Bun.$,
-  }
+  return { directory: "/tmp/test", worktree: "/tmp/test" } as unknown as MatrixxContext
 }
 
 /**
@@ -39,22 +30,18 @@ function createMockContext(): MatrixxContext {
  * The spy exists purely to prove the hook never reaches the legacy read.
  */
 function createThrowingTodoContext(): { ctx: MatrixxContext; invocations: () => number } {
-  const client = createOpencodeClient({ directory: "/tmp/test" })
-  type SessionTodoOptions = Parameters<typeof client.session.todo>[0]
-  type SessionTodoResult = ReturnType<typeof client.session.todo>
   let calls = 0
-  client.session.todo = async (_: SessionTodoOptions): Promise<SessionTodoResult> => {
-    calls += 1
-    throw new Error("session.todo must never be called")
+  const session = {
+    todo: async (): Promise<unknown> => {
+      calls += 1
+      throw new Error("session.todo must never be called")
+    },
   }
-  const ctx: MatrixxContext = {
-    client,
-    project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
+  const ctx = {
     directory: "/tmp/test",
     worktree: "/tmp/test",
-    serverUrl: new URL("http://localhost"),
-    $: Bun.$,
-  }
+    session,
+  } as unknown as MatrixxContext
   return { ctx, invocations: () => calls }
 }
 
@@ -148,7 +135,7 @@ describe("plan-persister", () => {
     const hook = createPlanPersister(createMockContext(), { directory: dir })
 
     // No mission.json — no active plan
-    await hook.event({ event: { type: "session.idle", properties: { sessionID: "ses_1" } } })
+    await hook.event({ type: "session.idle", data: { sessionID: "ses_1" } })
   })
 
   it("writes plan file on session.idle for a mission-linked task", async () => {
@@ -162,10 +149,8 @@ describe("plan-persister", () => {
 
     //#when
     await hook.event({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: "test-session-1" },
-      },
+      type: "session.idle",
+      data: { sessionID: "test-session-1" },
     })
     await waitForPendingTicks()
 
@@ -187,10 +172,8 @@ describe("plan-persister", () => {
 
     //#when
     await hook.event({
-      event: {
-        type: "session.compacted",
-        properties: { sessionID: "test-session-2" },
-      },
+      type: "session.compacted",
+      data: { sessionID: "test-session-2" },
     })
     await waitForPendingTicks()
 
@@ -207,8 +190,8 @@ describe("plan-persister", () => {
     const hook = createPlanPersister(createMockContext(), { directory: dir })
 
     // Should not throw on ignored events
-    await hook.event({ event: { type: "session.error", properties: { sessionID: "ses_1" } } })
-    await hook.event({ event: { type: "session.deleted", properties: { sessionID: "ses_1" } } })
+    await hook.event({ type: "session.error", data: { sessionID: "ses_1" } })
+    await hook.event({ type: "session.deleted", data: { sessionID: "ses_1" } })
   })
 
   // REWRITTEN (was: "never calls ctx.client.session.todo and leaves the plan

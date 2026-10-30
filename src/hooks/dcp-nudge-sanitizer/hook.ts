@@ -12,7 +12,7 @@
 
 /**
  * Local legacy part shape (Task 27: the V1 `experimental.chat.messages.transform`
- * fan-out is deleted, so `@opencode-ai/sdk` part types are no longer imported).
+ * fan-out is deleted, so `legacy V1 SDK` part types are no longer imported).
  * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
  */
 type Part = {

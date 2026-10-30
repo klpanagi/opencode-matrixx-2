@@ -1,11 +1,17 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { parseModelString } from "../tools/delegate-task/model-string-parser"
 import { getErrorMessage } from "./error-formatting"
 import { log } from "./logger"
 import { isRecord } from "./record-type-guard"
 import type { SessionDomainLike } from "./session-facade"
 
-type Client = ReturnType<typeof createOpencodeClient>
+export interface RetrySessionClient {
+  session: {
+    promptAsync(args: unknown): Promise<unknown>
+    prompt(args: unknown): Promise<unknown>
+  }
+}
+
+type Client = RetrySessionClient
 
 interface ModelSuggestionInfo {
   providerID: string
@@ -76,9 +82,7 @@ export async function promptWithModelSuggestionRetry(
 ): Promise<void> {
   // NOTE: Model suggestion retry removed — promptAsync returns 204 immediately,
   // model errors happen asynchronously server-side and cannot be caught here
-  const promptPromise = client.session.promptAsync(
-    args as Parameters<typeof client.session.promptAsync>[0],
-  )
+  const promptPromise = client.session.promptAsync(args)
 
   let timeoutID: ReturnType<typeof setTimeout> | null = null
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -138,7 +142,7 @@ export async function promptSyncWithModelSuggestionRetry(
 ): Promise<void> {
   let res: unknown
   try {
-    res = await client.session.prompt(args as Parameters<typeof client.session.prompt>[0])
+    res = await client.session.prompt(args)
   } catch (error) {
     const suggestion = parseModelSuggestion(error)
     if (!suggestion || !args.body.model) {
@@ -163,7 +167,7 @@ export async function promptSyncWithModelSuggestionRetry(
           modelID: suggestionModelID,
         },
       },
-    } as Parameters<typeof client.session.prompt>[0])
+    })
     throwOnSyncEnvelopeError(retryRes, args)
     return
   }

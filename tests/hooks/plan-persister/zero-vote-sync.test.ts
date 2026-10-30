@@ -12,7 +12,6 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
-import { createOpencodeClient } from "@opencode-ai/sdk"
 import { parseMetadataComment } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
 import { TaskObjectSchema } from "../../../src/tools/task/types"
@@ -26,15 +25,7 @@ function stripMetadata(content: string): string {
 }
 
 function makeMockContext(): MatrixxContext {
-  const client = createOpencodeClient({ directory: "/tmp/test" })
-  return {
-    client,
-    project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
-    directory: "/tmp/test",
-    worktree: "/tmp/test",
-    serverUrl: new URL("http://localhost"),
-    $: Bun.$,
-  }
+  return { directory: "/tmp/test", worktree: "/tmp/test" } as unknown as MatrixxContext
 }
 
 /** Write the plan file and the mission state that points at it. */

@@ -16,7 +16,7 @@
 
 /**
  * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
- * fan-out is deleted, so `@opencode-ai/sdk` message types are no longer imported).
+ * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).
  * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
  */
 type Message = {
