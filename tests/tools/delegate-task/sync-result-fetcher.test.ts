@@ -82,9 +82,11 @@ describe("fetchSyncResult", () => {
     //#when - anchor at 2 (beyond messages)
     const result = await fetchSyncResult(mockClient, "ses_test", 2)
 
-    //#then - should return error about no new response
+    //#then - should return error naming the observation, the causes, and the session
     expect(result.ok).toBe(false)
-    expect(result.error).toContain("no new response was generated")
+    expect(result.error).toContain("no new messages after the anchor")
+    expect(result.error).toContain("2 messages")
+    expect(result.error).toContain("ses_test")
   })
 
   test("with anchor + new assistant but non-terminal: returns latest terminal assistant", async () => {

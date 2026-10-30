@@ -1,6 +1,7 @@
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { formatPollTimeoutOutcome } from "../../shared/poll-timeout-outcome"
+import { DIAGNOSTIC_CAUSES, describeLastMessageParts, describeMessageShape } from "./diagnostic-shape"
 import type { SessionMessage } from "./executor-types"
 import { getTimingConfig } from "./timing"
 import type { OpencodeClient, ToolContextWithMetadata } from "./types"
@@ -209,7 +210,7 @@ export async function pollSyncSession(
         idleStallCount,
         pollCount,
       })
-      return `Session stalled: no assistant response generated after ${idleStallCount} idle polls. The model may have failed to start.\n\nSession ID: ${input.sessionID}`
+      return `Session stalled: no assistant response after ${idleStallCount} idle polls. Observed: ${describeMessageShape(msgs)}; last message part types: ${describeLastMessageParts(msgs)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${input.sessionID}`
     }
 
     const finishReason = lastAssistant?.info?.finish

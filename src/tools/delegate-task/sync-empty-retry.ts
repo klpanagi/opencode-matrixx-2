@@ -1,4 +1,5 @@
 import { normalizeSDKResponse } from "../../shared"
+import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
 import { formatDetailedError } from "./error-formatting"
 import type { SessionMessage } from "./executor-types"
 import type { DelegateTaskArgs, OpencodeClient } from "./types"
@@ -38,10 +39,12 @@ export function formatEmptySessionError(
   args: DelegateTaskArgs,
   sessionID: string,
   agentToUse: string,
+  observed?: SessionMessage[],
 ): string {
+  const observedShape = describeMessageShape(observed ?? [])
   return formatDetailedError(
     new Error(
-      `Sync task produced no response: send+poll reported success but session ${sessionID} has zero messages after 1 retry. The model may have failed silently.`,
+      `Sync task produced no response: send+poll reported success but session ${sessionID} has zero messages after 1 retry. Observed: ${observedShape}. ${DIAGNOSTIC_CAUSES}`,
     ),
     {
       operation: "Send+poll sync task",

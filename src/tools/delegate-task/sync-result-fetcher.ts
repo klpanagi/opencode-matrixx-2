@@ -1,4 +1,5 @@
 import { normalizeSDKResponse } from "../../shared"
+import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
 import type { SessionMessage } from "./executor-types"
 import type { OpencodeClient } from "./types"
 
@@ -84,7 +85,7 @@ export async function fetchSyncResult(
   if (anchorMessageCount !== undefined && messagesAfterAnchor.length === 0) {
     return {
       ok: false,
-      error: `Session completed but no new response was generated. The model may have failed silently.\n\nSession ID: ${sessionID}`,
+      error: `Session completed with no new messages after the anchor. Observed: ${describeMessageShape(messages)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
     }
   }
 
@@ -106,12 +107,15 @@ export async function fetchSyncResult(
   if (anchorMessageCount !== undefined && !lastMessage) {
     return {
       ok: false,
-      error: `Session completed but no new response was generated. The model may have failed silently.\n\nSession ID: ${sessionID}`,
+      error: `Session completed with no new assistant message. Observed: ${describeMessageShape(messagesAfterAnchor)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
     }
   }
 
   if (!lastMessage) {
-    return { ok: false, error: `No assistant response found.\n\nSession ID: ${sessionID}` }
+    return {
+      ok: false,
+      error: `No assistant response found. Observed: ${describeMessageShape(messages)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
+    }
   }
 
   const textContent = options?.finalTextOnly
