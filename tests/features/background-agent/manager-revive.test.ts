@@ -11,31 +11,33 @@ import { writeHandle, readHandles } from "../../../src/features/background-agent
 let TMP_DIR = ""
 
 interface PromptCall {
-  path: { id: string }
-  body: { parts?: Array<{ type: string; text: string }>; [key: string]: unknown }
+  sessionID: string
+  agent?: string
+  parts?: Array<{ type: string; text: string }>
+  [key: string]: unknown
 }
 
 function makeClient() {
   const promptCalls: PromptCall[] = []
-  const client = {
+  const native = {
     session: {
-      get: async () => ({ data: { directory: TMP_DIR } }),
-      create: async () => ({ data: { id: "sess_new" } }),
-      promptAsync: async (args: PromptCall) => {
+      get: async () => ({ directory: TMP_DIR }),
+      create: async () => ({ id: "sess_new" }),
+      prompt: async (args: PromptCall) => {
         promptCalls.push(args)
         return {}
       },
-      abort: async () => ({}),
-      messages: async () => ({ data: [] }),
-      todo: async () => ({ data: [] }),
-      status: async () => ({}),
+      interrupt: async () => ({}),
+      context: async () => ({ messages: [] }),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
-  return { client, promptCalls }
+  return { client: native, promptCalls }
 }
 
 function makeManager(client: unknown, dir: string, config?: unknown): BackgroundManager {
-  return new BackgroundManager({ client, directory: dir } as never, config as never)
+  return new BackgroundManager({ ...(client as Record<string, unknown>), directory: dir } as never, config as never)
 }
 
 function seedCompletedTask(overrides?: Partial<BackgroundTask>): BackgroundTask {
@@ -86,8 +88,8 @@ describe("BackgroundManager.revive", () => {
     //#then
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
-    expect(promptCalls[0].path.id).toBe(seed.sessionID)
-    expect(promptCalls[0].body.parts?.[0]?.text).toBe(NEW_PROMPT)
+    expect(promptCalls[0].sessionID).toBe(seed.sessionID)
+    expect(promptCalls[0].parts?.[0]?.text).toBe(NEW_PROMPT)
     mgr.shutdown()
   })
 
@@ -112,7 +114,7 @@ describe("BackgroundManager.revive", () => {
     //#then
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
-    expect(promptCalls[0].path.id).toBe("sess_pruned01")
+    expect(promptCalls[0].sessionID).toBe("sess_pruned01")
     mgr.shutdown()
   })
 
@@ -137,7 +139,7 @@ describe("BackgroundManager.revive", () => {
     //#then
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
-    expect(promptCalls[0].path.id).toBe("sess_fresh01")
+    expect(promptCalls[0].sessionID).toBe("sess_fresh01")
     mgrA.shutdown()
     mgrB.shutdown()
   })
@@ -209,7 +211,7 @@ describe("BackgroundManager.revive", () => {
     //#then
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
-    expect(promptCalls[0].body.parts?.[0]?.text).toBe("forced retry")
+    expect(promptCalls[0].parts?.[0]?.text).toBe("forced retry")
     mgr.shutdown()
   })
 

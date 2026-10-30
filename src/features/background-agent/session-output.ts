@@ -1,12 +1,10 @@
-import { log, normalizeSDKResponse } from "../../shared"
+import { log } from "../../shared"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { fetchSessionMessages as fetchNativeSessionMessages } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, roleOf } from "../../shared/session-message"
 
-export interface SessionOutputClient {
-  session: {
-    messages: (args: { path: { id: string } }) => Promise<unknown>
-  }
-}
+export type SessionOutputClient = SessionContextCarrier
 
 export type { SessionMessage }
 
@@ -18,8 +16,7 @@ export async function fetchSessionMessages(
   client: SessionOutputClient,
   sessionID: string,
 ): Promise<SessionMessage[]> {
-  const response = await client.session.messages({ path: { id: sessionID } })
-  return normalizeSDKResponse(response, [] as SessionMessage[], { preferResponseOnMissingData: true })
+  return fetchNativeSessionMessages(client, sessionID)
 }
 
 /**

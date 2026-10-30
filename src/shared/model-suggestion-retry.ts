@@ -3,6 +3,7 @@ import { parseModelString } from "../tools/delegate-task/model-string-parser"
 import { getErrorMessage } from "./error-formatting"
 import { log } from "./logger"
 import { isRecord } from "./record-type-guard"
+import type { SessionDomainLike } from "./session-facade"
 
 type Client = ReturnType<typeof createOpencodeClient>
 
@@ -167,4 +168,47 @@ export async function promptSyncWithModelSuggestionRetry(
     return
   }
   throwOnSyncEnvelopeError(res, args)
+}
+
+const PROMPT_TIMEOUT_MS = 120_000
+
+export async function promptNativeWithModelSuggestionRetry(
+  session: SessionDomainLike,
+  args: { sessionID: string } & PromptBody,
+): Promise<void> {
+  const { sessionID, ...body } = args
+  const prompt = () => session.prompt({ sessionID, ...body })
+
+  let timeoutID: ReturnType<typeof setTimeout> | null = null
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutID = setTimeout(() => {
+      reject(new Error(`prompt timed out after ${PROMPT_TIMEOUT_MS}ms`))
+    }, PROMPT_TIMEOUT_MS)
+  })
+
+  try {
+    await Promise.race([prompt(), timeoutPromise])
+  } catch (error) {
+    const suggestion = parseModelSuggestion(error)
+    if (!suggestion || !body.model) {
+      throw error
+    }
+
+    log("[model-suggestion-retry] Model not found, retrying with suggestion", {
+      original: `${suggestion.providerID}/${suggestion.modelID}`,
+      suggested: suggestion.suggestion,
+    })
+
+    const parsedSuggestion = parseModelString(suggestion.suggestion)
+    const suggestionModelID = parsedSuggestion ? parsedSuggestion.modelID : suggestion.suggestion.trim()
+
+    await prompt().catch((retryError: unknown) => {
+      throw new Error(
+        `prompt failed: sessionID=${sessionID} detail=${getErrorMessage(retryError) || "unknown error"}`,
+      )
+    })
+    return
+  } finally {
+    if (timeoutID !== null) clearTimeout(timeoutID)
+  }
 }

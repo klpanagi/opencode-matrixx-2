@@ -22,7 +22,7 @@ import {
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { BackgroundManager } from "./manager"
 import type { BackgroundTask } from "./types"
 
@@ -33,18 +33,17 @@ const N_FILES = 3
 function makeMockClient() {
   return {
     session: {
-      status: async () => ({ data: {} as Record<string, { type: string }> }),
-      messages: async () => ({ data: [] }),
+      context: async () => ({ messages: [] as unknown[] }),
       prompt: async () => ({}),
-      promptAsync: async () => ({}),
-      abort: async () => ({}),
-      todo: async () => ({ data: [] }),
+      interrupt: async () => ({}),
     },
+    agent: { list: async () => [] as unknown[] },
+    model: { list: async () => [] as unknown[] },
   }
 }
 
 function makeManager(): BackgroundManager {
-  return new BackgroundManager({ client: makeMockClient(), directory: tmpdir() } as unknown as PluginInput)
+  return new BackgroundManager({ ...makeMockClient(), directory: tmpdir() } as unknown as NativePluginContext)
 }
 
 describe("BackgroundManager B1 baseline (duplicate checkAndInterruptStaleTasks)", () => {
@@ -181,21 +180,20 @@ describe("BackgroundManager B2 baseline (2× readFileSync per file)", () => {
     // Re-import manager with cache buster so it picks up the mocked modules.
     const { BackgroundManager: BenchManager } = await import(`./manager?bust=${randomUUID()}`)
 
-    // client.session.messages throws → triggers fallback in notifyParentSession
+    // session.context throws → triggers fallback in notifyParentSession
     // which calls getMessageDir → findNearestMessageExcludingCompaction.
-    const client = {
+    const native = {
       session: {
-        status: async () => ({ data: {} as Record<string, { type: string }> }),
-        messages: async () => {
+        context: async () => {
           throw new Error("simulated failure")
         },
         prompt: async () => ({}),
-        promptAsync: async () => ({}),
-        abort: async () => ({}),
-        todo: async () => ({ data: [] }),
+        interrupt: async () => ({}),
       },
+      agent: { list: async () => [] as unknown[] },
+      model: { list: async () => [] as unknown[] },
     }
-    const manager = new BenchManager({ client, directory: tmpdir() } as unknown as PluginInput)
+    const manager = new BenchManager({ ...native, directory: tmpdir() } as unknown as NativePluginContext)
 
     const task: BackgroundTask = {
       id: "task_bench",

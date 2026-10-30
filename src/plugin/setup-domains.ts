@@ -105,7 +105,7 @@ export type DomainHooks = SessionHooks &
 type FirstMessageVariantGate = ReturnType<typeof createFirstMessageVariantGate>
 
 function createDomainManagers(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   tmuxConfig: TmuxConfig
   backgroundNotificationHookEnabled: boolean

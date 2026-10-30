@@ -6,10 +6,10 @@
  * wake-scheduler, wall-clock supervisor, tmux pane callbacks, parent
  * notification pipeline) with a thin wrapper over the native session APIs:
  *
- * - `client.session.create` + `client.session.promptAsync` for launches
+ * - native `session.create` + `session.prompt` for launches
  * - Native `session.idle` / `session.error` events (via `handleEvent`) for
  *   completion detection — no polling loops, no reconcile probes
- * - `client.session.abort` for cancellation
+ * - native `session.interrupt` for cancellation
  * - File-backed handles (`handle-index`) for restart visibility only —
  *   persisted `running|pending` handles reload as `statusUncertain`,
  *   revivable with `force: true`
@@ -22,10 +22,14 @@
  * doctor `tmux-integration` check keep their own tmux binary usage.
  */
 
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
-import { getAgentToolRestrictions, log, promptWithModelSuggestionRetry } from "../../shared"
+import { getAgentToolRestrictions, log } from "../../shared"
 import { delay } from "../../shared/delay"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import type {
+  NativeDomains,
+  NativePluginContext,
+} from "../../shared/session-context-source"
 import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
 import { registerSubagentSession } from "../session-state/state"
 import { getTaskToastManager } from "../task-toast-manager"
@@ -62,17 +66,15 @@ export type {
   SubagentSessionCreatedEvent,
 }
 
-type OpencodeClient = PluginInput["client"]
-
 export class BackgroundManager {
   private tasks = new Map<string, BackgroundTask>()
-  private client: OpencodeClient
+  private native: NativeDomains
   private directory: string
   private config?: BackgroundTaskConfig
   readonly taskHistory = new TaskHistory()
 
   constructor(
-    ctx: PluginInput,
+    ctx: NativePluginContext,
     config?: BackgroundTaskConfig,
     options?: {
       /** @deprecated Native session events own display; ignored. */
@@ -82,7 +84,7 @@ export class BackgroundManager {
       pluginConfig?: Partial<MatrixxConfig>
     },
   ) {
-    this.client = ctx.client
+    this.native = ctx
     this.directory = ctx.directory
     this.config = config
     void options
@@ -132,7 +134,7 @@ export class BackgroundManager {
 
   /**
    * Launch a subagent via the native session APIs: `session.create` with the
-   * parent linkage, then a fire-and-forget `promptAsync`. No queues, no
+   * parent linkage, then a fire-and-forget `session.prompt`. No queues, no
    * semaphores, no tmux callbacks — saturation surfaces as a thrown error
    * from the host instead of a synthetic `queue-saturated` terminal state.
    */
@@ -197,28 +199,22 @@ export class BackgroundManager {
       })
     }
 
-    const parentSession = await this.client.session
-      .get({ path: { id: input.parentSessionID } })
-      .catch(() => null)
-    const parentDirectory = parentSession?.data?.directory ?? this.directory
-
-    const createResult = await this.client.session.create({
-      body: {
+    let created: { id?: string }
+    try {
+      created = (await this.native.session.create({
         parentID: input.parentSessionID,
         title: buildSubagentTitle(input.description, input.agent),
-      },
-      query: { directory: parentDirectory },
-    })
-
-    if (createResult.error) {
+      })) as { id?: string }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
       task.status = "error"
-      task.error = `Failed to create background session: ${createResult.error}`
+      task.error = `Failed to create background session: ${message}`
       task.completedAt = new Date()
       this.persistHandle(task)
       throw new Error(task.error)
     }
 
-    if (!createResult.data?.id) {
+    if (!created.id) {
       task.status = "error"
       task.error =
         "Failed to create background session: API returned no session ID"
@@ -227,7 +223,7 @@ export class BackgroundManager {
       throw new Error(task.error)
     }
 
-    const sessionID = createResult.data.id
+    const sessionID = created.id
     registerSubagentSession(sessionID, input.parentSessionID)
 
     task.status = "running"
@@ -258,7 +254,7 @@ export class BackgroundManager {
     }
 
     this.firePrompt(task, input.prompt, input.skillContent).catch((error) => {
-      log("[background-agent] promptAsync error:", error)
+      log("[background-agent] prompt error:", error)
       task.status = "interrupt"
       task.error = error instanceof Error ? error.message : String(error)
       task.completedAt = new Date()
@@ -402,7 +398,7 @@ export class BackgroundManager {
     return existingTask
   }
 
-  /** Revive a terminal task with a new prompt via the native `promptAsync`. */
+  /** Revive a terminal task with a new prompt via native `session.prompt`. */
   async revive(input: ReviveInput): Promise<BackgroundTask> {
     const id = input.taskId ?? input.sessionId ?? ""
     let task =
@@ -802,7 +798,7 @@ export class BackgroundManager {
   }
 
   private abortSessionQuietly(sessionID: string, context?: string): void {
-    this.client.session.abort({ path: { id: sessionID } }).catch((err) => {
+    this.native.session.interrupt({ sessionID }).catch((err) => {
       log(
         `[background-agent] Session abort failed${context ? ` (${context})` : ""}:`,
         { sessionID, error: err },
@@ -830,16 +826,14 @@ export class BackgroundManager {
     }
     setSessionTools(sessionID, tools)
 
-    await promptWithModelSuggestionRetry(this.client, {
-      path: { id: sessionID },
-      body: {
-        agent: task.agent,
-        ...(launchModel ? { model: launchModel } : {}),
-        ...(launchVariant ? { variant: launchVariant } : {}),
-        ...(skillContent ? { system: skillContent } : {}),
-        tools,
-        parts: [{ type: "text", text: prompt }],
-      },
+    await promptNativeWithModelSuggestionRetry(this.native.session, {
+      sessionID,
+      agent: task.agent,
+      ...(launchModel ? { model: launchModel } : {}),
+      ...(launchVariant ? { variant: launchVariant } : {}),
+      ...(skillContent ? { system: skillContent } : {}),
+      tools,
+      parts: [{ type: "text", text: prompt }],
     })
   }
 }

@@ -48,41 +48,39 @@ const TMP_ROOT = mkdtempSync(join(tmpdir(), "retain-"))
 
 interface MockClient {
   session: {
-    get: () => Promise<{ data?: { directory: string } }>
-    create: () => Promise<{ error?: string; data?: { id: string } }>
-    promptAsync: () => Promise<void>
-    promptAsyncRaw: (body: Record<string, unknown>) => Promise<void>
-    status: () => Promise<Record<string, { type: string }>>
-    todo: () => Promise<{ data?: unknown[] }>
-    messages: () => Promise<{ data?: unknown[] }>
-    abort: () => Promise<void>
+    get: () => Promise<{ directory: string }>
+    create: () => Promise<{ id: string }>
+    prompt: () => Promise<unknown>
+    interrupt: () => Promise<unknown>
+    context: () => Promise<{ messages: unknown[] }>
   }
+  agent: { list: () => Promise<unknown[]> }
+  model: { list: () => Promise<unknown[]> }
 }
 
 function makeMockClient(overrides?: {
   createError?: string
   promptReject?: Error
-  sessionStatuses?: Record<string, { type: string }>
 }): MockClient {
-  const statuses: Record<string, { type: string }> = overrides?.sessionStatuses ?? {}
+  const createError = overrides?.createError
+  const promptReject = overrides?.promptReject
   return {
     session: {
-      get: async () => ({ data: { directory: TMP_ROOT } }),
-      create: async () =>
-        overrides?.createError
-          ? { error: overrides.createError }
-          : { data: { id: `sess_${Math.random().toString(36).slice(2, 10)}` } },
-      promptAsync: overrides?.promptReject
-        ? () => { throw overrides.promptReject! }
-        : async () => {},
-      promptAsyncRaw: overrides?.promptReject
-        ? () => { throw overrides.promptReject! }
-        : async () => {},
-      status: async () => statuses,
-      todo: async () => ({ data: [] }),
-      messages: async () => ({ data: [] }),
-      abort: async () => {},
+      get: async () => ({ directory: TMP_ROOT }),
+      create: async () => {
+        if (createError) throw new Error(createError)
+        return { id: `sess_${Math.random().toString(36).slice(2, 10)}` }
+      },
+      prompt: promptReject
+        ? async () => {
+            throw promptReject
+          }
+        : async () => ({}),
+      interrupt: async () => ({}),
+      context: async () => ({ messages: [] }),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
 }
 
@@ -90,11 +88,8 @@ function buildManager(ctx: MockClient, config?: import("../../../src/config/sche
   const toastMgr = initTaskToastManager(ctx.session)
   const mgr = new BackgroundManager(
     {
-      client: ctx,
+      ...ctx,
       directory: TMP_ROOT,
-      getAgentToolRestrictions: () => ({}),
-      llm: { chat: async () => ({ content: "" }) },
-      directoryConfig: {},
     } as never,
     config,
   )
@@ -229,9 +224,7 @@ describe("Retention invariant", () => {
     // restart-visibility only; live tasks live in the memory map.
     test("running handle within TTL reloads as statusUncertain and stays on disk", async () => {
       //#given
-      const ctx = makeMockClient({
-        sessionStatuses: { "sess_prune01": { type: "idle" } },
-      })
+      const ctx = makeMockClient()
 
       // 5 minutes ago: within the default 30-minute handle TTL
       const past = Date.now() - 5 * 60 * 1000
@@ -275,9 +268,7 @@ describe("Retention invariant", () => {
 
     test("running handle beyond TTL is swept from disk on restore", async () => {
       //#given a running handle older than the default 30-minute TTL
-      const ctx = makeMockClient({
-        sessionStatuses: { "sess_prune02": { type: "idle" } },
-      })
+      const ctx = makeMockClient()
       const past = Date.now() - 60 * 60 * 1000 // 1 hour ago
       const task: BackgroundTask = {
         id: "bg_prune02",

@@ -181,14 +181,16 @@ function createMockTask(overrides: Partial<BackgroundTask> & { id: string; sessi
 }
 
 function createBackgroundManager(): BackgroundManager {
-  const client = {
+  const native = {
     session: {
       prompt: async () => ({}),
-      promptAsync: async () => ({}),
-      abort: async () => ({}),
+      interrupt: async () => ({}),
+      context: async () => ({ messages: [] }),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
-  return new BackgroundManager({ client, directory: tmpdir() } as unknown as PluginInput)
+  return new BackgroundManager({ ...native, directory: tmpdir() } as unknown as PluginInput)
 }
 
 function getConcurrencyManager(manager: BackgroundManager): ConcurrencyManager {
@@ -511,23 +513,25 @@ describe("BackgroundManager.trackTask", () => {
 
 describe("BackgroundManager.resume model persistence", () => {
    let manager: BackgroundManager
-   let promptCalls: Array<{ path: { id: string }; body: Record<string, unknown> }>
+   let promptCalls: Array<{ sessionID: string } & Record<string, unknown>>
 
    beforeEach(() => {
      // given
      promptCalls = []
-     const promptMock = async (args: { path: { id: string }; body: Record<string, unknown> }) => {
+     const promptMock = async (args: { sessionID: string } & Record<string, unknown>) => {
        promptCalls.push(args)
        return {}
      }
-     const client = {
+     const native = {
        session: {
          prompt: promptMock,
-         promptAsync: promptMock,
-         abort: async () => ({}),
+         interrupt: async () => ({}),
+         context: async () => ({ messages: [] }),
        },
+       agent: { list: async () => [] },
+       model: { list: async () => [] },
      }
-     manager = new BackgroundManager({ client, directory: tmpdir() } as unknown as PluginInput)
+     manager = new BackgroundManager({ ...native, directory: tmpdir() } as unknown as PluginInput)
      stubNotifyParentSession(manager)
    })
 
@@ -563,8 +567,8 @@ describe("BackgroundManager.resume model persistence", () => {
 
     // then - model should be passed in prompt body
     expect(promptCalls).toHaveLength(1)
-    expect(promptCalls[0].body.model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-20250514" })
-    expect(promptCalls[0].body.agent).toBe("trinity")
+    expect(promptCalls[0].model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-20250514" })
+    expect(promptCalls[0].agent).toBe("trinity")
   })
 
   test("should NOT pass model when task has no model (backward compatibility)", async () => {
@@ -594,8 +598,8 @@ describe("BackgroundManager.resume model persistence", () => {
 
     // then - model should NOT be in prompt body
     expect(promptCalls).toHaveLength(1)
-    expect("model" in promptCalls[0].body).toBe(false)
-    expect(promptCalls[0].body.agent).toBe("trinity")
+    expect("model" in promptCalls[0]).toBe(false)
+    expect(promptCalls[0].agent).toBe("trinity")
   })
 })
 
