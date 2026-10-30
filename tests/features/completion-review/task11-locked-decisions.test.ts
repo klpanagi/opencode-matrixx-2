@@ -114,7 +114,7 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // NOTE (v1-removal task 21, native event dispatch): hash advanced from
     // a435a408839c29a94ddc8b6230355481. The V1 event envelope is gone —
     // ({ event: { type, properties } }) => (event: V2Event) reading event.data,
-    // PluginInput -> NativePluginContext, and getLastAgentFromSession takes the
+    // V1 input -> NativePluginContext, and getLastAgentFromSession takes the
     // native ctx. Execution path unchanged; Niobe remains the plan EXECUTOR.
     const FROZEN_MD5 = "1ec435b50b9d276d2a69282f72adbb32"
 
