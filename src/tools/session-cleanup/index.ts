@@ -1,9 +1,9 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared"
 import { isRecord } from "../../shared/record-type-guard"
 import type { SessionDomainLike } from "../../shared/session-facade"
 import { unwrapList } from "../../shared/unwrap-list"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 type SessionCleanupSession = SessionDomainLike & {
   remove?(input: { sessionID: string }): Promise<unknown>
@@ -93,11 +93,11 @@ export function createSessionCleanupTool(ctx: SessionCleanupContext): MatrixxToo
   return defineTool("session_cleanup", {
     description: SESSION_CLEANUP_DESCRIPTION,
     args: {
-      apply: tool.schema
+      apply: z
         .boolean()
         .optional()
         .describe("Actually delete. Defaults to false (dry run)."),
-      include_look_at: tool.schema
+      include_look_at: z
         .boolean()
         .optional()
         .describe("Also match 'look_at: *' sessions. Defaults to false."),

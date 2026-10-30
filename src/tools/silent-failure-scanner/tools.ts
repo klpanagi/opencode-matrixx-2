@@ -1,6 +1,6 @@
 import { isAbsolute, join } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { DEFAULT_GLOBS, SILENT_FAILURE_SCAN_DESCRIPTION } from "./constants"
 import { scanPath } from "./scanner"
@@ -21,18 +21,18 @@ export function createSilentFailureScannerTool(ctx: MatrixxContext): Record<stri
   const silent_failure_scan: MatrixxToolDefinition = defineTool("silent_failure_scan", {
     description: SILENT_FAILURE_SCAN_DESCRIPTION,
     args: {
-      path: tool.schema
+      path: z
         .string()
         .describe("File or directory to scan (absolute, or relative to the project directory)."),
-      globs: tool.schema
-        .array(tool.schema.string())
+      globs: z
+        .array(z.string())
         .optional()
         .describe(`Glob filters when path is a directory (default: ${DEFAULT_GLOBS.join(", ")}).`),
-      severity: tool.schema
+      severity: z
         .enum(["warn", "error"])
         .optional()
         .describe("Minimum severity to report (default: warn)."),
-      waivers: tool.schema
+      waivers: z
         .string()
         .optional()
         .describe(

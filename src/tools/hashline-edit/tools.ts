@@ -19,23 +19,23 @@ export function createHashlineEditTool(): MatrixxToolDefinition {
   return defineTool("edit", {
     description: HASHLINE_EDIT_DESCRIPTION,
     args: {
-      filePath: tool.schema.string().describe("Absolute path to the file to edit"),
-      delete: tool.schema.boolean().optional().describe("Delete file instead of editing"),
-      rename: tool.schema.string().optional().describe("Rename output file path after edits"),
-      edits: tool.schema
+      filePath: z.string().describe("Absolute path to the file to edit"),
+      delete: z.boolean().optional().describe("Delete file instead of editing"),
+      rename: z.string().optional().describe("Rename output file path after edits"),
+      edits: z
         .array(
-          tool.schema.object({
-            op: tool.schema
+          z.object({
+            op: z
               .union([
-                tool.schema.literal("replace"),
-                tool.schema.literal("append"),
-                tool.schema.literal("prepend"),
+                z.literal("replace"),
+                z.literal("append"),
+                z.literal("prepend"),
               ])
               .describe("Hashline edit operation mode"),
-            pos: tool.schema.string().optional().describe("Primary anchor in LINE#ID format"),
-            end: tool.schema.string().optional().describe("Range end anchor in LINE#ID format"),
-            lines: tool.schema
-              .union([tool.schema.array(tool.schema.string()), tool.schema.string(), tool.schema.null()])
+            pos: z.string().optional().describe("Primary anchor in LINE#ID format"),
+            end: z.string().optional().describe("Range end anchor in LINE#ID format"),
+            lines: z
+              .union([z.array(z.string()), z.string(), z.null()])
               .describe("Replacement or inserted lines as newline-delimited string. null deletes with replace"),
           })
         )

@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { atomicWrite } from "../../features/mission-state/plan-storage"
 import {
@@ -16,6 +15,7 @@ import { applyHashlineEditsWithReport } from "../hashline-edit/edit-operations"
 import { canonicalizeFileText, restoreFileText } from "../hashline-edit/file-text-canonicalization"
 import { executeHashlineEditTool } from "../hashline-edit/hashline-edit-executor"
 import { normalizeHashlineEdits } from "../hashline-edit/normalize-edits"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES } from "./constants"
 import { PLAN_ERROR_CODES, statusTransitionRejectedPayload } from "./error-codes"
 import { enforcePlanCap, type PostApplyHook } from "./plan-write-guard"
@@ -53,21 +53,21 @@ export function createPlanUpdateTool(ctx?: MatrixxContext, postApply?: PostApply
   return defineTool("plan_update", {
     description: `Update a plan file under .matrixx/plans/*.md via hashline edits. Delegates to executeHashlineEditTool scoped to PLANS_DIR. Requires LINE#ID anchors, validates file exists. Re-validates the contract after the edit (WARN-first warnings), rejects edits that push the file past ${cap} bytes without persisting, and injects front-matter once when absent. SECTION-SCOPED: an edit may name \`section\` instead of hand-computing line numbers — the target's line range is re-derived from a fresh parse at write time (no line number is ever persisted), and the supplied \`contentHash\` from plan_read gates the section as a whole. A changed section is refused with section_stale naming both hashes; an unknown or renamed id is section_not_found listing the ids this plan has; a repeated section needs sectionIndex.`,
     args: {
-      filePath: tool.schema.string().describe("Absolute path to the file to edit (must be inside .matrixx/plans, kebab-case .md)"),
-      edits: tool.schema
+      filePath: z.string().describe("Absolute path to the file to edit (must be inside .matrixx/plans, kebab-case .md)"),
+      edits: z
         .array(
-          tool.schema.object({
-            op: tool.schema.union([tool.schema.literal("replace"), tool.schema.literal("append"), tool.schema.literal("prepend")]).describe("Hashline edit operation mode"),
-            pos: tool.schema.string().optional().describe("Primary anchor in LINE#ID format. REQUIRED for replace. For a section-scoped edit it must be an absolute anchor of a line INSIDE that section — an anchor outside it is a validation_error. Omitted on a section-scoped append/prepend, the anchor defaults to the section's end (append: after its last non-blank line, so a trailing blank separator survives) or its start (prepend: directly under the heading)"),
-            end: tool.schema.string().optional().describe("Range end anchor in LINE#ID format; on a section-scoped edit it must also be inside the section"),
-            lines: tool.schema.union([tool.schema.array(tool.schema.string()), tool.schema.string(), tool.schema.null()]).describe("Replacement or inserted lines"),
-            section: tool.schema.string().optional().describe("Edit inside this section only: a registry id (e.g. 'todos', 'tl-dr'), heading text, or a custom heading's derived id. PRECEDENCE: when section is present it defines the target span, and the span is re-derived from a FRESH parse at write time — pos is then interpreted relative to that span and must fall inside it"),
-            sectionIndex: tool.schema.number().optional().describe("0-based occurrence index, required ONLY when the named section appears more than once in this plan (repeated H3s). Missing or out of range is a fail-closed validation_error naming the valid range — never a silent first match"),
-            contentHash: tool.schema.string().optional().describe("The section's contentHash from plan_read(section). Gates the section as a whole: the writer recomputes it from the current text and refuses with section_stale (naming both hashes, writing nothing) on a mismatch. Omit to edit without the gate. It does NOT harden the 1-char per-line anchor check INSIDE the section"),
+          z.object({
+            op: z.union([z.literal("replace"), z.literal("append"), z.literal("prepend")]).describe("Hashline edit operation mode"),
+            pos: z.string().optional().describe("Primary anchor in LINE#ID format. REQUIRED for replace. For a section-scoped edit it must be an absolute anchor of a line INSIDE that section — an anchor outside it is a validation_error. Omitted on a section-scoped append/prepend, the anchor defaults to the section's end (append: after its last non-blank line, so a trailing blank separator survives) or its start (prepend: directly under the heading)"),
+            end: z.string().optional().describe("Range end anchor in LINE#ID format; on a section-scoped edit it must also be inside the section"),
+            lines: z.union([z.array(z.string()), z.string(), z.null()]).describe("Replacement or inserted lines"),
+            section: z.string().optional().describe("Edit inside this section only: a registry id (e.g. 'todos', 'tl-dr'), heading text, or a custom heading's derived id. PRECEDENCE: when section is present it defines the target span, and the span is re-derived from a FRESH parse at write time — pos is then interpreted relative to that span and must fall inside it"),
+            sectionIndex: z.number().optional().describe("0-based occurrence index, required ONLY when the named section appears more than once in this plan (repeated H3s). Missing or out of range is a fail-closed validation_error naming the valid range — never a silent first match"),
+            contentHash: z.string().optional().describe("The section's contentHash from plan_read(section). Gates the section as a whole: the writer recomputes it from the current text and refuses with section_stale (naming both hashes, writing nothing) on a mismatch. Omit to edit without the gate. It does NOT harden the 1-char per-line anchor check INSIDE the section"),
           }),
         )
         .describe("Array of edit operations to apply. After a section-scoped write the response carries `section` (the first targeted section's recomputed id/level/headingText/startLine/endLine/bytes/contentHash) and `sections` (every section's recomputed startLine/endLine/contentHash)"),
-      forceCompletion: tool.schema
+      forceCompletion: z
         .boolean()
         .optional()
         .describe("Explicit human-approved override for a backward plan-status jump (completed -> in_progress, completed -> pending, in_progress -> pending). Forward or same-status jumps never need it. When true a backward jump is honored instead of rejected with status_transition_rejected."),

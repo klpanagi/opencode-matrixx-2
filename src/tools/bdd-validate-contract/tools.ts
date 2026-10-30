@@ -1,7 +1,7 @@
 import * as fsp from "node:fs/promises"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { ContractSchema } from "../../features/bdd/schema"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 /**
  * The bdd_validate_contract tool reads a contract JSON from disk and
@@ -33,7 +33,7 @@ export function createBddValidateContractTool(): MatrixxToolDefinition {
       "agent MUST call this after writing annotations to be sure the " +
       "on-disk JSON conforms to the strict schema.",
     args: {
-      contractPath: tool.schema
+      contractPath: z
         .string()
         .describe("Path to the contract JSON file to validate"),
     },

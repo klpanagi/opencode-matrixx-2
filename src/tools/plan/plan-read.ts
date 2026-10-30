@@ -1,10 +1,10 @@
 import { existsSync, statSync } from "node:fs"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { readPlanFile, readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import type { MatrixxContext } from "../../plugin/context"
 import { formatHashLine } from "../hashline-edit/hash-computation"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES, MAX_PLAN_READ_RENDERED_BYTES } from "./constants"
 import {
   classifyReadRefusal,
@@ -31,32 +31,32 @@ export function createPlanReadTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_
   return defineTool("plan_read", {
     description: `Read a plan file from .matrixx/plans/*.md, returning EXACTLY ONE payload for the selected format: 'hashline' (default; 1#AB|content anchors for plan_update) or 'content' (raw lines) — never both. Paginate with offset (1-based start line, inclusive) and limit (line count); returned anchors stay absolute. PRECEDENCE: section WINS over offset/limit — when both are supplied the section defines the base span and the response reports precedence:"section" plus the effective absolute startLine/endLine, so the conflict is never silent. Omit for a whole-file read. A single section over the rendered cap degrades to {truncated, outline-within-section, hint} — never a failure, never an empty payload. If the selected format's rendered payload exceeds ${MAX_PLAN_READ_RENDERED_BYTES} bytes, returns {truncated, outline, hint} with no payload — use plan_tasks for the manifest, or paginate with offset/limit. SIZE CEILING, not a wall: the ${cap}-byte cap is refused (file_too_large) for an unbounded WHOLE-FILE read only. Supply offset/limit or a section and the read is allowed past the cap, because a span is bounded by your own window; an over-large window is clamped to the ${MAX_PLAN_READ_RENDERED_BYTES}-byte rendered budget and answered with {clamped:true, limit:<effective line count>, hint} naming the effective window.`,
     args: {
-      filePath: tool.schema
+      filePath: z
         .string()
         .describe("Path to plan file (must be inside .matrixx/plans, kebab-case .md)"),
-      format: tool.schema
+      format: z
         .enum(["hashline", "content"])
         .optional()
         .describe("Output format: 'hashline' (default) or 'content' — exactly one is returned"),
-      offset: tool.schema
+      offset: z
         .number()
         .optional()
         .describe(
           "1-based start line (inclusive) for pagination; omit for whole file. Present but invalid (< 1, non-finite) is a validation_error, not a silent fallback",
         ),
-      limit: tool.schema
+      limit: z
         .number()
         .optional()
         .describe(
           "Number of lines to return from offset; omit to read to end of file. Present but invalid (< 1, non-finite) is a validation_error, not a silent fallback",
         ),
-      section: tool.schema
+      section: z
         .string()
         .optional()
         .describe(
           "Section to read: a registry id (e.g. 'todos', 'tl-dr'), heading text, or a custom heading's derived id. Returns ONLY that section's span plus its metadata (id, level, startLine, endLine, bytes, contentHash). PRECEDENCE: section WINS over offset/limit — when both are supplied the section defines the base span and the response reports precedence:'section' with the effective absolute startLine/endLine, so the conflict is never silent. Omit for a whole-file read",
         ),
-      sectionIndex: tool.schema
+      sectionIndex: z
         .number()
         .optional()
         .describe(

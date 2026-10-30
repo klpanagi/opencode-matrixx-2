@@ -1,5 +1,5 @@
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { githubSearch } from "./cli"
 import { MAX_LIMIT } from "./constants"
@@ -14,16 +14,16 @@ export function createGithubSearchTools(_ctx: MatrixxContext): Record<string, Ma
       "With repo (owner/name): clones shallow to TMPDIR and searches locally with permalinks. " +
       "Requires gh CLI + auth for discovery (`gh auth login`).",
     args: {
-      query: tool.schema.string().describe("Code pattern to search for (e.g. \"useQuery(\", \"staleTime:\")"),
-      repo: tool.schema
+      query: z.string().describe("Code pattern to search for (e.g. \"useQuery(\", \"staleTime:\")"),
+      repo: z
         .string()
         .optional()
         .describe("Repository in owner/name format for deep local search (e.g. \"tanstack/query\")"),
-      language: tool.schema
+      language: z
         .string()
         .optional()
         .describe("Language filter for discovery mode (e.g. \"TypeScript\")"),
-      limit: tool.schema
+      limit: z
         .number()
         .optional()
         .describe(`Max results for discovery mode (1-${MAX_LIMIT}, default 10)`),

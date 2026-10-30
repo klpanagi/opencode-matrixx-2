@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { getHandlePath } from "../../features/background-agent/handle-index"
 import { formatReviveOutcome, formatUnrevivable } from "../../shared/revive-outcome"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BACKGROUND_REVIVE_DESCRIPTION } from "./constants"
 import type { BackgroundReviveArgs, BackgroundReviveManager } from "./types"
 
@@ -67,18 +67,18 @@ export function createBackgroundRevive(
   return defineTool("background_revive", {
     description: BACKGROUND_REVIVE_DESCRIPTION,
     args: {
-      taskId: tool.schema.string().optional().describe("Task ID to revive (provide this or session_id)"),
-      session_id: tool.schema.string().optional().describe("Session ID of the task to revive (alternative to taskId)"),
-      prompt: tool.schema
+      taskId: z.string().optional().describe("Task ID to revive (provide this or session_id)"),
+      session_id: z.string().optional().describe("Session ID of the task to revive (alternative to taskId)"),
+      prompt: z
         .string()
         .optional()
         .describe("NEW instruction for the revived session (required unless list=true)"),
-      list: tool.schema.boolean().optional().describe("List revivable tasks instead of reviving one (default: false)"),
-      force: tool.schema
+      list: z.boolean().optional().describe("List revivable tasks instead of reviving one (default: false)"),
+      force: z
         .boolean()
         .optional()
         .describe("Acknowledge unknown liveness for statusUncertain tasks (default: false)"),
-      parentSessionID: tool.schema.string().optional().describe("Restrict discovery to this parent session"),
+      parentSessionID: z.string().optional().describe("Restrict discovery to this parent session"),
     },
     async execute(args: BackgroundReviveArgs, toolContext) {
       const isListing = args.list === true || (args.taskId === undefined && args.session_id === undefined)

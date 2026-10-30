@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxContext } from "../../plugin/context"
 import { selectLines } from "../plan/plan-read-pagination"
 import { resolveDirectory } from "../plan/types"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { NOTEPAD_ERROR_CODES } from "./constants"
 import { validateNotepadFilePath } from "./validation"
 
@@ -11,13 +11,13 @@ export function createNotepadReadTool(ctx?: MatrixxContext): MatrixxToolDefiniti
   return defineTool("notepad_read", {
     description: `Read a notepad file from .matrixx/notepads/<bucket>/<file>.md (utf-8).\nValidated via validateNotepadFilePath. Missing file returns not_found. Paginate with offset (1-based) / limit.`,
     args: {
-      planName: tool.schema.string().optional().describe("Bucket name (kebab-case). Omit for the adhoc bucket"),
-      fileName: tool.schema.string().describe("Notepad file name (kebab-case .md, directly inside the bucket)"),
-      offset: tool.schema
+      planName: z.string().optional().describe("Bucket name (kebab-case). Omit for the adhoc bucket"),
+      fileName: z.string().describe("Notepad file name (kebab-case .md, directly inside the bucket)"),
+      offset: z
         .number()
         .optional()
         .describe("1-based start line (inclusive) for pagination; omit for whole file"),
-      limit: tool.schema
+      limit: z
         .number()
         .optional()
         .describe("Number of lines to return from offset; omit to read to end of file"),

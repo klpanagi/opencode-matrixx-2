@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { isAbsolute, join } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { DASHBOARD_FLUX_VALIDATE_DESCRIPTION } from "./constants"
 import type { FluxValidationResult } from "./types"
@@ -19,7 +19,7 @@ export function createDashboardFluxValidatorTool(ctx: MatrixxContext): Record<st
   const dashboard_flux_validate: MatrixxToolDefinition = defineTool("dashboard_flux_validate", {
     description: DASHBOARD_FLUX_VALIDATE_DESCRIPTION,
     args: {
-      path: tool.schema
+      path: z
         .string()
         .describe("Grafana provisioning YAML, dashboard JSON, or a directory (absolute, or project-relative)."),
     },

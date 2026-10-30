@@ -2,8 +2,8 @@ import { existsSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const PYTHON_SCRIPT = `#!/usr/bin/env python3
 import sys
@@ -225,35 +225,35 @@ export function createPdfExtractFiguresTool(): Record<string, MatrixxToolDefinit
       "Useful for extracting figures, diagrams, charts, and photos from PDF documents. " +
       "Requires Python 3.8+ with PyMuPDF installed (pip install PyMuPDF).",
     args: {
-      file_path: tool.schema
+      file_path: z
         .string()
         .describe("Absolute path to the PDF file to extract images from"),
-      output_dir: tool.schema
+      output_dir: z
         .string()
         .optional()
         .describe(
           "Directory to save extracted image files. " +
             "If omitted, only JSON metadata is returned (no files saved).",
         ),
-      page: tool.schema
+      page: z
         .number()
         .optional()
         .describe("Only extract images from this specific page number (1-indexed)"),
-      min_width: tool.schema
+      min_width: z
         .number()
         .optional()
         .describe("Minimum image width in pixels (filters out smaller images like icons)"),
-      min_height: tool.schema
+      min_height: z
         .number()
         .optional()
         .describe("Minimum image height in pixels (filters out smaller images like icons)"),
-      min_area: tool.schema
+      min_area: z
         .number()
         .optional()
         .describe(
           "Minimum image area in square pixels (filters out small decorative elements)",
         ),
-      json_only: tool.schema
+      json_only: z
         .boolean()
         .optional()
         .describe(

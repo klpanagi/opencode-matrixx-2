@@ -1,11 +1,11 @@
 import { basename } from "node:path"
 import { pathToFileURL } from "node:url"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { fetchSessionMessages, type NativePluginContext } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { extractLatestAssistantText } from "./assistant-message-extractor"
 import { CONSTRUCT_AGENT, LOOK_AT_DESCRIPTION } from "./constants"
 import type { LookAtArgsWithAlias } from "./look-at-arguments"
@@ -24,9 +24,9 @@ export function createLookAt(ctx: NativePluginContext): MatrixxToolDefinition {
   return defineTool("look_at", {
     description: LOOK_AT_DESCRIPTION,
     args: {
-      file_path: tool.schema.string().optional().describe("Absolute path to the file to analyze"),
-      image_data: tool.schema.string().optional().describe("Base64 encoded image data (for clipboard/pasted images)"),
-      goal: tool.schema.string().describe("What specific information to extract from the file"),
+      file_path: z.string().optional().describe("Absolute path to the file to analyze"),
+      image_data: z.string().optional().describe("Base64 encoded image data (for clipboard/pasted images)"),
+      goal: z.string().describe("What specific information to extract from the file"),
     },
     async execute(rawArgs: LookAtArgs, toolContext) {
       const args = normalizeArgs(rawArgs as LookAtArgsWithAlias)

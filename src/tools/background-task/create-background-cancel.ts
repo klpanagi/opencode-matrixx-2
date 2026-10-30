@@ -1,7 +1,7 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"
 import type { BackgroundCancelArgs } from "./types"
 
@@ -9,8 +9,8 @@ export function createBackgroundCancel(manager: BackgroundManager, _client: Sess
   return defineTool("background_cancel", {
     description: BACKGROUND_CANCEL_DESCRIPTION,
     args: {
-      taskId: tool.schema.string().optional().describe("Task ID to cancel (required if all=false)"),
-      all: tool.schema.boolean().optional().describe("Cancel all running background tasks (default: false)"),
+      taskId: z.string().optional().describe("Task ID to cancel (required if all=false)"),
+      all: z.boolean().optional().describe("Cancel all running background tasks (default: false)"),
     },
     async execute(args: BackgroundCancelArgs, toolContext) {
       try {

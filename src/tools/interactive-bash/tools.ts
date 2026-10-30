@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { log } from "../../shared/logger"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BLOCKED_TMUX_SUBCOMMANDS, DEFAULT_TIMEOUT_MS, INTERACTIVE_BASH_DESCRIPTION } from "./constants"
 import { getCachedTmuxPath } from "./tmux-path-resolver"
 
@@ -52,7 +52,7 @@ export function tokenizeCommand(cmd: string): string[] {
 export const interactive_bash: MatrixxToolDefinition = defineTool("interactive_bash", {
   description: INTERACTIVE_BASH_DESCRIPTION,
   args: {
-    tmux_command: tool.schema.string().describe("The tmux command to execute (without 'tmux' prefix)"),
+    tmux_command: z.string().describe("The tmux command to execute (without 'tmux' prefix)"),
   },
   execute: async (args) => {
     try {

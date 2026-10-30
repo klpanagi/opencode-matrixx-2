@@ -9,8 +9,8 @@ import type { Diagnostic } from "./types"
 export const lsp_diagnostics: MatrixxToolDefinition = defineTool("lsp_diagnostics", {
   description: "Get errors, warnings, hints from language server BEFORE running build.",
   args: {
-    filePath: tool.schema.string(),
-    severity: tool.schema
+    filePath: z.string(),
+    severity: z
       .enum(["error", "warning", "information", "hint", "all"])
       .optional()
       .describe("Filter by severity level"),

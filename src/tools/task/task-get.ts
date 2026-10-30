@@ -1,10 +1,10 @@
 import { join } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import type { MatrixxContext } from "../../plugin/context"
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { TASK_ID_PATTERN } from "./constants"
 import { TaskGetInputSchema, TaskObjectSchema } from "./types"
 
@@ -22,7 +22,7 @@ Returns the full task object including all fields: id, subject, description, sta
 
 Returns null if the task does not exist or the file is invalid.`,
     args: {
-      id: tool.schema.string().describe("Task ID to retrieve (format: T-{uuid})"),
+      id: z.string().describe("Task ID to retrieve (format: T-{uuid})"),
     },
     execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
       try {

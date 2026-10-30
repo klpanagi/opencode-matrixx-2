@@ -8,9 +8,9 @@ import { applyWorkspaceEdit } from "./workspace-edit"
 export const lsp_prepare_rename: MatrixxToolDefinition = defineTool("lsp_prepare_rename", {
   description: "Check if rename is valid. Use BEFORE lsp_rename.",
   args: {
-    filePath: tool.schema.string(),
-    line: tool.schema.number().min(1).describe("1-based"),
-    character: tool.schema.number().min(0).describe("0-based"),
+    filePath: z.string(),
+    line: z.number().min(1).describe("1-based"),
+    character: z.number().min(0).describe("0-based"),
   },
   execute: async (args, _context) => {
     try {
@@ -32,10 +32,10 @@ export const lsp_prepare_rename: MatrixxToolDefinition = defineTool("lsp_prepare
 export const lsp_rename: MatrixxToolDefinition = defineTool("lsp_rename", {
   description: "Rename symbol across entire workspace. APPLIES changes to all files.",
   args: {
-    filePath: tool.schema.string(),
-    line: tool.schema.number().min(1).describe("1-based"),
-    character: tool.schema.number().min(0).describe("0-based"),
-    newName: tool.schema.string().describe("New symbol name"),
+    filePath: z.string(),
+    line: z.number().min(1).describe("1-based"),
+    character: z.number().min(0).describe("0-based"),
+    newName: z.string().describe("New symbol name"),
   },
   execute: async (args, _context) => {
     try {

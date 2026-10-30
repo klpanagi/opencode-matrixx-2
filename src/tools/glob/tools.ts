@@ -1,5 +1,5 @@
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runRgFiles } from "./cli"
 import { resolveGrepCliWithAutoInstall } from "./constants"
@@ -13,8 +13,8 @@ export function createGlobTools(ctx: MatrixxContext): Record<string, MatrixxTool
       "Returns matching file paths sorted by modification time. " +
       "Use this tool when you need to find files by name patterns.",
     args: {
-      pattern: tool.schema.string().describe("The glob pattern to match files against"),
-      path: tool.schema
+      pattern: z.string().describe("The glob pattern to match files against"),
+      path: z
         .string()
         .optional()
         .describe(

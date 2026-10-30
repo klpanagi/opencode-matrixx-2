@@ -1,6 +1,4 @@
 import { join } from "node:path";
-import type { MatrixxContext } from "../../plugin/context";
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { z } from "zod";
 import type { MatrixxConfig } from "../../config/schema";
 import {
@@ -10,8 +8,10 @@ import {
   writeJsonAtomic,
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
+import type { MatrixxContext } from "../../plugin/context";
 import { log } from "../../shared/logger";
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { TASK_ID_PATTERN } from "./constants";
 import type { TaskObject } from "./types";
 import { TaskObjectSchema, TaskUpdateInputSchema } from "./types";
@@ -36,31 +36,31 @@ For blocks/blockedBy: use addBlocks/addBlockedBy to append (additive, not replac
 Use \`addBlockedBy\` to declare dependencies on other tasks.
 Properly managed dependencies enable maximum parallel execution.`,
      args: {
-      id: tool.schema.string().describe("Task ID (required)"),
-      subject: tool.schema.string().optional().describe("Task subject"),
-      description: tool.schema.string().optional().describe("Task description"),
-      status: tool.schema
+      id: z.string().describe("Task ID (required)"),
+      subject: z.string().optional().describe("Task subject"),
+      description: z.string().optional().describe("Task description"),
+      status: z
         .enum(["pending", "in_progress", "completed", "deleted"])
         .optional()
         .describe("Task status"),
-      activeForm: tool.schema
+      activeForm: z
         .string()
         .optional()
         .describe("Active form (present continuous)"),
-      owner: tool.schema
+      owner: z
         .string()
         .optional()
         .describe("Task owner (agent name)"),
-      addBlocks: tool.schema
-        .array(tool.schema.string())
+      addBlocks: z
+        .array(z.string())
         .optional()
         .describe("Task IDs to add to blocks (additive, not replacement)"),
-      addBlockedBy: tool.schema
-        .array(tool.schema.string())
+      addBlockedBy: z
+        .array(z.string())
         .optional()
         .describe("Task IDs to add to blockedBy (additive, not replacement)"),
-      metadata: tool.schema
-        .record(tool.schema.string(), tool.schema.unknown())
+      metadata: z
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Task metadata to merge (set key to null to delete)"),
     },

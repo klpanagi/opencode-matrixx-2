@@ -1,8 +1,8 @@
-import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { createOpencodeClient } from "@opencode-ai/sdk"
+import { z } from "zod"
 import { log } from "../../shared"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { discoverCommandsSync } from "./command-discovery"
 import { formatCommandList, formatLoadedCommand } from "./command-output-formatter"
 import { skillToCommandInfo } from "./skill-command-converter"
@@ -84,12 +84,12 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): M
     },
 
     args: {
-      command: tool.schema
+      command: z
         .string()
         .describe(
           "The slash command name (without leading slash). E.g., 'publish', 'commit', 'plan'"
         ),
-      user_message: tool.schema
+      user_message: z
         .string()
         .optional()
         .describe(

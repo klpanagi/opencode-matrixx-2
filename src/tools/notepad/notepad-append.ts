@@ -1,8 +1,8 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { NOTEPAD_ERROR_CODES } from "./constants"
 import { validateNotepadFilePath } from "./validation"
 
@@ -12,10 +12,10 @@ export function createNotepadAppendTool(ctx?: MatrixxContext): MatrixxToolDefini
   return defineTool("notepad_append", {
     description: "Append a timestamped section to an existing notepad file under .matrixx/notepads/<bucket>/*.md. APPEND-only via appendFileSync — never overwrites, never auto-creates (missing file returns not_found).",
     args: {
-      planName: tool.schema.string().optional().describe("Bucket/plan name (kebab-case); empty falls back to adhoc"),
-      fileName: tool.schema.string().describe("Notepad file name (kebab-case .md, directly inside bucket)"),
-      content: tool.schema.string().describe("Markdown content to append (non-empty, max 40k bytes)"),
-      taskId: tool.schema.string().optional().describe("Task ID for the section heading"),
+      planName: z.string().optional().describe("Bucket/plan name (kebab-case); empty falls back to adhoc"),
+      fileName: z.string().describe("Notepad file name (kebab-case .md, directly inside bucket)"),
+      content: z.string().describe("Markdown content to append (non-empty, max 40k bytes)"),
+      taskId: z.string().optional().describe("Task ID for the section heading"),
     },
     execute: async (args, context) => {
       try {

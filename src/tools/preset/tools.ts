@@ -2,12 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config"
 import type { ModelPreset } from "../../config/schema/model-presets"
 import { getSessionPreset, setSessionPreset } from "../../features/preset-state/manager"
 import { parseJsoncSafe } from "../../shared/jsonc-parser"
 import { log } from "../../shared/logger"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const ACTIONS = ["list", "show", "set"] as const
 const SCOPES = ["global", "project"] as const
@@ -154,18 +154,18 @@ export function createPresetTool(options?: PresetToolOptions): Record<string, Ma
       "categories immediately and applies to builtin agents on the next session; " +
       "`set <name> --save [--global|--project]` additionally persists `active_preset` to config.",
     args: {
-      action: tool.schema
+      action: z
         .enum(ACTIONS)
         .describe("Operation: list available presets, show a preset's details, or set the active preset"),
-      name: tool.schema
+      name: z
         .string()
         .optional()
         .describe("Preset name (required for set; optional for show — defaults to the active preset)"),
-      save: tool.schema
+      save: z
         .boolean()
         .optional()
         .describe("Persist the active preset to config (default: false — session-only overlay)"),
-      scope: tool.schema
+      scope: z
         .enum(SCOPES)
         .optional()
         .describe(

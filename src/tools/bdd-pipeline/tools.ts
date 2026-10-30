@@ -1,11 +1,11 @@
 import * as fs from "node:fs"
 import { resolve as resolvePath } from "node:path"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { type Contract, ContractSchema } from "../../features/bdd/schema"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
 import { createBddParseGherkinTool } from "../bdd-parse-gherkin/tools"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { buildAnalysisReport } from "./analysis-report"
 import { BDD_PIPELINE_DESCRIPTION, PIPELINE_REQUIRED_OUTPUTS } from "./constants"
 import { resolveFeaturePaths } from "./feature-resolver"
@@ -36,13 +36,13 @@ export function createBddPipelineTool(opts: {
   return defineTool("bdd_pipeline_run", {
     description: BDD_PIPELINE_DESCRIPTION,
     args: {
-      featurePaths: tool.schema
-        .array(tool.schema.string())
+      featurePaths: z
+        .array(z.string())
         .describe(
           "One or more .feature file paths, directories, or glob patterns (e.g. 'features/**/*.feature').",
         ),
-      outDir: tool.schema.string().describe("Output directory root; per-feature dirs are created under it"),
-      force: tool.schema
+      outDir: z.string().describe("Output directory root; per-feature dirs are created under it"),
+      force: z
         .boolean()
         .default(false)
         .describe("Overwrite existing contract / output files"),

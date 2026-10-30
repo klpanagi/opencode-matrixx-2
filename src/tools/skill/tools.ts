@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { TOOL_DESCRIPTION_NO_SKILLS, TOOL_DESCRIPTION_PREFIX } from "./constants"
 import type { SkillArgs, SkillInfo, SkillLoadOptions } from "./types"
 
@@ -59,7 +59,7 @@ export function createSkillTool(options: SkillLoadOptions = {}): MatrixxToolDefi
       return cachedDescription ?? TOOL_DESCRIPTION_PREFIX
     },
     args: {
-      name: tool.schema.string().describe("The skill identifier from available_skills (e.g., 'code-review')"),
+      name: z.string().describe("The skill identifier from available_skills (e.g., 'code-review')"),
     },
     async execute(args: SkillArgs, ctx?: { agent?: string }) {
       const skills = getSkills()

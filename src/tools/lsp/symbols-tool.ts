@@ -10,13 +10,13 @@ export const lsp_symbols: MatrixxToolDefinition = defineTool("lsp_symbols", {
   description:
     "Get symbols from file (document) or search across workspace. Use scope='document' for file outline, scope='workspace' for project-wide symbol search.",
   args: {
-    filePath: tool.schema.string().describe("File path for LSP context"),
-    scope: tool.schema
+    filePath: z.string().describe("File path for LSP context"),
+    scope: z
       .enum(["document", "workspace"])
       .default("document")
       .describe("'document' for file symbols, 'workspace' for project-wide search"),
-    query: tool.schema.string().optional().describe("Symbol name to search (required for workspace scope)"),
-    limit: tool.schema.number().optional().describe("Max results (default 50)"),
+    query: z.string().optional().describe("Symbol name to search (required for workspace scope)"),
+    limit: z.number().optional().describe("Max results (default 50)"),
   },
   execute: async (args, _context) => {
     try {

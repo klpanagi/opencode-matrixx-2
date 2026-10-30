@@ -1,7 +1,7 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundManager } from "../../features/background-agent"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BACKGROUND_WAIT_ALL_DESCRIPTION } from "./constants"
 import type { ToolContextWithMetadata } from "./types"
 
@@ -16,7 +16,7 @@ export function createBackgroundWaitAll(manager: BackgroundManager): MatrixxTool
   return defineTool("background_wait_all", {
     description: BACKGROUND_WAIT_ALL_DESCRIPTION,
     args: {
-      timeout: tool.schema
+      timeout: z
         .number()
         .optional()
         .describe("Max wait time in ms (default: 30000, max: 120000)"),

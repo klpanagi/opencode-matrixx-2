@@ -1,11 +1,11 @@
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import type { MatrixxContext } from "../../plugin/context"
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { TaskObject, TaskStatus } from "./types"
 import { TaskObjectSchema } from "./types"
 
@@ -30,7 +30,7 @@ Returns summary format: id, subject, status, owner, blockedBy (not full descript
 Optional \`parentID\` filter: when provided, returns only tasks whose parentID matches
 (i.e. the subtasks of that parent task).`,
     args: {
-      parentID: tool.schema.string().optional().describe("Filter to subtasks of this parent task ID"),
+      parentID: z.string().optional().describe("Filter to subtasks of this parent task ID"),
     },
     execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
       const parentID = args.parentID as string | undefined

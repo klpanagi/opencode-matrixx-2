@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type {
   AvailableCategory,
   AvailableSkill,
@@ -7,6 +6,7 @@ import type {
 import { resolveSoftwareDevEnforcement, type SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import { log } from "../../shared/logger"
 import { mergeCategories } from "../../shared/merge-categories"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { CATEGORY_DESCRIPTIONS, isCodeWritingCategory, SHORT_CATEGORY_HINTS } from "./constants"
 import {
   executeBackgroundContinuation,
@@ -122,21 +122,21 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
   return defineTool("task", {
     description,
     args: {
-      load_skills: tool.schema.array(tool.schema.string()).describe("Skill names to inject. REQUIRED - pass [] if no skills needed."),
-      description: tool.schema.string().describe("Short task description (3-5 words)"),
-      prompt: tool.schema.string().describe("Full detailed prompt for the agent"),
-      run_in_background: tool.schema.boolean().default(false).describe("true=async (returns task_id), false=sync (waits). Default: false"),
-      category: tool.schema.string().optional().describe(`REQUIRED if subagent_type not provided. Do NOT provide both category and subagent_type. Available: ${categoryExamples}. Per-category model/temperature/skills guidance is injected at execution time.`),
-      subagent_type: tool.schema.string().optional().describe("REQUIRED if category not provided. Do NOT provide both category and subagent_type."),
-      session_id: tool.schema.string().optional().describe("Existing Task session to continue (full context preserved). Use when: task failed/incomplete (fix: <issue>), follow-up on previous result, or multi-turn with same agent. NEVER start fresh for follow-ups."),
-      command: tool.schema.string().optional().describe("The command that triggered this task"),
-      complexity: tool.schema.union([
-        tool.schema.literal(1),
-        tool.schema.literal(2),
-        tool.schema.literal(3),
-        tool.schema.literal(4),
-        tool.schema.literal(5),
-        tool.schema.literal("auto"),
+      load_skills: z.array(z.string()).describe("Skill names to inject. REQUIRED - pass [] if no skills needed."),
+      description: z.string().describe("Short task description (3-5 words)"),
+      prompt: z.string().describe("Full detailed prompt for the agent"),
+      run_in_background: z.boolean().default(false).describe("true=async (returns task_id), false=sync (waits). Default: false"),
+      category: z.string().optional().describe(`REQUIRED if subagent_type not provided. Do NOT provide both category and subagent_type. Available: ${categoryExamples}. Per-category model/temperature/skills guidance is injected at execution time.`),
+      subagent_type: z.string().optional().describe("REQUIRED if category not provided. Do NOT provide both category and subagent_type."),
+      session_id: z.string().optional().describe("Existing Task session to continue (full context preserved). Use when: task failed/incomplete (fix: <issue>), follow-up on previous result, or multi-turn with same agent. NEVER start fresh for follow-ups."),
+      command: z.string().optional().describe("The command that triggered this task"),
+      complexity: z.union([
+        z.literal(1),
+        z.literal(2),
+        z.literal(3),
+        z.literal(4),
+        z.literal(5),
+        z.literal("auto"),
       ]).optional().default("auto").describe(
         "Task complexity (1-5) or 'auto' for automatic scoring. Levels 1-2 may use cheaper models."
       ),

@@ -1,9 +1,9 @@
 import * as path from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { approveHubWrite, HUB_WRITE_APPROVAL_TTL_MS } from "../../hooks/knowledge-hub-guard/approvals"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const HOOK_NAME = "knowledge-hub-guard"
 
@@ -23,10 +23,10 @@ export function createKnowledgeHubConfirmTool(ctx: MatrixxContext): MatrixxToolD
       "explicitly approved the write via the question tool. Records a session-scoped " +
       "approval (10 min TTL) for the path, then retry the blocked write.",
     args: {
-      path: tool.schema
+      path: z
         .string()
         .describe("Hub file or directory the user approved for writing (absolute or relative to the project dir)"),
-      sessionID: tool.schema
+      sessionID: z
         .string()
         .optional()
         .describe("Session the approval applies to (defaults to the current session)"),

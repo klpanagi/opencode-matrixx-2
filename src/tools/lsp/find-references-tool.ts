@@ -9,10 +9,10 @@ import type { Location } from "./types"
 export const lsp_find_references: MatrixxToolDefinition = defineTool("lsp_find_references", {
   description: "Find ALL usages/references of a symbol across the entire workspace.",
   args: {
-    filePath: tool.schema.string(),
-    line: tool.schema.number().min(1).describe("1-based"),
-    character: tool.schema.number().min(0).describe("0-based"),
-    includeDeclaration: tool.schema.boolean().optional().describe("Include the declaration itself"),
+    filePath: z.string(),
+    line: z.number().min(1).describe("1-based"),
+    character: z.number().min(0).describe("0-based"),
+    includeDeclaration: z.boolean().optional().describe("Include the declaration itself"),
   },
   execute: async (args, _context) => {
     try {

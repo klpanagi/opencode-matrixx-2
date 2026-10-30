@@ -34,8 +34,8 @@ Returns a JSON object with:
 - data: the parsed GherkinDocument AST (when success is true)
 - error: error message (when success is false)`,
     args: {
-      filePath: tool.schema.string().describe("Path to .feature file"),
-      includeSourceMap: tool.schema
+      filePath: z.string().describe("Path to .feature file"),
+      includeSourceMap: z
         .boolean()
         .default(false)
         .describe("Include location (line/column) information in the output"),

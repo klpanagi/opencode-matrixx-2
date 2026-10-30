@@ -1,5 +1,5 @@
-import type { MatrixxContext } from "../../plugin/context"
 import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runRg } from "./cli"
 import { formatGrepResult } from "./result-formatter"
@@ -13,12 +13,12 @@ export function createGrepTools(ctx: MatrixxContext): Record<string, MatrixxTool
       "Filter files by pattern with the include parameter (eg. \"*.js\", \"*.{ts,tsx}\"). " +
       "Returns file paths with matches sorted by modification time.",
     args: {
-      pattern: tool.schema.string().describe("The regex pattern to search for in file contents"),
-      include: tool.schema
+      pattern: z.string().describe("The regex pattern to search for in file contents"),
+      include: z
         .string()
         .optional()
         .describe("File pattern to include in the search (e.g. \"*.js\", \"*.{ts,tsx}\")"),
-      path: tool.schema
+      path: z
         .string()
         .optional()
         .describe("The directory to search in. Defaults to the current working directory."),
