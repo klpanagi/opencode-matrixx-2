@@ -44,11 +44,13 @@ export async function executeSyncContinuation(
       const messages = normalizeSDKResponse(messagesResp, [] as SessionMessage[])
       anchorMessageCount = messages.length
       for (let i = messages.length - 1; i >= 0; i--) {
-        const info = messages[i].info
-        if (info?.agent || info?.model || (info?.modelID && info?.providerID)) {
-          resumeAgent = info.agent
-          resumeModel = info.model ?? (info.providerID && info.modelID ? { providerID: info.providerID, modelID: info.modelID } : undefined)
-          resumeVariant = info.variant
+        const message = messages[i]
+        if (message.agent || message.model) {
+          resumeAgent = message.agent
+          resumeModel = message.model
+            ? { providerID: message.model.providerID, modelID: message.model.modelID }
+            : undefined
+          resumeVariant = message.model?.variant
           break
         }
       }

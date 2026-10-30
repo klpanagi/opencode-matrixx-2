@@ -1,13 +1,14 @@
 import { normalizeSDKResponse } from "../../shared"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
-import type { SessionMessage } from "./executor-types"
 import type { OpencodeClient } from "./types"
 
 /**
  * Extract all text (text + reasoning parts) from a session message.
  */
 function messageText(msg: SessionMessage): string {
-  const textParts = msg.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
+  const textParts = contentOf(msg).filter((p) => p.type === "text" || p.type === "reasoning")
   return textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
 }
 
@@ -43,7 +44,7 @@ function extractTaggedDeliverable(
   // Search newest-first for tagged content
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
-    if (msg.info?.role !== "assistant") continue
+    if (!isAssistant(msg)) continue
     const text = messageText(msg)
     const startIdx = text.indexOf(tagStart)
     if (startIdx === -1) continue
@@ -100,8 +101,8 @@ export async function fetchSyncResult(
   }
 
   const assistantMessages = messagesAfterAnchor
-    .filter((m) => m.info?.role === "assistant")
-    .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
+    .filter((m) => isAssistant(m))
+    .sort((a, b) => timeOf(b) - timeOf(a))
   const lastMessage = assistantMessages[0]
 
   if (anchorMessageCount !== undefined && !lastMessage) {

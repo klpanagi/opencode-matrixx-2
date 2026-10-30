@@ -1,6 +1,7 @@
 import type { BackgroundTask } from "../../features/background-agent"
 import { formatDuration } from "../../shared"
 import { consumeNewMessages } from "../../shared/session-cursor"
+import { contentOf, roleOf } from "../../shared/session-message"
 import type { BackgroundOutputClient, BackgroundOutputMessagesResult } from "./clients"
 import { extractMessages, getErrorMessage } from "./session-messages"
 
@@ -49,7 +50,7 @@ Session ID: ${task.sessionID}
 (No messages found)`
   }
 
-  const relevantMessages = messages.filter((m) => m.info?.role === "assistant" || m.info?.role === "tool")
+  const relevantMessages = messages.filter((m) => roleOf(m) === "assistant" || roleOf(m) === "tool")
   if (relevantMessages.length === 0) {
     return `Task Result
 
@@ -64,8 +65,8 @@ Session ID: ${task.sessionID}
   }
 
   const sortedMessages = [...relevantMessages].sort((a, b) => {
-    const timeA = getTimeString(a.info?.time)
-    const timeB = getTimeString(b.info?.time)
+    const timeA = getTimeString(a.time)
+    const timeB = getTimeString(b.time)
     return timeA.localeCompare(timeB)
   })
 
@@ -86,7 +87,7 @@ Session ID: ${task.sessionID}
 
   const extractedContent: string[] = []
   for (const message of newMessages) {
-    for (const part of message.parts ?? []) {
+    for (const part of contentOf(message)) {
       if ((part.type === "text" || part.type === "reasoning") && part.text) {
         extractedContent.push(part.text)
         continue

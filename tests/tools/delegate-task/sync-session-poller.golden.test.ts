@@ -42,9 +42,9 @@ describe("golden: sync session poller over the message corpora", () => {
     __resetTimingConfig()
   })
 
-  test("treats the v1-shaped corpus as a completed session", () => {
-    //#given the v1-shaped corpus, whose last assistant message carries finish: "stop"
-    const messages = clone(loadCorpus("v1-shaped"))
+  test("treats the flat corpus as a completed session", () => {
+    //#given the flat corpus, whose last assistant message carries finish: "stop"
+    const messages = clone(loadCorpus("v2-flat"))
 
     //#when
     const complete = isSessionComplete(messages)
@@ -54,8 +54,8 @@ describe("golden: sync session poller over the message corpora", () => {
   })
 
   test("resolves when the polled session reaches a terminal assistant finish", async () => {
-    //#given a client that reports an idle session holding the v1-shaped corpus
-    const messages = clone(loadCorpus("v1-shaped"))
+    //#given a client that reports an idle session holding the flat corpus
+    const messages = clone(loadCorpus("v2-flat"))
 
     //#when
     const result = await pollSyncSession(createCtx() as never, clientReturning(messages) as never, {
@@ -71,7 +71,7 @@ describe("golden: sync session poller over the message corpora", () => {
 
   test("stall path reports the task-7 diagnostics when no assistant message ever arrives", async () => {
     //#given a corpus with user messages only, so the poller never sees an assistant turn
-    const messages = clone(loadCorpus("v1-shaped")).filter((message) => message.info?.role === "user")
+    const messages = clone(loadCorpus("v2-flat")).filter((message) => message.type === "user")
 
     //#when
     const result = await pollSyncSession(createCtx() as never, clientReturning(messages) as never, {
@@ -89,14 +89,14 @@ describe("golden: sync session poller over the message corpora", () => {
     expect(result as string).toContain(DIAGNOSTIC_CAUSES)
   })
 
-  test("pins the current v2-flat gap that task 15 closes", () => {
-    //#given the v2-flat corpus, whose assistant messages carry type/content instead of info/parts
+  test("reads the flat corpus as complete (the gap task 15 closed)", () => {
+    //#given the flat corpus the poller used to read as incomplete
     const v2 = clone(loadCorpus("v2-flat"))
 
     //#when
     const complete = isSessionComplete(v2)
 
-    //#then task 15 flips this expectation to true
-    expect(complete).toBe(false)
+    //#then
+    expect(complete).toBe(true)
   })
 })

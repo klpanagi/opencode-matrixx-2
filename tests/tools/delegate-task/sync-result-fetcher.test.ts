@@ -9,19 +9,19 @@ describe("fetchSyncResult", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+            { id: "msg_001", type: "user", time: { created: 1000 } },
             {
-              info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-              parts: [{ type: "text", text: "First response" }],
+              id: "msg_002", type: "assistant", time: { created: 2000 },
+              content: [{ type: "text", text: "First response" }]
             },
-            { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+            { id: "msg_003", type: "user", time: { created: 3000 } },
             {
-              info: { id: "msg_004", role: "assistant", time: { created: 4000 } },
-              parts: [{ type: "text", text: "Latest response" }],
+              id: "msg_004", type: "assistant", time: { created: 4000 },
+              content: [{ type: "text", text: "Latest response" }]
             },
-          ],
-        }),
-      },
+          ]
+        })
+      }
     }
 
     //#when
@@ -39,19 +39,19 @@ describe("fetchSyncResult", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+            { id: "msg_001", type: "user", time: { created: 1000 } },
             {
-              info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-              parts: [{ type: "text", text: "First response" }],
+              id: "msg_002", type: "assistant", time: { created: 2000 },
+              content: [{ type: "text", text: "First response" }]
             },
-            { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+            { id: "msg_003", type: "user", time: { created: 3000 } },
             {
-              info: { id: "msg_004", role: "assistant", time: { created: 4000 } },
-              parts: [{ type: "text", text: "After anchor response" }],
+              id: "msg_004", type: "assistant", time: { created: 4000 },
+              content: [{ type: "text", text: "After anchor response" }]
             },
-          ],
-        }),
-      },
+          ]
+        })
+      }
     }
 
     //#when - anchor at 2 (after first assistant message)
@@ -69,14 +69,14 @@ describe("fetchSyncResult", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+            { id: "msg_001", type: "user", time: { created: 1000 } },
             {
-              info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-              parts: [{ type: "text", text: "Response" }],
+              id: "msg_002", type: "assistant", time: { created: 2000 },
+              content: [{ type: "text", text: "Response" }]
             },
-          ],
-        }),
-      },
+          ]
+        })
+      }
     }
 
     //#when - anchor at 2 (beyond messages)
@@ -97,24 +97,24 @@ describe("fetchSyncResult", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+            { id: "msg_001", type: "user", time: { created: 1000 } },
             {
-              info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-              parts: [{ type: "text", text: "First response" }],
+              id: "msg_002", type: "assistant", time: { created: 2000 },
+              content: [{ type: "text", text: "First response" }]
             },
-            { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+            { id: "msg_003", type: "user", time: { created: 3000 } },
             {
-              info: { id: "msg_004", role: "assistant", time: { created: 3500 } },
-              parts: [{ type: "text", text: "Middle response" }],
+              id: "msg_004", type: "assistant", time: { created: 3500 },
+              content: [{ type: "text", text: "Middle response" }]
             },
-            { info: { id: "msg_005", role: "user", time: { created: 4000 } } },
+            { id: "msg_005", type: "user", time: { created: 4000 } },
             {
-              info: { id: "msg_006", role: "assistant", time: { created: 4500 } },
-              parts: [{ type: "text", text: "Latest response" }],
+              id: "msg_006", type: "assistant", time: { created: 4500 },
+              content: [{ type: "text", text: "Latest response" }]
             },
-          ],
-        }),
-      },
+          ]
+        })
+      }
     }
 
     //#when - anchor at 2 (after first assistant)
@@ -131,9 +131,9 @@ describe("fetchSyncResult", () => {
     const mockClient = {
       session: {
         messages: async () => ({
-          data: [],
-        }),
-      },
+          data: []
+        })
+      }
     }
 
     //#when

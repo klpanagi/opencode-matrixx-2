@@ -13,12 +13,12 @@ const mockContext: ToolContext = {
   sessionID: "test-session",
   messageID: "test-message",
   agent: "test-agent",
-  abort: new AbortController().signal,
+  abort: new AbortController().signal
 }
 
 function createMockManager(task: BackgroundTask): BackgroundOutputManager {
   return {
-    getTask: (id: string) => (id === task.id ? task : undefined),
+    getTask: (id: string) => (id === task.id ? task : undefined)
   }
 }
 
@@ -27,9 +27,9 @@ function createMockClient(messagesBySession: Record<string, BackgroundOutputMess
   const client = {
     session: {
       messages: async ({ path }: { path: { id: string } }) => ({
-        data: messagesBySession[path.id] ?? emptyMessages,
-      }),
-    },
+        data: messagesBySession[path.id] ?? emptyMessages
+      })
+    }
   } satisfies BackgroundOutputClient
   return client
 }
@@ -44,7 +44,7 @@ function createTask(overrides: Partial<BackgroundTask> = {}): BackgroundTask {
     prompt: "do work",
     agent: "test-agent",
     status: "running",
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -57,14 +57,14 @@ describe("background_output full_session", () => {
       id: "task-1",
       agent: "trinity",
       description: "Find how task output is rendered",
-      status: "running",
+      status: "running"
     })
     const manager = createMockManager(task)
     const client = createMockClient({})
     const tool = createBackgroundOutput(manager, client)
     const ctxWithCallId = {
       ...mockContext,
-      callID: "call-1",
+      callID: "call-1"
     } as unknown as ToolContext
 
     // #when
@@ -84,14 +84,14 @@ describe("background_output full_session", () => {
       agent: "Mouse",
       category: "bullet-time",
       description: "Fix flaky test",
-      status: "running",
+      status: "running"
     })
     const manager = createMockManager(task)
     const client = createMockClient({})
     const tool = createBackgroundOutput(manager, client)
     const ctxWithCallId = {
       ...mockContext,
-      callID: "call-1",
+      callID: "call-1"
     } as unknown as ToolContext
 
     // #when
@@ -110,22 +110,22 @@ describe("background_output full_session", () => {
       "ses-1": [
         {
           id: "m1",
-          info: { role: "assistant", time: "2026-01-01T00:00:00Z", agent: "test" },
-          parts: [
+          type: "assistant", time: "2026-01-01T00:00:00Z", agent: "test",
+          content: [
             { type: "text", text: "hello" },
             { type: "thinking", thinking: "thinking text" },
             { type: "tool_result", content: "tool output" },
-          ],
+          ]
         },
         {
           id: "m2",
-          info: { role: "assistant", time: "2026-01-01T00:00:01Z" },
-          parts: [
+          type: "assistant", time: "2026-01-01T00:00:01Z",
+          content: [
             { type: "reasoning", text: "reasoning text" },
             { type: "text", text: "after" },
-          ],
+          ]
         },
-      ],
+      ]
     })
     const tool = createBackgroundOutput(manager, client)
 
@@ -134,7 +134,7 @@ describe("background_output full_session", () => {
       task_id: "task-1",
       full_session: true,
       include_thinking: true,
-      include_tool_results: true,
+      include_tool_results: true
     }, mockContext)
 
     // #then
@@ -151,15 +151,15 @@ describe("background_output full_session", () => {
       "ses-1": [
         {
           id: "m1",
-          info: { role: "assistant", time: "2026-01-01T00:00:00Z" },
-          parts: [{ type: "text", text: "hello" }],
+          type: "assistant", time: "2026-01-01T00:00:00Z",
+          content: [{ type: "text", text: "hello" }]
         },
         {
           id: "m2",
-          info: { role: "assistant", time: "2026-01-01T00:00:01Z" },
-          parts: [{ type: "text", text: "after" }],
+          type: "assistant", time: "2026-01-01T00:00:01Z",
+          content: [{ type: "text", text: "after" }]
         },
-      ],
+      ]
     })
     const tool = createBackgroundOutput(manager, client)
 
@@ -167,7 +167,7 @@ describe("background_output full_session", () => {
     const output = await tool.execute({
       task_id: "task-1",
       full_session: true,
-      since_message_id: "m1",
+      since_message_id: "m1"
     }, mockContext)
 
     // #then
@@ -183,10 +183,10 @@ describe("background_output full_session", () => {
       "ses-1": [
         {
           id: "m1",
-          info: { role: "assistant", time: "2026-01-01T00:00:00Z" },
-          parts: [{ type: "text", text: "hello" }],
+          type: "assistant", time: "2026-01-01T00:00:00Z",
+          content: [{ type: "text", text: "hello" }]
         },
-      ],
+      ]
     })
     const tool = createBackgroundOutput(manager, client)
 
@@ -194,7 +194,7 @@ describe("background_output full_session", () => {
     const output = await tool.execute({
       task_id: "task-1",
       full_session: true,
-      since_message_id: "missing",
+      since_message_id: "missing"
     }, mockContext)
 
     // #then
@@ -207,11 +207,9 @@ describe("background_output full_session", () => {
     const manager = createMockManager(task)
     const messages = Array.from({ length: 120 }, (_, index) => ({
       id: `m${index}`,
-      info: {
-        role: "assistant",
+      type: "assistant",
         time: new Date(2026, 0, 1, 0, 0, index).toISOString(),
-      },
-      parts: [{ type: "text", text: `message-${index}` }],
+      content: [{ type: "text", text: `message-${index}` }]
     }))
     const client = createMockClient({ "ses-1": messages })
     const tool = createBackgroundOutput(manager, client)
@@ -220,7 +218,7 @@ describe("background_output full_session", () => {
     const output = await tool.execute({
       task_id: "task-1",
       full_session: true,
-      message_limit: 200,
+      message_limit: 200
     }, mockContext)
 
     // #then
@@ -266,13 +264,13 @@ describe("background_output full_session", () => {
       "ses-1": [
         {
           id: "m1",
-          info: { role: "assistant", time: "2026-01-01T00:00:00Z" },
-          parts: [
+          type: "assistant", time: "2026-01-01T00:00:00Z",
+          content: [
             { type: "thinking", thinking: longThinking },
             { type: "text", text: "hello" },
-          ],
+          ]
         },
-      ],
+      ]
     })
     const tool = createBackgroundOutput(manager, client)
 
@@ -281,7 +279,7 @@ describe("background_output full_session", () => {
       task_id: "task-1",
       full_session: true,
       include_thinking: true,
-      thinking_max_chars: 100,
+      thinking_max_chars: 100
     }, mockContext)
 
     // #then
@@ -298,13 +296,13 @@ describe("background_output full_session", () => {
       "ses-1": [
         {
           id: "m1",
-          info: { role: "assistant", time: "2026-01-01T00:00:00Z" },
-          parts: [
+          type: "assistant", time: "2026-01-01T00:00:00Z",
+          content: [
             { type: "thinking", thinking: longThinking },
             { type: "text", text: "hello" },
-          ],
+          ]
         },
-      ],
+      ]
     })
     const tool = createBackgroundOutput(manager, client)
 
@@ -312,7 +310,7 @@ describe("background_output full_session", () => {
     const output = await tool.execute({
       task_id: "task-1",
       full_session: true,
-      include_thinking: true,
+      include_thinking: true
     }, mockContext)
 
     // #then
@@ -333,7 +331,7 @@ describe("background_cancel", () => {
         cancelled.push(taskId)
         task.status = "cancelled"
         return true
-      },
+      }
     } as unknown as BackgroundManager
     const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
     const tool = createBackgroundCancel(manager, client)
@@ -359,7 +357,7 @@ describe("background_cancel", () => {
         const task = taskId === taskA.id ? taskA : taskB
         task.status = "cancelled"
         return true
-      },
+      }
     } as unknown as BackgroundManager
     const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
     const tool = createBackgroundCancel(manager, client)
@@ -383,7 +381,7 @@ describe("background_cancel", () => {
         const task = taskId === taskA.id ? taskA : taskB
         task.status = "cancelled"
         return true
-      },
+      }
     } as unknown as BackgroundManager
     const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
     const tool = createBackgroundCancel(manager, client)
@@ -407,7 +405,7 @@ describe("background_cancel", () => {
         cancelOptions.push({ taskId, options })
         task.status = "cancelled"
         return true
-      },
+      }
     } as unknown as BackgroundManager
     const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
     const tool = createBackgroundCancel(manager, client)
@@ -433,7 +431,7 @@ describe("background_cancel", () => {
         cancelOptions.push({ taskId, options })
         task.status = "cancelled"
         return true
-      },
+      }
     } as unknown as BackgroundManager
     const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
     const tool = createBackgroundCancel(manager, client)

@@ -148,20 +148,20 @@ describe("look-at tool", () => {
           get: async () => ({ data: { directory: "/project" } }),
           create: async () => ({ data: { id: "ses_test_prompt_fail" } }),
           prompt: async () => { throw new Error("Network connection failed") },
-          messages: async () => ({ data: [] }),
-        },
+          messages: async () => ({ data: [] })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -181,20 +181,20 @@ describe("look-at tool", () => {
           get: async () => ({ data: { directory: "/project" } }),
           create: async () => ({ data: { id: "ses_test_no_msg" } }),
           prompt: async () => ({}),
-          messages: async () => ({ data: [] }),
-        },
+          messages: async () => ({ data: [] })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -214,20 +214,20 @@ describe("look-at tool", () => {
           get: async () => ({ data: { directory: "/project" } }),
           create: async () => ({ error: "Internal server error" }),
           prompt: async () => ({}),
-          messages: async () => ({ data: [] }),
-        },
+          messages: async () => ({ data: [] })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -253,10 +253,10 @@ describe("look-at tool", () => {
               {
                 name: "construct",
                 mode: "subagent",
-                model: { providerID: "google", modelID: "gemini-3-flash" },
+                model: { providerID: "google", modelID: "gemini-3-flash" }
               },
-            ],
-          }),
+            ]
+          })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -267,22 +267,22 @@ describe("look-at tool", () => {
           },
           messages: async () => ({
             data: [
-              { info: { role: "assistant", time: { created: 1 } }, parts: [{ type: "text", text: "done" }] },
-            ],
-          }),
-        },
+              { type: "assistant", time: { created: 1 }, content: [{ type: "text", text: "done" }] },
+            ]
+          })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       await tool.execute(
@@ -292,7 +292,7 @@ describe("look-at tool", () => {
 
       expect(promptBody.model).toEqual({
         providerID: "google",
-        modelID: "gemini-3-flash",
+        modelID: "gemini-3-flash"
       })
     })
   })
@@ -308,7 +308,7 @@ describe("look-at tool", () => {
 
       const mockClient = {
         app: {
-          agents: async () => ({ data: [] }),
+          agents: async () => ({ data: [] })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -318,22 +318,22 @@ describe("look-at tool", () => {
           status: statusFn,
           messages: async () => ({
             data: [
-              { info: { role: "assistant", time: { created: 1 } }, parts: [{ type: "text", text: "result" }] },
-            ],
-          }),
-        },
+              { type: "assistant", time: { created: 1 }, content: [{ type: "text", text: "result" }] },
+            ]
+          })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -353,7 +353,7 @@ describe("look-at tool", () => {
     test("catches sync prompt errors and still fetches messages", async () => {
       const mockClient = {
         app: {
-          agents: async () => ({ data: [] }),
+          agents: async () => ({ data: [] })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -363,22 +363,22 @@ describe("look-at tool", () => {
           status: async () => ({ data: {} }),
           messages: async () => ({
             data: [
-              { info: { role: "assistant", time: { created: 1 } }, parts: [{ type: "text", text: "result despite error" }] },
-            ],
-          }),
-        },
+              { type: "assistant", time: { created: 1 }, content: [{ type: "text", text: "result despite error" }] },
+            ]
+          })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -395,7 +395,7 @@ describe("look-at tool", () => {
     test("returns no-response error when sync prompt fails and no messages", async () => {
       const mockClient = {
         app: {
-          agents: async () => ({ data: [] }),
+          agents: async () => ({ data: [] })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -403,20 +403,20 @@ describe("look-at tool", () => {
           prompt: async () => { throw new Error("Connection refused") },
           promptAsync: async () => ({}),
           status: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-        },
+          messages: async () => ({ data: [] })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const result = await tool.execute(
@@ -438,7 +438,7 @@ describe("look-at tool", () => {
 
       const mockClient = {
         app: {
-          agents: async () => ({ data: [] }),
+          agents: async () => ({ data: [] })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -449,22 +449,22 @@ describe("look-at tool", () => {
           },
           messages: async () => ({
             data: [
-              { info: { role: "assistant", time: { created: 1 } }, parts: [{ type: "text", text: "analyzed" }] },
-            ],
-          }),
-        },
+              { type: "assistant", time: { created: 1 }, content: [{ type: "text", text: "analyzed" }] },
+            ]
+          })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       await tool.execute(
@@ -487,7 +487,7 @@ describe("look-at tool", () => {
 
       const mockClient = {
         app: {
-          agents: async () => ({ data: [] }),
+          agents: async () => ({ data: [] })
         },
         session: {
           get: async () => ({ data: { directory: "/project" } }),
@@ -498,22 +498,22 @@ describe("look-at tool", () => {
           },
           messages: async () => ({
             data: [
-              { info: { role: "assistant", time: { created: 1 } }, parts: [{ type: "text", text: "analyzed" }] },
-            ],
-          }),
-        },
+              { type: "assistant", time: { created: 1 }, content: [{ type: "text", text: "analyzed" }] },
+            ]
+          })
+        }
       }
 
       const tool = createLookAt({
         client: mockClient,
-        directory: "/project",
+        directory: "/project"
       } as unknown as PluginInput)
 
       const toolContext: ToolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       await tool.execute(

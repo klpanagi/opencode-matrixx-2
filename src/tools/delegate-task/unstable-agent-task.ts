@@ -1,8 +1,10 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata, normalizeSDKResponse } from "../../shared"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
-import type { ExecutorContext, ParentContext, SessionMessage } from "./executor-types"
+import type { ExecutorContext, ParentContext } from "./executor-types"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -143,15 +145,15 @@ session_id: ${sessionID}
     })
 
     const assistantMessages = messages
-      .filter((m) => m.info?.role === "assistant")
-      .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
+      .filter((m) => isAssistant(m))
+      .sort((a, b) => timeOf(b) - timeOf(a))
     const lastMessage = assistantMessages[0]
 
     if (!lastMessage) {
       return `No assistant response found (task ran in background mode).\n\nSession ID: ${sessionID}`
     }
 
-    const textParts = lastMessage?.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
+    const textParts = contentOf(lastMessage).filter((p) => p.type === "text" || p.type === "reasoning")
     const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
     const duration = formatDuration(startTime)
 

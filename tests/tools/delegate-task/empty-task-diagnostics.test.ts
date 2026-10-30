@@ -3,7 +3,7 @@ import { fetchSyncResult } from "../../../src/tools/delegate-task/sync-result-fe
 import { formatEmptySessionError } from "../../../src/tools/delegate-task/sync-empty-retry"
 import {
   describeLastMessageParts,
-  describeMessageShape,
+  describeMessageShape
 } from "../../../src/tools/delegate-task/diagnostic-shape"
 import type { OpencodeClient } from "../../../src/tools/delegate-task/types"
 
@@ -17,8 +17,8 @@ const RETIRED_PHRASES = [
 function clientReturning(messages: unknown[]): OpencodeClient {
   return {
     session: {
-      messages: async () => ({ data: messages }),
-    },
+      messages: async () => ({ data: messages })
+    }
   } as unknown as OpencodeClient
 }
 
@@ -27,7 +27,7 @@ function args() {
     description: "diagnostic probe",
     prompt: "do it",
     load_skills: [],
-    category: "source",
+    category: "source"
   } as never
 }
 
@@ -49,8 +49,8 @@ describe("empty task diagnostics", () => {
   test("lists the observed roles when no assistant message exists", async () => {
     //#given messages that carry only user turns
     const client = clientReturning([
-      { info: { role: "user" }, parts: [{ type: "text", text: "hello" }] },
-      { info: { role: "user" }, parts: [{ type: "text", text: "still waiting" }] },
+      { type: "user", content: [{ type: "text", text: "hello" }] },
+      { type: "user", content: [{ type: "text", text: "still waiting" }] },
     ])
 
     //#when the sync result is fetched
@@ -104,8 +104,8 @@ describe("empty task diagnostics", () => {
   test("describes roles and last-message part types", () => {
     //#given a session whose last message carries a tool part
     const messages = [
-      { info: { role: "user" }, parts: [{ type: "text" }] },
-      { info: { role: "assistant" }, parts: [{ type: "tool" }, { type: "tool-result" }] },
+      { type: "user", content: [{ type: "text" }] },
+      { type: "assistant", content: [{ type: "tool" }, { type: "tool-result" }] },
     ]
 
     //#when the shape is described

@@ -1,4 +1,5 @@
-import type { SessionMessage } from "./executor-types"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant, roleOf, textOf } from "../../shared/session-message"
 
 const MAX_LISTED = 6
 
@@ -13,13 +14,15 @@ function summarize(values: string[]): string {
 }
 
 export function describeMessageShape(messages: SessionMessage[]): string {
-  const assistantCount = messages.filter((message) => message.info?.role === "assistant").length
-  const roles = messages.map((message) => message.info?.role ?? "unknown")
+  const assistantCount = messages.filter((message) => isAssistant(message)).length
+  const roles = messages.map((message) => roleOf(message))
   return `${messages.length} messages, ${assistantCount} assistant (roles: ${summarize(roles)})`
 }
 
 export function describeLastMessageParts(messages: SessionMessage[]): string {
   const last = messages[messages.length - 1]
-  const types = (last?.parts ?? []).map((part) => part.type ?? "unknown")
-  return types.length > 0 ? types.join(",") : "none"
+  const types = contentOf(last).map((part) => part.type ?? "unknown")
+  if (types.length > 0) return types.join(",")
+  // Flat messages keep their text outside the content array.
+  return textOf(last).length > 0 ? "text" : "none"
 }
