@@ -5,10 +5,8 @@ describe("createToolExecuteBeforeHandler", () => {
   test("does not execute subagent question blocker hook for question tool", async () => {
     //#given
     const ctx = {
-      client: {
-        session: {
-          messages: async () => ({ data: [] }),
-        },
+      session: {
+        context: async () => [],
       },
     }
 
@@ -34,12 +32,10 @@ describe("createToolExecuteBeforeHandler", () => {
   describe("task tool subagent_type normalization", () => {
     const emptyHooks = {}
 
-    function createCtxWithSessionMessages(messages: Array<{ info?: { agent?: string; role?: string } }> = []) {
+    function createCtxWithSessionMessages(messages: Array<{ type?: string; agent?: string; info?: { agent?: string; role?: string } }> = []) {
       return {
-        client: {
-          session: {
-            messages: async () => ({ data: messages }),
-          },
+        session: {
+          context: async () => messages,
         },
       }
     }

@@ -1,12 +1,12 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../features/hook-message-injector"
 import { getSessionAgent } from "../features/session-state/state"
 import { getAgentConfigKey } from "./agent-display-names"
 import { log } from "./logger"
 import { getMessageDir } from "./opencode-message-dir"
 import { isSqliteBackend } from "./opencode-storage-detection"
+import type { SessionContextCarrier } from "./session-context-source"
 
-export async function isCallerOrchestrator(sessionID?: string, client?: PluginInput["client"]): Promise<boolean> {
+export async function isCallerOrchestrator(sessionID?: string, carrier?: SessionContextCarrier): Promise<boolean> {
   if (!sessionID) return false
 
   // In-memory session agent is already authoritative for the live session
@@ -17,9 +17,9 @@ export async function isCallerOrchestrator(sessionID?: string, client?: PluginIn
     return getAgentConfigKey(knownAgent) === "niobe"
   }
 
-  if (isSqliteBackend() && client) {
+  if (isSqliteBackend() && carrier) {
     try {
-      const nearest = await findNearestMessageWithFieldsFromSDK(client, sessionID)
+      const nearest = await findNearestMessageWithFieldsFromSDK(carrier, sessionID)
       return getAgentConfigKey(nearest?.agent ?? "") === "niobe"
     } catch (error) {
       log("[session-utils] SDK orchestrator check failed", { sessionID, error: String(error) })

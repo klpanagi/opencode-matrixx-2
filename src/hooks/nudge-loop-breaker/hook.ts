@@ -1,5 +1,5 @@
-import type { PluginContext } from "../../plugin/types"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import {
   DEFAULT_COOLDOWN_MS,
   DEFAULT_LOOP_THRESHOLD,
@@ -58,7 +58,7 @@ function isResetEvent(type: string, props: Record<string, unknown>): boolean {
 }
 
 export function createNudgeLoopBreakerHook(
-  ctx: PluginContext,
+  ctx: NativePluginContext,
   options: NudgeLoopBreakerOptions = {},
 ): NudgeLoopBreakerHook {
   const threshold = options.threshold ?? DEFAULT_LOOP_THRESHOLD
@@ -72,20 +72,15 @@ export function createNudgeLoopBreakerHook(
     onCorrective?.(sessionID, backoff)
 
     if (state.correctiveSent || sessionID === "unknown") return
-    const prompt = ctx.client?.session?.prompt
-    if (typeof prompt !== "function") return
     state.correctiveSent = true
-    prompt({
-      path: { id: sessionID },
-      body: {
-        parts: [
-          {
-            type: "text",
-            text: "Repetition detected: stop echoing the prune/compress nudge. Continue the task or run the compress tool with real message IDs.",
-          },
-        ],
-      },
-      query: { directory: ctx.directory },
+    ctx.session.prompt({
+      sessionID,
+      parts: [
+        {
+          type: "text",
+          text: "Repetition detected: stop echoing the prune/compress nudge. Continue the task or run the compress tool with real message IDs.",
+        },
+      ],
     }).catch((error: unknown) => {
       log("[nudge-loop-breaker] corrective prompt failed", { error })
     })

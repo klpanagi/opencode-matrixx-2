@@ -8,7 +8,6 @@ import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
-type OpencodeClient = SessionContextCarrier
 
 function findLastThinkingContent(sessionID: string, beforeMessageID: string): string {
   const messages = readMessages(sessionID)
@@ -69,7 +68,7 @@ export function prependThinkingPart(sessionID: string, messageID: string): boole
 }
 
 async function findLastThinkingContentFromSDK(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   beforeMessageID: string
 ): Promise<string> {
@@ -97,7 +96,7 @@ async function findLastThinkingContentFromSDK(
 }
 
 export async function prependThinkingPartAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string
 ): Promise<boolean> {

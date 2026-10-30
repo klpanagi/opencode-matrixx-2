@@ -19,7 +19,7 @@ export function createToolExecuteBeforeHandler(input: {
   const { ctx, pendingFilePaths } = input
 
   return async (toolInput, toolOutput): Promise<void> => {
-    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx.client))) {
+    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx))) {
       return
     }
 

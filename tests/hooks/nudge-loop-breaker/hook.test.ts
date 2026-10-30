@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { PluginContext } from "../../../src/plugin/types"
+import type { NativePluginContext } from "../../../src/shared/session-context-source"
 import { createNudgeLoopBreakerHook } from "../../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../../src/hooks/nudge-loop-breaker/session-state"
 
@@ -19,8 +19,18 @@ function stepEnded(text: string, sessionID = SESSION) {
 
 function makeHook() {
   const activations: Activation[] = []
+  const promptCalls: unknown[] = []
   let clock = 1000
-  const hook = createNudgeLoopBreakerHook({} as PluginContext, {
+  const hook = createNudgeLoopBreakerHook(
+    {
+      session: {
+        prompt: async (args: unknown) => {
+          promptCalls.push(args)
+        },
+      },
+      directory: "/tmp",
+    } as unknown as NativePluginContext,
+    {
     now: () => clock,
     cooldownMs: 100,
     onCorrective: (sessionID, backoff) => activations.push({ sessionID, backoff }),
@@ -28,6 +38,7 @@ function makeHook() {
   return {
     hook,
     activations,
+    promptCalls,
     advance: (ms: number) => {
       clock += ms
     },
@@ -37,7 +48,7 @@ function makeHook() {
 describe("createNudgeLoopBreakerHook — repeated step detection", () => {
   test("activates backoff after three identical step.ended events", async () => {
     //#given
-    const { hook, activations } = makeHook()
+    const { hook, activations, promptCalls } = makeHook()
 
     //#when
     await hook.event(stepEnded("repeated assistant text"))
@@ -49,6 +60,8 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     expect(beforeThreshold).toBe(0)
     expect(activations.length).toBe(1)
     expect(activations[0]).toEqual({ sessionID: SESSION, backoff: 1 })
+    expect(promptCalls).toHaveLength(1)
+    expect(promptCalls[0]).toEqual({ sessionID: SESSION, parts: [{ type: "text", text: expect.stringContaining("Repetition detected") }] })
   })
 
   test("resets the counter when the text changes", async () => {

@@ -10,8 +10,6 @@ import { injectTextPartAsync } from "../session-recovery/storage/text-part-injec
 
 export const PLACEHOLDER_TEXT = "[user interrupted]"
 
-type OpencodeClient = SessionContextCarrier
-
 function hasSdkContent(parts: ReadonlyArray<ContentPart>): boolean {
   if (parts.length === 0) return false
   for (const p of parts) {
@@ -27,7 +25,7 @@ function hasSdkContent(parts: ReadonlyArray<ContentPart>): boolean {
   return false
 }
 
-async function findEmptyIdsSdk(client: OpencodeClient, sessionID: string): Promise<string[]> {
+async function findEmptyIdsSdk(client: SessionContextCarrier, sessionID: string): Promise<string[]> {
   try {
     const msgs = await fetchSessionMessages(client, sessionID)
     const empty: string[] = []
@@ -42,7 +40,7 @@ async function findEmptyIdsSdk(client: OpencodeClient, sessionID: string): Promi
   }
 }
 
-export async function sanitizeEmptyMessagesBeforeSummarize(sessionID: string, client?: OpencodeClient): Promise<number> {
+export async function sanitizeEmptyMessagesBeforeSummarize(sessionID: string, client?: SessionContextCarrier): Promise<number> {
   if (client && isSqliteBackend()) {
     const ids = await findEmptyIdsSdk(client, sessionID)
     if (ids.length === 0) return 0

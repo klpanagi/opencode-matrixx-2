@@ -6,7 +6,6 @@ import { PART_STORAGE } from "../constants"
 import type { StoredTextPart } from "../types"
 import { generatePartId } from "./part-id"
 
-type OpencodeClient = SessionContextCarrier
 
 export function injectTextPart(sessionID: string, messageID: string, text: string): boolean {
   if (isSqliteBackend()) {
@@ -39,7 +38,7 @@ export function injectTextPart(sessionID: string, messageID: string, text: strin
 }
 
 export async function injectTextPartAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string,
   text: string

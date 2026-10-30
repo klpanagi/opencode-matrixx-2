@@ -90,7 +90,7 @@ export function createNiobeEventHandler(input: {
         return
       }
 
-      const lastAgent = await getLastAgentFromSession(sessionID, ctx.client)
+      const lastAgent = await getLastAgentFromSession(sessionID, ctx)
       const lastAgentKey = getAgentConfigKey(lastAgent ?? "")
       const requiredAgent = getAgentConfigKey(missionState.agent ?? "niobe")
       const lastAgentMatchesRequired = lastAgentKey === requiredAgent

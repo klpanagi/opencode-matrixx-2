@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
@@ -16,9 +15,7 @@ export interface StoredMessage {
   tools?: Record<string, ToolPermission>
 }
 
-export type OpencodeClient = PluginInput["client"]
-
-export type MessageSource = OpencodeClient | SessionContextCarrier
+export type MessageSource = SessionContextCarrier
 
 interface LegacyMessageInfo {
   agent?: string

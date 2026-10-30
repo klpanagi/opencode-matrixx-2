@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "bun:test"
-import type { OpencodeClient } from "../../../src/features/hook-message-injector/injector"
+import type { SessionContextCarrier } from "../../../src/features/hook-message-injector/injector"
 import {
   findFirstMessageWithAgentFromSDK,
   findNearestMessageWithFieldsFromSDK,
@@ -49,7 +49,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       { agent: "morpheus", model: { providerID: "anthropic", modelID: "claude-opus-4" } },
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toEqual({
       agent: "morpheus",
@@ -63,7 +63,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       { info: { agent: "morpheus", providerID: "openai", modelID: "gpt-5" } },
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toEqual({
       agent: "morpheus",
@@ -78,7 +78,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       { agent: "new-agent", model: { providerID: "new", modelID: "model" } },
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result?.agent).toBe("new-agent")
   })
@@ -88,7 +88,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       { agent: "partial-agent" },
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result?.agent).toBe("partial-agent")
   })
@@ -99,7 +99,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       {},
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBeNull()
   })
@@ -107,7 +107,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
   it("returns null when messages array is empty", async () => {
     const mockClient = createMockClient([])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBeNull()
   })
@@ -121,7 +121,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       },
     }
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBeNull()
   })
@@ -137,7 +137,7 @@ describe("findNearestMessageWithFieldsFromSDK", () => {
       },
     ])
 
-    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findNearestMessageWithFieldsFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result?.tools).toEqual({ edit: true, write: false })
   })
@@ -150,7 +150,7 @@ describe("findFirstMessageWithAgentFromSDK", () => {
       { agent: "second-agent" },
     ])
 
-    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBe("first-agent")
   })
@@ -161,7 +161,7 @@ describe("findFirstMessageWithAgentFromSDK", () => {
       { agent: "first-real-agent" },
     ])
 
-    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBe("first-real-agent")
   })
@@ -172,7 +172,7 @@ describe("findFirstMessageWithAgentFromSDK", () => {
       {},
     ])
 
-    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBeNull()
   })
@@ -186,7 +186,7 @@ describe("findFirstMessageWithAgentFromSDK", () => {
       },
     }
 
-    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as OpencodeClient, "ses_123")
+    const result = await findFirstMessageWithAgentFromSDK(mockClient as unknown as SessionContextCarrier, "ses_123")
 
     expect(result).toBeNull()
   })

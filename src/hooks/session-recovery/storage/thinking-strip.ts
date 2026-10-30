@@ -7,7 +7,6 @@ import { contentOf, idOf } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import type { StoredPart } from "../types"
 
-type OpencodeClient = SessionContextCarrier
 
 export function stripThinkingParts(messageID: string): boolean {
   if (isSqliteBackend()) {
@@ -37,7 +36,7 @@ export function stripThinkingParts(messageID: string): boolean {
 }
 
 export async function stripThinkingPartsAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string
 ): Promise<boolean> {

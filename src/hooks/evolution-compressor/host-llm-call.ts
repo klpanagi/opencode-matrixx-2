@@ -4,7 +4,7 @@ import type { NativePluginContext } from "../../shared/session-context-source"
 import { fetchSessionMessages } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
-import { withEphemeralSession } from "../../shared/with-ephemeral-session"
+import { type EphemeralSessionHandle, withEphemeralSession } from "../../shared/with-ephemeral-session"
 import { parseModelString } from "../../tools/delegate-task/model-string-parser"
 
 function latestAssistantText(messages: SessionMessage[]): string | null {
@@ -36,8 +36,7 @@ export function createHostLlmCall(options: {
     const effectiveModel = model ?? defaultModel
     const parsed = parseModelOverride(effectiveModel)
     return withEphemeralSession({
-      client: ctx.client,
-      directory: ctx.directory,
+      session: ctx.session as unknown as EphemeralSessionHandle,
       title: "evolution-compressor",
       ...(parentID ? { parentID } : {}),
       body: async (sessionID: string) => {

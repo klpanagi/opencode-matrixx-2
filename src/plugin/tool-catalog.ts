@@ -144,7 +144,6 @@ export function createToolCatalog(args: {
   const slashcommandTool = createSlashcommandTool({
     commands,
     skills: skillContext.builtinSkills,
-    client: ctx.client,
   })
 
   const taskSystemEnabled = isTaskSystemEnabled(pluginConfig)

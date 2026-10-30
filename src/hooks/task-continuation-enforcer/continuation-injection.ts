@@ -144,7 +144,7 @@ export async function injectContinuation(args: {
   if (!agentName || !model) {
     let previousMessage = null
     if (isSqliteBackend()) {
-      previousMessage = await findNearestMessageWithFieldsFromSDK(ctx.client, sessionID)
+      previousMessage = await findNearestMessageWithFieldsFromSDK(ctx, sessionID)
     } else {
       const messageDir = getMessageDir(sessionID)
       previousMessage = messageDir ? findNearestMessageWithFields(messageDir) : null

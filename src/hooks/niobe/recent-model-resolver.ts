@@ -26,7 +26,7 @@ export async function resolveRecentModelForSession(
 
   let currentMessage = null
   if (isSqliteBackend()) {
-    currentMessage = await findNearestMessageWithFieldsFromSDK(ctx.client, sessionID)
+    currentMessage = await findNearestMessageWithFieldsFromSDK(ctx, sessionID)
   } else {
     const messageDir = getMessageDir(sessionID)
     currentMessage = messageDir ? findNearestMessageWithFields(messageDir) : null

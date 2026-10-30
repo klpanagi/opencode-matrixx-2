@@ -6,10 +6,10 @@ import {
 import { log } from "../../../shared/logger"
 import { notify } from "../../../shared/notify"
 
-export async function updateAndShowConnectedProvidersCacheStatus(ctx: PluginInput): Promise<void> {
+export async function updateAndShowConnectedProvidersCacheStatus(_ctx: PluginInput): Promise<void> {
   const hadCache = hasConnectedProvidersCache()
 
-  updateConnectedProvidersCache(ctx.client).catch((err) => { log("[auto-update] Provider cache update failed:", err) })
+  updateConnectedProvidersCache().catch((err) => { log("[auto-update] Provider cache update failed:", err) })
 
   if (!hadCache) {
     notify("info", "Connected Providers Cache: Building provider cache for first time. Restart OpenCode for full model filtering.")

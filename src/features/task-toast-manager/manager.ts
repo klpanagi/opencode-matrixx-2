@@ -1,17 +1,12 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
 import type { ConcurrencyManager } from "../background-agent/concurrency"
 import type { ModelFallbackInfo, TaskStatus, TrackedTask } from "./types"
 
-type OpencodeClient = PluginInput["client"]
-
 export class TaskToastManager {
   private tasks: Map<string, TrackedTask> = new Map()
-  private client: OpencodeClient
   private concurrencyManager?: ConcurrencyManager
 
-  constructor(client: OpencodeClient, concurrencyManager?: ConcurrencyManager) {
-    this.client = client
+  constructor(concurrencyManager?: ConcurrencyManager) {
     this.concurrencyManager = concurrencyManager
   }
 
@@ -154,34 +149,19 @@ export class TaskToastManager {
    * Show consolidated toast with all running/queued tasks
    */
   private showTaskListToast(newTask: TrackedTask): void {
-    const tuiClient = this.client as unknown as { tui?: { showToast: (options: unknown) => Promise<unknown> } }
-    if (!tuiClient.tui?.showToast) return
-
     const message = this.buildTaskListMessage(newTask)
-    const running = this.getRunningTasks()
-    const queued = this.getQueuedTasks()
 
     const title = newTask.isBackground
       ? `New Background Task`
       : `New Task Executed`
 
-    tuiClient.tui.showToast({
-      body: {
-        title,
-        message: message || `${newTask.description} (${newTask.agent})`,
-        variant: "info",
-        duration: running.length + queued.length > 2 ? 5000 : 3000,
-      },
-    }).catch((err) => { log("[task-toast] Toast failed:", err) })
+    notify("info", `${title}: ${message || `${newTask.description} (${newTask.agent})`}`)
   }
 
   /**
    * Show task completion toast
    */
   showCompletionToast(task: { id: string; description: string; duration: string }): void {
-    const tuiClient = this.client as unknown as { tui?: { showToast: (options: unknown) => Promise<unknown> } }
-    if (!tuiClient.tui?.showToast) return
-
     this.removeTask(task.id)
 
     const remaining = this.getRunningTasks()
@@ -192,14 +172,7 @@ export class TaskToastManager {
       message += `\n\nStill running: ${remaining.length} | Queued: ${queued.length}`
     }
 
-    tuiClient.tui.showToast({
-      body: {
-        title: "Task Completed",
-        message,
-        variant: "success",
-        duration: 5000,
-      },
-    }).catch((err) => { log("[task-toast] Toast failed:", err) })
+    notify("success", `Task Completed: ${message}`)
   }
 }
 
@@ -209,11 +182,8 @@ export function getTaskToastManager(): TaskToastManager | null {
   return instance
 }
 
-export function initTaskToastManager(
-  client: OpencodeClient,
-  concurrencyManager?: ConcurrencyManager
-): TaskToastManager {
-  instance = new TaskToastManager(client, concurrencyManager)
+export function initTaskToastManager(concurrencyManager?: ConcurrencyManager): TaskToastManager {
+  instance = new TaskToastManager(concurrencyManager)
   return instance
 }
 

@@ -1,10 +1,10 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { isCallerOrchestrator } from "../../shared/session-utils"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
 import { HOOK_NAME, NOTEPAD_DIRECTIVE } from "./constants"
 
-export function createMouseNotepadHook(ctx: PluginInput) {
+export function createMouseNotepadHook(ctx: NativePluginContext) {
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
@@ -16,7 +16,7 @@ export function createMouseNotepadHook(ctx: PluginInput) {
       }
 
       // 2. Check if caller is Niobe (orchestrator)
-      if (!(await isCallerOrchestrator(input.sessionID, ctx.client))) {
+      if (!(await isCallerOrchestrator(input.sessionID, ctx))) {
         return
       }
 

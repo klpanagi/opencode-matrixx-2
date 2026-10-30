@@ -2,28 +2,19 @@ declare const require: (name: string) => unknown
 const { describe, test, expect, beforeEach, afterEach, mock } = require("bun:test")
 
 import type { ConcurrencyManager } from "../../../src/features/background-agent/concurrency"
+import { resetNotifySink, setNotifySink, type NotifyLevel } from "../../../src/shared/notify"
 
 type TaskToastManagerClass = typeof import("../../../src/features/task-toast-manager/manager").TaskToastManager
 
 describe("TaskToastManager", () => {
-  interface MockClient {
-    tui: { showToast: (...args: unknown[]) => Promise<unknown> }
-  }
   let TaskToastManager: TaskToastManagerClass
-  let mockClient: {
-    tui: {
-      showToast: ReturnType<typeof mock>
-    }
-  }
+  let notices: Array<{ level: NotifyLevel; message: string }>
   let toastManager: InstanceType<TaskToastManagerClass>
   let mockConcurrencyManager: ConcurrencyManager
 
   beforeEach(async () => {
-    mockClient = {
-      tui: {
-        showToast: mock(() => Promise.resolve()),
-      },
-    }
+    notices = []
+    setNotifySink((level, message) => { notices.push({ level, message }) })
     mockConcurrencyManager = {
       getConcurrencyLimit: mock(() => 5),
     } as unknown as ConcurrencyManager
@@ -31,11 +22,12 @@ describe("TaskToastManager", () => {
     const mod = await import("../../../src/features/task-toast-manager/manager")
     TaskToastManager = mod.TaskToastManager
 
-    toastManager = new TaskToastManager(mockClient as unknown as MockClient, mockConcurrencyManager)
+    toastManager = new TaskToastManager(mockConcurrencyManager)
   })
 
   afterEach(() => {
     mock.restore()
+    resetNotifySink()
   })
 
   describe("skills in toast message", () => {
@@ -53,10 +45,10 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast message should include skills
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).toContain("playwright")
-      expect(call.body.message).toContain("git-master")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).toContain("playwright")
+      expect(call.message).toContain("git-master")
     })
 
     test("should not display skills section when no skills provided", () => {
@@ -72,9 +64,9 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast message should not include skills prefix
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).not.toContain("Skills:")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).not.toContain("Skills:")
     })
   })
 
@@ -103,10 +95,10 @@ describe("TaskToastManager", () => {
       })
 
       // then - toast should show concurrency info
-      expect(mockClient.tui.showToast).toHaveBeenCalledTimes(3)
-      const lastCall = mockClient.tui.showToast.mock.calls[2][0]
+      expect(notices).toHaveLength(3)
+      const lastCall = notices[2]
       // Should show "Running (3):" header
-      expect(lastCall.body.message).toContain("Running (3):")
+      expect(lastCall.message).toContain("Running (3):")
     })
 
     test("should display concurrency limit info when available", () => {
@@ -117,7 +109,7 @@ describe("TaskToastManager", () => {
         getQueuedCount: mock(() => 1),
       } as unknown as ConcurrencyManager
 
-      const managerWithConcurrency = new TaskToastManager(mockClient as unknown as MockClient, mockConcurrencyWithCounts)
+      const managerWithConcurrency = new TaskToastManager(mockConcurrencyWithCounts)
 
       // when - a task is added
       managerWithConcurrency.addTask({
@@ -128,9 +120,9 @@ describe("TaskToastManager", () => {
       })
 
       // then - toast should show concurrency status like "2/5 slots"
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).toMatch(/\d+\/\d+/)
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).toMatch(/\d+\/\d+/)
     })
   })
 
@@ -149,10 +141,10 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should include both skills and task count
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).toContain("frontend-ui-ux")
-      expect(call.body.message).toContain("Running (1):")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).toContain("frontend-ui-ux")
+      expect(call.message).toContain("Running (1):")
     })
   })
 
@@ -171,10 +163,10 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should NOT show warning - category default is expected
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).not.toContain("[FALLBACK]")
-      expect(call.body.message).not.toContain("(category default)")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).not.toContain("[FALLBACK]")
+      expect(call.message).not.toContain("(category default)")
     })
 
     test("should display warning when model falls back to system-default", () => {
@@ -191,11 +183,11 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should show fallback warning
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).toContain("[FALLBACK]")
-      expect(call.body.message).toContain("anthropic/claude-sonnet-4-5")
-      expect(call.body.message).toContain("(system default fallback)")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).toContain("[FALLBACK]")
+      expect(call.message).toContain("anthropic/claude-sonnet-4-5")
+      expect(call.message).toContain("(system default fallback)")
     })
 
     test("should display warning when model is inherited from parent", () => {
@@ -212,11 +204,11 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should show fallback warning
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).toContain("[FALLBACK]")
-      expect(call.body.message).toContain("cliproxy/claude-opus-4-6")
-      expect(call.body.message).toContain("(inherited from parent)")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).toContain("[FALLBACK]")
+      expect(call.message).toContain("cliproxy/claude-opus-4-6")
+      expect(call.message).toContain("(inherited from parent)")
     })
 
     test("should not display model info when user-defined", () => {
@@ -233,12 +225,12 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should NOT show model warning
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).not.toContain("[FALLBACK] Model:")
-      expect(call.body.message).not.toContain("(inherited)")
-      expect(call.body.message).not.toContain("(category default)")
-      expect(call.body.message).not.toContain("(system default)")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).not.toContain("[FALLBACK] Model:")
+      expect(call.message).not.toContain("(inherited)")
+      expect(call.message).not.toContain("(category default)")
+      expect(call.message).not.toContain("(system default)")
     })
 
     test("should not display model info when not provided", () => {
@@ -254,9 +246,9 @@ describe("TaskToastManager", () => {
       toastManager.addTask(task)
 
       // then - toast should NOT show model warning
-      expect(mockClient.tui.showToast).toHaveBeenCalled()
-      const call = mockClient.tui.showToast.mock.calls[0][0]
-      expect(call.body.message).not.toContain("[FALLBACK] Model:")
+      expect(notices).toHaveLength(1)
+      const call = notices[0]
+      expect(call.message).not.toContain("[FALLBACK] Model:")
     })
   })
 })

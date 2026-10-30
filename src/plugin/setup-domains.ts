@@ -38,7 +38,6 @@ import { setAvailableToolNames } from "../plugin-handlers/agent-config-handler"
 import { createModelCacheState } from "../plugin-state"
 import {
   formatCompactionAppendLog,
-  injectServerAuthIntoClient,
   log,
   summarizeCompactionAppend,
   utf8ByteLength,
@@ -69,7 +68,7 @@ import { createToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
 import { createMessagesTransformHandler } from "./messages-transform"
-import { createV1PluginContext } from "./opencode-context"
+import { createNativePluginContext } from "./native-context"
 import { toV1Event } from "./opencode-events"
 import { toV2Tool } from "./opencode-tools"
 import type {
@@ -127,10 +126,10 @@ function createDomainManagers(args: {
     log("[index] Failed to restore background handles:", error)
   })
 
-  initTaskToastManager(ctx.client)
+  initTaskToastManager()
 
   const configHandler = createConfigHandler({
-    ctx: { directory: ctx.directory, client: ctx.client },
+    ctx: { directory: ctx.directory },
     pluginConfig,
     modelCacheState: createModelCacheState(),
   })
@@ -299,12 +298,11 @@ export async function setupDomains(ctx: V2Context): Promise<{
     directory: ctx.location?.directory,
   })
 
-  const v1ctx = createV1PluginContext(ctx)
+  const pctx = createNativePluginContext(ctx)
 
-  injectServerAuthIntoClient(v1ctx.client)
   startTmuxCheck()
 
-  const pluginConfig = await loadPluginConfig(v1ctx.directory, v1ctx)
+  const pluginConfig = await loadPluginConfig(pctx.directory, pctx)
   setContextModeForPrompts(pluginConfig.context_mode)
 
   // Auto-activate DCP profile on startup if default_profile is configured
@@ -328,14 +326,14 @@ export async function setupDomains(ctx: V2Context): Promise<{
   }
 
   const managers = createDomainManagers({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     tmuxConfig,
     backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
   })
 
   const toolsResult = await setupToolsDomain({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     managers,
     systemDefaultModel: () => resolveSystemDefaultModel(ctx),
@@ -345,28 +343,28 @@ export async function setupDomains(ctx: V2Context): Promise<{
   setAvailableToolNames(Object.keys(toolsResult.filteredTools))
 
   const session = createSessionHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
   })
 
   const toolGuard = createToolGuardHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
   })
 
   const transform = createTransformHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled: (name) => isHookEnabled(name as HookName),
     safeHookEnabled,
   })
 
   const continuation = createContinuationHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
@@ -375,7 +373,7 @@ export async function setupDomains(ctx: V2Context): Promise<{
   })
 
   const skill = createSkillHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     isHookEnabled,
     safeHookEnabled,
     builtinSkills: toolsResult.builtinSkills,
@@ -391,17 +389,17 @@ export async function setupDomains(ctx: V2Context): Promise<{
   }
 
   const chat = setupChatHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     firstMessageVariantGate,
     hooks,
   })
 
-  const tool = setupToolHooks({ ctx: v1ctx, hooks })
+  const tool = setupToolHooks({ ctx: pctx, hooks })
   const compaction = setupCompactionHooks({ hooks })
 
   const event = createEventHandler({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     firstMessageVariantGate,
     managers,
@@ -418,8 +416,8 @@ export async function setupDomains(ctx: V2Context): Promise<{
   }
 
   return {
-    directory: v1ctx.directory,
-    worktree: v1ctx.worktree,
+    directory: pctx.directory,
+    worktree: pctx.worktree,
     hooks: assembled,
   }
 }

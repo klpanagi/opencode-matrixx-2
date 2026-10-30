@@ -9,7 +9,6 @@ import type { StoredPart, StoredTextPart } from "../types"
 import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
-type OpencodeClient = SessionContextCarrier
 
 export function replaceEmptyTextParts(messageID: string, replacementText: string): boolean {
   if (isSqliteBackend()) {
@@ -45,7 +44,7 @@ export function replaceEmptyTextParts(messageID: string, replacementText: string
 }
 
 export async function replaceEmptyTextPartsAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string,
   replacementText: string
@@ -97,7 +96,7 @@ export function findMessagesWithEmptyTextParts(sessionID: string): string[] {
 }
 
 export async function findMessagesWithEmptyTextPartsFromSDK(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string
 ): Promise<string[]> {
   try {
