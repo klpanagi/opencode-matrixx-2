@@ -10,9 +10,18 @@
  * reorders the `plugin` array so Matrixx runs after DCP.
  */
 
-import type { Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy part shape (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `legacy V1 SDK` part types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
 
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { sanitizeKnownTags } from "../../shared/system-directive"
 import { guardCompressDirective, NUDGE_MARKERS, normalizeNudgeText } from "./constants"
 
@@ -68,7 +77,7 @@ export function sanitizeNudgeParts(messages: MessageWithParts[]): void {
   }
 }
 
-export function createDcpNudgeSanitizerHook(_ctx: PluginContext): MessagesTransformHook {
+export function createDcpNudgeSanitizerHook(_ctx: MatrixxContext): MessagesTransformHook {
   return {
     "experimental.chat.messages.transform": async (_input, output) => {
       sanitizeNudgeParts(output.messages)

@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs"
 import { isAbsolute, resolve } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import picomatch from "picomatch"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
 import { scanPath } from "../../tools/silent-failure-scanner"
 import { getRuleInjectionFilePath } from "../rules-injector/output-path"
@@ -55,7 +55,7 @@ function buildWarning(
  * tool output. It never blocks and never swallows its own errors — a failure in
  * the guard is logged explicitly so the guard is not itself a silent failure.
  */
-export function createSilentFailureGuardHook(ctx: PluginInput) {
+export function createSilentFailureGuardHook(ctx: MatrixxContext) {
   return {
     "tool.execute.after": async (
       input: ToolExecuteAfterInput,

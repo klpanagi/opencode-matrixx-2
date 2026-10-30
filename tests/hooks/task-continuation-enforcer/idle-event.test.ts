@@ -2,11 +2,12 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { registerSubagentSession, unregisterSubagentSession } from "../../../src/features/session-state/state"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { handleNonIdleEvent } from "../../../src/hooks/task-continuation-enforcer/non-idle-events"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
+import { setNotifySink } from "../../../src/shared/notify"
 
 function writeValidTask(dir: string, id: string, status = "pending", threadID?: string): void {
   const task: Record<string, unknown> = { id, subject: `task ${id}`, description: "d", status, blocks: [], blockedBy: [] }
@@ -18,16 +19,13 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
   )
 }
 
-function makeIdleCtx(dir: string): PluginInput {
+function makeIdleCtx(dir: string): MatrixxContext {
   return {
     directory: dir,
-    client: {
-      tui: { showToast: mock(async () => ({} as never)) as never },
-      session: {
-        messages: async () => ({ data: [] } as unknown as never) as never,
-      },
+    session: {
+      context: async () => [],
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 describe("task-continuation idle-event", () => {
@@ -54,13 +52,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-one", "pending", "s2")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s2", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { session_scoped: false } } } })
@@ -76,13 +72,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-done", "completed", "s3")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s3", sessionStateStore: store, skipAgents: [] })
@@ -98,13 +92,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-rapid", "pending", "s4")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     await handleSessionIdle({ ctx, sessionID: "s4", sessionStateStore: store, skipAgents: [] })
     const firstCalls = (toastMock as unknown as { mock: { calls: unknown[] } }).mock.calls.length
@@ -122,13 +114,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-tool", "pending", "s5")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     await handleSessionIdle({ ctx, sessionID: "s5", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { session_scoped: false } } } })
     expect(store.getState("s5").countdownTimer).toBeDefined()
@@ -150,13 +140,11 @@ describe("task-continuation idle-event", () => {
     const old = new Date(Date.now() - 3 * 60 * 60 * 1000)
     utimesSync(join(dir, ".matrixx", "tasks", "T-stale.json"), old, old)
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     const config = { morpheus: { tasks: { stale_after_hours: 2 } } }
     //#when
@@ -176,13 +164,11 @@ describe("task-continuation idle-event", () => {
     const old = new Date(Date.now() - 3 * 60 * 60 * 1000)
     utimesSync(join(dir, ".matrixx", "tasks", "T-stale.json"), old, old)
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "s-mixed", sessionStateStore: store, skipAgents: [], config: { morpheus: { tasks: { stale_after_hours: 2, session_scoped: false } } } })
@@ -198,13 +184,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-other", "pending", "other-session")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "my-session", sessionStateStore: store, skipAgents: [] })
@@ -220,13 +204,11 @@ describe("task-continuation idle-event", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-idle-"))
     writeValidTask(dir, "T-sub", "pending", "sub-session")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     registerSubagentSession("sub-session", "my-session")
     //#when
@@ -245,13 +227,11 @@ describe("task-continuation idle-event", () => {
     registerSubagentSession("dead-sub", "my-session")
     unregisterSubagentSession("dead-sub")
     const toastMock = mock(async () => ({} as never))
+    setNotifySink(toastMock)
     const ctx = {
       directory: dir,
-      client: {
-        tui: { showToast: toastMock },
-        session: { messages: async () => ({ data: [] } as unknown as never) as never },
-      },
-    } as unknown as PluginInput
+      session: { context: async () => [] },
+    } as unknown as MatrixxContext
     const store = createSessionStateStore()
     //#when
     await handleSessionIdle({ ctx, sessionID: "my-session", sessionStateStore: store, skipAgents: [] })

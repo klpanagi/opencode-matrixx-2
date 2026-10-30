@@ -1,11 +1,10 @@
-import type { ToolDefinition } from "@opencode-ai/plugin"
-
 import type {
   AvailableCategory,
 } from "../agents/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../config"
 import { resolvePlanCap } from "../features/mission-state/constants"
 import { filterDisabledTools } from "../shared/disabled-tools"
+import type { NativePluginContext } from "../shared/session-context-source"
 import { isTaskSystemEnabled } from "../shared/task-system-gating"
 import {
   builtinTools,
@@ -53,6 +52,8 @@ import {
   interactive_bash,
 } from "../tools"
 import { createPlanTasksTool } from "../tools/plan"
+import type { MatrixxToolDefinition } from "../tools/shared/define-tool"
+import type { ToolsRecord } from "./context"
 import type { DomainManagers } from "./setup-domains"
 import type { SkillContext } from "./skill-context"
 import {
@@ -65,7 +66,6 @@ import {
   shouldEnablePresetTools,
   shouldEnableSessionCleanup,
 } from "./tool-policy"
-import type { PluginContext, ToolsRecord } from "./types"
 
 export type ToolCatalogResult = {
   filteredTools: ToolsRecord
@@ -73,15 +73,16 @@ export type ToolCatalogResult = {
 }
 
 export function createToolCatalog(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
+  systemDefaultModel?: () => Promise<string | undefined>
 }): ToolCatalogResult {
-  const { ctx, pluginConfig, managers, skillContext, availableCategories } = args
+  const { ctx, pluginConfig, managers, skillContext, availableCategories, systemDefaultModel } = args
 
-  const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx.client, ctx.directory)
+  const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx, ctx.directory)
 
   const isMultimodalLookerEnabled = isConstructAgentEnabled(pluginConfig.disabled_agents)
   const toolGating = pluginConfig.tool_gating
@@ -93,7 +94,7 @@ export function createToolCatalog(args: {
   const evolutionEnabled = shouldEnableEvolutionTool(pluginConfig.evolution?.enabled)
   const evolutionRecord = evolutionEnabled ? createEvolutionTool(ctx) : {}
   const lookAt = lookAtEnabled ? createLookAt(ctx) : null
-  const bddToolsRecord: Record<string, ToolDefinition> = bddEnabled
+  const bddToolsRecord: Record<string, MatrixxToolDefinition> = bddEnabled
     ? {
         bdd_create_contract: createBddCreateContractTool(),
         bdd_parse_gherkin: createBddParseGherkinTool(),
@@ -101,13 +102,13 @@ export function createToolCatalog(args: {
         bdd_validate_contract: createBddValidateContractTool(),
       }
     : {}
-  const pdfFiguresRecord: Record<string, ToolDefinition> = pdfFiguresEnabled
+  const pdfFiguresRecord: Record<string, MatrixxToolDefinition> = pdfFiguresEnabled
     ? { ...createPdfExtractFiguresTool() }
     : {}
-  const presetRecord: Record<string, ToolDefinition> = presetToolsEnabled
+  const presetRecord: Record<string, MatrixxToolDefinition> = presetToolsEnabled
     ? { ...createPresetTool({ pluginConfig, directory: ctx.directory }) }
     : {}
-  const sessionCleanupRecord: Record<string, ToolDefinition> = shouldEnableSessionCleanup(
+  const sessionCleanupRecord: Record<string, MatrixxToolDefinition> = shouldEnableSessionCleanup(
     toolGating?.session_cleanup,
   )
     ? { session_cleanup: createSessionCleanupTool(ctx) }
@@ -115,7 +116,7 @@ export function createToolCatalog(args: {
 
   const delegateTask = createDelegateTask({
     manager: managers.backgroundManager,
-    client: ctx.client,
+    client: ctx,
     directory: ctx.directory,
     userCategories: pluginConfig.categories,
     globalModel: pluginConfig.global_model,
@@ -130,6 +131,7 @@ export function createToolCatalog(args: {
     modelPresets: pluginConfig.model_presets,
     activePreset: pluginConfig.active_preset,
     agentOverrides: pluginConfig.agents,
+    systemDefaultModel,
   })
 
   const skillTool = createSkillTool({
@@ -141,11 +143,10 @@ export function createToolCatalog(args: {
   const slashcommandTool = createSlashcommandTool({
     commands,
     skills: skillContext.builtinSkills,
-    client: ctx.client,
   })
 
   const taskSystemEnabled = isTaskSystemEnabled(pluginConfig)
-  const taskToolsRecord: Record<string, ToolDefinition> = taskSystemEnabled
+  const taskToolsRecord: Record<string, MatrixxToolDefinition> = taskSystemEnabled
     ? {
         task_create: createTaskCreateTool(pluginConfig, ctx),
         task_get: createTaskGetTool(pluginConfig, ctx),
@@ -155,12 +156,12 @@ export function createToolCatalog(args: {
       }
     : {}
   const hashlineEnabled = pluginConfig.experimental?.hashline_edit ?? false
-  const hashlineToolsRecord: Record<string, ToolDefinition> = hashlineEnabled
+  const hashlineToolsRecord: Record<string, MatrixxToolDefinition> = hashlineEnabled
     ? { edit: createHashlineEditTool() }
     : {}
 
   const planCap = resolvePlanCap(pluginConfig)
-  const planToolsRecord: Record<string, ToolDefinition> = {
+  const planToolsRecord: Record<string, MatrixxToolDefinition> = {
     plan_create: createPlanCreateTool(ctx, planCap),
     plan_read: createPlanReadTool(ctx, planCap),
     plan_list: createPlanListTool(ctx, planCap),
@@ -169,7 +170,7 @@ export function createToolCatalog(args: {
     plan_tasks: createPlanTasksTool(ctx, planCap),
   }
 
-  const notepadToolsRecord: Record<string, ToolDefinition> = {
+  const notepadToolsRecord: Record<string, MatrixxToolDefinition> = {
     notepad_create: createNotepadCreateTool(ctx),
     notepad_read: createNotepadReadTool(ctx),
     notepad_append: createNotepadAppendTool(ctx),
@@ -184,7 +185,7 @@ export function createToolCatalog(args: {
       })
     : null
 
-  const allTools: Record<string, ToolDefinition> = {
+  const allTools: Record<string, MatrixxToolDefinition> = {
     ...builtinTools,
     ...createGrepTools(ctx),
     ...createGithubSearchTools(ctx),

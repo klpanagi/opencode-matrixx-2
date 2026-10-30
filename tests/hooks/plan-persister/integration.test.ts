@@ -2,7 +2,7 @@
  * Integration test: plan persistence round-trip.
  *
  * Simulates: plan creation → work → session.idle writes →
- * process restart (new PluginInput) → rehydration context matches original state.
+ * process restart (new MatrixxContext) → rehydration context matches original state.
  *
  * Progress is driven by mission-linked task files, the only source the
  * plan-persister hook reads.
@@ -11,8 +11,7 @@ import { describe, expect, it } from "bun:test"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { createOpencodeClient } from "@opencode-ai/sdk"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { parseMetadataComment, readPlanFile } from "../../../src/features/mission-state/plan-storage"
 import { createPlanPersister } from "../../../src/hooks/plan-persister/hook"
 
@@ -22,16 +21,8 @@ function tmpDir(): string {
   return d
 }
 
-function makeMockContext(): PluginInput {
-  const client = createOpencodeClient({ directory: "/tmp/test" })
-  return {
-    client,
-    project: { id: "test-project", worktree: "/tmp/test", time: { created: Date.now() } },
-    directory: "/tmp/test",
-    worktree: "/tmp/test",
-    serverUrl: new URL("http://localhost"),
-    $: Bun.$,
-  }
+function makeMockContext(): MatrixxContext {
+  return { directory: "/tmp/test", worktree: "/tmp/test" } as unknown as MatrixxContext
 }
 
 function setupMission(dir: string, planName: string, planPath: string): void {
@@ -79,7 +70,7 @@ function writeLinkedTask(
 
 /**
  * Scenario: Plan is generated → agent works through steps → session.idle
- * persists progress → process restarts (new PluginInput) → rehydration
+ * persists progress → process restarts (new MatrixxContext) → rehydration
  * correctly reads the persisted plan file.
  */
 describe("plan persistence round-trip", () => {
@@ -112,7 +103,7 @@ describe("plan persistence round-trip", () => {
     //#when
     // Simulate session.idle after step 1
     await hook1.event({
-      event: { type: "session.idle", properties: { sessionID: "integration-session" } },
+      type: "session.idle", data: { sessionID: "integration-session" },
     })
     await new Promise((resolve) => setTimeout(resolve, 10))
 
@@ -128,7 +119,7 @@ describe("plan persistence round-trip", () => {
     const hook2 = createPlanPersister(makeMockContext(), { directory: dir })
 
     await hook2.event({
-      event: { type: "session.idle", properties: { sessionID: "integration-session" } },
+      type: "session.idle", data: { sessionID: "integration-session" },
     })
     await new Promise((resolve) => setTimeout(resolve, 10))
 
@@ -138,7 +129,7 @@ describe("plan persistence round-trip", () => {
     expect(afterStep2).toContain("- [x] Configure database")
     expect(afterStep2).toContain("- [ ] Deploy to staging")
 
-    // Phase 4: Simulate process restart — fresh PluginInput, no in-memory state
+    // Phase 4: Simulate process restart — fresh MatrixxContext, no in-memory state
     // The plan file on disk should have all the state we need
     const freshHook = createPlanPersister(makeMockContext(), { directory: dir })
 

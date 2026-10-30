@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import * as sessionModelState from "../../../src/shared/session-state"
 import { createReadImageResizerHook } from "../../../src/hooks/read-image-resizer/hook"
 import * as imageDimensions from "../../../src/hooks/read-image-resizer/image-dimensions"
@@ -35,11 +35,11 @@ type ToolOutput = {
   attachments?: Array<{ mime: string; url: string; filename?: string }>
 }
 
-function createMockContext(): PluginInput {
+function createMockContext(): MatrixxContext {
   return {
-    client: {} as PluginInput["client"],
+    client: {} as MatrixxContext["client"],
     directory: "/test",
-  } as PluginInput
+  } as MatrixxContext
 }
 
 function createInput(tool: string): { tool: string; sessionID: string; callID: string } {

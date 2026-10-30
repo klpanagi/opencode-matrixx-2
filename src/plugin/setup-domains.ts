@@ -7,10 +7,10 @@
  *
  * Domain setup functions build `Hooks` fragments directly; `registerDomains`
  * applies them onto the V2 context with the same adapters the bridge used
- * (`toV2Tool`, `toV1Event`, per-domain `transform` registrars).
+ * (`emitToolInfo` plus per-domain `transform` registrars).
  *
  * Still load-bearing below this module (owned by later TODOs):
- * - the V1 `PluginContext` substrate (`./types`) every hook/tool is written against
+ * - the V1 `MatrixxContext` substrate (`./types`) every hook/tool is written against
  * - the 6-phase config pipeline (`../plugin-handlers/config-handler`) that feeds the config draft
  * - the unified compaction hook (Task 8)
  *
@@ -19,13 +19,12 @@
  * the tmux pane mirror is gone.
  */
 
-import type { Hooks } from "@opencode-ai/plugin"
 import { registerAgentTransform } from "../agents/agents.transform"
 import type {
   AvailableCategory,
   AvailableSkill,
 } from "../agents/dynamic-agent-prompt-builder"
-import type { HookName, MatrixxConfig } from "../config"
+import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
 import type { BrowserAutomationProvider } from "../config/schema/browser-automation"
 import type { BackgroundManager } from "../features/background-agent"
 import { BackgroundManager as BackgroundManagerImpl } from "../features/background-agent"
@@ -38,7 +37,6 @@ import { setAvailableToolNames } from "../plugin-handlers/agent-config-handler"
 import { createModelCacheState } from "../plugin-state"
 import {
   formatCompactionAppendLog,
-  injectServerAuthIntoClient,
   log,
   summarizeCompactionAppend,
   utf8ByteLength,
@@ -46,16 +44,25 @@ import {
 import { setContextModeForPrompts } from "../shared/context-mode-enforcement"
 import { switchProfile } from "../shared/dcp-switch-profile"
 import { createFirstMessageVariantGate } from "../shared/first-message-variant"
+import type { NativePluginContext, SessionContextCarrier } from "../shared/session-context-source"
 import { resolveTasksConfig } from "../shared/task-system-gating"
 import type { BuiltinSkill } from "../skills"
 import { registerSkillTransform } from "../skills/skills.transform"
 import { startTmuxCheck } from "../tools"
+import { resolveSystemDefaultModel } from "../tools/delegate-task/default-model"
 import { setPollTimeoutMs } from "../tools/delegate-task/timing"
+import { emitToolInfo } from "../tools/shared/define-tool"
 import { createAvailableCategories } from "./available-categories"
 import { createChatMessageHandler } from "./chat-message"
 import { createChatParamsHandler } from "./chat-params"
+import type { MatrixxContext, ToolsRecord, 
+  V2Event, 
+  V2Registration,
+  V2SessionContextEvent,
+  V2SystemPart,
+  V2ToolEditor} from "./context"
 import { createEventHandler } from "./event"
-import { createEventPump } from "./event-pump"
+import { createEventDispatcher } from "./event-dispatch"
 import type { ContinuationHooks } from "./hooks/create-continuation-hooks"
 import { createContinuationHooks } from "./hooks/create-continuation-hooks"
 import type { SessionHooks } from "./hooks/create-session-hooks"
@@ -66,23 +73,14 @@ import type { ToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import { createToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
-import { createMessagesTransformHandler } from "./messages-transform"
-import { createV1PluginContext } from "./opencode-context"
-import { toV1Event } from "./opencode-events"
-import { toV2Tool } from "./opencode-tools"
-import type {
-  V2Context,
-  V2Registration,
-  V2SessionContextEvent,
-  V2SystemPart,
-  V2ToolEditor,
-} from "./opencode-types"
+import type { Hooks } from "./legacy-hooks"
+import { registerMessageHooks } from "./message-hooks"
+import { createNativePluginContext } from "./native-context"
 import { createSkillContext } from "./skill-context"
 import { createToolCatalog } from "./tool-catalog"
 import { createToolDefinitionHandler } from "./tool-definition"
 import { createToolExecuteAfterHandler } from "./tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./tool-execute-before"
-import type { PluginContext, TmuxConfig, ToolsRecord } from "./types"
 
 /** Managers owned by the composition root (moved from `create-managers.ts`). */
 export type DomainManagers = {
@@ -103,7 +101,7 @@ export type DomainHooks = SessionHooks &
 type FirstMessageVariantGate = ReturnType<typeof createFirstMessageVariantGate>
 
 function createDomainManagers(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   tmuxConfig: TmuxConfig
   backgroundNotificationHookEnabled: boolean
@@ -125,10 +123,10 @@ function createDomainManagers(args: {
     log("[index] Failed to restore background handles:", error)
   })
 
-  initTaskToastManager(ctx.client)
+  initTaskToastManager()
 
   const configHandler = createConfigHandler({
-    ctx: { directory: ctx.directory, client: ctx.client },
+    ctx: { directory: ctx.directory },
     pluginConfig,
     modelCacheState: createModelCacheState(),
   })
@@ -151,11 +149,12 @@ export type SetupToolsDomainResult = {
 
 /** Tool domain: skill context, categories, and the filtered tool registry. */
 export async function setupToolsDomain(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   managers: Pick<DomainManagers, "backgroundManager">
+  systemDefaultModel?: () => Promise<string | undefined>
 }): Promise<SetupToolsDomainResult> {
-  const { ctx, pluginConfig, managers } = args
+  const { ctx, pluginConfig, managers, systemDefaultModel } = args
 
   const pollTimeout = resolveTasksConfig(pluginConfig).pollTimeoutMs
   if (pollTimeout !== undefined) {
@@ -175,6 +174,7 @@ export async function setupToolsDomain(args: {
     managers,
     skillContext,
     availableCategories,
+    systemDefaultModel,
   })
 
   return {
@@ -190,7 +190,7 @@ export async function setupToolsDomain(args: {
 
 /** Chat domain: message, params, and message/system transforms. */
 export function setupChatHooks(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   hooks: DomainHooks
@@ -198,7 +198,6 @@ export function setupChatHooks(args: {
   Hooks,
   | "chat.message"
   | "chat.params"
-  | "experimental.chat.messages.transform"
   | "experimental.chat.system.transform"
 > {
   const { ctx, pluginConfig, firstMessageVariantGate, hooks } = args
@@ -213,10 +212,6 @@ export function setupChatHooks(args: {
 
     "chat.params": createChatParamsHandler({ anthropicEffort: hooks.anthropicEffort }),
 
-    "experimental.chat.messages.transform": createMessagesTransformHandler({
-      hooks,
-    }),
-
     "experimental.chat.system.transform": async (input, output): Promise<void> => {
       await hooks.contextModeRouting(input, output)
       await hooks.rtkRouting(input, output)
@@ -226,7 +221,7 @@ export function setupChatHooks(args: {
 
 /** Tool domain: execute guards and tool definition passthrough. */
 export function setupToolHooks(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
 }): Pick<Hooks, "tool.execute.before" | "tool.execute.after" | "tool.definition"> {
   const { ctx, hooks } = args
@@ -286,7 +281,7 @@ export function setupCompactionHooks(args: {
  * Builds managers, tools, hooks, and the `Hooks` fragments the V2
  * registration below consumes.
  */
-export async function setupDomains(ctx: V2Context): Promise<{
+export async function setupDomains(ctx: MatrixxContext): Promise<{
   directory: string
   worktree: string
   hooks: Hooks
@@ -295,12 +290,11 @@ export async function setupDomains(ctx: V2Context): Promise<{
     directory: ctx.location?.directory,
   })
 
-  const v1ctx = createV1PluginContext(ctx)
+  const pctx = createNativePluginContext(ctx)
 
-  injectServerAuthIntoClient(v1ctx.client)
   startTmuxCheck()
 
-  const pluginConfig = await loadPluginConfig(v1ctx.directory, v1ctx)
+  const pluginConfig = await loadPluginConfig(pctx.directory, pctx)
   setContextModeForPrompts(pluginConfig.context_mode)
 
   // Auto-activate DCP profile on startup if default_profile is configured
@@ -324,44 +318,45 @@ export async function setupDomains(ctx: V2Context): Promise<{
   }
 
   const managers = createDomainManagers({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     tmuxConfig,
     backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
   })
 
   const toolsResult = await setupToolsDomain({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     managers,
+    systemDefaultModel: () => resolveSystemDefaultModel(ctx),
   })
 
   // Store tool names for use when building agent prompts
   setAvailableToolNames(Object.keys(toolsResult.filteredTools))
 
   const session = createSessionHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
   })
 
   const toolGuard = createToolGuardHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
   })
 
   const transform = createTransformHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled: (name) => isHookEnabled(name as HookName),
     safeHookEnabled,
   })
 
   const continuation = createContinuationHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
@@ -370,7 +365,7 @@ export async function setupDomains(ctx: V2Context): Promise<{
   })
 
   const skill = createSkillHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     isHookEnabled,
     safeHookEnabled,
     builtinSkills: toolsResult.builtinSkills,
@@ -386,17 +381,17 @@ export async function setupDomains(ctx: V2Context): Promise<{
   }
 
   const chat = setupChatHooks({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     firstMessageVariantGate,
     hooks,
   })
 
-  const tool = setupToolHooks({ ctx: v1ctx, hooks })
+  const tool = setupToolHooks({ ctx: pctx, hooks })
   const compaction = setupCompactionHooks({ hooks })
 
   const event = createEventHandler({
-    ctx: v1ctx,
+    ctx: pctx,
     pluginConfig,
     firstMessageVariantGate,
     managers,
@@ -407,14 +402,16 @@ export async function setupDomains(ctx: V2Context): Promise<{
     tool: toolsResult.filteredTools,
     ...chat,
     config: managers.configHandler,
-    event,
+    // Native pump delivers raw V2Event (see startDomainEventPump); the SDK
+    // Hooks.event envelope shape is legacy-static only. No runtime change.
+    event: event as unknown as Hooks["event"],
     ...tool,
     ...compaction,
   }
 
   return {
-    directory: v1ctx.directory,
-    worktree: v1ctx.worktree,
+    directory: pctx.directory,
+    worktree: pctx.worktree,
     hooks: assembled,
   }
 }
@@ -426,7 +423,7 @@ export async function setupDomains(ctx: V2Context): Promise<{
  */
 type DomainBridgeHandlers = {
   tool?: ToolsRecord | undefined
-  event?: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event?: (event: V2Event) => Promise<void>
   config?: (input: Record<string, unknown>) => Promise<void>
   "chat.message"?: (
     input: Record<string, unknown>,
@@ -440,10 +437,6 @@ type DomainBridgeHandlers = {
       topK?: number
       options?: Record<string, unknown>
     },
-  ) => Promise<void>
-  "experimental.chat.messages.transform"?: (
-    input: Record<string, unknown>,
-    output: { messages: unknown[] },
   ) => Promise<void>
   "experimental.chat.system.transform"?: (
     input: Record<string, unknown>,
@@ -468,7 +461,7 @@ type DomainBridgeHandlers = {
 }
 
 export interface RegisterDomainsInput {
-  ctx: V2Context
+  ctx: MatrixxContext
   hooks: Hooks
   directory: string
   worktree: string
@@ -531,7 +524,7 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
   const registration = await guard("tool.transform", () =>
     ctx.tool.transform((editor: V2ToolEditor) => {
       for (const [name, definition] of Object.entries(tools)) {
-        const tool = toV2Tool(name, definition, deps)
+        const tool = emitToolInfo(name, definition as never, deps)
         if (tool) editor.add(tool)
       }
       for (const [name, override] of overrides) {
@@ -549,14 +542,11 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
 function startDomainEventPump(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }, controller: AbortController): void {
   const handler = input.bridge.event
   if (!handler) return
-  createEventPump({
-    subscribe: (o) => input.ctx.event.subscribe({ signal: o.signal }),
-    handler,
-    signal: controller.signal,
-    guard,
-    log,
-    toV1Event,
-  }).start()
+  const dispatcher = createEventDispatcher({ handler, guard, log })
+  dispatcher.start(
+    (options) => input.ctx.event.subscribe({ signal: options.signal }) as AsyncIterable<V2Event>,
+    controller.signal,
+  )
 }
 
 async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }): Promise<V2Registration[]> {
@@ -616,11 +606,7 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
     }
   }
 
-  if (
-    hooks["chat.params"] ||
-    hooks["experimental.chat.system.transform"] ||
-    hooks["experimental.chat.messages.transform"]
-  ) {
+  if (hooks["chat.params"] || hooks["experimental.chat.system.transform"]) {
     const registration = await guard("session.hook(context)", () =>
       ctx.session.hook("context", async (event) => {
         // `context` fires for the primary turn only (per-kind dispatch in the
@@ -628,16 +614,16 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
         // routing discipline reaches primary turns, not auxiliary requests.
         await guard("chat.params", () => applyChatParams(event))
         await guard("system.transform", () => applySystemTransform(event))
-        // Stage 4: V2 `messages` are flat `Message[]` while the V1 transform
-        // expects `{ info, parts }[]`. Registering the V1 handler here would
-        // inject V1-shaped entries into a V2 request, so it stays deferred.
-        if (hooks["experimental.chat.messages.transform"]) {
-          log("[matrixx] messages transform deferred to Stage 4 (V2 messages are flat; V1 transform expects {info, parts}[])")
-        }
       }),
     )
     if (registration) registrations.push(registration)
   }
+
+  // Task 25: native per-hook message registrations (flat-Message[] bodies land in Task 26).
+  const messageHookRegistrations = await guard("registerMessageHooks", () =>
+    registerMessageHooks(ctx),
+  )
+  if (messageHookRegistrations) registrations.push(...messageHookRegistrations)
 
   if (hooks["experimental.session.compacting"]) {
     const handler = hooks["experimental.session.compacting"]

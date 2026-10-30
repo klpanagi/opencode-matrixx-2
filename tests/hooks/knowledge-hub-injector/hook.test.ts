@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../../../src/plugin/context";
 import { ContextCollector } from "../../../src/features/context-injector";
 import { createKnowledgeHubInjectorHook } from "../../../src/hooks/knowledge-hub-injector/hook";
 
@@ -18,8 +18,8 @@ afterEach(() => {
   }
 });
 
-function makeCtx(): PluginInput {
-  return { directory: tmpdir(), client: {} } as unknown as PluginInput;
+function makeCtx(): MatrixxContext {
+  return { directory: tmpdir(), client: {} } as unknown as MatrixxContext;
 }
 
 function makeHub(files: Record<string, string>): string {
@@ -161,7 +161,7 @@ describe("createKnowledgeHubInjectorHook", () => {
     await runTransform(hook, "ses-1");
     collector.consume("ses-1");
     //#when
-    await hook.event({ event: { type: "session.compacted", properties: { sessionID: "ses-1" } } });
+    await hook.event({  type: "session.compacted", data: { sessionID: "ses-1" }  });
     await runTransform(hook, "ses-1");
     //#then
     expect(collector.hasPending("ses-1")).toBe(true);
@@ -175,7 +175,7 @@ describe("createKnowledgeHubInjectorHook", () => {
     await runTransform(hook, "ses-1");
     collector.consume("ses-1");
     //#when
-    await hook.event({ event: { type: "session.deleted", properties: { info: { id: "ses-1" } } } });
+    await hook.event({  type: "session.deleted", data: { info: { id: "ses-1" } }  });
     await runTransform(hook, "ses-1");
     //#then
     expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER);

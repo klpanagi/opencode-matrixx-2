@@ -11,12 +11,12 @@ import { EVOLUTION_TEMPLATE } from "../../src/features/builtin-commands/template
 import { createContinuationHooks } from "../../src/plugin/hooks/create-continuation-hooks"
 import { createToolGuardHooks } from "../../src/plugin/hooks/create-tool-guard-hooks"
 import { shouldEnableEvolutionTool } from "../../src/plugin/tool-policy"
-import type { PluginContext } from "../../src/plugin/types"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createEvolutionTool } from "../../src/tools/evolution"
 
 function makeBaseArgs(pluginConfig: MatrixxConfig) {
   return {
-    ctx: { directory: "/tmp/evolution-gating-test" } as unknown as PluginContext,
+    ctx: { directory: "/tmp/evolution-gating-test" } as unknown as MatrixxContext,
     pluginConfig,
     isHookEnabled: (_name: HookName) => true,
     safeHookEnabled: true,
@@ -96,7 +96,7 @@ describe("T2 evolution tool gating", () => {
 
   test("createEvolutionTool registers the evolution tool", () => {
     //#given a plugin context
-    const ctx = { directory: "/tmp/evolution-gating-test" } as unknown as PluginContext
+    const ctx = { directory: "/tmp/evolution-gating-test" } as unknown as MatrixxContext
     //#when creating the evolution tool
     const record = createEvolutionTool(ctx)
     //#then the evolution tool is registered

@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createEmptyTaskResponseDetectorHook } from "../../src/hooks/empty-task-response-detector"
 
 //#given: a fake plugin input (the hook ignores ctx) and the after-hook
 function makeAfter() {
-  const hook = createEmptyTaskResponseDetectorHook({} as unknown as PluginInput)
+  const hook = createEmptyTaskResponseDetectorHook({} as unknown as MatrixxContext)
   return hook["tool.execute.after"]
 }
 

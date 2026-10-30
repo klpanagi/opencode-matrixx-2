@@ -1,6 +1,6 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import { getSessionAgent } from "../../features/session-state/state"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { notifyInjection } from "../../shared/injection-notifier"
@@ -54,8 +54,9 @@ function hashSnippet(value: string): string {
   return (hash >>> 0).toString(16)
 }
 
+import type { V2Event } from "../../plugin/context"
 export function createCategorySkillReminderHook(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   availableSkills: AvailableSkill[] = []
 ) {
   const sessionStates = new Map<string, SessionState>()
@@ -122,8 +123,8 @@ export function createCategorySkillReminderHook(
     }
   }
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined

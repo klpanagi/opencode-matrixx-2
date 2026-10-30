@@ -1,8 +1,9 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
-import type { PluginContext } from "../../plugin/types"
+import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import {
   MATRIXX_DIR_NAME,
   NOTEPAD_FILENAME_KEBAB_REGEX,
@@ -10,11 +11,11 @@ import {
 } from "./constants"
 import { validateBucketName } from "./validation"
 
-export function createNotepadListTool(ctx?: PluginContext): ToolDefinition {
-  return tool({
+export function createNotepadListTool(ctx?: MatrixxContext): MatrixxToolDefinition {
+  return defineTool("notepad_list", {
     description: "List notepad buckets under .matrixx/notepads/ (no args) or *.md files inside a bucket (planName). File entries carry mtime/size, mirroring plan_list.",
     args: {
-      planName: tool.schema.string().optional().describe("Bucket/plan name (kebab-case); omit to list buckets"),
+      planName: z.string().optional().describe("Bucket/plan name (kebab-case); omit to list buckets"),
     },
     execute: async (args, context) => {
       try {

@@ -1,6 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { InputSecretGuardConfig } from "../../config/schema/security"
 import { log } from "../../shared"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { createSystemDirective, isSystemDirective } from "../../shared/system-directive"
 import { extractPromptText } from "../keyword-detector/detector"
 import { detectSecrets, hashFinding } from "./detector"
@@ -22,7 +23,7 @@ function buildRedactedPreview(findings: { ruleId: string; redacted: string }[]):
   return parts.join(", ")
 }
 
-export function createInputSecretGuardHook(ctx: PluginInput, cfg?: InputSecretGuardConfig) {
+export function createInputSecretGuardHook(_ctx: NativePluginContext, cfg?: InputSecretGuardConfig) {
   const enabled = cfg?.enabled ?? true
   const mode = cfg?.mode ?? "prompt"
   const blocklistMode = cfg?.blocklist_mode ?? "prompt"
@@ -129,21 +130,7 @@ export function createInputSecretGuardHook(ctx: PluginInput, cfg?: InputSecretGu
         ? `Found ${findings.length} potential secret(s) (${redactedPreview}). Blocked — remove or redact the secret and resend.`
         : `Found ${findings.length} potential secret(s) (${redactedPreview}). Remove them or reply 'allow once' / 'allow session' to send.`
 
-      ctx.client.tui
-        .showToast({
-          body: {
-            title: "🔒 Potential secret detected",
-            message: toastMessage,
-            variant: "warning" as const,
-            duration: 6000,
-          },
-        })
-        .catch((err) =>
-          log("[input-secret-guard] Failed to show toast", {
-            error: err,
-            sessionID: input.sessionID,
-          }),
-        )
+      notify("warn", `🔒 Potential secret detected: ${toastMessage}`)
 
       const textPartIndex = output.parts.findIndex((p) => p.type === "text" && p.text !== undefined)
       if (textPartIndex !== -1) {

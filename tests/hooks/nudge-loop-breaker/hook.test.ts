@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { PluginContext } from "../../../src/plugin/types"
+import type { NativePluginContext } from "../../../src/shared/session-context-source"
 import { createNudgeLoopBreakerHook } from "../../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../../src/hooks/nudge-loop-breaker/session-state"
 
@@ -10,17 +10,25 @@ type Activation = { sessionID: string; backoff: number }
 
 function stepEnded(text: string, sessionID = SESSION) {
   return {
-    event: {
-      type: "session.next.step.ended",
-      properties: { sessionID, assistantMessageID: "msg_x", text },
-    },
+    type: "session.next.step.ended",
+    data: { sessionID, assistantMessageID: "msg_x", text },
   }
 }
 
 function makeHook() {
   const activations: Activation[] = []
+  const promptCalls: unknown[] = []
   let clock = 1000
-  const hook = createNudgeLoopBreakerHook({} as PluginContext, {
+  const hook = createNudgeLoopBreakerHook(
+    {
+      session: {
+        prompt: async (args: unknown) => {
+          promptCalls.push(args)
+        },
+      },
+      directory: "/tmp",
+    } as unknown as NativePluginContext,
+    {
     now: () => clock,
     cooldownMs: 100,
     onCorrective: (sessionID, backoff) => activations.push({ sessionID, backoff }),
@@ -28,6 +36,7 @@ function makeHook() {
   return {
     hook,
     activations,
+    promptCalls,
     advance: (ms: number) => {
       clock += ms
     },
@@ -37,7 +46,7 @@ function makeHook() {
 describe("createNudgeLoopBreakerHook — repeated step detection", () => {
   test("activates backoff after three identical step.ended events", async () => {
     //#given
-    const { hook, activations } = makeHook()
+    const { hook, activations, promptCalls } = makeHook()
 
     //#when
     await hook.event(stepEnded("repeated assistant text"))
@@ -49,6 +58,8 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     expect(beforeThreshold).toBe(0)
     expect(activations.length).toBe(1)
     expect(activations[0]).toEqual({ sessionID: SESSION, backoff: 1 })
+    expect(promptCalls).toHaveLength(1)
+    expect(promptCalls[0]).toEqual({ sessionID: SESSION, parts: [{ type: "text", text: expect.stringContaining("Repetition detected") }] })
   })
 
   test("resets the counter when the text changes", async () => {
@@ -87,7 +98,7 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
     await hook.event({
-      event: { type: "session.next.tool.success", properties: { sessionID: SESSION, tool: "compress" } },
+       type: "session.next.tool.success", data: { sessionID: SESSION, tool: "compress" } ,
     })
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
@@ -107,7 +118,7 @@ describe("createNudgeLoopBreakerHook — repeated step detection", () => {
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))
     await hook.event({
-      event: { type: "message.updated", properties: { sessionID: SESSION, info: { role: "user" } } },
+       type: "message.updated", data: { sessionID: SESSION, info: { role: "user" } } ,
     })
     await hook.event(stepEnded("same"))
     await hook.event(stepEnded("same"))

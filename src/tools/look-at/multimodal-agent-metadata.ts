@@ -1,6 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared"
 import { isRecord } from "../../shared/record-type-guard"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { unwrapList } from "../../shared/unwrap-list"
 import { CONSTRUCT_AGENT } from "./constants"
 
 type AgentModel = { providerID: string; modelID: string }
@@ -31,12 +32,10 @@ function toAgentInfo(value: unknown): AgentInfo | null {
 }
 
 export async function resolveMultimodalLookerAgentMetadata(
-  ctx: PluginInput
+  ctx: NativePluginContext
 ): Promise<ResolvedAgentMetadata> {
   try {
-    const agentsResult = await ctx.client.app?.agents?.()
-    const agentsRaw = isRecord(agentsResult) ? agentsResult.data : undefined
-    const agents = Array.isArray(agentsRaw) ? agentsRaw.map(toAgentInfo).filter(Boolean) : []
+    const agents = unwrapList(await ctx.agent.list()).map(toAgentInfo).filter(Boolean)
 
     const matched = agents.find(
       (agent) => agent?.name?.toLowerCase() === CONSTRUCT_AGENT.toLowerCase()

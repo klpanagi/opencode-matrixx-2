@@ -1,6 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin";
 import { subagentSessions } from "../../features/session-state/state";
+import type { V2Event } from "../../plugin/context";
 import { log } from "../../shared/logger";
+import type { NativePluginContext } from "../../shared/session-context-source";
 import { buildSessionReminderMessage } from "./constants";
 import { extractSessionNameFromTokens, findSubcommand, tokenizeCommand } from "./parser";
 import { getOrCreateState, isOmoSession, killAllTrackedSessions } from "./state-manager";
@@ -20,14 +21,7 @@ interface ToolExecuteOutput {
   metadata: unknown;
 }
 
-interface EventInput {
-  event: {
-    type: string;
-    properties?: unknown;
-  };
-}
-
-export function createInteractiveBashSessionHook(ctx: PluginInput) {
+export function createInteractiveBashSessionHook(ctx: NativePluginContext) {
   const sessionStates = new Map<string, InteractiveBashSessionState>();
 
   function getOrCreateStateLocal(sessionID: string): InteractiveBashSessionState {
@@ -40,7 +34,7 @@ export function createInteractiveBashSessionHook(ctx: PluginInput) {
     await killAllTrackedSessions(state);
     
     for (const sessionId of subagentSessions) {
-      ctx.client.session.abort({ path: { id: sessionId } }).catch((err) => { log("[interactive-bash] Session abort failed:", err) })
+      ctx.session.interrupt({ sessionID: sessionId }).catch((err) => { log("[interactive-bash] Session abort failed:", err) })
     }
   }
 
@@ -103,8 +97,8 @@ export function createInteractiveBashSessionHook(ctx: PluginInput) {
     }
   };
 
-  const eventHandler = async ({ event }: EventInput) => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

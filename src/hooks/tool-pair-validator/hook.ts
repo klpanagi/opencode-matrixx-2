@@ -1,4 +1,20 @@
-import type { Message, Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string
+  sessionID?: string
+  role?: string
+  [key: string]: unknown
+}
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
+
 import { log } from "../../shared/logger"
 
 const TOOL_RESULT_PLACEHOLDER = "Tool output unavailable (context compacted)"

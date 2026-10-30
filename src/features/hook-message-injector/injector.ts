@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { SessionMessage } from "../../shared/session-message"
 import { MESSAGE_STORAGE, PART_STORAGE } from "./constants"
 import { getCachedSdkMessages, setCachedSdkMessages } from "./sdk-message-cache"
 import type { MessageMeta, OriginalMessageContext, TextPart, ToolPermission } from "./types"
@@ -14,40 +15,48 @@ export interface StoredMessage {
   tools?: Record<string, ToolPermission>
 }
 
-export type OpencodeClient = PluginInput["client"]
+export type MessageSource = SessionContextCarrier
 
-interface SDKMessage {
-  info?: {
-    agent?: string
-    model?: {
-      providerID?: string
-      modelID?: string
-      variant?: string
-    }
+interface LegacyMessageInfo {
+  agent?: string
+  model?: {
     providerID?: string
     modelID?: string
-    tools?: Record<string, ToolPermission>
+    variant?: string
   }
+  providerID?: string
+  modelID?: string
+  tools?: Record<string, ToolPermission>
+}
+
+type SDKMessage = SessionMessage & { info?: LegacyMessageInfo }
+
+function asSessionCarrier(source: MessageSource): SessionContextCarrier | undefined {
+  if (typeof source !== "object" || source === null) return undefined
+  const session = (source as { session?: unknown }).session
+  if (typeof session !== "object" || session === null) return undefined
+  if (typeof (session as { context?: unknown }).context !== "function") return undefined
+  return { session: session as SessionContextCarrier["session"] }
 }
 
 function convertSDKMessageToStoredMessage(msg: SDKMessage): StoredMessage | null {
   const info = msg.info
-  if (!info) return null
 
-  const providerID = info.model?.providerID ?? info.providerID
-  const modelID = info.model?.modelID ?? info.modelID
-  const variant = info.model?.variant
+  const agent = msg.agent ?? info?.agent
+  const providerID = msg.model?.providerID ?? info?.model?.providerID ?? info?.providerID
+  const modelID = msg.model?.modelID ?? info?.model?.modelID ?? info?.modelID
+  const variant = msg.model?.variant ?? info?.model?.variant
 
-  if (!info.agent && !providerID && !modelID) {
+  if (!agent && !providerID && !modelID) {
     return null
   }
 
   return {
-    agent: info.agent,
+    agent,
     model: providerID && modelID
       ? { providerID, modelID, ...(variant ? { variant } : {}) }
       : undefined,
-    tools: info.tools,
+    tools: info?.tools,
   }
 }
 
@@ -57,15 +66,16 @@ function convertSDKMessageToStoredMessage(msg: SDKMessage): StoredMessage | null
 // See: https://github.com/klpanagi/opencode-matrixx/pull/1837
 
 /**
- * Finds the nearest message with required fields using SDK (for beta/SQLite backend).
- * Uses client.session.messages() to fetch message data from SQLite.
+ * Finds the nearest message with required fields using the native session
+ * context (for beta/SQLite backend).
+ * Uses fetchSessionMessages() to fetch message data from SQLite.
  */
 /**
- * Single choke point for `client.session.messages()` in this feature.
+ * Single choke point for native session message reads in this feature.
  * Returns an array SHARED with the cache — callers must not mutate it.
  */
 async function fetchSdkMessages(
-  client: OpencodeClient,
+  client: MessageSource,
   sessionID: string,
   timeoutMs: number
 ): Promise<SDKMessage[] | null> {
@@ -74,15 +84,23 @@ async function fetchSdkMessages(
     return cached as SDKMessage[]
   }
 
+  const carrier = asSessionCarrier(client)
+  if (!carrier) {
+    log("[hook-message-injector] SDK message fetch skipped: no native session context available", {
+      sessionID,
+    })
+    return null
+  }
+
   try {
     const response = await Promise.race([
-      client.session.messages({ path: { id: sessionID } }),
+      fetchSessionMessages(carrier, sessionID),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`SDK messages timeout after ${timeoutMs}ms`)), timeoutMs)
       ),
     ])
-    const messages = normalizeSDKResponse(response, [] as SDKMessage[], { preferResponseOnMissingData: true })
-    setCachedSdkMessages(sessionID, messages)
+    setCachedSdkMessages(sessionID, response)
+    const messages = response as SDKMessage[]
     return messages
   } catch (error) {
     log("[hook-message-injector] SDK message fetch failed", {
@@ -94,7 +112,7 @@ async function fetchSdkMessages(
 }
 
 export async function findNearestMessageWithFieldsFromSDK(
-  client: OpencodeClient,
+  client: MessageSource,
   sessionID: string,
   timeoutMs = 5000
 ): Promise<StoredMessage | null> {
@@ -128,7 +146,7 @@ export async function findNearestMessageWithFieldsFromSDK(
  * Finds the FIRST (oldest) message with agent field using SDK (for beta/SQLite backend).
  */
 export async function findFirstMessageWithAgentFromSDK(
-  client: OpencodeClient,
+  client: MessageSource,
   sessionID: string,
   timeoutMs = 5000
 ): Promise<string | null> {
@@ -391,7 +409,7 @@ export function injectHookMessage(
 
 export async function resolveMessageContext(
   sessionID: string,
-  client: OpencodeClient,
+  client: MessageSource,
   messageDir: string | null
 ): Promise<{ prevMessage: StoredMessage | null; firstMessageAgent: string | null }> {
   const [prevMessage, firstMessageAgent] = isSqliteBackend()

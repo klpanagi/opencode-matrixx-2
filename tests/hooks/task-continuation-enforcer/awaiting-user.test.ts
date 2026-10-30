@@ -2,10 +2,11 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
+import { setNotifySink } from "../../../src/shared/notify"
 
 // ASSUMPTION (discovery audit 2026-09-11, .matrixx/notepads/fix-task-continuation-hijack/learnings.md):
 // No awaiting-user signal exists in source (rg for awaiting hits only unrelated
@@ -29,7 +30,7 @@ function writeValidTask(dir: string, id: string, status = "pending", threadID?: 
 
 function awaitingQuestionMessages(): Array<unknown> {
   return [
-    { info: { role: "assistant", agent: "build" }, parts: [{ type: "text", text: "Which option should I use?" }] },
+    { type: "assistant", agent: "build", content: [{ type: "text", text: "Which option should I use?" }] },
   ]
 }
 
@@ -37,18 +38,16 @@ function makeCtx(
   dir: string,
   toastMock: ReturnType<typeof mock>,
   messages: Array<unknown>,
-  promptAsyncMock?: ReturnType<typeof mock>,
-): PluginInput {
+  promptMock?: ReturnType<typeof mock>,
+): MatrixxContext {
+  setNotifySink(toastMock)
   return {
     directory: dir,
-    client: {
-      tui: { showToast: toastMock },
-      session: {
-        messages: async () => ({ data: messages }) as unknown as never,
-        promptAsync: promptAsyncMock ?? (async () => ({})),
-      },
+    session: {
+      context: async () => messages,
+      prompt: promptMock ?? (async () => ({})),
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
 }
 
 function markAwaitingUser(store: ReturnType<typeof createSessionStateStore>, sessionID: string): void {
@@ -79,15 +78,15 @@ describe("task-continuation awaiting-user guard (RED)", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-await-"))
     writeValidTask(dir, "T-await-2", "pending", "await-2")
     const toastMock = mock(async () => ({} as never))
-    const promptAsyncMock = mock(async () => ({} as never))
-    const ctx = makeCtx(dir, toastMock, awaitingQuestionMessages(), promptAsyncMock)
+    const promptMock = mock(async () => ({} as never))
+    const ctx = makeCtx(dir, toastMock, awaitingQuestionMessages(), promptMock)
     const store = createSessionStateStore()
     store.getState("await-2")
     markAwaitingUser(store, "await-2")
     //#when inject runs while awaiting user
     await injectContinuation({ ctx, sessionID: "await-2", sessionStateStore: store, skipAgents: [] })
     //#then no continuation prompt hijacks the pending question
-    expect(promptAsyncMock).not.toHaveBeenCalled()
+    expect(promptMock).not.toHaveBeenCalled()
     store.shutdown()
     rmSync(dir, { recursive: true, force: true })
   })
@@ -97,8 +96,8 @@ describe("task-continuation awaiting-user guard (RED)", () => {
     const dir = mkdtempSync(join(tmpdir(), "task-await-"))
     writeValidTask(dir, "T-await-3", "pending", "await-3")
     const toastMock = mock(async () => ({} as never))
-    const promptAsyncMock = mock(async () => ({} as never))
-    const ctx = makeCtx(dir, toastMock, [], promptAsyncMock)
+    const promptMock = mock(async () => ({} as never))
+    const ctx = makeCtx(dir, toastMock, [], promptMock)
     const store = createSessionStateStore()
     const { registerSubagentSession } = await import("../../../src/features/session-state/state")
     registerSubagentSession("await-3b", "await-3")
@@ -107,7 +106,7 @@ describe("task-continuation awaiting-user guard (RED)", () => {
     await injectContinuation({ ctx, sessionID: "await-3", sessionStateStore: store, skipAgents: [] })
     //#then enforcement still fires (control case)
     expect(toastMock).toHaveBeenCalledTimes(1)
-    expect(promptAsyncMock).toHaveBeenCalledTimes(1)
+    expect(promptMock).toHaveBeenCalledTimes(1)
     store.shutdown()
     rmSync(dir, { recursive: true, force: true })
   })

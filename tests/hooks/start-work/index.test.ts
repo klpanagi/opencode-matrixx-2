@@ -15,7 +15,7 @@ describe("start-work hook", () => {
   let testDir: string
   let matrixDir: string
 
-  function createMockPluginInput() {
+  function createMockMatrixxContext() {
     return {
       directory: testDir,
       client: {},
@@ -44,7 +44,7 @@ describe("start-work hook", () => {
   describe("chat.message handler", () => {
     test("should ignore non-start-work commands", async () => {
       // given - hook and non-start-work message
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "Just a regular message" }],
       }
@@ -61,7 +61,7 @@ describe("start-work hook", () => {
 
     test("should detect start-work command via session-context tag", async () => {
       // given - hook and start-work message
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -94,7 +94,7 @@ describe("start-work hook", () => {
       }
       writeMissionState(testDir, state)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -112,7 +112,7 @@ describe("start-work hook", () => {
 
     test("should replace $SESSION_ID placeholder", async () => {
       // given - hook and message with placeholder
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -135,7 +135,7 @@ describe("start-work hook", () => {
 
     test("should replace $TIMESTAMP placeholder", async () => {
       // given - hook and message with placeholder
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -169,7 +169,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-incomplete.md")
       writeFileSync(plan2Path, "# Plan Incomplete\n- [ ] Task 1\n- [x] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -197,7 +197,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-b.md")
       writeFileSync(plan2Path, "# Plan B\n- [ ] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -225,7 +225,7 @@ describe("start-work hook", () => {
       const plan2Path = join(plansDir, "plan-y.md")
       writeFileSync(plan2Path, "# Plan Y\n- [ ] Task 2")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -263,7 +263,7 @@ describe("start-work hook", () => {
       }
       writeMissionState(testDir, staleState)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -295,7 +295,7 @@ describe("start-work hook", () => {
       const planPath = join(plansDir, "my-feature-plan.md")
       writeFileSync(planPath, "# My Feature Plan\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -326,7 +326,7 @@ describe("start-work hook", () => {
       const planPath = join(plansDir, "api-refactor.md")
       writeFileSync(planPath, "# API Refactor\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -357,7 +357,7 @@ describe("start-work hook", () => {
       const planPath = join(plansDir, "2026-01-15-feature-implementation.md")
       writeFileSync(planPath, "# Feature Implementation\n- [ ] Task 1")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [
           {
@@ -386,7 +386,7 @@ describe("start-work hook", () => {
       // given
       const updateSpy = spyOn(sessionState, "updateSessionAgent")
       
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -415,7 +415,7 @@ describe("start-work hook", () => {
       const old = new Date(Date.now() - 72 * 60 * 60 * 1000)
       utimesSync(stalePath, old, old)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -443,7 +443,7 @@ describe("start-work hook", () => {
       const old = new Date(Date.now() - 72 * 60 * 60 * 1000)
       utimesSync(stalePath, old, old)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -477,7 +477,7 @@ describe("start-work hook", () => {
       }
       writeMissionState(testDir, state)
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }
@@ -502,7 +502,7 @@ describe("start-work hook", () => {
       writeFileSync(join(plansDir, "fresh-work.md"), "# Fresh\n- [ ] 1. Active work")
       writeFileSync(join(plansDir, "empty-notes.md"), "# Notes\nJust prose, no checkboxes.")
 
-      const hook = createStartWorkHook(createMockPluginInput())
+      const hook = createStartWorkHook(createMockMatrixxContext())
       const output = {
         parts: [{ type: "text", text: "<session-context></session-context>" }],
       }

@@ -1,3 +1,4 @@
+import type { SessionMessage } from "../../shared/session-message"
 import type { TaskStatus } from "../../shared/status-types"
 
 export interface StoredMessageMeta {
@@ -60,31 +61,7 @@ export type StoredPart = StoredTextPart | StoredToolPart | StoredReasoningPart |
   [key: string]: unknown
 }
 
-export interface MessageData {
-  info?: {
-    id?: string
-    role?: string
-    sessionID?: string
-    parentID?: string
-    error?: unknown
-    agent?: string
-    model?: {
-      providerID: string
-      modelID: string
-    }
-    system?: string
-    tools?: Record<string, boolean>
-  }
-  parts?: Array<{
-    type: string
-    id?: string
-    text?: string
-    thinking?: string
-    name?: string
-    input?: Record<string, unknown>
-    callID?: string
-  }>
-}
+export type MessageData = SessionMessage
 
 export interface ResumeConfig {
   sessionID: string

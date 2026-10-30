@@ -19,10 +19,10 @@ function createBaseArgs(overrides?: Partial<DelegateTaskArgs>): DelegateTaskArgs
 
 function createExecutorContext(agentsFn: () => Promise<unknown>): ExecutorContext {
   const client = {
-    app: {
-      agents: agentsFn,
+    agent: {
+      list: agentsFn,
     },
-  } as ExecutorContext["client"]
+  } as unknown as ExecutorContext["client"]
 
   return {
     client,

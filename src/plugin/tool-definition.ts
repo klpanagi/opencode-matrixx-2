@@ -1,4 +1,7 @@
-import type { DomainHooks } from "./setup-domains"
+import { defineTool } from "../tools/shared/define-tool";
+import type { DomainHooks } from "./setup-domains";
+
+export const toolAuthoringEntry = defineTool;
 
 export function createToolDefinitionHandler(args: {
   hooks: DomainHooks

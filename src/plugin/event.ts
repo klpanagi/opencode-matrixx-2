@@ -9,12 +9,13 @@ import {
 } from "../features/session-state/state"
 import { resetMessageCursor } from "../shared"
 import { log } from "../shared/logger"
+import type { NativePluginContext } from "../shared/session-context-source"
 import { lspManager } from "../tools"
-import { DEDUPLICATE_WINDOW_MS } from "./event-pump"
+import type { MatrixxContext, V2Event } from "./context"
+import { DEDUPLICATE_WINDOW_MS } from "./event-dispatch"
 import { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
 import { normalizeSessionStatusToIdle } from "./session-status-normalizer"
 import type { DomainHooks, DomainManagers } from "./setup-domains"
-import type { PluginContext } from "./types"
 
 type FirstMessageVariantGate = {
   markSessionCreated: (sessionInfo: { id?: string; title?: string; parentID?: string } | undefined) => void
@@ -22,43 +23,43 @@ type FirstMessageVariantGate = {
 }
 
 export function createEventHandler(args: {
-  ctx: PluginContext
+  ctx: MatrixxContext & NativePluginContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   managers: DomainManagers
   hooks: DomainHooks
-}): (input: { event: { type: string; properties?: Record<string, unknown> } }) => Promise<void> {
+}): (event: V2Event) => Promise<void> {
   const { ctx, firstMessageVariantGate, hooks } = args
 
-  const dispatchToHooks = async (input: { event: { type: string; properties?: Record<string, unknown> } }): Promise<void> => {
-    await Promise.resolve(hooks.autoUpdateChecker?.event?.(input))
-    await Promise.resolve(hooks.backgroundNotificationHook?.event?.(input))
-    await Promise.resolve(hooks.sessionNotification?.(input))
-    await Promise.resolve(hooks.taskContinuationEnforcer?.handler?.(input))
-    await Promise.resolve(hooks.unstableAgentBabysitter?.event?.(input))
-    await Promise.resolve(hooks.nudgeLoopBreaker?.event?.(input))
-    await Promise.resolve(hooks.contextWindowMonitor?.event?.(input))
-    await Promise.resolve(hooks.directoryAgentsInjector?.event?.(input))
-    await Promise.resolve(hooks.rulesInjector?.event?.(input))
-    await Promise.resolve(hooks.knowledgeHubInjector?.event?.(input))
-    await Promise.resolve(hooks.thinkMode?.event?.(input))
-    await Promise.resolve(hooks.contextWindowLimitRecovery?.event?.(input))
-    await Promise.resolve(hooks.agentUsageReminder?.event?.(input))
-    await Promise.resolve(hooks.categorySkillReminder?.event?.(input))
-    await Promise.resolve(hooks.interactiveBashSession?.event?.(input))
-    await Promise.resolve(hooks.matrixLoop?.event?.(input))
-    await Promise.resolve(hooks.stopContinuationGuard?.event?.(input))
-    await Promise.resolve(hooks.niobeHook?.handler?.(input))
-    await Promise.resolve(hooks.planPersister?.event?.(input))
-    await Promise.resolve(hooks.runtimeFallback?.event?.(input))
-    await Promise.resolve(hooks.sessionMemory?.event?.(input))
+  const dispatchToHooks = async (event: V2Event): Promise<void> => {
+    await Promise.resolve(hooks.autoUpdateChecker?.event?.(event))
+    await Promise.resolve(hooks.backgroundNotificationHook?.event?.(event))
+    await Promise.resolve(hooks.sessionNotification?.(event))
+    await Promise.resolve(hooks.taskContinuationEnforcer?.handler?.(event))
+    await Promise.resolve(hooks.unstableAgentBabysitter?.event?.(event))
+    await Promise.resolve(hooks.nudgeLoopBreaker?.event?.(event))
+    await Promise.resolve(hooks.contextWindowMonitor?.event?.(event))
+    await Promise.resolve(hooks.directoryAgentsInjector?.event?.(event))
+    await Promise.resolve(hooks.rulesInjector?.event?.(event))
+    await Promise.resolve(hooks.knowledgeHubInjector?.event?.(event))
+    await Promise.resolve(hooks.thinkMode?.event?.(event))
+    await Promise.resolve(hooks.contextWindowLimitRecovery?.event?.(event))
+    await Promise.resolve(hooks.agentUsageReminder?.event?.(event))
+    await Promise.resolve(hooks.categorySkillReminder?.event?.(event))
+    await Promise.resolve(hooks.interactiveBashSession?.event?.(event))
+    await Promise.resolve(hooks.matrixLoop?.event?.(event))
+    await Promise.resolve(hooks.stopContinuationGuard?.event?.(event))
+    await Promise.resolve(hooks.niobeHook?.handler?.(event))
+    await Promise.resolve(hooks.planPersister?.event?.(event))
+    await Promise.resolve(hooks.runtimeFallback?.event?.(event))
+    await Promise.resolve(hooks.sessionMemory?.event?.(event))
   }
 
 
   const recentSyntheticIdles = new Map<string, number>()
   const recentRealIdles = new Map<string, number>()
 
-  return async (input): Promise<void> => {
+  return async (event: V2Event): Promise<void> => {
     pruneRecentSyntheticIdles({
       recentSyntheticIdles,
       recentRealIdles,
@@ -66,8 +67,8 @@ export function createEventHandler(args: {
       dedupWindowMs: DEDUPLICATE_WINDOW_MS,
     })
 
-    if (input.event.type === "session.idle") {
-      const sessionID = (input.event.properties as Record<string, unknown> | undefined)?.sessionID as string | undefined
+    if (event.type === "session.idle") {
+      const sessionID = (event.data as Record<string, unknown> | undefined)?.sessionID as string | undefined
       if (sessionID) {
         const emittedAt = recentSyntheticIdles.get(sessionID)
         if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
@@ -78,11 +79,11 @@ export function createEventHandler(args: {
       }
     }
 
-    await dispatchToHooks(input)
+    await dispatchToHooks(event)
 
-    const syntheticIdle = normalizeSessionStatusToIdle(input)
+    const syntheticIdle = normalizeSessionStatusToIdle(event)
     if (syntheticIdle) {
-      const sessionID = (syntheticIdle.event.properties as Record<string, unknown>)?.sessionID as string
+      const sessionID = (syntheticIdle.data as Record<string, unknown>)?.sessionID as string
       const emittedAt = recentRealIdles.get(sessionID)
       if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
         recentRealIdles.delete(sessionID)
@@ -92,8 +93,7 @@ export function createEventHandler(args: {
       await dispatchToHooks(syntheticIdle)
     }
 
-    const { event } = input
-    const props = event.properties as Record<string, unknown> | undefined
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.created") {
       const sessionInfo = props?.info as
@@ -153,11 +153,10 @@ export function createEventHandler(args: {
           sessionID === getMainSessionID() &&
           !hooks.stopContinuationGuard?.isStopped(sessionID)
         ) {
-          await ctx.client.session
+          await ctx.session
             .prompt({
-              path: { id: sessionID },
-              body: { parts: [{ type: "text", text: "continue" }] },
-              query: { directory: ctx.directory },
+              sessionID,
+              parts: [{ type: "text", text: "continue" }],
             })
             .catch((err) => { log("[plugin] Session prompt failed:", err) })
         }

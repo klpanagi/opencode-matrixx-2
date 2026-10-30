@@ -3,16 +3,16 @@ import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import type { ParentContext } from "./executor-types"
-import type { OpencodeClient, ToolContextWithMetadata } from "./types"
+import type { NativeClient, ToolContextWithMetadata } from "./types"
 
 export async function resolveParentContext(
   ctx: ToolContextWithMetadata,
-  client: OpencodeClient
+  client: NativeClient
 ): Promise<ParentContext> {
   const messageDir = getMessageDir(ctx.sessionID)
   const { prevMessage, firstMessageAgent } = await resolveMessageContext(
     ctx.sessionID,
-    client,
+    client as unknown as Parameters<typeof resolveMessageContext>[1],
     messageDir
   )
 

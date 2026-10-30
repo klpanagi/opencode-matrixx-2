@@ -4,12 +4,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createNotepadAppendTool } from "../../../src/tools/notepad/notepad-append"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-notepad-append",
     messageID: "test-message-notepad-append",
@@ -19,7 +19,7 @@ function testContext(testDir: string): ToolContext {
     worktree: testDir,
     metadata: () => {},
     ask: async () => {},
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("notepad_append APPEND-only", () => {

@@ -1,8 +1,8 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { appendSessionId, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { collectGitDiffStats } from "../../shared/git-worktree/collect-git-diff-stats"
 import { formatFileChanges } from "../../shared/git-worktree/format-file-changes"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { isCallerOrchestrator } from "../../shared/session-utils"
 import { stateRootFromPluginContext } from "../../shared/state-root"
 import { HOOK_NAME } from "./hook-name"
@@ -14,7 +14,7 @@ import { buildOrchestratorReminder, buildStandaloneVerificationReminder } from "
 import { isWriteOrEditToolName } from "./write-edit-tool-policy"
 
 export function createToolExecuteAfterHandler(input: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   pendingFilePaths: Map<string, string>
 }): (toolInput: ToolExecuteAfterInput, toolOutput: ToolExecuteAfterOutput) => Promise<void> {
   const { ctx, pendingFilePaths } = input
@@ -26,7 +26,7 @@ export function createToolExecuteAfterHandler(input: {
       return
     }
 
-    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx.client))) {
+    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx))) {
       return
     }
 

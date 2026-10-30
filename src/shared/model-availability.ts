@@ -3,7 +3,7 @@ import { join } from "node:path"
 import * as connectedProvidersCache from "./connected-providers-cache"
 import { getOpenCodeCacheDir } from "./data-path"
 import { log } from "./logger"
-import { normalizeSDKResponse } from "./normalize-sdk-response"
+import { unwrapList } from "./unwrap-list"
 
 /**
  * Fuzzy match a target model name against available models
@@ -116,7 +116,9 @@ export function isModelAvailable(
 	return fuzzyMatchModel(targetModel, availableModels) !== null
 }
 
-export async function getConnectedProviders(client: { provider?: { list?: () => Promise<{ data?: { connected?: string[] } }> }; model?: { list?: () => Promise<unknown> } }): Promise<string[]> {
+type ModelRow = { provider?: string; providerID?: string; id?: string; modelID?: string }
+
+export async function getConnectedProviders(client: { provider?: { list?: () => Promise<unknown> }; model?: { list?: () => Promise<unknown> } }): Promise<string[]> {
 	if (!client?.provider?.list) {
 		log("[getConnectedProviders] client.provider.list not available")
 		return []
@@ -124,7 +126,10 @@ export async function getConnectedProviders(client: { provider?: { list?: () => 
 
 	try {
 		const result = await client.provider.list()
-		const connected = result.data?.connected ?? []
+		const providers = unwrapList<{ id?: string; activation?: string }>(result)
+		const connected = providers
+			.filter((entry) => entry?.id && entry.activation !== "disabled")
+			.map((entry) => entry.id as string)
 		log("[getConnectedProviders] connected providers", { count: connected.length, providers: connected })
 		return connected
 	} catch (err) {
@@ -134,7 +139,7 @@ export async function getConnectedProviders(client: { provider?: { list?: () => 
 }
 
 export async function fetchAvailableModels(
-	client?: { provider?: { list?: () => Promise<{ data?: { connected?: string[] } }> }; model?: { list?: () => Promise<unknown> } },
+	client?: { provider?: { list?: () => Promise<unknown> }; model?: { list?: () => Promise<unknown> } },
 	options?: { connectedProviders?: string[] | null }
 ): Promise<Set<string>> {
 	let connectedProviders = options?.connectedProviders ?? null
@@ -159,10 +164,12 @@ export async function fetchAvailableModels(
 			const modelSet = new Set<string>()
 			try {
 				const modelsResult = await client.model.list()
-				const models = normalizeSDKResponse(modelsResult, [] as Array<{ provider?: string; id?: string }>)
+				const models = unwrapList<ModelRow>(modelsResult)
 				for (const model of models) {
-					if (model?.provider && model?.id) {
-						modelSet.add(`${model.provider}/${model.id}`)
+					const provider = model?.providerID ?? model?.provider
+					const id = model?.modelID ?? model?.id
+					if (provider && id) {
+						modelSet.add(`${provider}/${id}`)
 					}
 				}
 				log("[fetchAvailableModels] fetched models from client without provider filter", {
@@ -261,12 +268,14 @@ export async function fetchAvailableModels(
 	if (client?.model?.list) {
 		try {
 			const modelsResult = await client.model.list()
-			const models = normalizeSDKResponse(modelsResult, [] as Array<{ provider?: string; id?: string }>)
+			const models = unwrapList<ModelRow>(modelsResult)
 
 			for (const model of models) {
-				if (!model?.provider || !model?.id) continue
-				if (connectedSet.has(model.provider)) {
-					modelSet.add(`${model.provider}/${model.id}`)
+				const provider = model?.providerID ?? model?.provider
+				const id = model?.modelID ?? model?.id
+				if (!provider || !id) continue
+				if (connectedSet.has(provider)) {
+					modelSet.add(`${provider}/${id}`)
 				}
 			}
 

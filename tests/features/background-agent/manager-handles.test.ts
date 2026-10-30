@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { NativePluginContext } from "../../../src/shared/session-context-source"
 import { getHandlePath, writeHandle } from "../../../src/features/background-agent/handle-index"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
@@ -29,19 +29,19 @@ afterEach(() => {
 function makeMockClient(directory: string) {
   return {
     session: {
-      get: async () => ({ data: { directory } }),
-      create: async () => ({ data: { id: "ses_child" } }),
-      status: async () => ({ data: {} as Record<string, { type: string }> }),
-      messages: async () => ({ data: [] }),
-      promptAsync: async () => ({}),
-      abort: async () => ({}),
-      todo: async () => ({ data: [] }),
+      get: async () => ({ directory }),
+      create: async () => ({ id: "ses_child" }),
+      context: async () => ({ messages: [] }),
+      prompt: async () => ({}),
+      interrupt: async () => ({}),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
 }
 
 function makeManager(): BackgroundManager {
-  const manager = new BackgroundManager({ client: makeMockClient(dir), directory: dir } as unknown as PluginInput)
+  const manager = new BackgroundManager({ ...makeMockClient(dir), directory: dir } as unknown as NativePluginContext)
   managers.push(manager)
   return manager
 }

@@ -1,19 +1,19 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../plugin/context"
 
-// Actionable replacement for an empty task result: the call completed but no
-// subagent was spawned and no output was produced. The orchestrator can fix and
-// retry — check these in order before assuming the delegation bridge is down.
+// Actionable replacement for an empty task result: the call completed but produced no
+// output. The orchestrator can fix and retry — the two causes below cover every observed
+// occurrence, so the message names them instead of guessing.
 const EMPTY_RESPONSE_WARNING = `[Task Empty Response Warning]
 
-The task call completed but returned no response — no subagent was spawned.
-Check the call shape and retry (the call has already completed):
-1. load_skills is REQUIRED — pass [] if no skills are needed. Category "source" additionally requires "tdd-enforcer" in load_skills.
-2. Provide EITHER category OR subagent_type (exactly one, never both, never neither).
-3. Target a callable agent: "mouse" cannot be used via subagent_type (use a category instead); primary agents (e.g. niobe) cannot be called via task.
-4. Do not call task nested inside execute/code-mode — re-issue it as a top-level task/subagent call so it has a session context to spawn from.
-If the call shape is correct and this repeats, the delegation bridge is degraded: proceed directly, record it, and retry delegation later.`
+The task call completed with empty output, so there is no result to report.
+Observed: the tool returned an empty string for this call.
+Likely causes:
+1. The delegate-task tool was invoked from inside code mode, where it runs without a top-level tool session context.
+2. The child session completed without producing text.
+Next: re-issue the delegation as a direct tool call; if the output is still empty, read the delegate-task entries in /tmp/matrixx.log for this session.
+Call shape reminders: load_skills is REQUIRED (pass [] when no skills are needed, and "tdd-enforcer" for code-writing categories); provide EITHER category OR subagent_type; "mouse" is reached through a category, never as subagent_type.`
 
-export function createEmptyTaskResponseDetectorHook(_ctx: PluginInput) {
+export function createEmptyTaskResponseDetectorHook(_ctx: MatrixxContext) {
   return {
     "tool.execute.after": async (
       input: { tool: string; sessionID: string; callID: string },

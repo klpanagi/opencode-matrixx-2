@@ -56,17 +56,17 @@ describe("morpheus-task", () => {
       WAIT_FOR_SESSION_INTERVAL_MS: 10,
       WAIT_FOR_SESSION_TIMEOUT_MS: 1000,
       MAX_POLL_TIME_MS: 2000,
-      SESSION_CONTINUATION_STABILITY_MS: 50,
+      SESSION_CONTINUATION_STABILITY_MS: 50
     })
     cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["anthropic", "google", "openai"])
     providerModelsSpy = spyOn(connectedProvidersCache, "readProviderModelsCache").mockReturnValue({
       models: {
         anthropic: ["claude-opus-4-6", "claude-sonnet-4-5", "claude-haiku-4-5"],
         google: ["gemini-3-pro", "gemini-3.1-pro", "gemini-3-flash"],
-        openai: ["gpt-5.2", "gpt-5.3-codex"],
+        openai: ["gpt-5.2", "gpt-5.3-codex"]
       },
       connected: ["anthropic", "google", "openai"],
-      updatedAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
     })
   })
 
@@ -287,42 +287,42 @@ describe("morpheus-task", () => {
           status: "pending",
           description: "Parse test",
           agent: "mouse",
-          sessionID: "test-session",
-        }),
+          sessionID: "test-session"
+        })
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const resolveSkillContentSpy = spyOn(executor, "resolveSkillContent").mockResolvedValue({
         content: "resolved skill content",
-        error: null,
+        error: null
       })
 
       const args: DelegateTaskArgsWithSerializedSkills = {
@@ -330,7 +330,7 @@ describe("morpheus-task", () => {
         prompt: "Load skill parsing test",
         category: "quick",
         run_in_background: true,
-        load_skills: '["playwright", "git-master"]',
+        load_skills: '["playwright", "git-master"]'
       }
 
       //#when
@@ -351,42 +351,42 @@ describe("morpheus-task", () => {
           status: "pending",
           description: "Parse test",
           agent: "mouse",
-          sessionID: "test-session",
-        }),
+          sessionID: "test-session"
+        })
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const resolveSkillContentSpy = spyOn(executor, "resolveSkillContent").mockResolvedValue({
         content: "resolved skill content",
-        error: null,
+        error: null
       })
 
       const args: DelegateTaskArgsWithSerializedSkills = {
@@ -394,7 +394,7 @@ describe("morpheus-task", () => {
         prompt: "Load skill parsing test",
         category: "quick",
         run_in_background: true,
-        load_skills: '["playwright", "git-master"',
+        load_skills: '["playwright", "git-master"'
       }
 
       //#when
@@ -417,36 +417,36 @@ describe("morpheus-task", () => {
           status: "pending",
           description: "Test task",
           agent: "mouse",
-          sessionID: "test-session",
-        }),
+          sessionID: "test-session"
+        })
       }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) },
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
        const toolContext = {
          sessionID: "parent-session",
          messageID: "parent-message",
          agent: "morpheus",
-         abort: new AbortController().signal,
+         abort: new AbortController().signal
        }
 
        const args: {
@@ -461,7 +461,7 @@ describe("morpheus-task", () => {
          prompt: "Do something",
          category: "bullet-time",
          run_in_background: true,
-         load_skills: [],
+         load_skills: []
        }
 
        // when
@@ -481,37 +481,37 @@ describe("morpheus-task", () => {
           status: "pending",
           description: "Override test",
           agent: "mouse",
-          sessionID: "test-session",
-        }),
+          sessionID: "test-session"
+        })
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({}) },
         provider: { list: async () => ({ data: { connected: ["openai"] } }) },
         model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
+          context: async () => ({ messages: [] }),
           status: async () => ({ data: {} }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       const args: {
@@ -527,7 +527,7 @@ describe("morpheus-task", () => {
         category: "bullet-time",
         subagent_type: "oracle",
         run_in_background: true,
-        load_skills: [],
+        load_skills: []
       }
 
       //#when
@@ -544,32 +544,32 @@ describe("morpheus-task", () => {
       
        const mockManager = { launch: async () => ({ id: "task-123", status: "pending", description: "Test task", agent: "mouse", sessionID: "test-session" }) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) }, // No model configured
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
        
        const toolContext = {
          sessionID: "parent-session",
          messageID: "parent-message",
          agent: "morpheus",
-         abort: new AbortController().signal,
+         abort: new AbortController().signal
        }
        
       // when delegating with a category
@@ -579,7 +579,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: true,
-          load_skills: ["tdd-enforcer"],
+          load_skills: ["tdd-enforcer"]
          },
          toolContext
        )
@@ -594,16 +594,16 @@ describe("morpheus-task", () => {
       
        const mockManager = { launch: async () => ({ id: "task-123" }) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({}) }, // No model configured
          model: { list: async () => [] }, // No available models
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        // Custom category with no model defined
@@ -612,14 +612,14 @@ describe("morpheus-task", () => {
          client: mockClient,
          userCategories: {
            "custom-no-model": { temperature: 0.5 }, // No model field
-         },
+         }
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when delegating with a custom category that has no model
@@ -629,7 +629,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "custom-no-model",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -656,29 +656,29 @@ describe("morpheus-task", () => {
             tasks.set(task.id, { ...task, status: "running", sessionID: "ses_child" })
           }, 20)
           return task
-        },
+        }
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "trinity", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "trinity", mode: "subagent" }] }) },
          config: { get: async () => ({}) },
          provider: { list: async () => ({ data: { connected: ["openai"] } }) },
          model: { list: async () => ({ data: [{ provider: "openai", id: "gpt-5.3-codex" }] }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
        const metadataCalls: Array<{ title?: string; metadata?: Record<string, unknown> }> = []
@@ -689,7 +689,7 @@ describe("morpheus-task", () => {
         abort: new AbortController().signal,
         metadata: (input: { title?: string; metadata?: Record<string, unknown> }) => {
           metadataCalls.push(input)
-        },
+        }
       }
 
       const args = {
@@ -697,7 +697,7 @@ describe("morpheus-task", () => {
         prompt: "Explore features directory deeply",
         subagent_type: "trinity",
         run_in_background: true,
-        load_skills: [],
+        load_skills: []
       }
 
       //#when
@@ -730,7 +730,7 @@ describe("morpheus-task", () => {
       // when
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
-        availableModels,
+        availableModels
       })
 
       // then - resolves successfully since anthropic is available
@@ -746,7 +746,7 @@ describe("morpheus-task", () => {
       // when
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
-        availableModels,
+        availableModels
       })
 
       // then - falls back to systemDefaultModel
@@ -759,14 +759,14 @@ describe("morpheus-task", () => {
       const categoryName = "deep-jack"
       const availableModels = new Set<string>(["anthropic/claude-opus-4-6", "openai/gpt-5.3-codex"])
       const userCategories = {
-        "deep-jack": { model: "anthropic/claude-opus-4-6" },
+        "deep-jack": { model: "anthropic/claude-opus-4-6" }
       }
 
       // #when
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
         availableModels,
-        userCategories,
+        userCategories
       })
 
       // #then
@@ -779,14 +779,14 @@ describe("morpheus-task", () => {
       const categoryName = "custom-bypass"
       const availableModels = new Set<string>()
       const userCategories = {
-        "custom-bypass": { model: "anthropic/claude-opus-4-6" },
+        "custom-bypass": { model: "anthropic/claude-opus-4-6" }
       }
 
       // #when
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
         availableModels,
-        userCategories,
+        userCategories
       })
 
       // #then
@@ -800,7 +800,7 @@ describe("morpheus-task", () => {
 
       // when
       const result = resolveCategoryConfig(categoryName, {
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -814,7 +814,7 @@ describe("morpheus-task", () => {
       // given
       const categoryName = "construct"
       const userCategories = {
-        "construct": { model: "anthropic/claude-opus-4-6" },
+        "construct": { model: "anthropic/claude-opus-4-6" }
       }
 
       // when
@@ -831,8 +831,8 @@ describe("morpheus-task", () => {
       const userCategories = {
         "construct": {
           model: "google/gemini-3-pro",
-          system_append: "Custom instructions here",
-        },
+          system_append: "Custom instructions here"
+        }
       }
 
       // when
@@ -851,8 +851,8 @@ describe("morpheus-task", () => {
         "my-custom": {
           model: "openai/gpt-5.2",
           request: { body: { temperature: 0.5 } },
-          system_append: "You are a custom agent",
-        },
+          system_append: "You are a custom agent"
+        }
       }
 
       // when
@@ -871,8 +871,8 @@ describe("morpheus-task", () => {
       const userCategories = {
         "construct": {
           model: "google/gemini-3-pro",
-          temperature: 0.3,
-        },
+          temperature: 0.3
+        }
       }
 
       // when
@@ -891,7 +891,7 @@ describe("morpheus-task", () => {
       // when
       const result = resolveCategoryConfig(categoryName, {
         inheritedModel,
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -918,7 +918,7 @@ describe("morpheus-task", () => {
       // given
       const categoryName = "construct"
       const userCategories = {
-        "construct": { model: "my-provider/my-model" },
+        "construct": { model: "my-provider/my-model" }
       }
       const inheritedModel = "cliproxy/claude-opus-4-6"
 
@@ -936,7 +936,7 @@ describe("morpheus-task", () => {
 
       // when
       const result = resolveCategoryConfig(categoryName, {
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -953,7 +953,7 @@ describe("morpheus-task", () => {
       // when
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
-        presetEntry,
+        presetEntry
       })
 
       // then - preset model wins over systemDefaultModel
@@ -972,7 +972,7 @@ describe("morpheus-task", () => {
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
         presetEntry,
-        userCategories,
+        userCategories
       })
 
       // then - explicit user model wins
@@ -990,7 +990,7 @@ describe("morpheus-task", () => {
       const result = resolveCategoryConfig(categoryName, {
         systemDefaultModel: SYSTEM_DEFAULT_MODEL,
         presetEntry,
-        userCategories,
+        userCategories
       })
 
       // then - preset model fills the custom category
@@ -1053,38 +1053,38 @@ describe("morpheus-task", () => {
             sessionID: "session-variant",
             description: "Variant task",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           source: { model: "openai/gpt-5.2", variant: "xhigh" },
+           source: { model: "openai/gpt-5.2", variant: "xhigh" }
          },
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when
@@ -1094,7 +1094,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: true,
-          load_skills: ["git-master", "tdd-enforcer"],
+          load_skills: ["git-master", "tdd-enforcer"]
         },
         toolContext
       )
@@ -1103,7 +1103,7 @@ describe("morpheus-task", () => {
       expect(launchInput.model).toEqual({
         providerID: "openai",
         modelID: "gpt-5.2",
-        variant: "xhigh",
+        variant: "xhigh"
       })
     })
 
@@ -1120,37 +1120,38 @@ describe("morpheus-task", () => {
             sessionID: "session-default-variant",
             description: "Default variant task",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-opus-4-6" }] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        // NO userCategories - must use DEFAULT_CATEGORIES
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - red-pill has variant: "max" in DEFAULT_CATEGORIES
@@ -1160,7 +1161,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "red-pill",
           run_in_background: true,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -1170,7 +1171,7 @@ describe("morpheus-task", () => {
       expect(launchInput.model).toEqual({
         providerID: "anthropic",
         modelID: "claude-sonnet-4-5",
-        variant: "max",
+        variant: "max"
       })
     })
 
@@ -1187,33 +1188,34 @@ describe("morpheus-task", () => {
        }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-opus-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_default_variant" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_default_variant" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
            }),
            status: async () => ({ data: { "ses_sync_default_variant": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
       // NO userCategories - must use DEFAULT_CATEGORIES
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - red-pill has variant: "max" in DEFAULT_CATEGORIES
@@ -1223,7 +1225,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "red-pill",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -1232,7 +1234,7 @@ describe("morpheus-task", () => {
       // model is the system default (tiers removed — DEFAULT_CATEGORIES carries no model)
       expect(promptBody.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-sonnet-4-5",
+        modelID: "claude-sonnet-4-5"
       })
       expect(promptBody.variant).toBe("max")
     }, { timeout: 20000 })
@@ -1245,27 +1247,27 @@ describe("morpheus-task", () => {
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve()),
-        },
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
-        client: mockClient,
+        client: mockClient
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - skills not provided (undefined)
@@ -1275,7 +1277,7 @@ describe("morpheus-task", () => {
           description: "Test task",
           prompt: "Do something",
           category: "source",
-          run_in_background: false,
+          run_in_background: false
         },
         toolContext
       )).rejects.toThrow("Invalid arguments: 'load_skills' parameter is REQUIRED")
@@ -1287,27 +1289,27 @@ describe("morpheus-task", () => {
        
        const mockManager = { launch: async () => ({}) }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
        
        const toolContext = {
          sessionID: "parent-session",
          messageID: "parent-message",
          agent: "morpheus",
-         abort: new AbortController().signal,
+         abort: new AbortController().signal
        }
        
        // when - null passed
@@ -1318,7 +1320,7 @@ describe("morpheus-task", () => {
            prompt: "Do something",
            category: "source",
            run_in_background: false,
-           load_skills: null,
+           load_skills: null
          },
          toolContext
         )).rejects.toThrow("Invalid arguments: load_skills=null is not allowed")
@@ -1337,31 +1339,31 @@ describe("morpheus-task", () => {
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "test-session" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "test-session" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
       
       const tool = createDelegateTask({
         manager: mockManager,
-        client: mockClient,
+        client: mockClient
       })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - empty array passed
@@ -1371,7 +1373,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["tdd-enforcer"],
+          load_skills: ["tdd-enforcer"]
         },
         toolContext
       )
@@ -1392,12 +1394,12 @@ describe("morpheus-task", () => {
       sessionID: "ses_continue_test",
       description: "Continued task",
       agent: "trinity",
-      status: "running",
+      status: "running"
     }
     
     const mockManager = {
       resume: async () => mockTask,
-      launch: async () => mockTask,
+      launch: async () => mockTask
     }
     
       let messagesCallCount = 0
@@ -1406,64 +1408,64 @@ describe("morpheus-task", () => {
          session: {
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async (args?: { path?: { id?: string } }) => {
-             const sessionID = args?.path?.id
+           context: async (args?: { sessionID?: string }) => {
+             const sessionID = args?.sessionID
              // Only track calls for the target session (ses_continue_test),
              // not for parent-session calls from resolveParentContext
              if (sessionID !== "ses_continue_test") {
-               return { data: [] }
+               return { messages: [] }
              }
              messagesCallCount++
              const now = Date.now()
 
              const beforeContinuation = [
                {
-                 info: { id: "msg_001", role: "user", time: { created: now } },
-                 parts: [{ type: "text", text: "Previous context" }],
+                 id: "msg_001", type: "user", time: { created: now },
+                 content: [{ type: "text", text: "Previous context" }]
                },
                {
-                 info: { id: "msg_002", role: "assistant", time: { created: now + 1 }, finish: "end_turn" },
-                 parts: [{ type: "text", text: "Previous result" }],
+                 id: "msg_002", type: "assistant", time: { created: now + 1 }, finish: "end_turn",
+                 content: [{ type: "text", text: "Previous result" }]
                },
              ]
 
              if (messagesCallCount === 1) {
-               return { data: beforeContinuation }
+               return { messages: beforeContinuation }
              }
 
              return {
-               data: [
+               messages: [
                  ...beforeContinuation,
                  {
-                   info: { id: "msg_003", role: "user", time: { created: now + 2 } },
-                   parts: [{ type: "text", text: "Continue the task" }],
+                   id: "msg_003", type: "user", time: { created: now + 2 },
+                   content: [{ type: "text", text: "Continue the task" }]
                  },
                  {
-                   info: { id: "msg_004", role: "assistant", time: { created: now + 3 }, finish: "end_turn" },
-                   parts: [{ type: "text", text: "This is the continued task result" }],
+                   id: "msg_004", type: "assistant", time: { created: now + 3 }, finish: "end_turn",
+                   content: [{ type: "text", text: "This is the continued task result" }]
                  },
-               ],
+               ]
              }
            },
            status: async () => ({ data: { "ses_continue_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [] }),
-        },
+         agent: {
+           list: async () => ({ data: [] })
+        }
       }
      
      const tool = createDelegateTask({
        manager: mockManager,
-       client: mockClient,
+       client: mockClient
      })
      
      const toolContext = {
        sessionID: "parent-session",
        messageID: "parent-message",
        agent: "morpheus",
-       abort: new AbortController().signal,
+       abort: new AbortController().signal
      }
      
      // when
@@ -1473,7 +1475,7 @@ describe("morpheus-task", () => {
          prompt: "Continue the task",
          session_id: "ses_continue_test",
          run_in_background: false,
-         load_skills: ["git-master"],
+         load_skills: ["git-master"]
        },
        toolContext
      )
@@ -1495,44 +1497,41 @@ describe("morpheus-task", () => {
       session: {
         prompt: promptMock,
         promptAsync: promptMock,
-        messages: async () => ({
-          data: [
+        context: async () => ({
+          messages: [
             {
-              info: {
-                id: "msg_001",
-                role: "user",
+              id: "msg_001",
+                type: "user",
                 agent: "mouse",
-                model: { providerID: "anthropic", modelID: "claude-opus-4-6" },
-                variant: "max",
+                model: { providerID: "anthropic", modelID: "claude-opus-4-6", variant: "max" },
                 time: { created: Date.now() },
-              },
-              parts: [{ type: "text", text: "previous message" }],
+              content: [{ type: "text", text: "previous message" }]
             },
             {
-              info: { id: "msg_002", role: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn" },
-              parts: [{ type: "text", text: "Completed." }],
+              id: "msg_002", type: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn",
+              content: [{ type: "text", text: "Completed." }]
             },
-          ],
+          ]
         }),
         status: async () => ({ data: { "ses_var_test": { type: "idle" } } }),
-        abort: mock(() => Promise.resolve()),
+        interrupt: mock(() => Promise.resolve())
       },
       config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-      app: {
-        agents: async () => ({ data: [] }),
-      },
+      agent: {
+        list: async () => ({ data: [] })
+      }
     }
 
     const tool = createDelegateTask({
       manager: { resume: async () => ({ id: "task-var", sessionID: "ses_var_test", description: "Variant test", agent: "mouse", status: "running" }) },
-      client: mockClient,
+      client: mockClient
     })
 
     const toolContext = {
       sessionID: "parent-session",
       messageID: "parent-message",
       agent: "morpheus",
-      abort: new AbortController().signal,
+      abort: new AbortController().signal
     }
 
     //#when continuing the session
@@ -1542,7 +1541,7 @@ describe("morpheus-task", () => {
         prompt: "Continue the task",
         session_id: "ses_var_test",
         run_in_background: false,
-        load_skills: [],
+        load_skills: []
       },
       toolContext
     )
@@ -1564,35 +1563,35 @@ describe("morpheus-task", () => {
       sessionID: "ses_bg_continue",
       description: "Background continued task",
       agent: "trinity",
-      status: "running",
+      status: "running"
     }
     
     const mockManager = {
-      resume: async () => mockTask,
+      resume: async () => mockTask
     }
     
      const mockClient = {
        session: {
          prompt: async () => ({ data: {} }),
          promptAsync: async () => ({ data: {} }),
-         messages: async () => ({
-           data: [],
+         context: async () => ({
+           messages: []
          }),
-         abort: mock(() => Promise.resolve()),
+         interrupt: mock(() => Promise.resolve())
        },
-       config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
+       config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) }
      }
      
      const tool = createDelegateTask({
        manager: mockManager,
-       client: mockClient,
+       client: mockClient
      })
      
      const toolContext = {
        sessionID: "parent-session",
        messageID: "parent-message",
        agent: "morpheus",
-       abort: new AbortController().signal,
+       abort: new AbortController().signal
      }
      
      // when
@@ -1602,7 +1601,7 @@ describe("morpheus-task", () => {
          prompt: "Continue in background",
          session_id: "ses_bg_continue",
          run_in_background: true,
-         load_skills: ["git-master"],
+         load_skills: ["git-master"]
        },
        toolContext
      )
@@ -1619,7 +1618,7 @@ describe("morpheus-task", () => {
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       
       const mockManager = {
-        launch: async () => ({}),
+        launch: async () => ({})
       }
       
        const promptMock = async () => {
@@ -1628,30 +1627,30 @@ describe("morpheus-task", () => {
 
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_error_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_error_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [{ name: "source", mode: "subagent" }] }),
-         },
+         agent: {
+           list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when
@@ -1661,7 +1660,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["git-master", "tdd-enforcer"],
+          load_skills: ["git-master", "tdd-enforcer"]
         },
         toolContext
       )
@@ -1680,46 +1679,46 @@ describe("morpheus-task", () => {
       const mockManager = {
         launch: async () => ({}),
         getTasksByParentSession: () => [],
-        hasInFlightNotificationForParent: () => false,
+        hasInFlightNotificationForParent: () => false
       }
       
        const mockClient = {
           session: {
-            get: async () => ({ data: { directory: "/project" } }),
-            create: async () => ({ data: { id: "ses_sync_success" } }),
+            get: async () => ({ directory: "/project" }),
+            create: async () => ({ id: "ses_sync_success" }),
             prompt: async () => ({ data: {} }),
             promptAsync: async () => ({ data: {} }),
-            messages: async () => ({
-              data: [
+            context: async () => ({
+              messages: [
                 {
-                  info: { id: "msg_001", role: "user", time: { created: Date.now() } },
-                  parts: [{ type: "text", text: "Do something" }],
+                  id: "msg_001", type: "user", time: { created: Date.now() },
+                  content: [{ type: "text", text: "Do something" }]
                 },
                 {
-                  info: { id: "msg_002", role: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn" },
-                  parts: [{ type: "text", text: "Sync task completed successfully" }],
+                  id: "msg_002", type: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn",
+                  content: [{ type: "text", text: "Sync task completed successfully" }]
                 },
-              ],
+              ]
             }),
             status: async () => ({ data: { "ses_sync_success": { type: "idle" } } }),
-            abort: mock(() => Promise.resolve()),
+            interrupt: mock(() => Promise.resolve())
           },
           config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-          app: {
-            agents: async () => ({ data: [{ name: "source", mode: "subagent" }] }),
-          },
+          agent: {
+            list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+          }
         }
         
         const tool = createDelegateTask({
           manager: mockManager,
-          client: mockClient,
+          client: mockClient
         })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when
@@ -1729,7 +1728,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["git-master", "tdd-enforcer"],
+          load_skills: ["git-master", "tdd-enforcer"]
         },
         toolContext
       )
@@ -1744,7 +1743,7 @@ describe("morpheus-task", () => {
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       
       const mockManager = {
-        launch: async () => ({}),
+        launch: async () => ({})
       }
       
        const promptMock = async () => {
@@ -1753,30 +1752,30 @@ describe("morpheus-task", () => {
 
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_agent_notfound" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_agent_notfound" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [] }),
+           context: async () => ({ messages: [] }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: {
-           agents: async () => ({ data: [{ name: "source", mode: "subagent" }] }),
-         },
+         agent: {
+           list: async () => ({ data: [{ name: "source", mode: "subagent" }] })
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when
@@ -1786,7 +1785,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["git-master", "tdd-enforcer"],
+          load_skills: ["git-master", "tdd-enforcer"]
         },
         toolContext
       )
@@ -1810,18 +1809,18 @@ describe("morpheus-task", () => {
        
        const mockClient = {
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
+           interrupt: mock(() => Promise.resolve())
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) }
        }
 
       const tool = createDelegateTask({
@@ -1867,48 +1866,48 @@ describe("morpheus-task", () => {
         sessionID: "ses_unstable_custom",
         description: "Unstable custom task",
         agent: "mouse",
-        status: "running",
+        status: "running"
       }
       const mockManager = {
         launch: async () => {
           launchCalled = true
           return launchedTask
         },
-        getTask: () => launchedTask,
+        getTask: () => launchedTask
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_unstable_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_unstable_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
-               { info: { role: "assistant", time: { created: Date.now() } }, parts: [{ type: "text", text: "Unstable task completed successfully" }] }
+           context: async () => ({
+             messages: [
+               { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Unstable task completed successfully" }] }
              ]
            }),
            status: async () => ({ data: { "ses_unstable_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           "custom-unstable": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true },
-         },
+           "custom-unstable": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true }
+         }
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - using custom unstable category with run_in_background=false
@@ -1918,7 +1917,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "custom-unstable",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -1942,33 +1941,33 @@ describe("morpheus-task", () => {
             sessionID: "ses_normal_bg",
             description: "Normal background task",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
        
        const toolContext = {
          sessionID: "parent-session",
          messageID: "parent-message",
          agent: "morpheus",
-         abort: new AbortController().signal,
+         abort: new AbortController().signal
        }
        
        // when - using construct with run_in_background=true (normal background)
@@ -1978,7 +1977,7 @@ describe("morpheus-task", () => {
            prompt: "Do something visual",
            category: "construct",
            run_in_background: true,  // User explicitly says true - normal background
-           load_skills: ["git-master"],
+           load_skills: ["git-master"]
          },
          toolContext
        )
@@ -1999,32 +1998,32 @@ describe("morpheus-task", () => {
         sessionID: "ses_unstable_minimax",
         description: "Unstable minimax task",
         agent: "mouse",
-        status: "running",
+        status: "running"
       }
       const mockManager = {
         launch: async () => {
           launchCalled = true
           return launchedTask
         },
-        getTask: () => launchedTask,
+        getTask: () => launchedTask
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_unstable_minimax" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_unstable_minimax" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
-               { info: { role: "assistant", time: { created: Date.now() } }, parts: [{ type: "text", text: "Minimax task completed successfully" }] }
+           context: async () => ({
+             messages: [
+               { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Minimax task completed successfully" }] }
              ]
            }),
            status: async () => ({ data: { "ses_unstable_minimax": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
@@ -2032,16 +2031,16 @@ describe("morpheus-task", () => {
          client: mockClient,
          userCategories: {
            "minimax-cat": {
-             model: "minimax/abab-5",
-           },
-         },
+             model: "minimax/abab-5"
+           }
+         }
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using minimax category with run_in_background=false
@@ -2051,7 +2050,7 @@ describe("morpheus-task", () => {
           prompt: "Do something with minimax",
           category: "minimax-cat",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -2072,7 +2071,7 @@ describe("morpheus-task", () => {
         launch: async () => {
           launchCalled = true
           return { id: "should-not-be-called", sessionID: "x", description: "x", agent: "x", status: "running" }
-        },
+        }
       }
       
        const promptMock = async () => {
@@ -2081,32 +2080,32 @@ describe("morpheus-task", () => {
        }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_sync_non_gemini" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_sync_non_gemini" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done sync" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done sync" }] }]
            }),
            status: async () => ({ data: { "ses_sync_non_gemini": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        // Use source which uses gpt-5.2 (non-gemini)
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - using source (gpt model) with run_in_background=false
@@ -2116,7 +2115,7 @@ describe("morpheus-task", () => {
           prompt: "Do something smart",
           category: "source",
           run_in_background: false,
-          load_skills: ["git-master", "tdd-enforcer"],
+          load_skills: ["git-master", "tdd-enforcer"]
         },
         toolContext
       )
@@ -2137,48 +2136,48 @@ describe("morpheus-task", () => {
         sessionID: "ses_artistry_custom",
         description: "Artistry custom task",
         agent: "mouse",
-        status: "running",
+        status: "running"
       }
       const mockManager = {
         launch: async () => {
           launchCalled = true
           return launchedTask
         },
-        getTask: () => launchedTask,
+        getTask: () => launchedTask
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_artistry_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_artistry_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
-               { info: { role: "assistant", time: { created: Date.now() } }, parts: [{ type: "text", text: "Artistry result here" }] }
+           context: async () => ({
+             messages: [
+               { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Artistry result here" }] }
              ]
            }),
            status: async () => ({ data: { "ses_artistry_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           "custom-artistry": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true },
-         },
+           "custom-artistry": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true }
+         }
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - custom artistry category with is_unstable_agent=true
@@ -2188,7 +2187,7 @@ describe("morpheus-task", () => {
           prompt: "Do something artistic",
           category: "custom-artistry",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -2209,48 +2208,48 @@ describe("morpheus-task", () => {
         sessionID: "ses_writing_custom",
         description: "Writing custom task",
         agent: "mouse",
-        status: "running",
+        status: "running"
       }
       const mockManager = {
         launch: async () => {
           launchCalled = true
           return launchedTask
         },
-        getTask: () => launchedTask,
+        getTask: () => launchedTask
       }
       
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ provider: "anthropic", id: "claude-sonnet-4-6" }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_writing_custom" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_writing_custom" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [
-               { info: { role: "assistant", time: { created: Date.now() } }, parts: [{ type: "text", text: "Writing result here" }] }
+           context: async () => ({
+             messages: [
+               { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Writing result here" }] }
              ]
            }),
            status: async () => ({ data: { "ses_writing_custom": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           "custom-broadcast": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true },
-         },
+           "custom-broadcast": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true }
+         }
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - custom broadcast category with is_unstable_agent=true
@@ -2260,7 +2259,7 @@ describe("morpheus-task", () => {
           prompt: "Write something",
           category: "custom-broadcast",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -2281,32 +2280,32 @@ describe("morpheus-task", () => {
         sessionID: "ses_custom_unstable",
         description: "Custom unstable task",
         agent: "mouse",
-        status: "running",
+        status: "running"
       }
       const mockManager = {
         launch: async () => {
           launchCalled = true
           return launchedTask
         },
-        getTask: () => launchedTask,
+        getTask: () => launchedTask
       }
       
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_custom_unstable" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_custom_unstable" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({
-            data: [
-              { info: { role: "assistant", time: { created: Date.now() } }, parts: [{ type: "text", text: "Custom unstable result" }] }
+          context: async () => ({
+            messages: [
+              { type: "assistant", time: { created: Date.now() }, content: [{ type: "text", text: "Custom unstable result" }] }
             ]
           }),
           status: async () => ({ data: { "ses_custom_unstable": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
       
       const tool = createDelegateTask({
@@ -2315,16 +2314,16 @@ describe("morpheus-task", () => {
         userCategories: {
           "my-unstable-cat": {
             model: "openai/gpt-5.2",
-            is_unstable_agent: true,
-          },
-        },
+            is_unstable_agent: true
+          }
+        }
       })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - using custom unstable category with run_in_background=false
@@ -2334,7 +2333,7 @@ describe("morpheus-task", () => {
           prompt: "Do something",
           category: "my-unstable-cat",
           run_in_background: false,
-          load_skills: ["git-master"],
+          load_skills: ["git-master"]
         },
         toolContext
       )
@@ -2363,38 +2362,39 @@ describe("morpheus-task", () => {
             sessionID: "ses_fallback_test",
             description: "Fallback test task",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve()),
-        },
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       // NO userCategories override, NO mouseModel
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
         // userCategories: undefined - use DEFAULT_CATEGORIES only
         // mouseModel: undefined
         connectedProvidersOverride: null,
-        availableModelsOverride: new Set(),
+        availableModelsOverride: new Set()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using "quick" category which should use "anthropic/claude-haiku-4-5"
@@ -2404,7 +2404,7 @@ describe("morpheus-task", () => {
           prompt: "Do something quick",
           category: "bullet-time",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -2428,43 +2428,43 @@ describe("morpheus-task", () => {
             sessionID: "ses_ui_model_test",
             description: "UI model inheritance test",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
 const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
         userCategories: {
-          "fallback-test": { model: "anthropic/claude-opus-4-6" },
+          "fallback-test": { model: "anthropic/claude-opus-4-6" }
         },
         modelPresets: {
-          default: { categories: { "bullet-time": { model: "anthropic/claude-haiku-4-5" } } },
+          default: { categories: { "bullet-time": { model: "anthropic/claude-haiku-4-5" } } }
         },
         activePreset: "default",
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using "quick" category which resolves via preset to "anthropic/claude-haiku-4-5"
@@ -2474,7 +2474,7 @@ const tool = createDelegateTask({
           prompt: "Do something quick",
           category: "bullet-time",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -2497,21 +2497,21 @@ const tool = createDelegateTask({
             sessionID: "ses_override_test",
             description: "Override precedence test",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve()),
-        },
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
@@ -2519,18 +2519,18 @@ const tool = createDelegateTask({
         client: mockClient,
         mouseModel: "anthropic/claude-sonnet-4-5",
         modelPresets: {
-          default: { categories: { source: { model: "anthropic/claude-opus-4-6" } } },
+          default: { categories: { source: { model: "anthropic/claude-opus-4-6" } } }
         },
         activePreset: "default",
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using source category (preset assigns opus-4-6)
@@ -2540,7 +2540,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "source",
           run_in_background: true,
-          load_skills: ["tdd-enforcer"],
+          load_skills: ["tdd-enforcer"]
         },
         toolContext
       )
@@ -2563,22 +2563,22 @@ const tool = createDelegateTask({
             sessionID: "ses_category_precedence_test",
             description: "Category precedence test",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
@@ -2586,17 +2586,17 @@ const tool = createDelegateTask({
          client: mockClient,
          mouseModel: "anthropic/claude-sonnet-4-5",
          userCategories: {
-           source: { model: "openai/gpt-5.3-codex" },
+           source: { model: "openai/gpt-5.3-codex" }
          },
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using source category with explicit model override
@@ -2606,7 +2606,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "source",
           run_in_background: true,
-          load_skills: ["tdd-enforcer"],
+          load_skills: ["tdd-enforcer"]
         },
         toolContext
       )
@@ -2629,21 +2629,21 @@ const tool = createDelegateTask({
             sessionID: "ses_1295_quick",
             description: "Issue 1295 regression",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve()),
-        },
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
@@ -2651,18 +2651,18 @@ const tool = createDelegateTask({
         client: mockClient,
         mouseModel: "anthropic/claude-sonnet-4-5",
         modelPresets: {
-          default: { categories: { "bullet-time": { model: "anthropic/claude-haiku-4-5" } } },
+          default: { categories: { "bullet-time": { model: "anthropic/claude-haiku-4-5" } } }
         },
         activePreset: "default",
         connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-        availableModelsOverride: createTestAvailableModels(),
+        availableModelsOverride: createTestAvailableModels()
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using quick category (preset assigns anthropic/claude-haiku-4-5)
@@ -2672,7 +2672,7 @@ const tool = createDelegateTask({
           prompt: "Quick task",
           category: "bullet-time",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -2695,37 +2695,38 @@ const tool = createDelegateTask({
             sessionID: "ses_1295_custom",
             description: "Issue 1295 custom category",
             agent: "mouse",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         model: { list: async () => [] },
         session: {
-          create: async () => ({ data: { id: "test-session" } }),
+          create: async () => ({ id: "test-session" }),
           prompt: async () => ({ data: {} }),
-          messages: async () => ({ data: [] }),
-          abort: mock(() => Promise.resolve()),
-        },
+          context: async () => ({ messages: [] }),
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
         client: mockClient,
+        systemDefaultModel: async () => SYSTEM_DEFAULT_MODEL,
         mouseModel: "openai/gpt-5.2",
         userCategories: {
-          "my-custom": { temperature: 0.5 },
-        },
+          "my-custom": { temperature: 0.5 }
+        }
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - using custom category with no explicit model
@@ -2735,7 +2736,7 @@ const tool = createDelegateTask({
           prompt: "Do something custom",
           category: "my-custom",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -2760,33 +2761,33 @@ const tool = createDelegateTask({
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_browser_provider" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_browser_provider" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        // Pass browserProvider to createDelegateTask
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
-         browserProvider: "agent-browser",
+         browserProvider: "agent-browser"
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - request agent-browser skill
@@ -2796,7 +2797,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["agent-browser", "tdd-enforcer"],
+          load_skills: ["agent-browser", "tdd-enforcer"]
         },
         toolContext
       )
@@ -2813,32 +2814,32 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_no_browser_provider" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_no_browser_provider" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: {} }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        // No browserProvider passed
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - request agent-browser skill without browserProvider
@@ -2848,7 +2849,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: ["agent-browser", "tdd-enforcer"],
+          load_skills: ["agent-browser", "tdd-enforcer"]
         },
         toolContext
       )
@@ -2919,14 +2920,14 @@ const tool = createDelegateTask({
         {
           name: "deep-jack",
           description: "Goal-oriented autonomous problem-solving",
-          model: "openai/gpt-5.3-codex",
+          model: "openai/gpt-5.3-codex"
         },
       ]
       const availableSkills = [
         {
           name: "typescript-programmer",
           description: "Production TypeScript code.",
-          location: "plugin",
+          location: "plugin"
         },
       ]
 
@@ -2934,7 +2935,7 @@ const tool = createDelegateTask({
       const result = buildSystemContent({
         agentName: "plan",
         availableCategories,
-        availableSkills,
+        availableSkills
       })
 
       // then
@@ -2954,7 +2955,7 @@ const tool = createDelegateTask({
       //#when
       const result = buildSystemContent({
         skillContent,
-        agentName: "oracle",
+        agentName: "oracle"
       })
 
       //#then - oracle should NOT get plan agent system prepend
@@ -2970,7 +2971,7 @@ const tool = createDelegateTask({
       //#when
       const result = buildSystemContent({
         skillContent,
-        agentName: "Oracle",
+        agentName: "Oracle"
       })
 
       //#then
@@ -2988,14 +2989,14 @@ const tool = createDelegateTask({
         {
           name: "writing",
           description: "Documentation, prose, technical writing",
-          model: "kimi-for-coding/k2p5",
+          model: "kimi-for-coding/k2p5"
         },
       ]
       const availableSkills = [
         {
           name: "python-programmer",
           description: "Production Python code.",
-          location: "plugin",
+          location: "plugin"
         },
       ]
       const planPrepend = buildPlanAgentSystemPrepend(availableCategories, availableSkills)
@@ -3005,7 +3006,7 @@ const tool = createDelegateTask({
         skillContent,
         agentName: "plan",
         availableCategories,
-        availableSkills,
+        availableSkills
       })
 
       // then
@@ -3048,7 +3049,7 @@ const tool = createDelegateTask({
 
       // when
       const resolved = resolveCategoryConfig(categoryName, {
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -3064,7 +3065,7 @@ const tool = createDelegateTask({
 
       // when
       const resolved = resolveCategoryConfig(categoryName, {
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -3081,7 +3082,7 @@ const tool = createDelegateTask({
       // when
       const resolved = resolveCategoryConfig(categoryName, {
         inheritedModel,
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -3145,7 +3146,7 @@ const tool = createDelegateTask({
       // when category has no preset entry
       const resolved = resolveCategoryConfig(categoryName, {
         inheritedModel,
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -3215,7 +3216,7 @@ const tool = createDelegateTask({
       const resolved = resolveCategoryConfig(categoryName, {
         userCategories,
         inheritedModel,
-        systemDefaultModel: SYSTEM_DEFAULT_MODEL,
+        systemDefaultModel: SYSTEM_DEFAULT_MODEL
         
       })
 
@@ -3245,9 +3246,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())},
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3266,9 +3267,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())},
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3286,9 +3287,9 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-         session: { get: async () => ({ data: { directory: "/project" } }), create: async () => ({ data: { id: "s" } }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), messages: async () => ({ data: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())},
+         session: { get: async () => ({ directory: "/project" }), create: async () => ({ id: "s" }), prompt: async () => ({ data: {} }), promptAsync: async () => ({ data: {} }), context: async () => ({ messages: [] }), status: async () => ({ data: {} }) , abort: mock(() => Promise.resolve())}
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3306,17 +3307,17 @@ const tool = createDelegateTask({
       //#given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_ok" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_ok" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Plan created" }] }] }),
+           context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
            status: async () => ({ data: { "ses_ok": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
         const tool = createDelegateTask({ manager: { launch: async () => ({}), getTasksByParentSession: () => [], hasInFlightNotificationForParent: () => false }, client: mockClient })
        
@@ -3346,39 +3347,39 @@ const tool = createDelegateTask({
             sessionID: "ses_explore_model",
             description: "Explore task",
             agent: "trinity",
-            status: "running",
+            status: "running"
           }
-        },
+        }
       }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "trinity", mode: "subagent", model: { providerID: "anthropic", modelID: "claude-haiku-4-5" } },
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           create: async () => ({ data: { id: "ses_explore_model" } }),
+           create: async () => ({ id: "ses_explore_model" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to explore agent via subagent_type
@@ -3388,7 +3389,7 @@ const tool = createDelegateTask({
           prompt: "Find auth patterns",
           subagent_type: "trinity",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3396,7 +3397,7 @@ const tool = createDelegateTask({
       // then - matched agent's model should be passed to manager.launch
       expect(launchInput.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-haiku-4-5",
+        modelID: "claude-haiku-4-5"
       })
     })
 
@@ -3413,37 +3414,37 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "anthropic", modelID: "claude-opus-4-6" } },
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_oracle_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_oracle_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Consultation done" }] }],
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
            }),
            status: async () => ({ data: { "ses_oracle_model": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to oracle agent via subagent_type in sync mode
@@ -3453,7 +3454,7 @@ const tool = createDelegateTask({
           prompt: "Review architecture",
           subagent_type: "oracle",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3461,7 +3462,7 @@ const tool = createDelegateTask({
       // then - matched agent's model should be passed to session.prompt
       expect(promptBody.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-opus-4-6",
+        modelID: "claude-opus-4-6"
       })
     }, { timeout: 20000 })
 
@@ -3478,37 +3479,37 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "trinity", mode: "subagent" },
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_no_model_agent" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_no_model_agent" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_no_model_agent": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to agent without model
@@ -3518,7 +3519,7 @@ const tool = createDelegateTask({
           prompt: "Find something",
           subagent_type: "trinity",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3540,40 +3541,40 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "openai", modelID: "gpt-5.2" } },
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_override_model" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_override_model" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_override_model": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          agentOverrides: {
-           oracle: { model: "anthropic/claude-opus-4-6" },
-         },
+           oracle: { model: "anthropic/claude-opus-4-6" }
+         }
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to oracle via subagent_type with user override
@@ -3583,7 +3584,7 @@ const tool = createDelegateTask({
           prompt: "Review architecture",
           subagent_type: "oracle",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3591,7 +3592,7 @@ const tool = createDelegateTask({
       // then - user-configured model should take priority over matchedAgent.model
       expect(promptBody.model).toEqual({
         providerID: "anthropic",
-        modelID: "claude-opus-4-6",
+        modelID: "claude-opus-4-6"
       })
     }, { timeout: 20000 })
 
@@ -3608,40 +3609,40 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent", model: { providerID: "openai", modelID: "gpt-5.2" } },
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_variant_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_variant_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_variant_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          agentOverrides: {
-           oracle: { model: "anthropic/claude-opus-4-6", variant: "max" },
-         },
+           oracle: { model: "anthropic/claude-opus-4-6", variant: "max" }
+         }
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to oracle via subagent_type with variant override
@@ -3651,7 +3652,7 @@ const tool = createDelegateTask({
           prompt: "Review architecture",
           subagent_type: "oracle",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3673,25 +3674,25 @@ const tool = createDelegateTask({
        }
 
        const mockClient = {
-         app: {
-           agents: async () => ({
+         agent: {
+           list: async () => ({
              data: [
                { name: "oracle", mode: "subagent" }, // no model field
-             ],
-           }),
+             ]
+           })
          },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_fallback_test" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_fallback_test" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
            }),
            status: async () => ({ data: { "ses_fallback_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
@@ -3699,14 +3700,14 @@ const tool = createDelegateTask({
          client: mockClient,
          // no agentOverrides
          connectedProvidersOverride: TEST_CONNECTED_PROVIDERS,
-         availableModelsOverride: createTestAvailableModels(),
+         availableModelsOverride: createTestAvailableModels()
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - delegating to oracle with no override and no matchedAgent model
@@ -3716,7 +3717,7 @@ const tool = createDelegateTask({
           prompt: "Review architecture",
           subagent_type: "oracle",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3744,31 +3745,31 @@ const tool = createDelegateTask({
        }
        
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "plan", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_plan_delegate" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_plan_delegate" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Plan created" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }]
            }),
            status: async () => ({ data: { "ses_plan_delegate": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       //#when - morpheus delegates to plan
@@ -3778,7 +3779,7 @@ const tool = createDelegateTask({
           prompt: "Create a plan",
           subagent_type: "plan",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3793,17 +3794,17 @@ const tool = createDelegateTask({
       let promptBody: CapturedPromptBody = {}
       const promptMock = async (input: CapturedPromptBody) => { promptBody = input; return { data: {} } }
        const mockClient = {
-         app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+         agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-           create: async () => ({ data: { id: "ses_oracle_task" } }),
+           get: async () => ({ directory: "/project" }),
+           create: async () => ({ id: "ses_oracle_task" }),
            prompt: promptMock,
            promptAsync: promptMock,
-           messages: async () => ({ data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Plan created" }] }] }),
+           context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
            status: async () => ({ data: { "ses_oracle_task": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
        const tool = createDelegateTask({ manager: { launch: async () => ({}) }, client: mockClient })
       
@@ -3824,11 +3825,11 @@ const tool = createDelegateTask({
       
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
+        agent: { list: async () => ({ data: [{ name: "oracle", mode: "subagent" }] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_oracle_no_delegate" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_oracle_no_delegate" }),
           prompt: async (input: CapturedPromptBody) => {
             promptBody = input
             return { data: {} }
@@ -3837,24 +3838,24 @@ const tool = createDelegateTask({
             promptBody = input
             return { data: {} }
           },
-          messages: async () => ({
-            data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Consultation done" }] }]
+          context: async () => ({
+            messages: [{ type: "assistant", content: [{ type: "text", text: "Consultation done" }] }]
           }),
           status: async () => ({ data: { "ses_oracle_no_delegate": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
       
       const tool = createDelegateTask({
         manager: mockManager,
-        client: mockClient,
+        client: mockClient
       })
       
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
       
       // when - morpheus delegates to oracle
@@ -3864,7 +3865,7 @@ const tool = createDelegateTask({
           prompt: "Consult on architecture",
           subagent_type: "oracle",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3882,35 +3883,35 @@ const tool = createDelegateTask({
 
       const mockManager = { launch: async () => ({}) }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [{ id: SYSTEM_DEFAULT_MODEL }] },
          session: {
-           get: async () => ({ data: { directory: "/project" } }),
-          create: async (input: { body: { title?: string } }) => {
-             createBody = input.body
-             return { data: { id: "ses_title_test" } }
+           get: async () => ({ directory: "/project" }),
+          create: async (input: { title?: string }) => {
+             createBody = input
+             return { id: "ses_title_test" }
            },
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({
-             data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "done" }] }]
+           context: async () => ({
+             messages: [{ type: "assistant", content: [{ type: "text", text: "done" }] }]
            }),
            status: async () => ({ data: { "ses_title_test": { type: "idle" } } }),
-           abort: mock(() => Promise.resolve()),
-         },
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
-         client: mockClient,
+         client: mockClient
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when - sync task with category
@@ -3920,7 +3921,7 @@ const tool = createDelegateTask({
           prompt: "Build the feature",
           category: "bullet-time",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3935,32 +3936,32 @@ const tool = createDelegateTask({
 
         const mockManager = { launch: async () => ({}), getTasksByParentSession: () => [], hasInFlightNotificationForParent: () => false }
         const mockClient = {
-          app: { agents: async () => ({ data: [] }) },
+          agent: { list: async () => ({ data: [] }) },
           config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
           model: { list: async () => [{ id: SYSTEM_DEFAULT_MODEL }] },
           session: {
-            get: async () => ({ data: { directory: "/project" } }),
-            create: async () => ({ data: { id: "ses_metadata_test" } }),
+            get: async () => ({ directory: "/project" }),
+            create: async () => ({ id: "ses_metadata_test" }),
             prompt: async () => ({ data: {} }),
             promptAsync: async () => ({ data: {} }),
-            messages: async () => ({
-              data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Task completed" }] }]
+            context: async () => ({
+              messages: [{ type: "assistant", content: [{ type: "text", text: "Task completed" }] }]
             }),
             status: async () => ({ data: { "ses_metadata_test": { type: "idle" } } }),
-            abort: mock(() => Promise.resolve()),
-          },
+            interrupt: mock(() => Promise.resolve())
+          }
         }
 
         const tool = createDelegateTask({
           manager: mockManager,
-          client: mockClient,
+          client: mockClient
         })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when
@@ -3970,7 +3971,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "bullet-time",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -3991,35 +3992,35 @@ const tool = createDelegateTask({
           sessionID: "ses_bg_metadata",
           description: "Background metadata test",
           agent: "mouse",
-          status: "running",
-        }),
+          status: "running"
+        })
       }
        const mockClient = {
-         app: { agents: async () => ({ data: [] }) },
+         agent: { list: async () => ({ data: [] }) },
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          model: { list: async () => [] },
          session: {
-           create: async () => ({ data: { id: "test-session" } }),
+           create: async () => ({ id: "test-session" }),
            prompt: async () => ({ data: {} }),
            promptAsync: async () => ({ data: {} }),
-           messages: async () => ({ data: [] }),
-           abort: mock(() => Promise.resolve()),
-         },
+           context: async () => ({ messages: [] }),
+           interrupt: mock(() => Promise.resolve())
+         }
        }
 
        const tool = createDelegateTask({
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           "mouse": { model: "anthropic/claude-sonnet-4-5" },
-         },
+           "mouse": { model: "anthropic/claude-sonnet-4-5" }
+         }
        })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       // when
@@ -4029,7 +4030,7 @@ const tool = createDelegateTask({
           prompt: "Do something",
           category: "bullet-time",
           run_in_background: true,
-          load_skills: [],
+          load_skills: []
         },
         toolContext
       )
@@ -4052,43 +4053,43 @@ const tool = createDelegateTask({
       const mockManager = {
         launch: async () => ({}),
         getTasksByParentSession: () => [],
-        hasInFlightNotificationForParent: () => false,
+        hasInFlightNotificationForParent: () => false
       }
       const mockClient = {
-        app: { agents: async () => ({ data: [] }) },
+        agent: { list: async () => ({ data: [] }) },
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
-          get: async () => ({ data: { directory: "/project" } }),
-          create: async () => ({ data: { id: "ses_default_bg" } }),
+          get: async () => ({ directory: "/project" }),
+          create: async () => ({ id: "ses_default_bg" }),
           prompt: async () => ({ data: {} }),
           promptAsync: async () => ({ data: {} }),
-          messages: async () => ({
-            data: [
+          context: async () => ({
+            messages: [
               {
-                info: { id: "msg_001", role: "user", time: { created: Date.now() } },
-                parts: [{ type: "text", text: "Do something" }],
+                id: "msg_001", type: "user", time: { created: Date.now() },
+                content: [{ type: "text", text: "Do something" }]
               },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn" },
-                parts: [{ type: "text", text: "Sync task completed" }],
+                id: "msg_002", type: "assistant", time: { created: Date.now() + 1 }, finish: "end_turn",
+                content: [{ type: "text", text: "Sync task completed" }]
               },
-            ],
+            ]
           }),
           status: async () => ({ data: { "ses_default_bg": { type: "idle" } } }),
-          abort: mock(() => Promise.resolve()),
-        },
+          interrupt: mock(() => Promise.resolve())
+        }
       }
 
       const tool = createDelegateTask({
         manager: mockManager,
-        client: mockClient,
+        client: mockClient
       })
 
       const toolContext = {
         sessionID: "parent-session",
         messageID: "parent-message",
         agent: "morpheus",
-        abort: new AbortController().signal,
+        abort: new AbortController().signal
       }
 
       //#when - run_in_background is OMITTED entirely (relies on schema default)

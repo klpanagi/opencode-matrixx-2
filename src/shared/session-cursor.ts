@@ -1,16 +1,8 @@
-type MessageTime =
-  | { created?: number | string }
-  | number
-  | string
-  | undefined
-
-type MessageInfo = {
-  id?: string
-  time?: MessageTime
-}
+import { idOf, timeOf } from "./session-message"
 
 type CursorMessage = {
-  info?: MessageInfo
+  id?: string
+  time?: { created?: number }
 }
 
 interface CursorState {
@@ -21,23 +13,15 @@ interface CursorState {
 const sessionCursors = new Map<string, CursorState>()
 
 function buildMessageKey(message: CursorMessage, index: number): string {
-  const id = message.info?.id
-  if (id) return `id:${id}`
+  const id = idOf(message)
+  if (id) return `id:` + id
 
-  const time = message.info?.time
-  if (typeof time === "number" || typeof time === "string") {
-    return `t:${time}:${index}`
+  const created = timeOf(message)
+  if (created !== 0) {
+    return `t:` + String(created) + `:` + String(index)
   }
 
-  const created = time?.created
-  if (typeof created === "number") {
-    return `t:${created}:${index}`
-  }
-  if (typeof created === "string") {
-    return `t:${created}:${index}`
-  }
-
-  return `i:${index}`
+  return `i:` + String(index)
 }
 
 export function consumeNewMessages<T extends CursorMessage>(

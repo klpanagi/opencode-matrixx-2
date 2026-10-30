@@ -9,7 +9,6 @@ import { _resetRuleCacheForTesting } from "../src/hooks/rules-injector/injector"
 import { _resetThinkModeStateForTesting } from "../src/hooks/think-mode/hook"
 import { _resetNormalizeModelCacheForTesting } from "../src/hooks/think-mode/switcher"
 import { _resetDisabledSetsCacheForTesting } from "../src/plugin-config"
-import { _resetMessagesTransformCacheForTesting } from "../src/plugin/messages-transform"
 import { _resetDisciplineCacheForTesting } from "../src/agents/dynamic-agent-prompt-builder"
 import { _resetContextModeEnforcementForTesting } from "../src/shared/context-mode-enforcement"
 import { _resetDcpGuidanceForTesting } from "../src/shared/dcp-guidance"
@@ -27,7 +26,6 @@ beforeEach(() => {
   _resetThinkModeStateForTesting()
   _resetNormalizeModelCacheForTesting()
   _resetDisabledSetsCacheForTesting()
-  _resetMessagesTransformCacheForTesting()
   _resetDisciplineCacheForTesting()
   _resetContextModeEnforcementForTesting()
   _resetDcpGuidanceForTesting()

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
@@ -23,7 +23,7 @@ describe("task-edit-guard: generic Write/Edit blocked on plans", () => {
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "plan-enforcement-guard-"))
     ctx = { directory: tempDir }
-    hook = createTaskEditGuardHook(ctx as unknown as PluginInput)
+    hook = createTaskEditGuardHook(ctx as unknown as MatrixxContext)
   })
 
   afterEach(() => {
@@ -183,7 +183,7 @@ describe("task-edit-guard: bash mutation matrix blocked on plans/tasks", () => {
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "plan-enforcement-bash-"))
     ctx = { directory: tempDir }
-    hook = createTaskEditGuardHook(ctx as unknown as PluginInput)
+    hook = createTaskEditGuardHook(ctx as unknown as MatrixxContext)
   })
 
   afterEach(() => {
@@ -243,7 +243,7 @@ describe("task-edit-guard: bash mutation matrix blocked on plans/tasks", () => {
 
   test("blocks shell mutations like bash (V2 alias)", async () => {
     //#given: raw shell mutation commands touching plans/tasks
-    const hook2 = createTaskEditGuardHook(ctx as unknown as PluginInput)
+    const hook2 = createTaskEditGuardHook(ctx as unknown as MatrixxContext)
     async function runShell(command: string) {
       const input = { tool: "shell", sessionID: "ses_1", callID: "call_1" }
       const output = { args: { command } }

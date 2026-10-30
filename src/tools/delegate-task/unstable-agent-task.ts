@@ -1,8 +1,10 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration, normalizeSDKResponse } from "../../shared"
+import { formatDuration, jsonSafeMetadata } from "../../shared"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
-import type { ExecutorContext, ParentContext, SessionMessage } from "./executor-types"
+import type { ExecutorContext, ParentContext } from "./executor-types"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -54,7 +56,7 @@ export async function executeUnstableAgentTask(
       })
     }
 
-    const bgTaskMeta = {
+    const bgTaskMeta = jsonSafeMetadata({
       title: args.description,
       metadata: {
         prompt: args.prompt,
@@ -66,7 +68,7 @@ export async function executeUnstableAgentTask(
         sessionId: sessionID,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(bgTaskMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, bgTaskMeta)
@@ -92,22 +94,9 @@ export async function executeUnstableAgentTask(
         break
       }
 
-      const statusResult = await client.session.status()
-      const allStatuses = normalizeSDKResponse(statusResult, {} as Record<string, { type: string }>)
-      const sessionStatus = allStatuses[sessionID]
-
-      if (sessionStatus && sessionStatus.type !== "idle") {
-        stablePolls = 0
-        lastMsgCount = 0
-        continue
-      }
-
       if (Date.now() - pollStart < timingCfg.MIN_STABILITY_TIME_MS) continue
 
-      const messagesCheck = await client.session.messages({ path: { id: sessionID } })
-      const msgs = normalizeSDKResponse(messagesCheck, [] as Array<unknown>, {
-        preferResponseOnMissingData: true,
-      })
+      const msgs = await fetchSessionMessages(client, sessionID)
       const currentMsgCount = msgs.length
 
       if (currentMsgCount === lastMsgCount) {
@@ -137,21 +126,18 @@ session_id: ${sessionID}
 </task_metadata>`
     }
 
-    const messagesResult = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(messagesResult, [] as SessionMessage[], {
-      preferResponseOnMissingData: true,
-    })
+    const messages = await fetchSessionMessages(client, sessionID)
 
     const assistantMessages = messages
-      .filter((m) => m.info?.role === "assistant")
-      .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
+      .filter((m) => isAssistant(m))
+      .sort((a, b) => timeOf(b) - timeOf(a))
     const lastMessage = assistantMessages[0]
 
     if (!lastMessage) {
       return `No assistant response found (task ran in background mode).\n\nSession ID: ${sessionID}`
     }
 
-    const textParts = lastMessage?.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
+    const textParts = contentOf(lastMessage).filter((p) => p.type === "text" || p.type === "reasoning")
     const textContent = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
     const duration = formatDuration(startTime)
 

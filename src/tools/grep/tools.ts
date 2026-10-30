@@ -1,10 +1,11 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runRg } from "./cli"
 import { formatGrepResult } from "./result-formatter"
 
-export function createGrepTools(ctx: PluginInput): Record<string, ToolDefinition> {
-  const grep: ToolDefinition = tool({
+export function createGrepTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const grep: MatrixxToolDefinition = defineTool("grep", {
     description:
       "Fast content search tool with safety limits (60s timeout, 10MB output). " +
       "Searches file contents using regular expressions. " +
@@ -12,12 +13,12 @@ export function createGrepTools(ctx: PluginInput): Record<string, ToolDefinition
       "Filter files by pattern with the include parameter (eg. \"*.js\", \"*.{ts,tsx}\"). " +
       "Returns file paths with matches sorted by modification time.",
     args: {
-      pattern: tool.schema.string().describe("The regex pattern to search for in file contents"),
-      include: tool.schema
+      pattern: z.string().describe("The regex pattern to search for in file contents"),
+      include: z
         .string()
         .optional()
         .describe("File pattern to include in the search (e.g. \"*.js\", \"*.{ts,tsx}\")"),
-      path: tool.schema
+      path: z
         .string()
         .optional()
         .describe("The directory to search in. Defaults to the current working directory."),

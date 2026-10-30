@@ -1,25 +1,25 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { clearPendingStore, consumeToolMetadata } from "../../../src/features/tool-metadata-store"
 import { createBackgroundWaitAll } from "../../../src/tools/background-task/create-background-wait-all"
 
-function createMockContext(): ToolContext {
+function createMockContext(): MatrixxToolContext {
   return {
     sessionID: "test-session",
     messageID: "test-message",
     agent: "test-agent",
     abort: new AbortController().signal,
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
-function createMockContextWithCallID(callID: string): ToolContext {
+function createMockContextWithCallID(callID: string): MatrixxToolContext {
   return {
     ...createMockContext(),
     callID,
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("background_wait_all", () => {

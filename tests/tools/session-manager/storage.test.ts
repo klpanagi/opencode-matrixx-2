@@ -359,7 +359,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
   const mockClient = {
     session: {
       list: mock(() => Promise.resolve({ data: [] })),
-      messages: mock(() => Promise.resolve({ data: [] })),
+      context: mock(() => Promise.resolve({ messages: [] })),
       todo: mock(() => Promise.resolve({ data: [] })),
     },
   }
@@ -367,7 +367,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
   beforeEach(() => {
     // Reset mocks
     mockClient.session.list.mockClear()
-    mockClient.session.messages.mockClear()
+    mockClient.session.context.mockClear()
     mockClient.session.todo.mockClear()
   })
 
@@ -429,15 +429,21 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     // given
     const mockMessages = [
       {
-        info: { id: "msg_1", role: "user", agent: "test", time: { created: 1000 } },
-        parts: [{ id: "part_1", type: "text", text: "Hello" }],
+        id: "msg_1",
+        type: "user",
+        agent: "test",
+        time: { created: 1000 },
+        content: [{ id: "part_1", type: "text", text: "Hello" }],
       },
       {
-        info: { id: "msg_2", role: "assistant", agent: "oracle", time: { created: 2000 } },
-        parts: [{ id: "part_2", type: "text", text: "Hi there" }],
+        id: "msg_2",
+        type: "assistant",
+        agent: "oracle",
+        time: { created: 2000 },
+        content: [{ id: "part_2", type: "text", text: "Hi there" }],
       },
     ]
-    mockClient.session.messages.mockImplementation(() => Promise.resolve({ data: mockMessages }))
+    mockClient.session.context.mockImplementation(() => Promise.resolve(mockMessages))
 
     mock.module("../../../src/shared/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
@@ -451,7 +457,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     const messages = await readSessionMessages("ses_test")
 
     // then
-    expect(mockClient.session.messages).toHaveBeenCalledWith({ path: { id: "ses_test" } })
+    expect(mockClient.session.context).toHaveBeenCalledWith({ sessionID: "ses_test" })
     expect(messages.length).toBe(2)
     expect(messages[0].id).toBe("msg_1")
     expect(messages[1].id).toBe("msg_2")
@@ -492,7 +498,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
 
   test("SDK path returns empty array on error", async () => {
     // given
-    mockClient.session.messages.mockImplementation(() => Promise.reject(new Error("API error")))
+    mockClient.session.context.mockImplementation(() => Promise.reject(new Error("API error")))
 
     mock.module("../../../src/shared/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,

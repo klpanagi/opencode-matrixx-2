@@ -1,21 +1,22 @@
 import { existsSync } from "node:fs"
 import { basename } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import { countPlanProgressFromContent } from "../../features/mission-state"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { atomicWrite, ensurePlanDir, upsertMetadataComment } from "../../features/mission-state/plan-storage"
 import { validatePlanContract } from "../../features/plan-contract"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES } from "./constants"
 import { planSizeExceededFields } from "./error-codes"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
-export function createPlanCreateTool(ctx?: PluginContext, cap: number = MAX_PLAN_FILE_BYTES): ToolDefinition {
-  return tool({
+export function createPlanCreateTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
+  return defineTool("plan_create", {
     description: `Create a new plan file under .matrixx/plans/*.md.\nValidated via isAllowedFile(join(directory,PLANS_DIR), filePath) + .md + kebab-case.\nUses atomicWrite (.tmp.pid+rename) + upsertMetadataComment. Warns if file already exists.`,
     args: {
-      filePath: tool.schema.string().describe("Path to plan file (must be inside .matrixx/plans, kebab-case .md)"),
-      content: tool.schema.string().describe("Markdown content for the plan"),
+      filePath: z.string().describe("Path to plan file (must be inside .matrixx/plans, kebab-case .md)"),
+      content: z.string().describe("Markdown content for the plan"),
     },
     execute: async (args, context) => {
       try {
@@ -40,7 +41,7 @@ export function createPlanCreateTool(ctx?: PluginContext, cap: number = MAX_PLAN
         }
         const contract = validatePlanContract(content, cap)
         const id = basename(resolved, ".md")
-        const sessionId = (context as Record<string, unknown>)?.sessionID as string | undefined ?? "unknown"
+        const sessionId = (context as unknown as Record<string, unknown>)?.sessionID as string | undefined ?? "unknown"
         const { total, completed } = countPlanProgressFromContent(content)
         const meta = {
           id,

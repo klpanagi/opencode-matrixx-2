@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import { readSessionTasks } from "../../features/task-session-scope"
-import { normalizeSDKResponse } from "../../shared"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
+import type { SessionDomainLike } from "../../shared/session-facade"
+import { contentOf, idOf, roleOf, timeOf } from "../../shared/session-message"
+import { unwrapList } from "../../shared/unwrap-list"
 import { MESSAGE_STORAGE, PART_STORAGE, SESSION_STORAGE, TRANSCRIPT_DIR } from "./constants"
 import { normalizeDirForCompare } from "./path-normalize"
 import type { SessionInfo, SessionMessage, SessionMetadata, TodoItem } from "./types"
@@ -15,19 +17,19 @@ interface GetMainSessionsOptions {
   directory?: string
 }
 
-// SDK client reference for beta mode
-let sdkClient: PluginInput["client"] | null = null
+// Native session carrier for beta mode
+let sessionCarrier: (SessionContextCarrier & { session: SessionDomainLike }) | null = null
 
 let storageDirectory: string | undefined
 
 let pluginConfig: Partial<MatrixxConfig> | undefined
 
-export function setStorageClient(client: PluginInput["client"]): void {
-  sdkClient = client
+export function setStorageClient(carrier: SessionContextCarrier & { session: SessionDomainLike }): void {
+  sessionCarrier = carrier
 }
 
 export function resetStorageClient(): void {
-  sdkClient = null
+  sessionCarrier = null
 }
 
 /**
@@ -63,10 +65,9 @@ function directoriesEqual(a: string, b: string): boolean {
 
 export async function getMainSessions(options: GetMainSessionsOptions): Promise<SessionMetadata[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.list()
-      const sessions = normalizeSDKResponse(response, [] as SessionMetadata[])
+      const sessions = unwrapList<SessionMetadata>(await sessionCarrier.session.list())
       const annotated = sessions.map((s) => (s.parentID ? { ...s, isChild: true } : s));
       if (options.directory) {
         return annotated
@@ -115,10 +116,9 @@ export async function getMainSessions(options: GetMainSessionsOptions): Promise<
 
 export async function getAllSessions(): Promise<string[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.list()
-      const sessions = normalizeSDKResponse(response, [] as SessionMetadata[])
+      const sessions = unwrapList<SessionMetadata>(await sessionCarrier.session.list())
       return sessions.map((s) => s.id)
     } catch {
       return []
@@ -156,9 +156,8 @@ export async function getAllSessions(): Promise<string[]> {
 export { getMessageDir } from "../../shared/opencode-message-dir"
 
 export async function sessionExists(sessionID: string): Promise<boolean> {
-  if (isSqliteBackend() && sdkClient) {
-    const response = await sdkClient.session.list()
-    const sessions = normalizeSDKResponse(response, [] as Array<{ id?: string }>)
+  if (isSqliteBackend() && sessionCarrier) {
+    const sessions = unwrapList<Array<{ id?: string }>[number]>(await sessionCarrier.session.list())
     return sessions.some((s) => s.id === sessionID)
   }
   return getMessageDir(sessionID) !== null
@@ -166,53 +165,31 @@ export async function sessionExists(sessionID: string): Promise<boolean> {
 
 export async function readSessionMessages(sessionID: string): Promise<SessionMessage[]> {
   // Beta mode: use SDK
-  if (isSqliteBackend() && sdkClient) {
+  if (isSqliteBackend() && sessionCarrier) {
     try {
-      const response = await sdkClient.session.messages({ path: { id: sessionID } })
-      const rawMessages = normalizeSDKResponse(response, [] as Array<{
-        info?: {
-          id?: string
-          role?: string
-          agent?: string
-          time?: { created?: number; updated?: number }
-        }
-        parts?: Array<{
-          id?: string
-          type?: string
-          text?: string
-          thinking?: string
-          tool?: string
-          callID?: string
-          input?: Record<string, unknown>
-          output?: string
-          error?: string
-        }>
-      }>)
+      const rawMessages = await fetchSessionMessages(sessionCarrier, sessionID)
       const messages: SessionMessage[] = rawMessages
-        .filter((m) => m.info?.id)
-        .map((m) => ({
-          id: m.info?.id as string,
-          role: (m.info?.role as "user" | "assistant") || "user",
-          agent: m.info?.agent,
-          time: m.info?.time?.created
-            ? {
-                created: m.info?.time.created,
-                updated: m.info?.time.updated,
-              }
-            : undefined,
-          parts:
-            m.parts?.map((p) => ({
-              id: p.id || "",
-              type: p.type || "text",
-              text: p.text,
-              thinking: p.thinking,
-              tool: p.tool,
-              callID: p.callID,
-              input: p.input,
-              output: p.output,
-              error: p.error,
-            })) || [],
-        }))
+        .filter((m) => idOf(m))
+        .map((m) => {
+          const created = timeOf(m)
+          return {
+            id: idOf(m) as string,
+            role: roleOf(m) === "assistant" ? "assistant" : "user",
+            agent: m.agent,
+            time: created > 0 ? { created } : undefined,
+            content: contentOf(m).map((p) => ({
+              id: typeof p.id === "string" ? p.id : "",
+              type: typeof p.type === "string" ? p.type : "text",
+              text: typeof p.text === "string" ? p.text : undefined,
+              thinking: typeof p.thinking === "string" ? p.thinking : undefined,
+              tool: typeof p.tool === "string" ? p.tool : undefined,
+              callID: typeof p.callID === "string" ? p.callID : undefined,
+              input: typeof p.input === "object" && p.input !== null ? (p.input as Record<string, unknown>) : undefined,
+              output: typeof p.output === "string" ? p.output : undefined,
+              error: typeof p.error === "string" ? p.error : undefined,
+            })),
+          }
+        })
       return messages.sort((a, b) => {
         const aTime = a.time?.created ?? 0
         const bTime = b.time?.created ?? 0
@@ -234,17 +211,17 @@ export async function readSessionMessages(sessionID: string): Promise<SessionMes
     for (const file of files) {
       if (!file.endsWith(".json")) continue
       try {
-        const content = await readFile(join(messageDir, file), "utf-8")
-        const meta = JSON.parse(content)
+        const rawText = await readFile(join(messageDir, file), "utf-8")
+        const meta = JSON.parse(rawText)
 
-        const parts = await readParts(meta.id)
+        const content = await readParts(meta.id)
 
         messages.push({
           id: meta.id,
           role: meta.role,
           agent: meta.agent,
           time: meta.time,
-          parts,
+          content,
         })
       } catch {
       }

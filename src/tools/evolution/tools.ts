@@ -1,12 +1,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
+import { z } from "zod"
 import { type EvolutionWriterConfig, EvolutionWriterConfigSchema } from "../../config/schema/evolution";
 import { KNOWLEDGE_KINDS } from "../../features/evolution/schema";
 import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store/trace-store";
 import type { SkillMeta } from "../../features/evolution/types";
 import { EvolutionWriter } from "../../features/evolution/writer";
+import type { MatrixxContext } from "../../plugin/context";
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { AUDIT_TAIL_LIMIT, EVOLUTION_DESCRIPTION, NO_PENDING_MESSAGE, SLUG_PATTERN } from "./constants";
 import { handleGetContext, handleSearch } from "./query-actions";
 import type { EvolutionToolArgs, PendingProposalSummary } from "./types";
@@ -112,33 +113,33 @@ async function handleStatus(store: TraceStore, writer: EvolutionWriter, evolutio
  * retrieval actions `search` and `get_context`, filtered through the T4a
  * retrieval contract and scoped to the current project.
  */
-export function createEvolutionTool(ctx: PluginInput, options?: EvolutionToolOptions): Record<string, ToolDefinition> {
+export function createEvolutionTool(ctx: MatrixxContext, options?: EvolutionToolOptions): Record<string, MatrixxToolDefinition> {
   const projectRoot = ctx.directory ?? process.cwd();
   const writerConfig = options?.writerConfig ?? EvolutionWriterConfigSchema.parse({});
   const pendingDir = path.resolve(projectRoot, PENDING_DIR);
   const evolutionDir = path.resolve(projectRoot, EVOLUTION_DIR);
 
-  const evolution: ToolDefinition = tool({
+  const evolution: MatrixxToolDefinition = defineTool("evolution", {
     description: EVOLUTION_DESCRIPTION,
     args: {
-      action: tool.schema
+      action: z
         .enum(["list", "get", "approve", "reject", "status", "search", "get_context"])
         .describe(
           "Governance action: list pending proposals, get a staged proposal, approve (promote) or reject it, or show status. search and get_context are read-only retrieval queries.",
         ),
-      slug: tool.schema
+      slug: z
         .string()
         .optional()
         .describe("Proposal slug (required for get/approve/reject). Never invent one — read it from list."),
-      global: tool.schema
+      global: z
         .boolean()
         .optional()
         .describe("(action=approve) Also promote to the global skills dir (default: false)."),
-      query: tool.schema
+      query: z
         .string()
         .optional()
         .describe("(action=search/get_context) Case-insensitive text match over id and body; omit to return all in scope."),
-      kind: tool.schema
+      kind: z
         .enum(KNOWLEDGE_KINDS)
         .optional()
         .describe("(action=search/get_context) Restrict results to one knowledge kind."),

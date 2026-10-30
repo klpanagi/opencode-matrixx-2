@@ -1,36 +1,23 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
 
 import {
   COUNTDOWN_SECONDS,
   HOOK_NAME,
-  TOAST_DURATION_MS,
 } from "./constants"
 import { injectContinuation } from "./continuation-injection"
 import type { SessionStateStore } from "./session-state"
 import type { ResolvedMessageInfo } from "./types"
 
-async function showCountdownToast(
-  ctx: PluginInput,
-  seconds: number,
-  incompleteCount: number
-): Promise<void> {
-  await ctx.client.tui
-    .showToast({
-      body: {
-        title: "Task Continuation",
-        message: `Resuming in ${seconds}s... (${incompleteCount} tasks remaining)`,
-        variant: "warning" as const,
-        duration: TOAST_DURATION_MS,
-      },
-    })
-    .catch((err) => { log("[task-continuation] Countdown toast failed:", err) })
+function showCountdownToast(seconds: number, incompleteCount: number): void {
+  notify("warn", `Task Continuation: Resuming in ${seconds}s... (${incompleteCount} tasks remaining)`)
 }
 
 export function startCountdown(args: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   sessionID: string
   incompleteCount: number
   total: number
@@ -58,13 +45,13 @@ export function startCountdown(args: {
   }
 
   let secondsRemaining = COUNTDOWN_SECONDS
-  showCountdownToast(ctx, secondsRemaining, incompleteCount)
+  showCountdownToast(secondsRemaining, incompleteCount)
   state.countdownStartedAt = Date.now()
 
   state.countdownInterval = setInterval(() => {
     secondsRemaining--
     if (secondsRemaining > 0) {
-      showCountdownToast(ctx, secondsRemaining, incompleteCount)
+      showCountdownToast(secondsRemaining, incompleteCount)
     }
   }, 1000)
 

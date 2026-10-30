@@ -20,7 +20,6 @@ passed), close it with task_update(status="completed") right now instead of
 redoing it. Never leave finished work marked in_progress.`
 
 export const COUNTDOWN_SECONDS = 2
-export const TOAST_DURATION_MS = 900
 export const COUNTDOWN_GRACE_PERIOD_MS = 500
 
 export const ABORT_WINDOW_MS = 3000

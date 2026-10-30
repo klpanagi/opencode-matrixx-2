@@ -1,5 +1,6 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { TOOL_DESCRIPTION_NO_SKILLS, TOOL_DESCRIPTION_PREFIX } from "./constants"
 import type { SkillArgs, SkillInfo, SkillLoadOptions } from "./types"
 
@@ -23,7 +24,7 @@ function formatSkillsXml(skills: SkillInfo[]): string {
   return `\n\n<available_skills>\n${skillsXml}\n</available_skills>\n\nCall skill(name) for detail on a specific skill. Names only are listed to save context; descriptions load lazily.`
 }
 
-export function createSkillTool(options: SkillLoadOptions = {}): ToolDefinition {
+export function createSkillTool(options: SkillLoadOptions = {}): MatrixxToolDefinition {
   let cachedSkills: BuiltinSkill[] | null = null
   let cachedDescription: string | null = null
 
@@ -53,12 +54,12 @@ export function createSkillTool(options: SkillLoadOptions = {}): ToolDefinition 
     getDescription()
   }
 
-  return tool({
+  return defineTool("skill", {
     get description() {
       return cachedDescription ?? TOOL_DESCRIPTION_PREFIX
     },
     args: {
-      name: tool.schema.string().describe("The skill identifier from available_skills (e.g., 'code-review')"),
+      name: z.string().describe("The skill identifier from available_skills (e.g., 'code-review')"),
     },
     async execute(args: SkillArgs, ctx?: { agent?: string }) {
       const skills = getSkills()
@@ -89,4 +90,4 @@ export function createSkillTool(options: SkillLoadOptions = {}): ToolDefinition 
   })
 }
 
-export const skill: ToolDefinition = createSkillTool()
+export const skill: MatrixxToolDefinition = createSkillTool()

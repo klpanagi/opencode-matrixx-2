@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../plugin/context"
 
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/shell-tool-name"
@@ -13,7 +13,7 @@ interface SecretLeakGuardOptions {
   allowlist_paths?: string[]
 }
 
-export function createSecretLeakGuardHook(ctx: PluginInput, config?: SecretLeakGuardOptions) {
+export function createSecretLeakGuardHook(ctx: MatrixxContext, config?: SecretLeakGuardOptions) {
   const enabled = config?.enabled ?? true
   const blockOnDetection = config?.block_on_detection ?? true
 

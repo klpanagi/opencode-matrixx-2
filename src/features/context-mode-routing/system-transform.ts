@@ -1,6 +1,6 @@
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
-
 import type { MatrixxConfig } from "../../config"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 import { resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
 import { notifyInjection } from "../../shared/injection-notifier"
 import { buildContextModeRoutingBlock, containsContextModeMarker } from "./routing-block"
@@ -46,7 +46,7 @@ export function hashInjectionContent(content: string): string {
  * per session per block version — only after the splice, never on the
  * marker-present early-return path. Dedupe is handled inside the notifier.
  */
-export function createContextModeSystemTransformHook(pluginConfig: MatrixxConfig, ctx?: PluginInput): SystemTransformHandler {
+export function createContextModeSystemTransformHook(pluginConfig: MatrixxConfig, ctx?: MatrixxContext): SystemTransformHandler {
   const { enabled } = resolveContextModeEnforcement(pluginConfig.context_mode)
   const routingBlock = buildContextModeRoutingBlock()
   const blockHash = hashInjectionContent(routingBlock)

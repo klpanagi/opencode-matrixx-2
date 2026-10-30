@@ -1,4 +1,3 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { ContextCollector } from "../../features/context-injector"
 import {
   getMainSessionID,
@@ -7,6 +6,8 @@ import {
 } from "../../features/session-state/state"
 import { getUltraworkState } from "../../features/ultrawork-state"
 import { log } from "../../shared"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import {
   isSystemDirective,
   sanitizeKnownTags,
@@ -14,7 +15,7 @@ import {
 import { isPlannerAgent } from "./constants"
 import { detectKeywordsWithType, extractPromptText } from "./detector"
 
-export function createKeywordDetectorHook(ctx: PluginInput, _collector?: ContextCollector) {
+export function createKeywordDetectorHook(_ctx: NativePluginContext, _collector?: ContextCollector) {
   return {
     "chat.message": async (
       input: {
@@ -88,21 +89,7 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
           output.message.variant = "max"
         }
 
-        ctx.client.tui
-          .showToast({
-            body: {
-              title: "Ultrawork Mode Activated",
-              message: "Maximum precision engaged. All agents at your disposal.",
-              variant: "success" as const,
-              duration: 3000,
-            },
-          })
-          .catch((err) =>
-            log(`[keyword-detector] Failed to show toast`, {
-              error: err,
-              sessionID: input.sessionID,
-            }),
-          )
+        notify("success", "Ultrawork Mode Activated: Maximum precision engaged. All agents at your disposal.")
       }
 
       const textPartIndex = output.parts.findIndex((p) => p.type === "text" && p.text !== undefined)

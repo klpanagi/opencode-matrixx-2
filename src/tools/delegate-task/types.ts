@@ -1,12 +1,12 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type {
   AvailableCategory,
   AvailableSkill,
 } from "../../agents/dynamic-agent-prompt-builder"
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements, SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
+import type { NativeDomains } from "../../shared/session-context-source"
 
-export type OpencodeClient = PluginInput["client"]
+export type NativeClient = NativeDomains
 
 export interface DelegateTaskArgs {
   description: string
@@ -37,7 +37,7 @@ export interface ToolContextWithMetadata {
   abort: AbortSignal
   metadata?: (input: { title?: string; metadata?: Record<string, unknown> }) => void | Promise<void>
   /**
-   * Tool call ID injected by OpenCode's internal context (not in plugin ToolContext type,
+   * Tool call ID injected by OpenCode's internal context (not in plugin MatrixxToolContext type,
    * but present at runtime via spread in fromPlugin()). Used for metadata store keying.
    */
   callID?: string
@@ -55,7 +55,7 @@ export interface SyncSessionCreatedEvent {
 
 export interface DelegateTaskToolOptions {
   manager: BackgroundManager
-  client: OpencodeClient
+  client: NativeClient
   directory: string
   /**
    * Test hook: bypass global cache reads (Bun runs tests in parallel).
@@ -83,6 +83,8 @@ export interface DelegateTaskToolOptions {
   /** Active preset name from plugin config (`active_preset`). */
   activePreset?: string
   onSyncSessionCreated?: (event: SyncSessionCreatedEvent) => Promise<void>
+  /** Resolves the live system default model (provider/model); absence falls back to category resolution. */
+  systemDefaultModel?: () => Promise<string | undefined>
 }
 
 export interface BuildSystemContentInput {

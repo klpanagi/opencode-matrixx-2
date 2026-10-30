@@ -1,72 +1,66 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { withEphemeralSession } from "../../src/shared/with-ephemeral-session"
 import { createHostLlmCall } from "../../src/hooks/evolution-compressor/host-llm-call"
+import type { EphemeralSessionHandle } from "../../src/shared/with-ephemeral-session"
+import { withEphemeralSession } from "../../src/shared/with-ephemeral-session"
 
-function makeIds(): { created: string[]; deleted: string[] } {
-  return { created: [], deleted: [] }
+function makeIds(): { created: string[]; removed: string[] } {
+  return { created: [], removed: [] }
 }
 
-function makeClient(opts: {
+function makeSession(opts: {
   createResult: unknown
   promptImpl?: (args: unknown) => Promise<unknown>
-  messagesImpl?: (args: unknown) => Promise<unknown>
-  deleteImpl?: (args: unknown) => Promise<unknown>
-  tracker: { created: string[]; deleted: string[] }
-}): {
-  session: {
-    create: (args: unknown) => Promise<unknown>
-    prompt: (args: unknown) => Promise<unknown>
-    messages: (args: unknown) => Promise<unknown>
-    delete: (args: unknown) => Promise<unknown>
-  }
+  contextImpl?: (args: unknown) => Promise<unknown>
+  removeImpl?: (args: unknown) => Promise<unknown>
+  tracker: { created: string[]; removed: string[] }
+}): EphemeralSessionHandle & {
+  prompt: (args: unknown) => Promise<unknown>
+  context: (args: unknown) => Promise<unknown>
 } {
   return {
-    session: {
-      create: async (args: unknown) => {
-        opts.tracker.created.push(JSON.stringify(args))
-        return opts.createResult
-      },
-      prompt: async (args: unknown) => (opts.promptImpl ? opts.promptImpl(args) : {}),
-      messages: async (args: unknown) => (opts.messagesImpl ? opts.messagesImpl(args) : []),
-      delete: async (args: unknown) => {
-        opts.tracker.deleted.push(JSON.stringify(args))
-        return opts.deleteImpl ? opts.deleteImpl(args) : { data: true }
-      },
+    create: async (args: unknown) => {
+      opts.tracker.created.push(JSON.stringify(args))
+      return opts.createResult
     },
+    remove: async (args: unknown) => {
+      opts.tracker.removed.push(JSON.stringify(args))
+      if (opts.removeImpl) return opts.removeImpl(args)
+      return {}
+    },
+    prompt: async (args: unknown) => (opts.promptImpl ? opts.promptImpl(args) : {}),
+    context: async (args: unknown) => (opts.contextImpl ? opts.contextImpl(args) : []),
   }
 }
 
 describe("withEphemeralSession", () => {
-  test("deletes the session on success", async () => {
-    //#given a client whose create returns a session id
+  test("removes the session on success", async () => {
+    //#given a native session handle whose create returns a session id
     const tracker = makeIds()
-    const client = makeClient({ createResult: { data: { id: "ses-1" } }, tracker })
+    const session = makeSession({ createResult: { id: "ses-1" }, tracker })
 
     //#when the body runs successfully
     const result = await withEphemeralSession({
-      client: client as never,
-      directory: "/tmp",
+      session,
       title: "evolution-compressor",
       body: async (id) => `used-${id}`,
     })
 
-    //#then the body result is returned and delete was called for the id
+    //#then the body result is returned and remove was called for the id
     expect(result).toBe("used-ses-1")
-    expect(tracker.deleted.length).toBe(1)
-    expect(tracker.deleted[0]).toContain("ses-1")
+    expect(tracker.removed.length).toBe(1)
+    expect(tracker.removed[0]).toContain("ses-1")
   })
 
-  test("deletes the session when the body throws and rethrows the original error", async () => {
+  test("removes the session when the body throws and rethrows the original error", async () => {
     //#given a body that throws
     const tracker = makeIds()
-    const client = makeClient({ createResult: { data: { id: "ses-2" } }, tracker })
+    const session = makeSession({ createResult: { id: "ses-2" }, tracker })
     const boom = new Error("body boom")
 
     //#when the body throws
     const caught = await withEphemeralSession({
-      client: client as never,
-      directory: "/tmp",
+      session,
       title: "evolution-compressor",
       body: async () => {
         throw boom
@@ -76,25 +70,26 @@ describe("withEphemeralSession", () => {
       (err: unknown) => err,
     )
 
-    //#then the original error propagates and delete still ran
+    //#then the original error propagates and remove still ran
     expect(caught).toBe(boom)
-    expect(tracker.deleted.length).toBe(1)
+    expect(tracker.removed.length).toBe(1)
   })
 
-  test("body error propagates even when delete fails", async () => {
-    //#given a body that throws and a delete that reports error
+  test("body error propagates even when remove fails", async () => {
+    //#given a body that throws and a remove that rejects
     const tracker = makeIds()
-    const client = makeClient({
-      createResult: { data: { id: "ses-3" } },
-      deleteImpl: async () => ({ data: false, error: { message: "delete failed" } }),
+    const session = makeSession({
+      createResult: { id: "ses-3" },
+      removeImpl: async () => {
+        throw new Error("remove failed")
+      },
       tracker,
     })
     const boom = new Error("original body error")
 
-    //#when both body and delete fail
+    //#when both body and remove fail
     const caught = await withEphemeralSession({
-      client: client as never,
-      directory: "/tmp",
+      session,
       title: "evolution-compressor",
       body: async () => {
         throw boom
@@ -104,21 +99,20 @@ describe("withEphemeralSession", () => {
       (err: unknown) => err,
     )
 
-    //#then the body's error (not the delete error) propagates
+    //#then the body's error (not the remove error) propagates
     expect(caught).toBe(boom)
-    expect(tracker.deleted.length).toBe(1)
+    expect(tracker.removed.length).toBe(1)
   })
 
-  test("does not attempt delete when creation yields no id", async () => {
+  test("does not attempt remove when creation yields no id", async () => {
     //#given a create result with no id
     const tracker = makeIds()
-    const client = makeClient({ createResult: { data: {} }, tracker })
+    const session = makeSession({ createResult: {}, tracker })
 
     //#when the body would run
     let bodyRan = false
     const caught = await withEphemeralSession({
-      client: client as never,
-      directory: "/tmp",
+      session,
       title: "evolution-compressor",
       body: async () => {
         bodyRan = true
@@ -129,21 +123,20 @@ describe("withEphemeralSession", () => {
       (err: unknown) => err,
     )
 
-    //#then creation failure throws and delete never ran
+    //#then creation failure throws and remove never ran
     expect(caught).toBeInstanceOf(Error)
     expect(bodyRan).toBe(false)
-    expect(tracker.deleted.length).toBe(0)
+    expect(tracker.removed.length).toBe(0)
   })
 
   test("passes parentID through to create", async () => {
     //#given a parent id
     const tracker = makeIds()
-    const client = makeClient({ createResult: { data: { id: "ses-4" } }, tracker })
+    const session = makeSession({ createResult: { id: "ses-4" }, tracker })
 
     //#when running with a parentID
     await withEphemeralSession({
-      client: client as never,
-      directory: "/tmp",
+      session,
       title: "evolution-compressor",
       parentID: "ses-parent",
       body: async () => "ok",
@@ -156,32 +149,37 @@ describe("withEphemeralSession", () => {
 })
 
 describe("createHostLlmCall session hygiene", () => {
-  test("deletes the ephemeral session after prompt+messages", async () => {
-    //#given a host llm client mock
+  test("removes the ephemeral session after prompt+messages", async () => {
+    //#given a host llm session mock
     const tracker = makeIds()
-    const client = makeClient({
-      createResult: { data: { id: "ses-host-1" } },
-      messagesImpl: async () => [
-        { info: { role: "assistant", time: { created: 2 } }, parts: [{ type: "text", text: "hello" }] },
+    const session = makeSession({
+      createResult: { id: "ses-host-1" },
+      contextImpl: async () => [
+        { type: "assistant", time: { created: 2 }, content: [{ type: "text", text: "hello" }] },
       ],
       tracker,
     })
 
     //#when the llm call runs
-    const call = createHostLlmCall({ client: client as never, directory: "/tmp" })
+    const call = createHostLlmCall({
+      ctx: {
+        directory: "/tmp",
+        session,
+      } as never,
+    })
     const result = await call("summarize this")
 
-    //#then text is returned and the session was deleted
+    //#then text is returned and the session was removed
     expect(result.text).toBe("hello")
-    expect(tracker.deleted.length).toBe(1)
-    expect(tracker.deleted[0]).toContain("ses-host-1")
+    expect(tracker.removed.length).toBe(1)
+    expect(tracker.removed[0]).toContain("ses-host-1")
   })
 
-  test("deletes the ephemeral session when prompt throws", async () => {
+  test("removes the ephemeral session when prompt throws", async () => {
     //#given a prompt that throws
     const tracker = makeIds()
-    const client = makeClient({
-      createResult: { data: { id: "ses-host-2" } },
+    const session = makeSession({
+      createResult: { id: "ses-host-2" },
       promptImpl: async () => {
         throw new Error("prompt down")
       },
@@ -189,15 +187,20 @@ describe("createHostLlmCall session hygiene", () => {
     })
 
     //#when the llm call runs
-    const call = createHostLlmCall({ client: client as never, directory: "/tmp" })
+    const call = createHostLlmCall({
+      ctx: {
+        directory: "/tmp",
+        session,
+      } as never,
+    })
     const caught = await call("summarize this").then(
       () => null,
       (err: unknown) => err,
     )
 
-    //#then the error propagates and the session was deleted
+    //#then the error propagates and the session was removed
     expect(caught).toBeInstanceOf(Error)
-    expect(tracker.deleted.length).toBe(1)
-    expect(tracker.deleted[0]).toContain("ses-host-2")
+    expect(tracker.removed.length).toBe(1)
+    expect(tracker.removed[0]).toContain("ses-host-2")
   })
 })

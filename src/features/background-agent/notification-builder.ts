@@ -1,4 +1,7 @@
-import { log, normalizeSDKResponse } from "../../shared"
+import { log } from "../../shared"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { SessionMessage } from "../../shared/session-message"
 import { isAbortedSessionError } from "./error-helpers"
 import {
   findNearestMessageExcludingCompaction,
@@ -20,6 +23,13 @@ const STATUS_LABELS: Record<BackgroundTaskStatus, string> = {
 
 function statusToLabel(status: BackgroundTaskStatus): string {
   return STATUS_LABELS[status]
+}
+
+type ParentMessageInfo = {
+  agent?: string
+  model?: { providerID: string; modelID: string }
+  modelID?: string
+  providerID?: string
 }
 
 export function buildCompletionNotification(
@@ -66,13 +76,7 @@ Use \`background_output(task_id="${task.id}")\` to retrieve this result when rea
 }
 
 export async function resolveAgentAndModel(
-  client: {
-    session: {
-      messages: (args: {
-        path: { id: string }
-      }) => Promise<unknown>
-    }
-  },
+  client: SessionContextCarrier,
   task: Pick<BackgroundTask, "parentSessionID" | "parentAgent">,
   enableParentSessionNotifications: boolean,
 ): Promise<{
@@ -91,22 +95,9 @@ export async function resolveAgentAndModel(
   }
 
   try {
-    const messagesResp = await client.session.messages({
-      path: { id: task.parentSessionID },
-    })
-    const messages = normalizeSDKResponse(
-      messagesResp,
-      [] as Array<{
-        info?: {
-          agent?: string
-          model?: { providerID: string; modelID: string }
-          modelID?: string
-          providerID?: string
-        }
-      }>,
-    )
+    const messages = await fetchSessionMessages(client, task.parentSessionID)
     for (let i = messages.length - 1; i >= 0; i--) {
-      const info = messages[i].info
+      const info = (messages[i] as SessionMessage & { info?: ParentMessageInfo }).info
       if (isCompactionAgent(info?.agent)) {
         continue
       }

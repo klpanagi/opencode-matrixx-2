@@ -1,6 +1,7 @@
 import * as fs from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import { ContractSchema } from "../../features/bdd/schema"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 /**
  * The bdd_create_contract tool is deterministic. It lifts the parsed Gherkin
@@ -64,26 +65,26 @@ function extractScenario(s: Record<string, unknown>): Record<string, unknown> {
 }
 
 /** Create a tool that produces a Contract JSON from a parsed Gherkin AST. */
-export function createBddCreateContractTool(): ToolDefinition {
-  return tool({
+export function createBddCreateContractTool(): MatrixxToolDefinition {
+  return defineTool("bdd_create_contract", {
       description:
         "Create a structured contract JSON from a parsed Gherkin AST. " +
         "Builds a Contract object with empty annotations, validates " +
         "against ContractSchema, and writes to disk. The bdd-contract " +
         "agent is responsible for filling annotations via LLM inference.",
     args: {
-      parsedAst: tool.schema
+      parsedAst: z
         .string()
         .describe("JSON-serialized GherkinDocument AST from bdd_parse_gherkin"),
-      sourceFile: tool.schema.string().describe("Original .feature file path"),
-      sourceText: tool.schema
+      sourceFile: z.string().describe("Original .feature file path"),
+      sourceText: z
         .string()
         .describe("Original .feature file content (kept for compatibility, not parsed)"),
-      force: tool.schema
+      force: z
         .boolean()
         .default(false)
         .describe("Overwrite existing contract file"),
-      outputPath: tool.schema
+      outputPath: z
         .string()
         .optional()
         .describe("Custom output path; defaults to <sourceFile>.contract.json"),

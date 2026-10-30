@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createDesignIntentPreserverHook } from "../../../src/hooks/design-intent-preserver/hook"
 
 describe("design-intent-preserver", () => {
@@ -19,11 +19,11 @@ describe("design-intent-preserver", () => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  function createMockPluginInput() {
+  function createMockMatrixxContext() {
     return {
       client: {},
       directory: tempDir,
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
   }
 
   function createMockOutput(text: string) {
@@ -39,7 +39,7 @@ describe("design-intent-preserver", () => {
       join(plansDir, "2026-01-01-feat.md"),
       "# Feature Plan\n\n## Phase 1: UI\ncategory: construct\nweb-designer\n\n## Phase 2: Backend\ncategory: source\n"
     )
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("Phase 2: implement backend now")
 
     //#when - hook processes the message
@@ -59,7 +59,7 @@ describe("design-intent-preserver", () => {
       join(plansDir, "plan.md"),
       "category: construct\nweb-designer\n"
     )
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("just a regular user message")
 
     //#when - hook processes the message
@@ -76,7 +76,7 @@ describe("design-intent-preserver", () => {
       join(plansDir, "plan.md"),
       "# Plan\n\n## Phase 1: Setup\ncategory: source\n\n## Phase 2: Build\ncategory: source\n"
     )
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("Phase 2: build feature")
 
     //#when - hook processes the message
@@ -90,7 +90,7 @@ describe("design-intent-preserver", () => {
   test("no-ops when no plans directory exists", async () => {
     //#given - no plans directory
     rmSync(join(tempDir, ".matrixx"), { recursive: true, force: true })
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("Phase 2: anything")
 
     //#when - hook processes the message
@@ -107,7 +107,7 @@ describe("design-intent-preserver", () => {
       join(plansDir, "plan.md"),
       "category: construct\nweb-designer\n"
     )
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const guardrailText = "Phase 2: x\n\n<design-intent-preservation>\nFROZEN\n</design-intent-preservation>"
     const output = createMockOutput(guardrailText)
 
@@ -134,7 +134,7 @@ describe("design-intent-preserver", () => {
     const { utimesSync } = require("node:fs")
     utimesSync(newPath, future, future)
 
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("Phase 2: do thing")
 
     //#when - hook processes the message
@@ -151,7 +151,7 @@ describe("design-intent-preserver", () => {
       join(plansDir, "plan.md"),
       "# UI work\nagent: web-designer\nskill: frontend-ui-ux\n"
     )
-    const hook = createDesignIntentPreserverHook(createMockPluginInput())
+    const hook = createDesignIntentPreserverHook(createMockMatrixxContext())
     const output = createMockOutput("Phase 3: now switch to backend")
 
     //#when - hook processes the message

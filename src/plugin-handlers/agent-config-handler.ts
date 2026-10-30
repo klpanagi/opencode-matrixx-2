@@ -90,7 +90,7 @@ export async function applyAgentConfig(params: {
     undefined,
     params.pluginConfig.categories,
     allDiscoveredSkills,
-    params.ctx.client,
+    undefined,
     browserProvider,
     currentModel,
     disabledSkills,

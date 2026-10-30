@@ -6,13 +6,13 @@ import type { MatrixxConfig } from "../../src/config"
 import type { BackgroundManager } from "../../src/features/background-agent"
 import type { SkillContext } from "../../src/plugin/skill-context"
 import { createToolCatalog } from "../../src/plugin/tool-catalog"
-import type { PluginContext } from "../../src/plugin/types"
+import type { MatrixxContext } from "../../src/plugin/context"
 
 const NOTEPAD_TOOLS = ["notepad_create", "notepad_read", "notepad_append", "notepad_list"] as const
 
 function makeArgs(pluginConfig: MatrixxConfig, directory: string) {
   return {
-    ctx: { directory, client: {} } as unknown as PluginContext,
+    ctx: { directory, client: {} } as unknown as MatrixxContext,
     pluginConfig,
     managers: { backgroundManager: {} as unknown as BackgroundManager },
     skillContext: {

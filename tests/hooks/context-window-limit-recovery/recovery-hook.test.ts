@@ -1,5 +1,10 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import { appendFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+// Shared log file (mirrors src/shared/logger.ts): the mock.module below is
+// process-wide, so it forwards to the real file instead of swallowing.
+const LOG_FILE = join(tmpdir(), "matrixx.log")
 
 const executeCompactMock = mock(async () => {})
 const getLastAssistantMock = mock(async () => ({
@@ -22,25 +27,27 @@ mock.module("../../../src/hooks/context-window-limit-recovery/parser", () => ({
 }))
 
 mock.module("../../../src/shared/logger", () => ({
-  log: () => {},
+  // Transparent from birth: forward to the real log file (same format as
+  // src/shared/logger.ts) instead of swallowing, so later suites that assert
+  // on /tmp/matrixx.log keep working. Never references the mocked module.
+  log: (message: string, data?: unknown) => {
+    try {
+      appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${message} ${data !== undefined ? JSON.stringify(data) : ""}\n`)
+    } catch {}
+  },
 }))
 
 afterAll(() => {
+  // The logger mock above is transparent from birth (forwards to the real
+  // file), so later suites are unaffected. mock.restore() clears call history.
   mock.restore()
 })
 
-function createMockContext(): PluginInput {
+function createMockContext(): MatrixxContext {
   return {
-    client: {
-      session: {
-        messages: mock(() => Promise.resolve({ data: [] })),
-      },
-      tui: {
-        showToast: mock(() => Promise.resolve()),
-      },
-    },
+    session: { context: async () => [] },
     directory: "/tmp",
-  } as PluginInput
+  } as MatrixxContext
 }
 
 function setupDelayedTimeoutMocks(): {
@@ -86,17 +93,13 @@ describe("createAnthropicContextWindowLimitRecoveryHook", () => {
     try {
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID: "session-race", error: "prompt is too long" },
-        },
+        type: "session.error",
+        data: { sessionID: "session-race", error: "prompt is too long" },
       })
 
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-race" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-race" },
       })
 
       //#then

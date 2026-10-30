@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { executeBackgroundTask } from "../../../src/tools/delegate-task/background-task"
 import { __resetTimingConfig, __setTimingConfig } from "../../../src/tools/delegate-task/timing"
@@ -60,8 +60,8 @@ describe("executeBackgroundTask - pending placeholder regression", () => {
     }
 
     const mockClient = {
-      session: { messages: mock(() => Promise.resolve({ data: [] })) },
-    } as unknown as PluginInput["client"]
+      session: { context: mock(() => Promise.resolve({ messages: [] })) },
+    } as unknown as MatrixxContext["client"]
 
     const executorCtx = {
       manager: mockManager,

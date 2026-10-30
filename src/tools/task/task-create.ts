@@ -1,5 +1,3 @@
-import type { PluginInput } from "@opencode-ai/plugin";
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool";
 import { z } from "zod";
 import type { MatrixxConfig } from "../../config/schema";
 import {
@@ -8,8 +6,10 @@ import {
   migrateLegacyTasksIfNeeded,
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
+import type { MatrixxContext } from "../../plugin/context";
 import { log } from "../../shared/logger";
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { createOneTask } from "./create-one";
 import type {
   CreatedTaskSummary,
@@ -29,9 +29,9 @@ const BATCH_KEYS = Object.keys(TaskCreateBatchInputSchema.shape)
 
 export function createTaskCreateTool(
   config: Partial<MatrixxConfig>,
-  ctx?: PluginInput,
-): ToolDefinition {
-  return tool({
+  ctx?: MatrixxContext,
+): MatrixxToolDefinition {
+  return defineTool("task_create", {
     description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Create a new task with auto-generated ID and threadID recording.
 
@@ -53,39 +53,39 @@ Calculate dependencies carefully to maximize parallel execution:
 
 Do NOT confuse with the task tool ([DELEGATION]): task_create only records a checklist item — it does NOT spawn an agent and no work gets done. To have another agent do work, use task (with category/subagent_type).`,
     args: {
-      subject: tool.schema.string().optional().describe("Task subject (required outside batch form)"),
-      description: tool.schema.string().optional().describe("Task description"),
-      activeForm: tool.schema.string().optional().describe("Active form (present continuous)"),
-      metadata: tool.schema
-        .record(tool.schema.string(), tool.schema.unknown())
+      subject: z.string().optional().describe("Task subject (required outside batch form)"),
+      description: z.string().optional().describe("Task description"),
+      activeForm: z.string().optional().describe("Active form (present continuous)"),
+      metadata: z
+        .record(z.string(), z.unknown())
         .optional()
         .describe("Task metadata"),
-      blockedBy: tool.schema
-        .array(tool.schema.string())
+      blockedBy: z
+        .array(z.string())
         .optional()
         .describe("Task IDs blocking this task"),
-      blocks: tool.schema
-        .array(tool.schema.string())
+      blocks: z
+        .array(z.string())
         .optional()
         .describe("Task IDs this task blocks"),
-      repoURL: tool.schema.string().optional().describe("Repository URL"),
-      parentID: tool.schema.string().optional().describe("Parent task ID"),
-      priority: tool.schema
+      repoURL: z.string().optional().describe("Repository URL"),
+      parentID: z.string().optional().describe("Parent task ID"),
+      priority: z
         .enum(["low", "medium", "high"])
         .optional()
         .describe("Importance marker stored with the task; no reader acts on it yet"),
-      items: tool.schema
+      items: z
         .array(
-          tool.schema.object({
-            subject: tool.schema.string(),
-            description: tool.schema.string().optional(),
-            activeForm: tool.schema.string().optional(),
-            metadata: tool.schema.record(tool.schema.string(), tool.schema.unknown()).optional(),
-            blockedBy: tool.schema.array(tool.schema.string()).optional(),
-            blocks: tool.schema.array(tool.schema.string()).optional(),
-            repoURL: tool.schema.string().optional(),
-            parentID: tool.schema.string().optional(),
-            priority: tool.schema.enum(["low", "medium", "high"]).optional(),
+          z.object({
+            subject: z.string(),
+            description: z.string().optional(),
+            activeForm: z.string().optional(),
+            metadata: z.record(z.string(), z.unknown()).optional(),
+            blockedBy: z.array(z.string()).optional(),
+            blocks: z.array(z.string()).optional(),
+            repoURL: z.string().optional(),
+            parentID: z.string().optional(),
+            priority: z.enum(["low", "medium", "high"]).optional(),
           }),
         )
         .optional()
@@ -134,7 +134,7 @@ function parseCreateArgs(args: Record<string, unknown>): ParseOutcome {
 async function handleCreate(
   args: Record<string, unknown>,
   config: Partial<MatrixxConfig>,
-  ctx: PluginInput | undefined,
+  ctx: MatrixxContext | undefined,
   context: { sessionID: string },
 ): Promise<string> {
   try {

@@ -3,7 +3,7 @@ import type { MatrixxConfig } from "../../src/config"
 import type { DomainHooks } from "../../src/plugin/setup-domains"
 import { getSessionModel } from "../../src/features/session-state/state"
 import { createChatMessageHandler } from "../../src/plugin/chat-message"
-import type { PluginContext } from "../../src/plugin/types"
+import type { MatrixxContext } from "../../src/plugin/context"
 
 type ChatMessagePart = { type: string; text?: string; [key: string]: unknown }
 type ChatMessageHandlerOutput = { message: Record<string, unknown>; parts: ChatMessagePart[] }
@@ -14,7 +14,7 @@ function createMockHandlerArgs(overrides?: {
 }) {
   const appliedSessions: string[] = []
   return {
-    ctx: { client: { tui: { showToast: async () => {} } } } as unknown as PluginContext,
+    ctx: { client: { tui: { showToast: async () => {} } } } as unknown as MatrixxContext,
     pluginConfig: (overrides?.pluginConfig ?? {}) as MatrixxConfig,
     firstMessageVariantGate: {
       shouldOverride: () => overrides?.shouldOverride ?? false,

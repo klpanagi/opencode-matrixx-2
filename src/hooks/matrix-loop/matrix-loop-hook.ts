@@ -1,12 +1,12 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { V2Event } from "../../plugin/context"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { getTranscriptPath as getDefaultTranscriptPath } from "../../shared/transcript-path"
 import { createLoopSessionRecovery } from "./loop-session-recovery"
 import { createLoopStateController } from "./loop-state-controller"
 import { createMatrixLoopEventHandler } from "./matrix-loop-event-handler"
 import type { MatrixLoopOptions, MatrixLoopState } from "./types"
-
 export interface MatrixLoopHook {
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
   startLoop: (
     sessionID: string,
     prompt: string,
@@ -19,7 +19,7 @@ export interface MatrixLoopHook {
 const DEFAULT_API_TIMEOUT = 5000 as const
 
 export function createMatrixLoopHook(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   options?: MatrixLoopOptions
 ): MatrixLoopHook {
   const config = options?.config

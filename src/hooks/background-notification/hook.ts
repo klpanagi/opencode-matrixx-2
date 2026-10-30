@@ -1,13 +1,5 @@
 import type { BackgroundManager } from "../../features/background-agent"
-
-interface Event {
-  type: string
-  properties?: Record<string, unknown>
-}
-
-interface EventInput {
-  event: Event
-}
+import type { V2Event } from "../../plugin/context"
 
 /**
  * Background notification hook - handles event routing to BackgroundManager.
@@ -16,7 +8,7 @@ interface EventInput {
  * from the manager, so this hook only needs to handle event routing.
  */
 export function createBackgroundNotificationHook(manager: BackgroundManager) {
-  const eventHandler = async ({ event }: EventInput) => {
+  const eventHandler = async (event: V2Event) => {
     manager.handleEvent(event)
   }
 

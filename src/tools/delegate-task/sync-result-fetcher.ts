@@ -1,12 +1,14 @@
-import { normalizeSDKResponse } from "../../shared"
-import type { SessionMessage } from "./executor-types"
-import type { OpencodeClient } from "./types"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
+import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
+import type { NativeClient } from "./types"
 
 /**
  * Extract all text (text + reasoning parts) from a session message.
  */
 function messageText(msg: SessionMessage): string {
-  const textParts = msg.parts?.filter((p) => p.type === "text" || p.type === "reasoning") ?? []
+  const textParts = contentOf(msg).filter((p) => p.type === "text" || p.type === "reasoning")
   return textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
 }
 
@@ -42,7 +44,7 @@ function extractTaggedDeliverable(
   // Search newest-first for tagged content
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
-    if (msg.info?.role !== "assistant") continue
+    if (!isAssistant(msg)) continue
     const text = messageText(msg)
     const startIdx = text.indexOf(tagStart)
     if (startIdx === -1) continue
@@ -62,29 +64,19 @@ type FetchSyncResultOptions = {
 }
 
 export async function fetchSyncResult(
-  client: OpencodeClient,
+  client: NativeClient,
   sessionID: string,
   anchorMessageCount?: number,
   options?: FetchSyncResultOptions
 ): Promise<{ ok: true; textContent: string } | { ok: false; error: string }> {
-  const messagesResult = await client.session.messages({
-    path: { id: sessionID },
-  })
-
-  if ((messagesResult as { error?: unknown }).error) {
-    return { ok: false, error: `Error fetching result: ${(messagesResult as { error: unknown }).error}\n\nSession ID: ${sessionID}` }
-  }
-
-  const messages = normalizeSDKResponse(messagesResult, [] as SessionMessage[], {
-    preferResponseOnMissingData: true,
-  })
+  const messages = await fetchSessionMessages(client, sessionID)
 
   const messagesAfterAnchor = anchorMessageCount !== undefined ? messages.slice(anchorMessageCount) : messages
 
   if (anchorMessageCount !== undefined && messagesAfterAnchor.length === 0) {
     return {
       ok: false,
-      error: `Session completed but no new response was generated. The model may have failed silently.\n\nSession ID: ${sessionID}`,
+      error: `Session completed with no new messages after the anchor. Observed: ${describeMessageShape(messages)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
     }
   }
 
@@ -99,19 +91,22 @@ export async function fetchSyncResult(
   }
 
   const assistantMessages = messagesAfterAnchor
-    .filter((m) => m.info?.role === "assistant")
-    .sort((a, b) => (b.info?.time?.created ?? 0) - (a.info?.time?.created ?? 0))
+    .filter((m) => isAssistant(m))
+    .sort((a, b) => timeOf(b) - timeOf(a))
   const lastMessage = assistantMessages[0]
 
   if (anchorMessageCount !== undefined && !lastMessage) {
     return {
       ok: false,
-      error: `Session completed but no new response was generated. The model may have failed silently.\n\nSession ID: ${sessionID}`,
+      error: `Session completed with no new assistant message. Observed: ${describeMessageShape(messagesAfterAnchor)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
     }
   }
 
   if (!lastMessage) {
-    return { ok: false, error: `No assistant response found.\n\nSession ID: ${sessionID}` }
+    return {
+      ok: false,
+      error: `No assistant response found. Observed: ${describeMessageShape(messages)}. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
+    }
   }
 
   const textContent = options?.finalTextOnly

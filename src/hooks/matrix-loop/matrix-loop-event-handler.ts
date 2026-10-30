@@ -1,5 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { withTimeout } from "../../shared/with-timeout"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { detectCompletionInSessionMessages, detectCompletionInTranscript } from "./completion-promise-detector"
@@ -14,7 +16,7 @@ type LoopStateController = { getState: () => MatrixLoopState | null; clear: () =
 type MatrixLoopEventHandlerOptions = { directory: string; apiTimeoutMs: number; getTranscriptPath: (sessionID: string) => string | undefined; checkSessionExists?: MatrixLoopOptions["checkSessionExists"]; sessionRecovery: SessionRecovery; loopState: LoopStateController; verification?: MatrixLoopOptions["verification"] }
 
 async function handleVerificationFailure(
-	ctx: PluginInput,
+	ctx: NativePluginContext,
 	options: MatrixLoopEventHandlerOptions,
 	state: MatrixLoopState,
 	sessionID: string,
@@ -41,11 +43,12 @@ async function handleVerificationFailure(
 	}
 }
 
-export function createMatrixLoopEventHandler(ctx: PluginInput, options: MatrixLoopEventHandlerOptions) {
+import type { V2Event } from "../../plugin/context"
+export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: MatrixLoopEventHandlerOptions) {
 	const inFlightSessions = new Set<string>()
 
-	return async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-		const props = event.properties as Record<string, unknown> | undefined
+	return async (event: V2Event): Promise<void> => {
+		const props = event.data as Record<string, unknown> | undefined
 
 		if (event.type === "session.idle") {
 			const sessionID = props?.sessionID as string | undefined
@@ -82,27 +85,14 @@ export function createMatrixLoopEventHandler(ctx: PluginInput, options: MatrixLo
 				const transcriptPath = options.getTranscriptPath(sessionID)
 				const completionViaTranscript = detectCompletionInTranscript(transcriptPath, state.completion_promise)
 
-				// Cache session.messages response so detector AND verifier can share it (H4)
+				// Cache the session context response so detector AND verifier can share it (H4)
 				let messages: OpenCodeSessionMessage[] | undefined
 				if (!completionViaTranscript) {
 					try {
-						const response = await withTimeout(
-							ctx.client.session.messages({
-								path: { id: sessionID },
-								query: { directory: options.directory },
-							}),
+						messages = await withTimeout(
+							fetchSessionMessages(ctx, sessionID),
 							options.apiTimeoutMs,
 						)
-						const messagesResponse: unknown = response
-						const responseData =
-							typeof messagesResponse === "object" && messagesResponse !== null && "data" in messagesResponse
-								? (messagesResponse as { data?: unknown }).data
-								: undefined
-						messages = Array.isArray(messagesResponse)
-							? (messagesResponse as OpenCodeSessionMessage[])
-							: Array.isArray(responseData)
-								? (responseData as OpenCodeSessionMessage[])
-								: []
 					} catch (err) {
 						setTimeout(() => {
 							log(`[${HOOK_NAME}] Session messages fetch failed`, { sessionID, error: String(err) })
@@ -130,7 +120,7 @@ export function createMatrixLoopEventHandler(ctx: PluginInput, options: MatrixLo
 
 						if (failedCount >= maxRetries) {
 							options.loopState.clear()
-							await ctx.client.tui.showToast({ body: { title: "Matrix Loop Complete", message: `Force-completed after ${failedCount} failed verification(s)`, variant: "warning", duration: 5000 } }).catch((err) => { log("[matrix-loop] Force complete toast failed:", err) })
+							notify("warn", `Matrix Loop Complete: Force-completed after ${failedCount} failed verification(s)`)
 							return
 						}
 
@@ -151,14 +141,14 @@ export function createMatrixLoopEventHandler(ctx: PluginInput, options: MatrixLo
 					options.loopState.clear()
 					const title = state.ultrawork ? "ULTRAWORK LOOP COMPLETE!" : "Matrix Loop Complete!"
 					const message = state.ultrawork ? `JUST ULW ULW! Task completed after ${state.iteration} iteration(s)` : `Task completed after ${state.iteration} iteration(s)`
-					await ctx.client.tui.showToast({ body: { title, message, variant: "success", duration: 5000 } }).catch((err) => { log("[matrix-loop] Loop complete toast failed:", err) })
+					notify("success", `${title}: ${message}`)
 					return
 				}
 
 				if (state.iteration >= state.max_iterations) {
 					log(`[${HOOK_NAME}] Max iterations reached`, { sessionID, iteration: state.iteration, max: state.max_iterations })
 					options.loopState.clear()
-					await ctx.client.tui.showToast({ body: { title: "Matrix Loop Stopped", message: `Max iterations (${state.max_iterations}) reached without completion`, variant: "warning", duration: 5000 } }).catch((err) => { log("[matrix-loop] Max iterations toast failed:", err) })
+					notify("warn", `Matrix Loop Stopped: Max iterations (${state.max_iterations}) reached without completion`)
 					return
 				}
 
@@ -168,7 +158,7 @@ export function createMatrixLoopEventHandler(ctx: PluginInput, options: MatrixLo
 					return
 				}
 				log(`[${HOOK_NAME}] Continuing loop`, { sessionID, iteration: newState.iteration, max: newState.max_iterations })
-				await ctx.client.tui.showToast({ body: { title: "Matrix Loop", message: `Iteration ${newState.iteration}/${newState.max_iterations}`, variant: "info", duration: 2000 } }).catch((err) => { log("[matrix-loop] Iteration toast failed:", err) })
+				notify("info", `Matrix Loop: Iteration ${newState.iteration}/${newState.max_iterations}`)
 
 				try {
 					await injectContinuationPrompt(ctx, { sessionID, prompt: buildContinuationPrompt(newState), directory: options.directory, apiTimeoutMs: options.apiTimeoutMs })

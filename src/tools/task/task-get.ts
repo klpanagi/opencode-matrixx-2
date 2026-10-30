@@ -1,9 +1,10 @@
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import type { MatrixxContext } from "../../plugin/context"
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { TASK_ID_PATTERN } from "./constants"
 import { TaskGetInputSchema, TaskObjectSchema } from "./types"
 
@@ -12,8 +13,8 @@ function parseTaskId(id: string): string | null {
   return id
 }
 
-export function createTaskGetTool(config: Partial<MatrixxConfig>, ctx?: PluginInput): ToolDefinition {
-  return tool({
+export function createTaskGetTool(config: Partial<MatrixxConfig>, ctx?: MatrixxContext): MatrixxToolDefinition {
+  return defineTool("task_get", {
     description: `[TRACKING — local progress record only. Spawns nothing, executes nothing.]
 Retrieve a task by ID.
 
@@ -21,7 +22,7 @@ Returns the full task object including all fields: id, subject, description, sta
 
 Returns null if the task does not exist or the file is invalid.`,
     args: {
-      id: tool.schema.string().describe("Task ID to retrieve (format: T-{uuid})"),
+      id: z.string().describe("Task ID to retrieve (format: T-{uuid})"),
     },
     execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
       try {

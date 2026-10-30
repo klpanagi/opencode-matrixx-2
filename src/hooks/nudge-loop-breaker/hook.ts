@@ -1,5 +1,6 @@
-import type { PluginContext } from "../../plugin/types"
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import {
   DEFAULT_COOLDOWN_MS,
   DEFAULT_LOOP_THRESHOLD,
@@ -24,9 +25,7 @@ export interface NudgeLoopBreakerOptions {
   onCorrective?: (sessionID: string, backoff: number) => void
 }
 
-type EventInput = { event: { type: string; properties?: unknown } }
-
-export type NudgeLoopBreakerHook = { event: (input: EventInput) => Promise<void> }
+export type NudgeLoopBreakerHook = { event: (event: V2Event) => Promise<void> }
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value === "object" && value !== null && !Array.isArray(value)) {
@@ -58,7 +57,7 @@ function isResetEvent(type: string, props: Record<string, unknown>): boolean {
 }
 
 export function createNudgeLoopBreakerHook(
-  ctx: PluginContext,
+  ctx: NativePluginContext,
   options: NudgeLoopBreakerOptions = {},
 ): NudgeLoopBreakerHook {
   const threshold = options.threshold ?? DEFAULT_LOOP_THRESHOLD
@@ -72,28 +71,23 @@ export function createNudgeLoopBreakerHook(
     onCorrective?.(sessionID, backoff)
 
     if (state.correctiveSent || sessionID === "unknown") return
-    const prompt = ctx.client?.session?.prompt
-    if (typeof prompt !== "function") return
     state.correctiveSent = true
-    prompt({
-      path: { id: sessionID },
-      body: {
-        parts: [
-          {
-            type: "text",
-            text: "Repetition detected: stop echoing the prune/compress nudge. Continue the task or run the compress tool with real message IDs.",
-          },
-        ],
-      },
-      query: { directory: ctx.directory },
+    ctx.session.prompt({
+      sessionID,
+      parts: [
+        {
+          type: "text",
+          text: "Repetition detected: stop echoing the prune/compress nudge. Continue the task or run the compress tool with real message IDs.",
+        },
+      ],
     }).catch((error: unknown) => {
       log("[nudge-loop-breaker] corrective prompt failed", { error })
     })
   }
 
   return {
-    event: async ({ event }) => {
-      const props = asRecord(event.properties)
+    event: async (event: V2Event) => {
+      const props = asRecord(event.data)
       const sessionID = readString(props, SESSION_ID_KEYS) ?? "unknown"
       const state = sessions.get(sessionID) ?? createNudgeLoopState()
       sessions.set(sessionID, state)

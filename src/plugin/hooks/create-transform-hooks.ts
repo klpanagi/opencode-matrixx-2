@@ -18,7 +18,7 @@ import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer/hoo
 import { createDomainKeywordDetectorHook } from "../../hooks/domain-keyword-detector"
 import { createInputSecretGuardHook } from "../../hooks/input-secret-guard/hook"
 import { safeCreateHook } from "../../shared/safe-create-hook"
-import type { PluginContext } from "../types"
+import type { NativePluginContext } from "../../shared/session-context-source"
 
 export type TransformHooks = {
   inputSecretGuard: ReturnType<typeof createInputSecretGuardHook> | null
@@ -36,7 +36,7 @@ export type TransformHooks = {
 }
 
 export function createTransformHooks(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   isHookEnabled: (hookName: string) => boolean
   safeHookEnabled?: boolean

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { createBackgroundOutput } from "../../../src/tools/background-task/create-background-output"
 
@@ -20,9 +20,9 @@ describe("createBackgroundOutput", () => {
 
   const mockClient = {
     session: {
-      messages: mock(() => Promise.resolve({ data: [] })),
+      context: mock(() => Promise.resolve({ messages: [] })),
     },
-  } as unknown as PluginInput["client"]
+  } as unknown as MatrixxContext["client"]
 
   const tool = createBackgroundOutput(mockManager, mockClient)
 

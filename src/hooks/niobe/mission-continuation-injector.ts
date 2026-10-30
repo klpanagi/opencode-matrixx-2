@@ -1,14 +1,14 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { BackgroundManager } from "../../features/background-agent"
 import { log } from "../../shared/logger"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { HOOK_NAME } from "./hook-name"
 import { resolveRecentModelForSession } from "./recent-model-resolver"
 import { MISSION_CONTINUATION_PROMPT } from "./system-reminder-templates"
 import type { SessionState } from "./types"
 
 export async function injectMissionContinuation(input: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   sessionID: string
   planName: string
   remaining: number
@@ -46,14 +46,11 @@ export async function injectMissionContinuation(input: {
 
     const model = await resolveRecentModelForSession(ctx, sessionID)
 
-    await promptWithModelSuggestionRetry(ctx.client, {
-      path: { id: sessionID },
-      body: {
-        agent: agent ?? "niobe",
-        ...(model !== undefined ? { model } : {}),
-        parts: [{ type: "text", text: prompt }],
-      },
-      query: { directory: ctx.directory },
+    await promptNativeWithModelSuggestionRetry(ctx.session, {
+      sessionID,
+      agent: agent ?? "niobe",
+      ...(model !== undefined ? { model } : {}),
+      parts: [{ type: "text", text: prompt }],
     })
 
     sessionState.promptFailureCount = 0

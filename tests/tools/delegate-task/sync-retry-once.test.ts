@@ -9,19 +9,19 @@ const mockRegisterSubagentSession = mock(() => {})
 
 mock.module("../../../src/features/session-state/state", () => ({
   registerSubagentSession: mockRegisterSubagentSession,
-  unregisterSubagentSession: mockUnregisterSubagentSession,
+  unregisterSubagentSession: mockUnregisterSubagentSession
 }))
 
 mock.module("../../../src/features/task-toast-manager", () => ({
-  getTaskToastManager: mock(() => null),
+  getTaskToastManager: mock(() => null)
 }))
 
 mock.module("../../../src/features/tool-metadata-store", () => ({
-  storeToolMetadata: mock(() => {}),
+  storeToolMetadata: mock(() => {})
 }))
 
 mock.module("../../../src/shared/logger", () => ({
-  log: mock(() => {}),
+  log: mock(() => {})
 }))
 
 import type { ExecutorContext, ParentContext } from "../../../src/tools/delegate-task/executor-types"
@@ -36,7 +36,7 @@ const defaultArgs: DelegateTaskArgs = {
   description: "test task",
   prompt: "do something",
   run_in_background: false,
-  load_skills: [],
+  load_skills: []
 }
 
 function buildHarness(messagesImpl: () => Promise<unknown>) {
@@ -45,18 +45,18 @@ function buildHarness(messagesImpl: () => Promise<unknown>) {
   const mockMessages = mock(messagesImpl)
   const client = {
     session: {
-      abort: mockAbort,
+      interrupt: mockAbort,
       status: mock(() => Promise.resolve({})),
-      messages: mockMessages,
+      context: mockMessages
     },
-    config: { get: mock(() => Promise.resolve({})) },
+    config: { get: mock(() => Promise.resolve({})) }
   }
 
   const ctx = {
     sessionID: "parent-session",
     callID: "call-1",
     metadata: mock(() => Promise.resolve()),
-    abort: {},
+    abort: {}
   } as unknown as ToolContextWithMetadata
 
   const executorCtx = {
@@ -64,14 +64,14 @@ function buildHarness(messagesImpl: () => Promise<unknown>) {
     directory: "/tmp",
     manager: {
       getTasksByParentSession: mock(() => []),
-      hasInFlightNotificationForParent: mock(() => false),
+      hasInFlightNotificationForParent: mock(() => false)
     },
-    onSyncSessionCreated: undefined,
+    onSyncSessionCreated: undefined
   } as unknown as ExecutorContext
 
   const parentContext = {
     sessionID: "parent-session",
-    messageID: "msg-1",
+    messageID: "msg-1"
   } as ParentContext
 
   const sendSyncPrompt = mock(() => Promise.resolve(null))
@@ -83,7 +83,7 @@ function buildHarness(messagesImpl: () => Promise<unknown>) {
     ),
     sendSyncPrompt,
     pollSyncSession,
-    fetchSyncResult,
+    fetchSyncResult
   } as unknown as SyncTaskDeps & {
     sendSyncPrompt: ReturnType<typeof mock>
     pollSyncSession: ReturnType<typeof mock>
@@ -113,7 +113,7 @@ describe("executeSyncTask - retry-once-on-empty", () => {
 
   test("(A) success but 0 messages -> exactly 1 retry happens, then structured error", async () => {
     //#given - pipeline reports success (null promptError) but the session stays empty
-    const h = buildHarness(async () => ({ data: [] }))
+    const h = buildHarness(async () => ({ messages: [] }))
 
     //#when
     const result = await executeSyncTask(
@@ -137,13 +137,13 @@ describe("executeSyncTask - retry-once-on-empty", () => {
   test("(B) success with >=1 messages -> NO retry", async () => {
     //#given - session has a user + assistant message, so no empty-response retry is needed
     const h = buildHarness(async () => ({
-      data: [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+      messages: [
+        { id: "msg_001", type: "user", time: { created: 1000 } },
         {
-          info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-          parts: [{ type: "text", text: "Hello" }],
+          id: "msg_002", type: "assistant", time: { created: 2000 },
+          content: [{ type: "text", text: "Hello" }]
         },
-      ],
+      ]
     }))
 
     //#when
@@ -160,7 +160,7 @@ describe("executeSyncTask - retry-once-on-empty", () => {
 
   test("(C) already-retried (second consecutive empty) -> no second retry", async () => {
     //#given - session stays empty across both attempts
-    const h = buildHarness(async () => ({ data: [] }))
+    const h = buildHarness(async () => ({ messages: [] }))
 
     //#when
     const result = await executeSyncTask(

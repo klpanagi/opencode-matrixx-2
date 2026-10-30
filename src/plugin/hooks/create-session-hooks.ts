@@ -34,8 +34,8 @@ import {
   resolveRtkEnforcement,
 } from "../../shared"
 import { bindSafeHook } from "../../shared/safe-create-hook"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { sessionExists } from "../../tools"
-import type { PluginContext } from "../types"
 
 let memoryFlatAliasWarned = false
 
@@ -63,7 +63,7 @@ export type SessionHooks = {
 }
 
 export function createSessionHooks(args: {
-  ctx: PluginContext
+  ctx: NativePluginContext
   pluginConfig: MatrixxConfig
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
@@ -14,7 +14,7 @@ const TASK_STORE_TEST_ROOT = join(tmpdir(), "matrixx-session-notification-tests"
 describe("session-notification", () => {
   let notificationCalls: string[]
 
-  function createMockPluginInput(directory = "/tmp/test") {
+  function createMockMatrixxContext(directory = "/tmp/test") {
     return {
       $: async (cmd: TemplateStringsArray | string, ...values: unknown[]) => {
         // given - track notification commands (osascript, notify-send, powershell)
@@ -33,7 +33,7 @@ describe("session-notification", () => {
         },
       },
       directory,
-    } as unknown as PluginInput
+    } as unknown as MatrixxContext
   }
 
   /**
@@ -119,16 +119,14 @@ describe("session-notification", () => {
     const subagentSessionID = "subagent-123"
     subagentSessions.add(subagentSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 0,
     })
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // Wait for any pending timers
@@ -144,16 +142,14 @@ describe("session-notification", () => {
     const otherSessionID = "other-456"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 0,
     })
 
     // when - non-main session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: otherSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: otherSessionID },
     })
 
     // Wait for any pending timers
@@ -168,17 +164,15 @@ describe("session-notification", () => {
     const mainSessionID = "main-789"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 10,
       skipIfIncompleteTodos: false,
     })
 
     // when - main session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for idle confirmation delay + buffer
@@ -195,16 +189,14 @@ describe("session-notification", () => {
     setMainSession(mainSessionID)
     subagentSessions.add(subagentSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 0,
     })
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // Wait for any pending timers
@@ -222,24 +214,20 @@ describe("session-notification", () => {
     setMainSession(mainSessionID)
     subagentSessions.add(subagentSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 0,
     })
 
     // when - subagent session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: subagentSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: subagentSessionID },
     })
 
     // when - unknown session goes idle (not main, not in subagentSessions)
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: unknownSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: unknownSessionID },
     })
 
     // Wait for any pending timers
@@ -254,25 +242,21 @@ describe("session-notification", () => {
     const mainSessionID = "main-cancel"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 100, // Long delay
       skipIfIncompleteTodos: false,
     })
 
     // when - session goes idle
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // when - activity happens before delay completes
     await hook({
-      event: {
-        type: "tool.execute.before",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "tool.execute.before",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for original delay to pass
@@ -284,15 +268,13 @@ describe("session-notification", () => {
 
   test("should handle session.created event without notification", async () => {
     // given - a new session is created
-    const hook = createSessionNotification(createMockPluginInput(), {})
+    const hook = createSessionNotification(createMockMatrixxContext(), {})
 
     // when - session.created event fires
     await hook({
-      event: {
-        type: "session.created",
-        properties: {
-          info: { id: "new-session", title: "Test Session" },
-        },
+      type: "session.created",
+      data: {
+        info: { id: "new-session", title: "Test Session" },
       },
     })
 
@@ -305,15 +287,13 @@ describe("session-notification", () => {
 
   test("should handle session.deleted event and cleanup state", async () => {
     // given - a session exists
-    const hook = createSessionNotification(createMockPluginInput(), {})
+    const hook = createSessionNotification(createMockMatrixxContext(), {})
 
     // when - session.deleted event fires
     await hook({
-      event: {
-        type: "session.deleted",
-        properties: {
-          info: { id: "deleted-session" },
-        },
+      type: "session.deleted",
+      data: {
+        info: { id: "deleted-session" },
       },
     })
 
@@ -329,25 +309,21 @@ describe("session-notification", () => {
     const mainSessionID = "main-message"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 50,
       skipIfIncompleteTodos: false,
     })
 
     // when - session goes idle, then message.updated fires
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     await hook({
-      event: {
-        type: "message.updated",
-        properties: {
-          info: { sessionID: mainSessionID, role: "user", finish: false },
-        },
+      type: "message.updated",
+      data: {
+        info: { sessionID: mainSessionID, role: "user", finish: false },
       },
     })
 
@@ -363,24 +339,20 @@ describe("session-notification", () => {
     const mainSessionID = "main-tool"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 50,
       skipIfIncompleteTodos: false,
     })
 
     // when - session goes idle, then tool.execute.before fires
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     await hook({
-      event: {
-        type: "tool.execute.before",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "tool.execute.before",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for idle delay to pass
@@ -395,27 +367,23 @@ describe("session-notification", () => {
     const mainSessionID = "main-dup"
     setMainSession(mainSessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(), {
+    const hook = createSessionNotification(createMockMatrixxContext(), {
       idleConfirmationDelay: 10,
       skipIfIncompleteTodos: false,
     })
 
     // when - session goes idle twice
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for first notification
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID: mainSessionID },
-      },
+      type: "session.idle",
+      data: { sessionID: mainSessionID },
     })
 
     // Wait for second potential notification
@@ -433,16 +401,14 @@ describe("session-notification", () => {
     const sessionID = "ses_target"
     setMainSession(sessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(root), {
+    const hook = createSessionNotification(createMockMatrixxContext(root), {
       idleConfirmationDelay: 10,
     })
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -458,16 +424,14 @@ describe("session-notification", () => {
     const sessionID = "ses_target"
     setMainSession(sessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(root), {
+    const hook = createSessionNotification(createMockMatrixxContext(root), {
       idleConfirmationDelay: 10,
     })
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -483,16 +447,14 @@ describe("session-notification", () => {
     const sessionID = "ses_target"
     setMainSession(sessionID)
 
-    const hook = createSessionNotification(createMockPluginInput(root), {
+    const hook = createSessionNotification(createMockMatrixxContext(root), {
       idleConfirmationDelay: 10,
     })
 
     //#when
     await hook({
-      event: {
-        type: "session.idle",
-        properties: { sessionID },
-      },
+      type: "session.idle",
+      data: { sessionID },
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -517,14 +479,14 @@ describe("session-notification", () => {
     }
 
     const hook = createSessionNotification(
-      createMockPluginInput(projectRoot),
+      createMockMatrixxContext(projectRoot),
       { idleConfirmationDelay: 10 },
       pluginConfig
     )
 
     //#when
     await hook({
-      event: { type: "session.idle", properties: { sessionID } },
+       type: "session.idle", data: { sessionID } ,
     })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -553,14 +515,14 @@ describe("session-notification", () => {
 
     try {
       const hook = createSessionNotification(
-        createMockPluginInput(projectRoot),
+        createMockMatrixxContext(projectRoot),
         { idleConfirmationDelay: 10 },
         pluginConfig
       )
 
       //#when
       await hook({
-        event: { type: "session.idle", properties: { sessionID } },
+         type: "session.idle", data: { sessionID } ,
       })
       await new Promise((resolve) => setTimeout(resolve, 100))
 
@@ -584,13 +546,13 @@ describe("session-notification", () => {
     }
 
     const hook = createSessionNotification(
-      createMockPluginInput(projectRoot),
+      createMockMatrixxContext(projectRoot),
       { idleConfirmationDelay: 10 },
       pluginConfig
     )
 
     //#when
-    await hook({ event: { type: "session.idle", properties: { sessionID } } })
+    await hook({  type: "session.idle", data: { sessionID }  })
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     //#then
@@ -609,14 +571,14 @@ describe("session-notification", () => {
     }
 
     const hook = createSessionNotification(
-      createMockPluginInput(projectRoot),
+      createMockMatrixxContext(projectRoot),
       { idleConfirmationDelay: 10 },
       pluginConfig
     )
 
     //#when
     await expect(
-      hook({ event: { type: "session.idle", properties: { sessionID } } })
+      hook({  type: "session.idle", data: { sessionID }  })
     ).resolves.toBeUndefined()
     await new Promise((resolve) => setTimeout(resolve, 100))
 

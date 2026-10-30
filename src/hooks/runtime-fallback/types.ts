@@ -1,37 +1,14 @@
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../config"
-
+import type { V2Event } from "../../plugin/context"
+import type { SessionDomainLike } from "../../shared/session-context-source"
 export interface RuntimeFallbackInterval {
   unref: () => void
 }
 
 export type RuntimeFallbackTimeout = object | number
 
-export interface RuntimeFallbackPluginInput {
-  client: {
-    session: {
-      abort: (input: { path: { id: string } }) => Promise<unknown>
-      messages: (input: { path: { id: string }; query: { directory: string } }) => Promise<unknown>
-      promptAsync: (input: {
-        path: { id: string }
-        body: {
-          agent?: string
-          model: { providerID: string; modelID: string }
-          parts: Array<{ type: "text"; text: string }>
-        }
-        query: { directory: string }
-      }) => Promise<unknown>
-    }
-    tui: {
-      showToast: (input: {
-        body: {
-          title: string
-          message: string
-          variant: "success" | "error" | "info" | "warning"
-          duration: number
-        }
-      }) => Promise<unknown>
-    }
-  }
+export interface RuntimeFallbackContext {
+  session: SessionDomainLike
   directory: string
 }
 
@@ -58,7 +35,7 @@ export interface RuntimeFallbackOptions {
 }
 
 export interface RuntimeFallbackHook {
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
   "chat.message"?: (
     input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
     output: { message: { model?: { providerID: string; modelID: string } }; parts?: Array<{ type: string; text?: string }> }
@@ -67,7 +44,7 @@ export interface RuntimeFallbackHook {
 }
 
 export interface HookDeps {
-  ctx: RuntimeFallbackPluginInput
+  ctx: RuntimeFallbackContext
   config: Required<RuntimeFallbackConfig>
   options: RuntimeFallbackOptions | undefined
   pluginConfig: MatrixxConfig | undefined

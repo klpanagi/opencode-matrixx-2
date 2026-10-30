@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import type { ToolContext } from "@opencode-ai/plugin/tool";
+import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
 import type { LoadedHub } from "../../../src/features/knowledge-hub/loader";
 import { createKnowledgeHubConfirmTool } from "../../../src/tools/knowledge-hub-confirm/tools";
 import { approveHubWrite, clearHubWriteApprovals } from "../../../src/hooks/knowledge-hub-guard/approvals";
@@ -17,8 +17,8 @@ afterEach(() => {
   }
 });
 
-function makeCtx(directory: string): PluginInput {
-  return { directory, client: {} } as unknown as PluginInput;
+function makeCtx(directory: string): MatrixxContext {
+  return { directory, client: {} } as unknown as MatrixxContext;
 }
 
 function makeHubRoot(): string {
@@ -258,7 +258,7 @@ describe("hub write approvals", () => {
     const hook = createKnowledgeHubGuardHook(makeCtx(tmpdir()), { hubs: [makeHub(root)] });
     const target = path.join(root, "notes.md");
     const confirm = createKnowledgeHubConfirmTool(makeCtx(tmpdir()));
-    const context = { sessionID: "ses-e2e", directory: tmpdir() } as unknown as ToolContext;
+    const context = { sessionID: "ses-e2e", directory: tmpdir() } as unknown as MatrixxToolContext;
     //#when the user-approved path is confirmed
     const receipt = await confirm.execute({ path: target }, context);
     //#then the receipt names the path and the retry succeeds

@@ -1,16 +1,18 @@
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { ToolPermission } from "../../features/hook-message-injector"
 import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"
-import { normalizeSDKResponse, stateRootFromPluginContext } from "../../shared"
+import { stateRootFromPluginContext } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAwaitingUser } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { SessionMessage } from "../../shared/session-message"
 import { resolveTasksConfig } from "../../shared/task-system-gating"
 import { TaskObjectSchema } from "../../tools/task/types"
 import { isLastAssistantMessageAborted } from "./abort-detection"
@@ -28,8 +30,10 @@ import { getStaleAfterMs, isTaskStale } from "./staleness"
 import { dropSubtasksWithResolvedParent, filterTasksBySession, getIncompleteTasks } from "./todo"
 import type { MessageInfo, ResolvedMessageInfo } from "./types"
 
+type MessageWithInfo = SessionMessage & Partial<MessageInfo>
+
 export async function handleSessionIdle(args: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   sessionID: string
   sessionStateStore: SessionStateStore
   backgroundManager?: BackgroundManager
@@ -88,11 +92,7 @@ export async function handleSessionIdle(args: {
   }
 
   try {
-    const messagesResp = await ctx.client.session.messages({
-      path: { id: sessionID },
-      query: { directory: ctx.directory },
-    })
-    const messages = normalizeSDKResponse(messagesResp, [] as Array<{ info?: MessageInfo }>)
+    const messages = (await fetchSessionMessages(ctx, sessionID)) as MessageWithInfo[]
     if (isLastAssistantMessageAborted(messages)) {
       log(`[${HOOK_NAME}] Skipped: last assistant message was aborted (API fallback)`, { sessionID })
       return
@@ -199,12 +199,9 @@ export async function handleSessionIdle(args: {
   let resolvedInfo: ResolvedMessageInfo | undefined
   let hasCompactionMessage = false
   try {
-    const messagesResp = await ctx.client.session.messages({
-      path: { id: sessionID },
-    })
-    const messages = normalizeSDKResponse(messagesResp, [] as Array<{ info?: MessageInfo }>)
+    const messages = (await fetchSessionMessages(ctx, sessionID)) as MessageWithInfo[]
     for (let i = messages.length - 1; i >= 0; i--) {
-      const info = messages[i].info
+      const info = messages[i]
       if (info?.agent === "compaction") {
         hasCompactionMessage = true
         continue

@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { ContextCollector } from "../../../src/features/context-injector"
 import * as sessionState from "../../../src/features/session-state/state"
 import { _resetForTesting, clearSessionAgent, setMainSession, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
 import { createKeywordDetectorHook } from "../../../src/hooks/keyword-detector/hook"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 
 describe("keyword-detector message transform", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>
@@ -22,23 +23,18 @@ describe("keyword-detector message transform", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     getMainSessionSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
-  function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+  function createMockMatrixxContext() {
+    return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
   test("should prepend ultrawork message to text part", async () => {
     // given - a fresh ContextCollector and keyword-detector hook
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session-123"
     const output = {
       message: {} as Record<string, unknown>,
@@ -61,7 +57,7 @@ describe("keyword-detector message transform", () => {
     const collector = new ContextCollector()
     const sessionID = "search-test-session"
     getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "search for the bug" }],
@@ -81,7 +77,7 @@ describe("keyword-detector message transform", () => {
   test("should NOT transform when no keywords detected", async () => {
     // given - no keywords in message
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -112,20 +108,16 @@ describe("keyword-detector session filtering", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
-  function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
+  function createMockMatrixxContext(options: { toastCalls?: string[] } = {}) {
     const toastCalls = options.toastCalls ?? []
-    return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string } }) => {
-            toastCalls.push(opts.body.title)
-          },
-        },
-      },
-    } as unknown as PluginInput
+    setNotifySink((_level, message) => {
+      toastCalls.push(message)
+    })
+    return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
   test("should skip non-ultrawork keywords in non-main session (using mainSessionID check)", async () => {
@@ -134,7 +126,7 @@ describe("keyword-detector session filtering", () => {
     const subagentSessionID = "subagent-456"
     setMainSession(mainSessionID)
 
-    const hook = createKeywordDetectorHook(createMockPluginInput())
+    const hook = createKeywordDetectorHook(createMockMatrixxContext())
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "search mode 찾아줘" }],
@@ -158,7 +150,7 @@ describe("keyword-detector session filtering", () => {
     setMainSession(mainSessionID)
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "ultrawork mode" }],
@@ -172,7 +164,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - ultrawork should still work (variant set to max)
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should allow all keywords in main session", async () => {
@@ -180,7 +172,7 @@ describe("keyword-detector session filtering", () => {
     const mainSessionID = "main-123"
     setMainSession(mainSessionID)
 
-    const hook = createKeywordDetectorHook(createMockPluginInput())
+    const hook = createKeywordDetectorHook(createMockMatrixxContext())
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "search mode 찾아줘" }],
@@ -203,7 +195,7 @@ describe("keyword-detector session filtering", () => {
     setMainSession(undefined)
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "ultrawork search" }],
@@ -217,7 +209,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - all keywords should work
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should not override existing variant", async () => {
@@ -225,7 +217,7 @@ describe("keyword-detector session filtering", () => {
     setMainSession("main-123")
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: { variant: "low" } as Record<string, unknown>,
       parts: [{ type: "text", text: "ultrawork mode" }],
@@ -239,7 +231,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - existing variant should remain
     expect(output.message.variant).toBe("low")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 })
 
@@ -257,20 +249,16 @@ describe("keyword-detector word boundary", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
-  function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
+  function createMockMatrixxContext(options: { toastCalls?: string[] } = {}) {
     const toastCalls = options.toastCalls ?? []
-    return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string } }) => {
-            toastCalls.push(opts.body.title)
-          },
-        },
-      },
-    } as unknown as PluginInput
+    setNotifySink((_level, message) => {
+      toastCalls.push(message)
+    })
+    return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
   test("should NOT trigger ultrawork on partial matches like 'StatefulWidget' containing 'ulw'", async () => {
@@ -278,7 +266,7 @@ describe("keyword-detector word boundary", () => {
     setMainSession(undefined)
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "refactor the StatefulWidget component" }],
@@ -292,7 +280,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls).not.toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
   })
 
   test("should trigger ultrawork on standalone 'ulw' keyword", async () => {
@@ -300,7 +288,7 @@ describe("keyword-detector word boundary", () => {
     setMainSession(undefined)
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "ulw do this task" }],
@@ -314,7 +302,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should be triggered
     expect(output.message.variant).toBe("max")
-    expect(toastCalls).toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
   })
 
   test("should NOT trigger ultrawork on file references containing 'ulw' substring", async () => {
@@ -322,7 +310,7 @@ describe("keyword-detector word boundary", () => {
     setMainSession(undefined)
 
     const toastCalls: string[] = []
-    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
       parts: [{ type: "text", text: "@StatefulWidget.tsx please review this file" }],
@@ -336,7 +324,7 @@ describe("keyword-detector word boundary", () => {
 
     // then - ultrawork should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls).not.toContain("Ultrawork Mode Activated")
+    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
   })
 })
 
@@ -354,23 +342,18 @@ describe("keyword-detector system-reminder filtering", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
-  function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+  function createMockMatrixxContext() {
+    return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
   test("should NOT trigger search mode from keywords inside <system-reminder> tags", async () => {
     // given - message contains search keywords only inside system-reminder tags
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -396,7 +379,7 @@ Please locate and scan the directory.
   test("should NOT trigger analyze mode from keywords inside <system-reminder> tags", async () => {
     // given - message contains analyze keywords only inside system-reminder tags
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -422,7 +405,7 @@ Research the implementation details.
   test("should detect keywords in user text even when system-reminder is present", async () => {
     // given - message contains both system-reminder and user search keyword
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -449,7 +432,7 @@ Please search for the bug in the code.`
   test("should handle multiple system-reminder tags in message", async () => {
     // given - message contains multiple system-reminder blocks with keywords
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -480,7 +463,7 @@ Second reminder with investigate and examine keywords.
   test("should handle case-insensitive system-reminder tags", async () => {
     // given - message contains system-reminder with different casing
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -504,7 +487,7 @@ System will search and find files.
   test("should handle multiline system-reminder content with search keywords", async () => {
     // given - system-reminder with multiline content containing various search keywords
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -545,23 +528,18 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   afterEach(() => {
     logSpy?.mockRestore()
+    resetNotifySink()
     _resetForTesting()
   })
 
-  function createMockPluginInput() {
-    return {
-      client: {
-        tui: {
-          showToast: async () => {},
-        },
-      },
-    } as unknown as PluginInput
+  function createMockMatrixxContext() {
+    return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
   test("should skip ultrawork injection when agent is oracle", async () => {
     // given - collector and oracle agent
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "oracle-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -582,7 +560,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should skip ultrawork injection when agent name contains 'planner'", async () => {
     // given - collector and agent with 'planner' in name
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "planner-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -602,7 +580,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should skip ultrawork injection when agent name contains 'plan' token", async () => {
     //#given - collector and agent name that includes a plan token
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "plan-agent-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -622,7 +600,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should use normal ultrawork message when agent is Morpheus", async () => {
     // given - collector and Morpheus agent
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "morpheus-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -644,7 +622,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should use normal ultrawork message when agent is undefined", async () => {
     // given - collector with no agent specified
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "no-agent-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -666,7 +644,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should skip ultrawork for oracle but inject for morpheus", async () => {
     // given - two sessions, one with oracle, one with morpheus
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
 
     // First session with oracle
     const oracleSessionID = "oracle-first"
@@ -700,7 +678,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should contain MANDATORY ACCEPTANCE CRITERIA DEFINITION section in default ultrawork message", async () => {
     // given - collector with no agent specified (default model)
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "ac-test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -725,7 +703,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should contain MANDATORY QA EXECUTION section in default ultrawork message", async () => {
     // given - collector with no agent specified (default model)
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "qa-test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -750,7 +728,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should contain acceptance criteria and QA sections in GPT ultrawork message", async () => {
     // given - collector with GPT model
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "gpt-qa-test-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -775,7 +753,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should use session state agent over stale input.agent (bug fix)", async () => {
     // given - same session, agent switched from oracle to morpheus in session state
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "same-session-agent-switch"
 
     // Simulate: session state was updated to morpheus (by index.ts updateSessionAgent)
@@ -804,7 +782,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   test("should fall back to input.agent when session state is empty and skip ultrawork for oracle", async () => {
     // given - no session state, only input.agent available
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "no-session-state"
 
     // Ensure no session state
@@ -829,7 +807,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   test("should inject DeepSeek ultrawork variant for deepseek model", async () => {
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "deepseek-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -850,7 +828,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   test("should inject Mimo ultrawork variant for mimo model", async () => {
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "mimo-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -870,7 +848,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   test("should inject Gemini ultrawork variant for gemini model", async () => {
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "gemini-session"
     const output = {
       message: {} as Record<string, unknown>,
@@ -890,7 +868,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   test("should inject GLM ultrawork variant for glm model", async () => {
     const collector = new ContextCollector()
-    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "glm-session"
     const output = {
       message: {} as Record<string, unknown>,

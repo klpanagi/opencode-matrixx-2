@@ -1,14 +1,15 @@
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
-import { formatDuration, getMessageDir, normalizeSDKResponse } from "../../shared"
+import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
 import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { setSessionTools } from "../../shared/session-state"
 import { getDeliverableTag, isPlanFamily } from "./constants"
-import type { ExecutorContext, SessionMessage } from "./executor-types"
+import type { ExecutorContext } from "./executor-types"
 import { type SyncContinuationDeps, syncContinuationDeps } from "./sync-continuation-deps"
-import { promptEnvelopeErrorOf, type SyncPromptV2Args } from "./sync-prompt-sender"
+import { promptEnvelopeErrorOf, type SyncPromptV2Args, toPromptRetryClient } from "./sync-prompt-sender"
 import { buildContinuationTitle } from "./task-title"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -40,15 +41,16 @@ export async function executeSyncContinuation(
 
   try {
     try {
-      const messagesResp = await client.session.messages({ path: { id: continuationID as string } })
-      const messages = normalizeSDKResponse(messagesResp, [] as SessionMessage[])
+      const messages = await fetchSessionMessages(client, continuationID as string)
       anchorMessageCount = messages.length
       for (let i = messages.length - 1; i >= 0; i--) {
-        const info = messages[i].info
-        if (info?.agent || info?.model || (info?.modelID && info?.providerID)) {
-          resumeAgent = info.agent
-          resumeModel = info.model ?? (info.providerID && info.modelID ? { providerID: info.providerID, modelID: info.modelID } : undefined)
-          resumeVariant = info.variant
+        const message = messages[i]
+        if (message.agent || message.model) {
+          resumeAgent = message.agent
+          resumeModel = message.model
+            ? { providerID: message.model.providerID, modelID: message.model.modelID }
+            : undefined
+          resumeVariant = message.model?.variant
           break
         }
       }
@@ -62,7 +64,7 @@ export async function executeSyncContinuation(
       resumeVariant = resumeMessage?.model?.variant
     }
 
-    const syncContMeta = {
+    const syncContMeta = jsonSafeMetadata({
       title: buildContinuationTitle(args.description),
       metadata: {
         prompt: args.prompt,
@@ -76,7 +78,7 @@ export async function executeSyncContinuation(
         sync: true,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(syncContMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, syncContMeta)
@@ -99,7 +101,7 @@ export async function executeSyncContinuation(
       parts: [{ type: "text", text: args.prompt }],
     }
     const settled: unknown = await promptWithModelSuggestionRetry(
-      client,
+      toPromptRetryClient(client),
       continuationPromptArgs as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1]
     )
     const envelopeError = promptEnvelopeErrorOf(settled)

@@ -4,12 +4,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { createNotepadListTool } from "../../../src/tools/notepad/notepad-list"
 
 const TEST_ABORT = new AbortController()
 
-function testContext(testDir: string): ToolContext {
+function testContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-notepad-list",
     messageID: "test-message-notepad-list",
@@ -19,7 +19,7 @@ function testContext(testDir: string): ToolContext {
     worktree: testDir,
     metadata: () => {},
     ask: async () => {},
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 describe("notepad_list buckets + files", () => {

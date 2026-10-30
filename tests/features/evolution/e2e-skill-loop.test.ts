@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as fsp from "node:fs/promises"
 import * as path from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import type { LlmCall } from "../../../src/features/evolution/compressor/interface"
 import { runEvolutionPipeline } from "../../../src/features/evolution/pipeline"
 import { loadLedger } from "../../../src/features/evolution/store/budget-ledger";
@@ -67,10 +67,10 @@ function stubbedLlm(traces: TraceRecord[], sessionID: string): LlmCall {
 }
 
 function approve(slug: string): Promise<string> {
-  const record = createEvolutionTool({ directory: tmpDir, client: {} } as unknown as PluginInput)
+  const record = createEvolutionTool({ directory: tmpDir, client: {} } as unknown as MatrixxContext)
   return record.evolution.execute(
     { action: "approve", slug },
-    { sessionID: "ses-e2e", directory: tmpDir } as unknown as ToolContext,
+    { sessionID: "ses-e2e", directory: tmpDir } as unknown as MatrixxToolContext,
   )
 }
 

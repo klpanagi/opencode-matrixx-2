@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createSilentFailureScannerTool } from "../../src/tools/silent-failure-scanner"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "silent-failure-scanner")
@@ -18,7 +18,7 @@ type ScanResult = {
 }
 
 function scanner() {
-  return createSilentFailureScannerTool({ directory: FIXTURES } as unknown as PluginInput)
+  return createSilentFailureScannerTool({ directory: FIXTURES } as unknown as MatrixxContext)
 }
 
 async function scan(args: Record<string, unknown>): Promise<ScanResult> {

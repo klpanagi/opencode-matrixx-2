@@ -1,9 +1,10 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { clearMissionState, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { subagentSessions } from "../../features/session-state/state"
+import type { V2Event } from "../../plugin/context"
 import { getAgentConfigKey } from "../../shared/agent-display-names"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { stateRootFromPluginContext } from "../../shared/state-root"
 import { HOOK_NAME } from "./hook-name"
 import { injectMissionContinuation } from "./mission-continuation-injector"
@@ -13,16 +14,16 @@ import type { NiobeHookOptions, SessionState } from "./types"
 const CONTINUATION_COOLDOWN_MS = 5000
 
 export function createNiobeEventHandler(input: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   options?: NiobeHookOptions
   sessions: Map<string, SessionState>
   getState: (sessionID: string) => SessionState
-}): (arg: { event: { type: string; properties?: unknown } }) => Promise<void> {
+}): (event: V2Event) => Promise<void> {
   const { ctx, options, sessions, getState } = input
   const stateRoot = stateRootFromPluginContext(ctx)
 
-  return async ({ event }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined
+  return async (event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.error") {
       const sessionID = props?.sessionID as string | undefined
@@ -90,7 +91,7 @@ export function createNiobeEventHandler(input: {
         return
       }
 
-      const lastAgent = await getLastAgentFromSession(sessionID, ctx.client)
+      const lastAgent = await getLastAgentFromSession(sessionID, ctx)
       const lastAgentKey = getAgentConfigKey(lastAgent ?? "")
       const requiredAgent = getAgentConfigKey(missionState.agent ?? "niobe")
       const lastAgentMatchesRequired = lastAgentKey === requiredAgent

@@ -1,10 +1,10 @@
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import type { OpencodeClient } from "./types"
+import type { NativeClient } from "./types"
 
 export interface ExecutorContext {
   manager: BackgroundManager
-  client: OpencodeClient
+  client: NativeClient
   directory: string
   userCategories?: CategoriesConfig
   mouseModel?: string
@@ -29,17 +29,4 @@ export interface ParentContext {
   model?: { providerID: string; modelID: string; variant?: string }
 }
 
-export interface SessionMessage {
-  info?: {
-    id?: string
-    role?: string
-    time?: { created?: number }
-    finish?: string
-    agent?: string
-    model?: { providerID: string; modelID: string; variant?: string }
-    modelID?: string
-    providerID?: string
-    variant?: string
-  }
-  parts?: Array<{ type?: string; text?: string }>
-}
+export type { ContentPart, SessionMessage } from "../../shared/session-message"

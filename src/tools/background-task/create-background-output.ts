@@ -1,10 +1,12 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import type { BackgroundTask } from "../../features/background-agent"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
-import type { BackgroundOutputClient, BackgroundOutputManager } from "./clients"
+import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import type { BackgroundOutputManager } from "./clients"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"
@@ -41,24 +43,24 @@ function appendTimeoutNote(output: string, timeoutMs: number): string {
   return `${output}\n\n> **Timed out waiting** after ${timeoutMs}ms. Task is still running; showing latest available output.`
 }
 
-export function createBackgroundOutput(manager: BackgroundOutputManager, client: BackgroundOutputClient): ToolDefinition {
-  return tool({
+export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): MatrixxToolDefinition {
+  return defineTool("background_output", {
     description: BACKGROUND_OUTPUT_DESCRIPTION,
     args: {
-      task_id: tool.schema.string().describe("Task ID to get output from"),
-      block: tool.schema
+      task_id: z.string().describe("Task ID to get output from"),
+      block: z
         .boolean()
         .optional()
         .describe(
           "Wait for completion (default: false). System notifies when done, so blocking is rarely needed."
         ),
-      timeout: tool.schema.number().optional().describe("Max wait time in ms (default: 60000, max: 600000)"),
-      full_session: tool.schema.boolean().optional().describe("Return full session messages with filters (default: false)"),
-      include_thinking: tool.schema.boolean().optional().describe("Include thinking/reasoning parts in full_session output (default: false)"),
-      message_limit: tool.schema.number().optional().describe("Max messages to return (capped at 100)"),
-      since_message_id: tool.schema.string().optional().describe("Return messages after this message ID (exclusive)"),
-      include_tool_results: tool.schema.boolean().optional().describe("Include tool results in full_session output (default: false)"),
-      thinking_max_chars: tool.schema.number().optional().describe("Max characters for thinking content (default: 2000)"),
+      timeout: z.number().optional().describe("Max wait time in ms (default: 60000, max: 600000)"),
+      full_session: z.boolean().optional().describe("Return full session messages with filters (default: false)"),
+      include_thinking: z.boolean().optional().describe("Include thinking/reasoning parts in full_session output (default: false)"),
+      message_limit: z.number().optional().describe("Max messages to return (capped at 100)"),
+      since_message_id: z.string().optional().describe("Return messages after this message ID (exclusive)"),
+      include_tool_results: z.boolean().optional().describe("Include tool results in full_session output (default: false)"),
+      thinking_max_chars: z.number().optional().describe("Max characters for thinking content (default: 2000)"),
     },
     async execute(args: BackgroundOutputArgs, toolContext) {
       try {

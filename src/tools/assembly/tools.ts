@@ -1,6 +1,7 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import type { AssemblyConfig } from "../../config/schema/assembly"
 import type { BackgroundManager } from "../../features/background-agent/manager"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { executeAssembly } from "./assembly-executor"
 import { TOOL_DESCRIPTION } from "./tool-description"
 import { AssemblyArgsSchema } from "./types"
@@ -12,14 +13,14 @@ export interface AssemblyToolOptions {
 
 export function createAssemblyTool(
   options: AssemblyToolOptions,
-): ToolDefinition {
-  return tool({
+): MatrixxToolDefinition {
+  return defineTool("assembly", {
     description: TOOL_DESCRIPTION,
     args: {
-      question: tool.schema.string().describe("The question or decision to reach consensus on"),
-      voters: tool.schema.number().optional().describe("Number of voters (2-5, default: 3)"),
-      rounds: tool.schema.number().optional().describe("Number of synthesis rounds (1-3, default: 2)"),
-      models: tool.schema.array(tool.schema.string()).optional().describe("Override auto-selected models"),
+      question: z.string().describe("The question or decision to reach consensus on"),
+      voters: z.number().optional().describe("Number of voters (2-5, default: 3)"),
+      rounds: z.number().optional().describe("Number of synthesis rounds (1-3, default: 2)"),
+      models: z.array(z.string()).optional().describe("Override auto-selected models"),
     },
     async execute(args, toolContext) {
       const parsed = AssemblyArgsSchema.parse(args)

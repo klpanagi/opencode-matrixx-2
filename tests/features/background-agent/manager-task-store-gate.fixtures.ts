@@ -9,7 +9,7 @@
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import type { MatrixxConfig } from "../../../src/config/schema"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
@@ -25,23 +25,22 @@ export const CHILD_SESSION = "ses_child_gate"
 function makeClient(directory: string) {
   return {
     session: {
-      get: async () => ({ data: { directory } }),
-      create: async () => ({ data: { id: CHILD_SESSION } }),
-      status: async () => ({ data: { [CHILD_SESSION]: { type: "idle" } } }),
-      messages: async () => ({
-        data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "done" }] }],
+      get: async () => ({ directory }),
+      create: async () => ({ id: CHILD_SESSION }),
+      context: async () => ({
+        messages: [{ type: "assistant", content: [{ type: "text", text: "done" }] }],
       }),
       prompt: async () => ({}),
-      promptAsync: async () => ({}),
-      abort: async () => ({}),
-      todo: async () => ({ data: [] }),
+      interrupt: async () => ({}),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
 }
 
 export function makeManager(directory: string, pluginConfig?: Partial<MatrixxConfig>): BackgroundManager {
   return new BackgroundManager(
-    { client: makeClient(directory), directory } as unknown as PluginInput,
+    { ...makeClient(directory), directory } as unknown as MatrixxContext,
     undefined,
     pluginConfig ? { pluginConfig } : undefined,
   )

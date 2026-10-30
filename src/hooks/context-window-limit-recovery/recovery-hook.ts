@@ -1,11 +1,13 @@
 // Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive compression belongs to DCP (/dcp-compress). Do not add proactive thresholds here. Cap API calls 2.
-import type { PluginInput } from "@opencode-ai/plugin"
+
 import type { ExperimentalConfig } from "../../config"
+import type { V2Event } from "../../plugin/context"
 import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { executeCompact, getLastAssistant } from "./executor"
 import { parseTokenLimitError } from "./parser"
 import type { AutoCompactState, ParsedTokenLimitError } from "./types"
-
 export interface AnthropicContextWindowLimitRecoveryOptions {
   experimental?: ExperimentalConfig
 }
@@ -23,15 +25,15 @@ function createRecoveryState(): AutoCompactState {
 
 
 export function createAnthropicContextWindowLimitRecoveryHook(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   options?: AnthropicContextWindowLimitRecoveryOptions,
 ) {
   const autoCompactState = createRecoveryState()
   const experimental = options?.experimental
   const pendingCompactionTimeoutBySession = new Map<string, ReturnType<typeof setTimeout>>()
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined
@@ -65,20 +67,12 @@ export function createAnthropicContextWindowLimitRecoveryHook(
 
         if (autoCompactState.compactionInProgress.has(sessionID)) return
 
-        const lastAssistant = await getLastAssistant(sessionID, ctx.client, ctx.directory)
-        const providerID = parsed.providerID ?? (lastAssistant?.providerID as string | undefined)
-        const modelID = parsed.modelID ?? (lastAssistant?.modelID as string | undefined)
+        const lastAssistant = await getLastAssistant(sessionID, ctx)
+        const lastModel = lastAssistant?.model as { providerID?: string; modelID?: string } | undefined
+        const providerID = parsed.providerID ?? lastModel?.providerID
+        const modelID = parsed.modelID ?? lastModel?.modelID
 
-        await ctx.client.tui
-          .showToast({
-            body: {
-              title: "Context Limit Hit",
-              message: "Truncating large tool outputs and recovering...",
-              variant: "warning" as const,
-              duration: 3000,
-            },
-          })
-          .catch((err) => { log("[auto-compact] Toast failed:", err) })
+        notify("warn", "Context Limit Hit: Truncating large tool outputs and recovering...")
 
         const timeoutID = setTimeout(() => {
           pendingCompactionTimeoutBySession.delete(sessionID)
@@ -86,7 +80,7 @@ export function createAnthropicContextWindowLimitRecoveryHook(
             sessionID,
             { providerID, modelID },
             autoCompactState,
-            ctx.client,
+            ctx,
             ctx.directory,
             experimental,
           )
@@ -128,32 +122,24 @@ export function createAnthropicContextWindowLimitRecoveryHook(
       }
 
       const errorData = autoCompactState.errorDataBySession.get(sessionID)
-      const lastAssistant = await getLastAssistant(sessionID, ctx.client, ctx.directory)
+      const lastAssistant = await getLastAssistant(sessionID, ctx)
 
       if (lastAssistant?.summary === true) {
         autoCompactState.pendingCompact.delete(sessionID)
         return
       }
 
-      const providerID = errorData?.providerID ?? (lastAssistant?.providerID as string | undefined)
-      const modelID = errorData?.modelID ?? (lastAssistant?.modelID as string | undefined)
+      const lastModel = lastAssistant?.model as { providerID?: string; modelID?: string } | undefined
+      const providerID = errorData?.providerID ?? lastModel?.providerID
+      const modelID = errorData?.modelID ?? lastModel?.modelID
 
-      await ctx.client.tui
-        .showToast({
-          body: {
-            title: "Auto Compact",
-            message: "Token limit exceeded. Attempting recovery...",
-            variant: "warning" as const,
-            duration: 3000,
-          },
-        })
-        .catch((err) => { log("[auto-compact] Toast failed:", err) })
+      notify("warn", "Auto Compact: Token limit exceeded. Attempting recovery...")
 
       await executeCompact(
         sessionID,
         { providerID, modelID },
         autoCompactState,
-        ctx.client,
+        ctx,
         ctx.directory,
         experimental,
       )

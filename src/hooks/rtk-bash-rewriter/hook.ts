@@ -1,10 +1,10 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { MatrixxConfig } from "../../config"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/shell-tool-name"
 import { RTK_BINARY_NAME, RTK_REWRITE_COMMAND } from "./constants"
 
-export function createRtkBashRewriterHook(_ctx: PluginInput, config: MatrixxConfig) {
+export function createRtkBashRewriterHook(_ctx: MatrixxContext, config: MatrixxConfig) {
   const rtkConfig = config.rtk
   const binaryPath = rtkConfig?.binary_path ?? RTK_BINARY_NAME
 

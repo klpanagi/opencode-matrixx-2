@@ -1,6 +1,7 @@
 import { readConnectedProvidersCache, readProviderModelsCache } from "../../shared/connected-providers-cache"
 import { log } from "../../shared/logger"
-import type { OpencodeClient } from "./types"
+import { unwrapList } from "../../shared/unwrap-list"
+import type { NativeClient } from "./types"
 
 function addFromProviderModels(
   out: Set<string>,
@@ -15,7 +16,7 @@ function addFromProviderModels(
   }
 }
 
-export async function getAvailableModelsForDelegateTask(client: OpencodeClient): Promise<Set<string>> {
+export async function getAvailableModelsForDelegateTask(client: NativeClient): Promise<Set<string>> {
   const providerModelsCache = readProviderModelsCache()
 
   if (providerModelsCache?.models) {
@@ -35,30 +36,22 @@ export async function getAvailableModelsForDelegateTask(client: OpencodeClient):
     return new Set()
   }
 
-  const modelList = (client as unknown as { model?: { list?: () => Promise<unknown> } })
-    ?.model
-    ?.list
-
-  if (!modelList) {
-    return new Set()
-  }
-
   try {
-    const result = await modelList()
-    const rows = Array.isArray(result)
-      ? result
-      : ((result as { data?: unknown }).data as Array<{ provider?: string; id?: string }> | undefined) ?? []
+    const result = await client.model.list()
+    const rows = unwrapList<{ provider?: string; providerID?: string; id?: string; modelID?: string }>(result)
 
     const connected = new Set(connectedProviders)
     const out = new Set<string>()
     for (const row of rows) {
-      if (!row?.provider || !row?.id) continue
-      if (!connected.has(row.provider)) continue
-      out.add(`${row.provider}/${row.id}`)
+      const provider = row?.providerID ?? row?.provider
+      const id = row?.modelID ?? row?.id
+      if (!provider || !id) continue
+      if (!connected.has(provider)) continue
+      out.add(`${provider}/${id}`)
     }
     return out
   } catch (err) {
-    log("[delegate-task] client.model.list failed", { error: String(err) })
+    log("[delegate-task] model.list failed", { error: String(err) })
     return new Set()
   }
 }

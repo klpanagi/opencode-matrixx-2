@@ -1,4 +1,5 @@
-import { isRecord } from "../../shared/record-type-guard"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+import { contentOf, isAssistant, roleOf } from "../../shared/session-message"
 import type { extractAutoRetrySignal } from "./error-classifier"
 import type { SessionMessage, SessionMessagePart } from "./session-messages"
 import { extractSessionMessages } from "./session-messages"
@@ -6,7 +7,7 @@ import type { HookDeps } from "./types"
 
 function getLastUserMessageIndex(messages: SessionMessage[]): number {
   for (let index = messages.length - 1; index >= 0; index--) {
-    if (messages[index]?.info?.role === "user") {
+    if (roleOf(messages[index]) === "user") {
       return index
     }
   }
@@ -14,7 +15,7 @@ function getLastUserMessageIndex(messages: SessionMessage[]): number {
   return -1
 }
 
-function getAssistantText(parts: SessionMessagePart[] | undefined): string {
+function getAssistantText(parts: ReadonlyArray<SessionMessagePart> | undefined): string {
   return (parts ?? [])
     .flatMap((part) => {
       if (part.type !== "text") {
@@ -34,10 +35,7 @@ export function hasVisibleAssistantResponse(extractAutoRetrySignalFn: typeof ext
     _info: Record<string, unknown> | undefined,
   ): Promise<boolean> => {
     try {
-      const messagesResponse = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
+      const messagesResponse = await fetchSessionMessages(ctx, sessionID)
       const messages = extractSessionMessages(messagesResponse)
       if (!messages || messages.length === 0) return false
 
@@ -46,22 +44,15 @@ export function hasVisibleAssistantResponse(extractAutoRetrySignalFn: typeof ext
 
       for (let index = lastUserMessageIndex + 1; index < messages.length; index++) {
         const message = messages[index]
-        if (message?.info?.role !== "assistant") {
+        if (!isAssistant(message)) {
           continue
         }
 
-        if (message.info?.error) {
+        if (message.error) {
           continue
         }
 
-        const infoParts = message.info?.parts
-        const infoMessageParts = Array.isArray(infoParts)
-          ? infoParts.filter((part): part is SessionMessagePart => isRecord(part))
-          : undefined
-        const parts = message.parts && message.parts.length > 0
-          ? message.parts
-          : infoMessageParts
-        const assistantText = getAssistantText(parts)
+        const assistantText = getAssistantText(contentOf(message))
         if (!assistantText) {
           continue
         }

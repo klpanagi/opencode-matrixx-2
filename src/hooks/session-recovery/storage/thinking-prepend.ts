@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { isSqliteBackend, log, normalizeSDKResponse, patchPart } from "../../../shared"
+import { isSqliteBackend, log, patchPart } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
+import { contentOf, idOf, isAssistant } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
-import type { MessageData } from "../types"
 import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
-type OpencodeClient = PluginInput["client"]
 
 function findLastThinkingContent(sessionID: string, beforeMessageID: string): string {
   const messages = readMessages(sessionID)
@@ -68,25 +68,23 @@ export function prependThinkingPart(sessionID: string, messageID: string): boole
 }
 
 async function findLastThinkingContentFromSDK(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   beforeMessageID: string
 ): Promise<string> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
-    const currentIndex = messages.findIndex((m) => m.info?.id === beforeMessageID)
+    const currentIndex = messages.findIndex((m) => idOf(m) === beforeMessageID)
     if (currentIndex === -1) return ""
 
     for (let i = currentIndex - 1; i >= 0; i--) {
       const msg = messages[i]
-      if (msg.info?.role !== "assistant") continue
-      if (!msg.parts) continue
+      if (!isAssistant(msg)) continue
 
-      for (const part of msg.parts) {
+      for (const part of contentOf(msg)) {
         if (part.type && THINKING_TYPES.has(part.type)) {
-          const content = part.thinking || part.text
+          const content = typeof part.thinking === "string" ? part.thinking : part.text
           if (content && content.trim().length > 0) return content
         }
       }
@@ -98,7 +96,7 @@ async function findLastThinkingContentFromSDK(
 }
 
 export async function prependThinkingPartAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string
 ): Promise<boolean> {

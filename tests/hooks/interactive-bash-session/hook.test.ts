@@ -7,14 +7,12 @@ import { createInteractiveBashSessionHook } from "../../../src/hooks/interactive
 
 function makeMockCtx() {
   const abortCalls: string[] = []
-  const client = {
-    session: {
-      abort: async ({ path }: { path: { id: string } }) => {
-        abortCalls.push(path.id)
-      },
+  const session = {
+    interrupt: async ({ sessionID }: { sessionID: string }) => {
+      abortCalls.push(sessionID)
     },
   }
-  return { ctx: { client, directory: "/tmp" } as never, abortCalls }
+  return { ctx: { session, directory: "/tmp" } as never, abortCalls }
 }
 
 function cleanupStorage(sessionIDs: string[]) {
@@ -36,7 +34,7 @@ describe("interactive-bash-session session.deleted handler", () => {
     subagentSessions.add("ses_subagent")
 
     await hook.event({
-      event: { type: "session.deleted", properties: { info: { id: "ses_foreign" } } },
+       type: "session.deleted", data: { info: { id: "ses_foreign" } } ,
     })
 
     expect(abortCalls).toEqual([])
@@ -58,7 +56,7 @@ describe("interactive-bash-session session.deleted handler", () => {
     )
 
     await hook.event({
-      event: { type: "session.deleted", properties: { info: { id: "ses_owner" } } },
+       type: "session.deleted", data: { info: { id: "ses_owner" } } ,
     })
 
     expect(abortCalls).toContain("ses_subagent")

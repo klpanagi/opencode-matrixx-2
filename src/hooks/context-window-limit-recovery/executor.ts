@@ -1,6 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin";
 import type { ExperimentalConfig } from "../../config";
-import { log } from "../../shared/logger"
+import { notify } from "../../shared/notify"
 import type { Client } from "./client";
 import { runSummarizeRetryStrategy } from "./summarize-retry-strategy";
 import type { AutoCompactState } from "./types";
@@ -11,24 +10,14 @@ export async function executeCompact(
   sessionID: string,
   msg: Record<string, unknown>,
   autoCompactState: AutoCompactState,
-  client: PluginInput["client"],
+  client: Client,
   directory: string,
   experimental?: ExperimentalConfig,
 ): Promise<void> {
   void experimental
 
   if (autoCompactState.compactionInProgress.has(sessionID)) {
-    await (client as Client).tui
-      .showToast({
-        body: {
-          title: "Compact In Progress",
-          message:
-            "Recovery already running. Please wait or start new session if stuck.",
-          variant: "warning",
-          duration: 5000,
-        },
-      })
-      .catch((err) => { log("[auto-compact] Toast failed:", err) });
+    notify("warn", "Compact In Progress: Recovery already running. Please wait or start new session if stuck.")
     return;
   }
   autoCompactState.compactionInProgress.add(sessionID);
@@ -42,7 +31,7 @@ export async function executeCompact(
       sessionID,
       msg,
       autoCompactState,
-      client: client as Client,
+      client,
       directory,
       errorType: errorData?.errorType,
       messageIndex: errorData?.messageIndex,

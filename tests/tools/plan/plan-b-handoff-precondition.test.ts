@@ -17,7 +17,7 @@
  * Both arms are asserted with distinct fixtures (see `describe("condition 7")`).
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import { existsSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -38,14 +38,14 @@ import { createPlanTasksTool } from "../../../src/tools/plan/plan-tasks"
 
 const TEST_ABORT = new AbortController()
 
-function tasksContext(testDir: string): ToolContext {
+function tasksContext(testDir: string): MatrixxToolContext {
   return {
     sessionID: "test-session-plan-b-handoff",
     messageID: "test-message-plan-b-handoff",
     agent: "test-agent",
     abort: TEST_ABORT.signal,
     directory: testDir,
-  } as unknown as ToolContext
+  } as unknown as MatrixxToolContext
 }
 
 interface Manifest {

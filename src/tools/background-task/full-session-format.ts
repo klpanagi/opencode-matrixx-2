@@ -1,6 +1,7 @@
 import type { BackgroundTask } from "../../features/background-agent"
-import type { BackgroundOutputClient, BackgroundOutputMessage, BackgroundOutputMessagesResult } from "./clients"
-import { extractMessages, getErrorMessage } from "./session-messages"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
+import type { ContentPart, SessionMessage } from "../../shared/session-message"
+import { contentOf, roleOf } from "../../shared/session-message"
 import { formatTaskStatus } from "./task-status-format"
 import { formatMessageTime } from "./time-format"
 import { truncateText } from "./truncate-text"
@@ -8,23 +9,26 @@ import { truncateText } from "./truncate-text"
 const MAX_MESSAGE_LIMIT = 100
 const THINKING_MAX_CHARS = 2000
 
-function extractToolResultText(part: NonNullable<BackgroundOutputMessage["parts"]>[number]): string[] {
-  if (typeof part.content === "string" && part.content.length > 0) {
-    return [part.content]
+function extractToolResultText(part: ContentPart): string[] {
+  const content = part.content
+  if (typeof content === "string" && content.length > 0) {
+    return [content]
   }
 
-  if (Array.isArray(part.content)) {
+  if (Array.isArray(content)) {
     const blocks: string[] = []
-    for (const block of part.content) {
-      if ((block.type === "text" || block.type === "reasoning") && block.text) {
-        blocks.push(block.text)
+    for (const block of content) {
+      const record = block as { type?: string; text?: string }
+      if ((record.type === "text" || record.type === "reasoning") && record.text) {
+        blocks.push(record.text)
       }
     }
     if (blocks.length > 0) return blocks
   }
 
-  if (part.output && part.output.length > 0) {
-    return [part.output]
+  const output = part.output
+  if (typeof output === "string" && output.length > 0) {
+    return [output]
   }
 
   return []
@@ -32,7 +36,7 @@ function extractToolResultText(part: NonNullable<BackgroundOutputMessage["parts"
 
 export async function formatFullSession(
   task: BackgroundTask,
-  client: BackgroundOutputClient,
+  client: SessionContextCarrier,
   options: {
     includeThinking: boolean
     messageLimit?: number
@@ -45,23 +49,17 @@ export async function formatFullSession(
     return formatTaskStatus(task)
   }
 
-  const messagesResult: BackgroundOutputMessagesResult = await client.session.messages({
-    path: { id: task.sessionID },
-  })
-
-  const errorMessage = getErrorMessage(messagesResult)
-  if (errorMessage) {
-    return `Error fetching messages: ${errorMessage}`
-  }
-
-  const rawMessages = extractMessages(messagesResult)
-  if (!Array.isArray(rawMessages)) {
-    return "Error fetching messages: invalid response"
+  let rawMessages: SessionMessage[]
+  try {
+    rawMessages = await fetchSessionMessages(client, task.sessionID)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return `Error fetching messages: ${message}`
   }
 
   const sortedMessages = [...rawMessages].sort((a, b) => {
-    const timeA = String(a.info?.time ?? "")
-    const timeB = String(b.info?.time ?? "")
+    const timeA = String(a.time ?? "")
+    const timeB = String(b.time ?? "")
     return timeA.localeCompare(timeB)
   })
 
@@ -78,9 +76,9 @@ export async function formatFullSession(
   const includeToolResults = options.includeToolResults
   const thinkingMaxChars = options.thinkingMaxChars ?? THINKING_MAX_CHARS
 
-  const normalizedMessages: BackgroundOutputMessage[] = []
+  const normalizedMessages: Array<{ message: SessionMessage; parts: ReadonlyArray<ContentPart> }> = []
   for (const message of filteredMessages) {
-    const parts = (message.parts ?? []).filter((part) => {
+    const parts = contentOf(message).filter((part) => {
       if (part.type === "thinking" || part.type === "reasoning") {
         return includeThinking
       }
@@ -94,7 +92,7 @@ export async function formatFullSession(
       continue
     }
 
-    normalizedMessages.push({ ...message, parts })
+    normalizedMessages.push({ message, parts })
   }
 
   const limit = typeof options.messageLimit === "number" ? Math.min(options.messageLimit, MAX_MESSAGE_LIMIT) : undefined
@@ -120,20 +118,20 @@ export async function formatFullSession(
     return lines.join("\n")
   }
 
-  for (const message of visibleMessages) {
-    const role = message.info?.role ?? "unknown"
-    const agent = message.info?.agent ? ` (${message.info.agent})` : ""
-    const time = formatMessageTime(message.info?.time)
+  for (const { message, parts } of visibleMessages) {
+    const role = roleOf(message)
+    const agent = message.agent ? " (" + message.agent + ")" : ""
+    const time = formatMessageTime(message.time)
     const idLabel = message.id ? ` id=${message.id}` : ""
     lines.push("")
     lines.push(`[${role}${agent}] ${time}${idLabel}`)
 
-    for (const part of message.parts ?? []) {
-      if (part.type === "text" && part.text) {
+    for (const part of parts) {
+      if (part.type === "text" && typeof part.text === "string" && part.text) {
         lines.push(part.text.trim())
-      } else if (part.type === "thinking" && part.thinking) {
+      } else if (part.type === "thinking" && typeof part.thinking === "string" && part.thinking) {
         lines.push(`[thinking] ${truncateText(part.thinking, thinkingMaxChars)}`)
-      } else if (part.type === "reasoning" && part.text) {
+      } else if (part.type === "reasoning" && typeof part.text === "string" && part.text) {
         lines.push(`[thinking] ${truncateText(part.text, thinkingMaxChars)}`)
       } else if (part.type === "tool_result") {
         const toolTexts = extractToolResultText(part)

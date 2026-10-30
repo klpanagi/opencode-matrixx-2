@@ -34,7 +34,7 @@ mock.module("../../../src/shared/opencode-storage-detection", () => ({
   resetSqliteBackendCache: () => {},
 }))
 
-mock.module("/home/klpanagi/matrixx/src/shared/session-utils.ts", () => ({
+mock.module("../../../src/shared/session-utils", () => ({
   isCallerOrchestrator: async (sessionID: string | undefined) => {
     if (!sessionID) return false
     const { existsSync: fsExists, readdirSync, readFileSync } = require("node:fs")
@@ -68,31 +68,31 @@ describe("niobe hook", () => {
   let TEST_DIR: string
   let MATRIX_DIR: string
 
-  function createMockPluginInput(overrides?: { promptMock?: ReturnType<typeof mock> }) {
+  function createMockMatrixxContext(overrides?: { promptMock?: ReturnType<typeof mock> }) {
     const promptMock = overrides?.promptMock ?? mock(() => Promise.resolve())
-    const messagesMock = mock(({ path }: { path: { id: string } }) => {
-      const sessionID = path.id
+    const messagesMock = mock((input: { sessionID?: string; path?: { id: string } }) => {
+      const sessionID = input.sessionID ?? input.path?.id ?? ""
       const messageDir = join(TEST_MESSAGE_STORAGE, sessionID)
-      if (!existsSync(messageDir)) return Promise.resolve({ data: [] })
+      if (!existsSync(messageDir)) return Promise.resolve([] as unknown[])
       const { readdirSync, readFileSync } = require("node:fs")
       try {
         const files = readdirSync(messageDir).filter((f: string) => f.endsWith(".json"))
         const messages = files.map((f: string) => {
           try { return JSON.parse(readFileSync(join(messageDir, f), "utf-8")) } catch { return null }
         }).filter(Boolean)
-        return Promise.resolve({ data: messages.map((m: Record<string, unknown>) => ({
-          info: { ...m }
-        })) })
+        return Promise.resolve(messages)
       } catch {
-        return Promise.resolve({ data: [] })
+        return Promise.resolve([] as unknown[])
       }
     })
     return {
       directory: TEST_DIR,
+      session: {
+        context: messagesMock,
+        prompt: promptMock,
+      },
       client: {
         session: {
-          prompt: promptMock,
-          promptAsync: promptMock,
           messages: messagesMock,
         },
       },
@@ -141,7 +141,7 @@ describe("niobe hook", () => {
   describe("tool.execute.after handler", () => {
     test("should handle undefined output gracefully (issue #1035)", async () => {
       // given - hook and undefined output (e.g., from /review command)
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
 
       // when - calling with undefined output
       const result = await hook["tool.execute.after"](
@@ -155,7 +155,7 @@ describe("niobe hook", () => {
 
     test("should ignore non-task tools", async () => {
       // given - hook and non-task tool
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Test Tool",
         output: "Original output",
@@ -188,7 +188,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -212,7 +212,7 @@ describe("niobe hook", () => {
        const sessionID = "session-no-mission-test"
        setupMessageStorage(sessionID, "niobe")
       
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -249,7 +249,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task completed successfully",
@@ -288,7 +288,7 @@ describe("niobe hook", () => {
        }
        writeMissionState(TEST_DIR, state)
 
-       const hook = createNiobeHook(createMockPluginInput())
+       const hook = createNiobeHook(createMockMatrixxContext())
        const output = {
          title: "Morpheus Task",
          output: "Original output",
@@ -325,7 +325,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task output",
@@ -361,7 +361,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task output",
@@ -398,7 +398,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task completed",
@@ -435,7 +435,7 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const hook = createNiobeHook(createMockPluginInput())
+      const hook = createNiobeHook(createMockMatrixxContext())
       const output = {
         title: "Morpheus Task",
         output: "Task completed",
@@ -469,7 +469,7 @@ describe("niobe hook", () => {
 
       test("should append delegation reminder when orchestrator writes outside .matrixx/", async () => {
         // given
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const output = {
           title: "Write",
           output: "File written successfully",
@@ -490,7 +490,7 @@ describe("niobe hook", () => {
 
       test("should append delegation reminder when orchestrator edits outside .matrixx/", async () => {
         // given
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const output = {
           title: "Edit",
           output: "File edited successfully",
@@ -509,7 +509,7 @@ describe("niobe hook", () => {
 
       test("should NOT append reminder when orchestrator writes inside .matrixx/", async () => {
         // given
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -533,7 +533,7 @@ describe("niobe hook", () => {
         const nonOrchestratorSession = "non-orchestrator-session"
         setupMessageStorage(nonOrchestratorSession, "mouse")
         
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -556,7 +556,7 @@ describe("niobe hook", () => {
 
       test("should NOT append reminder for read-only tools", async () => {
         // given
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const originalOutput = "File content"
         const output = {
           title: "Read",
@@ -576,7 +576,7 @@ describe("niobe hook", () => {
 
       test("should handle missing filePath gracefully", async () => {
         // given
-        const hook = createNiobeHook(createMockPluginInput())
+        const hook = createNiobeHook(createMockMatrixxContext())
         const originalOutput = "File written successfully"
         const output = {
           title: "Write",
@@ -597,7 +597,7 @@ describe("niobe hook", () => {
       describe("cross-platform path validation (Windows support)", () => {
         test("should NOT append reminder when orchestrator writes inside .matrixx\\ (Windows backslash)", async () => {
           // given
-          const hook = createNiobeHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockMatrixxContext())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -618,7 +618,7 @@ describe("niobe hook", () => {
 
         test("should NOT append reminder when orchestrator writes inside .matrixx with mixed separators", async () => {
           // given
-          const hook = createNiobeHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockMatrixxContext())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -639,7 +639,7 @@ describe("niobe hook", () => {
 
         test("should NOT append reminder for absolute Windows path inside .matrixx\\", async () => {
           // given
-          const hook = createNiobeHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockMatrixxContext())
           const originalOutput = "File written successfully"
           const output = {
             title: "Write",
@@ -660,7 +660,7 @@ describe("niobe hook", () => {
 
         test("should append reminder for Windows path outside .matrixx\\", async () => {
           // given
-          const hook = createNiobeHook(createMockPluginInput())
+          const hook = createNiobeHook(createMockMatrixxContext())
           const output = {
             title: "Write",
             output: "File written successfully",
@@ -712,36 +712,32 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt with continuation
       expect(mockInput._promptMock).toHaveBeenCalled()
       const callArgs = mockInput._promptMock.mock.calls[0][0]
-      expect(callArgs.path.id).toBe(MAIN_SESSION_ID)
-      expect(callArgs.body.parts[0].text).toContain("incomplete tasks")
-      expect(callArgs.body.parts[0].text).toContain("2 remaining")
+      expect(callArgs.sessionID).toBe(MAIN_SESSION_ID)
+      expect(callArgs.parts[0].text).toContain("incomplete tasks")
+      expect(callArgs.parts[0].text).toContain("2 remaining")
     })
 
     test("should not inject when no mission state exists", async () => {
       // given - no mission state
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -761,15 +757,13 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - main session fires idle but is NOT in mission's session_ids
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should NOT call prompt because session is not part of this mission
@@ -789,15 +783,13 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -817,15 +809,13 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - main session fires idle
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - mission state should be cleared
@@ -847,24 +837,20 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - send abort error then idle
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError", message: "aborted" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError", message: "aborted" },
         },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should not call prompt
@@ -888,7 +874,7 @@ describe("niobe hook", () => {
          getTasksByParentSession: () => [{ status: "running" }],
        }
 
-       const mockInput = createMockPluginInput()
+       const mockInput = createMockMatrixxContext()
        const hook = createNiobeHook(mockInput, {
          directory: TEST_DIR,
          backgroundManager: mockBackgroundManager as unknown as BackgroundManager,
@@ -896,10 +882,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should not call prompt
@@ -919,7 +903,7 @@ describe("niobe hook", () => {
        }
        writeMissionState(TEST_DIR, state)
 
-       const mockInput = createMockPluginInput()
+       const mockInput = createMockMatrixxContext()
        const hook = createNiobeHook(mockInput, {
          directory: TEST_DIR,
          isContinuationStopped: (sessionID: string) => sessionID === MAIN_SESSION_ID,
@@ -927,10 +911,8 @@ describe("niobe hook", () => {
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should not call prompt because continuation is stopped
@@ -950,30 +932,24 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - abort error, then message update, then idle
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError" },
         },
       })
       await hook.handler({
-        event: {
-          type: "message.updated",
-          properties: { info: { sessionID: MAIN_SESSION_ID, role: "user" } },
-        },
+        type: "message.updated",
+        data: { info: { sessionID: MAIN_SESSION_ID, role: "user" } },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt because abort state was cleared
@@ -993,21 +969,19 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should include progress
       const callArgs = mockInput._promptMock.mock.calls[0][0]
-      expect(callArgs.body.parts[0].text).toContain("2/4 completed")
-      expect(callArgs.body.parts[0].text).toContain("2 remaining")
+      expect(callArgs.parts[0].text).toContain("2/4 completed")
+      expect(callArgs.parts[0].text).toContain("2 remaining")
     })
 
      test("should not inject when last agent does not match mission agent", async () => {
@@ -1028,15 +1002,13 @@ describe("niobe hook", () => {
        cleanupMessageStorage(MAIN_SESSION_ID)
        setupMessageStorage(MAIN_SESSION_ID, "morpheus")
 
-       const mockInput = createMockPluginInput()
+       const mockInput = createMockMatrixxContext()
        const hook = createNiobeHook(mockInput)
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should NOT call prompt because agent does not match
@@ -1060,21 +1032,19 @@ describe("niobe hook", () => {
        cleanupMessageStorage(MAIN_SESSION_ID)
        setupMessageStorage(MAIN_SESSION_ID, "morpheus")
 
-       const mockInput = createMockPluginInput()
+       const mockInput = createMockMatrixxContext()
        const hook = createNiobeHook(mockInput)
 
        // when
        await hook.handler({
-         event: {
-           type: "session.idle",
-           properties: { sessionID: MAIN_SESSION_ID },
-         },
+         type: "session.idle",
+         data: { sessionID: MAIN_SESSION_ID },
        })
 
        // then - should call prompt for morpheus
        expect(mockInput._promptMock).toHaveBeenCalled()
        const callArgs = mockInput._promptMock.mock.calls[0][0]
-       expect(callArgs.body.agent).toBe("morpheus")
+       expect(callArgs.agent).toBe("morpheus")
      })
 
     test("should debounce rapid continuation injections (prevent infinite loop)", async () => {
@@ -1090,27 +1060,21 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - fire multiple idle events in rapid succession (simulating infinite loop bug)
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should only call prompt ONCE due to debouncing
@@ -1131,7 +1095,7 @@ describe("niobe hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
-      const mockInput = createMockPluginInput({ promptMock })
+      const mockInput = createMockMatrixxContext({ promptMock })
       const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
@@ -1140,15 +1104,15 @@ describe("niobe hook", () => {
 
       try {
         //#when - idle fires repeatedly, past cooldown each time
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
         //#then - should attempt only twice, then disable continuation
@@ -1177,7 +1141,7 @@ describe("niobe hook", () => {
       promptMock.mockImplementationOnce(() => Promise.reject(new Error("Bad Request")))
       promptMock.mockImplementationOnce(() => Promise.reject(new Error("Bad Request")))
 
-      const mockInput = createMockPluginInput({ promptMock })
+      const mockInput = createMockMatrixxContext({ promptMock })
       const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
@@ -1187,7 +1151,7 @@ describe("niobe hook", () => {
       try {
         //#when - fail, succeed (reset), then fail twice (disable), then attempt again
         for (let i = 0; i < 5; i++) {
-          await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+          await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
           await flushMicrotasks()
           now += 6000
         }
@@ -1213,7 +1177,7 @@ describe("niobe hook", () => {
       writeMissionState(TEST_DIR, state)
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
-      const mockInput = createMockPluginInput({ promptMock })
+      const mockInput = createMockMatrixxContext({ promptMock })
       const hook = createNiobeHook(mockInput)
 
       const originalDateNow = Date.now
@@ -1222,21 +1186,21 @@ describe("niobe hook", () => {
 
       try {
         //#when - two failures disables continuation, then compaction resets it
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
-        await hook.handler({ event: { type: "session.compacted", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.compacted", data: { sessionID: MAIN_SESSION_ID }  })
         now += 6000
 
-        await hook.handler({ event: { type: "session.idle", properties: { sessionID: MAIN_SESSION_ID } } })
+        await hook.handler({  type: "session.idle", data: { sessionID: MAIN_SESSION_ID }  })
         await flushMicrotasks()
 
         //#then - 2 attempts + 1 after compaction (3 total)
@@ -1259,24 +1223,20 @@ describe("niobe hook", () => {
       }
       writeMissionState(TEST_DIR, state)
 
-      const mockInput = createMockPluginInput()
+      const mockInput = createMockMatrixxContext()
       const hook = createNiobeHook(mockInput)
 
       // when - create abort state then delete
       await hook.handler({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: MAIN_SESSION_ID,
-            error: { name: "AbortError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: MAIN_SESSION_ID,
+          error: { name: "AbortError" },
         },
       })
       await hook.handler({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: MAIN_SESSION_ID } },
-        },
+        type: "session.deleted",
+        data: { info: { id: MAIN_SESSION_ID } },
       })
 
       // Re-create mission after deletion
@@ -1284,10 +1244,8 @@ describe("niobe hook", () => {
 
       // Trigger idle - should inject because state was cleaned up
       await hook.handler({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: MAIN_SESSION_ID },
-        },
+        type: "session.idle",
+        data: { sessionID: MAIN_SESSION_ID },
       })
 
       // then - should call prompt because session state was cleaned

@@ -1,6 +1,7 @@
 import { isAbsolute, join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MARKET_SYMBOL_VALIDATE_DESCRIPTION } from "./constants"
 import type { SymbolFinding, SymbolValidationResult } from "./types"
 import { buildResult, validatePath, validateSymbols, validateText } from "./validator"
@@ -13,18 +14,18 @@ function errorResult(message: string): SymbolValidationResult {
   }
 }
 
-export function createMarketSymbolValidatorTool(ctx: PluginInput): Record<string, ToolDefinition> {
-  const market_symbol_validate: ToolDefinition = tool({
+export function createMarketSymbolValidatorTool(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
+  const market_symbol_validate: MatrixxToolDefinition = defineTool("market_symbol_validate", {
     description: MARKET_SYMBOL_VALIDATE_DESCRIPTION,
     args: {
-      source: tool.schema.string().optional().describe("Inline source text to validate."),
-      path: tool.schema
+      source: z.string().optional().describe("Inline source text to validate."),
+      path: z
         .string()
         .optional()
         .describe("File or directory to validate (absolute, or relative to the project directory)."),
-      symbols: tool.schema.array(tool.schema.string()).optional().describe("Symbols to validate directly."),
-      exchangeMarkets: tool.schema
-        .array(tool.schema.string())
+      symbols: z.array(z.string()).optional().describe("Symbols to validate directly."),
+      exchangeMarkets: z
+        .array(z.string())
         .optional()
         .describe("Allowlist of unified symbols; symbols outside it are flagged (MS003)."),
     },

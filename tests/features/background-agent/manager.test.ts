@@ -6,7 +6,7 @@ import * as fs from "node:fs"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { _resetTaskToastManagerForTesting, initTaskToastManager } from "../../../src/features/task-toast-manager/manager"
 import type { ConcurrencyManager } from "../../../src/features/background-agent/concurrency"
 import { MIN_IDLE_TIME_MS } from "../../../src/features/background-agent/constants"
@@ -181,14 +181,16 @@ function createMockTask(overrides: Partial<BackgroundTask> & { id: string; sessi
 }
 
 function createBackgroundManager(): BackgroundManager {
-  const client = {
+  const native = {
     session: {
       prompt: async () => ({}),
-      promptAsync: async () => ({}),
-      abort: async () => ({}),
+      interrupt: async () => ({}),
+      context: async () => ({ messages: [] }),
     },
+    agent: { list: async () => [] },
+    model: { list: async () => [] },
   }
-  return new BackgroundManager({ client, directory: tmpdir() } as unknown as PluginInput)
+  return new BackgroundManager({ ...native, directory: tmpdir() } as unknown as MatrixxContext)
 }
 
 function getConcurrencyManager(manager: BackgroundManager): ConcurrencyManager {
@@ -254,7 +256,7 @@ function createToastRemoveTaskTracker(): { removeTaskCalls: string[]; resetToast
   _resetTaskToastManagerForTesting()
   const toastManager = initTaskToastManager({
     tui: { showToast: async () => {} },
-  } as unknown as PluginInput["client"])
+  } as unknown as MatrixxContext["client"])
   const removeTaskCalls: string[] = []
   const originalRemoveTask = toastManager.removeTask.bind(toastManager)
   toastManager.removeTask = (taskId: string): void => {
@@ -511,23 +513,25 @@ describe("BackgroundManager.trackTask", () => {
 
 describe("BackgroundManager.resume model persistence", () => {
    let manager: BackgroundManager
-   let promptCalls: Array<{ path: { id: string }; body: Record<string, unknown> }>
+   let promptCalls: Array<{ sessionID: string } & Record<string, unknown>>
 
    beforeEach(() => {
      // given
      promptCalls = []
-     const promptMock = async (args: { path: { id: string }; body: Record<string, unknown> }) => {
+     const promptMock = async (args: { sessionID: string } & Record<string, unknown>) => {
        promptCalls.push(args)
        return {}
      }
-     const client = {
+     const native = {
        session: {
          prompt: promptMock,
-         promptAsync: promptMock,
-         abort: async () => ({}),
+         interrupt: async () => ({}),
+         context: async () => ({ messages: [] }),
        },
+       agent: { list: async () => [] },
+       model: { list: async () => [] },
      }
-     manager = new BackgroundManager({ client, directory: tmpdir() } as unknown as PluginInput)
+     manager = new BackgroundManager({ ...native, directory: tmpdir() } as unknown as MatrixxContext)
      stubNotifyParentSession(manager)
    })
 
@@ -563,8 +567,8 @@ describe("BackgroundManager.resume model persistence", () => {
 
     // then - model should be passed in prompt body
     expect(promptCalls).toHaveLength(1)
-    expect(promptCalls[0].body.model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-20250514" })
-    expect(promptCalls[0].body.agent).toBe("trinity")
+    expect(promptCalls[0].model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-20250514" })
+    expect(promptCalls[0].agent).toBe("trinity")
   })
 
   test("should NOT pass model when task has no model (backward compatibility)", async () => {
@@ -594,8 +598,8 @@ describe("BackgroundManager.resume model persistence", () => {
 
     // then - model should NOT be in prompt body
     expect(promptCalls).toHaveLength(1)
-    expect("model" in promptCalls[0].body).toBe(false)
-    expect(promptCalls[0].body.agent).toBe("trinity")
+    expect("model" in promptCalls[0]).toBe(false)
+    expect(promptCalls[0].agent).toBe("trinity")
   })
 })
 
@@ -622,7 +626,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: {
           name: "UnknownError",
@@ -656,7 +660,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: { name: "UnknownError", message: "boom" },
       },
@@ -689,7 +693,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     //#when
     manager.handleEvent({
       type: "session.error",
-      properties: {
+      data: {
         sessionID,
         error: { name: "UnknownError", message: "should not matter" },
       },
@@ -711,7 +715,7 @@ describe("BackgroundManager.handleEvent - session.error", () => {
     const handler = () =>
       manager.handleEvent({
         type: "session.error",
-        properties: {
+        data: {
           sessionID: "ses_unknown",
           error: { name: "UnknownError", message: "Model not found" },
         },
@@ -852,7 +856,7 @@ describe("findNearestMessageExcludingCompaction reads each file once", () => {
           }
           return realReadFileSync(...(args as Parameters<typeof realReadFileSync>))
         },
-        readdirSync: (path: string) => realReaddirSync(path),
+        readdirSync: (...args: unknown[]) => realReaddirSync(...(args as Parameters<typeof realReaddirSync>)),
       }
       return wrapped as unknown as typeof realFsNs
     })

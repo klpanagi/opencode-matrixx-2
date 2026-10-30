@@ -1,6 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import {
   SESSION_INFO_DESCRIPTION,
   SESSION_LIST_DESCRIPTION,
@@ -34,21 +35,21 @@ const MAX_SESSIONS_TO_SCAN = 50
 import { withTimeout } from "../../shared/with-timeout"
 
 export function createSessionManagerTools(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   pluginConfig?: Partial<MatrixxConfig>
-): Record<string, ToolDefinition> {
-  // Initialize storage client for SDK-based operations (beta mode)
-  setStorageClient(ctx.client)
+): Record<string, MatrixxToolDefinition> {
+  // Thread the native session carrier into storage for beta-mode operations
+  if (ctx.session) setStorageClient(ctx)
   setStorageDirectory(ctx.directory)
   setStorageConfig(pluginConfig)
 
-  const session_list: ToolDefinition = tool({
+  const session_list: MatrixxToolDefinition = defineTool("session_list", {
     description: SESSION_LIST_DESCRIPTION,
     args: {
-      limit: tool.schema.number().optional().describe("Maximum number of sessions to return"),
-      from_date: tool.schema.string().optional().describe("Filter sessions from this date (ISO 8601 format)"),
-      to_date: tool.schema.string().optional().describe("Filter sessions until this date (ISO 8601 format)"),
-      project_path: tool.schema.string().optional().describe("Filter sessions by project path (default: current working directory)"),
+      limit: z.number().optional().describe("Maximum number of sessions to return"),
+      from_date: z.string().optional().describe("Filter sessions from this date (ISO 8601 format)"),
+      to_date: z.string().optional().describe("Filter sessions until this date (ISO 8601 format)"),
+      project_path: z.string().optional().describe("Filter sessions by project path (default: current working directory)"),
     },
     execute: async (args: SessionListArgs, _context) => {
       try {
@@ -71,16 +72,16 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_read: ToolDefinition = tool({
+  const session_read: MatrixxToolDefinition = defineTool("session_read", {
     description: SESSION_READ_DESCRIPTION,
     args: {
-      session_id: tool.schema.string().describe("Session ID to read"),
-      include_todos: tool.schema
+      session_id: z.string().describe("Session ID to read"),
+      include_todos: z
         .boolean()
         .optional()
         .describe("Include this session's task state from the task store (default: false)"),
-      include_transcript: tool.schema.boolean().optional().describe("Include transcript log if available (default: false)"),
-      limit: tool.schema.number().optional().describe("Maximum number of messages to return (default: all)"),
+      include_transcript: z.boolean().optional().describe("Include transcript log if available (default: false)"),
+      limit: z.number().optional().describe("Maximum number of messages to return (default: all)"),
     },
     execute: async (args: SessionReadArgs, _context) => {
       try {
@@ -107,13 +108,13 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_search: ToolDefinition = tool({
+  const session_search: MatrixxToolDefinition = defineTool("session_search", {
     description: SESSION_SEARCH_DESCRIPTION,
     args: {
-      query: tool.schema.string().describe("Search query string"),
-      session_id: tool.schema.string().optional().describe("Search within specific session only (default: all sessions)"),
-      case_sensitive: tool.schema.boolean().optional().describe("Case-sensitive search (default: false)"),
-      limit: tool.schema.number().optional().describe("Maximum number of results to return (default: 20)"),
+      query: z.string().describe("Search query string"),
+      session_id: z.string().optional().describe("Search within specific session only (default: all sessions)"),
+      case_sensitive: z.boolean().optional().describe("Case-sensitive search (default: false)"),
+      limit: z.number().optional().describe("Maximum number of results to return (default: 20)"),
     },
     execute: async (args: SessionSearchArgs, _context) => {
       try {
@@ -148,10 +149,10 @@ export function createSessionManagerTools(
     },
   })
 
-  const session_info: ToolDefinition = tool({
+  const session_info: MatrixxToolDefinition = defineTool("session_info", {
     description: SESSION_INFO_DESCRIPTION,
     args: {
-      session_id: tool.schema.string().describe("Session ID to inspect"),
+      session_id: z.string().describe("Session ID to inspect"),
     },
     execute: async (args: SessionInfoArgs, _context) => {
       try {

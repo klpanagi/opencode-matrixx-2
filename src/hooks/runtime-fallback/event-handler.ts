@@ -1,3 +1,4 @@
+import type { V2Event } from "../../plugin/context"
 import { isAbortError } from "../../shared/is-abort-error"
 import { log } from "../../shared/logger"
 import type { AutoRetryHelpers } from "./auto-retry"
@@ -10,7 +11,6 @@ import { createFallbackState } from "./fallback-state"
 import { SessionCategoryRegistry } from "./session-category-registry"
 import { createSessionStatusHandler } from "./session-status-handler"
 import type { HookDeps } from "./types"
-
 export function createEventHandler(deps: HookDeps, helpers: AutoRetryHelpers) {
   const { config, pluginConfig, sessionStates, sessionLastAccess, sessionRetryInFlight, sessionAwaitingFallbackResult, sessionFallbackTimeouts, sessionStatusRetryKeys } = deps
   const sessionStatusHandler = createSessionStatusHandler(deps, helpers, sessionStatusRetryKeys)
@@ -197,10 +197,10 @@ export function createEventHandler(deps: HookDeps, helpers: AutoRetryHelpers) {
     })
   }
 
-  return async ({ event }: { event: { type: string; properties?: unknown } }) => {
+  return async (event: V2Event) => {
     if (!config.enabled) return
 
-    const props = event.properties as Record<string, unknown> | undefined
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.created") { handleSessionCreated(props); return }
     if (event.type === "session.deleted") { handleSessionDeleted(props); return }

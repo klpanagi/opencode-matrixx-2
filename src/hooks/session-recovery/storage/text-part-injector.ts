@@ -1,12 +1,11 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
 import { isSqliteBackend, log, patchPart } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
 import { PART_STORAGE } from "../constants"
 import type { StoredTextPart } from "../types"
 import { generatePartId } from "./part-id"
 
-type OpencodeClient = PluginInput["client"]
 
 export function injectTextPart(sessionID: string, messageID: string, text: string): boolean {
   if (isSqliteBackend()) {
@@ -39,7 +38,7 @@ export function injectTextPart(sessionID: string, messageID: string, text: strin
 }
 
 export async function injectTextPartAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string,
   text: string

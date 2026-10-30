@@ -1,42 +1,30 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
-import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { getMessageDir } from "../../shared/opencode-message-dir"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { withTimeout } from "../../shared/with-timeout"
 
-type MessageInfo = {
-	agent?: string
-	model?: { providerID: string; modelID: string }
-	modelID?: string
-	providerID?: string
-}
-
 export async function injectContinuationPrompt(
-	ctx: PluginInput,
+	ctx: NativePluginContext,
 	options: { sessionID: string; prompt: string; directory: string; apiTimeoutMs: number },
 ): Promise<void> {
 	let agent: string | undefined
 	let model: { providerID: string; modelID: string } | undefined
 
 	try {
-		const messagesResp = await withTimeout(
-			ctx.client.session.messages({
-				path: { id: options.sessionID },
-			}),
+		const messages = await withTimeout(
+			fetchSessionMessages(ctx, options.sessionID),
 			options.apiTimeoutMs,
 		)
-		const messages = normalizeSDKResponse(messagesResp, [] as Array<{ info?: MessageInfo }>)
 		for (let i = messages.length - 1; i >= 0; i--) {
-			const info = messages[i]?.info
-			if (info?.agent || info?.model || (info?.modelID && info?.providerID)) {
+			const info = messages[i]
+			if (info?.agent || info?.model) {
 				agent = info.agent
-				model =
-					info.model ??
-					(info.providerID && info.modelID
-						? { providerID: info.providerID, modelID: info.modelID }
-						: undefined)
+				model = info.model
+					? { providerID: info.model.providerID, modelID: info.model.modelID }
+					: undefined
 				break
 			}
 		}
@@ -53,14 +41,11 @@ export async function injectContinuationPrompt(
 				: undefined
 	}
 
-	await promptWithModelSuggestionRetry(ctx.client, {
-		path: { id: options.sessionID },
-		body: {
-			...(agent !== undefined ? { agent } : {}),
-			...(model !== undefined ? { model } : {}),
-			parts: [{ type: "text", text: options.prompt }],
-		},
-		query: { directory: options.directory },
+	await promptNativeWithModelSuggestionRetry(ctx.session, {
+		sessionID: options.sessionID,
+		...(agent !== undefined ? { agent } : {}),
+		...(model !== undefined ? { model } : {}),
+		parts: [{ type: "text", text: options.prompt }],
 	})
 
 	log("[matrix-loop] continuation injected", { sessionID: options.sessionID })

@@ -1,6 +1,7 @@
 import { getSessionAgent } from "../../features/session-state/state"
 import { log } from "../../shared/logger"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 import { normalizeAgentName, resolveAgentForSession, resolveRegisteredAgentName } from "./agent-resolver"
 import { HOOK_NAME } from "./constants"
 import { getFallbackModelsForSession } from "./fallback-models"
@@ -32,7 +33,7 @@ export function createAutoRetryHelpers(deps: HookDeps) {
 
   const abortSessionRequest = async (sessionID: string, source: string): Promise<void> => {
     try {
-      await ctx.client.session.abort({ path: { id: sessionID } })
+      await ctx.session.interrupt({ sessionID })
       log(`[${HOOK_NAME}] Aborted in-flight session request (${source})`, { sessionID })
     } catch (error) {
       log(`[${HOOK_NAME}] Failed to abort in-flight session request (${source})`, {
@@ -123,10 +124,7 @@ export function createAutoRetryHelpers(deps: HookDeps) {
     sessionRetryInFlight.add(sessionID)
     let retryDispatched = false
     try {
-      const messagesResp = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
+      const messagesResp = await fetchSessionMessages(ctx, sessionID)
       const retryParts = getLastUserRetryParts(messagesResp)
       if (retryParts.length > 0) {
         log(`[${HOOK_NAME}] Auto-retrying with fallback model (${source})`, {
@@ -139,18 +137,12 @@ export function createAutoRetryHelpers(deps: HookDeps) {
         sessionAwaitingFallbackResult.add(sessionID)
         scheduleSessionFallbackTimeout(sessionID, retryAgent)
 
-        await promptWithModelSuggestionRetry(
-          ctx.client as unknown as Parameters<typeof promptWithModelSuggestionRetry>[0],
-          {
-            path: { id: sessionID },
-            body: {
-              ...(launchAgent ? { agent: launchAgent } : {}),
-              ...retryModelPayload,
-              parts: retryParts,
-            },
-            query: { directory: ctx.directory },
-          } as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1],
-        )
+        await promptNativeWithModelSuggestionRetry(ctx.session, {
+          sessionID,
+          ...(launchAgent ? { agent: launchAgent } : {}),
+          ...retryModelPayload,
+          parts: retryParts,
+        })
         retryDispatched = true
       } else {
         log(`[${HOOK_NAME}] No user message found for auto-retry (${source})`, { sessionID })
@@ -178,17 +170,14 @@ export function createAutoRetryHelpers(deps: HookDeps) {
     if (resolved) return resolved
 
     try {
-      const messagesResp = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
+      const messagesResp = await fetchSessionMessages(ctx, sessionID)
       const msgs = extractSessionMessages(messagesResp)
       if (!msgs || msgs.length === 0) return undefined
 
       for (let i = msgs.length - 1; i >= 0; i--) {
-        const info = msgs[i]?.info
-        const infoAgent = typeof info?.agent === "string" ? info.agent : undefined
-        const normalized = normalizeAgentName(infoAgent)
+        const agent = msgs[i]?.agent
+        const messageAgent = typeof agent === "string" ? agent : undefined
+        const normalized = normalizeAgentName(messageAgent)
         if (normalized) {
           return normalized
         }

@@ -22,7 +22,7 @@ describe("oracle-md-only", () => {
   const TEST_SESSION_ID = "ses_test-session-oracle"
   let testMessageDir: string
 
-  function createMockPluginInput() {
+  function createMockMatrixxContext() {
     return {
       client: {},
       directory: "/tmp/test",
@@ -60,7 +60,7 @@ describe("oracle-md-only", () => {
     test("should enforce md-only restriction for exact oracle agent name", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, "oracle")
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -79,7 +79,7 @@ describe("oracle-md-only", () => {
     test("should enforce md-only restriction for Oracle display name Plan Builder", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, "Oracle (Plan Builder)")
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -98,7 +98,7 @@ describe("oracle-md-only", () => {
     test("should enforce md-only restriction for Oracle display name Planner", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, "Oracle (Planner)")
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -117,7 +117,7 @@ describe("oracle-md-only", () => {
     test("should enforce md-only restriction for uppercase ORACLE", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, "ORACLE")
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -136,7 +136,7 @@ describe("oracle-md-only", () => {
     test("should not enforce restriction for non-Oracle agent", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, "morpheus")
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -155,7 +155,7 @@ describe("oracle-md-only", () => {
     test("should not enforce restriction when agent name is undefined", async () => {
       //#given
       setupMessageStorage(TEST_SESSION_ID, undefined)
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -179,7 +179,7 @@ describe("oracle-md-only", () => {
 
     test("should block Oracle from writing non-.md files", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -197,7 +197,7 @@ describe("oracle-md-only", () => {
 
     test("should allow Oracle to write .md files inside .matrixx/", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -215,7 +215,7 @@ describe("oracle-md-only", () => {
 
     test("should inject workflow reminder when Oracle writes to .matrixx/plans/", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -237,7 +237,7 @@ describe("oracle-md-only", () => {
 
     test("should NOT inject workflow reminder for .matrixx/drafts/", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -256,7 +256,7 @@ describe("oracle-md-only", () => {
 
     test("should block Oracle from writing .md files outside .matrixx/", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -274,7 +274,7 @@ describe("oracle-md-only", () => {
 
     test("should block Edit tool for non-.md files", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Edit",
         sessionID: TEST_SESSION_ID,
@@ -292,7 +292,7 @@ describe("oracle-md-only", () => {
 
     test("should allow bash commands from Oracle", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "bash",
         sessionID: TEST_SESSION_ID,
@@ -310,7 +310,7 @@ describe("oracle-md-only", () => {
 
     test("should not affect non-blocked tools", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Read",
         sessionID: TEST_SESSION_ID,
@@ -328,7 +328,7 @@ describe("oracle-md-only", () => {
 
     test("should handle missing filePath gracefully", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -346,7 +346,7 @@ describe("oracle-md-only", () => {
 
     test("should inject read-only warning when Oracle calls task", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
@@ -366,7 +366,7 @@ describe("oracle-md-only", () => {
 
     test("should inject read-only warning when Oracle calls task", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
@@ -385,7 +385,7 @@ describe("oracle-md-only", () => {
 
     test("should inject read-only warning when Oracle calls task", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
@@ -404,7 +404,7 @@ describe("oracle-md-only", () => {
 
     test("should not double-inject warning if already present", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
@@ -431,7 +431,7 @@ describe("oracle-md-only", () => {
 
     test("should not affect non-Oracle agents", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: TEST_SESSION_ID,
@@ -449,7 +449,7 @@ describe("oracle-md-only", () => {
 
     test("should not inject warning for non-Oracle agents calling task", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "task",
         sessionID: TEST_SESSION_ID,
@@ -587,7 +587,7 @@ describe("oracle-md-only", () => {
   describe("without message storage", () => {
     test("should handle missing session gracefully (no agent found)", async () => {
       // given
-      const hook = createOracleMdOnlyHook(createMockPluginInput())
+      const hook = createOracleMdOnlyHook(createMockMatrixxContext())
       const input = {
         tool: "Write",
         sessionID: "ses_non_existent_session",
@@ -612,7 +612,7 @@ describe("oracle-md-only", () => {
      test("should allow Windows-style backslash paths under .matrixx/", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -631,7 +631,7 @@ describe("oracle-md-only", () => {
      test("should allow mixed separator paths under .matrixx/", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -650,7 +650,7 @@ describe("oracle-md-only", () => {
      test("should allow uppercase .MD extension", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -669,7 +669,7 @@ describe("oracle-md-only", () => {
      test("should block paths outside workspace root even if containing .matrixx", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -688,7 +688,7 @@ describe("oracle-md-only", () => {
      test("should allow nested .matrixx directories (ctx.directory may be parent)", async () => {
        // given - when ctx.directory is parent of actual project, path includes project name
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -707,7 +707,7 @@ describe("oracle-md-only", () => {
      test("should block path traversal attempts", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -726,7 +726,7 @@ describe("oracle-md-only", () => {
       test("should allow case-insensitive .MATRIX directory", async () => {
         // given
         setupMessageStorage(TEST_SESSION_ID, "oracle")
-        const hook = createOracleMdOnlyHook(createMockPluginInput())
+        const hook = createOracleMdOnlyHook(createMockMatrixxContext())
         const input = {
           tool: "Write",
           sessionID: TEST_SESSION_ID,
@@ -746,7 +746,7 @@ describe("oracle-md-only", () => {
        // given - simulates when ctx.directory is parent of actual project
        // User reported: xauusd-dxy-plan\.matrixx\drafts\supabase-email-templates.md
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -765,7 +765,7 @@ describe("oracle-md-only", () => {
      test("should allow nested project path with mixed separators", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,
@@ -784,7 +784,7 @@ describe("oracle-md-only", () => {
      test("should block nested project path without .matrixx", async () => {
        // given
        setupMessageStorage(TEST_SESSION_ID, "oracle")
-       const hook = createOracleMdOnlyHook(createMockPluginInput())
+       const hook = createOracleMdOnlyHook(createMockMatrixxContext())
        const input = {
          tool: "Write",
          sessionID: TEST_SESSION_ID,

@@ -6,6 +6,7 @@ import type { ThinkModeInput, ThinkModeState } from "./types"
 const MAX_THINK_MODE_ENTRIES = 1000
 const thinkModeState = new Map<string, ThinkModeState>()
 
+import type { V2Event } from "../../plugin/context"
 export function setThinkModeState(key: string, value: ThinkModeState): void {
   if (thinkModeState.size >= MAX_THINK_MODE_ENTRIES && !thinkModeState.has(key)) {
     const oldest = thinkModeState.keys().next().value
@@ -169,9 +170,9 @@ export function createThinkModeHook() {
       setThinkModeState(sessionID, state)
     },
 
-    event: async ({ event }: { event: { type: string; properties?: unknown } }) => {
+    event: async (event: V2Event) => {
       if (event.type === "session.deleted") {
-        const props = event.properties as { info?: { id?: string } } | undefined
+        const props = event.data as { info?: { id?: string } } | undefined
         if (props?.info?.id) {
           thinkModeState.delete(props.info.id)
         }

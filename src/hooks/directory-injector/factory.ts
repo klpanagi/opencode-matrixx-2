@@ -1,4 +1,4 @@
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext, V2Event } from "../../plugin/context";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 
 export interface ToolExecuteInput {
@@ -17,17 +17,10 @@ export interface ToolExecuteBeforeOutput {
   args: unknown;
 }
 
-export interface EventInput {
-  event: {
-    type: string;
-    properties?: unknown;
-  };
-}
-
 type DynamicTruncator = ReturnType<typeof createDynamicTruncator>;
 
 type ProcessFileFunction = (input: {
-  ctx: PluginInput;
+  ctx: MatrixxContext;
   truncator: DynamicTruncator;
   sessionCaches: Map<string, Set<string>>;
   filePath: string;
@@ -36,7 +29,7 @@ type ProcessFileFunction = (input: {
 }) => Promise<void>;
 
 export function createDirectoryInjectorHook(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   processFile: ProcessFileFunction,
   clearInjectedPaths: (sessionID: string) => void,
 ) {
@@ -67,8 +60,8 @@ export function createDirectoryInjectorHook(
     void output;
   };
 
-  const eventHandler = async ({ event }: EventInput) => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event) => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

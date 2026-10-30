@@ -1,14 +1,14 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
-import type { createOpencodeClient } from "@opencode-ai/sdk"
+import { z } from "zod"
 import { log } from "../../shared"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { discoverCommandsSync } from "./command-discovery"
 import { formatCommandList, formatLoadedCommand } from "./command-output-formatter"
 import { skillToCommandInfo } from "./skill-command-converter"
 import { buildDescriptionFromItems, TOOL_DESCRIPTION_PREFIX } from "./slashcommand-description"
-import type { CommandInfo, SlashcommandToolOptions } from "./types"
+import type { CommandInfo, PluginCommandClient, SlashcommandToolOptions } from "./types"
 
-async function discoverPluginCommands(client?: ReturnType<typeof createOpencodeClient>): Promise<CommandInfo[]> {
+async function discoverPluginCommands(client?: PluginCommandClient): Promise<CommandInfo[]> {
   if (!client) return []
 
   try {
@@ -32,7 +32,7 @@ async function discoverPluginCommands(client?: ReturnType<typeof createOpencodeC
   }
 }
 
-export function createSlashcommandTool(options: SlashcommandToolOptions = {}): ToolDefinition {
+export function createSlashcommandTool(options: SlashcommandToolOptions = {}): MatrixxToolDefinition {
   let cachedCommands: CommandInfo[] | null = options.commands ?? null
   let cachedSkills: BuiltinSkill[] | null = options.skills ?? null
   let cachedPluginCommands: CommandInfo[] | null = null
@@ -77,18 +77,18 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): T
     void buildDescription()
   }
 
-  return tool({
+  return defineTool("slashcommand", {
     get description() {
       return cachedDescription ?? TOOL_DESCRIPTION_PREFIX
     },
 
     args: {
-      command: tool.schema
+      command: z
         .string()
         .describe(
           "The slash command name (without leading slash). E.g., 'publish', 'commit', 'plan'"
         ),
-      user_message: tool.schema
+      user_message: z
         .string()
         .optional()
         .describe(
@@ -127,4 +127,4 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): T
   })
 }
 
-export const slashcommand: ToolDefinition = createSlashcommandTool()
+export const slashcommand: MatrixxToolDefinition = createSlashcommandTool()

@@ -1,4 +1,3 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { findFirstMessageWithAgent, 
   findFirstMessageWithAgentFromSDK,findNearestMessageWithFields, 
   findNearestMessageWithFieldsFromSDK,} from "../../features/hook-message-injector"
@@ -6,18 +5,17 @@ import { readMissionState } from "../../features/mission-state"
 import { getSessionAgent } from "../../features/session-state/state"
 import { getMessageDir } from "../../shared/opencode-message-dir"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-
-type OpencodeClient = PluginInput["client"]
+import type { SessionContextCarrier } from "../../shared/session-context-source"
 
 async function getAgentFromMessageFiles(
   sessionID: string,
-  client?: OpencodeClient
+  carrier?: SessionContextCarrier
 ): Promise<string | undefined> {
-  if (isSqliteBackend() && client) {
-    const firstAgent = await findFirstMessageWithAgentFromSDK(client, sessionID)
+  if (isSqliteBackend() && carrier) {
+    const firstAgent = await findFirstMessageWithAgentFromSDK(carrier, sessionID)
     if (firstAgent) return firstAgent
 
-    const nearest = await findNearestMessageWithFieldsFromSDK(client, sessionID)
+    const nearest = await findNearestMessageWithFieldsFromSDK(carrier, sessionID)
     return nearest?.agent
   }
 
@@ -41,7 +39,7 @@ async function getAgentFromMessageFiles(
 export async function getAgentFromSession(
   sessionID: string,
   directory: string,
-  client?: OpencodeClient
+  carrier?: SessionContextCarrier
 ): Promise<string | undefined> {
   // Check in-memory first (current session)
   const memoryAgent = getSessionAgent(sessionID)
@@ -54,5 +52,5 @@ export async function getAgentFromSession(
   }
 
   // Fallback to message files
-  return await getAgentFromMessageFiles(sessionID, client)
+  return await getAgentFromMessageFiles(sessionID, carrier)
 }

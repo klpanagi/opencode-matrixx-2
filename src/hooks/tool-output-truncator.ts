@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import type { ExperimentalConfig } from "../config/schema"
+import type { MatrixxContext } from "../plugin/context"
 import { createDynamicTruncator } from "../shared/dynamic-truncator"
 
 const DEFAULT_MAX_TOKENS = 50_000 // ~200k chars
@@ -38,7 +38,7 @@ interface ToolOutputTruncatorOptions {
   experimental?: ExperimentalConfig
 }
 
-export function createToolOutputTruncatorHook(ctx: PluginInput, options?: ToolOutputTruncatorOptions) {
+export function createToolOutputTruncatorHook(ctx: MatrixxContext, options?: ToolOutputTruncatorOptions) {
   const truncator = createDynamicTruncator(ctx)
   const truncateAll = options?.experimental?.truncate_all_tool_outputs ?? false
 

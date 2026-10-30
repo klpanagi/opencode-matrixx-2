@@ -1,10 +1,11 @@
 import { existsSync, statSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import { countPlanProgressFromContent, readPlanFile } from "../../features/mission-state"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import { parsePlanContract, parsePlanFrontMatter } from "../../features/plan-contract"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES, MAX_PLAN_READ_RENDERED_BYTES } from "./constants"
 import { classifyReadRefusal, fileTooLargePayload, readFailedPayload } from "./error-codes"
 import { clampManifestToRenderedBudget } from "./plan-tasks-clamp"
@@ -28,11 +29,11 @@ function truncationHint(shown: number, total: number): string {
   return `Showing the first ${shown} of ${total} tasks to fit the ${MAX_PLAN_READ_RENDERED_BYTES}-byte rendered budget — read the rest with plan_read using a section selector (e.g. section: 'todos')`
 }
 
-export function createPlanTasksTool(ctx?: PluginContext, cap: number = MAX_PLAN_FILE_BYTES): ToolDefinition {
-  return tool({
+export function createPlanTasksTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_FILE_BYTES): MatrixxToolDefinition {
+  return defineTool("plan_tasks", {
     description: `Return a compact manifest for a plan file: filePath, progress (total/completed/remaining/isComplete/needsTriage), numbered tasks (n, title, checked, line, LINE#ID anchor) and definition-of-done lines. Does NOT emit the plan body — use plan_read for content. A plan over the ${cap}-byte cap still yields a manifest, marked degraded:true, because this tool never reads the body into your context; the manifest itself is clamped to ${MAX_PLAN_READ_RENDERED_BYTES} bytes and reports what it dropped. The cap is still enforced on every write.`,
     args: {
-      filePath: tool.schema
+      filePath: z
         .string()
         .describe("Path to plan file (must be inside .matrixx/plans, kebab-case .md)"),
     },

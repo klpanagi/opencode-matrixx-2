@@ -11,27 +11,17 @@ describe("matrix-loop event handler", () => {
 	let messagesCalls: Array<{ sessionID: string }>
 	let mockSessionMessages: Array<{ info?: { role?: string }; parts?: Array<{ type: string; text?: string }> }>
 
-	function createMockPluginInput() {
+	function createMockMatrixxContext() {
 		messagesCalls = []
 		return {
-			client: {
-				session: {
-					prompt: async () => {
-						return {}
-					},
-					promptAsync: async () => {
-						return {}
-					},
-					messages: async (opts: { path: { id: string } }) => {
-						messagesCalls.push({ sessionID: opts.path.id })
-						return { data: mockSessionMessages }
-					},
-					create: async () => ({ data: { id: "verify-session-1" } }),
-					delete: async () => ({}),
+			session: {
+				prompt: async () => ({}),
+				context: async (opts: { sessionID: string }) => {
+					messagesCalls.push({ sessionID: opts.sessionID })
+					return mockSessionMessages
 				},
-				tui: {
-					showToast: async () => ({}),
-				},
+				create: async () => ({ id: "verify-session-1" }),
+				remove: async () => ({}),
 			},
 			directory: TEST_DIR,
 		} as unknown as Parameters<typeof createMatrixLoopHook>[0]
@@ -59,9 +49,9 @@ describe("matrix-loop event handler", () => {
 	test("session.idle event calls session.messages at most once per handler", async () => {
 		// given - mock with completion promise in assistant message (triggers detection)
 		mockSessionMessages = [
-			{ info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+			{ type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
 		]
-		const hook = createMatrixLoopHook(createMockPluginInput(), {
+		const hook = createMatrixLoopHook(createMockMatrixxContext(), {
 			getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
 			verification: { enabled: true, timeoutMs: 1000 },
 		})
@@ -69,7 +59,7 @@ describe("matrix-loop event handler", () => {
 
 		// when - session.idle event triggers both detection AND verification
 		await hook.event({
-			event: { type: "session.idle", properties: { sessionID: "session-123" } },
+			 type: "session.idle", data: { sessionID: "session-123" } ,
 		})
 
 		// then - session.messages called exactly ONCE (H4: shared between detector + verifier)

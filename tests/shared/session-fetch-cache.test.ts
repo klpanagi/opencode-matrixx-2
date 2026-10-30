@@ -1,19 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import { findFirstMessageWithAgentFromSDK, findNearestMessageWithFieldsFromSDK } from "../../src/features/hook-message-injector"
 import { invalidateSdkMessageCache } from "../../src/features/hook-message-injector/sdk-message-cache"
-import type { OpencodeClient } from "../../src/features/hook-message-injector/injector"
+import type { SessionContextCarrier } from "../../src/features/hook-message-injector/injector"
 
 function makeClient(payload: unknown) {
   let calls = 0
   const client = {
     session: {
-      messages: async () => {
+      context: async () => {
         calls++
         return payload
       },
     },
   }
-  return { client: client as unknown as OpencodeClient, getCalls: () => calls }
+  return { client: client as unknown as SessionContextCarrier, getCalls: () => calls }
 }
 
 describe("sdk transcript cache", () => {
@@ -29,9 +29,9 @@ describe("sdk transcript cache", () => {
   //#when findNearestMessageWithFieldsFromSDK is called repeatedly
   //#then the SDK is queried once and later calls are served from cache
   it("collapses repeated nearest-message lookups into a single fetch", async () => {
-    const { client, getCalls } = makeClient({
-      data: [{ info: { id: "m1", agent: "oracle", model: { providerID: "p", modelID: "m" } } }],
-    })
+    const { client, getCalls } = makeClient([
+      { info: { id: "m1", agent: "oracle", model: { providerID: "p", modelID: "m" } } },
+    ])
 
     const first = await findNearestMessageWithFieldsFromSDK(client, "ses_a")
     const second = await findNearestMessageWithFieldsFromSDK(client, "ses_a")
@@ -45,9 +45,9 @@ describe("sdk transcript cache", () => {
   //#when both are performed within the cache window
   //#then the shared fetch is reused instead of issued twice
   it("serves the first-message lookup from the same fetch as the nearest lookup", async () => {
-    const { client, getCalls } = makeClient({
-      data: [{ info: { id: "m1", agent: "oracle" } }],
-    })
+    const { client, getCalls } = makeClient([
+      { info: { id: "m1", agent: "oracle" } },
+    ])
 
     await findNearestMessageWithFieldsFromSDK(client, "ses_b")
     const agent = await findFirstMessageWithAgentFromSDK(client, "ses_b")
@@ -60,9 +60,9 @@ describe("sdk transcript cache", () => {
   //#when a different session is queried
   //#then that session is fetched independently
   it("keys entries per sessionID", async () => {
-    const { client, getCalls } = makeClient({
-      data: [{ info: { id: "m1", agent: "oracle" } }],
-    })
+    const { client, getCalls } = makeClient([
+      { info: { id: "m1", agent: "oracle" } },
+    ])
 
     await findNearestMessageWithFieldsFromSDK(client, "ses_1")
     await findNearestMessageWithFieldsFromSDK(client, "ses_2")
@@ -75,9 +75,9 @@ describe("sdk transcript cache", () => {
   //#when the cache is invalidated for that session
   //#then the next lookup refetches
   it("refetches after explicit invalidation", async () => {
-    const { client, getCalls } = makeClient({
-      data: [{ info: { id: "m1", agent: "oracle" } }],
-    })
+    const { client, getCalls } = makeClient([
+      { info: { id: "m1", agent: "oracle" } },
+    ])
 
     await findNearestMessageWithFieldsFromSDK(client, "ses_c")
     invalidateSdkMessageCache("ses_c")
@@ -93,12 +93,12 @@ describe("sdk transcript cache", () => {
     let calls = 0
     const client = {
       session: {
-        messages: async () => {
+        context: async () => {
           calls++
           throw new Error("boom")
         },
       },
-    } as unknown as OpencodeClient
+    } as unknown as SessionContextCarrier
 
     const first = await findNearestMessageWithFieldsFromSDK(client, "ses_d")
     const second = await findNearestMessageWithFieldsFromSDK(client, "ses_d")

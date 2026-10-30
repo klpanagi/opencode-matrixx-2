@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createPlanListTool } from "../../../src/tools/plan/plan-list"
 import { createPlanReadTool } from "../../../src/tools/plan/plan-read"
 import { createPlanUpdateTool } from "../../../src/tools/plan/plan-update"
@@ -13,8 +13,8 @@ import { createTaskList } from "../../../src/tools/task/task-list"
 const TEST_ABORT = new AbortController()
 const PLAN_NAME = "worktree-state-root-plan.md"
 
-function castPluginInput(value: { directory: string; worktree?: string }): PluginInput {
-  return value as unknown as PluginInput
+function castMatrixxContext(value: { directory: string; worktree?: string }): MatrixxContext {
+  return value as unknown as MatrixxContext
 }
 
 function toolContext(directory: string) {
@@ -53,7 +53,7 @@ describe("plan and task tools resolve state under the project canonical root", (
   //#when plan_read is called with the relative plan path
   //#then the plan is read from the project root instead of reporting file_not_found
   test("plan_read reads the plan from the canonical root", async () => {
-    const pluginCtx = castPluginInput({ directory: worktreeDir, worktree: projectRoot })
+    const pluginCtx = castMatrixxContext({ directory: worktreeDir, worktree: projectRoot })
     const tool = createPlanReadTool(pluginCtx)
 
     const raw = await tool.execute({ filePath: `.matrixx/plans/${PLAN_NAME}` }, toolContext(worktreeDir))
@@ -67,7 +67,7 @@ describe("plan and task tools resolve state under the project canonical root", (
   //#when plan_read is called with the absolute project-root plan path
   //#then the path is accepted rather than rejected as invalid_file_path
   test("plan_read accepts an absolute canonical plan path", async () => {
-    const pluginCtx = castPluginInput({ directory: worktreeDir, worktree: projectRoot })
+    const pluginCtx = castMatrixxContext({ directory: worktreeDir, worktree: projectRoot })
     const tool = createPlanReadTool(pluginCtx)
 
     const raw = await tool.execute(
@@ -83,7 +83,7 @@ describe("plan and task tools resolve state under the project canonical root", (
   //#when plan_list runs
   //#then it lists the canonical root's plans, not the empty worktree
   test("plan_list lists canonical plans", async () => {
-    const pluginCtx = castPluginInput({ directory: worktreeDir, worktree: projectRoot })
+    const pluginCtx = castMatrixxContext({ directory: worktreeDir, worktree: projectRoot })
     const tool = createPlanListTool(pluginCtx)
 
     const raw = String(await tool.execute({}, toolContext(worktreeDir)))
@@ -95,7 +95,7 @@ describe("plan and task tools resolve state under the project canonical root", (
   //#when plan_update marks a line complete
   //#then the canonical plan file is the one mutated
   test("plan_update mutates the canonical plan", async () => {
-    const pluginCtx = castPluginInput({ directory: worktreeDir, worktree: projectRoot })
+    const pluginCtx = castMatrixxContext({ directory: worktreeDir, worktree: projectRoot })
     const readTool = createPlanReadTool(pluginCtx)
     const updateTool = createPlanUpdateTool(pluginCtx)
 
@@ -135,7 +135,7 @@ describe("plan and task tools resolve state under the project canonical root", (
       "utf-8",
     )
 
-    const pluginCtx = castPluginInput({ directory: worktreeDir, worktree: projectRoot })
+    const pluginCtx = castMatrixxContext({ directory: worktreeDir, worktree: projectRoot })
     const tool = createTaskList({}, pluginCtx)
 
     const raw = String(await tool.execute({}, toolContext(worktreeDir)))

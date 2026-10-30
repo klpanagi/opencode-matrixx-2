@@ -1,4 +1,5 @@
 import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { jsonSafeMetadata } from "../../shared"
 import { formatDetailedError } from "../../shared/error-formatting"
 import {
   formatLaunchFailure,
@@ -74,7 +75,7 @@ export async function executeBackgroundTask(
       )
     }
 
-    const unstableMeta = {
+    const unstableMeta = jsonSafeMetadata({
       title: args.description,
       metadata: {
         prompt: args.prompt,
@@ -86,7 +87,7 @@ export async function executeBackgroundTask(
         sessionId,
         command: args.command,
       },
-    }
+    })
     await ctx.metadata?.(unstableMeta)
     if (ctx.callID) {
       storeToolMetadata(ctx.sessionID, ctx.callID, unstableMeta)

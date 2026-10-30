@@ -1,3 +1,4 @@
+import { contentOf, roleOf } from "./session-message"
 
 // Awaiting-user guard used by the task-continuation-enforcer. No schema
 // change: operates on in-memory
@@ -33,18 +34,6 @@ export function clearAwaitingUser(state: unknown): void {
   record.awaitingUserSince = undefined
 }
 
-interface QuestionMessagePart {
-  type?: string
-  tool?: string
-  name?: string
-  question?: unknown
-}
-
-interface QuestionMessage {
-  info?: { role?: string }
-  parts?: Array<QuestionMessagePart>
-}
-
 // True when the trailing message is an unanswered assistant question
 // (question tool call or question part with no subsequent user message).
 // Plain assistant text is NOT treated as awaiting: asking must go through
@@ -52,13 +41,11 @@ interface QuestionMessage {
 export function hasPendingQuestionMessage(messages: Array<unknown>): boolean {
   if (!messages || messages.length === 0) return false
   for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i] as QuestionMessage | undefined
-    const role = message?.info?.role
+    const message = messages[i]
+    const role = roleOf(message)
     if (role === "user") return false
     if (role !== "assistant") continue
-    const parts = message?.parts
-    if (!parts) return false
-    return parts.some((part) => {
+    return contentOf(message).some((part) => {
       const type = part?.type ?? ""
       if (typeof type === "string" && type.toLowerCase().includes("question")) return true
       const tool = part?.tool ?? part?.name

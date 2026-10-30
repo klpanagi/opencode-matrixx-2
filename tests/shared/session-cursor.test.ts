@@ -5,7 +5,8 @@ describe("consumeNewMessages", () => {
   const sessionID = "session-123"
 
   const buildMessage = (id: string, created: number) => ({
-    info: { id, time: { created } },
+    id,
+    time: { created },
   })
 
   beforeEach(() => {

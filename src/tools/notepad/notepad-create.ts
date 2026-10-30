@@ -1,19 +1,20 @@
 import { existsSync, mkdirSync } from "node:fs"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import { atomicWrite } from "../../features/mission-state/plan-storage"
 import { renderNotepad } from "../../hooks/task-notepad-writer/constants"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { resolveDirectory } from "../plan/types"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { validateNotepadFilePath } from "./validation"
 
-export function createNotepadCreateTool(ctx?: PluginContext): ToolDefinition {
-  return tool({
+export function createNotepadCreateTool(ctx?: MatrixxContext): MatrixxToolDefinition {
+  return defineTool("notepad_create", {
     description: `Create a notepad file under .matrixx/notepads/<bucket>/<file>.md.\nValidated via validateNotepadFilePath (kebab-case .md, no absolute paths, no .. escape).\nEmpty planName falls back to the adhoc bucket. Refuses to overwrite: file_exists when present.`,
     args: {
-      planName: tool.schema.string().optional().describe("Bucket name (kebab-case). Omit for the adhoc bucket"),
-      fileName: tool.schema.string().describe("Notepad file name (kebab-case .md, directly inside the bucket)"),
-      subject: tool.schema.string().optional().describe("Task subject for the notepad header (defaults to the file name)"),
-      taskId: tool.schema.string().optional().describe("Task ID for the **Task ID** marker line (defaults to <bucket>/<file>)"),
+      planName: z.string().optional().describe("Bucket name (kebab-case). Omit for the adhoc bucket"),
+      fileName: z.string().describe("Notepad file name (kebab-case .md, directly inside the bucket)"),
+      subject: z.string().optional().describe("Task subject for the notepad header (defaults to the file name)"),
+      taskId: z.string().optional().describe("Task ID for the **Task ID** marker line (defaults to <bucket>/<file>)"),
     },
     execute: async (args, context) => {
       try {

@@ -1,5 +1,10 @@
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
+
+type SessionWithRemove = { remove(input: { sessionID: string }): Promise<unknown> }
+
 import { log } from "../../shared/logger"
+import { contentOf, isAssistant } from "../../shared/session-message"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { DEFAULT_VERIFICATION_AGENT, DEFAULT_VERIFICATION_TIMEOUT_MS, HOOK_NAME } from "./constants"
 
@@ -50,15 +55,15 @@ function parseVerificationResponse(text: string): VerificationResult {
 function extractAssistantText(messages: OpenCodeSessionMessage[]): string | undefined {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const msg = messages[i]
-		if (msg.info?.role !== "assistant") continue
-		const textParts = msg.parts?.filter((p) => p.type === "text").map((p) => p.text ?? "")
-		if (textParts && textParts.length > 0) return textParts.join("\n")
+		if (!isAssistant(msg)) continue
+		const textParts = contentOf(msg).filter((p) => p.type === "text").map((p) => p.text ?? "")
+		if (textParts.length > 0) return textParts.join("\n")
 	}
 	return undefined
 }
 
 export async function verifyCompletion(
-	ctx: PluginInput,
+	ctx: NativePluginContext,
 	options: {
 		sessionID: string
 		directory: string
@@ -81,17 +86,17 @@ export async function verifyCompletion(
 	let verifySessionID: string | undefined
 
 	try {
-		const createResult = await ctx.client.session.create({
-			body: { parentID: options.sessionID, title: "Matrix Loop Verification" } as Record<string, unknown>,
-			query: { directory: options.directory },
-		})
+		const created = (await ctx.session.create({
+			parentID: options.sessionID,
+			title: "Matrix Loop Verification",
+		})) as { id?: string }
 
-		if ((createResult as { error?: unknown }).error || !createResult.data?.id) {
+		if (!created.id) {
 			log(`[${HOOK_NAME}] Verification session creation failed`)
 			return { verified: true }
 		}
 
-		verifySessionID = createResult.data.id
+		verifySessionID = created.id
 
 		const verificationPrompt = buildVerificationPrompt({
 			prompt: options.prompt,
@@ -99,30 +104,16 @@ export async function verifyCompletion(
 			completionPromise: options.completionPromise,
 		})
 
-		await ctx.client.session.prompt({
-			path: { id: verifySessionID },
-			body: {
-				agent,
-				parts: [{ type: "text", text: verificationPrompt }],
-			},
-			query: { directory: options.directory },
-		} as Parameters<typeof ctx.client.session.prompt>[0])
+		await ctx.session.prompt({
+			sessionID: verifySessionID,
+			agent,
+			parts: [{ type: "text", text: verificationPrompt }],
+		})
 
 		const deadline = Date.now() + timeoutMs
 		while (Date.now() < deadline) {
 			try {
-				const messagesResp = await ctx.client.session.messages({
-					path: { id: verifySessionID },
-				})
-
-				const responseData = messagesResp && typeof messagesResp === "object" && "data" in messagesResp
-					? (messagesResp as { data?: unknown }).data
-					: undefined
-				const messageArray: OpenCodeSessionMessage[] = Array.isArray(messagesResp)
-					? messagesResp
-					: Array.isArray(responseData)
-						? responseData
-						: []
+				const messageArray = await fetchSessionMessages(ctx, verifySessionID)
 
 				const assistantText = extractAssistantText(messageArray)
 				if (assistantText && VERIFICATION_TAG_PATTERN.test(assistantText)) {
@@ -144,7 +135,8 @@ export async function verifyCompletion(
 		return { verified: true }
 	} finally {
 		if (verifySessionID) {
-			ctx.client.session.delete({ path: { id: verifySessionID } }).catch((err) => { log("[matrix-loop] Verification session cleanup failed:", err) })
+			const session = ctx.session as NativePluginContext["session"] & SessionWithRemove
+			await session.remove({ sessionID: verifySessionID })
 		}
 	}
 }

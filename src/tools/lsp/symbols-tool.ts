@@ -1,21 +1,22 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 import { DEFAULT_MAX_SYMBOLS } from "./constants"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatDocumentSymbol, formatSymbolInfo } from "./lsp-formatters"
 import type { DocumentSymbol, SymbolInfo } from "./types"
 
-export const lsp_symbols: ToolDefinition = tool({
+export const lsp_symbols: MatrixxToolDefinition = defineTool("lsp_symbols", {
   description:
     "Get symbols from file (document) or search across workspace. Use scope='document' for file outline, scope='workspace' for project-wide symbol search.",
   args: {
-    filePath: tool.schema.string().describe("File path for LSP context"),
-    scope: tool.schema
+    filePath: z.string().describe("File path for LSP context"),
+    scope: z
       .enum(["document", "workspace"])
       .default("document")
       .describe("'document' for file symbols, 'workspace' for project-wide search"),
-    query: tool.schema.string().optional().describe("Symbol name to search (required for workspace scope)"),
-    limit: tool.schema.number().optional().describe("Max results (default 50)"),
+    query: z.string().optional().describe("Symbol name to search (required for workspace scope)"),
+    limit: z.number().optional().describe("Max results (default 50)"),
   },
   execute: async (args, _context) => {
     try {

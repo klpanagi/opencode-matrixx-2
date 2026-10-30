@@ -1,5 +1,19 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { ToolContext } from "@opencode-ai/plugin/tool"
+import { createRequire } from "node:module"
+import { homedir } from "node:os"
+import { join } from "node:path"
+import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+// Unmockable real fs: mock.module("node:fs") below would otherwise poison plain
+// imports, breaking sibling suites that share this process.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
+// Paths this suite owns: the project fixture dir and the global preset file.
+// Everything else delegates to the real fs so unrelated suites keep working.
+const PRESET_PROJECT_DIR = "/tmp/proj"
+const PRESET_GLOBAL_PATH = join(homedir(), ".config", "opencode", "matrixx.jsonc")
+function isPresetPath(path: unknown): boolean {
+  if (typeof path !== "string") return false
+  return path === PRESET_GLOBAL_PATH || path.startsWith(PRESET_PROJECT_DIR + "/") || path.startsWith(PRESET_PROJECT_DIR + "\\")
+}
 
 // ---------------------------------------------------------------------------
 // Mock fs BEFORE importing the module under test (mirrors dcp-switch-profile)
@@ -7,10 +21,20 @@ import type { ToolContext } from "@opencode-ai/plugin/tool"
 
 let capturedWritePath: string | null = null
 let capturedWriteData: string | null = null
-const mockExistsSync = mock((_path: string) => false)
-const mockMkdirSync = mock((_path: string, _opts?: unknown) => undefined)
-const mockReadFileSync = mock((_path: string, _enc: string) => "{}")
+const mockExistsSync = mock((path: string) => {
+  if (!isPresetPath(path)) return realFs.existsSync(path)
+  return false
+})
+const mockMkdirSync = mock((path: string, opts?: unknown) => {
+  if (!isPresetPath(path)) return realFs.mkdirSync(path, opts as never)
+  return undefined
+})
+const mockReadFileSync = mock((path: string, enc: string) => {
+  if (!isPresetPath(path)) return realFs.readFileSync(path, enc as never)
+  return "{}"
+})
 const mockWriteFileSync = mock((path: string, data: string) => {
+  if (!isPresetPath(path)) return realFs.writeFileSync(path, data)
   capturedWritePath = path
   capturedWriteData = data
 })
@@ -25,7 +49,7 @@ mock.module("node:fs", () => ({
 import { _resetPresetStateForTesting } from "../../../src/features/preset-state/manager"
 import { createPresetTool } from "../../../src/tools/preset/tools"
 
-const mockContext: ToolContext = { sessionID: "test-session" } as ToolContext
+const mockContext: MatrixxToolContext = { sessionID: "test-session" } as MatrixxToolContext
 
 const PLUGIN_CONFIG = {
   model_presets: {

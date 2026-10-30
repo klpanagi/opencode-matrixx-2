@@ -1,12 +1,13 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir } from "../../features/task-storage/storage"
 import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enforcer/staleness"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
 import { stateRootFromToolContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const TERMINAL_STATUSES = new Set(["completed", "deleted"])
 const ACTIVE_STATUSES = new Set(["pending", "in_progress"])
@@ -45,9 +46,9 @@ function getTaskTimestamp(task: unknown): number {
 
 export function createTaskCleanupTool(
   config: Partial<MatrixxConfig>,
-  ctx?: PluginInput,
-): ToolDefinition {
-  return tool({
+  ctx?: MatrixxContext,
+): MatrixxToolDefinition {
+  return defineTool("task_cleanup", {
     description: `[TRACKING — local progress records only. Spawns nothing, executes nothing.]
 Delete reclaimable task files from storage.
 
@@ -62,9 +63,9 @@ tasks uses the record's own timestamp. Active tasks are never reclaimed without 
 
 Returns counts: {deleted, remaining, deletedIds}`,
     args: {
-      olderThan: tool.schema.string().optional().describe('Only delete tasks older than duration (e.g. "7d", "24h", "30m"). For terminal tasks this uses the record timestamp; in stale mode it sets the mtime threshold.'),
-      all: tool.schema.boolean().optional().describe("Delete all reclaimable tasks (default true when olderThan not set)"),
-      stale: tool.schema.boolean().optional().describe("Also reclaim abandoned pending/in_progress tasks older than the threshold (default false)"),
+      olderThan: z.string().optional().describe('Only delete tasks older than duration (e.g. "7d", "24h", "30m"). For terminal tasks this uses the record timestamp; in stale mode it sets the mtime threshold.'),
+      all: z.boolean().optional().describe("Delete all reclaimable tasks (default true when olderThan not set)"),
+      stale: z.boolean().optional().describe("Also reclaim abandoned pending/in_progress tasks older than the threshold (default false)"),
     },
     execute: async (args: Record<string, unknown>, context?: { sessionID: string }): Promise<string> => {
       try {

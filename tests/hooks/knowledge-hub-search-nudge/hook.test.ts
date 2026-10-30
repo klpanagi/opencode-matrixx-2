@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import type { PluginInput } from "@opencode-ai/plugin";
+import type { MatrixxContext } from "../../../src/plugin/context";
 import type { LoadedHub } from "../../../src/features/knowledge-hub/loader";
 import { createKnowledgeHubSearchNudgeHook } from "../../../src/hooks/knowledge-hub-search-nudge/hook";
 
-function makeCtx(): PluginInput {
-  return { directory: "/tmp", client: {} } as unknown as PluginInput;
+function makeCtx(): MatrixxContext {
+  return { directory: "/tmp", client: {} } as unknown as MatrixxContext;
 }
 
 function makeHub(name: string): LoadedHub {

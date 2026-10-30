@@ -1,6 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import type { MatrixxContext } from "../../plugin/context"
 import { stateRootFromPluginContext } from "../../shared/state-root"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { handleArchive } from "./archive-handler"
 import { HANDOFF_DESCRIPTION } from "./constants"
 import { type HandoffCreateArgs, handleCreate } from "./create-handler"
@@ -10,7 +11,7 @@ import { handleRead } from "./read-handler"
 /**
  * Flat args shape for the multi-action `handoff` tool.
  *
- * `tool.schema` in the OpenCode SDK does not support `.discriminatedUnion()`
+ * `z` in the OpenCode SDK does not support `.discriminatedUnion()`
  * cleanly across the type-narrowing required by each action, so we use a
  * single flat shape: every `create`-only field is `.optional()`, and the
  * `execute` body branches on `args.action` to apply the right behavior.
@@ -41,12 +42,12 @@ type HandoffToolArgs = {
  * (`create-handler`, `read-handler`, `archive-handler`, `list-handler`) so
  * this dispatcher stays small and each handler can evolve independently.
  */
-export function createHandoffTools(ctx: PluginInput): Record<string, ToolDefinition> {
+export function createHandoffTools(ctx: MatrixxContext): Record<string, MatrixxToolDefinition> {
   const stateRoot = stateRootFromPluginContext(ctx)
-  const handoff: ToolDefinition = tool({
+  const handoff: MatrixxToolDefinition = defineTool("handoff", {
     description: HANDOFF_DESCRIPTION,
     args: {
-      action: tool.schema
+      action: z
         .enum(["create", "read", "list", "archive"])
         .describe(
           "Which handoff operation to perform: 'create' writes a new handoff, 'read' loads the active one, 'archive' marks the active one as consumed, 'list' shows all handoff files."
@@ -54,54 +55,54 @@ export function createHandoffTools(ctx: PluginInput): Record<string, ToolDefinit
 
       // -------- create-only fields (all optional at the schema layer) --------
 
-      topics: tool.schema
-        .array(tool.schema.string())
+      topics: z
+        .array(z.string())
         .min(1)
         .optional()
         .describe("(action=create) Topic tags for the handoff (e.g., ['auth', 'refactor'])"),
-      user_requests: tool.schema
+      user_requests: z
         .string()
         .optional()
         .describe("(action=create) Verbatim user requests (do not paraphrase)"),
-      goal: tool.schema
+      goal: z
         .string()
         .optional()
         .describe("(action=create) One-sentence description of what should be done next"),
-      work_completed: tool.schema
-        .array(tool.schema.string())
+      work_completed: z
+        .array(z.string())
         .optional()
         .describe("(action=create) First-person bullet points of what was done"),
-      current_state: tool.schema
+      current_state: z
         .string()
         .optional()
         .describe("(action=create) Current state of the codebase or task"),
-      pending_tasks: tool.schema
-        .array(tool.schema.string())
+      pending_tasks: z
+        .array(z.string())
         .optional()
         .describe("(action=create) Tasks planned but not completed"),
-      key_files: tool.schema
+      key_files: z
         .array(
-          tool.schema.object({
-            path: tool.schema.string(),
-            purpose: tool.schema.string(),
+          z.object({
+            path: z.string(),
+            purpose: z.string(),
           })
         )
         .optional()
         .describe("(action=create) Key files for continuing the work"),
-      important_decisions: tool.schema
+      important_decisions: z
         .array(
-          tool.schema.object({
-            decision: tool.schema.string(),
-            rationale: tool.schema.string(),
+          z.object({
+            decision: z.string(),
+            rationale: z.string(),
           })
         )
         .optional()
         .describe("(action=create) Important decisions and their rationale"),
-      explicit_constraints: tool.schema
-        .array(tool.schema.string())
+      explicit_constraints: z
+        .array(z.string())
         .optional()
         .describe("(action=create) Verbatim constraints only"),
-      context_for_continuation: tool.schema
+      context_for_continuation: z
         .string()
         .optional()
         .describe("(action=create) Additional context the next session should know"),

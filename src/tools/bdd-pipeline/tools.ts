@@ -1,10 +1,11 @@
 import * as fs from "node:fs"
 import { resolve as resolvePath } from "node:path"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import type { BackgroundManager } from "../../features/background-agent/manager"
 import { type Contract, ContractSchema } from "../../features/bdd/schema"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
 import { createBddParseGherkinTool } from "../bdd-parse-gherkin/tools"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { buildAnalysisReport } from "./analysis-report"
 import { BDD_PIPELINE_DESCRIPTION, PIPELINE_REQUIRED_OUTPUTS } from "./constants"
 import { resolveFeaturePaths } from "./feature-resolver"
@@ -27,21 +28,21 @@ const ENRICH_POLL_INTERVAL_MS = 250
 
 export function createBddPipelineTool(opts: {
   manager: BackgroundManager
-}): ToolDefinition {
+}): MatrixxToolDefinition {
   const { manager } = opts
   const parseTool = createBddParseGherkinTool()
   const createTool = createBddCreateContractTool()
 
-  return tool({
+  return defineTool("bdd_pipeline_run", {
     description: BDD_PIPELINE_DESCRIPTION,
     args: {
-      featurePaths: tool.schema
-        .array(tool.schema.string())
+      featurePaths: z
+        .array(z.string())
         .describe(
           "One or more .feature file paths, directories, or glob patterns (e.g. 'features/**/*.feature').",
         ),
-      outDir: tool.schema.string().describe("Output directory root; per-feature dirs are created under it"),
-      force: tool.schema
+      outDir: z.string().describe("Output directory root; per-feature dirs are created under it"),
+      force: z
         .boolean()
         .default(false)
         .describe("Overwrite existing contract / output files"),
@@ -101,8 +102,8 @@ export function createBddPipelineTool(opts: {
 
 function makeDeps(args: {
   manager: BackgroundManager
-  parseTool: ToolDefinition
-  createTool: ToolDefinition
+  parseTool: MatrixxToolDefinition
+  createTool: MatrixxToolDefinition
   parentSessionID: string
   parentMessageID: string
   parentAgent: string
@@ -115,7 +116,7 @@ function makeDeps(args: {
   return {
     parseFeature: async (path: string): Promise<ParseFeatureResult> => {
       const raw = await args.parseTool.execute({ filePath: path }, dummyCtx(args))
-      return JSON.parse(raw)
+      return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as ParseFeatureResult)
     },
     readFeatureSource: async (path: string): Promise<string> => {
       return fs.readFileSync(path, "utf-8")
@@ -131,7 +132,7 @@ function makeDeps(args: {
         },
         dummyCtx(args),
       )
-      return JSON.parse(raw)
+      return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as CreateContractResult)
     },
     enrichContract: async (contractPath: string): Promise<EnrichContractResult> => {
       return runEnrich(contractPath, args)

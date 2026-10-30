@@ -26,11 +26,26 @@ export interface CommandInfo {
   lazyContentLoader?: LazyContentLoader
 }
 
+export interface PluginCommandEntry {
+  name: string
+  description?: string
+  model?: unknown
+  agent?: string
+  subtask?: boolean
+  template?: unknown
+}
+
+export interface PluginCommandClient {
+  command: {
+    list(): Promise<{ data?: PluginCommandEntry[] }>
+  }
+}
+
 export interface SlashcommandToolOptions {
   /** Pre-loaded commands (skip discovery if provided) */
   commands?: CommandInfo[]
   /** Pre-loaded skills (skip discovery if provided) */
   skills?: BuiltinSkill[]
-  /** OpenCode SDK client for discovering plugin-registered commands */
-  client?: ReturnType<typeof import("@opencode-ai/sdk").createOpencodeClient>
+  /** Host command client for discovering plugin-registered commands */
+  client?: PluginCommandClient
 }

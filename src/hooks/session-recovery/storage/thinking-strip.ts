@@ -1,11 +1,12 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { deletePart, isSqliteBackend, log, normalizeSDKResponse } from "../../../shared"
+import { deletePart, isSqliteBackend, log } from "../../../shared"
+import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session-context-source"
+import { contentOf, idOf } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import type { StoredPart } from "../types"
 
-type OpencodeClient = PluginInput["client"]
 
 export function stripThinkingParts(messageID: string): boolean {
   if (isSqliteBackend()) {
@@ -35,24 +36,21 @@ export function stripThinkingParts(messageID: string): boolean {
 }
 
 export async function stripThinkingPartsAsync(
-  client: OpencodeClient,
+  client: SessionContextCarrier,
   sessionID: string,
   messageID: string
 ): Promise<boolean> {
   try {
-    const response = await client.session.messages({ path: { id: sessionID } })
-    const messages = normalizeSDKResponse(response, [] as Array<{ parts?: Array<{ type: string; id: string }> }>, { preferResponseOnMissingData: true })
+    const messages = await fetchSessionMessages(client, sessionID)
 
-    const targetMsg = messages.find((m) => {
-      const info = (m as Record<string, unknown>).info as Record<string, unknown> | undefined
-      return info?.id === messageID
-    })
-    if (!targetMsg?.parts) return false
+    const targetMsg = messages.find((m) => idOf(m) === messageID)
+    if (!targetMsg) return false
 
     let anyRemoved = false
-    for (const part of targetMsg.parts) {
-      if (THINKING_TYPES.has(part.type) && part.id) {
-        const deleted = await deletePart(client, sessionID, messageID, part.id)
+    for (const part of contentOf(targetMsg)) {
+      const partId = typeof part.id === "string" ? part.id : undefined
+      if (part.type && THINKING_TYPES.has(part.type) && partId) {
+        const deleted = await deletePart(client, sessionID, messageID, partId)
         if (deleted) anyRemoved = true
       }
     }

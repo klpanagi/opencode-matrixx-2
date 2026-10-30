@@ -1,5 +1,5 @@
-import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
 import { isCallerOrchestrator } from "../../shared/session-utils"
 import { isShellTool, isTaskTool } from "../../shared/shell-tool-name"
 import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
@@ -10,7 +10,7 @@ import { ORCHESTRATOR_DELEGATION_REQUIRED, SINGLE_TASK_DIRECTIVE } from "./syste
 import { isWriteOrEditToolName } from "./write-edit-tool-policy"
 
 export function createToolExecuteBeforeHandler(input: {
-  ctx: PluginInput
+  ctx: NativePluginContext
   pendingFilePaths: Map<string, string>
 }): (
   toolInput: { tool: string; sessionID?: string; callID?: string },
@@ -19,7 +19,7 @@ export function createToolExecuteBeforeHandler(input: {
   const { ctx, pendingFilePaths } = input
 
   return async (toolInput, toolOutput): Promise<void> => {
-    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx.client))) {
+    if (!(await isCallerOrchestrator(toolInput.sessionID, ctx))) {
       return
     }
 

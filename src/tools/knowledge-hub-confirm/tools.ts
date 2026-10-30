@@ -1,8 +1,9 @@
 import * as path from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
 import { approveHubWrite, HUB_WRITE_APPROVAL_TTL_MS } from "../../hooks/knowledge-hub-guard/approvals"
+import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared/logger"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const HOOK_NAME = "knowledge-hub-guard"
 
@@ -15,17 +16,17 @@ const HOOK_NAME = "knowledge-hub-guard"
  * for the resolved absolute path, then the agent retries the blocked write
  * and the guard lets it through.
  */
-export function createKnowledgeHubConfirmTool(ctx: PluginInput): ToolDefinition {
-  return tool({
+export function createKnowledgeHubConfirmTool(ctx: MatrixxContext): MatrixxToolDefinition {
+  return defineTool("knowledge_hub_confirm", {
     description:
       "Record user confirmation for a knowledge-hub write. Call only after the user " +
       "explicitly approved the write via the question tool. Records a session-scoped " +
       "approval (10 min TTL) for the path, then retry the blocked write.",
     args: {
-      path: tool.schema
+      path: z
         .string()
         .describe("Hub file or directory the user approved for writing (absolute or relative to the project dir)"),
-      sessionID: tool.schema
+      sessionID: z
         .string()
         .optional()
         .describe("Session the approval applies to (defaults to the current session)"),

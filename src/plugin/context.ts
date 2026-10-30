@@ -1,0 +1,306 @@
+/**
+ * Canonical plugin context for the matrixx V2 adapter (`MatrixxContext`)
+ * plus the promise-flavor domain shapes every consumer is written against.
+ *
+ * Renamed from `context.ts` (task 23): the file now carries the
+ * canonical `MatrixxContext` name instead of the `V2*` prefix, and the
+ * context includes the platform fields the core reads (`directory`,
+ * `worktree`, `project`, `$`) plus the host `notify` sink.
+ *
+ * Every domain member is the promise-flavor shape verified against runtime
+ * v2.1.4 by the Phase 0 probes (P1/P1b/P2/P4/P4b/P5):
+ * - P1/P1b: `agent.list()` answers a `{location, data}` envelope while
+ *   `agent.transform((e) => e.list())` re-registers and returns the
+ *   `Registration` — hence the tolerant `list(input?)` plus the
+ *   `transform(...) => Promise<V2Registration>` pair.
+ * - P2: `session.context()` requires a real sessionID and answers flat V2
+ *   messages — no `{data}` envelope, no `info`/`parts` wrapper.
+ * - P3/P4: `session.messages` and `config` are absent on the host context,
+ *   so neither appears here (a `config` member must FAIL typecheck).
+ * - P4b: the default model resolves via `model.transform(...)`, not
+ *   `config.get` — the model domain keeps the same transform shape.
+ * - P5: the tool list carries per-tool `options` (`codemode: false` for
+ *   the direct-only entry) — hence `options?` on `V2ToolInfo`.
+ *
+ * Type-only module: no runtime code. The old `definePlugin` identity helper
+ * lived here only to mirror `@opencode/plugin`; the host validates the
+ * default export structurally (`{ id, setup }`), so `src/index.ts` exports
+ * that literal directly.
+ */
+
+import type { NotifySink } from "../shared/notify"
+import type { MatrixxToolDefinition } from "../tools/shared/define-tool"
+
+export type Cleanup = () => unknown
+
+export interface V2App {
+  readonly name: string
+  readonly version: string
+  readonly channel: string
+}
+
+export interface V2Project {
+  readonly id: string
+  readonly directory: string
+  readonly canonical: string
+}
+
+export interface V2Location {
+  readonly directory: string
+  readonly workspaceID?: string
+  readonly project: V2Project
+}
+
+export interface V2Event {
+  readonly type: string
+  readonly [key: string]: unknown
+}
+
+export interface V2Registration {
+  dispose(): Promise<void>
+}
+
+export type V2HookCallback<Event> = (event: Event) => Promise<void> | void
+
+export interface V2SessionPromptEvent {
+  readonly sessionID: string
+  readonly messageID: string
+  prompt: { text: string; [key: string]: unknown }
+  metadata?: Record<string, unknown>
+  delivery: string
+}
+
+export interface V2SystemPart {
+  type: string
+  text: string
+}
+
+export interface V2SessionContextEvent {
+  readonly sessionID: string
+  readonly agent: string
+  readonly model: unknown
+  system: V2SystemPart[]
+  messages: unknown[]
+  options: Record<string, unknown>
+  tools: Record<string, { description: string; input: unknown }>
+}
+
+export interface V2SessionCompactionEvent extends V2SessionContextEvent {
+  result?: unknown
+}
+
+export interface V2ToolContext {
+  readonly sessionID: string
+  readonly agent: string
+  readonly messageID: string
+  readonly id: string
+  readonly signal: AbortSignal
+  progress(update: Record<string, unknown>): Promise<void>
+}
+
+export interface V2ToolResult {
+  content?: string | ReadonlyArray<unknown>
+  output?: unknown
+  metadata?: Record<string, unknown>
+}
+
+export interface V2ToolInfo {
+  name: string
+  description: string
+  input: unknown
+  output?: unknown
+  options?: Record<string, unknown>
+  execute(input: unknown, context: V2ToolContext): Promise<V2ToolResult>
+}
+
+export interface V2ToolEditor {
+  list(): ReadonlyArray<V2ToolInfo & { readonly id: string }>
+  get(id: string): (V2ToolInfo & { readonly id: string }) | undefined
+  namespace(namespace: { name: string; description: string }): void
+  add(tool: V2ToolInfo): void
+  update(id: string, update: (tool: V2ToolInfo) => void): void
+  remove(id: string): void
+}
+
+export interface V2ExecuteBeforeEvent {
+  tool: string
+  readonly sessionID: string
+  readonly agent: string
+  readonly messageID: string
+  readonly id: string
+  input: unknown
+}
+
+export type V2ExecuteAfterEvent = {
+  readonly tool: string
+  readonly sessionID: string
+  readonly agent: string
+  readonly messageID: string
+  readonly id: string
+  readonly input: unknown
+} & (
+  | { readonly status: "completed"; result: V2ToolResult }
+  | { readonly status: "error"; error: { message: string; [key: string]: unknown } }
+)
+
+export interface V2PermissionApi {
+  assert(input: Record<string, unknown>): Promise<void>
+  list(input: Record<string, unknown>): Promise<unknown>
+  get(input: Record<string, unknown>): Promise<unknown>
+  reply(input: Record<string, unknown>): Promise<void>
+}
+
+export interface V2ToolDomain {
+  transform(callback: (editor: V2ToolEditor) => void): Promise<V2Registration>
+  list(): Promise<ReadonlyArray<V2ToolInfo & { readonly id: string }>>
+  reload(): Promise<void>
+  hook(
+    name: "execute.before",
+    callback: V2HookCallback<V2ExecuteBeforeEvent>,
+  ): Promise<V2Registration>
+  hook(name: "execute.after", callback: V2HookCallback<V2ExecuteAfterEvent>): Promise<V2Registration>
+}
+
+export interface V2SessionDomain {
+  hook(
+    name: "prompt",
+    callback: V2HookCallback<V2SessionPromptEvent>,
+  ): Promise<V2Registration>
+  hook(
+    name: "context" | "compaction" | "generate" | "title",
+    callback: V2HookCallback<V2SessionContextEvent>,
+  ): Promise<V2Registration>
+  hook(
+    name: "model.request",
+    callback: V2HookCallback<{ headers: Record<string, string>; [key: string]: unknown }>,
+  ): Promise<V2Registration>
+  list(input?: Record<string, unknown>): Promise<unknown>
+  get(input: Record<string, unknown>): Promise<unknown>
+  create(input?: Record<string, unknown>): Promise<unknown>
+  update(input: Record<string, unknown>): Promise<unknown>
+  move(input: Record<string, unknown>): Promise<unknown>
+  remove(input: Record<string, unknown>): Promise<unknown>
+  switchAgent(input: Record<string, unknown>): Promise<unknown>
+  switchModel(input: Record<string, unknown>): Promise<unknown>
+  prompt(input: Record<string, unknown>): Promise<unknown>
+  generate(input: Record<string, unknown>): Promise<unknown>
+  command(input: Record<string, unknown>): Promise<unknown>
+  compact(input: Record<string, unknown>): Promise<unknown>
+  synthetic(input: Record<string, unknown>): Promise<unknown>
+  interrupt(input: Record<string, unknown>): Promise<unknown>
+  wait(input: Record<string, unknown>): Promise<unknown>
+  context(input: Record<string, unknown>): Promise<unknown>
+}
+
+export interface V2TransformDomain {
+  list(input?: Record<string, unknown>): Promise<unknown>
+  transform(callback: (editor: V2DomainEditor) => void): Promise<V2Registration>
+  reload(): Promise<void>
+}
+
+/** Shared shape of the command/skill/provider/model/reference editors. */
+export interface V2DomainEditor {
+  list(...args: unknown[]): ReadonlyArray<unknown>
+  get(...args: unknown[]): unknown
+  add(...args: unknown[]): void
+  update(...args: unknown[]): void
+  remove(...args: unknown[]): void
+  [key: string]: unknown
+}
+
+/** `MCPEditor` registers a server by name via `set`; it has no `add`. */
+export interface V2McpEditor {
+  list(): ReadonlyArray<[string, unknown]>
+  get(name: string): unknown
+  set(name: string, config: unknown): void
+  update(name: string, update: (config: Record<string, unknown>) => void): void
+  remove(name: string): void
+}
+
+export interface V2McpTransformDomain {
+  list(input?: Record<string, unknown>): Promise<unknown>
+  transform(callback: (editor: V2McpEditor) => void): Promise<V2Registration>
+  reload(): Promise<void>
+}
+
+export interface V2AgentInfo {
+  id: string
+  name: string
+  model?: { providerID: string; id: string; variant?: string }
+  request: { settings?: Record<string, unknown>; headers?: Record<string, string>; body?: Record<string, unknown> }
+  system?: string
+  description?: string
+  mode: "primary" | "subagent" | "all"
+  hidden: boolean
+  color?: string
+  steps?: number
+  disabled?: boolean
+  permissions: unknown[]
+  [key: string]: unknown
+}
+
+/** `AgentEditor` has no `add`; `update` seeds a missing agent from `Info.default`. */
+export interface V2AgentEditor {
+  list(): readonly V2AgentInfo[]
+  get(id: string): V2AgentInfo | undefined
+  default(id: string | undefined): void
+  update(id: string, update: (agent: V2AgentInfo) => void): void
+  remove(id: string): void
+}
+
+export interface V2AgentTransformDomain {
+  list(input?: Record<string, unknown>): Promise<unknown>
+  transform(callback: (editor: V2AgentEditor) => void): Promise<V2Registration>
+  reload(): Promise<void>
+}
+
+export interface MatrixxContext {
+  readonly app: V2App
+  readonly location: V2Location
+  readonly options: Record<string, unknown>
+  /**
+   * Platform fields the core needs. `createNativePluginContext` derives
+   * them from `location` today; they are first-class here so consumers can
+   * read them off the context directly.
+   */
+  readonly directory: string
+  readonly worktree: string
+  readonly project: V2Project
+  /** Bun shell API (`import { $ } from "bun"`), threaded for tool/exec use. */
+  readonly $: typeof import("bun").$
+  /** Host notification sink (authoritative type lives in shared/notify). */
+  readonly notify: NotifySink
+  readonly session: V2SessionDomain
+  readonly tool: V2ToolDomain
+  readonly event: {
+    subscribe(options?: { signal?: AbortSignal }): AsyncIterable<V2Event>
+  }
+  readonly agent: V2AgentTransformDomain
+  readonly command: V2TransformDomain
+  readonly mcp: V2McpTransformDomain
+  readonly skill: V2TransformDomain
+  readonly model: V2TransformDomain
+  readonly provider: V2TransformDomain
+  readonly reference: V2TransformDomain
+  readonly integration: V2TransformDomain
+  readonly permission: V2PermissionApi
+  readonly storage: {
+    get(key: string): Promise<unknown>
+    set(key: string, value: unknown): Promise<void>
+    remove(key: string): Promise<void>
+  }
+  readonly shell: {
+    hook(
+      name: "create.before",
+      callback: V2HookCallback<{ env: Record<string, string>; [key: string]: unknown }>,
+    ): Promise<V2Registration>
+  }
+}
+
+/**
+ * Registry of tool definitions keyed by tool name.
+ *
+ * Relocated from the deleted V1 substrate module (`./types`, task 24);
+ * the definition shape is the task 23 `MatrixxToolDefinition`.
+ */
+export type ToolsRecord = Record<string, MatrixxToolDefinition>

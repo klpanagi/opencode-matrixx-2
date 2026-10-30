@@ -6,11 +6,11 @@ describe("resolveSessionAgent", () => {
     //#given
     const client = {
       session: {
-        messages: async () => ({
-          data: [
-            { info: { role: "user" } },
-            { info: { role: "assistant", agent: "explore" } },
-            { info: { role: "assistant", agent: "oracle" } },
+        context: async () => ({
+          messages: [
+            { type: "user" },
+            { type: "assistant", agent: "explore" },
+            { type: "assistant", agent: "oracle" },
           ],
         }),
       },
@@ -27,11 +27,11 @@ describe("resolveSessionAgent", () => {
     //#given
     const client = {
       session: {
-        messages: async () => ({
-          data: [
-            { info: { role: "user" } },
-            { info: { role: "system" } },
-            { info: { role: "assistant", agent: "plan" } },
+        context: async () => ({
+          messages: [
+            { type: "user" },
+            { type: "system" },
+            { type: "assistant", agent: "plan" },
           ],
         }),
       },
@@ -48,10 +48,10 @@ describe("resolveSessionAgent", () => {
     //#given
     const client = {
       session: {
-        messages: async () => ({
-          data: [
-            { info: { role: "user" } },
-            { info: { role: "assistant" } },
+        context: async () => ({
+          messages: [
+            { type: "user" },
+            { type: "assistant" },
           ],
         }),
       },
@@ -68,7 +68,7 @@ describe("resolveSessionAgent", () => {
     //#given
     const client = {
       session: {
-        messages: async () => ({ data: [] }),
+        context: async () => ({ messages: [] }),
       },
     }
 
@@ -83,7 +83,7 @@ describe("resolveSessionAgent", () => {
     //#given
     const client = {
       session: {
-        messages: async () => { throw new Error("API error") },
+        context: async () => { throw new Error("API error") },
       },
     }
 

@@ -12,7 +12,7 @@
  *
  * WRITE PATH: `status` (and all front-matter fields) is written through the
  * `plan_update` tool. Ownership is enforced by TRANSITION ORDER, not caller
- * identity (PluginContext carries no caller identity, so ownership by caller
+ * identity (MatrixxContext carries no caller identity, so ownership by caller
  * identity is unenforceable): forward transitions (pending -> in_progress ->
  * completed) are legal, backward transitions are hard-rejected by
  * `plan_update` with `status_transition_rejected` unless the explicit escape

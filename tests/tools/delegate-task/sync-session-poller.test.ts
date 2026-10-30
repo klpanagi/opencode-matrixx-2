@@ -10,7 +10,7 @@ function createMockCtx(aborted = false) {
     sessionID: "parent-session",
     messageID: "parent-message",
     agent: "test-agent",
-    abort: controller.signal,
+    abort: controller.signal
   }
 }
 
@@ -20,7 +20,7 @@ describe("pollSyncSession", () => {
       POLL_INTERVAL_MS: 10,
       MIN_STABILITY_TIME_MS: 0,
       STABILITY_POLLS_REQUIRED: 1,
-      MAX_POLL_TIME_MS: 5000,
+      MAX_POLL_TIME_MS: 5000
     })
   })
 
@@ -37,17 +37,17 @@ describe("pollSyncSession", () => {
       const _pollCount = 0
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "stop" },
-                parts: [{ type: "text", text: "Done" }],
+                id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "stop",
+                content: [{ type: "text", text: "Done" }]
               },
-            ],
+            ]
           }),
-          status: async () => ({ data: { "ses_test": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_test": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -55,7 +55,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_test",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should return null (success, no error)
@@ -69,36 +69,36 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 2) {
               return {
-                data: [
-                  { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+                messages: [
+                  { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
-                    info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "tool-calls" },
-                    parts: [{ type: "tool-call", text: "calling tool" }],
+                    id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
+                    content: [{ type: "tool-call", text: "calling tool" }]
                   },
-                ],
+                ]
               }
             }
             return {
-              data: [
-                { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+              messages: [
+                { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
-                  info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "tool-calls" },
-                  parts: [{ type: "tool-call", text: "calling tool" }],
+                  id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
+                  content: [{ type: "tool-call", text: "calling tool" }]
                 },
-                { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+                { id: "msg_003", type: "user", time: { created: 3000 } },
                 {
-                  info: { id: "msg_004", role: "assistant", time: { created: 4000 }, finish: "end_turn" },
-                  parts: [{ type: "text", text: "Final answer" }],
+                  id: "msg_004", type: "assistant", time: { created: 4000 }, finish: "end_turn",
+                  content: [{ type: "text", text: "Final answer" }]
                 },
-              ],
+              ]
             }
           },
-          status: async () => ({ data: { "ses_test": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_test": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -106,7 +106,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_test",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then
@@ -121,36 +121,36 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 1) {
               return {
-                data: [
-                  { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+                messages: [
+                  { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
-                    info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "unknown" },
-                    parts: [],
+                    id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "unknown",
+                    content: []
                   },
-                ],
+                ]
               }
             }
             return {
-              data: [
-                { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+              messages: [
+                { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
-                  info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "unknown" },
-                  parts: [],
+                  id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "unknown",
+                  content: []
                 },
-                { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+                { id: "msg_003", type: "user", time: { created: 3000 } },
                 {
-                  info: { id: "msg_004", role: "assistant", time: { created: 4000 }, finish: "stop" },
-                  parts: [{ type: "text", text: "Done" }],
+                  id: "msg_004", type: "assistant", time: { created: 4000 }, finish: "stop",
+                  content: [{ type: "text", text: "Done" }]
                 },
-              ],
+              ]
             }
           },
-          status: async () => ({ data: { "ses_test": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_test": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -158,7 +158,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_test",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then
@@ -173,37 +173,37 @@ describe("pollSyncSession", () => {
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 1) {
               return {
-                data: [
-                  { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+                messages: [
+                  { id: "msg_001", type: "user", time: { created: 1000 } },
                   {
-                    info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-                    parts: [{ type: "text", text: "Partial" }],
+                    id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
+                    content: [{ type: "text", text: "Partial" }]
                   },
-                  { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
-                ],
+                  { id: "msg_003", type: "user", time: { created: 3000 } },
+                ]
               }
             }
             return {
-              data: [
-                { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+              messages: [
+                { id: "msg_001", type: "user", time: { created: 1000 } },
                 {
-                  info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-                  parts: [{ type: "text", text: "Partial" }],
+                  id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
+                  content: [{ type: "text", text: "Partial" }]
                 },
-                { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+                { id: "msg_003", type: "user", time: { created: 3000 } },
                 {
-                  info: { id: "msg_004", role: "assistant", time: { created: 4000 }, finish: "end_turn" },
-                  parts: [{ type: "text", text: "Final" }],
+                  id: "msg_004", type: "assistant", time: { created: 4000 }, finish: "end_turn",
+                  content: [{ type: "text", text: "Final" }]
                 },
-              ],
+              ]
             }
           },
-          status: async () => ({ data: { "ses_test": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_test": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -211,7 +211,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_test",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then
@@ -226,9 +226,9 @@ describe("pollSyncSession", () => {
       const { pollSyncSession } = require("../../../src/tools/delegate-task/sync-session-poller")
       const mockClient = {
         session: {
-          messages: async () => ({ data: [] }),
-          status: async () => ({ data: {} }),
-        },
+          context: async () => ({ messages: [] }),
+          status: async () => ({ data: {} })
+        }
       }
 
       //#when
@@ -236,7 +236,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_abort",
         agentToUse: "test-agent",
         toastManager: { removeTask: () => {} },
-        taskId: "task_123",
+        taskId: "task_123"
       })
 
       //#then
@@ -254,18 +254,18 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 1,
-        MAX_POLL_TIME_MS: 0,
+        MAX_POLL_TIME_MS: 0
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-            ],
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
+            ]
           }),
-          status: async () => ({ data: { "ses_timeout": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_timeout": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -273,7 +273,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_timeout",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
       //#then - timeout returns structured outcome with prefix preserved
       expect(result).toContain("Poll timeout reached after 50ms for session ses_timeout")
@@ -283,7 +283,7 @@ describe("pollSyncSession", () => {
   })
 
    describe("non-idle session status", () => {
-     test("skips message check when session is not idle", async () => {
+     test("never consults a status domain and completes from messages", async () => {
        //#given
        const { pollSyncSession } = require("../../../src/tools/delegate-task/sync-session-poller")
 
@@ -291,16 +291,16 @@ describe("pollSyncSession", () => {
        let _messageCallCount = 0
        const mockClient = {
          session: {
-           messages: async () => {
+           context: async () => {
              _messageCallCount++
              return {
-               data: [
-                 { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+               messages: [
+                 { id: "msg_001", type: "user", time: { created: 1000 } },
                  {
-                   info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-                   parts: [{ type: "text", text: "Done" }],
+                   id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
+                   content: [{ type: "text", text: "Done" }]
                  },
-               ],
+               ]
              }
            },
            status: async () => {
@@ -309,8 +309,8 @@ describe("pollSyncSession", () => {
                return { data: { "ses_busy": { type: "running" } } }
              }
              return { data: { "ses_busy": { type: "idle" } } }
-           },
-         },
+           }
+         }
        }
 
        //#when
@@ -318,12 +318,12 @@ describe("pollSyncSession", () => {
          sessionID: "ses_busy",
          agentToUse: "test-agent",
          toastManager: null,
-         taskId: undefined,
+         taskId: undefined
        })
 
-       //#then - should have waited for idle before checking messages
+       //#then - completion comes from the message stream; the status branch is gone
        expect(result).toBeNull()
-       expect(statusCallCount).toBeGreaterThanOrEqual(3)
+       expect(statusCallCount).toBe(0)
      })
    })
 
@@ -346,8 +346,8 @@ describe("pollSyncSession", () => {
 
       //#given - only user messages, no assistant
       const messages = [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-        { info: { id: "msg_002", role: "user", time: { created: 2000 } } },
+        { id: "msg_001", type: "user", time: { created: 1000 } },
+        { id: "msg_002", type: "user", time: { created: 2000 } },
       ]
 
       //#when
@@ -363,8 +363,8 @@ describe("pollSyncSession", () => {
       //#given - only assistant message, no user message
       const messages = [
         {
-          info: { id: "msg_001", role: "assistant", time: { created: 1000 }, finish: "end_turn" },
-          parts: [{ type: "text", text: "Response" }],
+          id: "msg_001", type: "assistant", time: { created: 1000 }, finish: "end_turn",
+          content: [{ type: "text", text: "Response" }]
         },
       ]
 
@@ -380,10 +380,10 @@ describe("pollSyncSession", () => {
 
       //#given - assistant message without finish field
       const messages = [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+        { id: "msg_001", type: "user", time: { created: 1000 } },
         {
-          info: { id: "msg_002", role: "assistant", time: { created: 2000 } },
-          parts: [{ type: "text", text: "Response" }],
+          id: "msg_002", type: "assistant", time: { created: 2000 },
+          content: [{ type: "text", text: "Response" }]
         },
       ]
 
@@ -399,10 +399,10 @@ describe("pollSyncSession", () => {
 
       //#given - assistant message without id in info
       const messages = [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+        { id: "msg_001", type: "user", time: { created: 1000 } },
         {
-          info: { role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-          parts: [{ type: "text", text: "Response" }],
+          type: "assistant", time: { created: 2000 }, finish: "end_turn",
+          content: [{ type: "text", text: "Response" }]
         },
       ]
 
@@ -418,10 +418,10 @@ describe("pollSyncSession", () => {
 
       //#given - user message without id in info
       const messages = [
-        { info: { role: "user", time: { created: 1000 } } },
+        { type: "user", time: { created: 1000 } },
         {
-          info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-          parts: [{ type: "text", text: "Response" }],
+          id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn",
+          content: [{ type: "text", text: "Response" }]
         },
       ]
 
@@ -439,9 +439,9 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-        { info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "tool-calls" } },
-        { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
+        { id: "msg_001", type: "user", time: { created: 1000 } },
+        { id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls" },
+        { id: "msg_003", type: "user", time: { created: 3000 } },
       ]
 
       //#when
@@ -456,8 +456,8 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-        { info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "end_turn" } },
+        { id: "msg_001", type: "user", time: { created: 1000 } },
+        { id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "end_turn" },
       ]
 
       //#when
@@ -487,18 +487,18 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 1,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-            ],
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
+            ]
           }),
-          status: async () => ({ data: { "ses_stall": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_stall": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -506,7 +506,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_stall",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should detect stall, not timeout after full MAX_POLL_TIME_MS
@@ -522,23 +522,23 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 1,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "tool-calls" },
-                parts: [{ type: "tool-call", text: "calling tool" }],
+                id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
+                content: [{ type: "tool-call", text: "calling tool" }]
               },
-              { info: { id: "msg_003", role: "user", time: { created: 3000 } } },
-            ],
+              { id: "msg_003", type: "user", time: { created: 3000 } },
+            ]
           }),
-          status: async () => ({ data: { "ses_toolstall": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_toolstall": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -546,7 +546,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_toolstall",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should break (not timeout) because tool result exists but no follow-up
@@ -561,20 +561,20 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 1,
-        MAX_POLL_TIME_MS: 5000,
+        MAX_POLL_TIME_MS: 5000
       })
 
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "stop" },
-                parts: [{ type: "text", text: "Done" }],
+                id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "stop",
+                content: [{ type: "text", text: "Done" }]
               },
-            ],
+            ]
           }),
           status: async () => {
             callCount++
@@ -582,8 +582,8 @@ describe("pollSyncSession", () => {
               return { data: { "ses_reset": { type: "running" } } }
             }
             return { data: { "ses_reset": { type: "idle" } } }
-          },
-        },
+          }
+        }
       }
 
       //#when
@@ -591,7 +591,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_reset",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should complete normally (stall counter was reset by non-idle status)
@@ -606,22 +606,22 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 100,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
               {
-                info: { id: "msg_002", role: "assistant", time: { created: 2000 }, finish: "tool-calls" },
-                parts: [{ type: "tool-call", text: "calling tool" }],
+                id: "msg_002", type: "assistant", time: { created: 2000 }, finish: "tool-calls",
+                content: [{ type: "tool-call", text: "calling tool" }]
               },
-            ],
+            ]
           }),
-          status: async () => ({ data: { "ses_orphan": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_orphan": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -629,7 +629,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_orphan",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should break via orphaned tool call detection, not 10-min timeout
@@ -646,22 +646,22 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 2,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { role: "user", time: { created: 1000 } } },
+          context: async () => ({
+            messages: [
+              { type: "user", time: { created: 1000 } },
               {
-                info: { role: "assistant", time: { created: 2000 }, finish: "end_turn" },
-                parts: [{ type: "text", text: "Response with finish but no IDs" }],
+                type: "assistant", time: { created: 2000 }, finish: "end_turn",
+                content: [{ type: "text", text: "Response with finish but no IDs" }]
               },
-            ],
+            ]
           }),
-          status: async () => ({ data: { "ses_stable": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_stable": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -669,7 +669,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_stable",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should complete via stability detection (not timeout)
@@ -684,18 +684,18 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 1,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       const mockClient = {
         session: {
-          messages: async () => ({
-            data: [
-              { info: { id: "msg_001", role: "user", time: { created: 1000 } } },
-            ],
+          context: async () => ({
+            messages: [
+              { id: "msg_001", type: "user", time: { created: 1000 } },
+            ]
           }),
-          status: async () => ({ data: { "ses_noa": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_noa": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -703,7 +703,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_noa",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should detect stall (no assistant), not stability completion
@@ -719,58 +719,58 @@ describe("pollSyncSession", () => {
         POLL_INTERVAL_MS: 10,
         MIN_STABILITY_TIME_MS: 0,
         STABILITY_POLLS_REQUIRED: 2,
-        MAX_POLL_TIME_MS: 30000,
+        MAX_POLL_TIME_MS: 30000
       })
 
       let callCount = 0
       const mockClient = {
         session: {
-          messages: async () => {
+          context: async () => {
             callCount++
             if (callCount <= 2) {
               return {
-                data: [
-                  { info: { role: "user" } },
+                messages: [
+                  { type: "user" },
                   {
-                    info: { role: "assistant", finish: "end_turn" },
-                    parts: [{ type: "text", text: "Partial" }],
+                    type: "assistant", finish: "end_turn",
+                    content: [{ type: "text", text: "Partial" }]
                   },
-                ],
+                ]
               }
             }
             if (callCount <= 4) {
               return {
-                data: [
-                  { info: { role: "user" } },
+                messages: [
+                  { type: "user" },
                   {
-                    info: { role: "assistant", finish: "end_turn" },
-                    parts: [{ type: "text", text: "Partial" }],
+                    type: "assistant", finish: "end_turn",
+                    content: [{ type: "text", text: "Partial" }]
                   },
-                  { info: { role: "user" } },
+                  { type: "user" },
                   {
-                    info: { role: "assistant", finish: "end_turn" },
-                    parts: [{ type: "text", text: "More" }],
+                    type: "assistant", finish: "end_turn",
+                    content: [{ type: "text", text: "More" }]
                   },
-                ],
+                ]
               }
             }
             return {
-              data: [
-                  { info: { role: "user" } },
+              messages: [
+                  { type: "user" },
                   {
-                    info: { role: "assistant", finish: "end_turn" },
-                    parts: [{ type: "text", text: "Partial" }],
+                    type: "assistant", finish: "end_turn",
+                    content: [{ type: "text", text: "Partial" }]
                   },
-                  { info: { role: "user" } },
+                  { type: "user" },
                   {
-                    info: { role: "assistant", finish: "end_turn" },
-                    parts: [{ type: "text", text: "More" }],
+                    type: "assistant", finish: "end_turn",
+                    content: [{ type: "text", text: "More" }]
                   },
-              ],
+              ]
             }
           },
-          status: async () => ({ data: { "ses_grow": { type: "idle" } } }),
-        },
+          status: async () => ({ data: { "ses_grow": { type: "idle" } } })
+        }
       }
 
       //#when
@@ -778,7 +778,7 @@ describe("pollSyncSession", () => {
         sessionID: "ses_grow",
         agentToUse: "test-agent",
         toastManager: null,
-        taskId: undefined,
+        taskId: undefined
       })
 
       //#then - should complete via stability after messages stop growing
@@ -793,8 +793,8 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Hello" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Response" }] },
+        { type: "user", content: [{ type: "text", text: "Hello" }] },
+        { type: "assistant", content: [{ type: "text", text: "Response" }] },
       ]
 
       //#then
@@ -806,7 +806,7 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { role: "assistant" }, parts: [{ type: "reasoning", text: "Thinking..." }] },
+        { type: "assistant", content: [{ type: "reasoning", text: "Thinking..." }] },
       ]
 
       //#then
@@ -818,7 +818,7 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { role: "assistant" }, parts: [{ type: "tool-call", text: "calling" }] },
+        { type: "assistant", content: [{ type: "tool-call", text: "calling" }] },
       ]
 
       //#then
@@ -830,7 +830,7 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Hello" }] },
+        { type: "user", content: [{ type: "text", text: "Hello" }] },
       ]
 
       //#then
@@ -842,7 +842,7 @@ describe("pollSyncSession", () => {
 
       //#given
       const messages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "  " }] },
+        { type: "assistant", content: [{ type: "text", text: "  " }] },
       ]
 
       //#then

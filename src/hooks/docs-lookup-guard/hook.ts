@@ -1,7 +1,9 @@
 // docs-lookup-guard — warn-first docs-lookup nudge (only-operator-direct).
-import type { Hooks, PluginInput } from "@opencode-ai/plugin"
+
 
 import { getSessionAgent } from "../../features/session-state/state"
+import type { MatrixxContext } from "../../plugin/context"
+import type { Hooks } from "../../plugin/legacy-hooks"
 import { log } from "../../shared"
 import { FALLBACK_MESSAGE, GUARDED_TOOLS, HOOK_NAME, NUDGE_MESSAGE, OPERATOR_AGENT } from "./constants"
 
@@ -21,7 +23,7 @@ function looksEmptyOrFailed(output: string): boolean {
   )
 }
 
-export function createDocsLookupGuardHook(ctx: PluginInput): Hooks {
+export function createDocsLookupGuardHook(ctx: MatrixxContext): Hooks {
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string; agent?: string },

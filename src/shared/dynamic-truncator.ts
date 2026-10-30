@@ -1,5 +1,8 @@
-import type { PluginInput } from "@opencode-ai/plugin";
-import { normalizeSDKResponse } from "./normalize-sdk-response"
+import type { MatrixxContext } from "../plugin/context";
+import { isRecord } from "./record-type-guard"
+import type { SessionContextCarrier } from "./session-context-source"
+import { fetchSessionMessages } from "./session-context-source"
+import { roleOf } from "./session-message"
 import { getCachedTokenUsage } from "./token-cache"
 
 const ANTHROPIC_ACTUAL_LIMIT =
@@ -20,8 +23,40 @@ interface AssistantMessageInfo {
 	};
 }
 
-interface MessageWrapper {
-	info: { role: string } & Partial<AssistantMessageInfo>;
+type MessageSource = MatrixxContext | SessionContextCarrier
+
+function asSessionCarrier(ctx: MessageSource): SessionContextCarrier | undefined {
+	if (typeof ctx !== "object" || ctx === null) return undefined
+	const session = (ctx as { session?: unknown }).session
+	if (!isRecord(session) || typeof session.context !== "function") return undefined
+	return { session: session as unknown as SessionContextCarrier["session"] }
+}
+
+function tokensOf(message: unknown): AssistantMessageInfo["tokens"] | undefined {
+	const holders = [isRecord(message) ? message.info : undefined, isRecord(message) ? message.tokens : undefined]
+	for (const holder of holders) {
+		if (!isRecord(holder)) continue
+		const candidate = holder as { input?: unknown; output?: unknown; reasoning?: unknown; cache?: unknown }
+		if (typeof candidate.input !== "number") continue
+		if (typeof candidate.output !== "number") continue
+		if (typeof candidate.reasoning !== "number") continue
+		if (!isRecord(candidate.cache)) continue
+		if (typeof candidate.cache.read !== "number") continue
+		if (typeof candidate.cache.write !== "number") continue
+		return {
+			input: candidate.input,
+			output: candidate.output,
+			reasoning: candidate.reasoning,
+			cache: { read: candidate.cache.read, write: candidate.cache.write },
+		}
+	}
+	return undefined
+}
+
+function isAssistantMessage(message: unknown): boolean {
+	if (roleOf(message) === "assistant") return true
+	const info = isRecord(message) ? message.info : undefined
+	return isRecord(info) && info.role === "assistant"
 }
 
 interface TruncationResult {
@@ -109,7 +144,7 @@ function truncateToTokenLimit(
 }
 
  async function getContextWindowUsage(
-	ctx: PluginInput,
+	ctx: MessageSource,
 	sessionID: string,
 ): Promise<{
 	usedTokens: number;
@@ -130,21 +165,23 @@ function truncateToTokenLimit(
 		};
 	}
 
+	const carrier = asSessionCarrier(ctx)
+	if (!carrier) return null
+
 	try {
 		const response = await Promise.race([
-			ctx.client.session.messages({
-				path: { id: sessionID },
-			}),
+			fetchSessionMessages(carrier, sessionID),
 			new Promise<never>((_, reject) =>
 				setTimeout(() => reject(new Error("SDK messages timeout after 5000ms")), 5000)
 			),
 		]);
 
-		const messages = normalizeSDKResponse(response, [] as MessageWrapper[], { preferResponseOnMissingData: true })
-
-		const assistantMessages = messages
-			.filter((m) => m.info.role === "assistant")
-			.map((m) => m.info as AssistantMessageInfo);
+		const assistantMessages: AssistantMessageInfo[] = []
+		for (const message of response) {
+			if (!isAssistantMessage(message)) continue
+			const tokens = tokensOf(message)
+			if (tokens) assistantMessages.push({ role: "assistant", tokens })
+		}
 
 		if (assistantMessages.length === 0) return null;
 
@@ -167,7 +204,7 @@ function truncateToTokenLimit(
 }
 
  async function dynamicTruncate(
-	ctx: PluginInput,
+	ctx: MessageSource,
 	sessionID: string,
 	output: string,
 	options: TruncationOptions = {},
@@ -203,7 +240,7 @@ function truncateToTokenLimit(
 	return truncateToTokenLimit(output, maxOutputTokens, preserveHeaderLines);
 }
 
-export function createDynamicTruncator(ctx: PluginInput) {
+export function createDynamicTruncator(ctx: MessageSource) {
 	return {
 		truncate: (
 			sessionID: string,

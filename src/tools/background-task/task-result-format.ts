@@ -1,14 +1,15 @@
 import type { BackgroundTask } from "../../features/background-agent"
 import { formatDuration } from "../../shared"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
 import { consumeNewMessages } from "../../shared/session-cursor"
-import type { BackgroundOutputClient, BackgroundOutputMessagesResult } from "./clients"
-import { extractMessages, getErrorMessage } from "./session-messages"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, roleOf } from "../../shared/session-message"
 
 function getTimeString(value: unknown): string {
   return typeof value === "string" ? value : ""
 }
 
-export async function formatTaskResult(task: BackgroundTask, client: BackgroundOutputClient): Promise<string> {
+export async function formatTaskResult(task: BackgroundTask, client: SessionContextCarrier): Promise<string> {
   if (task.compactedResult) {
     const duration = formatDuration(task.startedAt ?? new Date(), task.completedAt)
     return `Task Result
@@ -26,17 +27,14 @@ ${task.compactedResult}`
     return `Error: Task has no sessionID`
   }
 
-  const messagesResult: BackgroundOutputMessagesResult = await client.session.messages({
-    path: { id: task.sessionID },
-  })
-
-  const errorMessage = getErrorMessage(messagesResult)
-  if (errorMessage) {
-    return `Error fetching messages: ${errorMessage}`
+  let messages: SessionMessage[]
+  try {
+    messages = await fetchSessionMessages(client, task.sessionID)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return `Error fetching messages: ${message}`
   }
-
-  const messages = extractMessages(messagesResult)
-  if (!Array.isArray(messages) || messages.length === 0) {
+  if (messages.length === 0) {
     return `Task Result
 
 Task ID: ${task.id}
@@ -49,7 +47,7 @@ Session ID: ${task.sessionID}
 (No messages found)`
   }
 
-  const relevantMessages = messages.filter((m) => m.info?.role === "assistant" || m.info?.role === "tool")
+  const relevantMessages = messages.filter((m) => roleOf(m) === "assistant" || roleOf(m) === "tool")
   if (relevantMessages.length === 0) {
     return `Task Result
 
@@ -64,8 +62,8 @@ Session ID: ${task.sessionID}
   }
 
   const sortedMessages = [...relevantMessages].sort((a, b) => {
-    const timeA = getTimeString(a.info?.time)
-    const timeB = getTimeString(b.info?.time)
+    const timeA = getTimeString(a.time)
+    const timeB = getTimeString(b.time)
     return timeA.localeCompare(timeB)
   })
 
@@ -86,7 +84,7 @@ Session ID: ${task.sessionID}
 
   const extractedContent: string[] = []
   for (const message of newMessages) {
-    for (const part of message.parts ?? []) {
+    for (const part of contentOf(message)) {
       if ((part.type === "text" || part.type === "reasoning") && part.text) {
         extractedContent.push(part.text)
         continue

@@ -39,7 +39,7 @@ describe("session-manager utils", () => {
         id: "msg_001",
         role: "user",
         time: { created: Date.now() },
-        parts: [{ id: "prt_001", type: "text", text: "Hello world" }],
+        content: [{ id: "prt_001", type: "text", text: "Hello world" }],
       },
     ]
 
@@ -58,7 +58,7 @@ describe("session-manager utils", () => {
         id: "msg_001",
         role: "user",
         time: { created: Date.now() },
-        parts: [{ id: "prt_001", type: "text", text: "Test" }],
+        content: [{ id: "prt_001", type: "text", text: "Test" }],
       },
     ]
     const todos = [

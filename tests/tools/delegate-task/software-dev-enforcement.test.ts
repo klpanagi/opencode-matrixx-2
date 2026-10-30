@@ -20,30 +20,30 @@ function createSyncHarness() {
 
   const mockClient = {
     session: {
-      get: async () => ({ data: { directory: "/project" } }),
-      create: async () => ({ data: { id: "ses_sde_wiring" } }),
+      get: async () => ({ directory: "/project" }),
+      create: async () => ({ id: "ses_sde_wiring" }),
       prompt: promptMock,
       promptAsync: promptMock,
-      messages: async () => ({
-        data: [{ info: { role: "assistant" }, parts: [{ type: "text", text: "Done" }] }],
+      context: async () => ({
+        messages: [{ type: "assistant", content: [{ type: "text", text: "Done" }] }]
       }),
       status: async () => ({ data: {} }),
-      abort: mock(() => Promise.resolve()),
+      interrupt: mock(() => Promise.resolve())
     },
     config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
-    app: { agents: async () => ({ data: [] }) },
+    agent: { list: async () => ({ data: [] }) }
   }
 
   const tool = createDelegateTask({
     manager: { launch: async () => ({}) },
-    client: mockClient,
+    client: mockClient
   })
 
   const toolContext = {
     sessionID: "parent-session",
     messageID: "parent-message",
     agent: "morpheus",
-    abort: new AbortController().signal,
+    abort: new AbortController().signal
   }
 
   return { tool, toolContext, getPromptBody: () => promptBody }
@@ -59,7 +59,7 @@ describe("software-dev enforcement: Mouse subset composed through buildSystemCon
     const systemContent = buildSystemContent({
       skillContent: resolved.content,
       agentName: "mouse",
-      category: "source",
+      category: "source"
     })
 
     //#then full-template / delegation strings are absent, subset + single banner present
@@ -114,7 +114,7 @@ describe("software-dev enforcement: creation-path wiring keyed off resolved targ
         prompt: "Do something",
         category: "source",
         run_in_background: false,
-        load_skills: ["tdd-enforcer"],
+        load_skills: ["tdd-enforcer"]
       },
       toolContext,
     )
@@ -141,7 +141,7 @@ describe("software-dev enforcement: creation-path wiring keyed off resolved targ
         prompt: "Do something",
         category: "source",
         run_in_background: false,
-        load_skills: ["tdd-enforcer", "git-master"],
+        load_skills: ["tdd-enforcer", "git-master"]
       },
       toolContext,
     )
@@ -165,7 +165,7 @@ describe("software-dev enforcement: creation-path wiring keyed off resolved targ
           prompt: "Do something",
           category: "source",
           run_in_background: false,
-          load_skills: [],
+          load_skills: []
         },
         toolContext,
       ),

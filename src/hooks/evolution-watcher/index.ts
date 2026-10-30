@@ -1,7 +1,7 @@
 import type { EvolutionConfig } from "../../config/schema/evolution"
 import { traceStore } from "../../features/evolution/store/trace-store"
 import type { TraceRecord } from "../../features/evolution/types"
-import type { PluginContext } from "../../plugin/types"
+import type { MatrixxContext } from "../../plugin/context"
 import { classifySuccess, truncate } from "./utils"
 
 export { classifySuccess, truncate } from "./utils"
@@ -36,7 +36,7 @@ function randomId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export function createEvolutionWatcherHook(a?: PluginContext | EvolutionConfig, b?: EvolutionConfig) {
+export function createEvolutionWatcherHook(a?: MatrixxContext | EvolutionConfig, b?: EvolutionConfig) {
   const config = resolveConfig(a, b)
   const startTimes = new Map<string, number>()
   const pendingArgs = new Map<string, string>()

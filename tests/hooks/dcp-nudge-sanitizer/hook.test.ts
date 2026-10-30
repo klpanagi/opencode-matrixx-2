@@ -1,8 +1,23 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { Message, Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string
+  sessionID?: string
+  role?: string
+  [key: string]: unknown
+}
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
 
-import type { PluginContext } from "../../../src/plugin/types"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { createDcpNudgeSanitizerHook } from "../../../src/hooks/dcp-nudge-sanitizer/hook"
 
 type MessageWithParts = { info: Message; parts: Part[] }
@@ -29,7 +44,7 @@ function countNudges(parts: Part[]): number {
 const NUDGE = "<instruction name=iteration_nudge>use the compress tool on it now</instruction>"
 
 async function runSanitizer(messages: MessageWithParts[]): Promise<MessageWithParts[]> {
-  const hook = createDcpNudgeSanitizerHook({} as PluginContext)
+  const hook = createDcpNudgeSanitizerHook({} as MatrixxContext)
   await hook["experimental.chat.messages.transform"]?.({} as Record<string, never>, { messages })
   return messages
 }

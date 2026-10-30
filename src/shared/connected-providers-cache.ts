@@ -147,7 +147,7 @@ export function writeProviderModelsCache(data: { models: Record<string, string[]
  * Update the connected providers cache by fetching from the client.
  * Also updates the provider-models cache with model lists per provider.
  */
-export async function updateConnectedProvidersCache(client: {
+export async function updateConnectedProvidersCache(client?: {
 	provider?: {
 		list?: () => Promise<{
 			data?: {
@@ -157,6 +157,10 @@ export async function updateConnectedProvidersCache(client: {
 		}>
 	}
 }): Promise<void> {
+	if (!client) {
+		log("[connected-providers-cache] provider refresh skipped: no native provider domain")
+		return
+	}
 	if (!client?.provider?.list) {
 		log("[connected-providers-cache] client.provider.list not available")
 		return

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import * as path from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { ContextCollector } from "../../../src/features/context-injector"
 import { detectDomainSkills } from "../../../src/hooks/domain-keyword-detector/detector"
 import { createKnowledgeHubInjectorHook } from "../../../src/hooks/knowledge-hub-injector/hook"
@@ -24,7 +24,7 @@ function makeTuiCtx() {
       },
     },
   }
-  return { ctx: { directory: tmpdir(), client } as unknown as PluginInput, seen }
+  return { ctx: { directory: tmpdir(), client } as unknown as MatrixxContext, seen }
 }
 
 const tmpRoots: string[] = []
@@ -56,7 +56,7 @@ function userMessages(sessionID: string) {
 }
 
 function makeHook(
-  ctx: PluginInput,
+  ctx: MatrixxContext,
   root: string,
 ): { hook: ReturnType<typeof createKnowledgeHubInjectorHook>; collector: ContextCollector } {
   const collector = new ContextCollector()

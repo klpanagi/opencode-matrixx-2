@@ -1,8 +1,7 @@
-import type { PluginInput } from "@opencode-ai/plugin"
-
-import { normalizeSDKResponse } from "../../shared"
 import { hasPendingQuestionMessage } from "../../shared/awaiting-user"
 import { log } from "../../shared/logger"
+import type { NativePluginContext } from "../../shared/session-context-source"
+import { fetchSessionMessages } from "../../shared/session-context-source"
 
 const HOOK_NAME = "stop-continuation-guard"
 
@@ -16,8 +15,9 @@ interface StopContinuationGuardOptions {
   isAwaitingUser?: (sessionID: string) => boolean
 }
 
+import type { V2Event } from "../../plugin/context"
 export interface StopContinuationGuard {
-  event: (input: { event: { type: string; properties?: unknown } }) => Promise<void>
+  event: (event: V2Event) => Promise<void>
   "chat.message": (input: { sessionID?: string }) => Promise<void>
   stop: (sessionID: string) => Promise<void>
   isStopped: (sessionID: string) => boolean
@@ -25,7 +25,7 @@ export interface StopContinuationGuard {
 }
 
 export function createStopContinuationGuardHook(
-  ctx: PluginInput,
+  ctx: NativePluginContext,
   options?: StopContinuationGuardOptions
 ): StopContinuationGuard {
   const stoppedSessions = new Set<string>()
@@ -33,11 +33,7 @@ export function createStopContinuationGuardHook(
   const isSessionAwaitingUser = async (sessionID: string): Promise<boolean> => {
     if (options?.isAwaitingUser?.(sessionID)) return true
     try {
-      const resp = await ctx.client.session.messages({
-        path: { id: sessionID },
-        query: { directory: ctx.directory },
-      })
-      return hasPendingQuestionMessage(normalizeSDKResponse(resp, [] as Array<unknown>))
+      return hasPendingQuestionMessage(await fetchSessionMessages(ctx, sessionID))
     } catch (error) {
       log(`[${HOOK_NAME}] Messages fetch failed, assuming not awaiting user`, { sessionID, error: String(error) })
       return false
@@ -70,12 +66,8 @@ export function createStopContinuationGuardHook(
     log(`[${HOOK_NAME}] Continuation guard cleared for session`, { sessionID })
   }
 
-  const event = async ({
-    event,
-  }: {
-    event: { type: string; properties?: unknown }
-  }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined
+  const eventHandler = async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined
@@ -98,7 +90,7 @@ export function createStopContinuationGuardHook(
   }
 
   return {
-    event,
+    event: eventHandler,
     "chat.message": chatMessage,
     stop,
     isStopped,

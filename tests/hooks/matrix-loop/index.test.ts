@@ -1,5 +1,6 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -15,38 +16,19 @@ describe("matrix-loop", () => {
   let mockSessionMessages: Array<{ info?: { role?: string }; parts?: Array<{ type: string; text?: string }> }>
   let mockMessagesApiResponseShape: "data" | "array"
 
-  function createMockPluginInput() {
+  function createMockMatrixxContext() {
     return {
-      client: {
-        session: {
-          prompt: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-            promptCalls.push({
-              sessionID: opts.path.id,
-              text: opts.body.parts[0].text,
-            })
-            return {}
-          },
-          promptAsync: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-            promptCalls.push({
-              sessionID: opts.path.id,
-              text: opts.body.parts[0].text,
-            })
-            return {}
-          },
-          messages: async (opts: { path: { id: string } }) => {
-            messagesCalls.push({ sessionID: opts.path.id })
-            return mockMessagesApiResponseShape === "array" ? mockSessionMessages : { data: mockSessionMessages }
-          },
+      session: {
+        prompt: async (opts: { sessionID: string; parts: Array<{ type: string; text: string }> }) => {
+          promptCalls.push({
+            sessionID: opts.sessionID,
+            text: opts.parts[0].text,
+          })
+          return {}
         },
-        tui: {
-          showToast: async (opts: { body: { title: string; message: string; variant: string } }) => {
-            toastCalls.push({
-              title: opts.body.title,
-              message: opts.body.message,
-              variant: opts.body.variant,
-            })
-            return {}
-          },
+        context: async (opts: { sessionID: string }) => {
+          messagesCalls.push({ sessionID: opts.sessionID })
+          return mockSessionMessages
         },
       },
       directory: TEST_DIR,
@@ -59,6 +41,14 @@ describe("matrix-loop", () => {
     messagesCalls = []
     mockSessionMessages = []
     mockMessagesApiResponseShape = "data"
+    setNotifySink((level, message) => {
+      const separator = message.indexOf(": ")
+      toastCalls.push({
+        title: separator >= 0 ? message.slice(0, separator) : message,
+        message: separator >= 0 ? message.slice(separator + 2) : message,
+        variant: level === "warn" ? "warning" : level,
+      })
+    })
 
     if (!existsSync(TEST_DIR)) {
       mkdirSync(TEST_DIR, { recursive: true })
@@ -69,6 +59,7 @@ describe("matrix-loop", () => {
 
   afterEach(() => {
     clearState(TEST_DIR)
+    resetNotifySink()
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true })
     }
@@ -176,7 +167,7 @@ describe("matrix-loop", () => {
   describe("hook", () => {
     test("should start loop and write state", () => {
       // given - hook instance
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
 
       // when - start loop
       const success = hook.startLoop("session-123", "Build something", {
@@ -197,7 +188,7 @@ describe("matrix-loop", () => {
 
     test("should accept ultrawork option in startLoop", () => {
       // given - hook instance
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
 
       // when - start loop with ultrawork
       hook.startLoop("session-123", "Build something", { ultrawork: true })
@@ -209,7 +200,7 @@ describe("matrix-loop", () => {
 
     test("should handle missing ultrawork option in startLoop", () => {
       // given - hook instance
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
 
       // when - start loop without ultrawork
       hook.startLoop("session-123", "Build something")
@@ -221,15 +212,13 @@ describe("matrix-loop", () => {
 
     test("should inject continuation when loop active and no completion detected", async () => {
       // given - active loop state
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build a feature", { maxIterations: 10 })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - continuation should be injected
@@ -246,7 +235,7 @@ describe("matrix-loop", () => {
 
     test("should stop loop when max iterations reached", async () => {
       // given - loop at max iteration
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build something", { maxIterations: 2 })
 
       const state = hook.getState() as MatrixLoopState
@@ -255,10 +244,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -275,7 +262,7 @@ describe("matrix-loop", () => {
 
     test("should cancel loop via cancelLoop", () => {
       // given - active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Test task")
 
       // when - cancel loop
@@ -288,7 +275,7 @@ describe("matrix-loop", () => {
 
     test("should not cancel loop for different session", () => {
       // given - active loop for session-123
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Test task")
 
       // when - try to cancel for different session
@@ -301,22 +288,18 @@ describe("matrix-loop", () => {
 
     test("should skip injection during recovery", async () => {
       // given - active loop and session in recovery
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Test task")
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID: "session-123", error: new Error("test") },
-        },
+        type: "session.error",
+        data: { sessionID: "session-123", error: new Error("test") },
       })
 
       // when - session goes idle immediately
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -325,15 +308,13 @@ describe("matrix-loop", () => {
 
     test("should clear state on session deletion", async () => {
       // given - active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Test task")
 
       // when - session deleted
       await hook.event({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: "session-123" } },
-        },
+        type: "session.deleted",
+        data: { info: { id: "session-123" } },
       })
 
       // then - state should be cleared
@@ -342,15 +323,13 @@ describe("matrix-loop", () => {
 
     test("should not inject for different session than loop owner", async () => {
       // given - loop owned by session-123
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Test task")
 
       // when - different session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-456" },
       })
 
       // then - no continuation injected
@@ -371,7 +350,7 @@ describe("matrix-loop", () => {
       writeState(TEST_DIR, state)
 
       // Mock sessionExists to return false for the orphaned session
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         checkSessionExists: async (sessionID: string) => {
           // Orphaned session doesn't exist, current session does
           return sessionID !== "orphaned-session-999"
@@ -380,10 +359,8 @@ describe("matrix-loop", () => {
 
       // when - a new session goes idle (different from the orphaned session in state)
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "new-session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "new-session-456" },
       })
 
       // then - orphaned state should be cleared
@@ -406,7 +383,7 @@ describe("matrix-loop", () => {
       writeState(TEST_DIR, state)
 
       // Mock sessionExists to return true for the active session
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         checkSessionExists: async (sessionID: string) => {
           // Original session still exists
           return sessionID === "active-session-123" || sessionID === "new-session-456"
@@ -415,10 +392,8 @@ describe("matrix-loop", () => {
 
       // when - a different session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "new-session-456" },
-        },
+        type: "session.idle",
+        data: { sessionID: "new-session-456" },
       })
 
       // then - state should NOT be cleared (original session still active)
@@ -430,7 +405,7 @@ describe("matrix-loop", () => {
 
     test("should use default config values", () => {
       // given - hook with config
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         config: {
           enabled: true,
           default_max_iterations: 200,
@@ -447,14 +422,12 @@ describe("matrix-loop", () => {
 
     test("should not inject when no loop is active", async () => {
       // given - no active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - no continuation injected
@@ -464,7 +437,7 @@ describe("matrix-loop", () => {
     test("should detect completion promise and stop loop", async () => {
       // given - active loop with transcript containing completion
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "COMPLETE" })
@@ -473,10 +446,8 @@ describe("matrix-loop", () => {
 
       // when - session goes idle (transcriptPath now derived from sessionID via getTranscriptPath)
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed, no continuation
@@ -488,20 +459,18 @@ describe("matrix-loop", () => {
     test("should detect completion promise via session messages API", async () => {
       // given - active loop with assistant message containing completion promise
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
+        { type: "assistant", content: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "API_DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed via API detection, no continuation
@@ -518,20 +487,18 @@ describe("matrix-loop", () => {
       // given - active loop with assistant message containing completion promise
       mockMessagesApiResponseShape = "array"
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
+        { type: "assistant", content: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "API_DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop completed via API detection, no continuation
@@ -547,15 +514,15 @@ describe("matrix-loop", () => {
     test("should ignore completion promise in reasoning part via session messages API", async () => {
       //#given - active loop with assistant reasoning containing completion promise
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
         {
-          info: { role: "assistant" },
-          parts: [
+          type: "assistant",
+          content: [
             { type: "reasoning", text: "I am done now. <promise>REASONING_DONE</promise>" },
           ],
         },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build something", {
@@ -565,10 +532,8 @@ describe("matrix-loop", () => {
 
       //#when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       //#then - completion promise in reasoning is ignored, continuation injected
@@ -582,15 +547,15 @@ describe("matrix-loop", () => {
 
     test("should handle multiple iterations correctly", async () => {
       // given - active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build feature", { maxIterations: 5 })
 
       // when - multiple idle events
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - iteration incremented correctly
@@ -600,7 +565,7 @@ describe("matrix-loop", () => {
 
     test("should include prompt and promise in continuation message", async () => {
       // given - loop with specific prompt and promise
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Create a calculator app", {
         completionPromise: "CALCULATOR_DONE",
         maxIterations: 10,
@@ -608,7 +573,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - continuation includes original task and promise
@@ -618,18 +583,16 @@ describe("matrix-loop", () => {
 
     test("should clear loop state on user abort (MessageAbortedError)", async () => {
       // given - active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build something")
       expect(hook.getState()).not.toBeNull()
 
       // when - user aborts (Ctrl+C)
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: "session-123",
-            error: { name: "MessageAbortedError", message: "User aborted" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: "session-123",
+          error: { name: "MessageAbortedError", message: "User aborted" },
         },
       })
 
@@ -639,17 +602,15 @@ describe("matrix-loop", () => {
 
     test("should NOT set recovery mode on user abort", async () => {
       // given - active loop
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build something")
 
       // when - user aborts (Ctrl+C)
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID: "session-123",
-            error: { name: "MessageAbortedError" },
-          },
+        type: "session.error",
+        data: {
+          sessionID: "session-123",
+          error: { name: "MessageAbortedError" },
         },
       })
 
@@ -658,7 +619,7 @@ describe("matrix-loop", () => {
 
       // when - session goes idle immediately (should work, no recovery mode)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - continuation should be injected (not blocked by recovery)
@@ -668,20 +629,20 @@ describe("matrix-loop", () => {
     test("should check last 3 assistant messages for completion", async () => {
       // given - multiple assistant messages, promise in recent (not last) assistant message
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Start task" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Working on it." }] },
-        { info: { role: "user" }, parts: [{ type: "text", text: "Continue" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Nearly there... <promise>DONE</promise>" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "(extra output after promise)" }] },
+        { type: "user", content: [{ type: "text", text: "Start task" }] },
+        { type: "assistant", content: [{ type: "text", text: "Working on it." }] },
+        { type: "user", content: [{ type: "text", text: "Continue" }] },
+        { type: "assistant", content: [{ type: "text", text: "Nearly there... <promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "(extra output after promise)" }] },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - loop should complete (promise found within last 3 assistant messages)
@@ -693,20 +654,20 @@ describe("matrix-loop", () => {
     test("should detect completion even if promise is older than last 3 assistant messages", async () => {
       // given - promise appears in an assistant message older than last 3
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Start task" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Promise early <promise>DONE</promise>" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 1" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 2" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 3" }] },
+        { type: "user", content: [{ type: "text", text: "Start task" }] },
+        { type: "assistant", content: [{ type: "text", text: "Promise early <promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 1" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 2" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 3" }] },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - loop should complete (scans all assistant messages backwards)
@@ -716,7 +677,7 @@ describe("matrix-loop", () => {
 
     test("should allow starting new loop while previous loop is active (different session)", async () => {
       // given - active loop in session A
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-A", "First task", { maxIterations: 10 })
       expect(hook.getState()?.session_id).toBe("session-A")
       expect(hook.getState()?.prompt).toBe("First task")
@@ -732,7 +693,7 @@ describe("matrix-loop", () => {
 
       // when - session B goes idle
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-B" } },
+         type: "session.idle", data: { sessionID: "session-B" } ,
       })
 
       // then - continuation should be injected for session B
@@ -747,15 +708,15 @@ describe("matrix-loop", () => {
 
     test("should allow starting new loop in same session (restart)", async () => {
       // given - active loop in session A at iteration 5
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-A", "First task", { maxIterations: 10 })
       
       // Simulate some iterations
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
       expect(hook.getState()?.iteration).toBe(3)
       expect(promptCalls.length).toBe(2)
@@ -772,7 +733,7 @@ describe("matrix-loop", () => {
       // when - session goes idle
       promptCalls = [] // Reset to check new continuation
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-A" } },
+         type: "session.idle", data: { sessionID: "session-A" } ,
       })
 
       // then - continuation should use new task
@@ -796,17 +757,15 @@ Output <promise>DONE</promise> when fully complete`
       })
       writeFileSync(transcriptPath, `${userEntry}\n`)
 
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should CONTINUE (user message completion promise is instructional, not actual)
@@ -827,17 +786,15 @@ Original task: Build something`
       })
       writeFileSync(transcriptPath, `${userEntry}\n`)
 
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should CONTINUE (continuation prompt text is not actual completion)
@@ -857,17 +814,15 @@ Original task: Build something`
       })
       writeFileSync(transcriptPath, `${toolResultEntry}\n`)
 
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - loop should complete (tool_result contains actual completion output)
@@ -881,19 +836,17 @@ Original task: Build something`
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
       writeFileSync(transcriptPath, `${JSON.stringify({ type: "tool_result", tool_name: "write", tool_output: { output: "<promise>DONE</promise>" } })}\n`)
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "No promise here" }] },
+        { type: "assistant", content: [{ type: "text", text: "No promise here" }] },
       ]
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       hook.startLoop("session-123", "Build something", { completionPromise: "DONE" })
 
       // when - session goes idle
       await hook.event({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "session-123" },
-        },
+        type: "session.idle",
+        data: { sessionID: "session-123" },
       })
 
       // then - should complete via transcript (API not called when transcript succeeds)
@@ -906,14 +859,14 @@ Original task: Build something`
     test("should show ultrawork completion toast", async () => {
       // given - hook with ultrawork mode and completion in transcript
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       writeFileSync(transcriptPath, `${JSON.stringify({ type: "tool_result", tool_name: "write", tool_output: { output: "<promise>DONE</promise>" } })}\n`)
       hook.startLoop("test-id", "Build API", { ultrawork: true })
 
       // when - idle event triggered
-      await hook.event({ event: { type: "session.idle", properties: { sessionID: "test-id" } } })
+      await hook.event({  type: "session.idle", data: { sessionID: "test-id" }  })
 
       // then - ultrawork toast shown
       const completionToast = toastCalls.find(t => t.title === "ULTRAWORK LOOP COMPLETE!")
@@ -924,14 +877,14 @@ Original task: Build something`
     test("should show regular completion toast when ultrawork disabled", async () => {
       // given - hook without ultrawork
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
-      const hook = createMatrixLoopHook(createMockPluginInput(), {
+      const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       writeFileSync(transcriptPath, `${JSON.stringify({ type: "tool_result", tool_name: "write", tool_output: { output: "<promise>DONE</promise>" } })}\n`)
       hook.startLoop("test-id", "Build API")
 
       // when - idle event triggered
-      await hook.event({ event: { type: "session.idle", properties: { sessionID: "test-id" } } })
+      await hook.event({  type: "session.idle", data: { sessionID: "test-id" }  })
 
       // then - regular toast shown
       expect(toastCalls.some(t => t.title === "Matrix Loop Complete!")).toBe(true)
@@ -939,12 +892,12 @@ Original task: Build something`
 
     test("should prepend ultrawork to continuation prompt when ultrawork=true", async () => {
       // given - hook with ultrawork mode enabled
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build API", { ultrawork: true })
 
       // when - session goes idle (continuation triggered)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - prompt should start with "ultrawork "
@@ -954,12 +907,12 @@ Original task: Build something`
 
     test("should NOT prepend ultrawork to continuation prompt when ultrawork=false", async () => {
       // given - hook without ultrawork mode
-      const hook = createMatrixLoopHook(createMockPluginInput())
+      const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build API")
 
       // when - session goes idle (continuation triggered)
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       // then - prompt should NOT start with "ultrawork "
@@ -973,53 +926,34 @@ Original task: Build something`
     let verificationMessages: Array<{ info?: { role?: string }; parts?: Array<{ type: string; text?: string }> }>
     let sessionDeleteCalls: Array<{ id: string }>
 
-    function createVerificationMockPluginInput() {
+    function createVerificationMockMatrixxContext() {
       sessionCreateCalls = []
       verificationMessages = []
       sessionDeleteCalls = []
 
       return {
-        client: {
-          session: {
-            prompt: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-              promptCalls.push({
-                sessionID: opts.path.id,
-                text: opts.body.parts[0].text,
-              })
-              return {}
-            },
-            promptAsync: async (opts: { path: { id: string }; body: { parts: Array<{ type: string; text: string }> } }) => {
-              promptCalls.push({
-                sessionID: opts.path.id,
-                text: opts.body.parts[0].text,
-              })
-              return {}
-            },
-            messages: async (opts: { path: { id: string } }) => {
-              messagesCalls.push({ sessionID: opts.path.id })
-              if (opts.path.id === "verify-session-1") {
-                return { data: verificationMessages }
-              }
-              return mockMessagesApiResponseShape === "array" ? mockSessionMessages : { data: mockSessionMessages }
-            },
-            create: async (opts: { body: { parentID?: string; title?: string } }) => {
-              sessionCreateCalls.push({ parentID: opts.body.parentID, title: opts.body.title })
-              return { data: { id: "verify-session-1" } }
-            },
-            delete: async (opts: { path: { id: string } }) => {
-              sessionDeleteCalls.push({ id: opts.path.id })
-              return {}
-            },
+        session: {
+          prompt: async (opts: { sessionID: string; parts: Array<{ type: string; text: string }> }) => {
+            promptCalls.push({
+              sessionID: opts.sessionID,
+              text: opts.parts[0].text,
+            })
+            return {}
           },
-          tui: {
-            showToast: async (opts: { body: { title: string; message: string; variant: string } }) => {
-              toastCalls.push({
-                title: opts.body.title,
-                message: opts.body.message,
-                variant: opts.body.variant,
-              })
-              return {}
-            },
+          context: async (opts: { sessionID: string }) => {
+            messagesCalls.push({ sessionID: opts.sessionID })
+            if (opts.sessionID === "verify-session-1") {
+              return verificationMessages
+            }
+            return mockSessionMessages
+          },
+          create: async (opts: { parentID?: string; title?: string }) => {
+            sessionCreateCalls.push({ parentID: opts.parentID, title: opts.title })
+            return { id: "verify-session-1" }
+          },
+          remove: async (opts: { sessionID: string }) => {
+            sessionDeleteCalls.push({ id: opts.sessionID })
+            return {}
           },
         },
         directory: TEST_DIR,
@@ -1032,11 +966,11 @@ Original task: Build something`
     test("should call verification before clearing state on ultrawork completion", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
         },
       ]
-      const mockInput = createVerificationMockPluginInput()
+      const mockInput = createVerificationMockMatrixxContext()
       const hook = createMatrixLoopHook(mockInput, {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
         verification: { enabled: true, timeoutMs: 1000 },
@@ -1044,7 +978,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API", { ultrawork: true })
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(sessionCreateCalls.length).toBe(0)
@@ -1058,11 +992,11 @@ Original task: Build something`
     test("should clear state and show toast when verification passes", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
         },
       ]
-      const mockInput = createVerificationMockPluginInput()
+      const mockInput = createVerificationMockMatrixxContext()
       const hook = createMatrixLoopHook(mockInput, {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
         verification: { enabled: true, timeoutMs: 1000 },
@@ -1070,7 +1004,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).toBeNull()
@@ -1083,8 +1017,8 @@ Original task: Build something`
     test("should NOT clear state when verification fails, inject continuation with feedback", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [
+          type: "assistant",
+          content: [
             {
               type: "text",
               text: "<promise>DONE</promise> <verification>FAIL: Tests are not passing</verification>",
@@ -1092,7 +1026,7 @@ Original task: Build something`
           ],
         },
       ]
-      const mockInput = createVerificationMockPluginInput()
+      const mockInput = createVerificationMockMatrixxContext()
       const hook = createMatrixLoopHook(mockInput, {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
         verification: { enabled: true, timeoutMs: 1000 },
@@ -1100,7 +1034,7 @@ Original task: Build something`
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).not.toBeNull()
@@ -1116,13 +1050,13 @@ Original task: Build something`
     //#then state is force-cleared with warning toast
     test("should force-clear state after maxRetries verification failures", async () => {
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
       ]
-      const mockInput = createVerificationMockPluginInput()
+      const mockInput = createVerificationMockMatrixxContext()
       verificationMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<verification>FAIL: Still broken</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<verification>FAIL: Still broken</verification>" }],
         },
       ]
       const hook = createMatrixLoopHook(mockInput, {
@@ -1136,7 +1070,7 @@ Original task: Build something`
       writeState(TEST_DIR, state)
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(hook.getState()).toBeNull()
@@ -1148,15 +1082,15 @@ Original task: Build something`
     //#then verification is skipped (disabled by default for non-ultrawork)
     test("should skip verification for regular loops when not explicitly enabled", async () => {
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
       ]
-      const hook = createMatrixLoopHook(createVerificationMockPluginInput(), {
+      const hook = createMatrixLoopHook(createVerificationMockMatrixxContext(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
       })
       hook.startLoop("session-123", "Build API")
 
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
       expect(sessionCreateCalls.length).toBe(0)
@@ -1170,15 +1104,12 @@ Original task: Build something`
       // given - API that throws (simulates timeout error)
       let apiCallCount = 0
       const errorMock = {
-        ...createMockPluginInput(),
-        client: {
-          ...createMockPluginInput().client,
-          session: {
-            ...createMockPluginInput().client.session,
-            messages: async () => {
-              apiCallCount++
-              throw new Error("API timeout")
-            },
+        ...createMockMatrixxContext(),
+        session: {
+          ...createMockMatrixxContext().session,
+          context: async () => {
+            apiCallCount++
+            throw new Error("API timeout")
           },
         },
       }
@@ -1191,7 +1122,7 @@ Original task: Build something`
       // when - session goes idle (API will throw)
       const startTime = Date.now()
       await hook.event({
-        event: { type: "session.idle", properties: { sessionID: "session-123" } },
+         type: "session.idle", data: { sessionID: "session-123" } ,
       })
       const elapsed = Date.now() - startTime
 

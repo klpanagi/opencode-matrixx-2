@@ -3,14 +3,15 @@ import { createChatMessageHandler } from "./chat-message-handler"
 import { DEFAULT_CONFIG } from "./constants"
 import { createEventHandler } from "./event-handler"
 import { createMessageUpdateHandler } from "./message-update-handler"
-import type { HookDeps, RuntimeFallbackHook, RuntimeFallbackInterval, RuntimeFallbackOptions, RuntimeFallbackPluginInput, RuntimeFallbackTimeout } from "./types"
+import type { HookDeps, RuntimeFallbackContext, RuntimeFallbackHook, RuntimeFallbackInterval, RuntimeFallbackOptions, RuntimeFallbackTimeout } from "./types"
 
 declare function setInterval(callback: () => void, delay?: number): RuntimeFallbackInterval
 declare function clearInterval(interval: RuntimeFallbackInterval): void
 declare function clearTimeout(timeout: RuntimeFallbackTimeout): void
 
+import type { V2Event } from "../../plugin/context"
 export function createRuntimeFallbackHook(
-  ctx: RuntimeFallbackPluginInput,
+  ctx: RuntimeFallbackContext,
   options?: RuntimeFallbackOptions
 ): RuntimeFallbackHook {
   const config = {
@@ -54,16 +55,16 @@ export function createRuntimeFallbackHook(
     }
   }
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }) => {
+  const eventHandler = async (event: V2Event) => {
     ensureInterval()
 
     if (event.type === "message.updated") {
       if (!config.enabled) return
-      const props = event.properties as Record<string, unknown> | undefined
+      const props = event.data as Record<string, unknown> | undefined
       await messageUpdateHandler(props)
       return
     }
-    await baseEventHandler({ event })
+    await baseEventHandler(event)
   }
 
   const dispose = () => {

@@ -1,11 +1,28 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
-import type { PluginInput } from "@opencode-ai/plugin";
-import type { Message, Part } from "@opencode-ai/sdk";
+
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string;
+  sessionID?: string;
+  role?: string;
+  [key: string]: unknown
+};
+type Part = {
+  type?: string;
+  text?: string;
+  [key: string]: unknown
+};
+
 import type { KnowledgeHub } from "../../config/schema/knowledge";
 import { type ContextCollector, contextCollector } from "../../features/context-injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
 import { getMainSessionID } from "../../features/session-state/state";
+import type { MatrixxContext } from "../../plugin/context";
 import { createDynamicTruncator } from "../../shared/dynamic-truncator";
 import { notifyInjection } from "../../shared/injection-notifier";
 import { log } from "../../shared/logger";
@@ -17,6 +34,7 @@ const INDEX_MAX_TOKENS = 6000;
 const ROUTER_DIRECTIVE =
   "Consult these hubs before websearch/webfetch; open files via @hub/path on demand, never bulk-read.";
 
+import type { V2Event } from "../../plugin/context"
 export interface KnowledgeHubInjectorOptions {
   hubs?: KnowledgeHub[];
   getHubs?: () => KnowledgeHub[];
@@ -42,7 +60,7 @@ function readQuiet(filePath: string): string | null {
   }
 }
 
-export function createKnowledgeHubInjectorHook(ctx: PluginInput, options: KnowledgeHubInjectorOptions = {}) {
+export function createKnowledgeHubInjectorHook(ctx: MatrixxContext, options: KnowledgeHubInjectorOptions = {}) {
   const workspaceDir = ctx.directory;
   const pinnedFiles = options.pinnedFiles ?? [];
   const collector = options.collector ?? contextCollector;
@@ -134,8 +152,8 @@ export function createKnowledgeHubInjectorHook(ctx: PluginInput, options: Knowle
     });
   };
 
-  const eventHandler = async ({ event }: { event: { type: string; properties?: unknown } }): Promise<void> => {
-    const props = event.properties as Record<string, unknown> | undefined;
+  const eventHandler = async (event: V2Event): Promise<void> => {
+    const props = event.data as Record<string, unknown> | undefined;
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined;

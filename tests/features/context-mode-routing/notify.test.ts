@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 
 import type { MatrixxConfig } from "../../../src/config"
 import { buildContextModeRoutingBlock } from "../../../src/features/context-mode-routing/routing-block"
@@ -37,7 +37,7 @@ function makeCtx() {
       },
     },
   }
-  return { ctx: { client } as unknown as PluginInput, seen }
+  return { ctx: { client } as unknown as MatrixxContext, seen }
 }
 
 describe("context-mode-routing injection notice", () => {

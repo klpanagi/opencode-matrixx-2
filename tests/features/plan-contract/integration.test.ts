@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -256,7 +256,7 @@ describe("plan-tool chain — end-to-end integration", () => {
     expect(PLAN_READ_WARN.length).toBeGreaterThan(0)
     expect(typeof PLAN_WRITE_WARN).toBe("string")
     expect(PLAN_WRITE_WARN.length).toBeGreaterThan(0)
-    const hook = createTaskEditGuardHook({ directory: tmp } as unknown as PluginInput)
+    const hook = createTaskEditGuardHook({ directory: tmp } as unknown as MatrixxContext)
 
     //#when a generic read targets .matrixx/plans/x.md
     const input = { tool: "read", sessionID: "ses_1", callID: "call_1" }

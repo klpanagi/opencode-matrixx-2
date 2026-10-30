@@ -1,35 +1,24 @@
-import { log, normalizeSDKResponse } from "../shared"
-
-interface SessionMessage {
-  info?: {
-    agent?: string
-    role?: string
-  }
-}
-
-type SessionClient = {
-  session: {
-    messages: (opts: { path: { id: string } }) => Promise<{ data?: SessionMessage[] }>
-  }
-}
+import { log } from "../shared"
+import type { SessionContextCarrier } from "../shared/session-context-source"
+import { fetchSessionMessages } from "../shared/session-context-source"
 
 export async function resolveSessionAgent(
-  client: SessionClient,
+  client: SessionContextCarrier,
   sessionId: string,
   timeoutMs = 5000,
 ): Promise<string | undefined> {
   try {
-    const messagesResp = await Promise.race([
-      client.session.messages({ path: { id: sessionId } }),
+    const messages = await Promise.race([
+      fetchSessionMessages(client, sessionId),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`Session agent resolve timeout after ${timeoutMs}ms`)), timeoutMs)
       ),
     ])
-    const messages = normalizeSDKResponse(messagesResp, [] as SessionMessage[])
 
     for (const msg of messages) {
-      if (msg.info?.agent) {
-        return msg.info.agent
+      const agent = msg.agent
+      if (agent) {
+        return agent
       }
     }
   } catch (error) {

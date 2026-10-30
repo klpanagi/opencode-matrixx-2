@@ -1,4 +1,10 @@
 import { afterAll, describe, expect, it, mock } from "bun:test"
+import { appendFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+// Shared log file (mirrors src/shared/logger.ts): the logger mock below is
+// process-wide, so it forwards to the real file instead of swallowing.
+const LOG_FILE = join(tmpdir(), "matrixx.log")
 
 const mockShowConfigErrorsIfAny = mock(async () => {})
 const mockShowModelCacheWarningIfNeeded = mock(async () => {})
@@ -40,7 +46,13 @@ mock.module("../../../src/hooks/auto-update-checker/checker", () => ({
 }))
 
 mock.module("../../../src/shared/logger", () => ({
-  log: () => {},
+  // Transparent from birth: forward to the real log file (same format as
+  // src/shared/logger.ts). Never references the mocked module.
+  log: (message: string, data?: unknown) => {
+    try {
+      appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${message} ${data !== undefined ? JSON.stringify(data) : ""}\n`)
+    } catch {}
+  },
 }))
 
 const { createAutoUpdateCheckerHook } = await import("../../../src/hooks/auto-update-checker/hook")
@@ -48,6 +60,7 @@ const { createAutoUpdateCheckerHook } = await import("../../../src/hooks/auto-up
 afterAll(() => {
   mock.module("../../../src/hooks/auto-update-checker/hook/background-update-check", () => realBackgroundUpdateCheckModule)
   mock.module("../../../src/hooks/auto-update-checker/checker", () => realCheckerModule)
+  // The logger mock above forwards from birth, so later suites are unaffected.
   mock.restore()
 })
 

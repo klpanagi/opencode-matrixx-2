@@ -1,14 +1,15 @@
-import { type ToolDefinition, tool } from "@opencode-ai/plugin/tool"
+import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatLocation } from "./lsp-formatters"
 import type { Location, LocationLink } from "./types"
 
-export const lsp_goto_definition: ToolDefinition = tool({
+export const lsp_goto_definition: MatrixxToolDefinition = defineTool("lsp_goto_definition", {
   description: "Jump to symbol definition. Find WHERE something is defined.",
   args: {
-    filePath: tool.schema.string(),
-    line: tool.schema.number().min(1).describe("1-based"),
-    character: tool.schema.number().min(0).describe("0-based"),
+    filePath: z.string(),
+    line: z.number().min(1).describe("1-based"),
+    character: z.number().min(0).describe("0-based"),
   },
   execute: async (args, _context) => {
     try {

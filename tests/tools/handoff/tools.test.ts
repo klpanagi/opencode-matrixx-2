@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import yaml from "js-yaml"
 import {
   getHandoffConsumedFilePath,
@@ -14,19 +14,19 @@ import { createHandoffTools } from "../../../src/tools/handoff/tools"
 type AnyArgs = { [x: string]: unknown; }
 
 /**
- * Minimal mock of the `PluginInput` shape that `createHandoffTools` needs.
+ * Minimal mock of the `MatrixxContext` shape that `createHandoffTools` needs.
  * We don't exercise the OpenCode SDK here — we only need `directory` for
  * storage writes, and we ignore `client` entirely.
  */
-function makeCtx(directory: string): PluginInput {
+function makeCtx(directory: string): MatrixxContext {
   return {
-    client: {} as PluginInput["client"],
+    client: {} as MatrixxContext["client"],
     directory,
-    project: {} as PluginInput["project"],
+    project: {} as MatrixxContext["project"],
     worktree: directory,
     serverUrl: new URL("http://localhost:0"),
-    $: {} as PluginInput["$"],
-  } as PluginInput
+    $: {} as MatrixxContext["$"],
+  } as MatrixxContext
 }
 
 function makeContext(sessionID: string, directory: string) {

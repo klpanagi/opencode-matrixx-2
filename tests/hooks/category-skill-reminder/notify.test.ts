@@ -3,7 +3,7 @@
 // - src/hooks/category-skill-reminder/hook.ts (createCategorySkillReminderHook, PostToolUse)
 // - src/hooks/category-skill-reminder/formatter.ts (buildReminderMessage)
 import { describe, expect, test } from "bun:test"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../../src/plugin/context"
 import { _resetForTesting, clearSessionAgent, updateSessionAgent } from "../../../src/features/session-state/state"
 import { createCategorySkillReminderHook } from "../../../src/hooks/category-skill-reminder/hook"
 import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
@@ -23,7 +23,7 @@ function makeCtx() {
         },
       },
     },
-  } as unknown as PluginInput
+  } as unknown as MatrixxContext
   return { ctx, seen }
 }
 

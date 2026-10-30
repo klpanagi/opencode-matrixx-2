@@ -8,7 +8,7 @@ import { isRecord } from "../../shared/record-type-guard"
 import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
 import { isPlanFamily } from "./constants"
 import { formatDetailedError } from "./error-formatting"
-import type { DelegateTaskArgs, OpencodeClient } from "./types"
+import type { DelegateTaskArgs, NativeClient } from "./types"
 
 type SendSyncPromptDeps = {
   promptWithModelSuggestionRetry: typeof promptWithModelSuggestionRetry
@@ -40,6 +40,12 @@ type PromptRetryArgs = Parameters<typeof promptWithModelSuggestionRetry>[1]
 
 function toPromptRetryArgs(args: SyncPromptV2Args): PromptRetryArgs {
   return args as unknown as PromptRetryArgs
+}
+
+type PromptRetryClient = Parameters<typeof promptWithModelSuggestionRetry>[0]
+
+export function toPromptRetryClient(client: NativeClient): PromptRetryClient {
+  return client as unknown as PromptRetryClient
 }
 
 // Reads a resolved hey-api error envelope ({ error, response: { status } }).
@@ -76,7 +82,7 @@ function isUnexpectedEofError(error: unknown): boolean {
 }
 
 export async function sendSyncPrompt(
-  client: OpencodeClient,
+  client: NativeClient,
   input: {
     sessionID: string
     agentToUse: string
@@ -121,7 +127,10 @@ export async function sendSyncPrompt(
   }
 
   try {
-    const settled: unknown = await deps.promptWithModelSuggestionRetry(client, toPromptRetryArgs(promptArgs))
+    const settled: unknown = await deps.promptWithModelSuggestionRetry(
+      toPromptRetryClient(client),
+      toPromptRetryArgs(promptArgs)
+    )
     const envelopeError = promptEnvelopeErrorOf(settled)
     if (envelopeError !== null) {
       if (input.toastManager && input.taskId !== undefined) {
@@ -134,7 +143,7 @@ export async function sendSyncPrompt(
     if (isOracleAgent(input.agentToUse) && isUnexpectedEofError(promptError)) {
       try {
         const syncSettled: unknown = await deps.promptSyncWithModelSuggestionRetry(
-          client,
+          toPromptRetryClient(client),
           toPromptRetryArgs(promptArgs)
         )
         const syncEnvelopeError = promptEnvelopeErrorOf(syncSettled)

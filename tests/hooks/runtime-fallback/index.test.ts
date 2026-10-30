@@ -1,4 +1,10 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
+import { appendFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+// Shared log file (mirrors src/shared/logger.ts): the per-test logger mock below is
+// process-wide, so captured calls also forward to the real file.
+const LOG_FILE = join(tmpdir(), "matrixx.log")
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../../src/config"
 import * as loggerModule from "../../../src/shared/logger"
 import { SessionCategoryRegistry } from "../../../src/hooks/runtime-fallback/session-category-registry"
@@ -22,6 +28,11 @@ describe("runtime-fallback", () => {
       ...loggerModule,
       log: (msg: string, data?: unknown) => {
         logCalls.push({ msg, data })
+        // Transparent from birth: also forward to the real log file so later
+        // suites that assert on /tmp/matrixx.log keep working.
+        try {
+          appendFileSync(LOG_FILE, `[${new Date().toISOString()}] ${msg} ${data !== undefined ? JSON.stringify(data) : ""}\n`)
+        } catch {}
       },
     }))
 
@@ -34,29 +45,19 @@ describe("runtime-fallback", () => {
     mock.restore()
   })
 
-  function createMockPluginInput(overrides?: {
+
+  function createMockMatrixxContext(overrides?: {
     session?: {
-      messages?: (args: unknown) => Promise<unknown>
-      promptAsync?: (args: unknown) => Promise<unknown>
-      abort?: (args: unknown) => Promise<unknown>
+      context?: (args: unknown) => Promise<unknown>
+      prompt?: (args: unknown) => Promise<unknown>
+      interrupt?: (args: unknown) => Promise<unknown>
     }
   }) {
     return {
-      client: {
-        tui: {
-          showToast: async (opts: { body: { title: string; message: string; variant: string; duration: number } }) => {
-            toastCalls.push({
-              title: opts.body.title,
-              message: opts.body.message,
-              variant: opts.body.variant,
-            })
-          },
-        },
-        session: {
-          messages: overrides?.session?.messages ?? (async () => ({ data: [] })),
-          promptAsync: overrides?.session?.promptAsync ?? (async () => ({})),
-          abort: overrides?.session?.abort ?? (async () => ({})),
-        },
+      session: {
+        context: overrides?.session?.context ?? (async () => []),
+        prompt: overrides?.session?.prompt ?? (async () => ({})),
+        interrupt: overrides?.session?.interrupt ?? (async () => ({})),
       },
       directory: "/test/dir",
     } as unknown as Parameters<RuntimeFallbackModule["createRuntimeFallbackHook"]>[0]
@@ -104,22 +105,18 @@ describe("runtime-fallback", () => {
   describe("session.error handling", () => {
     test("should detect retryable error with status code 429", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-123"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429, message: "Rate limit exceeded" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429, message: "Rate limit exceeded" } },
       })
 
       //#then
@@ -130,22 +127,18 @@ describe("runtime-fallback", () => {
 
     test("should detect retryable error with status code 503", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-503"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "openai/gpt-5.4" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "openai/gpt-5.4" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 503, message: "Service unavailable" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 503, message: "Service unavailable" } },
       })
 
       //#then
@@ -155,22 +148,18 @@ describe("runtime-fallback", () => {
 
     test("should skip non-retryable errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-400"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 400, message: "Bad request" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 400, message: "Bad request" } },
       })
 
       //#then
@@ -180,27 +169,23 @@ describe("runtime-fallback", () => {
 
     test("should log missing API key errors with classification details", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-missing-api-key"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: {
-              name: "AI_LoadAPIKeyError",
-              message:
-                "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
-            },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: {
+            name: "AI_LoadAPIKeyError",
+            message:
+              "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
           },
         },
       })
@@ -220,7 +205,7 @@ describe("runtime-fallback", () => {
 
     test("should trigger fallback for missing API key errors when fallback models are configured", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["openai/gpt-5.4"]),
       })
@@ -229,22 +214,18 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "google/gemini-2.5-pro" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: {
-              name: "AI_LoadAPIKeyError",
-              message:
-                "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
-            },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: {
+            name: "AI_LoadAPIKeyError",
+            message:
+              "Google Generative AI API key is missing. Pass it using the 'apiKey' parameter or the GOOGLE_GENERATIVE_AI_API_KEY environment variable.",
           },
         },
       })
@@ -257,7 +238,7 @@ describe("runtime-fallback", () => {
 
     test("should NOT trigger fallback for quota exhaustion without auto-retry signal", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["zai-coding-plan/glm-5.1"]),
       })
@@ -266,19 +247,15 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "kimi-for-coding/k2p5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "kimi-for-coding/k2p5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { message: "You've reached your usage limit for this month. Please upgrade to continue." },
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { message: "You've reached your usage limit for this month. Please upgrade to continue." },
         },
       })
 
@@ -292,7 +269,7 @@ describe("runtime-fallback", () => {
 
     test("should log when no fallback models configured", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig(),
         pluginConfig: {},
       })
@@ -300,17 +277,13 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429, message: "Rate limit" } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429, message: "Rate limit" } },
       })
 
       //#then
@@ -322,17 +295,15 @@ describe("runtime-fallback", () => {
   describe("disabled hook", () => {
     test("should not process events when disabled", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ enabled: false }),
       })
       const sessionID = "test-session-disabled"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 429 } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 429 } },
       })
 
       //#then
@@ -344,16 +315,14 @@ describe("runtime-fallback", () => {
   describe("session lifecycle", () => {
     test("should create state on session.created", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-create"
       const model = "anthropic/claude-opus-4-5"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model } },
       })
 
       //#then
@@ -364,22 +333,18 @@ describe("runtime-fallback", () => {
 
     test("should cleanup state on session.deleted", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-delete"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "anthropic/claude-opus-4-5" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.deleted",
-          properties: { info: { id: sessionID } },
-        },
+        type: "session.deleted",
+        data: { info: { id: sessionID } },
       })
 
       //#then
@@ -390,18 +355,16 @@ describe("runtime-fallback", () => {
 
     test("should handle session.error without prior session.created", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-session-no-create"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { statusCode: 429 },
-            model: "anthropic/claude-opus-4-5",
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { statusCode: 429 },
+          model: "anthropic/claude-opus-4-5",
         },
       })
 
@@ -414,20 +377,18 @@ describe("runtime-fallback", () => {
   describe("message.updated handling", () => {
     test("should handle assistant message errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-message-updated"
 
       //#when
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              error: { statusCode: 429, message: "Rate limit" },
-              model: "anthropic/claude-opus-4-5",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            error: { statusCode: 429, message: "Rate limit" },
+            model: "anthropic/claude-opus-4-5",
           },
         },
       })
@@ -439,20 +400,18 @@ describe("runtime-fallback", () => {
 
     test("should skip non-assistant message errors", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), { config: createMockConfig() })
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), { config: createMockConfig() })
       const sessionID = "test-message-user"
 
       //#when
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "user",
-              error: { statusCode: 429 },
-              model: "anthropic/claude-opus-4-5",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "user",
+            error: { statusCode: 429 },
+            model: "anthropic/claude-opus-4-5",
           },
         },
       })
@@ -464,7 +423,7 @@ describe("runtime-fallback", () => {
 
     test("should trigger fallback on Copilot auto-retry signal in message.updated", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["openai/gpt-5.4"]),
       })
@@ -474,23 +433,19 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "github-copilot/claude-opus-4.7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "github-copilot/claude-opus-4.7" } },
       })
 
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              model: "github-copilot/claude-opus-4.7",
-              status:
-                "Too Many Requests: quota exceeded [retrying in ~2 weeks attempt #1]",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            model: "github-copilot/claude-opus-4.7",
+            status:
+              "Too Many Requests: quota exceeded [retrying in ~2 weeks attempt #1]",
           },
         },
       })
@@ -506,7 +461,7 @@ describe("runtime-fallback", () => {
 
     test("should NOT trigger fallback on auto-retry signal when timeout_seconds is 0", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ notify_on_fallback: false, timeout_seconds: 0 }),
         pluginConfig: createMockPluginConfigWithCategoryFallback(["anthropic/claude-opus-4-7"]),
       })
@@ -516,22 +471,18 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "openai/gpt-5.3-codex" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "openai/gpt-5.3-codex" } },
       })
 
       await hook.event({
-        event: {
-          type: "message.updated",
-          properties: {
-            info: {
-              sessionID,
-              role: "assistant",
-              model: "openai/gpt-5.3-codex",
-              status: "The usage limit has been reached [retrying in 27s attempt #6]",
-            },
+        type: "message.updated",
+        data: {
+          info: {
+            sessionID,
+            role: "assistant",
+            model: "openai/gpt-5.3-codex",
+            status: "The usage limit has been reached [retrying in 27s attempt #6]",
           },
         },
       })
@@ -550,17 +501,10 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: unknown[] = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
-            messages: async () => ({
-              data: [
-                {
-                  info: { role: "user" },
-                  parts: [{ type: "text", text: "continue" }],
-                },
-              ],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args)
               return {}
             },
@@ -577,23 +521,19 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 476,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 476,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
           },
         },
       })
@@ -612,17 +552,10 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: unknown[] = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
-            messages: async () => ({
-              data: [
-                {
-                  info: { role: "user" },
-                  parts: [{ type: "text", text: "continue" }],
-                },
-              ],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args)
               return {}
             },
@@ -639,38 +572,32 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "quotio/claude-opus-4-7" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 476,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 476,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 56s attempt #1]",
           },
         },
       })
 
       await hook.event({
-        event: {
-          type: "session.status",
-          properties: {
-            sessionID,
-            status: {
-              type: "retry",
-              next: 475,
-              attempt: 1,
-              message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 55s attempt #1]",
-            },
+        type: "session.status",
+        data: {
+          sessionID,
+          status: {
+            type: "retry",
+            next: 475,
+            attempt: 1,
+            message: "All credentials for model claude-opus-4-7 are cooling down [retrying in 7m 55s attempt #1]",
           },
         },
       })
@@ -685,12 +612,10 @@ describe("runtime-fallback", () => {
       //#given
       const promptCalls: Array<Record<string, unknown>> = []
       const hook = createRuntimeFallbackHook(
-        createMockPluginInput({
+        createMockMatrixxContext({
           session: {
-            messages: async () => ({
-              data: [{ info: { role: "user" }, parts: [{ type: "text", text: "continue" }] }],
-            }),
-            promptAsync: async (args) => {
+            context: async () => [{ type: "user", text: "continue" }],
+            prompt: async (args) => {
               promptCalls.push(args as Record<string, unknown>)
               return {}
             },
@@ -710,21 +635,16 @@ describe("runtime-fallback", () => {
 
       //#when
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: {
-            sessionID,
-            error: { statusCode: 429, message: "Rate limit exceeded" },
-          },
+        type: "session.error",
+        data: {
+          sessionID,
+          error: { statusCode: 429, message: "Rate limit exceeded" },
         },
       })
 
       //#then
       expect(promptCalls).toHaveLength(1)
-      const promptBody = promptCalls[0]?.body as {
-        model?: { providerID?: string; modelID?: string }
-        variant?: string
-      } | undefined
+      const promptBody = promptCalls[0]
       expect(promptBody?.model).toEqual({ providerID: "openai", modelID: "gpt-5.4" })
       expect(promptBody?.variant).toBe("high")
 
@@ -742,24 +662,20 @@ describe("runtime-fallback", () => {
   describe("custom error codes", () => {
     test("should support custom retry_on_errors configuration", async () => {
       //#given
-      const hook = createRuntimeFallbackHook(createMockPluginInput(), {
+      const hook = createRuntimeFallbackHook(createMockMatrixxContext(), {
         config: createMockConfig({ retry_on_errors: [500, 502] }),
       })
       const sessionID = "test-session-custom"
 
       //#when
       await hook.event({
-        event: {
-          type: "session.created",
-          properties: { info: { id: sessionID, model: "test-model" } },
-        },
+        type: "session.created",
+        data: { info: { id: sessionID, model: "test-model" } },
       })
 
       await hook.event({
-        event: {
-          type: "session.error",
-          properties: { sessionID, error: { statusCode: 500 } },
-        },
+        type: "session.error",
+        data: { sessionID, error: { statusCode: 500 } },
       })
 
       //#then

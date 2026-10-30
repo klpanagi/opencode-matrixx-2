@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { PluginInput } from "@opencode-ai/plugin"
+import type { MatrixxContext } from "../../src/plugin/context"
 import { createStalenessGapCheckerTool } from "../../src/tools/staleness-gap-checker"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "staleness-gap-checker")
@@ -11,7 +11,7 @@ type Staleness = { symbol: string; exchange: string; ageMs: number; state: strin
 type Result = { status: 0 | 1 | 2; gaps: Gap[]; staleness: Staleness[]; summary: { gaps: number; stale: number } }
 
 async function check(args: Record<string, unknown>): Promise<Result> {
-  const tool = createStalenessGapCheckerTool({ directory: FIXTURES } as unknown as PluginInput)
+  const tool = createStalenessGapCheckerTool({ directory: FIXTURES } as unknown as MatrixxContext)
   const output = await tool.staleness_gap_check.execute(args)
   return JSON.parse(output) as Result
 }

@@ -43,7 +43,7 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
     const mockClient = {
       session: {
         status: async () => ({ data: { [taskState.sessionID as string]: { type: "idle" } } }),
-        messages: async () => ({ data: [] }),
+        context: async () => ({ messages: [] }),
       },
     }
 
@@ -110,7 +110,7 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
     const mockClient = {
       session: {
         status: async () => ({ data: { [taskState.sessionID as string]: { type: "idle" } } }),
-        messages: async () => ({ data: [] }),
+        context: async () => ({ messages: [] }),
       },
     }
 
@@ -177,7 +177,7 @@ describe("executeUnstableAgentTask - interrupt detection", () => {
     const mockClient = {
       session: {
         status: async () => ({ data: { [taskState.sessionID as string]: { type: "idle" } } }),
-        messages: async () => ({ data: [] }),
+        context: async () => ({ messages: [] }),
       },
     }
 

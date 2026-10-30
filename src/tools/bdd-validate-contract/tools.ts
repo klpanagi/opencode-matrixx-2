@@ -1,6 +1,7 @@
 import * as fsp from "node:fs/promises"
-import { type ToolDefinition, tool } from "@opencode-ai/plugin"
+import { z } from "zod"
 import { ContractSchema } from "../../features/bdd/schema"
+import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 /**
  * The bdd_validate_contract tool reads a contract JSON from disk and
@@ -21,8 +22,8 @@ import { ContractSchema } from "../../features/bdd/schema"
  *   { success: false, error: <string> }    -- when the file is missing,
  *                                             unreadable, or not JSON
  */
-export function createBddValidateContractTool(): ToolDefinition {
-  return tool({
+export function createBddValidateContractTool(): MatrixxToolDefinition {
+  return defineTool("bdd_validate_contract", {
     description:
       "Read a contract JSON file from disk and validate it against " +
       "ContractSchema. Returns { success, contract } on pass or " +
@@ -32,7 +33,7 @@ export function createBddValidateContractTool(): ToolDefinition {
       "agent MUST call this after writing annotations to be sure the " +
       "on-disk JSON conforms to the strict schema.",
     args: {
-      contractPath: tool.schema
+      contractPath: z
         .string()
         .describe("Path to the contract JSON file to validate"),
     },

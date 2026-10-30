@@ -1,13 +1,28 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { Message, Part } from "@opencode-ai/sdk"
+/**
+ * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
+ * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).
+ * The live native port operates on flat `Message[]` in `src/plugin/message-hooks/`.
+ */
+type Message = {
+  id?: string
+  sessionID?: string
+  role?: string
+  [key: string]: unknown
+}
+type Part = {
+  type?: string
+  text?: string
+  [key: string]: unknown
+}
 
 import { buildContextDisciplineSection } from "../../src/agents/dynamic-agent-prompt-builder"
 import { getModelDirectives } from "../../src/agents/model-directives"
 import { createDcpNudgeSanitizerHook } from "../../src/hooks/dcp-nudge-sanitizer/hook"
 import { createNudgeLoopBreakerHook } from "../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../src/hooks/nudge-loop-breaker/session-state"
-import type { PluginContext } from "../../src/plugin/types"
+import type { NativePluginContext } from "../../src/shared/session-context-source"
 
 const DEEPSEEK_MODEL = "deepseek/deepseek-v4.1-flash"
 const ANTHROPIC_MODEL = "anthropic/claude-sonnet-4"
@@ -45,10 +60,8 @@ function makeMessage(role: "user" | "assistant", id: string): MessageWithParts {
 
 function stepEnded(text: string) {
   return {
-    event: {
-      type: "session.next.step.ended",
-      properties: { sessionID: SESSION, assistantMessageID: "msg_x", text },
-    },
+    type: "session.next.step.ended",
+      data: { sessionID: SESSION, assistantMessageID: "msg_x", text },
   }
 }
 
@@ -84,7 +97,12 @@ describe("F5 — nudge loop-breaker throttles repeated DSML-echo turns", () => {
     //#given
     const activations: Activation[] = []
     let clock = 1_000
-    const hook = createNudgeLoopBreakerHook({} as PluginContext, {
+    const hook = createNudgeLoopBreakerHook(
+      {
+        session: { prompt: async () => {} },
+        directory: "/tmp",
+      } as unknown as NativePluginContext,
+      {
       now: () => clock,
       cooldownMs: 1_000,
       onCorrective: (sessionID, backoff) => activations.push({ sessionID, backoff }),
@@ -115,7 +133,7 @@ describe("F5 — nudge loop-breaker throttles repeated DSML-echo turns", () => {
 describe("F5 — sanitizer caps sticky nudges at one across the transcript", () => {
   test("reduces multiple nudge parts to exactly one", async () => {
     //#given
-    const hook = createDcpNudgeSanitizerHook({} as PluginContext)
+    const hook = createDcpNudgeSanitizerHook({} as MatrixxContext)
     const first = makeMessage("assistant", "msg_1")
     first.parts = [textPart("real assistant answer"), textPart(NUDGE), textPart(NUDGE)]
     const second = makeMessage("assistant", "msg_2")
