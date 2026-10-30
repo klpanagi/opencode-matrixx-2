@@ -539,7 +539,7 @@ describe("BackgroundManager.resume model persistence", () => {
     manager.shutdown()
   })
 
-  test("should pass model when task has a configured model", async () => {
+  test("resume sends text-only prompt on the existing session (model stays pinned at creation)", async () => {
     // given - task with model from category config
     const taskWithModel: BackgroundTask = {
       id: "task-with-model",
@@ -565,13 +565,13 @@ describe("BackgroundManager.resume model persistence", () => {
       parentMessageID: "msg-2",
     })
 
-    // then - model should be passed in prompt body
+    // then - resume sends text on the existing session (model stays pinned
+    // at creation; the native prompt endpoint takes no agent/model keys)
     expect(promptCalls).toHaveLength(1)
-    expect(promptCalls[0].model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4-20250514" })
-    expect(promptCalls[0].agent).toBe("trinity")
+    expect(promptCalls[0]).toEqual({ sessionID: "session-1", text: "continue the work" })
   })
 
-  test("should NOT pass model when task has no model (backward compatibility)", async () => {
+  test("resume sends text-only prompt without model keys (backward compatibility)", async () => {
     // given - task without model (default behavior)
     const taskWithoutModel: BackgroundTask = {
       id: "task-no-model",
@@ -596,10 +596,9 @@ describe("BackgroundManager.resume model persistence", () => {
       parentMessageID: "msg-2",
     })
 
-    // then - model should NOT be in prompt body
+    // then - resume sends text on the existing session
     expect(promptCalls).toHaveLength(1)
-    expect("model" in promptCalls[0]).toBe(false)
-    expect(promptCalls[0].agent).toBe("trinity")
+    expect(promptCalls[0]).toEqual({ sessionID: "session-2", text: "continue the work" })
   })
 })
 

@@ -1,74 +1,33 @@
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
-import { getErrorMessage } from "../../shared/error-formatting"
-import {
-  promptSyncWithModelSuggestionRetry,
-  promptWithModelSuggestionRetry,
-} from "../../shared/model-suggestion-retry"
-import { isRecord } from "../../shared/record-type-guard"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
 import { isPlanFamily } from "./constants"
 import { formatDetailedError } from "./error-formatting"
 import type { DelegateTaskArgs, NativeClient } from "./types"
 
 type SendSyncPromptDeps = {
-  promptWithModelSuggestionRetry: typeof promptWithModelSuggestionRetry
-  promptSyncWithModelSuggestionRetry: typeof promptSyncWithModelSuggestionRetry
+  sendNativePrompt: typeof promptNativeWithModelSuggestionRetry
 }
 
 const sendSyncPromptDeps: SendSyncPromptDeps = {
-  promptWithModelSuggestionRetry,
-  promptSyncWithModelSuggestionRetry,
+  sendNativePrompt: promptNativeWithModelSuggestionRetry,
 }
 
-// Flat v2 session.prompt args served by host opencode v2.1.4: the session id
-// travels top-level next to the body keys (no {path,body} wrapper). Sending
-// the legacy wrapper yields 400 'Missing key [text]' on the host route.
+// Native v2 session.prompt payload: { sessionID, text } plus optional file/agent/
+// skill attachments. There is no per-message agent/model/system/tools selection
+// on this endpoint: agent and model are pinned at session.create, tools and
+// temperature flow through the local session-state stores, and per-task system
+// instructions are prepended to the user text by the caller.
 export interface SyncPromptV2Args {
   sessionID: string
-  agent?: string
-  model?: { providerID: string; modelID: string }
-  variant?: string
-  system?: string
-  tools?: Record<string, boolean>
-  parts: Array<{ type: "text"; text: string }>
+  text: string
+  [key: string]: unknown
 }
 
-// Pinned-SDK bridge while shared/model-suggestion-retry.ts still types its
-// args as the v1 {path,body} layout (updated by a parallel task). Remove the
-// cast once that type accepts the flat v2 shape.
-type PromptRetryArgs = Parameters<typeof promptWithModelSuggestionRetry>[1]
-
-function toPromptRetryArgs(args: SyncPromptV2Args): PromptRetryArgs {
-  return args as unknown as PromptRetryArgs
-}
-
-type PromptRetryClient = Parameters<typeof promptWithModelSuggestionRetry>[0]
-
-export function toPromptRetryClient(client: NativeClient): PromptRetryClient {
-  return client as unknown as PromptRetryClient
-}
-
-// Reads a resolved hey-api error envelope ({ error, response: { status } }).
-// A resolved envelope means the prompt was rejected: surface it as an error,
-// never let it pass silently into the poll phase.
-export function promptEnvelopeErrorOf(settled: unknown): { status?: number; message: string } | null {
-  if (!isRecord(settled) || !("error" in settled)) {
-    return null
-  }
-  if (settled.error === undefined || settled.error === null) {
-    return null
-  }
-  const response = settled.response
-  const status = isRecord(response) && typeof response.status === "number" ? response.status : undefined
-  return { status, message: getErrorMessage(settled.error) }
-}
-
-function envelopeToError(envelope: { status?: number; message: string }): Error {
-  return new Error(
-    envelope.status !== undefined
-      ? `Prompt failed with status ${envelope.status}: ${envelope.message}`
-      : `Prompt failed: ${envelope.message}`,
-  )
+function isAgentNotFoundError(message: string, agent: string): boolean {
+  if (message.includes("agent.name")) return true
+  if (message.includes(`"${agent}"`) && /not found|unknown agent|not registered/i.test(message)) return true
+  return /unknown agent/i.test(message)
 }
 
 function isOracleAgent(agentToUse: string): boolean {
@@ -106,17 +65,16 @@ export async function sendSyncPrompt(
     setSessionTemperature(input.sessionID, input.categoryModel.temperature)
   }
 
-  const promptArgs: SyncPromptV2Args = {
-    sessionID: input.sessionID,
-    agent: input.agentToUse,
-    ...(input.systemContent !== undefined ? { system: input.systemContent } : {}),
-    tools,
-    parts: [{ type: "text", text: input.args.prompt }],
-    ...(input.categoryModel
-      ? { model: { providerID: input.categoryModel.providerID, modelID: input.categoryModel.modelID } }
-      : {}),
-    ...(input.categoryModel?.variant ? { variant: input.categoryModel.variant } : {}),
-  }
+  // Native v2 session.prompt takes a flat { sessionID, text } payload: per-message
+  // agent/model/system/tools selection does not exist on this endpoint. Agent and
+  // model are pinned at session.create; tools and temperature flow through the
+  // local session-state stores consumed by hooks; per-task system instructions
+  // are prepended to the user text so the child still receives them.
+  const promptText =
+    input.systemContent !== undefined && input.systemContent.length > 0
+      ? `${input.systemContent}\n\n${input.args.prompt}`
+      : input.args.prompt
+  const promptArgs: SyncPromptV2Args = { sessionID: input.sessionID, text: promptText }
 
   const errorContext = {
     operation: "Send prompt",
@@ -127,40 +85,22 @@ export async function sendSyncPrompt(
   }
 
   try {
-    const settled: unknown = await deps.promptWithModelSuggestionRetry(
-      toPromptRetryClient(client),
-      toPromptRetryArgs(promptArgs)
-    )
-    const envelopeError = promptEnvelopeErrorOf(settled)
-    if (envelopeError !== null) {
-      if (input.toastManager && input.taskId !== undefined) {
-        input.toastManager.removeTask(input.taskId)
-      }
-      return formatDetailedError(envelopeToError(envelopeError), errorContext)
-    }
+    await deps.sendNativePrompt(client.session, promptArgs)
   } catch (promptError) {
-    let lastError = promptError
     if (isOracleAgent(input.agentToUse) && isUnexpectedEofError(promptError)) {
       try {
-        const syncSettled: unknown = await deps.promptSyncWithModelSuggestionRetry(
-          toPromptRetryClient(client),
-          toPromptRetryArgs(promptArgs)
-        )
-        const syncEnvelopeError = promptEnvelopeErrorOf(syncSettled)
-        if (syncEnvelopeError === null) {
-          return null
-        }
-        lastError = envelopeToError(syncEnvelopeError)
+        await deps.sendNativePrompt(client.session, promptArgs)
+        return null
       } catch (oracleRetryError) {
-        lastError = oracleRetryError
+        return formatDetailedError(oracleRetryError, errorContext)
       }
     }
 
     if (input.toastManager && input.taskId !== undefined) {
       input.toastManager.removeTask(input.taskId)
     }
-    const errorMessage = lastError instanceof Error ? lastError.message : String(lastError)
-    if (errorMessage.includes("agent.name") || errorMessage.includes("undefined")) {
+    const errorMessage = promptError instanceof Error ? promptError.message : String(promptError)
+    if (isAgentNotFoundError(errorMessage, input.agentToUse)) {
       return formatDetailedError(new Error(`Agent "${input.agentToUse}" not found. Make sure the agent is registered in your opencode.json or provided by a plugin.`), {
         operation: "Send prompt to agent",
         args: input.args,
@@ -169,7 +109,7 @@ export async function sendSyncPrompt(
         category: input.args.category,
       })
     }
-    return formatDetailedError(lastError, errorContext)
+    return formatDetailedError(promptError, errorContext)
   }
 
   return null

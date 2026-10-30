@@ -11,9 +11,9 @@ const SYSTEM_DEFAULT_MODEL = "anthropic/claude-sonnet-4-5"
 function createSyncHarness() {
   //#given a sync-execution harness mirroring tools.test.ts (captures the prompt body)
   const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
-  let promptBody: { system?: string } = {}
+  let promptBody: { text?: string } = {}
 
-  const promptMock = async (input: { system?: string }) => {
+  const promptMock = async (input: { text?: string }) => {
     promptBody = input
     return { data: {} }
   }
@@ -119,8 +119,8 @@ describe("software-dev enforcement: creation-path wiring keyed off resolved targ
       toolContext,
     )
 
-    //#then the captured prompt system holds the subset, the banner once, and no orchestrator strings
-    const system = String(getPromptBody().system ?? "")
+    //#then the captured prompt text holds the subset, the banner once, and no orchestrator strings
+    const system = String(getPromptBody().text ?? "")
     expect(system).toContain("# TDD Enforcer")
     expect(system).toContain("# Git Master Agent")
     expect(system.split("<TDD_Test_First>").length - 1).toBe(1)
@@ -147,7 +147,7 @@ describe("software-dev enforcement: creation-path wiring keyed off resolved targ
     )
 
     //#then enforcement adds no duplicate copy of either template
-    const system = String(getPromptBody().system ?? "")
+    const system = String(getPromptBody().text ?? "")
     expect(system.split("# Git Master Agent").length - 1).toBe(1)
     expect(system.split("# TDD Enforcer").length - 1).toBe(1)
   }, { timeout: 20000 })

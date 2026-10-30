@@ -59,7 +59,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -121,7 +124,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -189,7 +195,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -247,7 +256,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -310,7 +322,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -370,7 +385,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })
@@ -424,7 +442,10 @@ describe("executeSyncContinuation - toast cleanup error paths", () => {
             },
           ]
         }),
-        promptAsync: async () => ({}),
+        prompt: async () => ({}),
+        promptAsync: async () => {
+          throw new Error("promptAsync must not be called on the native client")
+        },
         status: async () => ({
           data: { ses_test: { type: "idle" } }
         })

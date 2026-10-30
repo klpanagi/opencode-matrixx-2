@@ -205,6 +205,16 @@ export class BackgroundManager {
       created = (await this.native.session.create({
         parentID: input.parentSessionID,
         title: buildSubagentTitle(input.description, input.agent),
+        agent: input.agent,
+        ...(input.model
+          ? {
+              model: {
+                id: input.model.modelID,
+                providerID: input.model.providerID,
+                ...(input.model.variant !== undefined ? { variant: input.model.variant } : {}),
+              },
+            }
+          : {}),
       })) as { id?: string }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -812,11 +822,6 @@ export class BackgroundManager {
   ): Promise<void> {
     const sessionID = task.sessionID
     if (!sessionID) throw new Error(`Task has no sessionID: ${task.id}`)
-    const launchModel = task.model
-      ? { providerID: task.model.providerID, modelID: task.model.modelID }
-      : undefined
-    const launchVariant = task.model?.variant
-
     const tools = {
       task: true,
       question: false,
@@ -824,14 +829,14 @@ export class BackgroundManager {
     }
     setSessionTools(sessionID, tools)
 
+    // Native v2 session.prompt takes { sessionID, text } only: agent and model
+    // are pinned at session.create above, tools flow through setSessionTools,
+    // and skill content is prepended to the user text so the child receives it.
+    const fireText =
+      skillContent !== undefined && skillContent.length > 0 ? `${skillContent}\n\n${prompt}` : prompt
     await promptNativeWithModelSuggestionRetry(this.native.session, {
       sessionID,
-      agent: task.agent,
-      ...(launchModel ? { model: launchModel } : {}),
-      ...(launchVariant ? { variant: launchVariant } : {}),
-      ...(skillContent ? { system: skillContent } : {}),
-      tools,
-      parts: [{ type: "text", text: prompt }],
+      text: fireText,
     })
   }
 }

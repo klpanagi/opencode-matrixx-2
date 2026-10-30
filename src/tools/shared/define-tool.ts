@@ -112,9 +112,16 @@ export function toInputSchema(name: string, args: unknown): Record<string, unkno
   }
 }
 
-/** Normalize a tool result, routing metadata through jsonSafeMetadata. */
+/** Normalize a tool result, routing metadata through jsonSafeMetadata.
+ *
+ * Every result carries BOTH channels: `content` (rendered message parts) and
+ * `output` (the hook-visible result and declared tool output). The host hook
+ * layer only forwards `output` to tool.execute.after hooks and derives the
+ * final message from it — a content-only result arrives as an empty string
+ * downstream (observed live as the empty task response).
+ */
 export function normalizeResult(result: unknown): V2ToolResult {
-  if (typeof result === "string") return { content: result };
+  if (typeof result === "string") return { content: result, output: result };
   if (result && typeof result === "object") {
     const record = result as Record<string, unknown>;
     const metadata = jsonSafeMetadata(
@@ -126,11 +133,23 @@ export function normalizeResult(result: unknown): V2ToolResult {
       metadata.title = record.title;
     }
     const text = typeof record.output === "string" ? record.output : record.content;
-    if (typeof text === "string") return { content: text, metadata };
-    if (record.output !== undefined) return { output: record.output, metadata };
+    if (typeof text === "string") return { content: text, output: text, metadata };
+    if (record.output !== undefined) {
+      const fallback = safeOutputText(record.output);
+      return { content: fallback, output: fallback, metadata };
+    }
     return { metadata };
   }
-  return { content: result === undefined ? "" : String(result) };
+  const text = result === undefined ? "" : String(result);
+  return { content: text, output: text };
+}
+
+function safeOutputText(value: unknown): string {
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
 }
 
 /** Build the Matrixx tool context from a V2 tool context and bridge deps. */
@@ -199,6 +218,10 @@ export function emitToolInfo(
     name,
     description: definition.description,
     input,
+    // Declared string output: normalizeResult always surfaces a string on the
+    // output channel, and the host requires a declared schema whenever a
+    // result carries output. Without this the hook layer sees an empty string.
+    output: { type: "string" },
     ...(options === undefined ? {} : { options }),
     execute: async (rawInput: unknown, context: V2ToolContext) => {
       const result = await definition.execute(

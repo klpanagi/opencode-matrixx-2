@@ -50,6 +50,15 @@ export async function executeSyncTask(
       agentToUse,
       description: args.description,
       defaultDirectory: directory,
+      ...(categoryModel !== undefined
+        ? {
+            model: {
+              providerID: categoryModel.providerID,
+              modelID: categoryModel.modelID,
+              ...(categoryModel.variant !== undefined ? { variant: categoryModel.variant } : {}),
+            },
+          }
+        : {}),
     })
 
     if (!createSessionResult.ok) {

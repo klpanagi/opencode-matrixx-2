@@ -16,6 +16,26 @@ interface CapturedPromptBody {
   variant?: string
   system?: string
   tools?: { task?: boolean }
+  text?: string
+  sessionID?: string
+}
+
+interface CapturedCreateBody {
+  parentID?: string
+  title?: string
+  agent?: string
+  model?: { id: string; providerID: string; variant?: string }
+}
+
+// Native v2 pins agent/model at session.create: the mock create below records
+// its input here so tests can assert the Ref while prompt assertions cover text.
+const lastCreateBody: { current?: CapturedCreateBody } = {}
+
+function captureCreate(id: string) {
+  return async (input: CapturedCreateBody) => {
+    lastCreateBody.current = input
+    return { id }
+  }
 }
 
 
@@ -1193,7 +1213,7 @@ describe("morpheus-task", () => {
          model: { list: async () => [{ provider: "anthropic", id: "claude-opus-4-6" }] },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_sync_default_variant" }),
+           create: captureCreate("ses_sync_default_variant"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -1230,13 +1250,14 @@ describe("morpheus-task", () => {
         toolContext
       )
 
-      // then - variant MUST be "max" from DEFAULT_CATEGORIES (passed as separate field);
-      // model is the system default (tiers removed — DEFAULT_CATEGORIES carries no model)
-      expect(promptBody.model).toEqual({
+      // then - variant MUST be "max" from DEFAULT_CATEGORIES, pinned at create
+      // as a Model.Ref ({id, providerID, variant}); the prompt itself is text-only
+      expect(lastCreateBody.current?.model).toEqual({
+        id: "claude-sonnet-4-5",
         providerID: "anthropic",
-        modelID: "claude-sonnet-4-5"
+        variant: "max"
       })
-      expect(promptBody.variant).toBe("max")
+      expect(promptBody.text).toBeDefined()
     }, { timeout: 20000 })
   })
 
@@ -1485,7 +1506,7 @@ describe("morpheus-task", () => {
     expect(result).not.toContain("Background task continued")
   }, { timeout: 10000 })
 
-  test("sync continuation preserves variant from previous session message", async () => {
+  test("sync continuation sends a text-only prompt; the session keeps its pinned model", async () => {
     //#given a session with a previous message that has variant "max"
     const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
 
@@ -1546,12 +1567,10 @@ describe("morpheus-task", () => {
       toolContext
     )
 
-    //#then prompt should include variant from previous message
+    //#then prompt is text-only; the session keeps the model pinned at creation
     expect(promptMock).toHaveBeenCalled()
     const callArgs = promptMock.mock.calls[0][0]
-    expect(callArgs.variant).toBe("max")
-    expect(callArgs.agent).toBe("mouse")
-    expect(callArgs.model).toEqual({ providerID: "anthropic", modelID: "claude-opus-4-6" })
+    expect(callArgs).toEqual({ sessionID: "ses_var_test", text: "Continue the task" })
   }, { timeout: 10000 })
 
   test("session_id with background=true should return immediately without waiting", async () => {
@@ -1810,7 +1829,7 @@ describe("morpheus-task", () => {
        const mockClient = {
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_sync_model" }),
+           create: captureCreate("ses_sync_model"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -1847,11 +1866,13 @@ describe("morpheus-task", () => {
         load_skills: ["git-master"]
       }, toolContext)
 
-      // then
-      expect(promptBody.model).toEqual({
-        providerID: "provider",
-        modelID: "custom-model"
+      // then - matched category model is pinned at session.create as a Ref
+      expect(lastCreateBody.current?.model).toEqual({
+        id: "custom-model",
+        providerID: "provider"
       })
+      expect(lastCreateBody.current?.agent).toBe("mouse")
+      expect(promptBody.text).toBeDefined()
     }, { timeout: 20000 })
   })
 
@@ -2765,7 +2786,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_browser_provider" }),
+           create: captureCreate("ses_browser_provider"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -2803,9 +2824,10 @@ const tool = createDelegateTask({
       )
 
       // then - agent-browser skill should be resolved (not in notFound)
+      // and merged into the prompt text (no per-message system channel exists)
       expect(promptBody).toBeDefined()
-      expect(promptBody.system).toBeDefined()
-      expect(promptBody.system).toContain("agent-browser")
+      expect(promptBody.text).toBeDefined()
+      expect(String(promptBody.text)).toContain("agent-browser")
     }, { timeout: 20000 })
 
     test("should NOT resolve agent-browser skill when browserProvider is not set", async () => {
@@ -3424,7 +3446,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_oracle_model" }),
+           create: captureCreate("ses_oracle_model"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3459,11 +3481,13 @@ const tool = createDelegateTask({
         toolContext
       )
 
-      // then - matched agent's model should be passed to session.prompt
-      expect(promptBody.model).toEqual({
-        providerID: "anthropic",
-        modelID: "claude-opus-4-6"
+      // then - matched agent's model is pinned at session.create as a Ref
+      expect(lastCreateBody.current?.model).toEqual({
+        id: "claude-opus-4-6",
+        providerID: "anthropic"
       })
+      expect(lastCreateBody.current?.agent).toBe("oracle")
+      expect(promptBody.text).toBeDefined()
     }, { timeout: 20000 })
 
     test("agent without model resolves via fallback chain", async () => {
@@ -3489,7 +3513,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_no_model_agent" }),
+           create: captureCreate("ses_no_model_agent"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3525,7 +3549,8 @@ const tool = createDelegateTask({
       )
 
       // then - model should be resolved via AGENT_MODEL_REQUIREMENTS fallback chain
-      expect(promptBody.model).toBeDefined()
+      // and pinned at session.create
+      expect(lastCreateBody.current?.model).toBeDefined()
     }, { timeout: 20000 })
 
     test("agentOverrides model takes priority over matchedAgent.model (#1357)", async () => {
@@ -3551,7 +3576,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_override_model" }),
+           create: captureCreate("ses_override_model"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3590,9 +3615,9 @@ const tool = createDelegateTask({
       )
 
       // then - user-configured model should take priority over matchedAgent.model
-      expect(promptBody.model).toEqual({
-        providerID: "anthropic",
-        modelID: "claude-opus-4-6"
+      expect(lastCreateBody.current?.model).toEqual({
+        id: "claude-opus-4-6",
+        providerID: "anthropic"
       })
     }, { timeout: 20000 })
 
@@ -3619,7 +3644,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_variant_test" }),
+           create: captureCreate("ses_variant_test"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3657,8 +3682,8 @@ const tool = createDelegateTask({
         toolContext
       )
 
-      // then - user-configured variant should be applied
-      expect(promptBody.variant).toBe("max")
+      // then - user-configured variant should be applied on the create Ref
+      expect(lastCreateBody.current?.model).toMatchObject({ variant: "max" })
     }, { timeout: 20000 })
 
     test("fallback chain resolves model when no override and no matchedAgent.model (#1357)", async () => {
@@ -3684,7 +3709,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_fallback_test" }),
+           create: captureCreate("ses_fallback_test"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3725,9 +3750,9 @@ const tool = createDelegateTask({
       // then - should resolve via AGENT_MODEL_REQUIREMENTS fallback chain for oracle
       // oracle fallback chain: claude-opus-4-6 (anthropic) > gpt-5.2 (openai) > gemini-3-pro (google)
       // Since anthropic is in connectedProviders, should resolve to anthropic/claude-opus-4-6
-      expect(promptBody.model).toBeDefined()
-      expect(promptBody.model.providerID).toBe("anthropic")
-      expect(promptBody.model.modelID).toContain("claude-opus-4-6")
+      expect(lastCreateBody.current?.model).toBeDefined()
+      expect(lastCreateBody.current?.model?.providerID).toBe("anthropic")
+      expect(lastCreateBody.current?.model?.id).toContain("claude-opus-4-6")
     }, { timeout: 20000 })
   })
 
@@ -3749,7 +3774,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_plan_delegate" }),
+           create: captureCreate("ses_plan_delegate"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({
@@ -3784,8 +3809,9 @@ const tool = createDelegateTask({
         toolContext
       )
       
-      //#then - plan agent should have task permission
-      expect(promptBody.tools.task).toBe(true)
+      //#then - plan agent should have task permission (stored per session)
+      const { getSessionTools } = require("../../../src/shared/session-state")
+      expect(getSessionTools("ses_plan_delegate")?.task).toBe(true)
     }, { timeout: 20000 })
 
     test("oracle subagent should have task permission (plan family)", async () => {
@@ -3798,7 +3824,7 @@ const tool = createDelegateTask({
          config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
          session: {
            get: async () => ({ directory: "/project" }),
-           create: async () => ({ id: "ses_oracle_task" }),
+           create: captureCreate("ses_oracle_task"),
            prompt: promptMock,
            promptAsync: promptMock,
            context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "Plan created" }] }] }),
@@ -3815,7 +3841,8 @@ const tool = createDelegateTask({
       )
       
       //#then
-      expect(promptBody.tools.task).toBe(true)
+      const { getSessionTools } = require("../../../src/shared/session-state")
+      expect(getSessionTools("ses_oracle_task")?.task).toBe(true)
     }, { timeout: 20000 })
 
     test("non-plan subagent should NOT have task permission", async () => {
@@ -3829,7 +3856,7 @@ const tool = createDelegateTask({
         config: { get: async () => ({ data: { model: SYSTEM_DEFAULT_MODEL } }) },
         session: {
           get: async () => ({ directory: "/project" }),
-          create: async () => ({ id: "ses_oracle_no_delegate" }),
+          create: captureCreate("ses_oracle_no_delegate"),
           prompt: async (input: CapturedPromptBody) => {
             promptBody = input
             return { data: {} }
@@ -3871,7 +3898,8 @@ const tool = createDelegateTask({
       )
       
       // then - oracle should NOT have task permission
-      expect(promptBody.tools.task).toBe(true)
+      const { getSessionTools } = require("../../../src/shared/session-state")
+      expect(getSessionTools("ses_oracle_no_delegate")?.task).toBe(true)
     }, { timeout: 20000 })
   })
 
