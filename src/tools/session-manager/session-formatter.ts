@@ -57,7 +57,7 @@ export function formatSessionMessages(
     const agent = msg.agent ? ` (${msg.agent})` : ""
     lines.push(`\n[${msg.role}${agent}] ${timestamp}`)
 
-    for (const part of msg.parts) {
+    for (const part of msg.content) {
       if (part.type === "text" && part.text) {
         lines.push(part.text.trim())
       } else if (part.type === "thinking" && part.thinking) {
@@ -163,7 +163,7 @@ export async function searchInSession(
     let matchCount = 0
     const excerpts: string[] = []
 
-    for (const part of msg.parts) {
+    for (const part of msg.content) {
       if (part.type === "text" && part.text) {
         const text = caseSensitive ? part.text : part.text.toLowerCase()
         const matches = text.split(searchQuery).length - 1

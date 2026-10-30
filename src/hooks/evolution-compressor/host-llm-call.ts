@@ -2,25 +2,22 @@ import type { createOpencodeClient } from "@opencode-ai/sdk"
 import type { LlmUsage } from "../../features/evolution/compressor/interface"
 import { log } from "../../shared/logger"
 import { normalizeSDKResponse } from "../../shared/normalize-sdk-response"
-import { isRecord } from "../../shared/record-type-guard"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { withEphemeralSession } from "../../shared/with-ephemeral-session"
 import { parseModelString } from "../../tools/delegate-task/model-string-parser"
 
 type Client = ReturnType<typeof createOpencodeClient>
 
-type SessionMessage = { info?: { role?: string; time?: { created?: number } }; parts?: unknown }
-
-type TextPart = { type: "text"; text: string }
-
 function latestAssistantText(messages: unknown): string | null {
   const list = normalizeSDKResponse<SessionMessage[]>(messages, [])
   if (!Array.isArray(list) || list.length === 0) return null
-  const assistants = list.filter((m) => isRecord(m) && isRecord(m.info) && m.info.role === "assistant")
-  assistants.sort((a, b) => Number(b.info?.time?.created ?? 0) - Number(a.info?.time?.created ?? 0))
+  const assistants = list.filter((m) => isAssistant(m))
+  assistants.sort((a, b) => timeOf(b) - timeOf(a))
   const latest = assistants[0]
-  if (!latest || !Array.isArray(latest.parts)) return null
-  const text = latest.parts
-    .filter((p): p is TextPart => isRecord(p) && p.type === "text" && typeof p.text === "string")
+  if (!latest) return null
+  const text = contentOf(latest)
+    .filter((p) => p.type === "text" && typeof p.text === "string")
     .map((p) => p.text)
     .join("\n")
   return text.length > 0 ? text : null

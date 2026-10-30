@@ -34,15 +34,15 @@ describe("session-manager golden (flat V2 messages)", () => {
     expect(rendered).toBe("No sessions found.")
   })
 
-  it("renders a V1-shaped transcript header and parts (contract kept after accessors)", () => {
-    // given a V1-shaped session message with one text part and one tool part
+  it("renders the transcript header and parts (contract kept after accessors)", () => {
+    // given a session message with one text part and one tool part
     const messages: SessionMessage[] = [
       {
         id: "msg_contract_assistant",
         role: "assistant",
         agent: "oracle",
         time: { created: 1730000001000 },
-        parts: [
+        content: [
           { id: "part_text", type: "text", text: "  hello there  " },
           { id: "part_tool", type: "tool_use", tool: "bash", input: { command: "bun test" } },
         ],

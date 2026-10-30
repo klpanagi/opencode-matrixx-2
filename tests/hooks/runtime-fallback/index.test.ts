@@ -555,8 +555,8 @@ describe("runtime-fallback", () => {
             messages: async () => ({
               data: [
                 {
-                  info: { role: "user" },
-                  parts: [{ type: "text", text: "continue" }],
+                  type: "user",
+                  text: "continue",
                 },
               ],
             }),
@@ -617,8 +617,8 @@ describe("runtime-fallback", () => {
             messages: async () => ({
               data: [
                 {
-                  info: { role: "user" },
-                  parts: [{ type: "text", text: "continue" }],
+                  type: "user",
+                  text: "continue",
                 },
               ],
             }),
@@ -688,7 +688,7 @@ describe("runtime-fallback", () => {
         createMockPluginInput({
           session: {
             messages: async () => ({
-              data: [{ info: { role: "user" }, parts: [{ type: "text", text: "continue" }] }],
+              data: [{ type: "user", text: "continue" }],
             }),
             promptAsync: async (args) => {
               promptCalls.push(args as Record<string, unknown>)

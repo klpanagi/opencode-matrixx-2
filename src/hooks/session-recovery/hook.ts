@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { ExperimentalConfig } from "../../config"
 import { log } from "../../shared/logger"
+import { idOf } from "../../shared/session-message"
 import type { RecoveryErrorType } from "./detect-error-type"
 import { detectErrorType } from "./detect-error-type"
 import { recoverThinkingBlockOrder } from "./recover-thinking-block-order"
@@ -72,7 +73,7 @@ export function createSessionRecoveryHook(ctx: PluginInput, options?: SessionRec
       })
       const msgs = (messagesResp as { data?: MessageData[] }).data
 
-      const failedMsg = msgs?.find((m) => m.info?.id === assistantMsgID)
+      const failedMsg = msgs?.find((m) => idOf(m) === assistantMsgID)
       if (!failedMsg) {
         return false
       }

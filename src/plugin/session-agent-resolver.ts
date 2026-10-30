@@ -1,15 +1,12 @@
 import { log, normalizeSDKResponse } from "../shared"
 
 interface SessionMessage {
-  info?: {
-    agent?: string
-    role?: string
-  }
+  agent?: string
 }
 
 type SessionClient = {
   session: {
-    messages: (opts: { path: { id: string } }) => Promise<{ data?: SessionMessage[] }>
+    messages: (opts: { path: { id: string } }) => Promise<{ data?: unknown[] }>
   }
 }
 
@@ -28,8 +25,9 @@ export async function resolveSessionAgent(
     const messages = normalizeSDKResponse(messagesResp, [] as SessionMessage[])
 
     for (const msg of messages) {
-      if (msg.info?.agent) {
-        return msg.info.agent
+      const agent = msg.agent
+      if (agent) {
+        return agent
       }
     }
   } catch (error) {

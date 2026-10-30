@@ -2,6 +2,8 @@ import type { PluginInput } from "@opencode-ai/plugin"
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { ContentPart, SessionMessage } from "../../shared/session-message"
+import { contentOf, idOf, isAssistant } from "../../shared/session-message"
 import { findEmptyMessages, injectTextPart, replaceEmptyTextParts } from "../session-recovery/storage"
 import { replaceEmptyTextPartsAsync } from "../session-recovery/storage/empty-text"
 import { injectTextPartAsync } from "../session-recovery/storage/text-part-injector"
@@ -10,18 +12,8 @@ export const PLACEHOLDER_TEXT = "[user interrupted]"
 
 type OpencodeClient = PluginInput["client"]
 
-interface SdkPart {
-  type?: string
-  text?: string
-}
-
-interface SdkMessage {
-  info?: { id?: string }
-  parts?: SdkPart[]
-}
-
-function hasSdkContent(parts?: SdkPart[]): boolean {
-  if (!parts || parts.length === 0) return false
+function hasSdkContent(parts: ReadonlyArray<ContentPart>): boolean {
+  if (parts.length === 0) return false
   for (const p of parts) {
     if (!p.type) continue
     if (p.type === "thinking" || p.type === "redacted_thinking" || p.type === "meta") continue
@@ -37,13 +29,13 @@ function hasSdkContent(parts?: SdkPart[]): boolean {
 
 async function findEmptyIdsSdk(client: OpencodeClient, sessionID: string): Promise<string[]> {
   try {
-    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: SdkMessage[] }
-    const msgs = normalizeSDKResponse(res, [] as SdkMessage[], { preferResponseOnMissingData: true })
+    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: SessionMessage[] }
+    const msgs = normalizeSDKResponse(res, [] as SessionMessage[], { preferResponseOnMissingData: true })
     const empty: string[] = []
     for (const m of msgs) {
-      const id = m.info?.id
+      const id = idOf(m)
       if (!id) continue
-      if (!hasSdkContent(m.parts)) empty.push(id)
+      if (!hasSdkContent(contentOf(m))) empty.push(id)
     }
     return empty
   } catch {
@@ -77,9 +69,9 @@ export async function getLastAssistant(sessionID: string, client: OpencodeClient
     const resp = await client.session.messages({ path: { id: sessionID }, query: { directory } })
     const data = (resp as { data?: unknown[] }).data
     if (!Array.isArray(data)) return null
-    const last = [...data].reverse().find((m) => (m as { info?: { role?: string } }).info?.role === "assistant")
+    const last = [...data].reverse().find((m) => isAssistant(m))
     if (!last) return null
-    return (last as { info?: Record<string, unknown> }).info ?? null
+    return last as Record<string, unknown>
   } catch {
     return null
   }

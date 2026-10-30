@@ -429,12 +429,18 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     // given
     const mockMessages = [
       {
-        info: { id: "msg_1", role: "user", agent: "test", time: { created: 1000 } },
-        parts: [{ id: "part_1", type: "text", text: "Hello" }],
+        id: "msg_1",
+        type: "user",
+        agent: "test",
+        time: { created: 1000 },
+        content: [{ id: "part_1", type: "text", text: "Hello" }],
       },
       {
-        info: { id: "msg_2", role: "assistant", agent: "oracle", time: { created: 2000 } },
-        parts: [{ id: "part_2", type: "text", text: "Hi there" }],
+        id: "msg_2",
+        type: "assistant",
+        agent: "oracle",
+        time: { created: 2000 },
+        content: [{ id: "part_2", type: "text", text: "Hi there" }],
       },
     ]
     mockClient.session.messages.mockImplementation(() => Promise.resolve({ data: mockMessages }))

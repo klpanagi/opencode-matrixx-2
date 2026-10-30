@@ -6,7 +6,7 @@ export interface SessionMessage {
     created: number
     updated?: number
   }
-  parts: MessagePart[]
+  content: MessagePart[]
 }
 
 export interface MessagePart {

@@ -8,9 +8,9 @@ describe("resolveSessionAgent", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { role: "user" } },
-            { info: { role: "assistant", agent: "explore" } },
-            { info: { role: "assistant", agent: "oracle" } },
+            { type: "user" },
+            { type: "assistant", agent: "explore" },
+            { type: "assistant", agent: "oracle" },
           ],
         }),
       },
@@ -29,9 +29,9 @@ describe("resolveSessionAgent", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { role: "user" } },
-            { info: { role: "system" } },
-            { info: { role: "assistant", agent: "plan" } },
+            { type: "user" },
+            { type: "system" },
+            { type: "assistant", agent: "plan" },
           ],
         }),
       },
@@ -50,8 +50,8 @@ describe("resolveSessionAgent", () => {
       session: {
         messages: async () => ({
           data: [
-            { info: { role: "user" } },
-            { info: { role: "assistant" } },
+            { type: "user" },
+            { type: "assistant" },
           ],
         }),
       },

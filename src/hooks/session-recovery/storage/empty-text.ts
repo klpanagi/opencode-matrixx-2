@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { isSqliteBackend, log, normalizeSDKResponse, patchPart } from "../../../shared"
+import { contentOf, idOf } from "../../../shared/session-message"
 import { PART_STORAGE } from "../constants"
 import type { MessageData, StoredPart, StoredTextPart } from "../types"
 import { readMessages } from "./messages-reader"
@@ -52,13 +53,14 @@ export async function replaceEmptyTextPartsAsync(
     const response = await client.session.messages({ path: { id: sessionID } })
     const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
 
-    const targetMsg = messages.find((m) => m.info?.id === messageID)
-    if (!targetMsg?.parts) return false
+    const targetMsg = messages.find((m) => idOf(m) === messageID)
+    if (!targetMsg) return false
 
     let anyReplaced = false
-    for (const part of targetMsg.parts) {
-      if (part.type === "text" && !part.text?.trim() && part.id) {
-        const patched = await patchPart(client, sessionID, messageID, part.id, {
+    for (const part of contentOf(targetMsg)) {
+      const partId = typeof part.id === "string" ? part.id : undefined
+      if (part.type === "text" && !part.text?.trim() && partId) {
+        const patched = await patchPart(client, sessionID, messageID, partId, {
           ...part,
           text: replacementText,
           synthetic: true,
@@ -104,9 +106,10 @@ export async function findMessagesWithEmptyTextPartsFromSDK(
     const result: string[] = []
 
     for (const msg of messages) {
-      if (!msg.parts || !msg.info?.id) continue
-      const hasEmpty = msg.parts.some((p) => p.type === "text" && !p.text?.trim())
-      if (hasEmpty) result.push(msg.info.id)
+      const id = idOf(msg)
+      if (!id) continue
+      const hasEmpty = contentOf(msg).some((p) => p.type === "text" && !p.text?.trim())
+      if (hasEmpty) result.push(id)
     }
 
     return result

@@ -25,16 +25,15 @@ describe("runtime-fallback golden (flat V2 messages)", () => {
     expect(extracted?.length).toBe(4)
   })
 
-  it("finds no retry parts when the last user message hides its role at the top level", () => {
+  it("reads retry parts from the newest flat user turn", () => {
     // given a flat V2 transcript whose newest user turn is msg_v2_user_2
     const messages = loadCorpus("v2-flat")
 
     // when collecting the last user retry parts
     const parts = getLastUserRetryParts(messages)
 
-    // then nothing is returned, because the reader looks for info.role
-    // (task 15 flips this expectation to the msg_v2_user_2 text once accessors land)
-    expect(parts).toEqual([])
+    // then the newest user text is returned
+    expect(parts).toEqual([{ type: "text", text: "Thanks. Is it a flake?" }])
   })
 
   it("reads retry parts from a data envelope with the same result", () => {
@@ -45,29 +44,28 @@ describe("runtime-fallback golden (flat V2 messages)", () => {
     const parts = getLastUserRetryParts({ data: messages })
 
     // then the envelope changes nothing
-    expect(parts).toEqual([])
+    expect(parts).toEqual([{ type: "text", text: "Thanks. Is it a flake?" }])
   })
 
-  it("reads retry parts from a V1-shaped user message (contract kept after accessors)", () => {
+  it("reads no retry parts from a V1-shaped transcript", () => {
     // given a V1-shaped transcript
     const messages = loadCorpus("v1-shaped")
 
     // when collecting the last user retry parts
     const parts = getLastUserRetryParts(messages)
 
-    // then the newest user text is returned
-    expect(parts).toEqual([{ type: "text", text: "Thanks. Is it a flake?" }])
+    // then nothing is returned, because the reader now speaks the flat shape only
+    expect(parts).toEqual([])
   })
 
-  it("reports no visible assistant response for a flat V2 transcript", async () => {
+  it("reports a visible assistant response for a flat V2 transcript", async () => {
     // given a flat V2 transcript served by the session client
     const ctx = createCtx({ data: loadCorpus("v2-flat") })
 
     // when asking whether the assistant produced a visible response
     const visible = await hasVisibleAssistantResponse(neverAutoRetry)(ctx, "ses_golden", undefined)
 
-    // then the hook cannot see the response and would retry forever
-    // (task 15 flips this expectation to true once accessors land)
-    expect(visible).toBe(false)
+    // then the newest assistant text is visible, so no retry is needed
+    expect(visible).toBe(true)
   })
 })

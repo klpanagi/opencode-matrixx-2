@@ -162,7 +162,7 @@ describe("createHostLlmCall session hygiene", () => {
     const client = makeClient({
       createResult: { data: { id: "ses-host-1" } },
       messagesImpl: async () => [
-        { info: { role: "assistant", time: { created: 2 } }, parts: [{ type: "text", text: "hello" }] },
+        { type: "assistant", time: { created: 2 }, content: [{ type: "text", text: "hello" }] },
       ],
       tracker,
     })

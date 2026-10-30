@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { isSqliteBackend, log, normalizeSDKResponse, patchPart } from "../../../shared"
+import { contentOf, idOf, isAssistant } from "../../../shared/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import type { MessageData } from "../types"
 import { readMessages } from "./messages-reader"
@@ -76,17 +77,16 @@ async function findLastThinkingContentFromSDK(
     const response = await client.session.messages({ path: { id: sessionID } })
     const messages = normalizeSDKResponse(response, [] as MessageData[], { preferResponseOnMissingData: true })
 
-    const currentIndex = messages.findIndex((m) => m.info?.id === beforeMessageID)
+    const currentIndex = messages.findIndex((m) => idOf(m) === beforeMessageID)
     if (currentIndex === -1) return ""
 
     for (let i = currentIndex - 1; i >= 0; i--) {
       const msg = messages[i]
-      if (msg.info?.role !== "assistant") continue
-      if (!msg.parts) continue
+      if (!isAssistant(msg)) continue
 
-      for (const part of msg.parts) {
+      for (const part of contentOf(msg)) {
         if (part.type && THINKING_TYPES.has(part.type)) {
-          const content = part.thinking || part.text
+          const content = typeof part.thinking === "string" ? part.thinking : part.text
           if (content && content.trim().length > 0) return content
         }
       }

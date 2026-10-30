@@ -1,5 +1,6 @@
 import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { roleOf } from "../../shared/session-message"
 import type { MessageData, ResumeConfig } from "./types"
 
 const RECOVERY_RESUME_TEXT = "[session recovered - continuing previous task]"
@@ -8,7 +9,7 @@ type Client = ReturnType<typeof createOpencodeClient>
 
 export function findLastUserMessage(messages: MessageData[]): MessageData | undefined {
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].info?.role === "user") {
+    if (roleOf(messages[i]) === "user") {
       return messages[i]
     }
   }
@@ -18,8 +19,11 @@ export function findLastUserMessage(messages: MessageData[]): MessageData | unde
 export function extractResumeConfig(userMessage: MessageData | undefined, sessionID: string): ResumeConfig {
   return {
     sessionID,
-    agent: userMessage?.info?.agent,
-    model: userMessage?.info?.model,
+    agent: userMessage?.agent,
+    model:
+      userMessage?.model?.providerID && userMessage.model.modelID
+        ? { providerID: userMessage.model.providerID, modelID: userMessage.model.modelID }
+        : undefined,
   }
 }
 

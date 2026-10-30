@@ -186,9 +186,9 @@ export function createAutoRetryHelpers(deps: HookDeps) {
       if (!msgs || msgs.length === 0) return undefined
 
       for (let i = msgs.length - 1; i >= 0; i--) {
-        const info = msgs[i]?.info
-        const infoAgent = typeof info?.agent === "string" ? info.agent : undefined
-        const normalized = normalizeAgentName(infoAgent)
+        const agent = msgs[i]?.agent
+        const messageAgent = typeof agent === "string" ? agent : undefined
+        const normalized = normalizeAgentName(messageAgent)
         if (normalized) {
           return normalized
         }

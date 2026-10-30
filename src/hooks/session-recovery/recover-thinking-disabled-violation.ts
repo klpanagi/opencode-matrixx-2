@@ -2,6 +2,7 @@ import type { createOpencodeClient } from "@opencode-ai/sdk"
 import { normalizeSDKResponse } from "../../shared"
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import { contentOf, idOf, isAssistant } from "../../shared/session-message"
 import { THINKING_TYPES } from "./constants"
 import { findMessagesWithThinkingBlocks, stripThinkingParts } from "./storage"
 import { stripThinkingPartsAsync } from "./storage/thinking-strip"
@@ -43,13 +44,13 @@ async function recoverThinkingDisabledViolationFromSDK(
 
     const messageIDsWithThinking: string[] = []
     for (const msg of messages) {
-      if (msg.info?.role !== "assistant") continue
-      if (!msg.info?.id) continue
-      if (!msg.parts) continue
+      const id = idOf(msg)
+      if (!isAssistant(msg)) continue
+      if (!id) continue
 
-      const hasThinking = msg.parts.some((part) => THINKING_TYPES.has(part.type))
+      const hasThinking = contentOf(msg).some((part) => part.type !== undefined && THINKING_TYPES.has(part.type))
       if (hasThinking) {
-        messageIDsWithThinking.push(msg.info.id)
+        messageIDsWithThinking.push(id)
       }
     }
 

@@ -1,13 +1,8 @@
 import { isRecord } from "../../shared/record-type-guard"
-export type SessionMessagePart = {
-  type?: string
-  text?: string
-}
+import type { ContentPart, SessionMessage } from "../../shared/session-message"
 
-export type SessionMessage = {
-  info?: Record<string, unknown>
-  parts?: SessionMessagePart[]
-}
+export type { SessionMessage } from "../../shared/session-message"
+export type SessionMessagePart = ContentPart
 
 
 function isSessionMessage(value: unknown): value is SessionMessage {

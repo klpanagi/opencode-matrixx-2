@@ -2,13 +2,12 @@ import { existsSync, readFileSync } from "node:fs"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { escapeRegExp as escapeRegex } from "../../shared/escape-regexp"
 import { log } from "../../shared/logger"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, isAssistant } from "../../shared/session-message"
 import { withTimeout } from "../../shared/with-timeout"
 import { HOOK_NAME } from "./constants"
 
-export interface OpenCodeSessionMessage {
-	info?: { role?: string }
-	parts?: Array<{ type: string; text?: string }>
-}
+export type OpenCodeSessionMessage = SessionMessage
 
 function buildPromisePattern(promise: string): RegExp {
 	return new RegExp(`<promise>\\s*${escapeRegex(promise)}\\s*</promise>`, "is")
@@ -56,16 +55,14 @@ export async function detectCompletionInSessionMessages(
 			? options.preFetchedMessages
 			: await fetchSessionMessages(ctx, options.sessionID, options.directory, options.apiTimeoutMs)
 
-		const assistantMessages = messageArray.filter((msg) => msg.info?.role === "assistant")
+		const assistantMessages = messageArray.filter((msg) => isAssistant(msg))
 		if (assistantMessages.length === 0) return false
 
 		const pattern = buildPromisePattern(options.promise)
 		for (let index = assistantMessages.length - 1; index >= 0; index -= 1) {
 			const assistant = assistantMessages[index]
-			if (!assistant.parts) continue
-
 			let responseText = ""
-			for (const part of assistant.parts) {
+			for (const part of contentOf(assistant)) {
 				if (part.type !== "text") continue
 				responseText += `${responseText ? "\n" : ""}${part.text ?? ""}`
 			}

@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { log } from "../../shared/logger"
+import { contentOf, isAssistant } from "../../shared/session-message"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { DEFAULT_VERIFICATION_AGENT, DEFAULT_VERIFICATION_TIMEOUT_MS, HOOK_NAME } from "./constants"
 
@@ -50,9 +51,9 @@ function parseVerificationResponse(text: string): VerificationResult {
 function extractAssistantText(messages: OpenCodeSessionMessage[]): string | undefined {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const msg = messages[i]
-		if (msg.info?.role !== "assistant") continue
-		const textParts = msg.parts?.filter((p) => p.type === "text").map((p) => p.text ?? "")
-		if (textParts && textParts.length > 0) return textParts.join("\n")
+		if (!isAssistant(msg)) continue
+		const textParts = contentOf(msg).filter((p) => p.type === "text").map((p) => p.text ?? "")
+		if (textParts.length > 0) return textParts.join("\n")
 	}
 	return undefined
 }

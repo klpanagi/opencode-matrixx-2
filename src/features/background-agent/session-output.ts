@@ -1,4 +1,6 @@
 import { log, normalizeSDKResponse } from "../../shared"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, roleOf } from "../../shared/session-message"
 
 export interface SessionOutputClient {
   session: {
@@ -6,16 +8,7 @@ export interface SessionOutputClient {
   }
 }
 
-interface SessionMessagePart {
-  type?: string
-  text?: string
-  content?: string | unknown[]
-}
-
-export interface SessionMessage {
-  info?: { role?: string; error?: unknown }
-  parts?: SessionMessagePart[]
-}
+export type { SessionMessage }
 
 /**
  * Fetch the raw messages for a session. Throws on transport failure so callers
@@ -37,26 +30,29 @@ export function messagesHaveAssistantOutput(
   messages: SessionMessage[],
   sessionID?: string,
 ): boolean {
-  const hasAssistantOrToolMessage = messages.some(
-    (m) => m.info?.role === "assistant" || m.info?.role === "tool",
-  )
+  const hasAssistantOrToolMessage = messages.some((m) => {
+    const role = roleOf(m)
+    return role === "assistant" || role === "tool"
+  })
   if (!hasAssistantOrToolMessage) {
     if (sessionID) log("[background-agent] No assistant/tool messages found in session:", sessionID)
     return false
   }
 
   const hasContent = messages.some((m) => {
-    if (m.info?.role !== "assistant" && m.info?.role !== "tool") return false
-    const parts = m.parts ?? []
-    return parts.some(
-      (p) =>
-        (p.type === "text" && p.text && p.text.trim().length > 0) ||
-        (p.type === "reasoning" && p.text && p.text.trim().length > 0) ||
-        p.type === "tool" ||
-        (p.type === "tool_result" &&
-          p.content &&
-          (typeof p.content === "string" ? p.content.trim().length > 0 : p.content.length > 0)),
-    )
+    const role = roleOf(m)
+    if (role !== "assistant" && role !== "tool") return false
+    return contentOf(m).some((p) => {
+      const text = typeof p.text === "string" ? p.text : undefined
+      if ((p.type === "text" || p.type === "reasoning") && text && text.trim().length > 0) return true
+      if (p.type === "tool") return true
+      if (p.type === "tool_result") {
+        const raw = p.content
+        if (typeof raw === "string") return raw.trim().length > 0
+        if (Array.isArray(raw)) return raw.length > 0
+      }
+      return false
+    })
   })
 
   if (!hasContent && sessionID) {
@@ -67,7 +63,7 @@ export function messagesHaveAssistantOutput(
 
 /** True when any assistant message carries a recorded provider/abort error. */
 export function messagesHaveRecordedError(messages: SessionMessage[]): boolean {
-  return messages.some((m) => m.info?.role === "assistant" && m.info.error != null)
+  return messages.some((m) => roleOf(m) === "assistant" && m.error != null)
 }
 
 /**

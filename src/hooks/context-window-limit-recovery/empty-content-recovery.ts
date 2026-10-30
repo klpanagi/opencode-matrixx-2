@@ -1,5 +1,7 @@
 import { log } from "../../shared/logger"
 import { isSqliteBackend } from "../../shared/opencode-storage-detection"
+import type { SessionMessage } from "../../shared/session-message"
+import { contentOf, idOf } from "../../shared/session-message"
 import {
   findEmptyMessageByIndex,
   findEmptyMessages,
@@ -55,14 +57,15 @@ async function fixSdk(client: Client, sessionID: string): Promise<{ fixed: boole
 
 async function findEmptyMessagesSdk(client: Client, sessionID: string): Promise<string[]> {
   try {
-    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: Array<{ info?: { id?: string }; parts?: Array<{ type?: string; text?: string }> }> }
-    const typedRes = res as { data?: Array<{ info?: { id?: string }; parts?: Array<{ type?: string; text?: string }> }> }
+    const res = (await client.session.messages({ path: { id: sessionID } })) as { data?: SessionMessage[] }
+    const typedRes = res as { data?: SessionMessage[] }
     const msgs = typedRes.data ?? []
     const empty: string[] = []
     for (const m of msgs) {
-      const id = m.info?.id
-      if (!id || !m.parts) continue
-      const hasContent = m.parts.some((p) => {
+      const id = idOf(m)
+      const content = contentOf(m)
+      if (!id || content.length === 0) continue
+      const hasContent = content.some((p) => {
         if (p.type === "text") return !!p.text?.trim()
         if (p.type === "tool" || p.type === "tool_use" || p.type === "tool_result") return true
         if (p.type === "thinking" || p.type === "redacted_thinking" || p.type === "meta") return false

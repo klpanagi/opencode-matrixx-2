@@ -20,16 +20,15 @@ function createPromptSpy(): { client: Client; calls: unknown[] } {
 }
 
 describe("session-recovery golden (flat V2 messages)", () => {
-  it("finds no user message in a flat V2 transcript", () => {
+  it("finds the newest user message in a flat V2 transcript", () => {
     // given a flat V2 transcript where the role lives at the top level
     const messages = loadCorpus("v2-flat") as MessageData[]
 
     // when scanning backwards for the last user message
     const found = findLastUserMessage(messages)
 
-    // then the reader sees nothing, because it only looks at info.role
-    // (task 15 flips this expectation to the msg_v2_user_2 id once accessors land)
-    expect(found).toBeUndefined()
+    // then msg_v2_user_2 is returned
+    expect(found?.id).toBe("msg_v2_user_2")
   })
 
   it("degrades the resume config to session-only when no user message is found", () => {
@@ -44,11 +43,14 @@ describe("session-recovery golden (flat V2 messages)", () => {
     expect(config).toEqual({ sessionID: "ses_golden", agent: undefined, model: undefined })
   })
 
-  it("reads the resume config from a V1-shaped user message (contract kept after accessors)", () => {
-    // given a V1-shaped user message that still carries info.agent and info.model
+  it("reads the resume config from a flat user message that carries agent and model", () => {
+    // given a flat user message that carries agent and model at the top level
     const userMessage = {
-      info: { role: "user", agent: "oracle", model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" } },
-      parts: [{ type: "text", text: "continue" }],
+      id: "msg_contract_user",
+      type: "user",
+      agent: "oracle",
+      model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
+      text: "continue",
     } as unknown as MessageData
 
     // when building the resume config
@@ -75,25 +77,26 @@ describe("session-recovery golden (flat V2 messages)", () => {
     expect(calls).toHaveLength(0)
   })
 
-  it("treats a flat V2 tool part as unrecoverable because it is not a tool_use part", async () => {
-    // given a V2 tool message whose part type is "tool" rather than "tool_use"
+  it("recovers a flat V2 tool part by its call id", async () => {
+    // given a V2 tool message whose part type is "tool"
     const { client, calls } = createPromptSpy()
     const assistantToolMessage = (loadCorpus("v2-assistant-tool") as MessageData[])[1]
 
     // when the tool-result-missing recovery runs
     const recovered = await recoverToolResultMissing(client, "ses_golden", assistantToolMessage)
 
-    // then the tool_use extractor finds no ids and the session is left untouched
-    expect(recovered).toBe(false)
-    expect(calls).toHaveLength(0)
+    // then the interrupted tool call is acknowledged once
+    expect(recovered).toBe(true)
+    expect(calls).toHaveLength(1)
   })
 
-  it("still recovers a V1-shaped tool_use part (contract kept after accessors)", async () => {
-    // given a V1-shaped assistant message with one tool_use part
+  it("recovers a flat tool_use part without falling back to storage", async () => {
+    // given a flat assistant message with one interrupted tool part
     const { client, calls } = createPromptSpy()
     const failedAssistantMsg = {
-      info: { role: "assistant" },
-      parts: [{ type: "tool_use", id: "call_golden" }],
+      id: "msg_contract_assistant",
+      type: "assistant",
+      content: [{ type: "tool", id: "call_golden", state: { status: "running" } }],
     } as unknown as MessageData
 
     // when the tool-result-missing recovery runs

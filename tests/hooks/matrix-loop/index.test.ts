@@ -488,8 +488,8 @@ describe("matrix-loop", () => {
     test("should detect completion promise via session messages API", async () => {
       // given - active loop with assistant message containing completion promise
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
+        { type: "assistant", content: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
       ]
       const hook = createMatrixLoopHook(createMockPluginInput(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
@@ -518,8 +518,8 @@ describe("matrix-loop", () => {
       // given - active loop with assistant message containing completion promise
       mockMessagesApiResponseShape = "array"
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
+        { type: "assistant", content: [{ type: "text", text: "I have completed the task. <promise>API_DONE</promise>" }] },
       ]
       const hook = createMatrixLoopHook(createMockPluginInput(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
@@ -547,10 +547,10 @@ describe("matrix-loop", () => {
     test("should ignore completion promise in reasoning part via session messages API", async () => {
       //#given - active loop with assistant reasoning containing completion promise
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Build something" }] },
+        { type: "user", content: [{ type: "text", text: "Build something" }] },
         {
-          info: { role: "assistant" },
-          parts: [
+          type: "assistant",
+          content: [
             { type: "reasoning", text: "I am done now. <promise>REASONING_DONE</promise>" },
           ],
         },
@@ -668,11 +668,11 @@ describe("matrix-loop", () => {
     test("should check last 3 assistant messages for completion", async () => {
       // given - multiple assistant messages, promise in recent (not last) assistant message
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Start task" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Working on it." }] },
-        { info: { role: "user" }, parts: [{ type: "text", text: "Continue" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Nearly there... <promise>DONE</promise>" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "(extra output after promise)" }] },
+        { type: "user", content: [{ type: "text", text: "Start task" }] },
+        { type: "assistant", content: [{ type: "text", text: "Working on it." }] },
+        { type: "user", content: [{ type: "text", text: "Continue" }] },
+        { type: "assistant", content: [{ type: "text", text: "Nearly there... <promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "(extra output after promise)" }] },
       ]
       const hook = createMatrixLoopHook(createMockPluginInput(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
@@ -693,11 +693,11 @@ describe("matrix-loop", () => {
     test("should detect completion even if promise is older than last 3 assistant messages", async () => {
       // given - promise appears in an assistant message older than last 3
       mockSessionMessages = [
-        { info: { role: "user" }, parts: [{ type: "text", text: "Start task" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "Promise early <promise>DONE</promise>" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 1" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 2" }] },
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "More work 3" }] },
+        { type: "user", content: [{ type: "text", text: "Start task" }] },
+        { type: "assistant", content: [{ type: "text", text: "Promise early <promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 1" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 2" }] },
+        { type: "assistant", content: [{ type: "text", text: "More work 3" }] },
       ]
       const hook = createMatrixLoopHook(createMockPluginInput(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
@@ -881,7 +881,7 @@ Original task: Build something`
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
       writeFileSync(transcriptPath, `${JSON.stringify({ type: "tool_result", tool_name: "write", tool_output: { output: "<promise>DONE</promise>" } })}\n`)
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "No promise here" }] },
+        { type: "assistant", content: [{ type: "text", text: "No promise here" }] },
       ]
       const hook = createMatrixLoopHook(createMockPluginInput(), {
         getTranscriptPath: () => transcriptPath,
@@ -1032,8 +1032,8 @@ Original task: Build something`
     test("should call verification before clearing state on ultrawork completion", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
         },
       ]
       const mockInput = createVerificationMockPluginInput()
@@ -1058,8 +1058,8 @@ Original task: Build something`
     test("should clear state and show toast when verification passes", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<promise>DONE</promise> <verification>PASS</verification>" }],
         },
       ]
       const mockInput = createVerificationMockPluginInput()
@@ -1083,8 +1083,8 @@ Original task: Build something`
     test("should NOT clear state when verification fails, inject continuation with feedback", async () => {
       mockSessionMessages = [
         {
-          info: { role: "assistant" },
-          parts: [
+          type: "assistant",
+          content: [
             {
               type: "text",
               text: "<promise>DONE</promise> <verification>FAIL: Tests are not passing</verification>",
@@ -1116,13 +1116,13 @@ Original task: Build something`
     //#then state is force-cleared with warning toast
     test("should force-clear state after maxRetries verification failures", async () => {
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
       ]
       const mockInput = createVerificationMockPluginInput()
       verificationMessages = [
         {
-          info: { role: "assistant" },
-          parts: [{ type: "text", text: "<verification>FAIL: Still broken</verification>" }],
+          type: "assistant",
+          content: [{ type: "text", text: "<verification>FAIL: Still broken</verification>" }],
         },
       ]
       const hook = createMatrixLoopHook(mockInput, {
@@ -1148,7 +1148,7 @@ Original task: Build something`
     //#then verification is skipped (disabled by default for non-ultrawork)
     test("should skip verification for regular loops when not explicitly enabled", async () => {
       mockSessionMessages = [
-        { info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+        { type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
       ]
       const hook = createMatrixLoopHook(createVerificationMockPluginInput(), {
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),

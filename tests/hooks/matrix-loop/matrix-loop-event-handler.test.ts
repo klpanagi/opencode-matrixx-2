@@ -59,7 +59,7 @@ describe("matrix-loop event handler", () => {
 	test("session.idle event calls session.messages at most once per handler", async () => {
 		// given - mock with completion promise in assistant message (triggers detection)
 		mockSessionMessages = [
-			{ info: { role: "assistant" }, parts: [{ type: "text", text: "<promise>DONE</promise>" }] },
+			{ type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },
 		]
 		const hook = createMatrixLoopHook(createMockPluginInput(), {
 			getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),

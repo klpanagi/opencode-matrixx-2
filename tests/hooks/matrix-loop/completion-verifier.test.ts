@@ -49,10 +49,10 @@ describe("completion-verifier", () => {
 	test("should return verified=true when agent responds with PASS", async () => {
 		const { ctx } = createMockCtx({
 			messagesResult: [
-				{ info: { role: "user" }, parts: [{ type: "text", text: "Verify..." }] },
+				{ type: "user", content: [{ type: "text", text: "Verify..." }] },
 				{
-					info: { role: "assistant" },
-					parts: [{ type: "text", text: "Everything looks good. <verification>PASS</verification>" }],
+					type: "assistant",
+					content: [{ type: "text", text: "Everything looks good. <verification>PASS</verification>" }],
 				},
 			],
 		})
@@ -77,10 +77,10 @@ describe("completion-verifier", () => {
 	test("should return verified=false with reason when agent responds with FAIL", async () => {
 		const { ctx } = createMockCtx({
 			messagesResult: [
-				{ info: { role: "user" }, parts: [{ type: "text", text: "Verify..." }] },
+				{ type: "user", content: [{ type: "text", text: "Verify..." }] },
 				{
-					info: { role: "assistant" },
-					parts: [{ type: "text", text: "<verification>FAIL: Tests are not passing</verification>" }],
+					type: "assistant",
+					content: [{ type: "text", text: "<verification>FAIL: Tests are not passing</verification>" }],
 				},
 			],
 		})
@@ -147,10 +147,10 @@ describe("completion-verifier", () => {
 	test("should return verified=true when response has no verification tag", async () => {
 		const { ctx } = createMockCtx({
 			messagesResult: [
-				{ info: { role: "user" }, parts: [{ type: "text", text: "Verify..." }] },
+				{ type: "user", content: [{ type: "text", text: "Verify..." }] },
 				{
-					info: { role: "assistant" },
-					parts: [{ type: "text", text: "I reviewed the work and it looks fine." }],
+					type: "assistant",
+					content: [{ type: "text", text: "I reviewed the work and it looks fine." }],
 				},
 			],
 		})
@@ -175,8 +175,8 @@ describe("completion-verifier", () => {
 		const { ctx, calls } = createMockCtx({
 			messagesResult: [
 				{
-					info: { role: "assistant" },
-					parts: [{ type: "text", text: "<verification>PASS</verification>" }],
+					type: "assistant",
+					content: [{ type: "text", text: "<verification>PASS</verification>" }],
 				},
 			],
 		})

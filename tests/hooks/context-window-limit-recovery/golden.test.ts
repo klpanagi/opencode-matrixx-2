@@ -19,16 +19,15 @@ function createCtx(messagesResponse: unknown): TruncatorCtx {
 }
 
 describe("context-window-limit-recovery golden (flat V2 messages)", () => {
-  it("finds no assistant message in a flat V2 transcript", async () => {
+  it("finds the last assistant message in a flat V2 transcript", async () => {
     // given a flat V2 transcript wrapped in the SDK data envelope
     const client = createClient({ data: loadCorpus("v2-flat") })
 
     // when locating the last assistant message
     const assistant = await getLastAssistant("ses_golden", client, "/tmp/golden")
 
-    // then nothing is found, because the reader looks for info.role
-    // (task 15 flips this expectation to the msg_v2_asst_2 message once accessors land)
-    expect(assistant).toBeNull()
+    // then the newest assistant message is returned as the flat message itself
+    expect(assistant?.id).toBe("msg_v2_asst_2")
   })
 
   it("derives no context-window usage from a flat V2 transcript", async () => {
@@ -54,15 +53,14 @@ describe("context-window-limit-recovery golden (flat V2 messages)", () => {
     expect(truncated).toEqual({ result: output, truncated: false })
   })
 
-  it("finds the last assistant message in a V1-shaped transcript (contract kept after accessors)", async () => {
+  it("finds no assistant message in a V1-shaped transcript", async () => {
     // given a V1-shaped transcript wrapped in the SDK data envelope
     const client = createClient({ data: loadCorpus("v1-shaped") })
 
     // when locating the last assistant message
     const assistant = await getLastAssistant("ses_contract", client, "/tmp/golden")
 
-    // then the newest assistant message is returned
-    expect(assistant).not.toBeNull()
-    expect(assistant?.id).toBe("msg_v1_asst_2")
+    // then nothing is found, because the reader now speaks the flat shape only
+    expect(assistant).toBeNull()
   })
 })
