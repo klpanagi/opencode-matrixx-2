@@ -5,16 +5,15 @@ const {
   mock: bunMock,
 } = require("bun:test")
 
-bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
-  bunTest("sends flat v2 shape with top-level sessionID instead of {path,body}", async () => {
+bunDescribe("sendSyncPrompt native payload (host session.prompt {sessionID, text})", () => {
+  bunTest("sends {sessionID, text} instead of parts/agent/model wrappers", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
 
     let captured: unknown
-    const promptWithModelSuggestionRetry = bunMock(async (_client: unknown, args: unknown) => {
+    const sendNativePrompt = bunMock(async (_session: unknown, args: unknown) => {
       captured = args
     })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
 
     const input = {
       sessionID: "ses-v2-shape",
@@ -33,30 +32,38 @@ bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
+      {
+        session: {
+          prompt: bunMock(async () => ({})),
+          promptAsync: bunMock(async () => {
+            throw new Error("promptAsync must not be called on the native client")
+          }),
+        },
+      },
       input,
-      { promptWithModelSuggestionRetry, promptSyncWithModelSuggestionRetry },
+      { sendNativePrompt },
     )
 
-    //#then - prompt succeeds silently (null) and args use the flat v2 shape
+    //#then - prompt succeeds silently (null) and args use the native text shape
     bunExpect(result).toBeNull()
     const record = captured as Record<string, unknown>
     bunExpect(record.sessionID).toBe("ses-v2-shape")
-    bunExpect(record.parts).toEqual([{ type: "text", text: "test prompt" }])
-    bunExpect(record.agent).toBe("mouse")
+    bunExpect(record.text).toBe("test prompt")
+    bunExpect("parts" in record).toBe(false)
+    bunExpect("agent" in record).toBe(false)
+    bunExpect("model" in record).toBe(false)
     bunExpect("path" in record).toBe(false)
     bunExpect("body" in record).toBe(false)
   })
 
-  bunTest("includes model and variant in the flat v2 shape when categoryModel is set", async () => {
+  bunTest("merges systemContent into text and keeps model out of the prompt payload", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
 
     let captured: unknown
-    const promptWithModelSuggestionRetry = bunMock(async (_client: unknown, args: unknown) => {
+    const sendNativePrompt = bunMock(async (_session: unknown, args: unknown) => {
       captured = args
     })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
 
     const input = {
       sessionID: "ses-v2-model",
@@ -75,32 +82,36 @@ bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
 
     //#when
     await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
+      {
+        session: {
+          prompt: bunMock(async () => ({})),
+          promptAsync: bunMock(async () => {
+            throw new Error("promptAsync must not be called on the native client")
+          }),
+        },
+      },
       input,
-      { promptWithModelSuggestionRetry, promptSyncWithModelSuggestionRetry },
+      { sendNativePrompt },
     )
 
-    //#then
+    //#then - model pins at session.create; system instructions ride in the text
     const record = captured as Record<string, unknown>
     bunExpect(record.sessionID).toBe("ses-v2-model")
-    bunExpect(record.model).toEqual({ providerID: "anthropic", modelID: "claude-sonnet-4" })
-    bunExpect(record.variant).toBe("max")
-    bunExpect(record.system).toBe("sys")
+    bunExpect(record.text).toBe("sys\n\ntest prompt")
+    bunExpect("model" in record).toBe(false)
+    bunExpect("variant" in record).toBe(false)
+    bunExpect("system" in record).toBe(false)
     bunExpect("path" in record).toBe(false)
     bunExpect("body" in record).toBe(false)
   })
 
-  bunTest("returns formatDetailedError with sessionID when prompt resolves a 400 error envelope", async () => {
-    //#given a deps prompt that RESOLVES a hey-api error envelope (400 Missing key [text])
+  bunTest("returns formatDetailedError with sessionID when the native prompt throws", async () => {
+    //#given a deps prompt that THROWS (native session.prompt surfaces rejections as throws)
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
 
-    const promptWithModelSuggestionRetry = bunMock(async () => ({
-      data: undefined,
-      error: { message: "Missing key [text]" },
-      response: { status: 400 },
-      request: {},
-    }))
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
+    const sendNativePrompt = bunMock(async () => {
+      throw new Error("Missing key [text]")
+    })
 
     const input = {
       sessionID: "ses-400-envelope",
@@ -119,24 +130,29 @@ bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
+      {
+        session: {
+          prompt: bunMock(async () => ({})),
+          promptAsync: bunMock(async () => {
+            throw new Error("promptAsync must not be called on the native client")
+          }),
+        },
+      },
       input,
-      { promptWithModelSuggestionRetry, promptSyncWithModelSuggestionRetry },
+      { sendNativePrompt },
     )
 
     //#then - never a silent pass: detailed error carries status and sessionID
     bunExpect(typeof result).toBe("string")
-    bunExpect(result as string).toContain("400")
-    bunExpect(result as string).toContain("Missing key [text]")
+        bunExpect(result as string).toContain("Missing key [text]")
     bunExpect(result as string).toContain("ses-400-envelope")
   })
 
-  bunTest("returns null when prompt resolves a success envelope", async () => {
+  bunTest("returns null when the native prompt resolves", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
 
-    const promptWithModelSuggestionRetry = bunMock(async () => ({ data: {} }))
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
+    const sendNativePrompt = bunMock(async () => {})
 
     const input = {
       sessionID: "ses-ok-envelope",
@@ -155,24 +171,31 @@ bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
+      {
+        session: {
+          prompt: bunMock(async () => ({})),
+          promptAsync: bunMock(async () => {
+            throw new Error("promptAsync must not be called on the native client")
+          }),
+        },
+      },
       input,
-      { promptWithModelSuggestionRetry, promptSyncWithModelSuggestionRetry },
+      { sendNativePrompt },
     )
 
     //#then
     bunExpect(result).toBeNull()
   })
 
-  bunTest("oracle EOF fallback also sends the flat v2 shape to the sync retry", async () => {
+  bunTest("oracle EOF fallback retries with the same text payload", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
 
-    const promptWithModelSuggestionRetry = bunMock(async () => {
-      throw new Error("JSON Parse error: Unexpected EOF")
-    })
+    let calls = 0
     let syncCaptured: unknown
-    const promptSyncWithModelSuggestionRetry = bunMock(async (_client: unknown, args: unknown) => {
+    const sendNativePrompt = bunMock(async (_session: unknown, args: unknown) => {
+      calls += 1
+      if (calls === 1) throw new Error("JSON Parse error: Unexpected EOF")
       syncCaptured = args
     })
 
@@ -193,15 +216,23 @@ bunDescribe("sendSyncPrompt v2 body schema (host opencode v2.1.4)", () => {
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
+      {
+        session: {
+          prompt: bunMock(async () => ({})),
+          promptAsync: bunMock(async () => {
+            throw new Error("promptAsync must not be called on the native client")
+          }),
+        },
+      },
       input,
-      { promptWithModelSuggestionRetry, promptSyncWithModelSuggestionRetry },
+      { sendNativePrompt },
     )
 
     //#then
     bunExpect(result).toBeNull()
     const record = syncCaptured as Record<string, unknown>
     bunExpect(record.sessionID).toBe("ses-oracle-v2")
+    bunExpect(record.text).toBe("test prompt")
     bunExpect("path" in record).toBe(false)
     bunExpect("body" in record).toBe(false)
   })

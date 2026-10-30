@@ -83,6 +83,32 @@ describe("tool schema", () => {
     walk(out);
   });
 
+  test("normalized results carry both content and output channels", () => {
+    //#given a plain string tool result
+    //#when normalized
+    const out = normalizeResult("done");
+
+    //#then both channels carry the text: content for message parts,
+    //#and output for the hook-visible result
+    expect(out.content).toBe("done");
+    expect(out.output).toBe("done");
+  });
+
+  test("emitted tool info declares a string output schema", () => {
+    //#given the delegate definition
+    const def = defineTool("task", {
+      description: "delegate",
+      args: { prompt: z.string() },
+      execute: async () => "ok",
+    });
+
+    //#when converted
+    const info = emitToolInfo("task", def, deps);
+
+    //#then the host can validate the output channel instead of dropping it
+    expect(info?.output).toEqual({ type: "string" });
+  });
+
   test("task tool keeps codemode:false while others stay unset", () => {
     //#given the delegate definition with direct-only options
     const taskDef = defineTool("task", {

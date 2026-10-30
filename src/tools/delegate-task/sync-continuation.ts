@@ -3,13 +3,12 @@ import { getTaskToastManager } from "../../features/task-toast-manager"
 import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
-import { promptWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import { fetchSessionMessages } from "../../shared/session-context-source"
 import { setSessionTools } from "../../shared/session-state"
 import { getDeliverableTag, isPlanFamily } from "./constants"
 import type { ExecutorContext } from "./executor-types"
 import { type SyncContinuationDeps, syncContinuationDeps } from "./sync-continuation-deps"
-import { promptEnvelopeErrorOf, type SyncPromptV2Args, toPromptRetryClient } from "./sync-prompt-sender"
 import { buildContinuationTitle } from "./task-title"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -35,8 +34,6 @@ export async function executeSyncContinuation(
   }
 
   let resumeAgent: string | undefined
-  let resumeModel: { providerID: string; modelID: string } | undefined
-  let resumeVariant: string | undefined
   let anchorMessageCount: number | undefined
 
   try {
@@ -47,10 +44,6 @@ export async function executeSyncContinuation(
         const message = messages[i]
         if (message.agent || message.model) {
           resumeAgent = message.agent
-          resumeModel = message.model
-            ? { providerID: message.model.providerID, modelID: message.model.modelID }
-            : undefined
-          resumeVariant = message.model?.variant
           break
         }
       }
@@ -58,10 +51,6 @@ export async function executeSyncContinuation(
       const resumeMessageDir = getMessageDir(continuationID as string)
       const resumeMessage = resumeMessageDir ? findNearestMessageWithFields(resumeMessageDir) : null
       resumeAgent = resumeMessage?.agent
-      resumeModel = resumeMessage?.model?.providerID && resumeMessage?.model?.modelID
-        ? { providerID: resumeMessage.model.providerID, modelID: resumeMessage.model.modelID }
-        : undefined
-      resumeVariant = resumeMessage?.model?.variant
     }
 
     const syncContMeta = jsonSafeMetadata({
@@ -92,26 +81,13 @@ export async function executeSyncContinuation(
     }
     setSessionTools(continuationID as string, tools)
 
-    const continuationPromptArgs: SyncPromptV2Args = {
+    // Native v2 session.prompt takes { sessionID, text } only. The resumed
+    // session keeps the agent/model pinned at its creation; tools stay in the
+    // local session-state store set above.
+    await promptNativeWithModelSuggestionRetry(client.session, {
       sessionID: continuationID as string,
-      ...(resumeAgent !== undefined ? { agent: resumeAgent } : {}),
-      ...(resumeModel !== undefined ? { model: resumeModel } : {}),
-      ...(resumeVariant !== undefined ? { variant: resumeVariant } : {}),
-      tools,
-      parts: [{ type: "text", text: args.prompt }],
-    }
-    const settled: unknown = await promptWithModelSuggestionRetry(
-      toPromptRetryClient(client),
-      continuationPromptArgs as unknown as Parameters<typeof promptWithModelSuggestionRetry>[1]
-    )
-    const envelopeError = promptEnvelopeErrorOf(settled)
-    if (envelopeError !== null) {
-      if (toastManager) {
-        toastManager.removeTask(taskId)
-      }
-      const statusSuffix = envelopeError.status !== undefined ? ` (status ${envelopeError.status})` : ""
-      return `Failed to send continuation prompt: ${envelopeError.message}${statusSuffix}\n\nSession ID: ${continuationID}`
-    }
+      text: args.prompt,
+    })
   } catch (promptError) {
     if (toastManager) {
       toastManager.removeTask(taskId)

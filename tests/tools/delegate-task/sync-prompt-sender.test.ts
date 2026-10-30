@@ -5,243 +5,205 @@ const {
   mock: bunMock,
 } = require("bun:test")
 
-bunDescribe("sendSyncPrompt", () => {
-  bunTest("passes question=false via tools parameter", async () => {
+function baseInput(overrides = {}) {
+  return {
+    sessionID: "test-session",
+    agentToUse: "mouse",
+    args: {
+      description: "test task",
+      prompt: "test prompt",
+      run_in_background: false,
+      load_skills: [],
+    },
+    systemContent: undefined,
+    categoryModel: undefined,
+    toastManager: null,
+    taskId: undefined,
+    ...overrides,
+  }
+}
+
+function nativeClient(captured: { args?: unknown }) {
+  return {
+    session: {
+      prompt: bunMock(async (_session: unknown, args: unknown) => {
+        captured.args = args
+      }),
+      promptAsync: bunMock(async () => {
+        throw new Error("promptAsync must not be called on the native client")
+      }),
+    },
+  }
+}
+
+bunDescribe("sendSyncPrompt (native session.prompt)", () => {
+  bunTest("calls native session.prompt with flat args and never promptAsync", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    let promptArgs: unknown
-    const promptAsync = bunMock(async (input: unknown) => {
-      promptArgs = input
-      return { data: {} }
+    const captured: { args?: unknown } = {}
+    const sendNativePrompt = bunMock(async (_session: unknown, args: unknown) => {
+      captured.args = args
     })
-
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "mouse",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
+    const client = nativeClient(captured)
 
     //#when
-    await sendSyncPrompt(mockClient, input)
+    const result = await sendSyncPrompt(client, baseInput(), { sendNativePrompt })
 
     //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.tools.question).toBe(false)
+    bunExpect(result).toBeNull()
+    bunExpect(sendNativePrompt).toHaveBeenCalledTimes(1)
+    const record = captured.args as Record<string, unknown>
+    bunExpect(record.sessionID).toBe("test-session")
+    bunExpect(record.text).toBe("test prompt")
+    bunExpect("parts" in record).toBe(false)
+    bunExpect("agent" in record).toBe(false)
+    bunExpect("model" in record).toBe(false)
+    bunExpect("path" in record).toBe(false)
+    bunExpect("body" in record).toBe(false)
+  })
+
+  bunTest("prepends systemContent to the prompt text", async () => {
+    //#given
+    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
+    const captured: { args?: unknown } = {}
+    const sendNativePrompt = bunMock(async (_s: unknown, args: unknown) => {
+      captured.args = args
+    })
+
+    //#when
+    const result = await sendSyncPrompt(
+      nativeClient(captured),
+      baseInput({ systemContent: "skill instructions" }),
+      { sendNativePrompt },
+    )
+
+    //#then
+    bunExpect(result).toBeNull()
+    const record = captured.args as Record<string, unknown>
+    bunExpect(record.text).toBe("skill instructions\n\ntest prompt")
+  })
+
+  bunTest("stores question=false in the session tools store", async () => {
+    //#given
+    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
+    const { getSessionTools } = require("../../../src/shared/session-state")
+    const captured: { args?: unknown } = {}
+    const sendNativePrompt = bunMock(async (_s: unknown, args: unknown) => {
+      captured.args = args
+    })
+
+    //#when
+    await sendSyncPrompt(nativeClient(captured), baseInput({ sessionID: "ses-tools-q" }), { sendNativePrompt })
+
+    //#then
+    const tools = getSessionTools("ses-tools-q") as Record<string, unknown>
+    bunExpect(tools.question).toBe(false)
   })
 
   bunTest("applies agent tool restrictions for explore agent", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    let promptArgs: unknown
-    const promptAsync = bunMock(async (input: unknown) => {
-      promptArgs = input
-      return { data: {} }
+    const captured: { args?: unknown } = {}
+    const sendNativePrompt = bunMock(async (_s: unknown, args: unknown) => {
+      captured.args = args
     })
-
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "trinity",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
 
     //#when
-    await sendSyncPrompt(mockClient, input)
+    await sendSyncPrompt(
+      nativeClient(captured),
+      baseInput({
+        sessionID: "ses-tools-trinity",
+        agentToUse: "trinity",
+        args: { ...baseInput().args, category: "bullet-time" },
+      }),
+      { sendNativePrompt },
+    )
 
     //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.tools.task).toBe(false)
+    const { getSessionTools } = require("../../../src/shared/session-state")
+    const tools = getSessionTools("ses-tools-trinity") as Record<string, unknown>
+    bunExpect(tools.task).toBe(false)
   })
 
-  bunTest("applies agent tool restrictions for librarian agent", async () => {
+  bunTest("includes model and variant in the flat shape when categoryModel is set", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    let promptArgs: unknown
-    const promptAsync = bunMock(async (input: unknown) => {
-      promptArgs = input
-      return { data: {} }
+    const captured: { args?: unknown } = {}
+    const sendNativePrompt = bunMock(async (_s: unknown, args: unknown) => {
+      captured.args = args
     })
-
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "operator",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.tools.task).toBe(false)
-  })
-
-  bunTest("restricts task for morpheus agent", async () => {
-    //#given
-    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    let promptArgs: unknown
-    const promptAsync = bunMock(async (input: unknown) => {
-      promptArgs = input
-      return { data: {} }
-    })
-
-    const mockClient = {
-      session: {
-        promptAsync,
-      },
-    }
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "morpheus",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        category: "quick",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
-
-    //#when
-    await sendSyncPrompt(mockClient, input)
-
-    //#then
-    bunExpect(promptAsync).toHaveBeenCalled()
-    bunExpect(promptArgs.tools.question).toBe(false)
-  })
-
-  bunTest("retries with promptSync for oracle when promptAsync fails with unexpected EOF", async () => {
-    //#given
-    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    const promptWithModelSuggestionRetry = bunMock(async () => {
-      throw new Error("JSON Parse error: Unexpected EOF")
-    })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "oracle",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
-      input,
-      {
-        promptWithModelSuggestionRetry,
-        promptSyncWithModelSuggestionRetry,
-      },
+      nativeClient(captured),
+      baseInput({
+        sessionID: "ses-v2-shape",
+        categoryModel: { providerID: "opencode-go", modelID: "muse-spark", variant: "max" },
+      }),
+      { sendNativePrompt },
     )
 
     //#then
     bunExpect(result).toBeNull()
-    bunExpect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
-    bunExpect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
+    const record = captured.args as Record<string, unknown>
+    bunExpect(record.sessionID).toBe("ses-v2-shape")
+    bunExpect(record.text).toBe("test prompt")
+    bunExpect("model" in record).toBe(false)
+    bunExpect("variant" in record).toBe(false)
   })
 
-  bunTest("does not retry with promptSync for non-oracle on unexpected EOF", async () => {
+  bunTest("retries once via native prompt for oracle on unexpected EOF", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-
-    const promptWithModelSuggestionRetry = bunMock(async () => {
-      throw new Error("JSON Parse error: Unexpected EOF")
+    let calls = 0
+    const sendNativePrompt = bunMock(async () => {
+      calls += 1
+      if (calls === 1) throw new Error("JSON Parse error: Unexpected EOF")
     })
-    const promptSyncWithModelSuggestionRetry = bunMock(async () => {})
-
-    const input = {
-      sessionID: "test-session",
-      agentToUse: "metis",
-      args: {
-        description: "test task",
-        prompt: "test prompt",
-        run_in_background: false,
-        load_skills: [],
-      },
-      systemContent: undefined,
-      categoryModel: undefined,
-      toastManager: null,
-      taskId: undefined,
-    }
 
     //#when
     const result = await sendSyncPrompt(
-      { session: { promptAsync: bunMock(async () => ({ data: {} })) } },
-      input,
-      {
-        promptWithModelSuggestionRetry,
-        promptSyncWithModelSuggestionRetry,
-      },
+      nativeClient({}),
+      baseInput({ agentToUse: "oracle" }),
+      { sendNativePrompt },
+    )
+
+    //#then
+    bunExpect(result).toBeNull()
+    bunExpect(sendNativePrompt).toHaveBeenCalledTimes(2)
+  })
+
+  bunTest("does not retry native prompt for non-oracle on unexpected EOF", async () => {
+    //#given
+    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
+    const sendNativePrompt = bunMock(async () => {
+      throw new Error("JSON Parse error: Unexpected EOF")
+    })
+
+    //#when
+    const result = await sendSyncPrompt(
+      nativeClient({}),
+      baseInput({ agentToUse: "mouse" }),
+      { sendNativePrompt },
     )
 
     //#then
     bunExpect(result).toContain("JSON Parse error: Unexpected EOF")
-    bunExpect(promptWithModelSuggestionRetry).toHaveBeenCalledTimes(1)
-    bunExpect(promptSyncWithModelSuggestionRetry).toHaveBeenCalledTimes(0)
+    bunExpect(sendNativePrompt).toHaveBeenCalledTimes(1)
+  })
+
+  bunTest("does not mask non-agent errors as agent-not-found", async () => {
+    //#given
+    const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
+    const sendNativePrompt = bunMock(async () => {
+      throw new TypeError("client.session.promptAsync is not a function")
+    })
+
+    //#when
+    const result = await sendSyncPrompt(nativeClient({}), baseInput(), { sendNativePrompt })
+
+    //#then
+    bunExpect(result).toContain("client.session.promptAsync is not a function")
+    bunExpect(result).not.toContain("not found")
   })
 })

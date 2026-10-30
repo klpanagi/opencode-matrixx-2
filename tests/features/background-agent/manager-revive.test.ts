@@ -12,8 +12,7 @@ let TMP_DIR = ""
 
 interface PromptCall {
   sessionID: string
-  agent?: string
-  parts?: Array<{ type: string; text: string }>
+  text?: string
   [key: string]: unknown
 }
 
@@ -89,7 +88,7 @@ describe("BackgroundManager.revive", () => {
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
     expect(promptCalls[0].sessionID).toBe(seed.sessionID)
-    expect(promptCalls[0].parts?.[0]?.text).toBe(NEW_PROMPT)
+    expect(promptCalls[0].text).toBe(NEW_PROMPT)
     mgr.shutdown()
   })
 
@@ -211,7 +210,7 @@ describe("BackgroundManager.revive", () => {
     //#then
     expect(revived.status).toBe("running")
     expect(promptCalls.length).toBe(1)
-    expect(promptCalls[0].parts?.[0]?.text).toBe("forced retry")
+    expect(promptCalls[0].text).toBe("forced retry")
     mgr.shutdown()
   })
 

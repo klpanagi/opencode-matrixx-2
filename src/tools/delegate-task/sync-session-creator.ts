@@ -1,8 +1,20 @@
 import type { NativeClient } from "./types"
 
+export interface SyncSessionModel {
+  providerID: string
+  modelID: string
+  variant?: string
+}
+
 export async function createSyncSession(
   client: NativeClient,
-  input: { parentSessionID: string; agentToUse: string; description: string; defaultDirectory: string }
+  input: {
+    parentSessionID: string
+    agentToUse: string
+    description: string
+    defaultDirectory: string
+    model?: SyncSessionModel
+  }
 ): Promise<{ ok: true; sessionID: string; parentDirectory: string } | { ok: false; error: string }> {
   const parentSession = (await client.session
     .get({ sessionID: input.parentSessionID })
@@ -13,6 +25,16 @@ export async function createSyncSession(
     const created = (await client.session.create({
       parentID: input.parentSessionID,
       title: `${input.description} (@${input.agentToUse} subagent)`,
+      agent: input.agentToUse,
+      ...(input.model
+        ? {
+            model: {
+              id: input.model.modelID,
+              providerID: input.model.providerID,
+              ...(input.model.variant !== undefined ? { variant: input.model.variant } : {}),
+            },
+          }
+        : {}),
     })) as { id: string }
 
     return { ok: true, sessionID: created.id, parentDirectory }

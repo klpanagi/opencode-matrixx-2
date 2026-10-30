@@ -473,6 +473,29 @@ export interface DomainRegistration {
   dispose(): Promise<void>
 }
 
+/** Extract hook-visible text from a completed tool result.
+ *
+ * The host normalizes string content to a [{type: "text", text}] array before
+ * hooks run, so a string-only check drops every tool result (observed live as
+ * the empty task response). Join text parts; non-text parts contribute nothing.
+ */
+export function hookOutputText(content: unknown): string | undefined {
+  if (typeof content === "string") return content
+  if (!Array.isArray(content)) return undefined
+  const texts: string[] = []
+  for (const part of content) {
+    if (typeof part === "string") {
+      texts.push(part)
+      continue
+    }
+    if (part !== null && typeof part === "object") {
+      const record = part as Record<string, unknown>
+      if (record.type === "text" && typeof record.text === "string") texts.push(record.text)
+    }
+  }
+  return texts.length > 0 ? texts.join("\n") : undefined
+}
+
 async function guard<T>(label: string, fn: () => Promise<T>): Promise<T | undefined> {
   try {
     return await fn()
@@ -668,7 +691,7 @@ async function registerDomainToolHooks(input: RegisterDomainsInput & { bridge: D
         const metadata = event.result.metadata
         const output: { title?: string; output?: string; metadata?: unknown } = {
           title: typeof metadata?.title === "string" ? metadata.title : undefined,
-          output: typeof event.result.content === "string" ? event.result.content : undefined,
+          output: hookOutputText(event.result.content),
           metadata,
         }
         await handler(
