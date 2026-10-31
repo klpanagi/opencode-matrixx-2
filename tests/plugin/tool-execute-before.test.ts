@@ -131,15 +131,18 @@ describe("createToolExecuteBeforeHandler", () => {
       expect(output.args.subagent_type).toBe("explore")
     })
 
-    test("blocks native subagent even when category is provided (global ban)", async () => {
-      //#given native subagent must never act as task alias
+    test("passes native subagent through untouched (coexistence)", async () => {
+      //#given native subagent coexists alongside plugin task
       const ctx = createCtxWithSessionMessages()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "subagent", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { category: "quick", description: "Test delegation" } as Record<string, unknown> }
 
-      //#when/then throws redirect to task
-      await expect(handler(input, output)).rejects.toThrow(/native subagent.*disabled.*task/i)
+      //#when
+      await handler(input, output)
+
+      //#then passthrough, no task aliasing applied
+      expect(output.args).toEqual({ category: "quick", description: "Test delegation" })
     })
 
     test("does not modify args for non-task tools", async () => {

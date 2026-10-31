@@ -18,6 +18,7 @@ export interface MatrixxToolContext {
   readonly sessionID: string;
   readonly messageID: string;
   readonly agent: string;
+  readonly callID?: string;
   readonly directory: string;
   readonly worktree: string;
   readonly abort: AbortSignal;
@@ -165,6 +166,7 @@ export function buildMatrixxToolContext(
     sessionID: context.sessionID,
     messageID: context.messageID,
     agent: context.agent,
+    callID: context.id,
     directory: deps.directory,
     worktree: deps.worktree,
     abort: context.signal,
