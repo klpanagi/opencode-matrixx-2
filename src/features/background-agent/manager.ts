@@ -658,6 +658,39 @@ export class BackgroundManager {
       return
     }
 
+    if (event.type === "session.execution.succeeded") {
+      task.status = "completed"
+      task.completedAt = new Date()
+      this.persistHandle(task)
+      this.taskHistory.record(task.parentSessionID, {
+        id: task.id,
+        sessionID: task.sessionID,
+        agent: task.agent,
+        description: task.description,
+        status: "completed",
+        category: task.category,
+        startedAt: task.startedAt,
+        completedAt: task.completedAt,
+      })
+      const toastManager = getTaskToastManager()
+      if (toastManager) toastManager.removeTask(task.id)
+      log("[background-agent] Task completed (native session.execution.succeeded):", task.id)
+      return
+    }
+
+    if (event.type === "session.execution.failed") {
+      task.status = "error"
+      task.error =
+        getSessionErrorMessage(props as EventProperties) ??
+        "Session reported an error"
+      task.completedAt = new Date()
+      this.persistHandle(task)
+      const toastManager = getTaskToastManager()
+      if (toastManager) toastManager.removeTask(task.id)
+      log("[background-agent] Task errored (native session.execution.failed):", task.id)
+      return
+    }
+
     log("[background-agent] handleEvent ignored non-idle event:", {
       type: event.type,
       taskId: task.id,
