@@ -6,6 +6,7 @@ import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
 import { log } from "../../shared/logger"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { isNativeSessionId } from "../../shared/session-id"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundOutputManager } from "./clients"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
@@ -81,7 +82,7 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
           }
         }
         if (!task) {
-          if (args.task_id.startsWith("ses_")) {
+          if (isNativeSessionId(args.task_id)) {
             return `Task not found: ${args.task_id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`
           }
           return `Task not found: ${args.task_id}`

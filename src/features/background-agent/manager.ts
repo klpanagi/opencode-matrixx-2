@@ -24,7 +24,7 @@
 
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
 import type { V2Event } from "../../plugin/context"
-import { getAgentToolRestrictions, log } from "../../shared"
+import { getAgentToolRestrictions, isNativeSessionId, log } from "../../shared"
 import { delay } from "../../shared/delay"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
 import type {
@@ -451,21 +451,20 @@ export class BackgroundManager {
       expired: `Task ${id} expired: its handle was removed after the 30-minute retention window.`,
     }
     if (!task) {
-      // Native ses_ sessions have no bg_ handles and can never be revived:
-      // fail fast with guidance instead of the generic not-found error.
-      if (
-        input.sessionId !== undefined &&
-        getParentSessionID(input.sessionId) !== undefined
-      ) {
-        throw new Error(
-          `Cannot revive native session ${input.sessionId}: revive is bg_-only (background handles only). Use background_output/session_read to inspect it.`,
-        )
-      }
       const handle = findRevivableHandle(readHandles(this.directory), {
         taskId: input.taskId,
         sessionId: input.sessionId,
       })
       if (!handle) {
+        // A ses_ id with no bg_ handle is a native session, which can never
+        // be revived: fail with guidance instead of the generic not-found
+        // error. Anything else keeps the legacy message.
+        const candidate = input.sessionId ?? input.taskId
+        if (isNativeSessionId(candidate)) {
+          throw new Error(
+            `Cannot revive native session ${candidate}: revive is bg_-only (background handles only). Use background_output/session_read to inspect it.`,
+          )
+        }
         throw new Error(
           `Task not found for revive: ${id}. It may have expired (handles are retained 30 minutes) or never existed.`,
         )
