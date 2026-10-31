@@ -65,6 +65,22 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
   const evolutionWatcherHook = hooks.evolutionWatcher?.["tool.execute.before"]
 
   return async (input, output): Promise<void> => {
+    // Global native-subagent ban: OpenCode V2 exposes delegation as `subagent`
+    // (native ses_*). It bypasses background_wait_all/background_output and
+    // breaks subtask monitoring. All delegation must go through the plugin
+    // `task` tool (category/subagent_type, bg_* handles).
+    if (String(input.tool ?? "").trim().toLowerCase() === "subagent") {
+      const promptForMessage = (output.args?.prompt as string | undefined) ?? ""
+      log("[tool.execute.before] BLOCKED native subagent call (global ban)", {
+        sessionID: input.sessionID,
+        tool: input.tool,
+      })
+      throw new Error(
+        "Blocked: native subagent tool is disabled. " +
+          "Use task with category/subagent_type instead of native subagent for: " +
+          promptForMessage.slice(0, 120),
+      )
+    }
     // webfetch-redirect-guard: MUTATOR + NETWORK (non-blocking, try/catch).
     // Resolves output.args.url before any other hook inspects args; no other
     // before-hook reads the webfetch URL, so running first is order-safe.
