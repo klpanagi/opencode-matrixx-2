@@ -3904,7 +3904,7 @@ const tool = createDelegateTask({
   })
 
   describe("session title and metadata format (OpenCode compatibility)", () => {
-    test("sync session title follows OpenCode format: '{description} (@{agent} subagent)'", async () => {
+    test("sync session title uses agent label format: '{Agent}[{category}] — {description}'", async () => {
       // given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       let createBody: { title?: string } = {}
@@ -3955,7 +3955,7 @@ const tool = createDelegateTask({
       )
 
       // then - title should follow OpenCode format
-      expect(createBody.title).toBe("Implement feature X (@mouse subagent)")
+      expect(createBody.title).toBe("Mouse[bullet-time] — Implement feature X")
     }, { timeout: 10000 })
 
     test("sync task output includes <task_metadata> block with session_id", async () => {

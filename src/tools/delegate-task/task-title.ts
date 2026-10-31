@@ -1,3 +1,5 @@
+import { buildLabeledTitle } from "../../shared/agent-label";
+
 export const FALLBACK_TASK_DESCRIPTION = "Background task";
 const MAX_DESCRIPTION_LENGTH = 80;
 
@@ -29,11 +31,12 @@ export function resolveTaskDescription(input: {
   return FALLBACK_TASK_DESCRIPTION;
 }
 
-export function buildTaskTitle(description: unknown, agent: unknown): string {
-  const desc = clean(description) !== "" ? clean(description) : FALLBACK_TASK_DESCRIPTION;
-  const ag = clean(agent);
-  if (ag !== "") return `${desc} (@${ag} subagent)`;
-  return desc;
+export function buildTaskTitle(description: unknown, agent: unknown, category?: unknown): string {
+  return buildLabeledTitle({ description, agent, category, background: false });
+}
+
+export function buildBackgroundTitle(description: unknown, agent: unknown, category?: unknown): string {
+  return buildLabeledTitle({ description, agent, category, background: true });
 }
 
 export function buildContinuationTitle(description: unknown): string {

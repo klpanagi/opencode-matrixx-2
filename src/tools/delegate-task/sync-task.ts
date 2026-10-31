@@ -10,6 +10,7 @@ import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
 import { formatEmptySessionError, getEmptyRetryBackoffMs, isSessionEmpty } from "./sync-empty-retry"
 import { type SyncTaskDeps, syncTaskDeps } from "./sync-task-deps"
+import { buildTaskTitle } from "./task-title"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -50,6 +51,7 @@ export async function executeSyncTask(
       parentSessionID: parentContext.sessionID,
       agentToUse,
       description: args.description,
+      category: args.category,
       defaultDirectory: directory,
       ...(categoryModel !== undefined
         ? {
@@ -75,7 +77,7 @@ export async function executeSyncTask(
       await onSyncSessionCreated({
         sessionID,
         parentID: parentContext.sessionID,
-        title: args.description,
+        title: buildTaskTitle(args.description, agentToUse, args.category),
       }).catch((err) => {
       log("[task] onSyncSessionCreated callback failed", { error: String(err) })
       })
@@ -98,7 +100,7 @@ export async function executeSyncTask(
     }
 
     const syncTaskMeta = jsonSafeMetadata({
-      title: args.description,
+      title: buildTaskTitle(args.description, agentToUse, args.category),
       metadata: {
         prompt: args.prompt,
         agent: agentToUse,

@@ -9,6 +9,7 @@ import {
 } from "../../shared/saturated-outcome"
 import { getSessionTools } from "../../shared/session-state"
 import type { ExecutorContext, ParentContext } from "./executor-types"
+import { buildBackgroundTitle } from "./task-title"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -76,7 +77,7 @@ export async function executeBackgroundTask(
     }
 
     const unstableMeta = jsonSafeMetadata({
-      title: args.description,
+      title: buildBackgroundTitle(args.description, task.agent, args.category),
       metadata: {
         prompt: args.prompt,
         agent: task.agent,
