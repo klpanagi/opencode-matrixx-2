@@ -1,7 +1,7 @@
 import { registerSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
 import { getTaskToastManager } from "../../features/task-toast-manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata } from "../../shared"
 import { log } from "../../shared/logger"
 import { isPollTimeoutOutcome } from "../../shared/poll-timeout-outcome"
@@ -111,8 +111,9 @@ export async function executeSyncTask(
       },
     })
     await ctx.metadata?.(syncTaskMeta)
-    if (ctx.callID) {
-      storeToolMetadata(ctx.sessionID, ctx.callID, syncTaskMeta)
+    const resolvedCallID = resolveToolCallID(ctx)
+    if (resolvedCallID) {
+      storeToolMetadata(ctx.sessionID, resolvedCallID, syncTaskMeta)
     }
 
     // Outer hard timeout: a hung send/poll SDK await never settles, and the

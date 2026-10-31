@@ -1,6 +1,6 @@
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
 import { getTaskToastManager } from "../../features/task-toast-manager"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
@@ -69,8 +69,9 @@ export async function executeSyncContinuation(
       },
     })
     await ctx.metadata?.(syncContMeta)
-    if (ctx.callID) {
-      storeToolMetadata(ctx.sessionID, ctx.callID, syncContMeta)
+    const resolvedCallID = resolveToolCallID(ctx)
+    if (resolvedCallID) {
+      storeToolMetadata(ctx.sessionID, resolvedCallID, syncContMeta)
     }
 
     const allowTask = isPlanFamily(resumeAgent)

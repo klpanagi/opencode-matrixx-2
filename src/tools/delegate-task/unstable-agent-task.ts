@@ -1,4 +1,4 @@
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata } from "../../shared"
 import { fetchSessionMessages } from "../../shared/session-context-source"
 import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
@@ -70,8 +70,9 @@ export async function executeUnstableAgentTask(
       },
     })
     await ctx.metadata?.(bgTaskMeta)
-    if (ctx.callID) {
-      storeToolMetadata(ctx.sessionID, ctx.callID, bgTaskMeta)
+    const resolvedCallID = resolveToolCallID(ctx)
+    if (resolvedCallID) {
+      storeToolMetadata(ctx.sessionID, resolvedCallID, bgTaskMeta)
     }
 
     const startTime = new Date()

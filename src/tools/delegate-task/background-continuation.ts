@@ -1,4 +1,4 @@
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { jsonSafeMetadata } from "../../shared"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
@@ -42,8 +42,9 @@ export async function executeBackgroundContinuation(
       },
     })
     await ctx.metadata?.(bgContMeta)
-    if (ctx.callID) {
-      storeToolMetadata(ctx.sessionID, ctx.callID, bgContMeta)
+    const resolvedCallID = resolveToolCallID(ctx)
+    if (resolvedCallID) {
+      storeToolMetadata(ctx.sessionID, resolvedCallID, bgContMeta)
     }
 
     return `Background task continued.
