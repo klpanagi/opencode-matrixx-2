@@ -250,7 +250,7 @@ export class BackgroundManager {
     try {
       created = (await this.native.session.create({
         parentID: input.parentSessionID,
-        title: buildSubagentTitle(input.description, input.agent),
+        title: buildSubagentTitle(input.description, input.agent, input.category),
         agent: input.agent,
         ...(input.model
           ? {

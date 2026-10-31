@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSyn
 import { dirname, join } from "node:path"
 import { z } from "zod"
 import { log } from "../../shared"
+import { buildLabeledTitle } from "../../shared/agent-label"
 import { TASK_TTL_MS } from "./constants"
 import type { BackgroundTask } from "./types"
 
@@ -68,11 +69,8 @@ function ensureDir(dirPath: string): void {
 }
 
 /** Single source of truth for the OpenCode subagent session title format. */
-export function buildSubagentTitle(description: unknown, agent: unknown): string {
-  const desc = typeof description === "string" && description.trim() !== "" && description.trim().toLowerCase() !== "undefined" ? description.trim() : "Background task";
-  const ag = typeof agent === "string" && agent.trim() !== "" ? agent.trim() : "";
-  if (ag !== "") return `${desc} (@${ag} subagent)`;
-  return desc;
+export function buildSubagentTitle(description: unknown, agent: unknown, category?: unknown): string {
+  return buildLabeledTitle({ description, agent, category, background: true });
 }
 
 /** Project a full task onto the lightweight, persistable handle index. */

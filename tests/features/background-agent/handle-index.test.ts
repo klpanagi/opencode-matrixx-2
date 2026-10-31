@@ -279,7 +279,7 @@ describe("buildSubagentTitle", () => {
     const title = buildSubagentTitle("Investigate the thing", "explore")
 
     //#then it matches the single source-of-truth format
-    expect(title).toBe("Investigate the thing (@explore subagent)")
+    expect(title).toBe("[BG] Explore — Investigate the thing")
   })
 })
 

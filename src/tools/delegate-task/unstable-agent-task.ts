@@ -5,6 +5,7 @@ import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { getSessionTools } from "../../shared/session-state"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
+import { buildBackgroundTitle } from "./task-title"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
@@ -57,7 +58,7 @@ export async function executeUnstableAgentTask(
     }
 
     const bgTaskMeta = jsonSafeMetadata({
-      title: args.description,
+      title: buildBackgroundTitle(args.description, agentToUse, args.category),
       metadata: {
         prompt: args.prompt,
         agent: agentToUse,

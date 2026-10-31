@@ -1,3 +1,4 @@
+import { buildTaskTitle } from "./task-title"
 import type { NativeClient } from "./types"
 
 export interface SyncSessionModel {
@@ -13,6 +14,7 @@ export async function createSyncSession(
     agentToUse: string
     description: string
     defaultDirectory: string
+    category?: string
     model?: SyncSessionModel
   }
 ): Promise<{ ok: true; sessionID: string; parentDirectory: string } | { ok: false; error: string }> {
@@ -24,7 +26,7 @@ export async function createSyncSession(
   try {
     const created = (await client.session.create({
       parentID: input.parentSessionID,
-      title: `${input.description} (@${input.agentToUse} subagent)`,
+      title: buildTaskTitle(input.description, input.agentToUse, input.category),
       agent: input.agentToUse,
       ...(input.model
         ? {
