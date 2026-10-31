@@ -2,8 +2,8 @@
 import { describe, test, expect } from "bun:test"
 import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
 
-describe("global native subagent ban", () => {
-  test("throws redirect naming task for tool=subagent", async () => {
+describe("native subagent coexistence", () => {
+  test("does not block tool=subagent (native stays available)", async () => {
     //#given
     const ctx = { session: { context: async () => [] } } as never
     const handler = createToolExecuteBeforeHandler({ ctx, hooks: {} as never })
@@ -11,13 +11,13 @@ describe("global native subagent ban", () => {
     const output = { args: { prompt: "do the thing" } as Record<string, unknown> }
 
     //#when
-    const run = handler(input, output)
+    await handler(input, output)
 
     //#then
-    await expect(run).rejects.toThrow(/task.*categor|subagent_type/i)
+    expect(output.args).toEqual({ prompt: "do the thing" })
   })
 
-  test("throws redirect for subagent repeat call", async () => {
+  test("does not block repeat subagent call", async () => {
     //#given
     const ctx = { session: { context: async () => [] } } as never
     const handler = createToolExecuteBeforeHandler({ ctx, hooks: {} as never })
@@ -25,9 +25,9 @@ describe("global native subagent ban", () => {
     const output = { args: { prompt: "do other thing" } as Record<string, unknown> }
 
     //#when
-    const run = handler(input, output)
+    await handler(input, output)
 
     //#then
-    await expect(run).rejects.toThrow(/native subagent/i)
+    expect(output.args).toEqual({ prompt: "do other thing" })
   })
 })

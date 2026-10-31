@@ -12,7 +12,6 @@ import {
 } from "../features/ultrawork-state"
 import { log } from "../shared"
 import type { SessionContextCarrier } from "../shared/session-context-source"
-import { isTaskTool } from "../shared/shell-tool-name"
 import type { MatrixxContext } from "./context"
 import { resolveSessionAgent } from "./session-agent-resolver"
 import type { DomainHooks } from "./setup-domains"
@@ -65,22 +64,6 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
   const evolutionWatcherHook = hooks.evolutionWatcher?.["tool.execute.before"]
 
   return async (input, output): Promise<void> => {
-    // Global native-subagent ban: OpenCode V2 exposes delegation as `subagent`
-    // (native ses_*). It bypasses background_wait_all/background_output and
-    // breaks subtask monitoring. All delegation must go through the plugin
-    // `task` tool (category/subagent_type, bg_* handles).
-    if (input.tool === "subagent") {
-      const promptForMessage = (output.args?.prompt as string | undefined) ?? ""
-      log("[tool.execute.before] BLOCKED native subagent call (global ban)", {
-        sessionID: input.sessionID,
-        tool: input.tool,
-      })
-      throw new Error(
-        "Blocked: native subagent tool is disabled. " +
-          "Use task with category/subagent_type instead of native subagent for: " +
-          promptForMessage.slice(0, 120),
-      )
-    }
     // webfetch-redirect-guard: MUTATOR + NETWORK (non-blocking, try/catch).
     // Resolves output.args.url before any other hook inspects args; no other
     // before-hook reads the webfetch URL, so running first is order-safe.
@@ -154,7 +137,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // This is the T1.4 optimization: removes the 5s-timeout network call
     // from the synchronous wait chain.
     let resolvePromise: Promise<string | undefined> | undefined
-    if (input.tool !== "slashcommand" && isTaskTool(input.tool)) { // T1.6: slashcommand is never a task tool; skip normalize+lowercase
+    if (input.tool === "task") { // coexistence: native `subagent` passes through untouched; only plugin `task` gets category->mouse normalization
       const argsObject = output.args
       const category = typeof argsObject.category === "string" ? argsObject.category : undefined
       const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
