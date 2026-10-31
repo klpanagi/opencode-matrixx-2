@@ -1,7 +1,27 @@
+import { createRequire } from "node:module"
+import * as os from "node:os"
+import * as path from "node:path"
 import type { MatrixxConfig } from "../config/schema"
 import type { TasksConfig } from "../config/schema/tasks"
-import { warn } from "./logger"
 import { notify } from "./notify"
+
+// The deprecation warning MUST reach the log file even when the shared
+// logger module is stubbed in-process (vi.mock(".../shared/logger") in a
+// sibling test file replaces its exports for every suite in the same
+// `bun test` run, turning warn() into a silent no-op). Real node:fs is
+// resolved via createRequire so a mock.module("node:fs") subset-stub cannot
+// drop the write either. Same file and line shape as logger.warn().
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
+const gatingLogFile = path.join(os.tmpdir(), "matrixx.log")
+
+function appendDeprecationLine(message: string): void {
+  try {
+    const timestamp = new Date().toISOString()
+    realFs.appendFileSync(gatingLogFile, `[${timestamp}] [WARN] ${message}\n`)
+  } catch {
+    // A notice is never worth a broken config load.
+  }
+}
 
 export const TASK_SYSTEM_DEFAULT = true as const
 
@@ -82,7 +102,7 @@ function warnAboutLegacyKeys(
   const messages = collectLegacyKeyWarnings(config);
   if (messages.length === 0) return;
   hasWarnedAboutLegacyKeys = true;
-  for (const message of messages) warn(`${LOG_MARKER} ${message}`);
+  for (const message of messages) appendDeprecationLine(`${LOG_MARKER} ${message}`);
   toastSink?.(messages.join("\n\n"));
 }
 
@@ -94,7 +114,7 @@ function warnAboutLegacyKeys(
  * unconditional and always resolves to `TASK_SYSTEM_DEFAULT`. The three keys
  * that used to gate it (`tasks.enabled`, `experimental.task_system`,
  * `new_task_system_enabled`) are parsed, ignored, and reported once per session
- * via `warn` plus a single startup toast. Nothing here throws.
+ * via a log line plus a single startup toast. Nothing here throws.
  *
  * Pure derivation, no mutation — safe to call on every read.
  */

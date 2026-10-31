@@ -12,6 +12,7 @@ tests/hooks/comment-checker/cli.test.ts
 tests/hooks/comment-checker/hook.apply-patch.test.ts
 tests/hooks/directory-agents-injector/injector.test.ts
 tests/hooks/rules-injector/injector.test.ts
+tests/hooks/rules-injector/injector.cache.test.ts
 tests/tools/lsp/client.test.ts
 tests/tools/lsp/lsp-process.test.ts
 tests/tools/skill/tools.test.ts
