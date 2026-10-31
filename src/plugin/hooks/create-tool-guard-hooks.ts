@@ -20,6 +20,7 @@ import {
   createRulesInjectorHook,
   createSecretLeakGuardHook,
   createSoftwareDevEnforcementHook,
+  createSubagentBlockHook,
   createTaskEditGuardHook,
   createTaskNotepadWriterHook,
   createToolOutputTruncatorHook,
@@ -55,6 +56,7 @@ export type ToolGuardHooks = {
   webfetchRedirectGuard: ReturnType<typeof createWebFetchRedirectGuardHook> | null
   qualityGate: ReturnType<typeof createQualityGateHook> | null
   taskEditGuard: ReturnType<typeof createTaskEditGuardHook> | null
+  subagentBlock: ReturnType<typeof createSubagentBlockHook> | null
   softwareDevEnforcement: ReturnType<typeof createSoftwareDevEnforcementHook> | null
   taskNotepadWriter: ReturnType<typeof createTaskNotepadWriterHook> | null
   documentReaderGuard: ReturnType<typeof createDocumentReaderGuardHook> | null
@@ -159,6 +161,10 @@ export function createToolGuardHooks(args: {
     ? safeHook("task-edit-guard", () => createTaskEditGuardHook(ctx))
     : null
 
+  const subagentBlock = isHookEnabled("subagent-block")
+    ? safeHook("subagent-block", () => createSubagentBlockHook({ ...ctx, config: pluginConfig }))
+    : null
+
   const softwareDevEnforcement = safeHook("software-dev-enforcement", () =>
     createSoftwareDevEnforcementHook(pluginConfig),
   )
@@ -212,6 +218,7 @@ export function createToolGuardHooks(args: {
     webfetchRedirectGuard,
     qualityGate,
     taskEditGuard,
+    subagentBlock,
     softwareDevEnforcement,
     taskNotepadWriter,
     documentReaderGuard,

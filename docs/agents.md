@@ -323,6 +323,18 @@ task(category="source", load_skills=[...])
 // task(subagent_type="mouse")  →  Error: "Mouse is spawned automatically when you specify a category"
 ```
 
+### Native Subagent Tool Policy
+
+The native `subagent` tool is blocked by the `subagent-block` hook. Always use
+`task()` (category or `subagent_type` + `load_skills`) to spawn agents so execution
+stays tracked and visible to `background_output` / `background_wait_all`.
+
+- `bg_*` task ids resolve through the background-agent registry; `ses_*` session ids
+  resolve read-through against the live native session (no registry write).
+- Unknown ids return a typed `not_found` error; `cancel` refuses native `ses_*` ids
+  (a live native session cannot be cancelled — revive it instead via `background_revive`
+  with a new instruction).
+
 ---
 
 ## Agent Roster by Layer

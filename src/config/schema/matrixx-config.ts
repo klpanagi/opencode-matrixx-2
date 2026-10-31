@@ -31,6 +31,7 @@ import { RuntimeFallbackConfigSchema } from "./runtime-fallback"
 import { SecurityConfigSchema } from "./security"
 import { SkillsConfigSchema } from "./skills"
 import { SoftwareDevEnforcementConfigSchema } from "./software-dev-enforcement"
+import { SubagentBlockConfigSchema } from "./subagent-block"
 import { TaskConfigSchema } from "./task"
 import { TasksConfigSchema } from "./tasks"
 import { TddEnforcerConfigSchema } from "./tdd-enforcer"
@@ -87,6 +88,7 @@ export const MatrixxConfigSchema = z.object({
 
   tdd_enforcer: TddEnforcerConfigSchema.optional(),
   softwareDevEnforcement: SoftwareDevEnforcementConfigSchema.optional(),
+  subagent_block: SubagentBlockConfigSchema.optional(),
   browser_automation_engine: BrowserAutomationConfigSchema.optional(),
   tmux: TmuxConfigSchema.optional(),
   morpheus: MorpheusConfigSchema.optional(),

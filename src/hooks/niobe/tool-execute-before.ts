@@ -65,6 +65,7 @@ export function createToolExecuteBeforeHandler(input: {
     }
 
     // Check task - inject single-task directive; hard-block native subagent from orchestrator
+    // NOTE: the global subagent-block hook is the source of truth for the native-subagent ban; this orchestrator-scoped check adds Niobe-specific guidance.
     if (isTaskTool(toolInput.tool)) {
       if (toolInput.tool === "subagent") {
         const promptForMessage = (toolOutput.args.prompt as string | undefined) ?? ""

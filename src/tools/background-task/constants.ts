@@ -1,4 +1,4 @@
-export const BACKGROUND_OUTPUT_DESCRIPTION = `Get output from background task. task_id also accepts a live session ID (resolved read-only; native ses_ sessions without handles have no task output). Use full_session=true to fetch session messages with filters. System notifies on completion, so block=true rarely needed.`
+export const BACKGROUND_OUTPUT_DESCRIPTION = `Get output from background task. task_id accepts bg_* or ses_* (pass session_id instead as an alias; both supplied and disagreeing is an ambiguous_id error). ses_* without a bg_ handle resolves read-only with origin marked; no registry writes. Use full_session=true to fetch session messages with filters. System notifies on completion, so block=true rarely needed.`
 
 export const BACKGROUND_CANCEL_DESCRIPTION = `Cancel running background task(s). Use all=true to cancel ALL before final answer.`
 

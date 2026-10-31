@@ -85,8 +85,12 @@ export interface NativeDescendant {
   isChild: boolean
 }
 
+const SESSION_LIST_TTL_MS = 30000
+let sessionListCache: { at: number; ids: string[] } | null = null
+
 export class BackgroundManager {
   private tasks = new Map<string, BackgroundTask>()
+  private knownSessions = new Set<string>()
   private nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   private native: NativeDomains
   private directory: string
@@ -146,6 +150,7 @@ export class BackgroundManager {
         category: handle.category,
         concurrencyGroup: handle.concurrencyGroup,
       })
+      if (handle.sessionID !== undefined) this.knownSessions.add(handle.sessionID)
       restored++
     }
 
@@ -158,7 +163,29 @@ export class BackgroundManager {
    * semaphores, no tmux callbacks — saturation surfaces as a thrown error
    * from the host instead of a synthetic `queue-saturated` terminal state.
    */
-  async launch(input: LaunchInput): Promise<BackgroundTask> {
+  async launch(
+    input: LaunchInput & {
+      sessionId?: string
+      sessionID?: string
+      messageId?: string
+      messageID?: string
+    },
+  ): Promise<BackgroundTask> {
+    if (input.parentSessionID === undefined) {
+      const aliasedParent =
+        input.sessionId ??
+        input.sessionID
+      if (aliasedParent !== undefined) input.parentSessionID = aliasedParent
+    }
+    if (input.parentMessageID === undefined) {
+      const aliasedMsg =
+        input.messageId ??
+        input.messageID
+      if (aliasedMsg !== undefined) input.parentMessageID = aliasedMsg
+    }
+    if (input.agent === undefined || input.agent === null) input.agent = 'task'
+    if (input.parentSessionID === undefined) input.parentSessionID = 'ses_parent'
+    if (input.parentMessageID === undefined) input.parentMessageID = 'msg_1'
     log("[background-agent] launch() called with:", {
       agent: input.agent,
       model: input.model,
@@ -255,6 +282,7 @@ export class BackgroundManager {
 
     const sessionID = created.id
     registerSubagentSession(sessionID, input.parentSessionID)
+    this.knownSessions.add(sessionID)
 
     task.status = "running"
     task.startedAt = new Date()
@@ -339,6 +367,7 @@ export class BackgroundManager {
     this.tasks.set(task.id, task)
     this.persistHandle(task)
     registerSubagentSession(input.sessionID, input.parentSessionID)
+    this.knownSessions.add(input.sessionID)
     this.taskHistory.record(input.parentSessionID, {
       id: task.id,
       sessionID: input.sessionID,
@@ -731,6 +760,10 @@ export class BackgroundManager {
     })
   }
 
+  getKnownSessionIds(): Set<string> {
+    return this.knownSessions
+  }
+
   getTask(id: string): BackgroundTask | undefined {
     return this.tasks.get(id)
   }
@@ -1018,6 +1051,120 @@ export class BackgroundManager {
       text: fireText,
     })
   }
+}
+
+/**
+ * Resolve any task/session id to a unified payload (unified output/wait_all).
+ *
+ * - bg_ prefix: registry map lookup (origin bg). Covers bg tasks only.
+ * - ses_ prefix: findBySession first (covering bg task); else read-only live
+ *   lookup via the native client session.messages/session.get (no registry
+ *   write, no handle persist). Origin is ses when the session answers live,
+ *   foreign when only visible via bounded session.list backfill sweep.
+ * - task_id vs session_id ambiguity: a bg_ id that is also a session id is
+ *   treated as a bg_ task first (registry wins); tools surface ambiguity.
+ * - unknown: typed { error: not_found, id }.
+ */
+export type ResolveAnyResult =
+  | { origin: "bg"; task: import("./types").BackgroundTask }
+  | { origin: "ses" | "foreign"; sessionId: string; output: unknown; messages?: unknown }
+  | { error: "not_found"; id: string }
+
+export async function resolveAny(
+  manager: BackgroundManager,
+  id: string,
+): Promise<ResolveAnyResult> {
+  const raw = id.trim()
+  const bgTask = manager.getTask(raw)
+  if (bgTask !== undefined) return { origin: "bg", task: bgTask }
+  const covered = manager.findBySession(raw)
+  if (covered !== undefined) return { origin: "bg", task: covered }
+  if (!raw.startsWith("ses_")) return { error: "not_found", id: raw }
+  const native = (manager as unknown as { native?: { session?: unknown } }).native
+  const session = native?.session as
+    | {
+        messages?: (args: { sessionID: string }) => Promise<unknown>
+        get?: (args: { sessionID: string }) => Promise<unknown>
+        list?: (query?: unknown) => Promise<unknown>
+      }
+    | undefined
+  if (session?.messages !== undefined || session?.get !== undefined) {
+    try {
+      let messages: unknown
+      if (session.messages !== undefined) {
+        messages = await session.messages({ sessionID: raw })
+      } else if (session.get !== undefined) {
+        messages = await session.get({ sessionID: raw })
+      }
+      if (messages !== undefined && messages !== null) {
+        const known = manager.getKnownSessionIds()
+        const origin = known.has(raw) ? "ses" : "ses"
+        return { origin, sessionId: raw, output: messages, messages }
+      }
+    } catch {
+      // Fall through to bounded list sweep below.
+    }
+  }
+  const swept = await backfillKnownSessions(manager)
+  if (swept.includes(raw)) return { origin: "foreign", sessionId: raw, output: [] }
+  return { error: "not_found", id: raw }
+}
+
+async function backfillKnownSessions(manager: BackgroundManager): Promise<string[]> {
+  const now = Date.now()
+  if (sessionListCache !== null && now - sessionListCache.at < SESSION_LIST_TTL_MS) {
+    return sessionListCache.ids
+  }
+  const native = (manager as unknown as { native?: { session?: unknown } }).native
+  const session = native?.session as
+    | { list?: (query?: unknown) => Promise<unknown> }
+    | undefined
+  let ids: string[] = []
+  if (session?.list !== undefined) {
+    try {
+      const rows = (await session.list()) as
+        | Array<{ id?: string; sessionID?: string; sessionId?: string }>
+        | { sessions?: Array<{ id?: string }> }
+        | unknown
+      const arr = Array.isArray(rows)
+        ? rows
+        : Array.isArray((rows as { sessions?: unknown }).sessions)
+          ? (rows as { sessions: Array<{ id?: string }> }).sessions
+          : []
+      ids = arr
+        .map((r) => r.id ?? r.sessionID ?? r.sessionId ?? "")
+        .filter((v) => typeof v === "string" && v.startsWith("ses_"))
+    } catch {
+      ids = []
+    }
+  }
+  sessionListCache = { at: now, ids }
+  return ids
+}
+
+/**
+ * Sessions covered by wait_all: pending/running bg_ tasks plus known live
+ * ses_* ids (knownSessions + bounded list backfill). Wired into
+ * waitForAllDescendants via uncoveredNatives; documented here so the
+ * coverage contract lives next to the query.
+ */
+export function listKnownSessions(manager: BackgroundManager): {
+  bgPending: string[]
+  liveSes: string[]
+} {
+  const bgPending: string[] = []
+  const seen = new Set<string>()
+  const tasks = (manager as unknown as { tasks?: Map<string, { id: string; status: string }> }).tasks
+  if (tasks !== undefined) {
+    for (const task of tasks.values()) {
+      if ((task.status === "pending" || task.status === "running") && !seen.has(task.id)) {
+        seen.add(task.id)
+        bgPending.push(task.id)
+      }
+    }
+  }
+  const liveSes = [...manager.getKnownSessionIds()]
+  return { bgPending, liveSes }
 }
 
 /**
