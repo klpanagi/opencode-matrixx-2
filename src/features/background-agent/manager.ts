@@ -582,13 +582,46 @@ export class BackgroundManager {
    * Completion is detected from native session lifecycle events only —
    * no polling, no reconcile probes.
    */
+  /**
+   * Normalize a raw session ID: trim surrounding whitespace and strip
+   * query/hash suffixes so mismatched shapes still hit the same task.
+   */
+  private static normalizeSessionID(raw: string): string {
+    const trimmed = raw.trim()
+    const queryIndex = trimmed.indexOf("?")
+    const withoutQuery =
+      queryIndex >= 0 ? trimmed.slice(0, queryIndex) : trimmed
+    const hashIndex = withoutQuery.indexOf("#")
+    return hashIndex >= 0 ? withoutQuery.slice(0, hashIndex) : withoutQuery
+  }
+
   handleEvent(event: V2Event): void {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
-    const sessionID =
-      typeof props.sessionID === "string" ? props.sessionID : undefined
-    if (!sessionID) return
+    const topLevelSessionID = (event as unknown as { sessionID?: unknown })
+      .sessionID
+    const rawSessionID =
+      typeof props.sessionID === "string"
+        ? props.sessionID
+        : typeof topLevelSessionID === "string"
+          ? topLevelSessionID
+          : undefined
+    log("[background-agent] handleEvent entry:", {
+      type: event.type,
+      sessionID: rawSessionID,
+    })
+    if (!rawSessionID) {
+      log("[background-agent] handleEvent no-op: missing sessionID", {
+        type: event.type,
+      })
+      return
+    }
+    const sessionID = BackgroundManager.normalizeSessionID(rawSessionID)
     const task = this.findBySession(sessionID)
     if (!task || (task.status !== "running" && task.status !== "pending")) {
+      log("[background-agent] handleEvent no-op: unknown or non-active session", {
+        type: event.type,
+        sessionID,
+      })
       return
     }
 
@@ -622,7 +655,45 @@ export class BackgroundManager {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task errored (native session.error):", task.id)
+      return
     }
+
+    log("[background-agent] handleEvent ignored non-idle event:", {
+      type: event.type,
+      taskId: task.id,
+    })
+  }
+
+  /**
+   * Liveness probe helper for block-polling callers: promote running
+   * entries that are provably terminal. O(n), idempotent, additive —
+   * never deletes entries. Without a probe it is a read-only no-op.
+   */
+  reconcile(isTerminal?: (sessionID: string) => boolean): {
+    promoted: string[]
+  } {
+    const promoted: string[] = []
+    if (!isTerminal) return { promoted }
+    for (const task of this.tasks.values()) {
+      if (task.status !== "running" && task.status !== "pending") continue
+      if (!task.sessionID) continue
+      let terminal = false
+      try {
+        terminal = isTerminal(task.sessionID)
+      } catch {
+        continue
+      }
+      if (!terminal) continue
+      task.status = "completed"
+      task.completedAt = new Date()
+      this.persistHandle(task)
+      promoted.push(task.id)
+      log("[background-agent] reconcile promoted task:", {
+        taskId: task.id,
+        sessionID: task.sessionID,
+      })
+    }
+    return { promoted }
   }
 
   getTask(id: string): BackgroundTask | undefined {
@@ -650,8 +721,13 @@ export class BackgroundManager {
   }
 
   findBySession(sessionID: string): BackgroundTask | undefined {
+    const wanted = BackgroundManager.normalizeSessionID(sessionID)
     for (const task of this.tasks.values()) {
-      if (task.sessionID === sessionID) return task
+      if (
+        task.sessionID !== undefined &&
+        BackgroundManager.normalizeSessionID(task.sessionID) === wanted
+      )
+        return task
     }
     return undefined
   }
