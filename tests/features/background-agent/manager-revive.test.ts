@@ -283,4 +283,100 @@ describe("BackgroundManager.revive", () => {
     expect(scoped.map((e) => e.taskId)).toEqual(["bg_list_new"])
     mgr.shutdown()
   })
+
+  test("(g) unregistered native session_id fails with bg_-only guidance, not generic not-found", async () => {
+    //#given a manager with no tasks or handles
+    const { client } = makeClient()
+    const mgr = makeManager(client, TMP_DIR)
+
+    //#when reviving a native ses_ id that has no bg_ handle
+    let thrown: Error | undefined
+    try {
+      await mgr.revive({
+        sessionId: "ses_native01",
+        prompt: "new instructions",
+        parentSessionID: "sess_parent01",
+        parentMessageID: "msg_nat01",
+      })
+    } catch (error) {
+      thrown = error as Error
+    }
+
+    //#then the error is the bg_-only guidance, not the generic expired message
+    expect(thrown).toBeDefined()
+    expect(thrown!.message).toContain("bg_-only")
+    expect(thrown!.message).not.toContain("Task not found for revive")
+    mgr.shutdown()
+  })
+
+  test("(h) ses_-shaped taskId fails with bg_-only guidance", async () => {
+    //#given a manager with no tasks or handles
+    const { client } = makeClient()
+    const mgr = makeManager(client, TMP_DIR)
+
+    //#when reviving with a native ses_ id passed as taskId
+    let thrown: Error | undefined
+    try {
+      await mgr.revive({
+        taskId: "ses_native02",
+        prompt: "new instructions",
+        parentSessionID: "sess_parent01",
+        parentMessageID: "msg_nat02",
+      })
+    } catch (error) {
+      thrown = error as Error
+    }
+
+    //#then the error is the bg_-only guidance
+    expect(thrown).toBeDefined()
+    expect(thrown!.message).toContain("bg_-only")
+    mgr.shutdown()
+  })
+
+  test("(i) unknown non-ses_ taskId keeps the legacy not-found error", async () => {
+    //#given a manager with no tasks or handles
+    const { client } = makeClient()
+    const mgr = makeManager(client, TMP_DIR)
+
+    //#when reviving an unknown bg_ id
+    let thrown: Error | undefined
+    try {
+      await mgr.revive({
+        taskId: "bg_missing01",
+        prompt: "new instructions",
+        parentSessionID: "sess_parent01",
+        parentMessageID: "msg_miss01",
+      })
+    } catch (error) {
+      thrown = error as Error
+    }
+
+    //#then the legacy generic message is preserved
+    expect(thrown).toBeDefined()
+    expect(thrown!.message).toContain("Task not found for revive")
+    expect(thrown!.message).not.toContain("bg_-only")
+    mgr.shutdown()
+  })
+
+  test("(j) persisted handle still wins over ses_ shape: revive by session_id succeeds", async () => {
+    //#given a completed handle on disk whose session is a native ses_ id
+    const { client, promptCalls } = makeClient()
+    const mgr = makeManager(client, TMP_DIR)
+    seedCompletedTask({ id: "bg_sesshandle01", sessionID: "ses_handled01" })
+
+    //#when reviving by that session id
+    const revived = await mgr.revive({
+      sessionId: "ses_handled01",
+      prompt: "resume handled session",
+      parentSessionID: "sess_parent01",
+      parentMessageID: "msg_h01",
+    })
+
+    //#then the handle is revived, not rejected as native-only
+    expect(revived.status).toBe("running")
+    expect(revived.id).toBe("bg_sesshandle01")
+    expect(promptCalls.length).toBe(1)
+    expect(promptCalls[0].sessionID).toBe("ses_handled01")
+    mgr.shutdown()
+  })
 })
