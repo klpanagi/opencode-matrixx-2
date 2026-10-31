@@ -44,7 +44,7 @@ export function formatEmptySessionError(
   const observedShape = describeMessageShape(observed ?? [])
   return formatDetailedError(
     new Error(
-      `Sync task produced no response: send+poll reported success but session ${sessionID} has zero messages after 1 retry. Observed: ${observedShape}. ${DIAGNOSTIC_CAUSES}`,
+      `Sync task produced no response: send+poll reported success but session ${sessionID} has zero messages after 1 retry (classified: empty model output after successful send+poll; rule out permission-denied nested delegation and code-mode invocation via /tmp/matrixx.log). Observed: ${observedShape}. ${DIAGNOSTIC_CAUSES}`,
     ),
     {
       operation: "Send+poll sync task",

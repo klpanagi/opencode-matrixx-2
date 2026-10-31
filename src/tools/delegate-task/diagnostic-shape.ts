@@ -4,7 +4,7 @@ import { contentOf, isAssistant, roleOf, textOf } from "../../shared/session-mes
 const MAX_LISTED = 6
 
 export const DIAGNOSTIC_CAUSES =
-  "Either the child model produced no assistant message, or the returned messages do not match the expected flat shape."
+  "Classified causes: (1) child produced no assistant message (empty model output / permission-denied delegation inside child); (2) messages exist but do not match the expected flat shape; (3) delegation was issued from inside code-mode (task has codemode:false) or with a permission-denied tool. Check /tmp/matrixx.log delegate-task entries for session ID."
 
 function summarize(values: string[]): string {
   if (values.length === 0) return "none"
