@@ -1,6 +1,8 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
+import type { MatrixxContext } from "../../../src/plugin/context"
+import type { BackgroundManager } from "../../../src/features/background-agent"
 import { createBackgroundOutput } from "../../../src/tools/background-task/create-background-output"
 
 const baseCtx = {
@@ -16,57 +18,60 @@ const mockClient = {
   session: {
     context: mock(() => Promise.resolve({ messages: [] })),
   },
-} as any
+} as unknown as MatrixxContext["client"]
 
 describe("createBackgroundOutput block", () => {
-  test("A: reconcile flips running->completed, no timeout", async () => {
-    //#given
-    const task: any = {
+  test("A: completed entry returns terminal outcome, no timeout footer", async () => {
+    //#given - native event already completed the task in the Map (D5)
+    const task = {
       id: "task-a",
       sessionID: "sess-a",
+      parentSessionID: "test-session",
+      parentMessageID: "test-message",
       description: "Task A",
       agent: "mouse",
       category: "source",
       prompt: "do stuff",
-      status: "running",
+      status: "completed",
       startedAt: new Date(),
       completedAt: new Date(),
       compactedResult: "done output",
     }
-    const reconcileMock = mock(async () => {
-      task.status = "completed"
-    })
-    const manager: any = {
+    const manager = {
       getTask: mock(() => task),
-      reconcile: reconcileMock,
-    }
+    } as unknown as BackgroundManager
     const tool = createBackgroundOutput(manager, mockClient)
     //#when
-    const result = await tool.execute({ task_id: "task-a", block: true, timeout: 1500 } as any, baseCtx as any)
+    const result = await tool.execute(
+      { task_id: "task-a", block: true, timeout: 1500, full_session: false },
+      baseCtx,
+    )
     //#then
-    expect(reconcileMock).toHaveBeenCalled()
     expect(result).not.toContain("Timed out")
+    expect(result).toContain("done output")
   })
 
   test("B: no reconcile, stays running -> Timed out", async () => {
     //#given
-    const task: any = {
+    const task = {
       id: "task-b",
       sessionID: "sess-b",
+      parentSessionID: "test-session",
+      parentMessageID: "test-message",
       description: "Task B",
       agent: "mouse",
       prompt: "do stuff",
       status: "running",
       startedAt: new Date(),
     }
-    const manager: any = {
+    const manager = {
       getTask: mock(() => task),
-    }
+    } as unknown as BackgroundManager
     const tool = createBackgroundOutput(manager, mockClient)
     //#when
     const result = await tool.execute(
-      { task_id: "task-b", block: true, timeout: 1500, full_session: false } as any,
-      baseCtx as any
+      { task_id: "task-b", block: true, timeout: 1500, full_session: false },
+      baseCtx,
     )
     //#then
     expect(result).toContain("Timed out")

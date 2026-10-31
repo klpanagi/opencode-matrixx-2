@@ -664,38 +664,6 @@ export class BackgroundManager {
     })
   }
 
-  /**
-   * Liveness probe helper for block-polling callers: promote running
-   * entries that are provably terminal. O(n), idempotent, additive —
-   * never deletes entries. Without a probe it is a read-only no-op.
-   */
-  reconcile(isTerminal?: (sessionID: string) => boolean): {
-    promoted: string[]
-  } {
-    const promoted: string[] = []
-    if (!isTerminal) return { promoted }
-    for (const task of this.tasks.values()) {
-      if (task.status !== "running" && task.status !== "pending") continue
-      if (!task.sessionID) continue
-      let terminal = false
-      try {
-        terminal = isTerminal(task.sessionID)
-      } catch {
-        continue
-      }
-      if (!terminal) continue
-      task.status = "completed"
-      task.completedAt = new Date()
-      this.persistHandle(task)
-      promoted.push(task.id)
-      log("[background-agent] reconcile promoted task:", {
-        taskId: task.id,
-        sessionID: task.sessionID,
-      })
-    }
-    return { promoted }
-  }
-
   getTask(id: string): BackgroundTask | undefined {
     return this.tasks.get(id)
   }

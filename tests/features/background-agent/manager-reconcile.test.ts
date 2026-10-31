@@ -39,7 +39,7 @@ function seedTask(manager: BackgroundManager, overrides: Partial<BackgroundTask>
   return task
 }
 
-describe("BackgroundManager handleEvent normalization + reconcile", () => {
+describe("BackgroundManager handleEvent normalization (D5: native events only)", () => {
   let dir: string
   let manager: BackgroundManager
 
@@ -101,41 +101,15 @@ describe("BackgroundManager handleEvent normalization + reconcile", () => {
     expect(task.status).toBe("running")
     expect(task.completedAt).toBeUndefined()
   })
-
-  test("reconcile promotes provably-terminal entries and is idempotent", () => {
+  test("session.error marks the task errored with the reported message", () => {
     //#given
-    const terminal = seedTask(manager, { id: "t-term", sessionID: "ses_terminal", status: "running" })
-    const live = seedTask(manager, { id: "t-live", sessionID: "ses_live", status: "running" })
-    const isTerminal = (sid: string): boolean => sid === "ses_terminal"
+    const task = seedTask(manager, { id: "t-err", sessionID: "ses_err", status: "running" })
 
     //#when
-    const first = manager.reconcile(isTerminal)
+    manager.handleEvent({ type: "session.error", data: { sessionID: "ses_err", error: "boom" } } as unknown as Parameters<BackgroundManager["handleEvent"]>[0])
 
     //#then
-    expect(first.promoted).toContain("t-term")
-    expect(terminal.status).toBe("completed")
-    expect(terminal.completedAt).toBeInstanceOf(Date)
-    expect(live.status).toBe("running")
-    expect(taskMap(manager).has("t-live")).toBe(true)
-
-    //#when
-    const second = manager.reconcile(isTerminal)
-
-    //#then
-    expect(second.promoted).toHaveLength(0)
-    expect(terminal.status).toBe("completed")
-  })
-
-  test("reconcile without probe never deletes running entries", () => {
-    //#given
-    seedTask(manager, { id: "t-safe", sessionID: "ses_safe", status: "running" })
-
-    //#when
-    const result = manager.reconcile()
-
-    //#then
-    expect(result.promoted).toHaveLength(0)
-    expect(taskMap(manager).has("t-safe")).toBe(true)
-    expect(taskMap(manager).get("t-safe")?.status).toBe("running")
+    expect(task.status).toBe("error")
+    expect(task.completedAt).toBeInstanceOf(Date)
   })
 })

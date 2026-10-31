@@ -113,33 +113,8 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
 
         let didTimeoutWhileActive = false
 
-        // Liveness probe: consult the manager reconcile helper (when
-        // available) before trusting Map-only state. Probe unknown means
-        // keep polling; only a probe-confirmed terminal state breaks early.
-        const probeLiveness = async (): Promise<boolean | undefined> => {
-          try {
-            const maybeReconcile = (
-              manager as unknown as { reconcile?: unknown }
-            ).reconcile
-            if (typeof maybeReconcile === "function") {
-              await (
-                maybeReconcile as (
-                  probe?: (sessionID: string) => boolean,
-                ) => unknown
-              ).call(manager, () => false)
-            }
-            const current = manager.getTask(args.task_id)
-            if (!current) return undefined
-            if (!isTaskActiveStatus(current.status)) return false
-            return true
-          } catch {
-            return undefined
-          }
-        }
-
         if (shouldBlock && isTaskActiveStatus(task.status)) {
           const startTime = Date.now()
-          let runningPolls = 0
           while (Date.now() - startTime < timeoutMs) {
             await delay(1000)
 
@@ -154,18 +129,6 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
               break
             }
 
-            runningPolls += 1
-            if (
-              runningPolls % 5 === 0 ||
-              Date.now() - startTime > timeoutMs / 2
-            ) {
-              const probe = await probeLiveness()
-              if (probe === false) {
-                const refreshed = manager.getTask(args.task_id)
-                if (refreshed) resolvedTask = refreshed
-                break
-              }
-            }
           }
 
           if (isTaskActiveStatus(resolvedTask.status)) {
@@ -176,13 +139,7 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
           }
 
           if (isTaskActiveStatus(resolvedTask.status)) {
-            const probe = await probeLiveness()
-            if (probe !== false) {
-              didTimeoutWhileActive = true
-            } else {
-              const refreshed = manager.getTask(args.task_id)
-              if (refreshed) resolvedTask = refreshed
-            }
+            didTimeoutWhileActive = true
           }
         }
 
