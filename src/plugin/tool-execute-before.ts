@@ -69,7 +69,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // (native ses_*). It bypasses background_wait_all/background_output and
     // breaks subtask monitoring. All delegation must go through the plugin
     // `task` tool (category/subagent_type, bg_* handles).
-    if (String(input.tool ?? "").trim().toLowerCase() === "subagent") {
+    if (input.tool === "subagent") {
       const promptForMessage = (output.args?.prompt as string | undefined) ?? ""
       log("[tool.execute.before] BLOCKED native subagent call (global ban)", {
         sessionID: input.sessionID,
