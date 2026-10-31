@@ -237,7 +237,8 @@
               "dcp-nudge-sanitizer",
               "nudge-loop-breaker",
               "task-notepad-writer",
-              "session-memory"
+              "session-memory",
+              "subagent-block"
             ]
           },
           {},
@@ -3560,6 +3561,27 @@
         "executorsSubset",
         "enforceOnContinuations",
         "mode"
+      ],
+      "additionalProperties": false
+    },
+    "subagent_block": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "allowlist": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "allowlist"
       ],
       "additionalProperties": false
     },
