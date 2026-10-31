@@ -4,6 +4,7 @@ import { storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
+import { log } from "../../shared/logger"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundOutputManager } from "./clients"
@@ -64,6 +65,12 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
     },
     async execute(args: BackgroundOutputArgs, toolContext) {
       try {
+        log("[background-task] background_output entry:", {
+          task_id: args.task_id,
+          block: args.block,
+          timeout: args.timeout,
+          full_session: args.full_session,
+        })
         const ctx = toolContext as ToolContextWithMetadata
         const task = manager.getTask(args.task_id)
         if (!task) {
@@ -121,6 +128,7 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
             if (!isTaskActiveStatus(currentTask.status)) {
               break
             }
+
           }
 
           if (isTaskActiveStatus(resolvedTask.status)) {

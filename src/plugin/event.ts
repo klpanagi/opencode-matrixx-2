@@ -58,6 +58,7 @@ export function createEventHandler(args: {
 
   const recentSyntheticIdles = new Map<string, number>()
   const recentRealIdles = new Map<string, number>()
+  let dedupDroppedTotal = 0
 
   return async (event: V2Event): Promise<void> => {
     pruneRecentSyntheticIdles({
@@ -68,14 +69,30 @@ export function createEventHandler(args: {
     })
 
     if (event.type === "session.idle") {
-      const sessionID = (event.data as Record<string, unknown> | undefined)?.sessionID as string | undefined
+      const idleData = event.data as Record<string, unknown> | undefined
+      const sessionID = idleData?.sessionID as string | undefined
       if (sessionID) {
         const emittedAt = recentSyntheticIdles.get(sessionID)
         if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
           recentSyntheticIdles.delete(sessionID)
+          dedupDroppedTotal += 1
+          log("[plugin:event] session.idle dedup dropped: synthetic idle wins", {
+            sessionID,
+            timestamp: new Date().toISOString(),
+            windowMsRemaining:
+              DEDUPLICATE_WINDOW_MS - (Date.now() - emittedAt),
+            dedup_dropped_total: dedupDroppedTotal,
+            ...(typeof idleData?.taskId === "string"
+              ? { taskId: idleData.taskId }
+              : {}),
+          })
           return
         }
         recentRealIdles.set(sessionID, Date.now())
+        log("[plugin:event] session.idle dedup kept: dispatching real idle", {
+          sessionID,
+          timestamp: new Date().toISOString(),
+        })
       }
     }
 
@@ -87,6 +104,14 @@ export function createEventHandler(args: {
       const emittedAt = recentRealIdles.get(sessionID)
       if (emittedAt && Date.now() - emittedAt < DEDUPLICATE_WINDOW_MS) {
         recentRealIdles.delete(sessionID)
+        dedupDroppedTotal += 1
+        log("[plugin:event] session.idle dedup dropped: real idle wins", {
+          sessionID,
+          timestamp: new Date().toISOString(),
+          windowMsRemaining:
+            DEDUPLICATE_WINDOW_MS - (Date.now() - emittedAt),
+          dedup_dropped_total: dedupDroppedTotal,
+        })
         return
       }
       recentSyntheticIdles.set(sessionID, Date.now())
