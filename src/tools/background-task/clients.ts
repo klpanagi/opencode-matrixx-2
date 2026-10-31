@@ -1,4 +1,4 @@
-import type { BackgroundManager } from "../../features/background-agent"
+import type { BackgroundManager, BackgroundTask } from "../../features/background-agent"
 import type { SessionMessage } from "../../shared/session-message"
 
 export type BackgroundOutputMessage = SessionMessage
@@ -19,4 +19,6 @@ export type BackgroundCancelClient = {
   }
 }
 
-export type BackgroundOutputManager = Pick<BackgroundManager, "getTask">
+export type BackgroundOutputManager = Pick<BackgroundManager, "getTask"> & {
+  findBySession?: (sessionId: string) => BackgroundTask | undefined
+}
