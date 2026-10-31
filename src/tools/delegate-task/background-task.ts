@@ -1,4 +1,4 @@
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { jsonSafeMetadata } from "../../shared"
 import { formatDetailedError } from "../../shared/error-formatting"
 import {
@@ -89,8 +89,9 @@ export async function executeBackgroundTask(
       },
     })
     await ctx.metadata?.(unstableMeta)
-    if (ctx.callID) {
-      storeToolMetadata(ctx.sessionID, ctx.callID, unstableMeta)
+    const resolvedCallID = resolveToolCallID(ctx)
+    if (resolvedCallID) {
+      storeToolMetadata(ctx.sessionID, resolvedCallID, unstableMeta)
     }
 
     return `Background task launched.

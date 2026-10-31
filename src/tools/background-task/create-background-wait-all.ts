@@ -1,16 +1,10 @@
 import { z } from "zod"
 import type { BackgroundManager } from "../../features/background-agent"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BACKGROUND_WAIT_ALL_DESCRIPTION } from "./constants"
 import type { ToolContextWithMetadata } from "./types"
 
-function resolveToolCallID(ctx: ToolContextWithMetadata & { callID?: string; callId?: string; call_id?: string }): string | undefined {
-  if (typeof ctx.callID === "string" && ctx.callID.trim() !== "") return ctx.callID
-  if (typeof ctx.callId === "string" && ctx.callId.trim() !== "") return ctx.callId
-  if (typeof ctx.call_id === "string" && ctx.call_id.trim() !== "") return ctx.call_id
-  return undefined
-}
 
 export function createBackgroundWaitAll(manager: BackgroundManager): MatrixxToolDefinition {
   return defineTool("background_wait_all", {

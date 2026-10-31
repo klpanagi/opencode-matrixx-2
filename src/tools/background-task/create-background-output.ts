@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { BackgroundTask } from "../../features/background-agent"
-import { storeToolMetadata } from "../../features/tool-metadata-store"
+import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
@@ -24,12 +24,6 @@ type ToolContextWithMetadata = {
   call_id?: string
 }
 
-function resolveToolCallID(ctx: ToolContextWithMetadata): string | undefined {
-  if (typeof ctx.callID === "string" && ctx.callID.trim() !== "") return ctx.callID
-  if (typeof ctx.callId === "string" && ctx.callId.trim() !== "") return ctx.callId
-  if (typeof ctx.call_id === "string" && ctx.call_id.trim() !== "") return ctx.call_id
-  return undefined
-}
 
 function formatResolvedTitle(task: BackgroundTask): string {
   const label = task.agent === MOUSE_AGENT && task.category ? task.category : task.agent
