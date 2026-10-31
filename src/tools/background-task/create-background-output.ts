@@ -72,8 +72,24 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
           full_session: args.full_session,
         })
         const ctx = toolContext as ToolContextWithMetadata
-        const task = manager.getTask(args.task_id)
+        let task = manager.getTask(args.task_id)
         if (!task) {
+          // Read-only native lookup: a task_id that is actually a live
+          // session ID resolves via findBySession. Ephemeral only — no
+          // handles are created for native sessions here.
+          const bySession = manager.findBySession?.(args.task_id)
+          if (bySession) {
+            log("[background-task] background_output resolved session ID to task:", {
+              task_id: args.task_id,
+              taskId: bySession.id,
+            })
+            task = bySession
+          }
+        }
+        if (!task) {
+          if (args.task_id.startsWith("ses_")) {
+            return `Task not found: ${args.task_id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`
+          }
           return `Task not found: ${args.task_id}`
         }
 

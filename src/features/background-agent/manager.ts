@@ -32,7 +32,7 @@ import type {
   NativePluginContext,
 } from "../../shared/session-context-source"
 import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
-import { registerSubagentSession } from "../session-state/state"
+import { getParentSessionID, getSubagentSessionIDs, registerSubagentSession } from "../session-state/state"
 import { getTaskToastManager } from "../task-toast-manager"
 import type {
   EventProperties,
@@ -61,14 +61,33 @@ import type {
   ReviveInput,
 } from "./types"
 
+/** Short-TTL cache for native descendant listings (T3). In-memory only. */
+const NATIVE_CACHE_TTL_MS = 1000
+
 export type {
   EventProperties,
   OnSubagentSessionCreated,
   SubagentSessionCreatedEvent,
 }
 
+/**
+ * Ephemeral native session descriptor (T1 unified-bg-native-tracking).
+ *
+ * Read-only view over the session-state registry — NOT a persisted bg_
+ * handle. Uses the lightweight `subagentSessions`/`subagentParentMap`
+ * registry (getSubagentSessionIDs + getParentSessionID) rather than the
+ * heavier storage.ts SDK read path (getMainSessions/getAllSessions),
+ * which requires directory-scoped sqlite/JSON access.
+ */
+export interface NativeDescendant {
+  sessionId: string
+  parentSessionId: string
+  isChild: boolean
+}
+
 export class BackgroundManager {
   private tasks = new Map<string, BackgroundTask>()
+  private nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   private native: NativeDomains
   private directory: string
   private config?: BackgroundTaskConfig
@@ -432,6 +451,16 @@ export class BackgroundManager {
       expired: `Task ${id} expired: its handle was removed after the 30-minute retention window.`,
     }
     if (!task) {
+      // Native ses_ sessions have no bg_ handles and can never be revived:
+      // fail fast with guidance instead of the generic not-found error.
+      if (
+        input.sessionId !== undefined &&
+        getParentSessionID(input.sessionId) !== undefined
+      ) {
+        throw new Error(
+          `Cannot revive native session ${input.sessionId}: revive is bg_-only (background handles only). Use background_output/session_read to inspect it.`,
+        )
+      }
       const handle = findRevivableHandle(readHandles(this.directory), {
         taskId: input.taskId,
         sessionId: input.sessionId,
@@ -617,6 +646,8 @@ export class BackgroundManager {
     }
     const sessionID = BackgroundManager.normalizeSessionID(rawSessionID)
     const task = this.findBySession(sessionID)
+    // Safe no-op for unmatched sessions, including ephemeral native ses_
+    // descendants with no bg_ task: log and return, never create handles.
     if (!task || (task.status !== "running" && task.status !== "pending")) {
       log("[background-agent] handleEvent no-op: unknown or non-active session", {
         type: event.type,
@@ -628,6 +659,7 @@ export class BackgroundManager {
     if (event.type === "session.idle") {
       task.status = "completed"
       task.completedAt = new Date()
+      this.nativeDescCache.clear()
       this.persistHandle(task)
       this.taskHistory.record(task.parentSessionID, {
         id: task.id,
@@ -651,6 +683,7 @@ export class BackgroundManager {
         getSessionErrorMessage(props as EventProperties) ??
         "Session reported an error"
       task.completedAt = new Date()
+      this.nativeDescCache.clear()
       this.persistHandle(task)
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
@@ -661,6 +694,7 @@ export class BackgroundManager {
     if (event.type === "session.execution.succeeded") {
       task.status = "completed"
       task.completedAt = new Date()
+      this.nativeDescCache.clear()
       this.persistHandle(task)
       this.taskHistory.record(task.parentSessionID, {
         id: task.id,
@@ -684,6 +718,7 @@ export class BackgroundManager {
         getSessionErrorMessage(props as EventProperties) ??
         "Session reported an error"
       task.completedAt = new Date()
+      this.nativeDescCache.clear()
       this.persistHandle(task)
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
@@ -718,6 +753,46 @@ export class BackgroundManager {
         result.push(...this.getAllDescendantTasks(child.sessionID))
       }
     }
+    return result
+  }
+
+  /**
+   * Read-only native descendants of a session (T1).
+   *
+   * Walks the ephemeral session-state registry: a native ses_ session
+   * counts as a descendant when its ancestor chain (via getParentSessionID)
+   * includes `sessionId`. Returns ephemeral descriptors only — no handle
+   * writes, no persistence. Cycle-guarded with a visited set (the older
+   * getAllDescendantTasks lacks one). Returns [] for unknown sessions.
+   */
+  getNativeDescendants(sessionId: string): NativeDescendant[] {
+    const cached = this.nativeDescCache.get(sessionId)
+    if (cached && Date.now() - cached.at < NATIVE_CACHE_TTL_MS) return cached.rows
+    const result: NativeDescendant[] = []
+    try {
+      const visited = new Set<string>([sessionId])
+      const queue: string[] = [...getSubagentSessionIDs(sessionId)]
+      for (const id of queue) visited.add(id)
+      while (queue.length > 0) {
+        const current = queue.shift() as string
+        const parent = getParentSessionID(current)
+        if (parent === undefined) continue
+        result.push({
+          sessionId: current,
+          parentSessionId: parent,
+          isChild: parent === sessionId,
+        })
+        for (const child of getSubagentSessionIDs(current)) {
+          if (!visited.has(child)) {
+            visited.add(child)
+            queue.push(child)
+          }
+        }
+      }
+    } catch {
+      return []
+    }
+    this.nativeDescCache.set(sessionId, { at: Date.now(), rows: result })
     return result
   }
 
@@ -827,11 +902,28 @@ export class BackgroundManager {
       this.getAllDescendantTasks(sessionID).filter(
         (t) => t.status === "running" || t.status === "pending",
       )
+    // Ephemeral native view: ses_ descendants with no covering bg_ task
+    // count as pending-equivalent so the wait does not false-complete.
+    // Read-only — never written to this.tasks or persisted.
+    const uncoveredNatives = (): NativeDescendant[] => {
+      try {
+        return this.getNativeDescendants(sessionID).filter(
+          (n) => !this.findBySession(n.sessionId),
+        )
+      } catch {
+        return []
+      }
+    }
 
     let pending = active()
-    while (pending.length > 0 && Date.now() - startTime < timeoutMs) {
+    let natives = uncoveredNatives()
+    while (
+      (pending.length > 0 || natives.length > 0) &&
+      Date.now() - startTime < timeoutMs
+    ) {
       await delay(pollIntervalMs)
       pending = active()
+      natives = uncoveredNatives()
     }
 
     const completed: Array<{
@@ -859,11 +951,22 @@ export class BackgroundManager {
         completed.push(row)
       }
     }
+    // Surface still-uncovered natives as ephemeral timedOut rows so
+    // background_wait_all observes them without any handle writes.
+    for (const n of uncoveredNatives()) {
+      timedOut.push({
+        id: n.sessionId,
+        description: `(native) ${n.sessionId}`,
+        agent: "native",
+        status: "running",
+      })
+    }
     return { completed, timedOut }
   }
 
   shutdown(): void {
     this.tasks.clear()
+    this.nativeDescCache.clear()
     log("[background-agent] BackgroundManager shut down (native shim)")
   }
 
