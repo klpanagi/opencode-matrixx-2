@@ -1,14 +1,15 @@
 import { z } from "zod"
-import type { BackgroundTask } from "../../features/background-agent"
+import type { BackgroundManager, BackgroundTask } from "../../features/background-agent"
+import { resolveAny } from "../../features/background-agent/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent-display-names"
 import { delay } from "../../shared/delay"
 import { formatDetailedError } from "../../shared/error-formatting"
 import { log } from "../../shared/logger"
-import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
 import { isNativeSessionId } from "../../shared/session-id"
+import { contentOf, roleOf } from "../../shared/session-message"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
-import type { BackgroundOutputManager } from "./clients"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"
@@ -39,11 +40,27 @@ function appendTimeoutNote(output: string, timeoutMs: number): string {
   return `${output}\n\n> **Timed out waiting** after ${timeoutMs}ms. Task is still running; showing latest available output.`
 }
 
-export function createBackgroundOutput(manager: BackgroundOutputManager, client: SessionContextCarrier): MatrixxToolDefinition {
+function formatForeignSessionOutput(sessionId: string, origin: "ses" | "foreign", texts: string[]): string {
+  const header = [
+    "# Session Output (read-only)",
+    "",
+    `Session ID: ${sessionId}`,
+    `Origin: ${origin} (no bg_ handle \u2014 read-only, no registry write)`,
+    `Messages: ${texts.length}`,
+    "",
+  ]
+  if (texts.length === 0) {
+    return [...header, "(No text output found)", "", "> Revive is bg_-only; inspect via session_read for full history."].join("\n")
+  }
+  return [...header, "## Messages", "", ...texts, "", "> Revive is bg_-only; inspect via session_read for full history."].join("\n")
+}
+
+export function createBackgroundOutput(manager: BackgroundManager, client: SessionContextCarrier): MatrixxToolDefinition {
   return defineTool("background_output", {
     description: BACKGROUND_OUTPUT_DESCRIPTION,
     args: {
       task_id: z.string().describe("Task ID to get output from"),
+      session_id: z.string().optional().describe("Session ID alias for task_id (pass exactly one of task_id/session_id)"),
       block: z
         .boolean()
         .optional()
@@ -62,31 +79,62 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
       try {
         log("[background-task] background_output entry:", {
           task_id: args.task_id,
+          session_id: args.session_id,
           block: args.block,
           timeout: args.timeout,
           full_session: args.full_session,
         })
         const ctx = toolContext as ToolContextWithMetadata
-        let task = manager.getTask(args.task_id)
-        if (!task) {
-          // Read-only native lookup: a task_id that is actually a live
-          // session ID resolves via findBySession. Ephemeral only — no
-          // handles are created for native sessions here.
-          const bySession = manager.findBySession?.(args.task_id)
-          if (bySession) {
-            log("[background-task] background_output resolved session ID to task:", {
-              task_id: args.task_id,
-              taskId: bySession.id,
-            })
-            task = bySession
-          }
+        const rawTaskId = (args.task_id ?? "").trim()
+        const rawSessionId = (args.session_id ?? "").trim()
+        if (rawTaskId !== "" && rawSessionId !== "" && rawTaskId !== rawSessionId) {
+          return `[ERROR] ambiguous_id: task_id ("${rawTaskId}") and session_id ("${rawSessionId}") disagree. Pass exactly one identifier; never guessing.`
         }
-        if (!task) {
-          if (isNativeSessionId(args.task_id)) {
-            return `Task not found: ${args.task_id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`
-          }
-          return `Task not found: ${args.task_id}`
+        const id = rawTaskId !== "" ? rawTaskId : rawSessionId
+        if (id === "") {
+          return `Task not found: (empty id). Inspect via session_read. Revive is bg_-only.`
         }
+        let resolved: Awaited<ReturnType<typeof resolveAny>>
+        try {
+          resolved = await resolveAny(manager, id)
+        } catch {
+          const task = manager.getTask(id) ?? manager.findBySession(id)
+          if (!task) {
+            if (isNativeSessionId(id)) {
+              return `Task not found: ${id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`
+            }
+            return `Task not found: ${id}`
+          }
+          resolved = { origin: "bg", task }
+        }
+        if ("error" in resolved) {
+          return `Task not found: ${resolved.id}. Inspect via session_read. Revive is bg_-only.`
+        }
+        if (resolved.origin === "ses" || resolved.origin === "foreign") {
+          const sessionId = resolved.sessionId
+          let texts: string[] = []
+          try {
+            const messages = await fetchSessionMessages(client, sessionId)
+            const limit = typeof args.message_limit === "number" ? Math.min(args.message_limit, 100) : 100
+            texts = messages
+              .filter((m) => roleOf(m) === "assistant" || roleOf(m) === "tool" || roleOf(m) === "user")
+              .slice(0, limit)
+              .flatMap((m) => contentOf(m))
+              .filter((p) => p.type === "text")
+              .map((p) => (p as unknown as { text?: unknown }).text)
+              .filter((t): t is string => typeof t === "string")
+              .map((t) => t.trim())
+              .filter((t) => t.length > 0)
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            return `Error fetching messages: ${message}`
+          }
+          return formatForeignSessionOutput(sessionId, resolved.origin, texts)
+        }
+        if (resolved.origin !== "bg") {
+          return `Task not found: ${id}. Inspect via session_read. Revive is bg_-only.`
+        }
+        const task = resolved.task
 
         if (!task.sessionID) {
           return formatDetailedError(
@@ -129,9 +177,9 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
           while (Date.now() - startTime < timeoutMs) {
             await delay(1000)
 
-            const currentTask = manager.getTask(args.task_id)
+            const currentTask = manager.getTask(task.id)
             if (!currentTask) {
-              return `Task was deleted: ${args.task_id}`
+              return `Task was deleted: ${task.id}`
             }
 
             resolvedTask = currentTask
@@ -143,7 +191,7 @@ export function createBackgroundOutput(manager: BackgroundOutputManager, client:
           }
 
           if (isTaskActiveStatus(resolvedTask.status)) {
-            const finalCheck = manager.getTask(args.task_id)
+            const finalCheck = manager.getTask(task.id)
             if (finalCheck) {
               resolvedTask = finalCheck
             }

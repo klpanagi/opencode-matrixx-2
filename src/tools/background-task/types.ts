@@ -1,5 +1,6 @@
 export interface BackgroundOutputArgs {
   task_id: string
+  session_id?: string
   block?: boolean
   timeout?: number
   full_session?: boolean

@@ -445,6 +445,29 @@ describe("background_cancel", () => {
       expect.objectContaining({ skipNotification: true })
     )
   })
+
+  test("refuses cancel for native ses_* ids with revive guidance", async () => {
+    //#given a native session id with no bg_ handle
+    const cancelled: string[] = []
+    const manager = {
+      getTask: () => undefined,
+      getAllDescendantTasks: () => [],
+      cancelTask: async (taskId: string) => {
+        cancelled.push(taskId)
+        return true
+      }
+    } as unknown as BackgroundManager
+    const client = { session: { abort: async () => ({}) } } as BackgroundCancelClient
+    const tool = createBackgroundCancel(manager, client)
+
+    //#when cancel is requested for the native session
+    const output = await tool.execute({ taskId: "ses_native123" }, mockContext)
+
+    //#then the tool refuses read-only without touching the manager
+    expect(cancelled).toEqual([])
+    expect(output).toContain("refusing to cancel native session")
+    expect(output).toContain("bg_-only")
+  })
 })
 type BackgroundOutputMessage = {
   id?: string

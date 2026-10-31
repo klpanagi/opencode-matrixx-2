@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { isNativeSessionId } from "../../shared/session-id"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"
 import type { BackgroundCancelArgs } from "./types"
@@ -12,12 +13,21 @@ export function createBackgroundCancel(manager: BackgroundManager, _client: Sess
       taskId: z.string().optional().describe("Task ID to cancel (required if all=false)"),
       all: z.boolean().optional().describe("Cancel all running background tasks (default: false)"),
     },
+    // Cancel/revive ID matrix (unified IDs):
+    // - bg_* with a handle: cancel aborts the session; revive re-prompts with a new instruction.
+    // - ses_* native with no bg_ handle: cancel is REFUSED (read-only); revive is REFUSED by the manager (bg_-only).
+    // - unknown id: typed not_found with a session_read hint; never guess across the two namespaces.
     async execute(args: BackgroundCancelArgs, toolContext) {
       try {
         const cancelAll = args.all === true
 
         if (!cancelAll && !args.taskId) {
           return `[ERROR] Invalid arguments: Either provide a taskId or set all=true to cancel all running tasks.`
+        }
+
+        const rawId = typeof args.taskId === "string" ? args.taskId.trim() : ""
+        if (!cancelAll && rawId !== "" && isNativeSessionId(rawId)) {
+          return `[ERROR] refusing to cancel native session ${rawId}: cancel is bg_-only (background handles only) and never aborts native sessions. Inspect via background_output(session_id="${rawId}") or session_read; revive is bg_-only.`
         }
 
         if (cancelAll) {
