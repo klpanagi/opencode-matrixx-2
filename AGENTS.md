@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 3.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.3.6
+**Version:** 3.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.4.4
 
 ---
 
@@ -108,7 +108,7 @@ Matrixx is a multi-agent orchestration **plugin for OpenCode**. 17 built-in agen
 |---|---|
 | Package | `opencode-matrixx-v2` (npm, v3.0.0) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
-| Stack | Bun 1.4.0 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
+| Stack | Bun 1.4.4 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |
 
 ## STRUCTURE
@@ -163,7 +163,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 **Trusted dependencies** — `@ast-grep/cli` postinstall is allowlisted via `trustedDependencies` in `package.json`. No extra env var needed.
 
-**Bun pinned to 1.4.0** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
+**Bun pinned to 1.4.4** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
 
 **Mock-heavy isolation** — ~30 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
 
@@ -217,7 +217,7 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 
 ## CONVENTIONS
 
-- **Bun only** — `npm`/`yarn` forbidden. `bun-types` 1.3.6, never `@types/node`.
+- **Bun only** — `npm`/`yarn` forbidden. `bun-types` 1.4.4, never `@types/node`.
 - **Biome 2.5** — linter on, formatter off. Only `src/**/*.ts` (`biome.json`).
 - **Build** — `bun build` (ESM, target bun) + `tsc --emitDeclarationOnly` + `build:schema`.
 - **Exports** — barrel via `index.ts`, type-only re-exports preferred.
