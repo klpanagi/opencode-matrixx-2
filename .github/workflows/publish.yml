@@ -155,12 +155,19 @@ jobs:
 
       - name: Publish main package
         if: steps.check.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           TAG_ARG=""
           if [ -n "${{ steps.version.outputs.dist_tag }}" ]; then
             TAG_ARG="--tag ${{ steps.version.outputs.dist_tag }}"
           fi
-          npm publish --access public --provenance $TAG_ARG
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > ~/.npmrc
+            npm publish --access public $TAG_ARG
+          else
+            npm publish --access public --provenance $TAG_ARG
+          fi
 
       - name: Git commit and tag
         if: steps.check.outputs.skip != 'true'
