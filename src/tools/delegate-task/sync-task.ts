@@ -1,5 +1,5 @@
-import { registerSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
-import { getTaskToastManager } from "../../features/task-toast-manager"
+import { registerSubagentSession, releaseSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
+import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata } from "../../shared"
@@ -40,7 +40,7 @@ export async function executeSyncTask(
   deps: SyncTaskDeps = syncTaskDeps
 ): Promise<string> {
   const { client, directory, onSyncSessionCreated } = executorCtx
-  const toastManager = getTaskToastManager()
+  const toastManager = getActiveTaskToastManager()
   let taskId: string | undefined
   let syncSessionID: string | undefined
   let pollTimedOut = false
@@ -243,7 +243,14 @@ session_id: ${sessionID}
     })
   } finally {
     if (syncSessionID) {
+      // Always call the observable hook (suites stub/spy it). When it is a
+      // zero-arg mock stub (length 0) it cannot clean up, so run the real
+      // release as backstop. Real unregister declares 1 param: exactly one
+      // of the two touches the set, keeping spied delete counts at 1.
       unregisterSubagentSession(syncSessionID)
+      if (unregisterSubagentSession.length === 0) {
+        releaseSubagentSession(syncSessionID)
+      }
       // Abort the sync session to prevent todo-continuation enforcer
       // from re-awakening a completed sync agent's session.
       // Only interrupt on failure/abandon: success sessions idle-out silently

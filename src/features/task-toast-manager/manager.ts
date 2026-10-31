@@ -182,6 +182,14 @@ export function getTaskToastManager(): TaskToastManager | null {
   return instance
 }
 
+// Live-binding read path for sync executors. Bun's mock.module() on the
+// barrel ("../task-toast-manager") patches the getTaskToastManager export
+// cell process-wide, so ESM importers keep seeing the stub's null even via
+// the deep path; this alias cell is never stubbed and always reads live.
+export function getActiveTaskToastManager(): TaskToastManager | null {
+  return instance
+}
+
 export function initTaskToastManager(concurrencyManager?: ConcurrencyManager): TaskToastManager {
   instance = new TaskToastManager(concurrencyManager)
   return instance

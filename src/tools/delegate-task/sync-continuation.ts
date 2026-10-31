@@ -1,5 +1,5 @@
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
-import { getTaskToastManager } from "../../features/task-toast-manager"
+import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"
 import { getAgentToolRestrictions } from "../../shared/agent-tool-restrictions"
@@ -19,7 +19,7 @@ export async function executeSyncContinuation(
   deps: SyncContinuationDeps = syncContinuationDeps
 ): Promise<string> {
   const { client } = executorCtx
-  const toastManager = getTaskToastManager()
+  const toastManager = getActiveTaskToastManager()
   const continuationID = args.execute?.task_id ?? args.session_id
   const taskId = `resume_sync_${continuationID?.slice(0, 8)}`
   const startTime = new Date()

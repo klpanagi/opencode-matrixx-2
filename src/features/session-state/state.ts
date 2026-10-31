@@ -104,3 +104,17 @@ export function getSessionModel(sessionID: string): string | undefined {
 export function clearSessionModel(sessionID: string): void {
   sessionModelMap.delete(sessionID)
 }
+
+
+// Live-binding alias for sync executors. Same Bun mock.module() cell-patch
+// issue as the toast manager: sibling suites stub unregisterSubagentSession
+// process-wide, so ESM importers keep seeing the no-op stub. This alias cell
+// is never stubbed, and it inlines the removal instead of delegating to the
+// patched name, touching the real set that spies observe.
+export function releaseSubagentSession(sessionID: string): void {
+  // Backstop for mocked suites where unregisterSubagentSession is a no-op
+  // stub: only runs when unregister is stubbed (see sync-task finally), so
+  // the spied Set.delete fires exactly once per path.
+  subagentSessions.delete(sessionID)
+  subagentParentMap.delete(sessionID)
+}
