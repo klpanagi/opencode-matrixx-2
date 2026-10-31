@@ -119,7 +119,7 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
 
 ## Quick Start
 
-**Prerequisites:** Bun 1.4.0 · OpenCode ≥ 1.0.150
+**Prerequisites:** Bun 1.4.4 · OpenCode ≥ 1.0.150
 
 ```bash
 bunx opencode-matrixx-v2 install
@@ -159,7 +159,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 - **Learning curve.** 17 agents, 8 categories, 50 skills, 23 commands — `ultrawork` hides this well, but mastery takes time.
 - **Multiple providers help.** It runs on one provider, but the multi-model value shows with two or more connected (or the OpenCode free tier).
 - **Orchestration overhead.** Delegation costs extra tokens on trivial one-line tasks — use direct mode for those.
-- **Pinned toolchain.** Bun 1.4.0 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.
+- **Pinned toolchain.** Bun 1.4.4 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.
 - **Fast-moving project.** Conventions and config keys evolve; pin versions in CI.
 
 ---
