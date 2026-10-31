@@ -6,12 +6,12 @@ import type { MatrixxContext } from "../plugin/context"
 const EMPTY_RESPONSE_WARNING = `[Task Empty Response Warning]
 
 The task call completed with empty output, so there is no result to report.
-Observed: the tool returned an empty string for this call.
-Likely causes:
-1. The delegate-task tool was invoked from inside code mode, where it runs without a top-level tool session context.
-2. The child session completed without producing text.
-Next: re-issue the delegation as a direct tool call; if the output is still empty, read the delegate-task entries in /tmp/matrixx.log for this session.
-Call shape reminders: load_skills is REQUIRED (pass [] when no skills are needed, and "tdd-enforcer" for code-writing categories); provide EITHER category OR subagent_type; "mouse" is reached through a category, never as subagent_type.`
+Session ID: see tool metadata (session_id in task_metadata). Check /tmp/matrixx.log delegate-task entries for this session.
+Classified likely causes:
+1. Code-mode delegation: task was invoked from inside code-mode/execute (task has codemode:false) and ran without a top-level tool session. Fix: re-issue as a direct top-level task call, never inside execute.
+2. Permission-denied nested delegation: a read-only consultant (Seraph/Smith) tried task()/subagent delegation its permissions deny, so the child never ran. Fix: use direct grep/glob/read/lsp_* in the consultant; reserve task() for the top-level orchestrator.
+3. Empty model output: the child session completed without producing text (timeout, model fallback miss, or prompt that produced no assistant message). Fix: retry with a narrower prompt, verify model availability, read delegate-task log lines for observed message shape.
+Next: re-issue the delegation as a direct tool call with load_skills set (pass [] when none; "tdd-enforcer" for code-writing categories); provide EITHER category OR subagent_type ("mouse" only via category, never as subagent_type). If still empty, attach the observed roles/shape from the log when reporting.`;
 
 export function createEmptyTaskResponseDetectorHook(_ctx: MatrixxContext) {
   return {
