@@ -171,7 +171,7 @@ describe("executeSyncTask — no-abort-on-timeout", () => {
   })
 
   describe("success path", () => {
-    test("calls abort when poll succeeds", async () => {
+    test("does not interrupt on success - idle-out silently", async () => {
       //#given
       const deps = createMockDeps(
         null,
@@ -191,9 +191,8 @@ describe("executeSyncTask — no-abort-on-timeout", () => {
         deps,
       )
 
-      //#then
-      expect(mockAbort).toHaveBeenCalledTimes(1)
-      expect(mockAbort).toHaveBeenCalledWith({ sessionID: SESSION_ID })
+      //#then - success idle-outs silently, no alarming interrupt
+      expect(mockAbort).not.toHaveBeenCalled()
       expect(result).toContain("task completed successfully")
     })
   })
@@ -339,6 +338,6 @@ describe("executeSyncTask — hard timeout around send+poll", () => {
     //#then — normal completion is untouched by the watchdog
     expect(result).toContain("Task completed")
     expect(result).toContain("done fast")
-    expect(built.mockAbort).toHaveBeenCalledTimes(1)
+    expect(built.mockAbort).not.toHaveBeenCalled()
   })
 })

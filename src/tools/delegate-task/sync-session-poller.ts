@@ -163,11 +163,25 @@ export async function pollSyncSession(
     const hasText = hasAssistantContent(msgs)
 
     if (!finishOf(lastAssistant) && hasText) {
-      log("[task] Poll complete - assistant text detected (fallback)", {
-        sessionID: input.sessionID,
-        pollCount,
-      })
-      break
+      const elapsed = Date.now() - pollStart
+      const stableReady = elapsed >= syncTiming.MIN_STABILITY_TIME_MS && stableIdlePolls >= syncTiming.STABILITY_POLLS_REQUIRED
+      if (stableReady) {
+        log("[task] Poll complete - assistant text detected (fallback, stability-gated)", {
+          sessionID: input.sessionID,
+          pollCount,
+          elapsed,
+          stableIdlePolls,
+        })
+        break
+      } else {
+        log("[task] Fallback text seen but stability gate not met, continuing", {
+          sessionID: input.sessionID,
+          pollCount,
+          elapsed,
+          stableIdlePolls,
+          requiredPolls: syncTiming.STABILITY_POLLS_REQUIRED,
+        })
+      }
     }
 
     idleStallCount++
