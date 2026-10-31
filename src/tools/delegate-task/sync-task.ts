@@ -43,6 +43,7 @@ export async function executeSyncTask(
   let taskId: string | undefined
   let syncSessionID: string | undefined
   let pollTimedOut = false
+  let didSucceed = false
 
   try {
     const createSessionResult = await deps.createSyncSession(client, {
@@ -211,6 +212,7 @@ export async function executeSyncTask(
         return result.error
       }
 
+      didSucceed = true
       const duration = formatDuration(startTime)
 
       return `Task completed in ${duration}.
@@ -242,9 +244,11 @@ session_id: ${sessionID}
       unregisterSubagentSession(syncSessionID)
       // Abort the sync session to prevent todo-continuation enforcer
       // from re-awakening a completed sync agent's session.
+      // Only interrupt on failure/abandon: success sessions idle-out silently
+      // to avoid alarming session.execution.interrupted after every subagent.
       // On poll timeout the session is still running — keep it alive so the
       // caller can resume via session_id.
-      if (!pollTimedOut) {
+      if (!pollTimedOut && !didSucceed) {
         client.session.interrupt({ sessionID: syncSessionID }).catch((err) => { log("[delegate-task] Sync session interrupt failed:", err) })
       }
     }
