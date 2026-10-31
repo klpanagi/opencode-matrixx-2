@@ -131,18 +131,15 @@ describe("createToolExecuteBeforeHandler", () => {
       expect(output.args.subagent_type).toBe("explore")
     })
 
-    test("sets subagent_type to mouse when category is provided on subagent tool", async () => {
-      //#given
+    test("blocks native subagent even when category is provided (global ban)", async () => {
+      //#given native subagent must never act as task alias
       const ctx = createCtxWithSessionMessages()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "subagent", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { category: "quick", description: "Test delegation" } as Record<string, unknown> }
 
-      //#when
-      await handler(input, output)
-
-      //#then
-      expect(output.args.subagent_type).toBe("mouse")
+      //#when/then throws redirect to task
+      await expect(handler(input, output)).rejects.toThrow(/native subagent.*disabled.*task/i)
     })
 
     test("does not modify args for non-task tools", async () => {
