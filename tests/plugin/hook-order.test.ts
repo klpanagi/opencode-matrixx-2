@@ -95,6 +95,7 @@ describe("hook registration order golden", () => {
       "webfetch-redirect-guard",
       "quality-gate",
       "task-edit-guard",
+      "subagent-block",
       "software-dev-enforcement",
       "task-notepad-writer",
       "document-reader-guard",

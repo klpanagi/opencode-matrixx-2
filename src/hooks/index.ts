@@ -54,6 +54,7 @@ export { createSessionRecoveryHook, type SessionRecoveryHook, type SessionRecove
 export { createSoftwareDevEnforcementHook } from "./software-dev-enforcement/hook";
 export { createStartWorkHook } from "./start-work/start-work-hook";
 export { createStopContinuationGuardHook, type StopContinuationGuard } from "./stop-continuation-guard/hook";
+export { createSubagentBlockHook } from "./subagent-block/hook";
 export { createTaskContinuationEnforcer, type TaskContinuationEnforcer } from "./task-continuation-enforcer";
 export { createTaskEditGuardHook } from "./task-edit-guard/hook";
 export { createTaskNotepadWriterHook } from "./task-notepad-writer/hook";
