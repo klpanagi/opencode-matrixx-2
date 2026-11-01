@@ -485,11 +485,35 @@ export class BackgroundManager {
         sessionId: input.sessionId,
       })
       if (!handle) {
-        // A ses_ id with no bg_ handle is a native session, which can never
-        // be revived: fail with guidance instead of the generic not-found
-        // error. Anything else keeps the legacy message.
         const candidate = input.sessionId ?? input.taskId
-        if (isNativeSessionId(candidate)) {
+        if (candidate !== undefined && isNativeSessionId(candidate)) {
+          // A ses_ id with no bg_ handle is a native session: revivable only
+          // by its owning parent via session.prompt. A foreign parent gets an
+          // ownership-mismatch refusal; no mapping keeps the bg_-only refusal
+          // (irreducible case: no session, no ownership).
+          const owner = getParentSessionID(candidate)
+          if (owner !== undefined && owner === input.parentSessionID) {
+            await promptNativeWithModelSuggestionRetry(this.native.session, {
+              sessionID: candidate,
+              text: input.prompt,
+            })
+            return {
+              id: candidate,
+              sessionID: candidate,
+              parentSessionID: input.parentSessionID,
+              parentMessageID: input.parentMessageID,
+              description: `native session ${candidate}`,
+              prompt: input.prompt,
+              agent: "native",
+              status: "running",
+              startedAt: new Date(),
+            } satisfies BackgroundTask
+          }
+          if (owner !== undefined) {
+            throw new Error(
+              `Cannot revive native session ${candidate}: owned by another parent session (ownership mismatch). Only the owning parent can re-prompt it.`,
+            )
+          }
           throw new Error(
             `Cannot revive native session ${candidate}: revive is bg_-only (background handles only). Use background_output/session_read to inspect it.`,
           )
