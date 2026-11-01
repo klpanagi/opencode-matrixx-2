@@ -6,6 +6,65 @@ import { parseJsoncSafe } from "../../../shared/jsonc-parser"
 import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
 import type { CheckResult, DoctorCheck } from "../types"
 
+export const CONTEXT_MODE_V1_TOOLS = ["ctx_batch_execute", "ctx_execute_file", "ctx_fetch_and_index"] as const
+
+export const CONTEXT_MODE_V2_TOOLS = [
+  "ctx_execute",
+  "ctx_batch",
+  "ctx_index",
+  "ctx_search",
+  "ctx_resume",
+  "ctx_stats",
+  "ctx_doctor",
+  "ctx_upgrade",
+  "ctx_purge",
+] as const
+
+const V1_TO_V2_HINT: Record<string, string> = {
+  ctx_batch_execute: "ctx_batch_execute \u2192 ctx_batch",
+  ctx_execute_file: "ctx_execute_file \u2192 ctx_execute with file param",
+  ctx_fetch_and_index: "ctx_fetch_and_index \u2192 ctx_index then ctx_search",
+}
+
+/**
+ * Pure evaluator for the context-mode tool-key compat check.
+ *
+ * Policy (locked): V1 keys are NEVER a hard failure — they pass with a
+ * migration hint naming the V2 replacements. V2-only keys pass clean.
+ * No ctx_* tools at all fails with an actionable message.
+ */
+export function evaluateContextModeToolCompat(toolNames: string[]): CheckResult {
+  const name = "context-mode-tools"
+  const available = new Set(toolNames)
+  const presentV1 = CONTEXT_MODE_V1_TOOLS.filter((t) => available.has(t))
+  const presentV2 = CONTEXT_MODE_V2_TOOLS.filter((t) => available.has(t))
+  if (presentV1.length === 0 && presentV2.length === 0) {
+    return {
+      name,
+      status: "fail",
+      message: "context-mode tools not found — no ctx_* tools registered",
+      detail:
+        "Install context-mode@2.0.0-next.24 and register it (plugin entry or " +
+        "mcp.servers in opencode.jsonc), then re-run doctor. Expected V2 tools: " +
+        `${[...CONTEXT_MODE_V2_TOOLS].join(", ")}.`,
+    }
+  }
+  if (presentV1.length > 0) {
+    return {
+      name,
+      status: "pass",
+      message: `context-mode tools available (${presentV1.length + presentV2.length} found, including V1 keys) — migration hint present`,
+      detail: `Found V1: ${presentV1.join(", ")}${presentV2.length > 0 ? `; found V2: ${presentV2.join(", ")}` : ""}. Migration: ${presentV1.map((t) => V1_TO_V2_HINT[t]).join("; ")}.`,
+    }
+  }
+  return {
+    name,
+    status: "pass",
+    message: `context-mode V2 tools available (${presentV2.length}/${CONTEXT_MODE_V2_TOOLS.length})`,
+    detail: `Found: ${presentV2.join(", ")}.`,
+  }
+}
+
 function loadContextModeConfig(): { enabled: boolean } | null {
   const dir = getOpenCodeConfigDir({ binary: "opencode" })
   const bases = [join(dir, "matrixx"), join(process.cwd(), ".opencode", "matrixx"), join(process.cwd(), "matrixx")]
@@ -69,9 +128,20 @@ function hasContextModeRegistration(): boolean {
  * cwd of a different project. Matrixx cannot patch the external server; this
  * check warns when the registration lacks an explicit cwd pin and points at
  * the per-project registration fix.
+ *
+ * Scope: MCP-only. Local plugin and registry installs resolve their own
+ * directory and never inherit a spawn cwd, so the check passes (skips) for
+ * those sources instead of warning.
  */
-export function evaluateContextModeCwd(server: unknown): CheckResult {
+export function evaluateContextModeCwd(server: unknown, source: "mcp" | "local" | "registry" | string = "mcp"): CheckResult {
   const name = "context-mode-cwd"
+  if (source === "local" || source === "registry") {
+    return {
+      name,
+      status: "pass",
+      message: `context-mode ${source} install — cwd sanity check is MCP-only, skipping`,
+    }
+  }
   if (typeof server !== "object" || server === null) {
     return {
       name,
@@ -123,7 +193,7 @@ function loadContextModeMcpServer(): unknown {
 export const contextModeCwdCheck: DoctorCheck = {
   name: "context-mode-cwd",
   category: "integrations",
-  check: (): CheckResult => evaluateContextModeCwd(loadContextModeMcpServer()),
+  check: (): CheckResult => evaluateContextModeCwd(loadContextModeMcpServer(), "mcp"),
 }
 
 export const contextModeCheck: DoctorCheck = {
