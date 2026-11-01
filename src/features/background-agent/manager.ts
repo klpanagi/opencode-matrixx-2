@@ -209,8 +209,21 @@ export class BackgroundManager {
         fromPrompt !== "" ? fromPrompt.slice(0, 80) : "Background task"
     }
 
+    const concurrencyKey = `${input.parentSessionID}:${input.agent}:${(input.prompt ?? "").length}:${(input.prompt ?? "").slice(0, 120)}`
+    for (const existing of this.tasks.values()) {
+      if (
+        existing.concurrencyKey === concurrencyKey &&
+        (existing.status === "pending" || existing.status === "running") &&
+        existing.parentSessionID === input.parentSessionID
+      ) {
+        log("[background-agent] Launch dedup: reusing active task", { taskId: existing.id })
+        return existing
+      }
+    }
+
     const task: BackgroundTask = {
       id: `bg_${crypto.randomUUID().slice(0, 8)}`,
+      concurrencyKey,
       status: "pending",
       queuedAt: new Date(),
       description: input.description,
@@ -697,9 +710,28 @@ export class BackgroundManager {
       return
     }
     const sessionID = BackgroundManager.normalizeSessionID(rawSessionID)
-    const task = this.findBySession(sessionID)
-    // Safe no-op for unmatched sessions, including ephemeral native ses_
-    // descendants with no bg_ task: log and return, never create handles.
+    let task = this.findBySession(sessionID)
+    if (!task) {
+      const owner = getParentSessionID(sessionID)
+      if (owner !== undefined) {
+        const auto: BackgroundTask = {
+          id: `bg_${crypto.randomUUID().slice(0, 8)}`,
+          parentSessionID: owner,
+          parentMessageID: "",
+          description: `tracked native session ${sessionID}`,
+          prompt: "",
+          agent: "native",
+          status: "running",
+          startedAt: new Date(),
+          sessionID,
+        }
+        this.tasks.set(auto.id, auto)
+        this.knownSessions.add(sessionID)
+        this.persistHandle(auto)
+        log("[background-agent] Auto-tracked native session:", { sessionID, taskId: auto.id })
+        task = auto
+      }
+    }
     if (!task || (task.status !== "running" && task.status !== "pending")) {
       log("[background-agent] handleEvent no-op: unknown or non-active session", {
         type: event.type,

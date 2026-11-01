@@ -83,7 +83,11 @@ export function hasToolResultAfterAssistant(messages: SessionMessage[]): boolean
 }
 
 export function hasAssistantContent(messages: SessionMessage[]): boolean {
-  return messages.some((m) => isAssistant(m) && textOf(m).trim().length > 0)
+  return messages.some((m) => {
+    if (!isAssistant(m)) return false
+    const stripped = textOf(m).replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim()
+    return stripped.length > 0
+  })
 }
 
 export async function pollSyncSession(

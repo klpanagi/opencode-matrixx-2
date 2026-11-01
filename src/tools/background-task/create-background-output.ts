@@ -49,8 +49,9 @@ function formatForeignSessionOutput(sessionId: string, origin: "ses" | "foreign"
     `Messages: ${texts.length}`,
     "",
   ]
-  if (texts.length === 0) {
-    return [...header, "(No text output found)", "", "> Revive is bg_-only; inspect via session_read for full history."].join("\n")
+  const meaningful = texts.filter((x) => x.replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim().length > 0)
+  if (texts.length === 0 || meaningful.length === 0) {
+    return [...header, "(No deliverable output yet — subagent still running or analysis-only)", "", "> Do NOT refire a duplicate. Wait via background_wait_all or session_read. Revive is bg_-only."].join("\n")
   }
   return [...header, "## Messages", "", ...texts, "", "> Revive is bg_-only; inspect via session_read for full history."].join("\n")
 }
