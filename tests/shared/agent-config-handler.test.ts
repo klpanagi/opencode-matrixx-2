@@ -37,14 +37,14 @@ describe("injectContextDiscipline pure", () => {
     //#given: ctx tools (runtime file or fallback)
     const agents = makeAgents(["mouse", "cipher", "sati", "sentinel", "niobe", "customBot"])
     //#when
-    injectContextDiscipline(["ctx_search", "ctx_batch_execute"], agents)
+    injectContextDiscipline(["ctx_search", "ctx_batch"], agents)
     //#then: compact discipline in either form
     for (const name of ["mouse", "cipher", "sati", "sentinel", "niobe", "customBot"]) {
       const prompt = (agents[name] as { system: string }).system
       expect(prompt.includes("when ctx_* available") || prompt.includes("context-mode")).toBe(true)
-      expect(prompt).toContain("ctx_batch_execute")
+      expect(prompt).toContain("ctx_batch")
       expect(prompt).toContain("ctx_search")
-      expect(prompt).toContain("ctx_fetch_and_index")
+      expect(prompt).toContain("ctx_index then ctx_search")
     }
   })
 
@@ -52,7 +52,7 @@ describe("injectContextDiscipline pure", () => {
     //#given: ctx tools plus grep/glob
     const agents = makeAgents(["trinity", "operator", "seraph", "smith", "merovingian", "construct", "oracle"])
     //#when
-    injectContextDiscipline(["ctx_search", "ctx_batch_execute", "grep", "glob"], agents)
+    injectContextDiscipline(["ctx_search", "ctx_batch", "grep", "glob"], agents)
     //#then: explore with grep/glob fallback
     for (const name of ["trinity", "operator", "seraph", "smith", "merovingian", "construct", "oracle"]) {
       const prompt = (agents[name] as { system: string }).system
@@ -183,7 +183,7 @@ describe("injectContextDiscipline pure", () => {
     injectContextDiscipline(["ctx_search"], agents)
     //#then: edit-read guidance in either form
     const prompt = (agents["cipher"] as { system: string }).system
-    expect(prompt.includes("LINE#ID") || prompt.includes("reading correct") || prompt.includes("ctx_execute_file")).toBe(true)
+    expect(prompt.includes("LINE#ID") || prompt.includes("reading correct") || prompt.includes("file param")).toBe(true)
   })
 
   it("should append the pointer instead of the static table when the package is installed", () => {

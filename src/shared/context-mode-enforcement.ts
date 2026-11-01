@@ -57,7 +57,7 @@ export function hasGrepGlobToolNames(toolNames: readonly string[]): boolean {
  * Whether agent prompts may advertise a grep/glob fallback.
  * Usable = registered AND not blocked. Under enforce:true the hook throws on
  * grep/glob, so the prompt must never offer them — it must name the working
- * substitute (ctx_batch_execute / ctx_execute running `rg`) instead.
+ * substitute (ctx_batch / ctx_execute running `rg`) instead.
  */
 export function resolveGrepGlobUsable(toolNames: readonly string[], contextMode?: ContextModeConfigInput): boolean {
   if (!hasGrepGlobToolNames(toolNames)) return false
@@ -188,12 +188,18 @@ export function hasWorkingSubstitute(): boolean {
 
 /**
  * SINGLE-OWNER predicate for ctx-tool presence.
- * Default absent (false) so production without an override is fail-open
- * (warn-only). Tests simulate presence via `_setCtxToolsForTesting(true)`.
+ * Fail-open (locked Phase-2 decision, honoring the committed
+ * ctx-absent-blocked RED suite): available only when the discipline path
+ * resolves AND a context_mode config is present and enabled; every other
+ * state defaults to false so the hook's warn-only fallback path stays
+ * reachable exactly as today. Tests force either outcome via
+ * `_setCtxToolsForTesting`.
  */
 export function isCtxToolsAvailable(): boolean {
   if (_ctxToolsOverride !== null) return _ctxToolsOverride
-  return false
+  if (!hasWorkingSubstitute()) return false
+  if (_contextModeForPrompts === undefined) return false
+  return _contextModeForPrompts.enabled !== false
 }
 
 /** Alias kept for prompt-builder readability — same single owner. */

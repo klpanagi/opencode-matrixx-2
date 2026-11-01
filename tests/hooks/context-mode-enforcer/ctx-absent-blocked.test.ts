@@ -64,6 +64,7 @@ describe("ctx-absent blocked loop (RED: fail-open when ctx tools absent)", () =>
   test("grep fail-opens with warn-only when ctx tools are absent", async () => {
     //#given: enforce:true + discipline present + NO ctx_* tool registered
     _setDisciplinePathForTesting(DISCIPLINE_PRESENT)
+    _setCtxToolsForTesting(false) // absent ctx tools: fail-open must warn, never throw
     const { promise, output } = runHook({ enforce: true }, "grep", { pattern: "foo" })
     //#when: grep runs with no working ctx substitute available to the agent
     //#then: soft warning, never throws — fail-open so the agent is not stranded
@@ -74,6 +75,7 @@ describe("ctx-absent blocked loop (RED: fail-open when ctx tools absent)", () =>
   test("glob fail-opens with warn-only when ctx tools are absent", async () => {
     //#given: enforce:true + discipline present + NO ctx_* tool registered
     _setDisciplinePathForTesting(DISCIPLINE_PRESENT)
+    _setCtxToolsForTesting(false) // absent ctx tools: fail-open must warn, never throw
     const { promise, output } = runHook({ enforce: true }, "glob", { pattern: "**/*.ts" })
     //#when: glob runs with no working ctx substitute available to the agent
     //#then: soft warning, never throws — fail-open so the agent is not stranded
@@ -84,6 +86,7 @@ describe("ctx-absent blocked loop (RED: fail-open when ctx tools absent)", () =>
   test("webfetch fail-opens with warn-only when ctx tools are absent", async () => {
     //#given: enforce:true + discipline present + NO ctx_* tool registered
     _setDisciplinePathForTesting(DISCIPLINE_PRESENT)
+    _setCtxToolsForTesting(false) // absent ctx tools: fail-open must warn, never throw
     const { promise, output } = runHook({ enforce: true }, "webfetch", { url: "https://example.com" })
     //#when: webfetch runs with no working ctx substitute available to the agent
     //#then: soft warning, never throws — fail-open so the agent is not stranded
@@ -94,6 +97,7 @@ describe("ctx-absent blocked loop (RED: fail-open when ctx tools absent)", () =>
   test("retry loop: repeated grep attempts resolve instead of throwing", async () => {
     //#given: enforce:true + discipline present + NO ctx_* tool registered, one session
     _setDisciplinePathForTesting(DISCIPLINE_PRESENT)
+    _setCtxToolsForTesting(false) // absent ctx tools: fail-open must warn, never throw
     const sessionID = `ses_ctxabsent_loop_${++seq}`
     rmSync(resolve(tmpdir(), `matrixx-ctx-guidance-s-${sessionID}`), { recursive: true, force: true })
     //#when: the agent retries grep 3 times (BLOCKED-loop replay — the error text

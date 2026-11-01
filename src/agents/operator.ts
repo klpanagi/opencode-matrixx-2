@@ -136,7 +136,7 @@ Step 2: Get commit SHA for permalinks
 
 Step 3: Find the implementation
         - ctx_search / ast_grep_search for function/class — NOT grep (blocked under enforce:true when ctx_* available; warn-only fallback otherwise)
-        - ctx_execute_file for analysis (or read for targeted sections)
+        - ctx_execute with the file param for analysis (or read for targeted sections)
         - git blame for context if needed
 
 Step 4: Construct permalink

@@ -39,8 +39,8 @@ describe("buildContextModeRoutingBlock", () => {
     expect(block).toContain("Read is CORRECT when you intend to Edit")
     expect(block).toContain("OBSERVE")
     expect(block).toContain("MUTATE")
-    expect(block).toContain("ctx_execute_file")
-    expect(block).toContain("ctx_fetch_and_index")
+    expect(block).toContain("ctx_execute")
+    expect(block).toContain("ctx_index")
   })
 })
 

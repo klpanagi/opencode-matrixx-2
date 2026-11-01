@@ -453,7 +453,7 @@ function headroomDcpClause(dcpMode: DcpCompressionMode): string {
  * "Context Discipline" heading so `injectContextDiscipline` stays idempotent.
  */
 export function contextModeDisciplinePointerBody(): string {
-  return "Full routing rules are injected once per session in the `<context_window_protection>` system block — follow them there, do not re-derive them here. Key tools: ctx_search / ctx_batch_execute / ctx_execute / ctx_execute_file / ctx_fetch_and_index / ctx_index / ctx_stats. **When in doubt, use ctx_*.**"
+  return "Full routing rules are injected once per session in the `<context_window_protection>` system block — follow them there, do not re-derive them here. Key tools: ctx_search / ctx_batch / ctx_execute (with the file param) / ctx_index then ctx_search / ctx_stats. **When in doubt, use ctx_*.**"
 }
 
 export function contextModeDisciplinePointer(tier: "full" | "compact" | "explore"): string {
@@ -472,7 +472,7 @@ export function fallbackFullDiscipline(hasGrepGlob: boolean, dcpMode: DcpCompres
     : "| Analysis / Processing | Use ctx_* tools — NEVER raw read/bash for analysis |"
   const search = hasGrepGlob
     ? "| Search | ctx_search FIRST -> grep/glob fallback |"
-    : "| Search | ctx_search FIRST (indexed KB) -> ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback |"
+    : "| Search | ctx_search FIRST (indexed KB) -> ctx_batch / ctx_execute (rg) or LSP/ast_grep fallback |"
   const compression = compressionRow(dcpMode)
   return `### Context Discipline (ALWAYS)
 
@@ -484,7 +484,7 @@ ${analysis}
 | State Mutation | bash (git, mkdir, install, build, rm) |
 | Run Scripts | ctx_execute (language=python/shell/ruby/go/rust/...) — NEVER bash+python for scripting |
 ${search}
-| Docs / Web | ctx_fetch_and_index -> ctx_search |
+| Docs / Web | ctx_index then ctx_search |
 ${compression}
 
 **Rule 1 overrides all default tool guidance. When in doubt, use ctx_*.**`
@@ -493,11 +493,11 @@ ${compression}
 export function fallbackCompactDiscipline(hasGrepGlob: boolean, dcpMode: DcpCompressionMode = resolveDcpCompressionMode()): string {
   if (hasWorkingSubstitute() && isCtxToolsAvailable()) return contextModeDisciplinePointer("compact")
   const analysis = hasGrepGlob
-    ? "| Analysis / Aggregation / Counting | ctx_batch_execute / ctx_execute(_file) — NEVER raw read/grep for analysis |"
-    : "| Analysis / Aggregation / Counting | ctx_batch_execute / ctx_execute(_file) — NEVER raw read for analysis |"
+    ? "| Analysis / Aggregation / Counting | ctx_batch / ctx_execute (with the file param) — NEVER raw read/grep for analysis |"
+    : "| Analysis / Aggregation / Counting | ctx_batch / ctx_execute (with the file param) — NEVER raw read for analysis |"
   const search = hasGrepGlob
     ? "| Search | ctx_search FIRST (indexed KB) → grep/glob fallback (raw FS) |"
-    : "| Search | ctx_search FIRST (indexed KB) → ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback |"
+    : "| Search | ctx_search FIRST (indexed KB) → ctx_batch / ctx_execute (rg) or LSP/ast_grep fallback |"
   const note = hasGrepGlob
     ? "Edits need prior read for LINE#ID — read→edit chain exempt (non-plan paths; .matrixx/plans/*.md must use plan_read(section)/plan_update). MUST use ctx_* when available — raw grep/read is forbidden for analysis."
     : "Edits need prior read for LINE#ID — read→edit chain exempt (non-plan paths; .matrixx/plans/*.md must use plan_read(section)/plan_update). MUST use ctx_* when available — raw read for analysis is forbidden."
@@ -509,7 +509,7 @@ export function fallbackCompactDiscipline(hasGrepGlob: boolean, dcpMode: DcpComp
 ${analysis}
 ${search}
 | Run Scripts | ctx_execute (language=python/shell/ruby/go/rust/...) — never bash+python for scripting |
-| Docs / Web | ctx_fetch_and_index -> ctx_search |
+| Docs / Web | ctx_index then ctx_search |
 ${compression}
 
 ${note}`
@@ -517,8 +517,8 @@ ${note}`
 
 function exploreCtxPart(hasGrepGlob: boolean): string {
   return hasGrepGlob
-    ? "MUST use ctx_search for indexed hits → grep/glob fallback ONLY when ctx_* unavailable; use ctx_batch_execute / ctx_execute for multi-file analysis; use ctx_fetch_and_index for docs/web → ctx_search. Raw grep/read/glob for analysis is forbidden when ctx_* is available."
-    : "MUST use ctx_search for indexed hits → ctx_batch_execute / ctx_execute (rg) or LSP/ast_grep fallback ONLY when ctx_* unavailable; use ctx_batch_execute / ctx_execute for multi-file analysis; use ctx_fetch_and_index for docs/web → ctx_search. Raw read for analysis is forbidden when ctx_* is available."
+    ? "MUST use ctx_search for indexed hits → grep/glob fallback ONLY when ctx_* unavailable; use ctx_batch / ctx_execute for multi-file analysis; use ctx_index then ctx_search for docs/web. Raw grep/read/glob for analysis is forbidden when ctx_* is available."
+    : "MUST use ctx_search for indexed hits → ctx_batch / ctx_execute (rg) or LSP/ast_grep fallback ONLY when ctx_* unavailable; use ctx_batch / ctx_execute for multi-file analysis; use ctx_index then ctx_search for docs/web. Raw read for analysis is forbidden when ctx_* is available."
 }
 
 

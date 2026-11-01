@@ -90,7 +90,7 @@ describe("context-mode-enforcer routing + throttle", () => {
 
       //#when: webfetch runs
       //#then: blocked with the fetch-and-index message
-      await expect(promise).rejects.toThrow("ctx_fetch_and_index")
+      await expect(promise).rejects.toThrow("ctx_index")
     })
 
     test("warns instead of throwing when no substitute is installed", async () => {
@@ -127,7 +127,7 @@ describe("context-mode-enforcer routing + throttle", () => {
       const { promise } = runHook({ enforce: true, blocked_tools: BASH_GATED }, "bash", { command: "curl https://example.com" })
 
       //#when: the fetch-shaped command runs
-      //#then: routed with the ctx_batch_execute/ctx_execute message
+      //#then: routed with the ctx_batch/ctx_execute message
       await expect(promise).rejects.toThrow(BASH_ROUTED_MESSAGE)
     })
 
@@ -138,7 +138,7 @@ describe("context-mode-enforcer routing + throttle", () => {
 
       //#when: the command runs
       //#then: routed
-      await expect(promise).rejects.toThrow("ctx_batch_execute")
+      await expect(promise).rejects.toThrow("ctx_batch")
     })
 
     test("build-tool commands are advisory, never a hard throw", async () => {
