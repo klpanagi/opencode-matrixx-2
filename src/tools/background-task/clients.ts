@@ -15,7 +15,7 @@ export type BackgroundOutputClient = {
 
 export type BackgroundCancelClient = {
   session: {
-    abort: (args: { path: { id: string } }) => Promise<unknown>
+    interrupt: (args: { sessionID: string }) => Promise<unknown>
   }
 }
 

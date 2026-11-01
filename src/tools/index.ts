@@ -46,6 +46,7 @@ export { lspManager }
 
 import type { BackgroundManager } from "../features/background-agent"
 import type { SessionContextCarrier } from "../shared/session-context-source"
+import type { BackgroundCancelClient } from "./background-task/clients"
 import {
   createBackgroundCancel,
   createBackgroundOutput,
@@ -68,7 +69,7 @@ export {
 
 export function createBackgroundTools(
   manager: BackgroundManager,
-  client: SessionContextCarrier,
+  client: SessionContextCarrier & BackgroundCancelClient,
   directory: string,
 ): Record<string, MatrixxToolDefinition> {
   return {
