@@ -118,7 +118,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
             const limit = typeof args.message_limit === "number" ? Math.min(args.message_limit, 100) : 100
             texts = messages
               .filter((m) => roleOf(m) === "assistant" || roleOf(m) === "tool" || roleOf(m) === "user")
-              .slice(0, limit)
+              .slice(limit === 0 ? messages.length : -limit)
               .flatMap((m) => contentOf(m))
               .filter((p) => p.type === "text")
               .map((p) => (p as unknown as { text?: unknown }).text)
