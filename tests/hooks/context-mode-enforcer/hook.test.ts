@@ -37,8 +37,8 @@ describe("context-mode-enforcer hook", () => {
   test("block message names the working substitute", () => {
     //#given: the block message
     //#when: inspected
-    //#then: points at ctx_batch_execute/ctx_execute + rg, never a grep/glob fallback
-    expect(BLOCK_MESSAGE_GREP_GLOB).toContain("ctx_batch_execute")
+    //#then: points at ctx_batch/ctx_execute + rg, never a grep/glob fallback
+    expect(BLOCK_MESSAGE_GREP_GLOB).toContain("ctx_batch")
     expect(BLOCK_MESSAGE_GREP_GLOB).toContain("ctx_execute")
     expect(BLOCK_MESSAGE_GREP_GLOB).toContain("rg")
     expect(BLOCK_MESSAGE_GREP_GLOB).not.toContain("grep/glob fallback")
@@ -51,7 +51,7 @@ describe("context-mode-enforcer hook", () => {
     const { promise } = runHook({ enforce: true }, "grep")
     //#when: grep runs
     //#then: throws naming the substitute
-    await expect(promise).rejects.toThrow("ctx_batch_execute")
+    await expect(promise).rejects.toThrow("ctx_batch")
   })
 
   test("warns instead of blocking when no substitute exists", async () => {

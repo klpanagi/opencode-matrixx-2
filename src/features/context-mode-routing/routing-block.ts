@@ -29,25 +29,25 @@ export function buildContextModeRoutingBlock(): string {
   <tool_selection_hierarchy>
     0. MEMORY: ctx_search(sort: "timeline")
        - On resume or compaction, query prior decisions, errors, plans, user prompts before asking the user — auto-captured session memory is searchable.
-    1. GATHER: ctx_batch_execute(commands, queries)
+    1. GATHER: ctx_batch(commands, queries)
        - Primary research tool. Runs commands in parallel, auto-indexes each output, and (when queries are passed) returns matching sections in the same round trip — no follow-up search call.
        - Each command: {label: "section header", command: "shell command"}; the label becomes the FTS5 chunk title — descriptive labels improve search.
     2. FOLLOW-UP: ctx_search(queries: ["q1", "q2", ...])
        - Multiple related questions about anything already indexed (your captures + session memory). Batch every question in one array; the ranking pipeline runs per-query and the round-trip cost is paid once.
-    3. PROCESSING: ctx_execute(language, code) | ctx_execute_file(path, language, code)
+    3. PROCESSING: ctx_execute(language, code, file)
        - Derive answers FROM data: filter, count, aggregate, parse, transform. Only what you console.log() enters your conversation; the raw bytes stay in the sandbox.
   </tool_selection_hierarchy>
 
   <when_not_to_use>
-    - You intend to PROCESS the output (filter, count, parse, aggregate) → use ctx_batch_execute or ctx_execute. Shell stays correct when you intend to OBSERVE a short fixed output (git status on a clean tree, whoami, pwd) or when you MUTATE state (git, mkdir, rm, mv, navigation).
-    - You want to analyze, summarize, or extract from a file → use ctx_execute_file. Read is CORRECT when you intend to Edit the file (Edit needs the exact bytes in your conversation to match against; hashline IDs for Edit on non-plan paths, .matrixx/plans/*.md must use plan_read/plan_update).
-    - Raw grep/glob → use ctx_search for indexed-KB hits, or ctx_batch_execute / ctx_execute running shell \`rg\` for codebase search. Raw grep/glob bypasses the FTS5 sandbox and pollutes context.
-    - WebFetch → use ctx_fetch_and_index; full network access, results indexed for ctx_search, raw page bytes never enter your conversation.
-    - ctx_execute and ctx_execute_file for file writes → these run code in a subprocess and discard the sandbox FS; they are for analysis, processing, and computation only.
+    - You intend to PROCESS the output (filter, count, parse, aggregate) → use ctx_batch or ctx_execute. Shell stays correct when you intend to OBSERVE a short fixed output (git status on a clean tree, whoami, pwd) or when you MUTATE state (git, mkdir, rm, mv, navigation).
+    - You want to analyze, summarize, or extract from a file → use ctx_execute with the file param. Read is CORRECT when you intend to Edit the file (Edit needs the exact bytes in your conversation to match against; hashline IDs for Edit on non-plan paths, .matrixx/plans/*.md must use plan_read/plan_update).
+    - Raw grep/glob → use ctx_search for indexed-KB hits, or ctx_batch / ctx_execute running shell \`rg\` for codebase search. Raw grep/glob bypasses the FTS5 sandbox and pollutes context.
+    - WebFetch → use ctx_index then ctx_search; full network access, results indexed for ctx_search, raw page bytes never enter your conversation.
+    - ctx_execute for file writes → these run code in a subprocess and discard the sandbox FS; they are for analysis, processing, and computation only.
   </when_not_to_use>
 
   <file_writing_policy>
-    File writes use the native Write or Edit tool — ctx_execute, ctx_execute_file, and Bash subprocesses do not persist edits to the host filesystem.
+    File writes use the native Write or Edit tool — ctx_execute and Bash subprocesses do not persist edits to the host filesystem.
     Applies to all file types: code, configs, plans, specs, YAML, JSON, markdown.
   </file_writing_policy>
 
