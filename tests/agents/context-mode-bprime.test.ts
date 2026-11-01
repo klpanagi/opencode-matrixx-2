@@ -58,10 +58,10 @@ describe("B-prime prompt/hook agreement", () => {
     const thrown = await hookThrows("grep")
     //#then: prompt omits the blocked fallback and names the substitute; hook blocks naming it too
     expect(trinityPrompt).not.toContain("grep/glob fallback")
-    expect(trinityPrompt).toContain("ctx_batch_execute")
+    expect(trinityPrompt).toContain("ctx_batch")
     expect(mousePrompt).not.toContain("grep/glob fallback")
     expect(thrown).not.toBeNull()
-    expect(thrown as string).toContain("ctx_batch_execute")
+    expect(thrown as string).toContain("ctx_batch")
   })
 
   test("warn-only mode keeps the grep/glob fallback and the hook warns", async () => {
