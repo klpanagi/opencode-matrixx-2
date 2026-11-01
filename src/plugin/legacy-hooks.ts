@@ -103,7 +103,7 @@ export interface Hooks {
       callID: string
     },
     output: {
-      args: any
+      args: Record<string, unknown>
     },
   ) => Promise<void>
   "shell.env"?: (
@@ -121,16 +121,16 @@ export interface Hooks {
       tool: string
       sessionID: string
       callID: string
-      args: any
+      args: Record<string, unknown>
     },
     output: {
       title: string
       output: string
-      metadata: any
+      metadata: Record<string, unknown>
     },
   ) => Promise<void>
   "experimental.chat.messages.transform"?: (
-    input: {},
+    input: Record<string, unknown>,
     output: {
       messages: {
         info: Message;
@@ -172,7 +172,7 @@ export interface Hooks {
     },
     output: {
       description: string
-      parameters: any
+      parameters: Record<string, unknown>
     },
   ) => Promise<void>
 }

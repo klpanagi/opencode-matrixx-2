@@ -38,7 +38,7 @@ function createManager(): BackgroundManager {
 }
 
 describe("revive native-session guard", () => {
-  test("rejects revive of a native ses_ session as bg_-only", async () => {
+  test("rejects revive of a foreign-parent ses_ session with ownership mismatch", async () => {
     //#given
     const manager = createManager()
     registerSubagentSession("ses_nat", "ses_parent")
@@ -46,8 +46,22 @@ describe("revive native-session guard", () => {
     const attempt = manager.revive({
       sessionId: "ses_nat",
       prompt: "new instruction",
-      parentSessionID: "ses_parent",
+      parentSessionID: "ses_unrelated",
       parentMessageID: "msg_1",
+    })
+    //#then
+    await expect(attempt).rejects.toThrow(/ownership mismatch/)
+  })
+
+  test("unregistered native ses_ id keeps the bg_-only refusal", async () => {
+    //#given
+    const manager = createManager()
+    //#when
+    const attempt = manager.revive({
+      sessionId: "ses_ghost",
+      prompt: "new instruction",
+      parentSessionID: "ses_parent",
+      parentMessageID: "msg_0",
     })
     //#then
     await expect(attempt).rejects.toThrow(/bg_-only/)

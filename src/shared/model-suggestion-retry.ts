@@ -203,9 +203,6 @@ export async function promptNativeWithModelSuggestionRetry(
       suggested: suggestion.suggestion,
     })
 
-    const parsedSuggestion = parseModelString(suggestion.suggestion)
-    const suggestionModelID = parsedSuggestion ? parsedSuggestion.modelID : suggestion.suggestion.trim()
-
     await prompt().catch((retryError: unknown) => {
       throw new Error(
         `prompt failed: sessionID=${sessionID} detail=${getErrorMessage(retryError) || "unknown error"}`,

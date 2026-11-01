@@ -42,9 +42,9 @@ Task creation → Queue → Admission check → Concurrency check → Execute �
 
 **Restart reconciliation** (`reconcile.ts`): On plugin start, `restoreHandles()` probes the live host for each persisted `running|pending` handle and classifies it as `completed | error | running | stopped | statusUncertain` instead of blindly flattening to `interrupt`. A still-running child is re-registered and polling restarts; concurrency is deliberately NOT re-acquired. Lookup failure degrades to `statusUncertain` (never assumes completion).
 
-**Bounded admission** (`admissionTimeoutMs`): When a root task waits past the timeout on a saturated queue it becomes terminal `stopped` with `terminalReason: "queue-saturated"`. Value `0` = unbounded (default), otherwise minimum `60000` ms.
+**Bounded admission** (removed PR-2: queue admission/semaphores deleted, keys gone; `queue-saturated` retained as compat-only handle value).
 
-**Nested-admission exemption** (`nestedAdmission`): Prevents a managed background child that spawns its own background work from self-deadlocking the semaphore. `classifyAdmission` walks the child→parent session registry. Depth-cap overflow yields terminal `stopped` + `terminalReason: "nested-depth-exceeded"`. Config: `{ enabled: boolean (default true), mode: "bypass"|"reserve" (default "bypass"), maxDepth: 1..5 (default 2) }`.
+**Nested-admission exemption** (removed PR-2: queue admission/semaphores deleted, keys gone; `nested-depth-exceeded` retained as compat-only handle value).
 
 **Session revive** (`revive.ts`, `background_revive` tool): A terminal task whose handle is still on disk can be resumed with a NEW instruction. Retention IS the existing handle files — there is no separate store — bounded by `TASK_TTL_MS` (30 min). Revivable: `cancelled | stopped | interrupt | error | completed` (each requires a `sessionID`); `statusUncertain` requires `force: true`; `pending | running` must use `background_output` instead; a handle that never produced a session (e.g. `queue-saturated`) is unrevivable. `manager.revive()` falls back to disk on an in-memory map miss, then re-admits through bounded/nested admission — and a nested revive bypasses the semaphore entirely so it can never await it unboundedly. `manager.resume()` remains the in-memory-only path.
 

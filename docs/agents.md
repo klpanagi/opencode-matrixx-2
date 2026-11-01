@@ -331,9 +331,14 @@ stays tracked and visible to `background_output` / `background_wait_all`.
 
 - `bg_*` task ids resolve through the background-agent registry; `ses_*` session ids
   resolve read-through against the live native session (no registry write).
-- Unknown ids return a typed `not_found` error; `cancel` refuses native `ses_*` ids
-  (a live native session cannot be cancelled — revive it instead via `background_revive`
-  with a new instruction).
+- Unknown ids return a typed `not_found` error. `ses_*` sessions stay manageable:
+  cancellable via `background_cancel` (`session.interrupt`) and revivable by the
+  owning parent via `background_revive` (`session.prompt`); foreign or unregistered
+  `ses_*` ids are still refused.
+- Allowlist escape hatch: IDs listed in `subagent_block.allowlist`
+  (`matrixx.jsonc`: `{ "subagent_block": { "enabled": true, "allowlist": ["my-agent"] } }`)
+  bypass the block. Default stays `enabled:true`; or disable the hook via
+  `disabled_hooks: ["subagent-block"]`.
 
 ---
 

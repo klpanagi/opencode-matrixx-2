@@ -10,11 +10,13 @@ export type BackgroundTaskStatus =
 
 /** Why a background task reached a terminal state (persisted on the handle). */
 export type BackgroundTerminalReason =
+  // compat-only: retained for handles persisted by older builds, no producer in current code
   | "queue-saturated"
   | "no-output"
   | "uncertain"
   | "aborted"
   | "stale"
+  // compat-only: retained for handles persisted by older builds, no producer in current code
   | "nested-depth-exceeded"
   | "wall-clock-timeout"
   | "expired"

@@ -28,11 +28,11 @@ background-agent/
 
 ## KEY PATTERNS
 
-**Supervisor Lifecycle:** On launch, `LaunchInput` → queue admission (bounded by `admissionTimeoutMs`, default unbounded) → nested-admission classification (default bypasses semaphore) → acquire model-level concurrency slot → spawn subprocess → poll loop every `POLLING_INTERVAL_MS` checking for assistant output / stale inactivity → on terminal status, record to handle-index, send completion notification, sweep stale handles if TTL exceeded. The manager runs exactly one polling goroutine per active task using a Map keyed by `taskId`.
+**Supervisor Lifecycle:** (removed PR-2: queue admission/semaphores deleted; `queue-saturated`/`nested-depth-exceeded` retained as compat-only handle values) On launch, `LaunchInput` → spawn subprocess → poll loop every `POLLING_INTERVAL_MS` checking for assistant output / stale inactivity → on terminal status, record to handle-index, send completion notification, sweep stale handles if TTL exceeded. The manager runs exactly one polling goroutine per active task using a Map keyed by `taskId`.
 
 **Wallclock Enforcement:** `wallClockTimeoutMs` defaults to `0` (OFF). Any non-zero value sets a hard upper bound (union type: exactly `0` or ≥60000). When exceeded, the task is terminated with `terminalReason: "wallclock-timeout"`. `wallClockAbortGraceMs` (default 5000ms) provides a grace period between timeout fire and actual abort signal, allowing graceful flush. Zero means no grace — immediate kill. This is applied uniformly to all agents regardless of category.
 
-**Concurrency Model:** Hierarchical — `modelConcurrency` overrides `providerConcurrency` which overrides `defaultConcurrency`. Each concurrent group uses an independent `Semaphore` with waiters queued FIFO. Acquisition respects `admissionTimeoutMs` deadline; timeout expires yields terminal `stopped` with `terminalReason: "queue-saturated"`. Concurrency is NOT re-acquired on restart reconciliation — already-running slots are preserved.
+**Concurrency Model:** (removed PR-2: queue admission/semaphores deleted, keys gone; `queue-saturated` retained as compat-only handle value).
 
 **Handle Persistence:** All tasks written atomically to `<project>/.matrixx/bg-handles/<taskId>.json` via temp+renameSync. Handles tracked in-memory Set bounded by `TASK_TTL_MS` (30 min). `sweepStaleHandles()` removes expired entries to prevent unbounded growth. On startup, `restoreHandles()` reconciles each persisted handle against the live tmux host.
 

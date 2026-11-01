@@ -1,18 +1,8 @@
 import { notify } from "../../shared/notify"
-import type { ConcurrencyManager } from "../background-agent/concurrency"
 import type { ModelFallbackInfo, TaskStatus, TrackedTask } from "./types"
 
 export class TaskToastManager {
   private tasks: Map<string, TrackedTask> = new Map()
-  private concurrencyManager?: ConcurrencyManager
-
-  constructor(concurrencyManager?: ConcurrencyManager) {
-    this.concurrencyManager = concurrencyManager
-  }
-
-  setConcurrencyManager(manager: ConcurrencyManager): void {
-    this.concurrencyManager = manager
-  }
 
   addTask(task: {
     id: string
@@ -88,20 +78,9 @@ export class TaskToastManager {
     return `${hours}h ${minutes % 60}m`
   }
 
-  private getConcurrencyInfo(): string {
-    if (!this.concurrencyManager) return ""
-    const running = this.getRunningTasks()
-    const queued = this.getQueuedTasks()
-    const total = running.length + queued.length
-    const limit = this.concurrencyManager.getConcurrencyLimit("default")
-    if (limit === Infinity) return ""
-    return ` [${total}/${limit}]`
-  }
-
   private buildTaskListMessage(newTask: TrackedTask): string {
     const running = this.getRunningTasks()
     const queued = this.getQueuedTasks()
-    const concurrencyInfo = this.getConcurrencyInfo()
 
     const lines: string[] = []
 
@@ -119,7 +98,7 @@ export class TaskToastManager {
     }
 
     if (running.length > 0) {
-      lines.push(`Running (${running.length}):${concurrencyInfo}`)
+      lines.push(`Running (${running.length}):`)
       for (const task of running) {
         const duration = this.formatDuration(task.startedAt)
         const bgIcon = task.isBackground ? "[BG]" : "[RUN]"
@@ -190,8 +169,8 @@ export function getActiveTaskToastManager(): TaskToastManager | null {
   return instance
 }
 
-export function initTaskToastManager(concurrencyManager?: ConcurrencyManager): TaskToastManager {
-  instance = new TaskToastManager(concurrencyManager)
+export function initTaskToastManager(): TaskToastManager {
+  instance = new TaskToastManager()
   return instance
 }
 

@@ -190,7 +190,7 @@ Each category defines: model, variant, temperature, max tokens, thinking/reasoni
 
 ### Queue-Saturated Launch Outcome
 
-When `delegate_task` launches into a saturated queue (root launch past `admissionTimeoutMs`), the tool returns a machine-readable block instead of throwing:
+When `delegate_task` launch is refused (removed PR-2: queue admission/semaphores deleted; `queue-saturated` retained as compat-only handle value), the tool returns a machine-readable block instead of throwing:
 
 ```
 Background task NOT admitted (queue saturated).

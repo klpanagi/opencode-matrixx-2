@@ -31,6 +31,7 @@ export const BgHandleSchema = z
     agent: z.string(),
     status: z.enum(["pending", "running", "completed", "error", "cancelled", "interrupt", "stopped", "statusUncertain"]),
     sessionID: z.string().optional(),
+    // compat-only: retained for handles persisted by older builds, no producer in current code.
     terminalReason: z
       .enum(["queue-saturated", "no-output", "uncertain", "aborted", "stale", "nested-depth-exceeded", "wall-clock-timeout", "expired"])
       .optional(),

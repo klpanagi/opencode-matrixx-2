@@ -1,12 +1,12 @@
 import { z } from "zod"
 import type { BackgroundManager } from "../../features/background-agent"
-import type { SessionContextCarrier } from "../../shared/session-context-source"
 import { isNativeSessionId } from "../../shared/session-id"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import type { BackgroundCancelClient } from "./clients"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"
 import type { BackgroundCancelArgs } from "./types"
 
-export function createBackgroundCancel(manager: BackgroundManager, _client: SessionContextCarrier): MatrixxToolDefinition {
+export function createBackgroundCancel(manager: BackgroundManager, client: BackgroundCancelClient): MatrixxToolDefinition {
   return defineTool("background_cancel", {
     description: BACKGROUND_CANCEL_DESCRIPTION,
     args: {
@@ -15,7 +15,7 @@ export function createBackgroundCancel(manager: BackgroundManager, _client: Sess
     },
     // Cancel/revive ID matrix (unified IDs):
     // - bg_* with a handle: cancel aborts the session; revive re-prompts with a new instruction.
-    // - ses_* native with no bg_ handle: cancel is REFUSED (read-only); revive is REFUSED by the manager (bg_-only).
+    // - ses_* native with no bg_ handle: cancel interrupts the session via session.interrupt; revive is bg_-only.
     // - unknown id: typed not_found with a session_read hint; never guess across the two namespaces.
     async execute(args: BackgroundCancelArgs, toolContext) {
       try {
@@ -27,7 +27,12 @@ export function createBackgroundCancel(manager: BackgroundManager, _client: Sess
 
         const rawId = typeof args.taskId === "string" ? args.taskId.trim() : ""
         if (!cancelAll && rawId !== "" && isNativeSessionId(rawId)) {
-          return `[ERROR] refusing to cancel native session ${rawId}: cancel is bg_-only (background handles only) and never aborts native sessions. Inspect via background_output(session_id="${rawId}") or session_read; revive is bg_-only.`
+          try {
+            await client.session.interrupt({ sessionID: rawId })
+            return `Native session ${rawId} interrupted via session.interrupt.`
+          } catch (error) {
+            return `[ERROR] Failed to interrupt native session ${rawId}: ${error instanceof Error ? error.message : String(error)}`
+          }
         }
 
         if (cancelAll) {

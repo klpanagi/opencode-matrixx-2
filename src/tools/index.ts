@@ -52,6 +52,7 @@ import {
   createBackgroundRevive,
   createBackgroundWaitAll,
 } from "./background-task"
+import type { BackgroundCancelClient } from "./background-task/clients"
 import type { MatrixxToolDefinition } from "./shared/define-tool"
 
 export { createAssemblyTool } from "./assembly/tools"
@@ -68,7 +69,7 @@ export {
 
 export function createBackgroundTools(
   manager: BackgroundManager,
-  client: SessionContextCarrier,
+  client: SessionContextCarrier & BackgroundCancelClient,
   directory: string,
 ): Record<string, MatrixxToolDefinition> {
   return {

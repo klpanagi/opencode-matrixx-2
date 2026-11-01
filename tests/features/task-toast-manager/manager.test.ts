@@ -1,7 +1,6 @@
 declare const require: (name: string) => unknown
 const { describe, test, expect, beforeEach, afterEach, mock } = require("bun:test")
 
-import type { ConcurrencyManager } from "../../../src/features/background-agent/concurrency"
 import { resetNotifySink, setNotifySink, type NotifyLevel } from "../../../src/shared/notify"
 
 type TaskToastManagerClass = typeof import("../../../src/features/task-toast-manager/manager").TaskToastManager
@@ -10,19 +9,14 @@ describe("TaskToastManager", () => {
   let TaskToastManager: TaskToastManagerClass
   let notices: Array<{ level: NotifyLevel; message: string }>
   let toastManager: InstanceType<TaskToastManagerClass>
-  let mockConcurrencyManager: ConcurrencyManager
 
   beforeEach(async () => {
     notices = []
     setNotifySink((level, message) => { notices.push({ level, message }) })
-    mockConcurrencyManager = {
-      getConcurrencyLimit: mock(() => 5),
-    } as unknown as ConcurrencyManager
-
     const mod = await import("../../../src/features/task-toast-manager/manager")
     TaskToastManager = mod.TaskToastManager
 
-    toastManager = new TaskToastManager(mockConcurrencyManager)
+    toastManager = new TaskToastManager()
   })
 
   afterEach(() => {
@@ -67,84 +61,6 @@ describe("TaskToastManager", () => {
       expect(notices).toHaveLength(1)
       const call = notices[0]
       expect(call.message).not.toContain("Skills:")
-    })
-  })
-
-  describe("concurrency info in toast message", () => {
-    test("should display concurrency status in toast", () => {
-      // given - multiple running tasks
-      toastManager.addTask({
-        id: "task_1",
-        description: "First task",
-        agent: "trinity",
-        isBackground: true,
-      })
-      toastManager.addTask({
-        id: "task_2",
-        description: "Second task",
-        agent: "operator",
-        isBackground: true,
-      })
-
-      // when - third task is added
-      toastManager.addTask({
-        id: "task_3",
-        description: "Third task",
-        agent: "trinity",
-        isBackground: true,
-      })
-
-      // then - toast should show concurrency info
-      expect(notices).toHaveLength(3)
-      const lastCall = notices[2]
-      // Should show "Running (3):" header
-      expect(lastCall.message).toContain("Running (3):")
-    })
-
-    test("should display concurrency limit info when available", () => {
-      // given - a concurrency manager with known limit
-      const mockConcurrencyWithCounts = {
-        getConcurrencyLimit: mock(() => 5),
-        getRunningCount: mock(() => 2),
-        getQueuedCount: mock(() => 1),
-      } as unknown as ConcurrencyManager
-
-      const managerWithConcurrency = new TaskToastManager(mockConcurrencyWithCounts)
-
-      // when - a task is added
-      managerWithConcurrency.addTask({
-        id: "task_1",
-        description: "Test task",
-        agent: "trinity",
-        isBackground: true,
-      })
-
-      // then - toast should show concurrency status like "2/5 slots"
-      expect(notices).toHaveLength(1)
-      const call = notices[0]
-      expect(call.message).toMatch(/\d+\/\d+/)
-    })
-  })
-
-  describe("combined skills and concurrency display", () => {
-    test("should display both skills and concurrency info together", () => {
-      // given - a task with skills and concurrency manager
-      const task = {
-        id: "task_1",
-        description: "Full info task",
-        agent: "mouse",
-        isBackground: true,
-        skills: ["frontend-ui-ux"],
-      }
-
-      // when - addTask is called
-      toastManager.addTask(task)
-
-      // then - toast should include both skills and task count
-      expect(notices).toHaveLength(1)
-      const call = notices[0]
-      expect(call.message).toContain("frontend-ui-ux")
-      expect(call.message).toContain("Running (1):")
     })
   })
 

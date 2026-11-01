@@ -6,12 +6,6 @@ const CircuitBreakerConfigSchema = z.object({
   consecutiveThreshold: z.number().int().min(5).optional(),
 })
 
-const NestedAdmissionConfigSchema = z.object({
-  enabled: z.boolean().optional(),
-  mode: z.enum(["bypass", "reserve"]).optional(),
-  maxDepth: z.number().int().min(1).max(5).optional(),
-})
-
 /** Idle-parent wake scheduler settings (default ON, default interval 300000ms, minimum 60000ms) */
 export const WakeSchedulerConfigSchema = z.object({
   enabled: z.boolean().optional(),
@@ -39,10 +33,6 @@ export const BackgroundTaskConfigSchema = z.object({
   maxToolCalls: z.number().int().min(10).optional(),
   /** Circuit breaker settings to prevent runaway background tasks */
   circuitBreaker: CircuitBreakerConfigSchema.optional(),
-  /** Queue admission timeout in ms. 0 = unbounded (current behavior). Otherwise minimum 60000. */
-  admissionTimeoutMs: z.union([z.literal(0), z.number().min(60000)]).optional(),
-  /** Nested-task admission exemption (prevents self-deadlock when a managed child spawns background work). */
-  nestedAdmission: NestedAdmissionConfigSchema.optional(),
   /** Idle-parent wake scheduler settings (default ON; see WakeSchedulerConfigSchema). */
   wakeScheduler: WakeSchedulerConfigSchema.optional(),
   /** Job-board snapshot settings (defaults true/latest/20; see JobBoardConfigSchema). */

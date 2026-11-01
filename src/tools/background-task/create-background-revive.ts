@@ -57,6 +57,12 @@ function resolveFailure(
   if (message.includes("no session to revive") || message.includes("has no sessionID")) {
     return { reason: "no-session", detail: message }
   }
+  if (message.includes("ownership mismatch") || message.includes("owned by another parent")) {
+    return { reason: "unknown-task", detail: message }
+  }
+  if (message.includes("bg_-only") || message.includes("Cannot revive native session")) {
+    return { reason: "no-session", detail: message }
+  }
   return { reason: "unknown-task", detail: message }
 }
 
