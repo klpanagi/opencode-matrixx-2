@@ -120,7 +120,7 @@ export async function formatFullSession(
 
   for (const { message, parts } of visibleMessages) {
     const role = roleOf(message)
-    const agent = message.agent ? " (" + message.agent + ")" : ""
+    const agent = message.agent ? ` (${message.agent})` : ""
     const time = formatMessageTime(message.time)
     const idLabel = message.id ? ` id=${message.id}` : ""
     lines.push("")

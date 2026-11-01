@@ -14,14 +14,14 @@ const sessionCursors = new Map<string, CursorState>()
 
 function buildMessageKey(message: CursorMessage, index: number): string {
   const id = idOf(message)
-  if (id) return `id:` + id
+  if (id) return `id:${id}`
 
   const created = timeOf(message)
   if (created !== 0) {
-    return `t:` + String(created) + `:` + String(index)
+    return `t:${String(created)}:${String(index)}`
   }
 
-  return `i:` + String(index)
+  return `i:${String(index)}`
 }
 
 export function consumeNewMessages<T extends CursorMessage>(

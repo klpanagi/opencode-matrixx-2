@@ -46,13 +46,13 @@ export { lspManager }
 
 import type { BackgroundManager } from "../features/background-agent"
 import type { SessionContextCarrier } from "../shared/session-context-source"
-import type { BackgroundCancelClient } from "./background-task/clients"
 import {
   createBackgroundCancel,
   createBackgroundOutput,
   createBackgroundRevive,
   createBackgroundWaitAll,
 } from "./background-task"
+import type { BackgroundCancelClient } from "./background-task/clients"
 import type { MatrixxToolDefinition } from "./shared/define-tool"
 
 export { createAssemblyTool } from "./assembly/tools"

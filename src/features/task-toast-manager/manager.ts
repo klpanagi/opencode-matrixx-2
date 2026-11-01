@@ -3,8 +3,6 @@ import type { ModelFallbackInfo, TaskStatus, TrackedTask } from "./types"
 
 export class TaskToastManager {
   private tasks: Map<string, TrackedTask> = new Map()
-  constructor() {
-  }
 
   addTask(task: {
     id: string
