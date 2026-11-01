@@ -24,6 +24,7 @@ import { buildSystemContent } from "./prompt-builder"
 import { softwareDevDisabledSkillError } from "./software-dev-enforcement"
 import { resolveSoftwareDevEnforcementContent } from "./software-dev-payload"
 import { resolveTaskDescription } from "./task-title"
+import { TASK_TOOL_OPTIONS } from "./tool-options"
 import type { DelegateTaskArgs, DelegateTaskToolOptions, ToolContextWithMetadata } from "./types"
 
 export { resolveCategoryConfig } from "./categories"
@@ -121,6 +122,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
 
   return defineTool("task", {
     description,
+    options: TASK_TOOL_OPTIONS,
     args: {
       load_skills: z.array(z.string()).describe("Skill names to inject. REQUIRED - pass [] if no skills needed."),
       description: z.string().describe("Short task description (3-5 words)"),
@@ -144,6 +146,15 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
     async execute(args: DelegateTaskArgs, toolContext) {
 
       const ctx = toolContext as ToolContextWithMetadata
+
+      if (!ctx.sessionID || !ctx.messageID) {
+        return (
+          "Task cannot run from inside code-mode (execute block): the nested spawn " +
+          "has no top-level tool session context, so the call would return empty output. " +
+          "Re-issue this delegation as a direct top-level task call (not inside execute), " +
+          "with load_skills set and either category or subagent_type."
+        )
+      }
 
       // Normalize description: the model may omit it, yielding `undefined" titles.
       // Resolve once here so every downstream path (metadata, launch, toast) is safe.

@@ -840,6 +840,42 @@ export class BackgroundManager {
     return undefined
   }
 
+  findDiskTaskBySession(sessionID: string): BackgroundTask | undefined {
+    const wanted = BackgroundManager.normalizeSessionID(sessionID)
+    let handles: ReturnType<typeof readHandles>
+    try {
+      handles = readHandles(this.directory)
+    } catch {
+      return undefined
+    }
+    for (const handle of handles) {
+      if (handle.sessionID === undefined) continue
+      if (BackgroundManager.normalizeSessionID(handle.sessionID) !== wanted) continue
+      if (this.tasks.has(handle.taskId)) return this.tasks.get(handle.taskId)
+      const uncertain = handle.status === "running" || handle.status === "pending"
+      const task: BackgroundTask = {
+        id: handle.taskId,
+        parentSessionID: handle.parentSessionID,
+        parentMessageID: handle.parentMessageID,
+        description: handle.description,
+        prompt: "",
+        agent: handle.agent,
+        status: uncertain ? "statusUncertain" : handle.status,
+        sessionID: handle.sessionID,
+        terminalReason: uncertain ? "uncertain" : handle.terminalReason,
+        queuedAt: handle.queuedAt !== undefined ? new Date(handle.queuedAt) : undefined,
+        startedAt: handle.startedAt !== undefined ? new Date(handle.startedAt) : undefined,
+        completedAt: handle.completedAt !== undefined ? new Date(handle.completedAt) : undefined,
+        model: handle.model,
+        category: handle.category,
+        concurrencyGroup: handle.concurrencyGroup,
+      }
+      this.tasks.set(task.id, task)
+      return task
+    }
+    return undefined
+  }
+
   async cancelTask(
     taskId: string,
     options?: {
@@ -1079,6 +1115,11 @@ export async function resolveAny(
   if (bgTask !== undefined) return { origin: "bg", task: bgTask }
   const covered = manager.findBySession(raw)
   if (covered !== undefined) return { origin: "bg", task: covered }
+  try {
+    const onDisk = manager.findDiskTaskBySession?.(raw)
+    if (onDisk !== undefined) return { origin: "bg", task: onDisk }
+  } catch {
+  }
   if (!raw.startsWith("ses_")) return { error: "not_found", id: raw }
   const native = (manager as unknown as { native?: { session?: unknown } }).native
   const session = native?.session as
