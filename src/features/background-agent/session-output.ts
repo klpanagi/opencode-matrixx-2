@@ -22,7 +22,13 @@ export async function fetchSessionMessages(
 /**
  * True when the session produced real assistant/tool output with content.
  * Shared by `validateSessionHasOutput` (manager) and `reconcileHandle`.
+ * Analysis-only content (<analysis> blocks) does NOT count as output —
+ * prevents premature completion when a subagent has only emitted its
+ * planning preamble.
  */
+export function stripAnalysisBlocks(text: string): string {
+  return text.replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim();
+}
 export function messagesHaveAssistantOutput(
   messages: SessionMessage[],
   sessionID?: string,
@@ -40,12 +46,12 @@ export function messagesHaveAssistantOutput(
     const role = roleOf(m)
     if (role !== "assistant" && role !== "tool") return false
     return contentOf(m).some((p) => {
-      const text = typeof p.text === "string" ? p.text : undefined
+      const text = typeof p.text === "string" ? stripAnalysisBlocks(p.text) : undefined
       if ((p.type === "text" || p.type === "reasoning") && text && text.trim().length > 0) return true
       if (p.type === "tool") return true
       if (p.type === "tool_result") {
         const raw = p.content
-        if (typeof raw === "string") return raw.trim().length > 0
+        if (typeof raw === "string") return stripAnalysisBlocks(raw).length > 0
         if (Array.isArray(raw)) return raw.length > 0
       }
       return false
@@ -77,6 +83,6 @@ export async function validateSessionHasOutput(
     return messagesHaveAssistantOutput(messages, sessionID)
   } catch (error) {
     log("[background-agent] Error validating session output:", error)
-    return true
+    return false
   }
 }

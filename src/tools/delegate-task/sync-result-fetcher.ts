@@ -9,7 +9,8 @@ import type { NativeClient } from "./types"
  */
 function messageText(msg: SessionMessage): string {
   const textParts = contentOf(msg).filter((p) => p.type === "text" || p.type === "reasoning")
-  return textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
+  const raw = textParts.map((p) => p.text ?? "").filter(Boolean).join("\n")
+  return raw.replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim()
 }
 
 /**
