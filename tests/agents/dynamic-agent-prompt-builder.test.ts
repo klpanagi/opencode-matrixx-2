@@ -217,7 +217,7 @@ describe("categorizeTools", () => {
 
   it("should categorize ctx_* tools as sandbox", () => {
     //#given: ctx_* tool names
-    const toolNames = ["ctx_execute", "ctx_batch_execute", "ctx_execute_file", "ctx_search", "ctx_fetch_and_index"]
+    const toolNames = ["ctx_execute", "ctx_batch", "ctx_search", "ctx_index", "ctx_stats"]
 
     //#when: categorizing
     const result = categorizeTools(toolNames)
@@ -308,7 +308,7 @@ describe("buildContextDisciplineSection", () => {
     expect(result.includes("Context Discipline") || result.includes("context-mode")).toBe(true)
     expect(result).toContain("ctx_")
     expect(result).toContain("ctx_search")
-    expect(result).toContain("ctx_fetch_and_index")
+    expect(result).toContain("ctx_index then ctx_search")
     expect(result.includes("ctx_stats") || result.includes("ctx_execute")).toBe(true)
   })
 
@@ -565,9 +565,9 @@ describe("buildCompactContextDisciplineSection", () => {
     const result = buildCompactContextDisciplineSection(true)
     //#then: ctx coverage in either form
     expect(result).toContain("ctx_")
-    expect(result.includes("ctx_batch_execute") || result.includes("GATHER")).toBe(true)
+    expect(result.includes("ctx_batch") || result.includes("GATHER")).toBe(true)
     expect(result.includes("ctx_search") || result.includes("FOLLOW-UP")).toBe(true)
-    expect(result.includes("ctx_fetch_and_index") || result.includes("WEB")).toBe(true)
+    expect(result.includes("ctx_index") || result.includes("WEB")).toBe(true)
     expect(result.includes("ctx_stats") || result.includes("PROCESSING")).toBe(true)
   })
 
@@ -575,7 +575,7 @@ describe("buildCompactContextDisciplineSection", () => {
     //#given (runtime file distinguishes edit-reads; fallback states chain exempt)
     const result = buildCompactContextDisciplineSection(true)
     //#then
-    expect(result.includes("LINE#ID") || result.includes("reading correct") || result.includes("ctx_execute_file")).toBe(true)
+    expect(result.includes("LINE#ID") || result.includes("reading correct") || result.includes("file param")).toBe(true)
     expect(result.includes("read→edit") || result.includes("Reading to **edit**") || result.includes("ctx_")).toBe(true)
   })
 
@@ -607,8 +607,8 @@ describe("buildExploreDisciplineSection", () => {
     expect(result).toContain("when available")
     expect(result).toContain("ctx_search")
     expect(result).toContain("grep/glob fallback")
-    expect(result).toContain("ctx_batch_execute")
-    expect(result).toContain("ctx_fetch_and_index")
+    expect(result).toContain("ctx_batch")
+    expect(result).toContain("ctx_index then ctx_search")
     expect(result).not.toContain("headroom_")
   })
 
@@ -626,8 +626,8 @@ describe("buildExploreDisciplineSection", () => {
     const result = buildExploreDisciplineSection(true, true)
     //#then: contains both
     expect(result).toContain("ctx_search")
-    expect(result).toContain("ctx_batch_execute")
-    expect(result).toContain("ctx_fetch_and_index")
+    expect(result).toContain("ctx_batch")
+    expect(result).toContain("ctx_index then ctx_search")
     expect(result).toContain("headroom_retrieve")
     expect(result).toContain("NEVER re-read full history")
   })
@@ -665,10 +665,10 @@ describe("categorizeTools extended", () => {
 
   it("should categorize n and n_file alongside ctx_* as sandbox in mixed list", () => {
     //#given: n/n_file mixed with ctx_* and other tools
-    const result = categorizeTools(["n", "ctx_execute", "n_file", "ctx_batch_execute", "grep", "read"])
+    const result = categorizeTools(["n", "ctx_execute", "n_file", "ctx_batch", "grep", "read"])
     //#then: n/n_file categorized as sandbox alongside ctx_* tools
     const byCategory = (c: string) => result.filter((t) => t.category === c).map((t) => t.name)
-    expect(byCategory("sandbox")).toEqual(["n", "ctx_execute", "n_file", "ctx_batch_execute"])
+    expect(byCategory("sandbox")).toEqual(["n", "ctx_execute", "n_file", "ctx_batch"])
     expect(byCategory("search")).toEqual(["grep"])
     expect(byCategory("other")).toEqual(["read"])
   })

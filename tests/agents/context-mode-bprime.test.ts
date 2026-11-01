@@ -52,7 +52,7 @@ describe("B-prime prompt/hook agreement", () => {
     setContextModeForPrompts({ enforce: true })
     const agents = makeAgents(["trinity", "mouse"])
     //#when: discipline injected and grep attempted
-    injectContextDiscipline(["ctx_search", "ctx_batch_execute", "grep", "glob"], agents)
+    injectContextDiscipline(["ctx_search", "ctx_batch", "grep", "glob"], agents)
     const trinityPrompt = (agents["trinity"] as { system: string }).system
     const mousePrompt = (agents["mouse"] as { system: string }).system
     const thrown = await hookThrows("grep")
@@ -108,7 +108,7 @@ describe("B-prime prompt/hook agreement", () => {
     //#then: whichever loads first never leaks into the other variant
     expect(withTools).toContain("grep/glob fallback")
     expect(withoutTools).not.toContain("grep/glob fallback")
-    expect(withoutTools).toContain("ctx_batch_execute")
+    expect(withoutTools).toContain("ctx_batch")
     expect(withoutFirst).toBe(withoutTools)
     expect(withSecond).toBe(withTools)
     expect(compactWith).toContain("grep/glob fallback")

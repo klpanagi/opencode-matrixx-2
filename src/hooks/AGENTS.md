@@ -64,7 +64,7 @@ hooks/
 | Hook | Event | Blocks When |
 |------|-------|-------------|
 | auto-slash-command | chat.message | Command execution fails |
-| context-mode-enforcer | tool.execute.before | Conditional, only under `enforce`: `grep`/`glob` and `webfetch` blocked when `hasWorkingSubstitute()` is true (use `ctx_search` / `ctx_fetch_and_index`); fetch-shaped `bash` blocked only when `bash` is also in `blockedTools`; `read` is warn-only and never throws. Non-enforce mode only attaches `output.message`, and a per-session throttle (`guidance-throttle.ts`) shows each guidance once per session |
+| context-mode-enforcer | tool.execute.before | Conditional, only under `enforce`: `grep`/`glob` and `webfetch` blocked when `hasWorkingSubstitute()` is true (use `ctx_search` / `ctx_index then ctx_search`); fetch-shaped `bash` blocked only when `bash` is also in `blockedTools`; `read` is warn-only and never throws. Non-enforce mode only attaches `output.message`, and a per-session throttle (`guidance-throttle.ts`) shows each guidance once per session |
 | keyword-detector | chat.message | Keyword injection fails |
 | non-interactive-env | tool.execute.before | Interactive command in non-TTY |
 | oracle-md-only | tool.execute.before | Write outside .morpheus/*.md |
