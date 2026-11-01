@@ -97,7 +97,7 @@ export async function formatFullSession(
 
   const limit = typeof options.messageLimit === "number" ? Math.min(options.messageLimit, MAX_MESSAGE_LIMIT) : undefined
   const hasMore = limit !== undefined && normalizedMessages.length > limit
-  const visibleMessages = limit !== undefined ? normalizedMessages.slice(0, limit) : normalizedMessages
+  const visibleMessages = limit !== undefined ? (limit === 0 ? [] : normalizedMessages.slice(-limit)) : normalizedMessages
 
   const lines: string[] = []
   lines.push("# Full Session Output")
