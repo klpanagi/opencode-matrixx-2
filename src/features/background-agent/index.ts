@@ -1,4 +1,3 @@
-export { ConcurrencyManager } from "./concurrency"
 export {
   BG_HANDLE_FILE_PREFIX,
   type BgHandle,

@@ -8,7 +8,6 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
 import { _resetTaskToastManagerForTesting, initTaskToastManager } from "../../../src/features/task-toast-manager/manager"
-import type { ConcurrencyManager } from "../../../src/features/background-agent/concurrency"
 import { MIN_IDLE_TIME_MS } from "../../../src/features/background-agent/constants"
 import { writeHandle } from "../../../src/features/background-agent/handle-index"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
@@ -191,10 +190,6 @@ function createBackgroundManager(): BackgroundManager {
     model: { list: async () => [] },
   }
   return new BackgroundManager({ ...native, directory: tmpdir() } as unknown as MatrixxContext)
-}
-
-function getConcurrencyManager(manager: BackgroundManager): ConcurrencyManager {
-  return (manager as unknown as { concurrencyManager: ConcurrencyManager }).concurrencyManager
 }
 
 function getTaskMap(manager: BackgroundManager): Map<string, BackgroundTask> {
