@@ -7,7 +7,7 @@
  * and passed in as data, so repeated runs over the same input replay identically.
  */
 
-import { context7 } from "./context7"
+import { buildContext7Entry } from "./context7"
 import { document_reader } from "./document-reader"
 import type { McpCreationFailure } from "./mcp-validator"
 
@@ -31,6 +31,8 @@ export interface BuildBuiltinMcpEntriesInput {
   disabledMcps?: string[]
   /** Resolved by the caller (e.g. `isCommandAvailable("uvx")`); never spawned here. */
   uvxAvailable: boolean
+  /** Resolved by the caller from `process.env.CONTEXT7_API_KEY` at the edge; never read here. */
+  context7ApiKey?: string
 }
 
 export interface BuildBuiltinMcpEntriesResult {
@@ -53,7 +55,7 @@ export function buildBuiltinMcpEntries(
   const failures: McpCreationFailure[] = []
 
   if (!disabledMcps.includes("context7")) {
-    entries.context7 = context7
+    entries.context7 = buildContext7Entry({ context7ApiKey: input.context7ApiKey || undefined })
   }
 
   if (!disabledMcps.includes("document_reader")) {

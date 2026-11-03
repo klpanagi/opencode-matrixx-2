@@ -1,5 +1,6 @@
 import type { MatrixxConfig } from "../config";
 import { buildBuiltinMcpEntries } from "../mcps";
+import { buildMcpStartupNotice } from "../mcps/mcp-startup-notice";
 import { setMcpStartupFailures } from "../mcps/mcp-startup-state";
 import { isCommandAvailable } from "../mcps/mcp-validator";
 import { log } from "../shared";
@@ -37,9 +38,11 @@ export async function applyMcpConfig(params: {
   const userDisabledMcps = captureUserDisabledMcps(userMcp);
 
   // Capability resolved once at the edge; the builder itself never spawns.
+  const context7ApiKey = process.env.CONTEXT7_API_KEY || undefined;
   const { entries: builtinMcps, failures } = buildBuiltinMcpEntries({
     disabledMcps,
     uvxAvailable: isCommandAvailable("uvx"),
+    context7ApiKey,
   });
 
   const merged = {
@@ -65,6 +68,8 @@ export async function applyMcpConfig(params: {
       .join("; ");
     log(`[mcp-config] MCP startup issues detected: ${summary}`, failures);
     setMcpStartupFailures(failures);
+    const notice = buildMcpStartupNotice(failures);
+    if (notice) log(notice);
   }
 
   params.config.mcp = merged;
