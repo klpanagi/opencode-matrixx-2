@@ -102,4 +102,48 @@ describe("createAutoUpdateCheckerHook", () => {
 
     delete process.env.OPENCODE_CLI_RUN_MODE
   })
+  it("surfaces the MCP startup notice on session.created when uvx is missing", async () => {
+    //#given - uvx-missing failure in startup state with a captured notify sink
+    const { _resetMcpStartupFailuresForTesting, setMcpStartupFailures } = await import(
+      "../../../src/mcps/mcp-startup-state"
+    )
+    const { resetNotifySink, setNotifySink } = await import("../../../src/shared/notify")
+    const seen: Array<{ level: string; message: string }> = []
+    setNotifySink((level, message) => {
+      seen.push({ level, message: String(message) })
+    })
+    setMcpStartupFailures([
+      {
+        name: "document_reader",
+        error:
+          "uvx (uv package manager) not found in PATH. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh",
+      },
+    ])
+    const hook = createAutoUpdateCheckerHook(
+      {
+        directory: "/test",
+        client: {} as never,
+      } as never,
+      { showStartupToast: true, isMorpheusEnabled: false, autoUpdate: false }
+    )
+
+    try {
+      //#when - session.created event arrives
+      hook.event({
+        type: "session.created",
+        data: { info: { parentID: undefined } },
+      } as never)
+      await new Promise((resolve) => setTimeout(resolve, 25))
+
+      //#then - notify sink received the uvx warning with the install fix
+      const mcpNotices = seen.filter((entry) => entry.message.includes("mcp-startup"))
+      expect(mcpNotices).toHaveLength(1)
+      expect(mcpNotices[0]?.level).toBe("warn")
+      expect(mcpNotices[0]?.message ?? "").toContain("uvx")
+      expect(mcpNotices[0]?.message ?? "").toContain("astral.sh/uv/install.sh")
+    } finally {
+      _resetMcpStartupFailuresForTesting()
+      resetNotifySink()
+    }
+  })
 })

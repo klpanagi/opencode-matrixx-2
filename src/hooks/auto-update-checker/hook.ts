@@ -4,6 +4,7 @@ import { getCachedVersion, getLocalDevVersion } from "./checker"
 import { runBackgroundUpdateCheck } from "./hook/background-update-check"
 import { showConfigErrorsIfAny } from "./hook/config-errors-toast"
 import { updateAndShowConnectedProvidersCacheStatus } from "./hook/connected-providers-status"
+import { showMcpStartupNoticeIfAny } from "./hook/mcp-startup-toast"
 import { showModelCacheWarningIfNeeded } from "./hook/model-cache-warning"
 import { showLocalDevToast, showVersionToast } from "./hook/startup-toasts"
 import type { AutoUpdateCheckerOptions } from "./types"
@@ -36,6 +37,7 @@ export function createAutoUpdateCheckerHook(ctx: MatrixxContext, options: AutoUp
       hasChecked = true
 
       setTimeout(async () => {
+        showMcpStartupNoticeIfAny().catch((err) => { log("[auto-update-checker] MCP startup notice failed:", err) })
         const cachedVersion = getCachedVersion()
         const localDevVersion = getLocalDevVersion(ctx.directory)
         const displayVersion = localDevVersion ?? cachedVersion
