@@ -91,7 +91,7 @@ task(
 Research documentation and knowledge base files related to: <CURRENT_LEAD>
 
 Read AGENTS.md files, README.md, doc/ directories, and inline documentation.
-For library/framework docs delegate via task(operator) for context7 resolve→query (resolve-library-id then query-docs); do NOT call context7 or websearch directly.
+For library/framework docs delegate via task(operator) for context7 resolve→query (context7_resolve-library-id then context7_query-docs); do NOT call context7 or websearch directly.
 
 OUTPUT: Structured findings from docs with source attribution.
 Flag any claims that contradict other sources.
