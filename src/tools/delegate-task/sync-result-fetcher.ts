@@ -94,7 +94,8 @@ export async function fetchSyncResult(
   const assistantMessages = messagesAfterAnchor
     .filter((m) => isAssistant(m))
     .sort((a, b) => timeOf(b) - timeOf(a))
-  const lastMessage = assistantMessages[0]
+  const lastMessage =
+    assistantMessages.find((m) => messageText(m).length > 0) ?? assistantMessages[0]
 
   if (anchorMessageCount !== undefined && !lastMessage) {
     return {
