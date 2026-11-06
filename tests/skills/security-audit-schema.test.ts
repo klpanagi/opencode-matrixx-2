@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import {
   FindingSchema,
   LedgerSchema,
-} from "../../src/skills/schemas/security-audit"
+} from "../../src/skills/loader/schemas/security-audit"
 
 const validEvidence = {
   root_cause: "unsanitized input flows to query sink",

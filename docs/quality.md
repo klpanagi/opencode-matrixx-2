@@ -393,7 +393,7 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 
 #### Agent Architecture
 
-| The `bdd-contract` skill follows the **Cipher template** (see `src/skills/skills/bdd-contract.ts`): |
+| The `bdd-contract` skill follows the **Cipher template** (see `src/skills/builtin/bdd-contract.ts`): |
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -584,7 +584,7 @@ src/
 │   └── bdd-pipeline/          ← bdd_pipeline_run tool (pipeline-runner, subagent-runner, feature-resolver, analysis-report)
 ├── agents/
 │   ├── morpheus.ts            ← Matrixx orchestrator (runs bdd-tests, bdd-frontend, bdd-backend)
-├── skills/skills/
+├── skills/builtin/bdd/
 │   ├── bdd-contract.ts        ← BDD contract skill (template prompt)
 │   ├── bdd-tests.ts           ← BDD tests skill
 │   ├── bdd-frontend.ts        ← BDD frontend skill
@@ -734,7 +734,7 @@ Scenario: Successful login redirects to dashboard
 
 ### Layer 2: tdd-enforcer — Execution Enforcement
 
-The `tdd-enforcer` skill (`src/skills/skills/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
+The `tdd-enforcer` skill (`src/skills/builtin/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
 
 #### Prime Directive
 
@@ -788,7 +788,7 @@ Before marking task DONE:
 
 ### Pipeline Integration
 
-TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/skills/software-dev.ts`):
+TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/builtin/software-dev.ts`):
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

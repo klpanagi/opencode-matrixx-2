@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { softwareDevSkill } from "../../src/skills/skills/core/software-dev"
+import { softwareDevSkill } from "../../src/skills/builtin/core/software-dev"
 
 describe("software-dev progress ledger + rulings-not-stalls (Item 4 workflow prose)", () => {
   test("template contains gitignored ledger path", () => {

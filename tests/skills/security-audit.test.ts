@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { createBuiltinSkills } from "../../src/skills/skills"
-import { SECURITY_AUDIT_SKILL_NAME, securityAuditSkill } from "../../src/skills/skills/security/security-audit"
+import { createBuiltinSkills } from "../../src/skills/loader/factories"
+import { SECURITY_AUDIT_SKILL_NAME, securityAuditSkill } from "../../src/skills/builtin/security/security-audit"
 
 describe("security-audit skill", () => {
   test("factory registers skill via lazy wrapper", () => {

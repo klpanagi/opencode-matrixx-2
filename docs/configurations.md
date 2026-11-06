@@ -593,7 +593,7 @@ For more details, see the [OpenCode Server documentation](https://opencode.ai/do
 
 ## Git Master
 
-The `git-master` skill (`src/skills/skills/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
+The `git-master` skill (`src/skills/builtin/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
 
 ## Morpheus Agent
 

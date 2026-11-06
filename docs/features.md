@@ -58,8 +58,8 @@ All non-browser built-in skills use **lazy template resolution**. Skill factorie
 
 **Files:**
 
-- `src/skills/lazy-skill-helper.ts` — `createLazyTemplateSkill()` factory + cache.
-- `src/skills/skills.ts` — wraps all non-browser skill loaders via the helper (`BROWSER_SKILL_NAMES`, eager `browserSkillName` resolution, `lazySkillNames` filter).
+- `src/skills/loader/lazy-skill-helper.ts` — `createLazyTemplateSkill()` factory + cache.
+- `src/skills/loader/factories.ts` — wraps all non-browser skill loaders via the helper (`BROWSER_SKILL_NAMES`, eager `browserSkillName` resolution, `lazySkillNames` filter).
 
 **Note:** Custom (project / user) skills loaded via the opencode-skill-loader are NOT affected — they already use the async `LazyContentLoader` pattern for their markdown bodies.
 
@@ -106,7 +106,7 @@ The `delegate_task` tool accepts an optional `complexity` field (1-5 or `"auto"`
 
 **Trigger**: Any browser-related request
 
-Matrixx provides browser automation providers, configurable via `browser_automation_engine.provider` (eagerly resolved at init — see `browserSkillName` in `src/skills/skills.ts`):
+Matrixx provides browser automation providers, configurable via `browser_automation_engine.provider` (eagerly resolved at init — see `browserSkillName` in `src/skills/loader/factories.ts`):
 
 #### Option 1: Playwright MCP (Default)
 

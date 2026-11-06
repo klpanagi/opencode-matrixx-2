@@ -66,7 +66,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 
 ### Built-in Skills (50 total)
 
-50 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/skills/` and load via `createBuiltinSkills()`.
+50 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/builtin/` and load via `createBuiltinSkills()`.
 
 **Development & Tools (6):**
 - **`git-master`** — Git expert. Detects commit styles, splits atomic commits, rebase strategies.
@@ -82,7 +82,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 - **`agent-browser`** — Agent-controlled browser automation.
 - **`frontend-ui-ux`** — Designer mindset. Color, typography, motion guidelines.
 
-Skill counts, honest version: **50** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **66** files in `src/skills/skills/` (65 skill modules + `index.ts`). The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `document-reader`).
+Skill counts, honest version: **50** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **66** files in `src/skills/builtin/` (65 skill modules + `index.ts`). The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `document-reader`).
 
 **DSL Engineering (11):**
 - **`dsl-core`**, **`dsl-grammar`**, **`dsl-codegen`**, **`dsl-metamodel`**, **`dsl-tooling`**

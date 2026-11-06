@@ -1,6 +1,6 @@
 import { denyActions } from "../shared/agent/permission-compat"
-import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../skills/skills/core/resilience-failure-hunting"
-import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../skills/skills/market-data/market-data-robustness-review"
+import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../skills/builtin/core/resilience-failure-hunting"
+import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../skills/builtin/market-data/market-data-robustness-review"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 import { isGptModel } from "./types"
