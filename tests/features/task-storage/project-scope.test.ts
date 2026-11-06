@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { tmpdir } from "node:os"
 import { getProjectTaskDir, getTaskDir, listTaskFiles, migrateLegacyTasksIfNeeded, sanitizePathSegment, resolveTaskListId } from "../../../src/features/task-storage/storage"
 import type { MatrixxConfig } from "../../../src/config/schema"
-import { getOpenCodeConfigDir } from "../../../src/shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../src/shared/config/opencode-config-dir"
 import { TaskObjectSchema } from "../../../src/tools/task/types"
 
 function tmpDir(prefix: string): string {

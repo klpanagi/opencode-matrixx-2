@@ -1,5 +1,5 @@
 import type { EvolutionCompressorConfig } from "../../../config/schema/evolution";
-import { log } from "../../../shared/logger";
+import { log } from "../../../shared/runtime/logger";
 import { KnowledgeKindSchema, normalizeKnowledgeKind } from "../schema";
 import { type CompressionInput, type DistilledKnowledge, type KnowledgeKind, type TraceRecord, UNSCOPED_LEGACY } from "../types";
 import type { CompressionResult, Compressor, LlmCall, LlmResponse, LlmUsage } from "./interface";

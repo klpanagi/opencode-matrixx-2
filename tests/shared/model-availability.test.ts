@@ -17,7 +17,7 @@ beforeAll(async () => {
     fuzzyMatchModel,
     isModelAvailable,
     getConnectedProviders,
-  } = await import("../../src/shared/model-availability"))
+  } = await import("../../src/shared/model/model-availability"))
 })
 
 describe("fetchAvailableModels", () => {

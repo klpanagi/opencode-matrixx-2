@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { bindSafeHook } from "../../src/shared/safe-create-hook"
+import { bindSafeHook } from "../../src/shared/agent/safe-create-hook"
 
 describe("bindSafeHook", () => {
   test("passes factory result through when enabled", () => {

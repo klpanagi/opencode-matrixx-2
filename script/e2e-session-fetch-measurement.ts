@@ -55,19 +55,19 @@ mkdirSync(join(process.env.XDG_DATA_HOME, "opencode"), { recursive: true })
 await Bun.write(join(process.env.XDG_DATA_HOME, "opencode", "opencode.db"), "")
 
 const { mock } = await import("bun:test")
-mock.module("../src/shared/opencode-storage-detection", () => ({
+mock.module("../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => true,
   resetSqliteBackendCache: () => {},
 }))
 
-const { createToolExecuteBeforeHandler } = await import("../src/plugin/tool-execute-before")
-const { createToolExecuteAfterHandler } = await import("../src/plugin/tool-execute-after")
+const { createToolExecuteBeforeHandler } = await import("../src/plugin/tool/tool-execute-before")
+const { createToolExecuteAfterHandler } = await import("../src/plugin/tool/tool-execute-after")
 const { createOracleMdOnlyHook } = await import("../src/hooks/oracle-md-only/hook")
 const { createNiobeHook } = await import("../src/hooks/niobe/index")
 // PR #157 adds this module; it does not exist at the merge base, so the import
 // is optional and the script runs unmodified on both revisions.
 const { invalidateSdkMessageCache } = await import(
-  "../src/features/hook-message-injector/sdk-message-cache" as string
+  "../src/features/context-injection/hook-bridge" as string
 ).catch(() => ({ invalidateSdkMessageCache: null }))
 const { _resetForTesting, setSessionAgent } = await import("../src/features/session-state/state")
 const { createPlanCreateTool } = await import("../src/tools/plan/plan-create")

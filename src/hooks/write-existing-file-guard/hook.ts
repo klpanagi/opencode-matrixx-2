@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { isAbsolute, join, normalize, resolve, sep } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 
 import { log } from "../../shared"
 

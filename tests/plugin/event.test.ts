@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
 import type { DomainHooks } from "../../src/plugin/setup-domains"
 import type { DomainManagers } from "../../src/plugin/setup-domains"
-import { createEventHandler } from "../../src/plugin/event"
-import type { V2Event } from "../../src/plugin/context"
-import type { MatrixxContext } from "../../src/plugin/context"
+import { createEventHandler } from "../../src/plugin/tool/event"
+import type { V2Event } from "../../src/plugin/tool/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 
 type EventInput = V2Event
 

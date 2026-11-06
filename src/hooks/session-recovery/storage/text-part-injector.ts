@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { isSqliteBackend, log, patchPart } from "../../../shared"
-import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
 import { PART_STORAGE } from "../constants"
 import type { StoredTextPart } from "../types"
 import { generatePartId } from "./part-id"

@@ -1,4 +1,4 @@
-import { allowActionsOnly } from "../shared/permission-compat"
+import { allowActionsOnly } from "../shared/agent/permission-compat"
 import { type AgentConfig, parseModelRef } from "./agent-config"
 import type { AgentMode, AgentPromptMetadata } from "./types"
 

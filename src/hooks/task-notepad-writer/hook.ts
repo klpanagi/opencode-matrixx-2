@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { TaskObjectSchema } from "../../tools/task/types"
 import {
   COMPLETED_STATUS,

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, spyOn, test } from "bun:test"
-import * as shared from "../../src/shared/logger"
-import { safeCreateHook } from "../../src/shared/safe-create-hook"
+import * as shared from "../../src/shared/runtime/logger"
+import { safeCreateHook } from "../../src/shared/agent/safe-create-hook"
 
 afterEach(() => {
   ;(shared.log as { mockRestore?: () => void })?.mockRestore?.()

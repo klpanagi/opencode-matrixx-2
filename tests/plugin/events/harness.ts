@@ -1,8 +1,8 @@
 import type { MatrixxConfig } from "../../../src/config"
-import { createEventHandler } from "../../../src/plugin/event"
-import type { V2Event } from "../../../src/plugin/context"
+import { createEventHandler } from "../../../src/plugin/tool/event"
+import type { V2Event } from "../../../src/plugin/tool/context"
 import type { DomainHooks, DomainManagers } from "../../../src/plugin/setup-domains"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 
 export type EventInput = V2Event
 type EventFn = (event: V2Event) => Promise<void>

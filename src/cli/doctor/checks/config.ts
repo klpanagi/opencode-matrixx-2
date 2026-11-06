@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { MatrixxConfigSchema } from "../../../config/schema/matrixx-config"
-import { detectConfigFile, parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../shared/config/opencode-config-dir"
+import { detectConfigFile, parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 import type { CheckResult, DoctorCheck } from "../types"
 
 function findConfigs(): Array<{ base: string; path: string; format: string; content: string }> {

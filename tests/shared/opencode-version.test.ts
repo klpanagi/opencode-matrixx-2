@@ -8,7 +8,7 @@ import {
   parseVersion,
   resetVersionCache,
   setVersionCache,
-} from "../../src/shared/opencode-version"
+} from "../../src/shared/config/opencode-version"
 
 describe("opencode-version", () => {
   describe("parseVersion", () => {

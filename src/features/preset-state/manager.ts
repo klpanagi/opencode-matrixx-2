@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 
 const HOOK_NAME = "preset-state"
 

@@ -1,5 +1,5 @@
-import { log } from "../../shared/logger"
-import { notify } from "../../shared/notify"
+import { log } from "../../shared/runtime/logger"
+import { notify } from "../../shared/runtime/notify"
 import type { AutoRetryHelpers } from "./auto-retry"
 import { HOOK_NAME } from "./constants"
 import { prepareFallback } from "./fallback-state"

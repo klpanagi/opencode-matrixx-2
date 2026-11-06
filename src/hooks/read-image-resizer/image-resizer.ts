@@ -1,5 +1,5 @@
 import { log } from "../../shared"
-import { getErrorMessage } from "../../shared/error-formatting"
+import { getErrorMessage } from "../../shared/text/error-formatting"
 import { extractBase64Data } from "../../tools/look-at/mime-type-inference"
 import { resizeImageFallback } from "./png-fallback-resizer"
 import type { ImageDimensions, ResizeResult } from "./types"

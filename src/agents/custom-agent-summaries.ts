@@ -1,5 +1,5 @@
-import { isRecord } from "../shared/record-type-guard"
-import { truncateDescription } from "../shared/truncate-description"
+import { truncateDescription } from "../shared/compaction/truncate-description"
+import { isRecord } from "../shared/runtime/record-type-guard"
 import type { AgentPromptMetadata } from "./types"
 
 type RegisteredAgentSummary = {

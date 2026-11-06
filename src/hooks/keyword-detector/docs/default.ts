@@ -11,7 +11,7 @@
  * triggers, no init-time checks.
  */
 
-import { escapeRegExp } from "../../../shared/escape-regexp"
+import { escapeRegExp } from "../../../shared/text/escape-regexp"
 import { DOC_INTENT_TRIGGERS } from "../../docs-lookup-guard/constants"
 
 // docs-suppresses-search pattern: exact DOC_INTENT_TRIGGERS phrases.

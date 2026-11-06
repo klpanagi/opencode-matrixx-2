@@ -6,19 +6,19 @@ import {
   findNearestMessageWithFields,
   findNearestMessageWithFieldsFromSDK,
   type ToolPermission,
-} from "../../features/hook-message-injector"
+} from "../../features/context-injection/hook-bridge"
 import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"
 import { stateRootFromPluginContext } from "../../shared"
-import { getAgentConfigKey } from "../../shared/agent-display-names"
-import { isAwaitingUser } from "../../shared/awaiting-user"
-import { log } from "../../shared/logger"
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import { getMessageDir } from "../../shared/opencode-message-dir"
-import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { resolveTasksConfig } from "../../shared/task-system-gating"
+import { getAgentConfigKey } from "../../shared/agent/agent-display-names"
+import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
+import { resolveTasksConfig } from "../../shared/config/task-system-gating"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import { log } from "../../shared/runtime/logger"
+import { isAwaitingUser } from "../../shared/session/awaiting-user"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { TaskObjectSchema } from "../../tools/task/types"
 import {
   CONTINUATION_COOLDOWN_MS,

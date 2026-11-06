@@ -11,9 +11,9 @@ import {
   writeMissionState,
 } from "../../features/mission-state"
 import { updateSessionAgent } from "../../features/session-state/state"
-import type { MatrixxContext } from "../../plugin/context"
-import { log } from "../../shared/logger"
-import { stateRootFromPluginContext } from "../../shared/state-root"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { log } from "../../shared/runtime/logger"
+import { stateRootFromPluginContext } from "../../shared/session/state-root"
 import { classifyPlans, formatPlanListLine } from "./plan-filter"
 
 export const HOOK_NAME = "start-work" as const

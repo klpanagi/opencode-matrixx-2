@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createBuiltinSkills } from "../../src/skills/skills"
+import { createBuiltinSkills } from "../../src/skills/loader/factories"
 
 const skills = createBuiltinSkills()
 

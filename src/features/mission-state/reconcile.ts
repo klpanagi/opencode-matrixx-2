@@ -12,7 +12,7 @@
 import { existsSync, mkdirSync, renameSync, statSync } from "node:fs"
 import { basename, join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { parsePlanFrontMatter } from "../plan-contract/front-matter"
 import { getTaskDir, listTaskFiles, readJsonSafe } from "../task-storage/storage"
 import { TaskSchema } from "../task-storage/types"

@@ -7,14 +7,14 @@ import { join } from "node:path"
 const TEST_STORAGE = join(tmpdir(), `matrixx-msgdir-test-${randomUUID()}`)
 const TEST_MESSAGE_STORAGE = join(TEST_STORAGE, "message")
 
-mock.module("../../src/shared/opencode-storage-paths", () => ({
+mock.module("../../src/shared/config/opencode-storage-paths", () => ({
   OPENCODE_STORAGE: TEST_STORAGE,
   MESSAGE_STORAGE: TEST_MESSAGE_STORAGE,
   PART_STORAGE: join(TEST_STORAGE, "part"),
   SESSION_STORAGE: join(TEST_STORAGE, "session"),
 }))
 
-mock.module("../../src/shared/opencode-storage-detection", () => ({
+mock.module("../../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
   resetSqliteBackendCache: () => {},
 }))
@@ -23,7 +23,7 @@ afterAll(() => {
   mock.restore()
 })
 
-const { getMessageDir } = await import("../../src/shared/opencode-message-dir")
+const { getMessageDir } = await import("../../src/shared/opencode/opencode-message-dir")
 
 describe("getMessageDir", () => {
   beforeEach(() => {

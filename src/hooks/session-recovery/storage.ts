@@ -1,4 +1,4 @@
-export { getMessageDir } from "../../shared/opencode-message-dir"
+export { getMessageDir } from "../../shared/opencode/opencode-message-dir"
 export {
   findEmptyMessageByIndex,
   findEmptyMessages,

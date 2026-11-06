@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatLocation } from "./lsp-formatters"
 import type { Location, LocationLink } from "./types"

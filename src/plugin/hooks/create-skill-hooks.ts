@@ -1,9 +1,9 @@
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import type { HookName } from "../../config"
 import { createAutoSlashCommandHook, createCategorySkillReminderHook } from "../../hooks"
-import { bindSafeHook } from "../../shared/safe-create-hook"
+import { bindSafeHook } from "../../shared/agent/safe-create-hook"
 import type { BuiltinSkill } from "../../skills"
-import type { MatrixxContext } from "../context"
+import type { MatrixxContext } from "../tool/context"
 
 export type SkillHooks = {
   categorySkillReminder: ReturnType<typeof createCategorySkillReminderHook> | null

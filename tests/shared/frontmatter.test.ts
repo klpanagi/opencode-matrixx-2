@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { parseFrontmatter } from "../../src/shared/frontmatter"
+import { parseFrontmatter } from "../../src/shared/io/frontmatter"
 
 describe("parseFrontmatter", () => {
   // #region backward compatibility

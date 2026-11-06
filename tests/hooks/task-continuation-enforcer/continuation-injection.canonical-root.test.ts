@@ -2,7 +2,7 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 

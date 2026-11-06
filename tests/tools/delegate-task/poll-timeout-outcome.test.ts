@@ -6,7 +6,7 @@ import {
   isPollTimeoutOutcome,
   LAST_ASSISTANT_TEXT_CAP,
   POLL_TIMEOUT_PREFIX,
-} from "../../../src/shared/poll-timeout-outcome"
+} from "../../../src/shared/outcome/poll-timeout-outcome"
 
 // Mirrors the TIMEOUT_ERROR constant in sync-task.test.ts:
 // `Poll timeout reached after 600000ms for session test-session-abc`

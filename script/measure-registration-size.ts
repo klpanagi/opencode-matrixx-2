@@ -13,7 +13,7 @@ import {
 import {
   MAX_MERGED_CHARS,
   MAX_PER_SOURCE_CHARS,
-} from "../src/features/context-injector/collector";
+} from "../src/features/context-injection/injector";
 
 function dirSize(dir: string): number {
   let total = 0;

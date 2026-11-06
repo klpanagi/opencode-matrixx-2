@@ -6,7 +6,7 @@ import { join } from "node:path"
 // process-wide, so captured calls also forward to the real file.
 const LOG_FILE = join(tmpdir(), "matrixx.log")
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../../src/config"
-import * as loggerModule from "../../../src/shared/logger"
+import * as loggerModule from "../../../src/shared/runtime/logger"
 import { SessionCategoryRegistry } from "../../../src/hooks/runtime-fallback/session-category-registry"
 
 type RuntimeFallbackModule = typeof import("../../../src/hooks/runtime-fallback/hook")
@@ -24,7 +24,7 @@ describe("runtime-fallback", () => {
 
     const cacheBuster = `${Date.now()}-${Math.random()}`
 
-    mock.module("../../../src/shared/logger", () => ({
+    mock.module("../../../src/shared/runtime/logger", () => ({
       ...loggerModule,
       log: (msg: string, data?: unknown) => {
         logCalls.push({ msg, data })

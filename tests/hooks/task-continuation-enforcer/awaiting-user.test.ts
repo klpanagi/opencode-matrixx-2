@@ -2,11 +2,11 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { injectContinuation } from "../../../src/hooks/task-continuation-enforcer/continuation-injection"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 // ASSUMPTION (discovery audit 2026-09-11, .matrixx/notepads/fix-task-continuation-hijack/learnings.md):
 // No awaiting-user signal exists in source (rg for awaiting hits only unrelated

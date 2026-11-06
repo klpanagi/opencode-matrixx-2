@@ -1,6 +1,6 @@
 import type { ExperimentalConfig } from "../config/schema"
-import type { MatrixxContext } from "../plugin/context"
-import { createDynamicTruncator } from "../shared/dynamic-truncator"
+import type { MatrixxContext } from "../plugin/tool/context"
+import { createDynamicTruncator } from "../shared/compaction/dynamic-truncator"
 
 const DEFAULT_MAX_TOKENS = 50_000 // ~200k chars
 const WEBFETCH_MAX_TOKENS = 10_000 // ~40k chars - web pages need aggressive truncation

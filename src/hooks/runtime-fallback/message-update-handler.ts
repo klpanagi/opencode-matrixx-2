@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import type { AutoRetryHelpers } from "./auto-retry"
 import { HOOK_NAME } from "./constants"
 import { classifyErrorType, containsErrorContent, extractAutoRetrySignal, extractErrorName, extractStatusCode, isRetryableError } from "./error-classifier"

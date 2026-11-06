@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test"
-import { clearSessionTools, getSessionTools, setSessionTools } from "../../src/shared/session-state"
+import { clearSessionTools, getSessionTools, setSessionTools } from "../../src/shared/session/session-state"
 
 describe("session-tools-store", () => {
   beforeEach(() => {

@@ -1,9 +1,9 @@
 import { z } from "zod"
 import { log } from "../../shared"
-import { isRecord } from "../../shared/record-type-guard"
-import type { SessionDomainLike } from "../../shared/session-facade"
-import { unwrapList } from "../../shared/unwrap-list"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { isRecord } from "../../shared/runtime/record-type-guard"
+import { unwrapList } from "../../shared/runtime/unwrap-list"
+import type { SessionDomainLike } from "../../shared/session/session-facade"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 type SessionCleanupSession = SessionDomainLike & {
   remove?(input: { sessionID: string }): Promise<unknown>

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { isSyntheticMessage } from "../../../src/features/session-memory/constants"
 import { isSyntheticCandidate } from "../../../src/features/session-memory/recall"
-import { sanitizeKnownTags } from "../../../src/shared/system-directive"
+import { sanitizeKnownTags } from "../../../src/shared/text/system-directive"
 
 describe("session-memory synthetic gate — shared-backed passthrough", () => {
   test("drops true synthetic prefixes", () => {

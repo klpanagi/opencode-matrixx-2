@@ -1,3 +1,9 @@
+/** Evolution layer cross-link (orchestration vs triggers vs actions):
+ * - Actions: this module (`tools/evolution`) exposes agent-callable tools on the evolution store.
+ * - Orchestration: `features/evolution/` owns the pipeline, store, and writer.
+ * - Triggers: `hooks/evolution-hitl`, `hooks/evolution-watcher`, `hooks/evolution-compressor`,
+ *   `hooks/evolution-quality-gate` observe session/tool events and feed the pipeline.
+ */
 export {
   AUDIT_TAIL_LIMIT,
   EVOLUTION_DESCRIPTION,

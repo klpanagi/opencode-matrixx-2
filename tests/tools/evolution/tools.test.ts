@@ -3,8 +3,8 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { MatrixxContext } from "../../../src/plugin/context";
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
+import type { MatrixxContext } from "../../../src/plugin/tool/context";
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool";
 import { createEvolutionTool } from "../../../src/tools/evolution/tools";
 
 function makeCtx(directory: string): MatrixxContext {

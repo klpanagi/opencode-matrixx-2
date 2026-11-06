@@ -139,7 +139,7 @@ describe("plan-tool binding — tool registry presence", () => {
   test("planToolsRecord in tool-catalog includes plan_read and plan_tasks", () => {
     //#given — read the tool-catalog source and verify the record construction
     const registrySource = readFileSync(
-      repoPath("src/plugin/tool-catalog.ts"),
+      repoPath("src/plugin/tool/tool-catalog.ts"),
       "utf8",
     )
 

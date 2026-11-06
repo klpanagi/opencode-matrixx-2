@@ -1,7 +1,7 @@
 import { existsSync, unlinkSync } from "node:fs"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { resolveDirectory, validatePlanFilePath } from "./types"
 
 export function createPlanDeleteTool(ctx?: MatrixxContext): MatrixxToolDefinition {

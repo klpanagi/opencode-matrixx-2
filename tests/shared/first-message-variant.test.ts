@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createFirstMessageVariantGate } from "../../src/shared/first-message-variant"
+import { createFirstMessageVariantGate } from "../../src/shared/session/first-message-variant"
 
 describe("createFirstMessageVariantGate", () => {
   test("marks new sessions and clears after apply", () => {

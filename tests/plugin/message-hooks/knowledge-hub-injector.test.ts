@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import * as path from "node:path"
-import { ContextCollector } from "../../../src/features/context-injector"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import { ContextCollector } from "../../../src/features/context-injection/injector"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   _resetKnowledgeHubInjectorForTesting,
   applyKnowledgeHubInjector,
@@ -11,7 +11,7 @@ import {
   registerKnowledgeHubInjector,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/knowledge-hub-injector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 const INDEX_MARKER = "ROUTER-INDEX-CONTENT-abc123"
 const CORPUS_MARKER = "CORPUS-SECRET-CONTENT-xyz789"

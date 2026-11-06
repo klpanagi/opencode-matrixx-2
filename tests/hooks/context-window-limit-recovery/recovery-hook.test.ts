@@ -26,7 +26,7 @@ mock.module("../../../src/hooks/context-window-limit-recovery/parser", () => ({
   parseTokenLimitError: parseAnthropicTokenLimitErrorMock,
 }))
 
-mock.module("../../../src/shared/logger", () => ({
+mock.module("../../../src/shared/runtime/logger", () => ({
   // Transparent from birth: forward to the real log file (same format as
   // src/shared/logger.ts) instead of swallowing, so later suites that assert
   // on /tmp/matrixx.log keep working. Never references the mocked module.

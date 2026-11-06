@@ -1,6 +1,6 @@
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log, notifyInjection } from "../../shared"
-import { isSystemDirective, sanitizeKnownTags } from "../../shared/system-directive"
+import { isSystemDirective, sanitizeKnownTags } from "../../shared/text/system-directive"
 import { DOMAIN_HINT_MARKER } from "./constants"
 import { buildDomainHint, detectDomainSkills } from "./detector"
 

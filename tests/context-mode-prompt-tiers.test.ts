@@ -16,7 +16,7 @@ import {
   _resetContextModeEnforcementForTesting,
   _setCtxToolsForTesting,
   _setDisciplinePathForTesting,
-} from "../src/shared/context-mode-enforcement"
+} from "../src/shared/policy/context-mode-enforcement"
 
 const FULL_TEXT = "### Context Discipline (ALWAYS)"
 

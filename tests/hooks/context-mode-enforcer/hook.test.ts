@@ -7,7 +7,7 @@ import { resolve } from "node:path"
 import type { MatrixxConfig } from "../../../src/config"
 import { BLOCK_MESSAGE_GREP_GLOB } from "../../../src/hooks/context-mode-enforcer/constants"
 import { createContextModeEnforcerHook } from "../../../src/hooks/context-mode-enforcer/hook"
-import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/policy/context-mode-enforcement"
 
 const FAKE_PATH = "/nonexistent-fake/AGENTS.md"
 

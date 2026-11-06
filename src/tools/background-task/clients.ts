@@ -1,5 +1,5 @@
 import type { BackgroundManager, BackgroundTask } from "../../features/background-agent"
-import type { SessionMessage } from "../../shared/session-message"
+import type { SessionMessage } from "../../shared/session/session-message"
 
 export type BackgroundOutputMessage = SessionMessage
 

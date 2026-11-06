@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { getAgentDisplayName } from "../../src/shared/agent-display-names"
-import { AGENT_MODEL_REQUIREMENTS } from "../../src/shared/model-requirements"
+import { getAgentDisplayName } from "../../src/shared/agent/agent-display-names"
+import { AGENT_MODEL_REQUIREMENTS } from "../../src/shared/model/model-requirements"
 
 describe("Agent Config Integration", () => {
 

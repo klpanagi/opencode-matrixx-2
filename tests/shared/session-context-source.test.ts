@@ -3,7 +3,7 @@ import {
   fetchSessionMessages,
   messagesOf,
   type SessionContextCarrier,
-} from "../../src/shared/session-context-source"
+} from "../../src/shared/session/session-context-source"
 
 describe("messagesOf", () => {
   it("keeps a bare message array", () => {

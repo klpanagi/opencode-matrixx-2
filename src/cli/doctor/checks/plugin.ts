@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigPaths } from "../../../shared/opencode-config-dir"
-import { compareVersions } from "../../../shared/opencode-version"
+import { getOpenCodeConfigPaths } from "../../../shared/config/opencode-config-dir"
+import { compareVersions } from "../../../shared/config/opencode-version"
+import { parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 import type { CheckResult, DoctorCheck } from "../types"
 
 function checkOpenCodeVersion(): string | null {

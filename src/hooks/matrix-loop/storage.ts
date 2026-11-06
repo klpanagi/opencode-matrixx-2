@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { parseFrontmatter } from "../../shared/frontmatter"
+import { parseFrontmatter } from "../../shared/io/frontmatter"
 import { DEFAULT_COMPLETION_PROMISE, DEFAULT_MAX_ITERATIONS, DEFAULT_STATE_FILE } from "./constants"
 import type { MatrixLoopState } from "./types"
 

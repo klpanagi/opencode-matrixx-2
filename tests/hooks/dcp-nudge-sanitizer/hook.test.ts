@@ -17,7 +17,7 @@ type Part = {
   [key: string]: unknown
 }
 
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { createDcpNudgeSanitizerHook } from "../../../src/hooks/dcp-nudge-sanitizer/hook"
 
 type MessageWithParts = { info: Message; parts: Part[] }

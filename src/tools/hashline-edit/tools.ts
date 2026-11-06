@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolContext, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolContext, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { executeHashlineEditTool } from "./hashline-edit-executor"
 import type { RawHashlineEdit } from "./normalize-edits"
 import { HASHLINE_EDIT_DESCRIPTION } from "./tool-description"

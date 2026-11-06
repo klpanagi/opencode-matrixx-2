@@ -1,7 +1,7 @@
 declare const require: (name: string) => unknown
 const { describe, test, expect, beforeEach, afterEach, spyOn, mock } = require("bun:test")
 
-import * as logger from "../../../src/shared/logger"
+import * as logger from "../../../src/shared/runtime/logger"
 import type { ExecutorContext } from "../../../src/tools/delegate-task/executor-types"
 import { resolveSubagentExecution } from "../../../src/tools/delegate-task/subagent-resolver"
 import type { DelegateTaskArgs } from "../../../src/tools/delegate-task/types"

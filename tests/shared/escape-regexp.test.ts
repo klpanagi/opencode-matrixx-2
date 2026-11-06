@@ -2,7 +2,7 @@
 //#when escapeRegExp is applied
 //#then all regex metacharacters are backslash-escaped (snapshot)
 import { describe, expect, test } from "bun:test"
-import { escapeRegExp } from "../../src/shared/escape-regexp"
+import { escapeRegExp } from "../../src/shared/text/escape-regexp"
 
 describe("escapeRegExp golden", () => {
   test("escapes all metacharacters", () => {

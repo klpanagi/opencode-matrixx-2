@@ -1,8 +1,8 @@
-import type { MatrixxContext } from "../../plugin/context"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 
 import { log } from "../../shared"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
 import { BASH_BLOCK_MESSAGE, BINARY_EXTENSIONS, BLOCKED_PATTERNS, HOOK_NAME, READ_BLOCK_MESSAGE } from "./constants"
 
 function getFilePath(args: Record<string, unknown>): string | undefined {

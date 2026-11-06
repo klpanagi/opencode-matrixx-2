@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { type MatrixxConfig, MatrixxConfigSchema } from "../../config/schema/matrixx-config";
-import { deepMerge } from "../../shared/deep-merge";
-import { detectConfigFile, parseJsonc } from "../../shared/jsonc-parser";
-import { getOpenCodeConfigDir } from "../../shared/opencode-config-dir";
+import { deepMerge } from "../../shared/config/deep-merge";
+import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir";
+import { detectConfigFile, parseJsonc } from "../../shared/text/jsonc-parser";
 import type { SetupState } from "./types";
 
 export function resolveMatrixxConfigPath(): { format: "json" | "jsonc" | "none"; path: string } {

@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs"
 import * as path from "node:path"
 import type { KnowledgeHub } from "../../config/schema/knowledge"
-import { type ContextCollector, contextCollector } from "../../features/context-injector"
+import { type ContextCollector, contextCollector } from "../../features/context-injection/injector"
 import { expandHubPath } from "../../features/knowledge-hub/loader"
 import { getMainSessionID } from "../../features/session-state/state"
-import { createDynamicTruncator } from "../../shared/dynamic-truncator"
-import { notifyInjection } from "../../shared/injection-notifier"
-import { log } from "../../shared/logger"
-import { roleOf, type SessionMessage } from "../../shared/session-message"
-import type { MatrixxContext, V2Registration } from "../context"
+import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator"
+import { notifyInjection } from "../../shared/policy/injection-notifier"
+import { log } from "../../shared/runtime/logger"
+import { roleOf, type SessionMessage } from "../../shared/session/session-message"
+import type { MatrixxContext, V2Registration } from "../tool/context"
 
 const INDEX_MAX_TOKENS = 6000
 

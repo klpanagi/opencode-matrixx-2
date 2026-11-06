@@ -3,7 +3,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
 

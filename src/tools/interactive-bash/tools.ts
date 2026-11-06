@@ -1,6 +1,6 @@
 import { z } from "zod"
-import { log } from "../../shared/logger"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { log } from "../../shared/runtime/logger"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { BLOCKED_TMUX_SUBCOMMANDS, DEFAULT_TIMEOUT_MS, INTERACTIVE_BASH_DESCRIPTION } from "./constants"
 import { getCachedTmuxPath } from "./tmux-path-resolver"
 

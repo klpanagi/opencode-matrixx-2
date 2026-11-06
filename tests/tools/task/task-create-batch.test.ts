@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import * as loggerModule from "../../../src/shared/logger"
+import * as loggerModule from "../../../src/shared/runtime/logger"
 import { TaskCreateBatchInputSchema, TaskCreateInputSchema } from "../../../src/tools/task/types"
 
 type TaskCreateModule = typeof import("../../../src/tools/task/task-create")
@@ -56,7 +56,7 @@ describe("task_create batch support", () => {
     mock.restore()
     logCalls = []
 
-    mock.module("../../../src/shared/logger", () => ({
+    mock.module("../../../src/shared/runtime/logger", () => ({
       ...loggerModule,
       log: (msg: string, data?: unknown) => {
         logCalls.push({ msg, data })

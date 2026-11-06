@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "bun:test"
-import { deletePart, getServerBaseUrl, patchPart } from "../../src/shared/opencode-http-api"
+import { deletePart, getServerBaseUrl, patchPart } from "../../src/shared/opencode/opencode-http-api"
 
 // Mock fetch globally
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
 // Mock log
-vi.mock("../../src/shared/logger", () => ({
+vi.mock("../../src/shared/runtime/logger", () => ({
   log: vi.fn(),
 }))
 
-import { log } from "../../src/shared/logger"
+import { log } from "../../src/shared/runtime/logger"
 
 describe("getServerBaseUrl", () => {
   it("returns baseUrl from client._client.getConfig().baseUrl", () => {

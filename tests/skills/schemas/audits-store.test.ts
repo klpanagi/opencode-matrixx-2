@@ -15,8 +15,8 @@ import {
   RUN_METADATA_FILE,
   writeAuditFile,
   type AuditRunMetadata,
-} from "../../../src/skills/schemas/audits-store"
-import type { SecurityAuditFinding, SecurityAuditLedger } from "../../../src/skills/schemas/security-audit"
+} from "../../../src/skills/loader/schemas/audits-store"
+import type { SecurityAuditFinding, SecurityAuditLedger } from "../../../src/skills/loader/schemas/security-audit"
 
 const roots: string[] = []
 afterEach(() => {

@@ -7,7 +7,7 @@ import {
   hasCtxToolsForPrompts,
   isCtxToolsAvailable,
   setContextModeForPrompts,
-} from "../../src/shared/context-mode-enforcement"
+} from "../../src/shared/policy/context-mode-enforcement"
 import {
   BASH_ROUTED_MESSAGE,
   BLOCK_MESSAGE_GREP_GLOB,

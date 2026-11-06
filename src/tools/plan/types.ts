@@ -1,6 +1,6 @@
 import { basename, isAbsolute, join, relative, resolve } from "node:path"
 import { isAllowedFile } from "../../hooks/oracle-md-only/path-policy"
-import { stateRootFromToolContext } from "../../shared/state-root"
+import { stateRootFromToolContext } from "../../shared/session/state-root"
 import type { RawHashlineEdit } from "../hashline-edit/normalize-edits"
 import { PLAN_FILENAME_KEBAB_REGEX, PLANS_DIR } from "./constants"
 

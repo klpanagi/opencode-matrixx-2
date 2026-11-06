@@ -32,12 +32,12 @@ import { join } from "node:path"
 import { loadPluginConfig } from "../src/plugin-config"
 import { MatrixxConfigSchema } from "../src/config/schema"
 import { HOOK_NAME_MAP } from "../src/shared/migration/hook-names"
-import { createConfigHandler } from "../src/plugin-handlers/config-handler"
+import { createConfigHandler } from "../src/plugin/handlers/config-handler"
 import {
   bindTaskSystemDeprecationToast,
   resetTaskSystemDeprecationWarning,
   resolveTasksConfig,
-} from "../src/shared/task-system-gating"
+} from "../src/shared/config/task-system-gating"
 
 // Derived from the real migration map rather than hardcoded: every name the map
 // marks `null` is a recognized name with no surviving target, i.e. exactly the

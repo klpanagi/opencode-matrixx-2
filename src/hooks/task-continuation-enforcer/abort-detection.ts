@@ -1,4 +1,4 @@
-import { roleOf } from "../../shared/session-message"
+import { roleOf } from "../../shared/session/session-message"
 import type { MessageInfo } from "./types"
 
 export function isLastAssistantMessageAborted(

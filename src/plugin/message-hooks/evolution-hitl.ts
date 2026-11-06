@@ -8,7 +8,7 @@
  */
 
 import { applyEvolutionHitl, type EvolutionHitlDeps } from "../../hooks/evolution-hitl/flat"
-import type { MatrixxContext, V2Registration } from "../context"
+import type { MatrixxContext, V2Registration } from "../tool/context"
 
 /**
  * Register the flat port on every native kind in its mapping-table row

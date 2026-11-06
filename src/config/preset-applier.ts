@@ -1,4 +1,4 @@
-import { log } from "../shared/logger"
+import { log } from "../shared/runtime/logger"
 import type { MatrixxConfig } from "./schema/matrixx-config"
 import type { ModelPreset, ModelPresetEntry } from "./schema/model-presets"
 

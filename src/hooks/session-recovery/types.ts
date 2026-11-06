@@ -1,5 +1,5 @@
-import type { SessionMessage } from "../../shared/session-message"
-import type { TaskStatus } from "../../shared/status-types"
+import type { TaskStatus } from "../../shared/policy/status-types"
+import type { SessionMessage } from "../../shared/session/session-message"
 
 export interface StoredMessageMeta {
   id: string

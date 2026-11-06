@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
 import { consumeToolMetadata, storeToolMetadata } from "../../../src/features/tool-metadata-store"
-import { jsonSafeMetadata } from "../../../src/shared/json-safe-metadata"
+import { jsonSafeMetadata } from "../../../src/shared/text/json-safe-metadata"
 
 describe("jsonSafeMetadata", () => {
   it("keeps a payload with command undefined JSON-serializable", () => {

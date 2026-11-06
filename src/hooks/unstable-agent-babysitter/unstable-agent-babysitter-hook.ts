@@ -1,9 +1,9 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import { getMainSessionID, getSessionAgent } from "../../features/session-state/state"
-import { log } from "../../shared/logger"
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import type { SessionDomainLike } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import { log } from "../../shared/runtime/logger"
+import type { SessionDomainLike } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 import {
   buildReminder,
   extractMessages,
@@ -84,7 +84,7 @@ async function getThinkingSummary(ctx: BabysitterContext, sessionID: string): Pr
   }
 }
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createUnstableAgentBabysitterHook(ctx: BabysitterContext, options: BabysitterOptions) {
   const reminderCooldowns = new Map<string, number>()
 

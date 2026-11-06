@@ -1,6 +1,6 @@
 import { $ } from "bun"
 import { describe, expect, it } from "bun:test"
-import type { MatrixxContext, V2Registration } from "../../src/plugin/context"
+import type { MatrixxContext, V2Registration } from "../../src/plugin/tool/context"
 
 //#given a factory for the promise-flavor registration every transform/hook returns
 function registration(): V2Registration {
@@ -110,7 +110,7 @@ export function minimalContext(): MatrixxContext {
   }
 }
 
-describe("plugin/context", () => {
+describe("plugin/tool/context", () => {
   //#when the minimal literal is built against MatrixxContext
   //#then every domain member resolves in promise flavor
   it("compiles a minimal context literal with promise-flavor domains", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { formatBytes } from "../../src/shared/format-bytes"
+import { formatBytes } from "../../src/shared/text/format-bytes"
 
 describe("formatBytes", () => {
   it("should return bytes for < 1024", () => {

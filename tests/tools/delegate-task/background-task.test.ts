@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { executeBackgroundTask } from "../../../src/tools/delegate-task/background-task"
 import { __resetTimingConfig, __setTimingConfig } from "../../../src/tools/delegate-task/timing"

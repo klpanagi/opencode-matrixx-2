@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { withTimeout } from "../../src/shared/with-timeout"
+import { withTimeout } from "../../src/shared/runtime/with-timeout"
 
 describe("withTimeout", () => {
   it("should resolve before timeout", async () => {

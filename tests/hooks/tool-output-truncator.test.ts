@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test"
-import * as dynamicTruncator from "../../src/shared/dynamic-truncator"
+import * as dynamicTruncator from "../../src/shared/compaction/dynamic-truncator"
 import { createToolOutputTruncatorHook } from "../../src/hooks/tool-output-truncator"
 
 describe("createToolOutputTruncatorHook", () => {

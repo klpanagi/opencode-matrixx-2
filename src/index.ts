@@ -11,8 +11,8 @@
  * (`{ id, setup }`), so no `definePlugin` helper is needed.
  */
 
-import type { Cleanup, MatrixxContext } from "./plugin/context"
 import { registerDomains, setupDomains } from "./plugin/setup-domains"
+import type { Cleanup, MatrixxContext } from "./plugin/tool/context"
 import { log } from "./shared"
 
 async function setup(ctx: MatrixxContext): Promise<Cleanup> {
@@ -50,4 +50,4 @@ export type {
 // NOTE: Do NOT export functions from the entrypoint!
 // OpenCode treats ALL exports as plugin instances and calls them.
 // Config error utilities are available via "./shared/config-errors" for internal use only.
-export type { ConfigLoadError } from "./shared/config-errors"
+export type { ConfigLoadError } from "./shared/config/config-errors"

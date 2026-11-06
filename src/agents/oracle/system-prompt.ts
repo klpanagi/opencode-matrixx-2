@@ -1,5 +1,5 @@
-import type { PermissionRule } from "../../shared/permission-compat"
-import { rule } from "../../shared/permission-compat"
+import type { PermissionRule } from "../../shared/agent/permission-compat"
+import { rule } from "../../shared/agent/permission-compat"
 import { ORACLE_BEHAVIORAL_SUMMARY } from "./behavioral-summary"
 import {
   createOracleHighAccuracyMode,

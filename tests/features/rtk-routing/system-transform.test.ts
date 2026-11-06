@@ -5,11 +5,11 @@ import type { MatrixxConfig } from "../../../src/config"
 import {
   containsContextModeMarker,
   MATRIXX_CONTEXT_MODE_MARKER,
-} from "../../../src/features/context-mode-routing/routing-block"
-import { createContextModeSystemTransformHook as createCtxHook } from "../../../src/features/context-mode-routing/system-transform"
+} from "../../../src/features/context-injection/routing"
+import { createContextModeSystemTransformHook as createCtxHook } from "../../../src/features/context-injection/routing"
 import { containsRtkMarker, MATRIXX_RTK_MARKER } from "../../../src/features/rtk-routing/routing-block"
 import { createRtkSystemTransformHook } from "../../../src/features/rtk-routing/system-transform"
-import { setAvailableToolNames } from "../../../src/plugin-handlers/agent-config-handler"
+import { setAvailableToolNames } from "../../../src/plugin/handlers/agent-config-handler"
 
 function model() {
   return { providerID: "anthropic", modelID: "claude-opus-4-6" } as never

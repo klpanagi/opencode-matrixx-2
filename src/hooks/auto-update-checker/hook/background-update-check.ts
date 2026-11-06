@@ -1,6 +1,6 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import { getOpenCodeConfigPaths } from "../../../shared"
-import { log } from "../../../shared/logger"
+import { log } from "../../../shared/runtime/logger"
 import { invalidatePackage } from "../cache"
 import { findPluginEntry, getCachedVersion, getLatestVersion, revertPinnedVersion } from "../checker"
 import { PACKAGE_NAME } from "../constants"

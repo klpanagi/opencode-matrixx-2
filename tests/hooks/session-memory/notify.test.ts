@@ -4,7 +4,7 @@
 // - src/hooks/session-memory/index.ts (barrel)
 import { describe, expect, test } from "bun:test"
 import { createSessionMemoryHook } from "../../../src/hooks/session-memory/index"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
 
 type ToastOpts = {
   body: { title: string; message: string; variant: "info" | "success"; duration: number }

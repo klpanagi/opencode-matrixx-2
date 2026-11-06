@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 
-import { resolveRtkEnforcement } from "../../src/shared/rtk-enforcement"
+import { resolveRtkEnforcement } from "../../src/shared/policy/rtk-enforcement"
 
 const PRESENT = () => "/usr/bin/rtk"
 const ABSENT = () => null

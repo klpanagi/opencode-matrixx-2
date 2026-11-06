@@ -1,8 +1,8 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { createHostLlmCall } from "../../src/hooks/evolution-compressor/host-llm-call"
-import type { EphemeralSessionHandle } from "../../src/shared/with-ephemeral-session"
-import { withEphemeralSession } from "../../src/shared/with-ephemeral-session"
+import type { EphemeralSessionHandle } from "../../src/shared/session/with-ephemeral-session"
+import { withEphemeralSession } from "../../src/shared/session/with-ephemeral-session"
 
 function makeIds(): { created: string[]; removed: string[] } {
   return { created: [], removed: [] }

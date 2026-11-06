@@ -2,9 +2,9 @@ import { existsSync, mkdirSync } from "node:fs"
 import { z } from "zod"
 import { atomicWrite } from "../../features/mission-state/plan-storage"
 import { renderNotepad } from "../../hooks/task-notepad-writer/constants"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { resolveDirectory } from "../plan/types"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { validateNotepadFilePath } from "./validation"
 
 export function createNotepadCreateTool(ctx?: MatrixxContext): MatrixxToolDefinition {

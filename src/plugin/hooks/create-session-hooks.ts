@@ -22,7 +22,7 @@ import {
   createThinkModeHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort/hook"
-import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
+import { getAvailableToolNames } from "../../plugin/handlers/agent-config-handler"
 import {
   detectExternalNotificationPlugin,
   detectMemoryBackendPlugins,
@@ -33,8 +33,8 @@ import {
   log,
   resolveRtkEnforcement,
 } from "../../shared"
-import { bindSafeHook } from "../../shared/safe-create-hook"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import { bindSafeHook } from "../../shared/agent/safe-create-hook"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { sessionExists } from "../../tools"
 
 let memoryFlatAliasWarned = false

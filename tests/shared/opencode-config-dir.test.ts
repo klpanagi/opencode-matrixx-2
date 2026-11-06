@@ -7,7 +7,7 @@ import {
   isDevBuild,
   TAURI_APP_IDENTIFIER,
   TAURI_APP_IDENTIFIER_DEV,
-} from "../../src/shared/opencode-config-dir"
+} from "../../src/shared/config/opencode-config-dir"
 
 describe("opencode-config-dir", () => {
   let originalPlatform: NodeJS.Platform

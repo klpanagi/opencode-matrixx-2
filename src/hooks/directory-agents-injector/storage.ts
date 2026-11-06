@@ -1,4 +1,4 @@
-import { createInjectedPathsStorage } from "../../shared/session-injected-paths";
+import { createInjectedPathsStorage } from "../../shared/session/session-injected-paths";
 import { AGENTS_INJECTOR_STORAGE } from "./constants";
 
 export const {

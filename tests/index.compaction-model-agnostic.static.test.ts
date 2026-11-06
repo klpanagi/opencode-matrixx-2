@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs"
 
 describe("experimental.session.compacting", () => {
   test("does not hardcode a model and uses output.context", () => {
-    //#given (hook lives in the composition root; index.ts only re-exports the plugin)
-    const indexUrl = new URL("../src/plugin/setup-domains.ts", import.meta.url)
+    //#given (hook lives in the composition root setup-domains/hooks.ts; index.ts only re-exports the plugin)
+    const indexUrl = new URL("../src/plugin/setup-domains/hooks.ts", import.meta.url)
     const content = readFileSync(indexUrl, "utf-8")
     const hookIndex = content.indexOf('"experimental.session.compacting"')
 

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { createBackgroundOutput } from "../../../src/tools/background-task/create-background-output"
 

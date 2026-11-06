@@ -1,6 +1,6 @@
 import type { BrowserAutomationProvider, CategoryConfig } from "../../config/schema"
 import { getAgentModelRequirements, isModelAvailable } from "../../shared"
-import type { ModelRequirement } from "../../shared/model-requirements"
+import type { ModelRequirement } from "../../shared/model/model-requirements"
 import { buildAgent, isFactory } from "../agent-builder"
 import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent } from "../dynamic-agent-prompt-builder"

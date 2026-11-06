@@ -2,8 +2,8 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { basename, join } from "node:path"
 import { buildBuiltinCommandEntries } from "../../features/builtin-commands/commands.transform"
 import { getOpenCodeConfigDir, parseFrontmatter } from "../../shared"
-import { isMarkdownFile } from "../../shared/file-utils"
-import { sanitizeModelField } from "../../shared/model-sanitizer"
+import { isMarkdownFile } from "../../shared/io/file-utils"
+import { sanitizeModelField } from "../../shared/model/model-sanitizer"
 import type { CommandInfo, CommandMetadata, CommandScope } from "./types"
 
 function discoverCommandsFromDir(commandsDir: string, scope: CommandScope): CommandInfo[] {

@@ -1,0 +1,20 @@
+/** session-state barrel: explicit named re-exports of local modules only. */
+export {
+  _resetForTesting,
+  clearSessionAgent,
+  clearSessionModel,
+  getMainSessionID,
+  getParentSessionID,
+  getSessionAgent,
+  getSessionModel,
+  getSubagentSessionIDs,
+  isMainSessionCandidate,
+  registerSubagentSession,
+  releaseSubagentSession,
+  setMainSession,
+  setSessionAgent,
+  setSessionModel,
+  subagentSessions,
+  unregisterSubagentSession,
+  updateSessionAgent,
+} from "./state"

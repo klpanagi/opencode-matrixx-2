@@ -5,9 +5,9 @@ import { z } from "zod"
 import type { MatrixxConfig } from "../../config"
 import type { ModelPreset } from "../../config/schema/model-presets"
 import { getSessionPreset, setSessionPreset } from "../../features/preset-state/manager"
-import { parseJsoncSafe } from "../../shared/jsonc-parser"
-import { log } from "../../shared/logger"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { log } from "../../shared/runtime/logger"
+import { parseJsoncSafe } from "../../shared/text/jsonc-parser"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 const ACTIONS = ["list", "show", "set"] as const
 const SCOPES = ["global", "project"] as const

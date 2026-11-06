@@ -1,4 +1,4 @@
-tests/plugin-handlers/
+tests/plugin/handlers/
 tests/hooks/compaction-context-injector/
 tests/tools/session-manager/storage.test.ts
 tests/hooks/oracle-md-only/index.test.ts
@@ -33,7 +33,6 @@ tests/cli/doctor/checks.test.ts
 tests/cli/install/index.test.ts
 tests/cli/setup/index.test.ts
 tests/shared/dcp-switch-profile.test.ts
-tests/shared/agent-config-handler.test.ts
 tests/shared/opencode-message-dir.test.ts
 tests/config/model-migration.test.ts
 tests/tools/preset/tools.test.ts

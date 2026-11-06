@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
-import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
+import { createToolExecuteBeforeHandler } from "../../src/plugin/tool/tool-execute-before"
 
 describe("native subagent coexistence", () => {
   test("does not block tool=subagent (native stays available)", async () => {

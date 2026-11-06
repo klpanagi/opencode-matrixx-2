@@ -3,12 +3,12 @@ import { readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
 import { readSessionTasks } from "../../features/task-session-scope"
-import { getMessageDir } from "../../shared/opencode-message-dir"
-import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
-import type { SessionDomainLike } from "../../shared/session-facade"
-import { contentOf, idOf, roleOf, timeOf } from "../../shared/session-message"
-import { unwrapList } from "../../shared/unwrap-list"
+import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
+import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import { unwrapList } from "../../shared/runtime/unwrap-list"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session/session-context-source"
+import type { SessionDomainLike } from "../../shared/session/session-facade"
+import { contentOf, idOf, roleOf, timeOf } from "../../shared/session/session-message"
 import { MESSAGE_STORAGE, PART_STORAGE, SESSION_STORAGE, TRANSCRIPT_DIR } from "./constants"
 import { normalizeDirForCompare } from "./path-normalize"
 import type { SessionInfo, SessionMessage, SessionMetadata, TodoItem } from "./types"
@@ -153,7 +153,7 @@ export async function getAllSessions(): Promise<string[]> {
   return [...new Set(sessions)]
 }
 
-export { getMessageDir } from "../../shared/opencode-message-dir"
+export { getMessageDir } from "../../shared/opencode/opencode-message-dir"
 
 export async function sessionExists(sessionID: string): Promise<boolean> {
   if (isSqliteBackend() && sessionCarrier) {

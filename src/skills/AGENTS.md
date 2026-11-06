@@ -6,7 +6,7 @@
 
 | Scope | Count | Source |
 |------|-------|--------|
-| **Built-in (this dir)** | 70 (69 files) | `src/skills/skills/<category>/*.ts` |
+| **Built-in (this dir)** | 70 (69 files) | `src/skills/builtin/<category>/*.ts` |
 | Opencode-project (`.opencode/skills/`) | varies | per-project |
 | Opencode-user (`~/.config/opencode/skills/`) | varies | per-user |
 | Claude Code compat (`.claude/skills/`) | varies | per-project |
@@ -16,12 +16,15 @@
 
 ```
 skills/
-├── index.ts                      # Barrel: createBuiltinSkills, registerSkillTransform, types
-├── skills.ts                     # createBuiltinSkills() factory + skillFactories table
-├── skills.transform.ts           # registerSkillTransform: pure replay onto ctx.skill.transform
-├── types.ts                      # BuiltinSkill interface
-├── lazy-skill-helper.ts          # createLazyTemplateSkill (lazy template getter)
-├── skills/                       # 70 skills across 7 category dirs (export Skill objects)
+├── index.ts                      # Type-level barrel (runtime loads via loader/factories)
+├── loader/                       # Runtime loading layer (factories + helpers)
+│   ├── factories.ts              # createBuiltinSkills() factory + skillFactories table
+│   ├── lazy-skill-helper.ts      # createLazyTemplateSkill (lazy template getter)
+│   ├── skills.transform.ts       # registerSkillTransform: pure replay onto ctx.skill.transform
+│   ├── types.ts                  # BuiltinSkill interface
+│   ├── schemas/                  # Zod schemas (security-audit, audits-store)
+│   └── index.ts                  # Loader barrel (explicit named re-exports)
+├── builtin/                      # 70 skills across 7 category dirs (export Skill objects)
 │   ├── bdd/                      # 4 skills (bdd-backend, bdd-contract, bdd-frontend, bdd-tests)
 │   ├── core/                     # 20 skills, 19 files (playwright.ts exports 2: playwright + agent-browser)
 │   │                             # git-master, docker-master, dev-browser, tdd-enforcer, quality-gate,
@@ -59,7 +62,7 @@ Each category dir has an `index.ts` that re-exports its skill objects (e.g. `exp
 
 ### 1. Eager browser skill (`BROWSER_SKILL_NAMES` + `browserProvider`)
 
-`src/skills/skills.ts`:
+`src/skills/loader/factories.ts`:
 
 ```typescript
 const BROWSER_SKILL_NAMES = new Set(["playwright", "agent-browser", "playwright-cli"])
@@ -105,7 +108,7 @@ Disabled skills are filtered **AFTER** creation at the array level (`allSkills.f
 
 ### 4. `registerSkillTransform` replay
 
-`src/skills/skills.transform.ts` — V2-native skill domain transform, owned by `src/skills/`:
+`src/skills/loader/skills.transform.ts` — V2-native skill domain transform, owned by `src/skills/`:
 
 - **Pure replay** of skill entries onto `ctx.skill.transform`. Entry builders in `./skills` are static data plus allocation-only wrappers (no filesystem access, no spawn, no network), so repeated runs over the same entries replay identically.
 - Accepts `Record<string, unknown> | BuiltinSkill[] | undefined`; the callback only calls `editor.add(record)`, so re-running over the same entries replays identically.
@@ -116,7 +119,7 @@ Disabled skills are filtered **AFTER** creation at the array level (`allSkills.f
 `src/skills/*/SKILL.md` files (e.g. `agent-browser/SKILL.md`, `git-master/SKILL.md`) are **document-only triage copies** — they are NOT loaded at runtime. The runtime path is exclusively:
 
 ```
-src/skills/skills/<category>/*.ts → skillFactories (skills.ts) → createBuiltinSkills() → registerSkillTransform
+src/skills/builtin/<category>/*.ts → skillFactories (skills.ts) → createBuiltinSkills() → registerSkillTransform
 ```
 
 Do not edit or delete `SKILL.md` files when adding/removing skills; they exist for human/agent triage reading only.
@@ -163,13 +166,13 @@ Names must match `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`).
 
 ## SKILL LOADING
 
-All skills are loaded from `src/skills/skills/<category>/` via `createBuiltinSkills()`. No external skill directory loading.
+All skills are loaded from `src/skills/builtin/<category>/` via `createBuiltinSkills()`. No external skill directory loading.
 
 ## HOW TO ADD A NEW BUILT-IN SKILL (5 STEPS)
 
-1. **Create the skill file in its category dir:** `src/skills/skills/<category>/<name>.ts`, exporting a `Skill` object: `export const mySkill: Skill = { name, description, template, ... }`. Pick the existing category that fits (bdd / core / dsl / frontend / market-data / security / zeromq).
-2. **Re-export the category index and the root barrel:** add `export { mySkill, MY_SKILL_NAME } from "./my-name"` to `src/skills/skills/<category>/index.ts`, and add the matching re-export line to the root `src/skills/skills/index.ts` (type-level access).
-3. **Add the import + factory entry in `src/skills/skills.ts`:** add a static import (`import { mySkill } from "./skills/<category>/my-name"`) plus a `skillFactories` entry (`"my-name": () => mySkill`). Content dirs are data only — no `require()` seam. Registration onto the domain goes through `registerSkillTransform` in `./skills.transform.ts`.
+1. **Create the skill file in its category dir:** `src/skills/builtin/<category>/<name>.ts`, exporting a `Skill` object: `export const mySkill: Skill = { name, description, template, ... }`. Pick the existing category that fits (bdd / core / dsl / frontend / market-data / security / zeromq).
+2. **Re-export the category index and the root barrel:** add `export { mySkill, MY_SKILL_NAME } from "./my-name"` to `src/skills/builtin/<category>/index.ts`, and add the matching re-export line to the root `src/skills/builtin/index.ts` (type-level access).
+3. **Add the import + factory entry in `src/skills/loader/factories.ts`:** add a static import (`import { mySkill } from "./builtin/<category>/my-name"`) plus a `skillFactories` entry (`"my-name": () => mySkill`). Content dirs are data only — no `require()` seam. Registration onto the domain goes through `registerSkillTransform` in `./skills.transform.ts`.
 4. **Add the skill name to the schema:** add `"my-name"` to `BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts` so `disabled_skills` accepts it (and rebuild the schema if the build embeds it).
 5. **Verify:** run typecheck (`bun run typecheck`) and the skills tests (`bun test` coverage for `skills.test.ts` / `lazy-skill-helper.test.ts`). The factory pattern plus the lazy wrapper handles hydration — no other change is needed.
 
@@ -179,10 +182,10 @@ Remove the static import and the `skillFactories` entry in `skills.ts`. Note: us
 
 ## KNOWN HOTSPOTS
 
-- `src/skills/skills/core/git-master.ts` — large skill with many workflow procedures
-- `src/skills/skills/core/ulw-research.ts` — references the research skill
-- `src/skills/skills.ts` `skillFactories` table — must stay in sync with `skills/<category>/*.ts` exports
-- `src/skills/skills/core/playwright.ts` — dual export (`playwrightSkill` + `agentBrowserSkill`); only the `browserProvider`-selected one loads
+- `src/skills/builtin/core/git-master.ts` — large skill with many workflow procedures
+- `src/skills/builtin/core/ulw-research.ts` — references the research skill
+- `src/skills/loader/factories.ts` `skillFactories` table — must stay in sync with `builtin/<category>/*.ts` exports
+- `src/skills/builtin/core/playwright.ts` — dual export (`playwrightSkill` + `agentBrowserSkill`); only the `browserProvider`-selected one loads
 
 ## Skill Description SDO (Skill Discovery Optimization)
 

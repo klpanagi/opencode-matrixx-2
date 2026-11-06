@@ -39,7 +39,7 @@ mock.module("../../../../src/hooks/auto-update-checker/hook/update-toasts", () =
   showAutoUpdatedToast: mockShowAutoUpdatedToast,
 }))
 
-mock.module("../../../../src/shared/logger", () => ({
+mock.module("../../../../src/shared/runtime/logger", () => ({
   // Transparent from birth: forward to the real log file (same format as
   // src/shared/logger.ts). Never references the mocked module.
   log: (message: string, data?: unknown) => {
@@ -54,7 +54,7 @@ mock.module("../../../../src/hooks/auto-update-checker/hook/background-update-ch
   const versionChannel = require("../../../../src/hooks/auto-update-checker/version-channel")
   const cache = require("../../../../src/hooks/auto-update-checker/cache")
   const updateToasts = require("../../../../src/hooks/auto-update-checker/hook/update-toasts")
-  const logger = require("../../../../src/shared/logger")
+  const logger = require("../../../../src/shared/runtime/logger")
   const { PACKAGE_NAME } = require("../../../../src/hooks/auto-update-checker/constants")
 
   async function runBunInstallSafe(): Promise<boolean> {

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 import { DEFAULT_MAX_DIAGNOSTICS } from "./constants"
 import { withLspClient } from "./lsp-client-wrapper"

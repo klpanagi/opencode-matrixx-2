@@ -1,5 +1,5 @@
-import type { MatrixxContext } from "../../../plugin/context"
-import { log } from "../../../shared/logger"
+import type { MatrixxContext } from "../../../plugin/tool/context"
+import { log } from "../../../shared/runtime/logger"
 import { showSpinnerToast } from "./spinner-toast"
 
 export async function showVersionToast(ctx: MatrixxContext, version: string | null, message: string): Promise<void> {

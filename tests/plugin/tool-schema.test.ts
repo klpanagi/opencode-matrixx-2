@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { emitToolInfo } from "../../src/tools/shared/define-tool";
+import { emitToolInfo } from "../../src/shared/tool/define-tool";
 import {
   defineTool,
   normalizeResult,
   toInputSchema,
-} from "../../src/tools/shared/define-tool";
+} from "../../src/shared/tool/define-tool";
 
 const deps = { directory: "/tmp/x", worktree: "/tmp/x" };
 

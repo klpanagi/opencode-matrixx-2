@@ -1,11 +1,11 @@
 import { findFirstMessageWithAgent, 
   findFirstMessageWithAgentFromSDK,findNearestMessageWithFields, 
-  findNearestMessageWithFieldsFromSDK,} from "../../features/hook-message-injector"
+  findNearestMessageWithFieldsFromSDK,} from "../../features/context-injection/hook-bridge"
 import { readMissionState } from "../../features/mission-state"
 import { getSessionAgent } from "../../features/session-state/state"
-import { getMessageDir } from "../../shared/opencode-message-dir"
-import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { SessionContextCarrier } from "../../shared/session-context-source"
+import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
+import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import type { SessionContextCarrier } from "../../shared/session/session-context-source"
 
 async function getAgentFromMessageFiles(
   sessionID: string,

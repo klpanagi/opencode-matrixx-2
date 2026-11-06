@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 
 import type { MatrixxConfig } from "../../../src/config"
 import { detectKeywordsWithType } from "../../../src/hooks/keyword-detector/detector"
@@ -12,8 +12,8 @@ import {
   RTK_NOTICE_MESSAGE,
   RTK_NOTICE_TITLE,
 } from "../../../src/features/rtk-routing/system-transform"
-import { notifyInjection, resetInjectionNotifier } from "../../../src/shared/injection-notifier"
-import { sanitizeKnownTags } from "../../../src/shared/system-directive"
+import { notifyInjection, resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
+import { sanitizeKnownTags } from "../../../src/shared/text/system-directive"
 
 function model() {
   return { providerID: "anthropic", modelID: "claude-opus-4-6" } as never

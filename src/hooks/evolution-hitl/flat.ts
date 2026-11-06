@@ -1,8 +1,8 @@
 import type { EvolutionConfig } from "../../config/schema/evolution"
 import { traceStore } from "../../features/evolution/store/trace-store"
 import { EvolutionWriter } from "../../features/evolution/writer"
-import { log } from "../../shared/logger"
-import { createSystemDirective } from "../../shared/system-directive"
+import { log } from "../../shared/runtime/logger"
+import { createSystemDirective } from "../../shared/text/system-directive"
 
 export interface FlatContentPart {
   type?: string

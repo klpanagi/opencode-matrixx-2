@@ -1,10 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { isSqliteBackend } from "../../../shared"
-import { getMessageDir } from "../../../shared/opencode-message-dir"
-import { isRecord } from "../../../shared/record-type-guard"
-import type { SessionContextCarrier } from "../../../shared/session-context-source"
-import { fetchSessionMessages } from "../../../shared/session-context-source"
+import { getMessageDir } from "../../../shared/opencode/opencode-message-dir"
+import { isRecord } from "../../../shared/runtime/record-type-guard"
+import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session/session-context-source"
 import type { StoredMessageMeta } from "../types"
 
 

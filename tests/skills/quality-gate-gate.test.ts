@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { createBuiltinSkills } from "../../src/skills/skills"
-import { qualityGateSkill } from "../../src/skills/skills/core/quality-gate"
+import { createBuiltinSkills } from "../../src/skills/loader/factories"
+import { qualityGateSkill } from "../../src/skills/builtin/core/quality-gate"
 
 describe("quality-gate gate function", () => {
   test("factory registers skill via lazy wrapper", () => {

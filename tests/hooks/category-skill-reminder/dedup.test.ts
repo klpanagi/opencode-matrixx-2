@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, test, expect, beforeEach } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   _resetForTesting,
   clearSessionAgent,
@@ -9,7 +9,7 @@ import {
   updateSessionAgent,
 } from "../../../src/features/session-state/state"
 import { createCategorySkillReminderHook } from "../../../src/hooks/category-skill-reminder/hook"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
 
 function makeCtx() {
   return {

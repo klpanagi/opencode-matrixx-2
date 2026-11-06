@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import { clearPendingStore, consumeToolMetadata } from "../../../src/features/tool-metadata-store"
 import { createBackgroundWaitAll } from "../../../src/tools/background-task/create-background-wait-all"

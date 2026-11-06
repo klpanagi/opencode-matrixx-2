@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { resolveDirectory } from "../plan/types"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import {
   MATRIXX_DIR_NAME,
   NOTEPAD_FILENAME_KEBAB_REGEX,

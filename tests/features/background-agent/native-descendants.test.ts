@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 const { describe, test, expect, beforeEach } = require("bun:test")
 import { tmpdir } from "node:os"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import {
   _resetForTesting,

@@ -1,10 +1,10 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import {
   hasConnectedProvidersCache,
   updateConnectedProvidersCache,
-} from "../../../shared/connected-providers-cache"
-import { log } from "../../../shared/logger"
-import { notify } from "../../../shared/notify"
+} from "../../../shared/model/connected-providers-cache"
+import { log } from "../../../shared/runtime/logger"
+import { notify } from "../../../shared/runtime/notify"
 
 export async function updateAndShowConnectedProvidersCacheStatus(_ctx: MatrixxContext): Promise<void> {
   const hadCache = hasConnectedProvidersCache()

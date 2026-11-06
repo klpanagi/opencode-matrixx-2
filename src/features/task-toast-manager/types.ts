@@ -1,4 +1,4 @@
-import type { ModelResolutionProvenance } from "../../shared/model-resolution-pipeline"
+import type { ModelResolutionProvenance } from "../../shared/model/model-resolution-pipeline"
 
 export type TaskStatus = "running" | "queued" | "completed" | "error"
 

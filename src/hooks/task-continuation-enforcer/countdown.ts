@@ -1,8 +1,8 @@
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import { log } from "../../shared/logger"
-import { notify } from "../../shared/notify"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import { log } from "../../shared/runtime/logger"
+import { notify } from "../../shared/runtime/notify"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 
 import {
   COUNTDOWN_SECONDS,

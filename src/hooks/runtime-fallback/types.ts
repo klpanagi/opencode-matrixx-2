@@ -1,6 +1,6 @@
 import type { MatrixxConfig, RuntimeFallbackConfig } from "../../config"
-import type { V2Event } from "../../plugin/context"
-import type { SessionDomainLike } from "../../shared/session-context-source"
+import type { V2Event } from "../../plugin/tool/context"
+import type { SessionDomainLike } from "../../shared/session/session-context-source"
 export interface RuntimeFallbackInterval {
   unref: () => void
 }

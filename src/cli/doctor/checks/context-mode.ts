@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { isCtxToolsAvailable, resolveContextModeDisciplineInfo } from "../../../shared/context-mode-enforcement"
-import { getOmoOpenCodeCacheDir } from "../../../shared/data-path"
-import { parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
+import { getOmoOpenCodeCacheDir } from "../../../shared/config/data-path"
+import { getOpenCodeConfigDir } from "../../../shared/config/opencode-config-dir"
+import { isCtxToolsAvailable, resolveContextModeDisciplineInfo } from "../../../shared/policy/context-mode-enforcement"
+import { parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 import type { CheckResult, DoctorCheck } from "../types"
 
 export const CONTEXT_MODE_V1_TOOLS = ["ctx_batch_execute", "ctx_execute_file", "ctx_fetch_and_index"] as const

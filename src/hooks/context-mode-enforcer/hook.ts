@@ -1,8 +1,8 @@
 import type { MatrixxConfig } from "../../config"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 import { log } from "../../shared"
-import { hasWorkingSubstitute, isCtxToolsAvailable, resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
+import { hasWorkingSubstitute, isCtxToolsAvailable, resolveContextModeEnforcement } from "../../shared/policy/context-mode-enforcement"
 import {
   BASH_ROUTED_MESSAGE,
   BLOCK_MESSAGE_GREP_GLOB,

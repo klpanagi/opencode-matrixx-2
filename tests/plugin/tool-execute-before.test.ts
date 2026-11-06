@@ -1,5 +1,5 @@
 const { describe, expect, test } = require("bun:test")
-const { createToolExecuteBeforeHandler } = require("../../src/plugin/tool-execute-before")
+const { createToolExecuteBeforeHandler } = require("../../src/plugin/tool/tool-execute-before")
 
 describe("createToolExecuteBeforeHandler", () => {
   test("does not execute subagent question blocker hook for question tool", async () => {

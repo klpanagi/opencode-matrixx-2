@@ -1,8 +1,8 @@
-import { log } from "../../shared/logger"
-import { notify } from "../../shared/notify"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import { withTimeout } from "../../shared/with-timeout"
+import { log } from "../../shared/runtime/logger"
+import { notify } from "../../shared/runtime/notify"
+import { withTimeout } from "../../shared/runtime/with-timeout"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { detectCompletionInSessionMessages, detectCompletionInTranscript } from "./completion-promise-detector"
 import { verifyCompletion } from "./completion-verifier"
@@ -43,7 +43,7 @@ async function handleVerificationFailure(
 	}
 }
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: MatrixLoopEventHandlerOptions) {
 	const inFlightSessions = new Set<string>()
 

@@ -1,4 +1,4 @@
-import type { MatrixxContext, V2Event } from "../../plugin/context";
+import type { MatrixxContext, V2Event } from "../../plugin/tool/context";
 import { AGENT_TOOLS, MAX_AGENT_USAGE_REMINDERS, REMINDER_MESSAGE, TARGET_TOOLS } from "./constants";
 import {
   clearAgentUsageState,

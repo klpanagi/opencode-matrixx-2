@@ -1,7 +1,7 @@
 import * as fsp from "node:fs/promises"
 import { z } from "zod"
 import { ContractSchema } from "../../features/bdd/schema"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 /**
  * The bdd_validate_contract tool reads a contract JSON from disk and

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
 
-import { pruneRecentSyntheticIdles } from "../../src/plugin/recent-synthetic-idles"
+import { pruneRecentSyntheticIdles } from "../../src/plugin/tool/recent-synthetic-idles"
 
 describe("pruneRecentSyntheticIdles", () => {
   it("removes entries where now - emittedAt >= dedupWindowMs (stale cleanup works)", () => {

@@ -102,8 +102,8 @@ Two goals are possible and imply different builds; pick one explicitly before im
 
 | Thing | File / symbol (verified in this repo) |
 |-------|----------------------------------------|
-| New skill file | Create `src/skills/skills/<kebab-name>.ts` (a `*_SKILL_NAME` const + a `BuiltinSkill = { name, description, template }`) → register in the **runtime** `skillLoaders` map in `src/skills/skills.ts` (`"<name>": () => require("./skills/<name>").<camel>Skill`). `skills/index.ts` is **type-only** and is NOT a runtime registry. `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts:21`) validates only `disabled_skills` and is **incomplete** (omits `zeromq-*`) — never treat it as the list of loadable skills. |
-| Existing zeromq skills | `src/skills/skills/zeromq-{core,sockets-patterns,pubsub,advanced-reqrep,reliability,architecture,frameworks}.ts` (exported `index.ts:52-58`) |
+| New skill file | Create `src/skills/builtin/<kebab-name>.ts` (a `*_SKILL_NAME` const + a `BuiltinSkill = { name, description, template }`) → register in the **runtime** `skillLoaders` map in `src/skills/loader/factories.ts` (`"<name>": () => require("./skills/<name>").<camel>Skill`). `skills/index.ts` is **type-only** and is NOT a runtime registry. `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts:21`) validates only `disabled_skills` and is **incomplete** (omits `zeromq-*`) — never treat it as the list of loadable skills. |
+| Existing zeromq skills | `src/skills/builtin/zeromq-{core,sockets-patterns,pubsub,advanced-reqrep,reliability,architecture,frameworks}.ts` (exported `index.ts:52-58`) |
 | New agent | `src/agents/<name>.ts` → add to `agentSources` in `src/agents/builtin-agents.ts:37` → add to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts:3` |
 | New tool | `src/tools/<kebab-name>/` (`index.ts`/`types.ts`/`constants.ts`/`tools.ts`) → register in `src/plugin/tool-registry.ts`; gating in `src/plugin/tool-gating.ts`; composed in `src/create-tools.ts` |
 | New MCP | `src/mcps/` + `createBuiltinMcps()` (`src/mcps/index.ts:48`) — **recommended NOT used** (see §5) |
@@ -112,7 +112,7 @@ Two goals are possible and imply different builds; pick one explicitly before im
 | Tests | new tests under `tests/**` (CI-discovered by `find tests script -name '*.test.ts'`); `mock.module()` tests MUST be added to `script/mock-heavy-list.txt` |
 | Full CI | `bash script/run-ci.sh` |
 
-**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, niobe, cipher, sentinel, sati, bdd-contract). `src/mcps/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/skills/skills.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
+**Verified inventory**: `BuiltinAgentNameSchema` = 15 agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, auditor, niobe, cipher, sentinel, sati, bdd-contract). `src/mcps/` = websearch, context7, document-reader. Runtime skills live in the `skillLoaders` map (`src/skills/loader/factories.ts`); `BuiltinSkillNameSchema` is **incomplete** (omits the `zeromq-*` skills) and gates only `disabled_skills`. Hook tiers = core/continuation/skill/session/tool-guard/transform.
 
 ---
 
@@ -355,7 +355,7 @@ Task F = "an error caught, logged as a warning, then recorded as an outcome indi
 - **Files**: `docs/` guide + finance rules file (see Phase 4 hook). No source changes.
 
 ### Phase 1 — Skills (highest ROI, no runtime risk) — **do this first**
-For each: `src/skills/skills/<name>.ts` → export in `.../skills/index.ts` → `createBuiltinSkills()` → `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`).
+For each: `src/skills/builtin/<name>.ts` → export in `.../skills/index.ts` → `createBuiltinSkills()` → `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`).
 
 Ordered (the **MVP gate** = items 1–3 green in CI before anything else):
 1. `resilience-error-taxonomy`, `silent-failure-detection` **(Task F core — MVP gate)**

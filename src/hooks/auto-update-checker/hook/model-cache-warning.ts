@@ -1,7 +1,7 @@
-import type { MatrixxContext } from "../../../plugin/context"
-import { log } from "../../../shared/logger"
-import { isModelCacheAvailable } from "../../../shared/model-availability"
-import { notify } from "../../../shared/notify"
+import type { MatrixxContext } from "../../../plugin/tool/context"
+import { isModelCacheAvailable } from "../../../shared/model/model-availability"
+import { log } from "../../../shared/runtime/logger"
+import { notify } from "../../../shared/runtime/notify"
 
 export async function showModelCacheWarningIfNeeded(_ctx: MatrixxContext): Promise<void> {
   if (isModelCacheAvailable()) return

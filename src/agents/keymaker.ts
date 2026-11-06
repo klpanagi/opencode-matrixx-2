@@ -1,4 +1,4 @@
-import { resolveGrepGlobUsable } from "../shared/context-mode-enforcement"
+import { resolveGrepGlobUsable } from "../shared/policy/context-mode-enforcement"
 import { type AgentConfig, parseModelRef, rule } from "./agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill, AvailableTool } from "./dynamic-agent-prompt-builder"
 import {

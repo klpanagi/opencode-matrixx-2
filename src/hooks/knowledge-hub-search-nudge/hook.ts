@@ -1,6 +1,6 @@
 import type { LoadedHub } from "../../features/knowledge-hub/loader"
-import type { MatrixxContext } from "../../plugin/context"
-import { log } from "../../shared/logger"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { log } from "../../shared/runtime/logger"
 
 const HOOK_NAME = "knowledge-hub-search-nudge"
 

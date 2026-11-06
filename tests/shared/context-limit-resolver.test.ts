@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
-import { type ContextLimitModelCacheState, resolveActualContextLimit } from "../../src/shared/context-limit-resolver"
+import { type ContextLimitModelCacheState, resolveActualContextLimit } from "../../src/shared/compaction/context-limit-resolver"
 
 describe("resolveActualContextLimit", () => {
   let originalAnthropicEnv: string | undefined

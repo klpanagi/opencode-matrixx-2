@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { withLspClient } from "./lsp-client-wrapper"
 import { formatApplyResult, formatPrepareRenameResult } from "./lsp-formatters"
 import type { PrepareRenameDefaultBehavior, PrepareRenameResult, WorkspaceEdit } from "./types"

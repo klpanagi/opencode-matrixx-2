@@ -2,8 +2,8 @@
 import { describe, expect, test } from "bun:test"
 
 import type { MatrixxConfig } from "../src/config"
-import { createContextModeSystemTransformHook } from "../src/features/context-mode-routing/system-transform"
-import { MATRIXX_CONTEXT_MODE_MARKER } from "../src/features/context-mode-routing/routing-block"
+import { createContextModeSystemTransformHook } from "../src/features/context-injection/routing"
+import { MATRIXX_CONTEXT_MODE_MARKER } from "../src/features/context-injection/routing"
 
 const BASE_CONFIG = {
   context_mode: { enabled: true },

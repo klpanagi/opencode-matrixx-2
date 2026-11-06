@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterAll, describe, expect, mock, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 
 const ORCHESTRATOR_FLAG_KEY = "__niobeToolExecuteBeforeOrchestrator"
 
@@ -11,7 +11,7 @@ function setOrchestrator(value: boolean): void {
 
 setOrchestrator(true)
 
-mock.module("../../../src/shared/session-utils", () => ({
+mock.module("../../../src/shared/session/session-utils", () => ({
   isCallerOrchestrator: async () =>
     (globalThis as unknown as Record<string, boolean>)[ORCHESTRATOR_FLAG_KEY] !== false,
 }))

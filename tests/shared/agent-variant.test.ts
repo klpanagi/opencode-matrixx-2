@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
-import { applyAgentVariant, resolveAgentVariant, resolveVariantForModel } from "../../src/shared/agent-variant"
+import { applyAgentVariant, resolveAgentVariant, resolveVariantForModel } from "../../src/shared/agent/agent-variant"
 
 describe("resolveAgentVariant", () => {
   test("returns undefined when agent name missing", () => {

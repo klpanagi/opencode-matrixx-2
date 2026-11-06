@@ -1,7 +1,7 @@
 import { subagentSessions } from "../../features/session-state/state";
-import type { V2Event } from "../../plugin/context";
-import { log } from "../../shared/logger";
-import type { NativePluginContext } from "../../shared/session-context-source";
+import type { V2Event } from "../../plugin/tool/context";
+import { log } from "../../shared/runtime/logger";
+import type { NativePluginContext } from "../../shared/session/session-context-source";
 import { buildSessionReminderMessage } from "./constants";
 import { extractSessionNameFromTokens, findSubcommand, tokenizeCommand } from "./parser";
 import { getOrCreateState, isOmoSession, killAllTrackedSessions } from "./state-manager";

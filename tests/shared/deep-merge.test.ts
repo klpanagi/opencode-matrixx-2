@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { deepMerge, isPlainObject } from "../../src/shared/deep-merge"
+import { deepMerge, isPlainObject } from "../../src/shared/config/deep-merge"
 
 type AnyObject = Record<string, unknown>
 

@@ -42,7 +42,7 @@ mock.module("node:fs", () => ({
   writeFileSync: mockWriteFileSync,
 }))
 
-import { deepMergeProfile, switchProfile } from "../../src/shared/dcp-switch-profile"
+import { deepMergeProfile, switchProfile } from "../../src/shared/policy/dcp-switch-profile"
 
 // ---------------------------------------------------------------------------
 // Helpers

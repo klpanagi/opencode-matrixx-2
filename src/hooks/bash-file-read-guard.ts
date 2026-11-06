@@ -1,7 +1,7 @@
-import type { Hooks } from "../plugin/legacy-hooks"
+import type { Hooks } from "../plugin/tool/legacy-hooks"
 
 import { log } from "../shared"
-import { isShellTool } from "../shared/shell-tool-name"
+import { isShellTool } from "../shared/io/shell-tool-name"
 
 const WARNING_MESSAGE =
   "Prefer the Read tool over `cat`/`head`/`tail` for reading file contents. " +

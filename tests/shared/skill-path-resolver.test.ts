@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { resolveSkillPathReferences } from "../../src/shared/skill-path-resolver"
+import { resolveSkillPathReferences } from "../../src/shared/tool/skill-path-resolver"
 
 describe("resolveSkillPathReferences", () => {
 	it("resolves @path references containing a slash to absolute paths", () => {

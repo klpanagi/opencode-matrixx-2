@@ -10,8 +10,8 @@
  */
 
 import type { CategoryConfig } from "../../config/schema"
-import { mergeCategories } from "../../shared/merge-categories"
-import { denyActions } from "../../shared/permission-compat"
+import { denyActions } from "../../shared/agent/permission-compat"
+import { mergeCategories } from "../../shared/tool/merge-categories"
 import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AvailableAgent, AvailableCategory, AvailableSkill } from "../dynamic-agent-prompt-builder"
 import { buildCategorySkillsDelegationGuide } from "../dynamic-agent-prompt-builder"

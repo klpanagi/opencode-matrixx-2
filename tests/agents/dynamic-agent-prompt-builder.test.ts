@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterAll, beforeEach, describe, expect, it } from "bun:test"
-import { _setDisciplinePathForTesting } from "../../src/shared/context-mode-enforcement"
+import { _setDisciplinePathForTesting } from "../../src/shared/policy/context-mode-enforcement"
 import {
   type AvailableAgent,
   type AvailableCategory,

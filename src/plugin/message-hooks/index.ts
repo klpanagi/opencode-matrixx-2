@@ -1,6 +1,6 @@
 import type { EvolutionHitlDeps } from "../../hooks/evolution-hitl/flat"
-import type { SessionMessage } from "../../shared/session-message"
-import type { MatrixxContext, V2Registration } from "../context"
+import type { SessionMessage } from "../../shared/session/session-message"
+import type { MatrixxContext, V2Registration } from "../tool/context"
 import { type ContextInjectorDeps, registerContextInjectorMessagesTransform } from "./context-injector"
 import { registerDcpNudgeSanitizer } from "./dcp-nudge-sanitizer"
 import { registerDomainKeywordDetector } from "./domain-keyword-detector"

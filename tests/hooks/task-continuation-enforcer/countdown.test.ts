@@ -2,10 +2,10 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { startCountdown } from "../../../src/hooks/task-continuation-enforcer/countdown"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 function makeCtx(dir: string, notifyMock: ReturnType<typeof mock>): MatrixxContext {
   setNotifySink(notifyMock)

@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import type { MatrixxConfig } from "../schema/matrixx-config"
 
 const MIGRATION_KEY = "model-migration"

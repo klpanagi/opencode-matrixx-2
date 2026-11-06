@@ -9,8 +9,8 @@ import {
   ensureExecutable,
   extractZipArchive,
   getCachedBinaryPath as getCachedBinaryPathShared,
-} from "../../shared/binary-downloader"
-import { log } from "../../shared/logger"
+} from "../../shared/io/binary-downloader"
+import { log } from "../../shared/runtime/logger"
 
 const REPO = "ast-grep/ast-grep"
 

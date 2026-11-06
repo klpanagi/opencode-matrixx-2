@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import type { NativePluginContext } from "../../../src/shared/session-context-source"
+import type { NativePluginContext } from "../../../src/shared/session/session-context-source"
 import { createNudgeLoopBreakerHook } from "../../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../../src/hooks/nudge-loop-breaker/session-state"
 

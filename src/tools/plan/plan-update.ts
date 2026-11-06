@@ -10,12 +10,12 @@ import {
   shouldMigrate,
   validatePlanContract,
 } from "../../features/plan-contract"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { applyHashlineEditsWithReport } from "../hashline-edit/edit-operations"
 import { canonicalizeFileText, restoreFileText } from "../hashline-edit/file-text-canonicalization"
 import { executeHashlineEditTool } from "../hashline-edit/hashline-edit-executor"
 import { normalizeHashlineEdits } from "../hashline-edit/normalize-edits"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES } from "./constants"
 import { PLAN_ERROR_CODES, statusTransitionRejectedPayload } from "./error-codes"
 import { enforcePlanCap, type PostApplyHook } from "./plan-write-guard"

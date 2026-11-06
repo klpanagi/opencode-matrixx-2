@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import { _setDisciplinePathForTesting } from "../../src/shared/context-mode-enforcement"
+import { _setDisciplinePathForTesting } from "../../src/shared/policy/context-mode-enforcement"
 import { afterAll, beforeEach } from "bun:test"
 
 // T8: the compact fallback is only emitted when the context-mode package is

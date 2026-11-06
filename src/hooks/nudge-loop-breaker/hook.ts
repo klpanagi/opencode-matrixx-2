@@ -1,6 +1,6 @@
-import type { V2Event } from "../../plugin/context"
-import { log } from "../../shared/logger"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import type { V2Event } from "../../plugin/tool/context"
+import { log } from "../../shared/runtime/logger"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import {
   DEFAULT_COOLDOWN_MS,
   DEFAULT_LOOP_THRESHOLD,

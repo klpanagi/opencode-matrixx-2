@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
-import { ContextCollector } from "../../../src/features/context-injector"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import { ContextCollector } from "../../../src/features/context-injection/injector"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   applyContextInjectorMessagesTransform,
   registerContextInjectorMessagesTransform,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/context-injector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 function flatMessages(texts: Array<{ type: string; text?: string; content?: Array<{ type?: string; text?: string }> }>): SessionMessage[] {
   return texts.map((t) => ({ ...t }) as SessionMessage)

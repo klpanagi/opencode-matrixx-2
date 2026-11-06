@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { detectConfigFile, parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../shared/config/opencode-config-dir"
+import { detectConfigFile, parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 
 export function readMatrixxConfig(): Record<string, unknown> | null {
   const userDir = getOpenCodeConfigDir({ binary: "opencode" })

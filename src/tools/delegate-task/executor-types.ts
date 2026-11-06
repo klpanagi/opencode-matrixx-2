@@ -29,4 +29,4 @@ export interface ParentContext {
   model?: { providerID: string; modelID: string; variant?: string }
 }
 
-export type { ContentPart, SessionMessage } from "../../shared/session-message"
+export type { ContentPart, SessionMessage } from "../../shared/session/session-message"

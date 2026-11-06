@@ -1,7 +1,7 @@
-import { log } from "../../shared/logger"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { isCallerOrchestrator } from "../../shared/session-utils"
-import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
+import { log } from "../../shared/runtime/logger"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { isCallerOrchestrator } from "../../shared/session/session-utils"
+import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/text/system-directive"
 import { HOOK_NAME, NOTEPAD_DIRECTIVE } from "./constants"
 
 export function createMouseNotepadHook(ctx: NativePluginContext) {

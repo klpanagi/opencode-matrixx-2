@@ -12,7 +12,7 @@ import {
   shouldEnablePdfFigures,
   shouldEnablePresetTools,
   shouldEnableSessionCleanup,
-} from "../../src/plugin/tool-policy"
+} from "../../src/plugin/tool/tool-policy"
 
 describe("tool-gating", () => {
   let dir: string

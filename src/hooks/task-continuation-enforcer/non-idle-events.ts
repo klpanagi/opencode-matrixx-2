@@ -1,5 +1,5 @@
-import { clearAwaitingUser, isQuestionTool, markAwaitingUser } from "../../shared/awaiting-user"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
+import { clearAwaitingUser, isQuestionTool, markAwaitingUser } from "../../shared/session/awaiting-user"
 
 import { COUNTDOWN_GRACE_PERIOD_MS, HOOK_NAME } from "./constants"
 import type { SessionStateStore } from "./session-state"

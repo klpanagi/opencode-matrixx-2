@@ -3,9 +3,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSyn
 import { basename, dirname, isAbsolute, join } from "node:path"
 import type { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
-import { log } from "../../shared/logger"
-import { getOpenCodeConfigDir } from "../../shared/opencode-config-dir"
-import { resolveTasksConfig } from "../../shared/task-system-gating"
+import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir"
+import { resolveTasksConfig } from "../../shared/config/task-system-gating"
+import { log } from "../../shared/runtime/logger"
 
 export function getProjectTaskDir(directory: string): string {
   return join(directory, ".matrixx", "tasks")

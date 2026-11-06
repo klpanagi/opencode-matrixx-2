@@ -1,4 +1,4 @@
-import { delay } from "../../delay"
+import { delay } from "../../runtime/delay"
 
 let serverAvailable: boolean | null = null
 let serverCheckUrl: string | null = null

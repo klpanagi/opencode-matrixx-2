@@ -1,4 +1,4 @@
-import { createSystemDirective, SystemDirectiveTypes } from "../../shared/system-directive"
+import { createSystemDirective, SystemDirectiveTypes } from "../../shared/text/system-directive"
 
 export const DIRECT_WORK_REMINDER = `
 

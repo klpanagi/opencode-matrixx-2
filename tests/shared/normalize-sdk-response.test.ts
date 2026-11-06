@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { normalizeSDKResponse } from "../../src/shared/normalize-sdk-response"
+import { normalizeSDKResponse } from "../../src/shared/model/normalize-sdk-response"
 
 describe("normalizeSDKResponse", () => {
   it("returns data array when response includes data", () => {

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { basename, join } from "node:path"
 import { z } from "zod"
 import type { MatrixxConfig } from "../../../src/config/schema"
-import { getOpenCodeConfigDir } from "../../../src/shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../src/shared/config/opencode-config-dir"
 import {
   acquireLock,
   generateTaskId,

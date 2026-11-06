@@ -3,7 +3,7 @@ import crypto from "node:crypto"
 import * as fs from "node:fs"
 import { generateMessages } from "@cucumber/gherkin"
 import { SourceMediaType } from "@cucumber/messages"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { ContractSchema } from "../../../src/features/bdd/schema"
 import { createBddCreateContractTool } from "../../../src/tools/bdd-create-contract/tools"
 

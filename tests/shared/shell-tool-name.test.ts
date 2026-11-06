@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import { isShellTool, isTaskTool } from "../../src/shared/shell-tool-name"
+import { isShellTool, isTaskTool } from "../../src/shared/io/shell-tool-name"
 
 describe("shell-tool-name", () => {
   test("bash and shell match in any case with surrounding whitespace", () => {

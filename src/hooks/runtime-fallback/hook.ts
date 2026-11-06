@@ -9,7 +9,7 @@ declare function setInterval(callback: () => void, delay?: number): RuntimeFallb
 declare function clearInterval(interval: RuntimeFallbackInterval): void
 declare function clearTimeout(timeout: RuntimeFallbackTimeout): void
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createRuntimeFallbackHook(
   ctx: RuntimeFallbackContext,
   options?: RuntimeFallbackOptions

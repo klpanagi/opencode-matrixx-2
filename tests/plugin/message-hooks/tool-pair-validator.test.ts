@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 
-import type { V2SessionContextEvent } from "../../../src/plugin/context"
+import type { V2SessionContextEvent } from "../../../src/plugin/tool/context"
 import type { FlatMessage } from "../../../src/plugin/message-hooks/tool-pair-validator"
 import {
   handleToolPairValidatorEvent,

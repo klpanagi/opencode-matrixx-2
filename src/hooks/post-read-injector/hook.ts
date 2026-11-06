@@ -1,5 +1,5 @@
-import type { MatrixxContext } from "../../plugin/context";
-import { createDynamicTruncator } from "../../shared/dynamic-truncator";
+import type { MatrixxContext } from "../../plugin/tool/context";
+import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator";
 import { clearInjectedPaths } from "../directory-agents-injector/storage";
 import { getRuleInjectionFilePath } from "../rules-injector/output-path";
 import { clearInjectedRules } from "../rules-injector/storage";
@@ -7,7 +7,7 @@ import { createUnifiedPostReadProcessor } from "./injector";
 
 const DEFAULT_TRACKED_TOOLS = ["read", "write", "edit", "multiedit"];
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createPostReadInjectorHook(ctx: MatrixxContext, options?: { trackedTools?: string[]; injectorId?: string }) {
   const truncator = createDynamicTruncator(ctx);
   const { processFilePathForInjection, clearSessionCache } = createUnifiedPostReadProcessor({

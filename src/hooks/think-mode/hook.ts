@@ -6,7 +6,7 @@ import type { ThinkModeInput, ThinkModeState } from "./types"
 const MAX_THINK_MODE_ENTRIES = 1000
 const thinkModeState = new Map<string, ThinkModeState>()
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function setThinkModeState(key: string, value: ThinkModeState): void {
   if (thinkModeState.size >= MAX_THINK_MODE_ENTRIES && !thinkModeState.has(key)) {
     const oldest = thinkModeState.keys().next().value

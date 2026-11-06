@@ -5,7 +5,7 @@ import {
   formatReviveOutcome,
   formatUnrevivable,
   isUnrevivableReason,
-} from "../../../src/shared/revive-outcome"
+} from "../../../src/shared/outcome/revive-outcome"
 
 function extractMetadata(output: string): Record<string, string> {
   const match = output.match(/<task_metadata>(.*)<\/task_metadata>/s)

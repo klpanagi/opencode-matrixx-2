@@ -9,7 +9,7 @@ const FEATURE = join(SRC, "features/completion-review")
 const SOLE_IMPORTER = "features/builtin-commands/templates/plan-review.ts"
 
 /** Directories an automatic trigger could plausibly hide in. Zero hits required. */
-const AUTOMATION_DIRS = ["hooks", "plugin-handlers", "plugin"]
+const AUTOMATION_DIRS = ["hooks", "plugin/handlers", "plugin"]
 
 function walk(dir: string, acc: string[] = []): string[] {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -86,13 +86,13 @@ describe("locked decision #3 — the review is unreachable from automation", () 
     expect(importers.filter((f) => f.startsWith("hooks/niobe/"))).toEqual([])
   })
 
-  test("NO file under src/plugin-handlers/ imports the feature", () => {
+  test("NO file under src/plugin/handlers/ imports the feature", () => {
     //#given the whole src/ module graph
     //#when every external importer of the feature is collected
     const importers = importersOutsideFeature()
 
     //#then no plugin handler reaches it either
-    expect(importers.filter((f) => f.startsWith("plugin-handlers/"))).toEqual([])
+    expect(importers.filter((f) => f.startsWith("plugin/handlers/"))).toEqual([])
   })
 
   test("no automation directory references the command or the feature at all", () => {

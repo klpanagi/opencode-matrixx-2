@@ -5,7 +5,7 @@ import {
   writeHandoffFile,
 } from "../../features/handoff"
 import type { HandoffData } from "../../features/handoff/schema"
-import type { MatrixxToolContext } from "../shared/define-tool"
+import type { MatrixxToolContext } from "../../shared/tool/define-tool"
 import { buildHandoffBody } from "./body-formatter"
 import { UNKNOWN_GIT_SHA } from "./constants"
 import { getGitHead } from "./git"

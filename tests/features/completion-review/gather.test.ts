@@ -357,7 +357,7 @@ describe("no hook, idle, or event-handler caller", () => {
     const trees = [
       join(REPO_ROOT, "src/hooks"),
       join(REPO_ROOT, "src/plugin"),
-      join(REPO_ROOT, "src/plugin-handlers"),
+      join(REPO_ROOT, "src/plugin/handlers"),
     ]
 
     //#when each tree is scanned for the gatherer's public entry point

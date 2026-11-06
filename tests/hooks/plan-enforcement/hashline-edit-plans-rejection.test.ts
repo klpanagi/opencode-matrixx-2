@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { createHashlineEditTool } from "../../../src/tools/hashline-edit/tools"
 import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computation"
 

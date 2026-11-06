@@ -1,4 +1,4 @@
-import { notify } from "../../shared/notify"
+import { notify } from "../../shared/runtime/notify"
 import type { ModelFallbackInfo, TaskStatus, TrackedTask } from "./types"
 
 export class TaskToastManager {

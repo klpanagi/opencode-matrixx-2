@@ -18,7 +18,7 @@
  */
 
 import { describe, expect, test } from "bun:test"
-import { mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { getBackgroundStaleAfterMs, getStaleAfterMs } from "../../src/hooks/task-continuation-enforcer/staleness"
@@ -28,7 +28,7 @@ import { TaskObjectSchema } from "../../src/tools/task/types"
 
 const SRC = join(import.meta.dir, "../../src")
 const HOUR_MS = 60 * 60 * 1000
-const MANAGER = "features/background-agent/manager.ts"
+const MANAGER = "features/background-agent/manager"
 const LEGACY_HOOK_NAMES = [
   "todo-continuation-enforcer",
   "compaction-todo-presister",
@@ -38,6 +38,12 @@ const LEGACY_HOOK_NAMES = [
 
 function readSrc(rel: string): string {
   return readFileSync(join(SRC, rel), "utf-8")
+}
+
+function sourceFilesUnderDir(rel: string): string[] {
+  return readdirSync(join(SRC, rel), { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+    .map((entry) => join(rel, entry.name))
 }
 
 /** The balanced `{ ... }` that opens at or after `anchor`. Throws if unbalanced. */
@@ -62,7 +68,8 @@ describe("R1: D5 removed the completion gates — completion is native events on
   // with the polling loops and restart reconciliation. Completion is detected
   // from native session.idle / session.error events via handleEvent().
   // These pins guard against reintroducing the deleted orchestration.
-  const source = readSrc(MANAGER)
+  // Phase 5a: MANAGER is the manager/ subdir — scan every module.
+  const source = sourceFilesUnderDir(MANAGER).map(readSrc).join("\n")
 
   test("10. no completion-gate predicate survives in the manager", () => {
     expect(source).not.toContain("hasIncompleteTasksForSession")
@@ -260,8 +267,8 @@ describe("D4 and the config-compat surface are pinned on purpose", () => {
   test("27. tool-config-handler.ts still denies both legacy todo tools via ruleset", () => {
     //#given the tool config handler source plus the permission module it spreads
     const handler =
-      readSrc("plugin-handlers/tool-config-handler.ts") +
-      readSrc("plugin-handlers/task-permissions.ts")
+      readSrc("plugin/handlers/tool-config-handler.ts") +
+      readSrc("plugin/handlers/task-permissions.ts")
 
     //#when the deny ruleset is inspected
     //#then the shared deny ruleset survives — this is what keeps the

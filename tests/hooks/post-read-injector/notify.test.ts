@@ -11,7 +11,7 @@ import { join } from "node:path"
 import { clearInjectedPaths } from "../../../src/hooks/directory-agents-injector/storage"
 import { createUnifiedPostReadProcessor } from "../../../src/hooks/post-read-injector/injector"
 import { clearInjectedRules } from "../../../src/hooks/rules-injector/storage"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
 
 type ToastOpts = {
   body: { title: string; message: string; variant: "info" | "success"; duration: number }

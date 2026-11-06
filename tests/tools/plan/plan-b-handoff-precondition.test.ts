@@ -17,7 +17,7 @@
  * Both arms are asserted with distinct fixtures (see `describe("condition 7")`).
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { existsSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"

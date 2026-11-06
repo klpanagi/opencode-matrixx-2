@@ -1,5 +1,5 @@
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import { contentOf, isAssistant, roleOf } from "../../shared/session-message"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { contentOf, isAssistant, roleOf } from "../../shared/session/session-message"
 import type { extractAutoRetrySignal } from "./error-classifier"
 import type { SessionMessage, SessionMessagePart } from "./session-messages"
 import { extractSessionMessages } from "./session-messages"

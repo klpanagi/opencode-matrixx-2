@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { LSPClient } from "./lsp-client"
 import { registerLspManagerProcessCleanup } from "./lsp-manager-process-cleanup"
 import { cleanupTempDirectoryLspClients } from "./lsp-manager-temp-directory-cleanup"

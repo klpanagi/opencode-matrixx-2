@@ -1,6 +1,6 @@
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { githubSearch } from "./cli"
 import { MAX_LIMIT } from "./constants"
 import { formatGithubSearchResult } from "./result-formatter"

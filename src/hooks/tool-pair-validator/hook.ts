@@ -15,7 +15,7 @@ type Part = {
   [key: string]: unknown
 }
 
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 
 const TOOL_RESULT_PLACEHOLDER = "Tool output unavailable (context compacted)"
 

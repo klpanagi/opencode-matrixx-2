@@ -1,6 +1,6 @@
 import { spawn } from "bun"
 
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 
 let tmuxPath: string | null = null
 let initPromise: Promise<string | null> | null = null

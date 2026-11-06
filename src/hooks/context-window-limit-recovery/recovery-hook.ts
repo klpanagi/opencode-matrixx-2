@@ -1,10 +1,10 @@
 // Boundary: reactive only (parses token_limit errors on session.error/message.updated/session.idle). Proactive compression belongs to DCP (/dcp-compress). Do not add proactive thresholds here. Cap API calls 2.
 
 import type { ExperimentalConfig } from "../../config"
-import type { V2Event } from "../../plugin/context"
-import { log } from "../../shared/logger"
-import { notify } from "../../shared/notify"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import type { V2Event } from "../../plugin/tool/context"
+import { log } from "../../shared/runtime/logger"
+import { notify } from "../../shared/runtime/notify"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { executeCompact, getLastAssistant } from "./executor"
 import { parseTokenLimitError } from "./parser"
 import type { AutoCompactState, ParsedTokenLimitError } from "./types"

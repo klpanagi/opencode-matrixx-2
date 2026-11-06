@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { createBuiltinSkills } from "../../src/skills/skills"
-import { systematicDebuggingSkill } from "../../src/skills/skills/core/systematic-debugging"
+import { createBuiltinSkills } from "../../src/skills/loader/factories"
+import { systematicDebuggingSkill } from "../../src/skills/builtin/core/systematic-debugging"
 
 describe("systematic-debugging skill", () => {
   test("factory registers skill via lazy wrapper", () => {

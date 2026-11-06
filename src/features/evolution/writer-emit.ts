@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { containsSecretForEval } from "./evaluator"
 import { traceStore } from "./store/trace-store"
 import type { DistilledKnowledge, KnowledgeKind } from "./types"

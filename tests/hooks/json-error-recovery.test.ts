@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { createJsonErrorRecoveryHook } from "../../src/hooks/json-error-recovery/hook"
 
 function makeHook() {

@@ -2,8 +2,8 @@ import * as p from "@clack/prompts"
 import { BuiltinAgentNameSchema } from "../../config/schema/agent-names"
 import { BuiltinCategoryNameSchema } from "../../config/schema/categories"
 import type { ModelPreset } from "../../config/schema/model-presets"
-import { readConnectedProvidersCache } from "../../shared/connected-providers-cache"
-import { fetchAvailableModels } from "../../shared/model-availability"
+import { readConnectedProvidersCache } from "../../shared/model/connected-providers-cache"
+import { fetchAvailableModels } from "../../shared/model/model-availability"
 
 /**
  * Exact error surfaced when no connected provider / model can be detected.

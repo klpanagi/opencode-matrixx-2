@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { findSgCliPathSync, setSgCliPath } from "./constants"
 import { ensureAstGrepBinary } from "./downloader"
 

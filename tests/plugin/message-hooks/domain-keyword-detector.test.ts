@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   applyDomainKeywordDetector,
   registerDomainKeywordDetector,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/domain-keyword-detector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 function flatEvent(texts: Array<{ type: string; text?: string; content?: Array<{ type?: string; text?: string }> }>): FlatMessageHookEvent {
   return {

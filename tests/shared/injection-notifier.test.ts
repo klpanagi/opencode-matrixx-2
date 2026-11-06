@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { detectKeywordsWithType } from "../../src/hooks/keyword-detector/detector"
-import { notifyInjection, resetInjectionNotifier } from "../../src/shared/injection-notifier"
-import { sanitizeKnownTags } from "../../src/shared/system-directive"
+import { notifyInjection, resetInjectionNotifier } from "../../src/shared/policy/injection-notifier"
+import { sanitizeKnownTags } from "../../src/shared/text/system-directive"
 
 //#given a mock ctx with a TUI showToast spy
 type ToastOpts = {

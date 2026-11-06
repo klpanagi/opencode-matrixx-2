@@ -1,6 +1,6 @@
 import { platform } from "node:os"
-import type { MatrixxContext } from "../plugin/context"
-import { log } from "../shared/logger"
+import type { MatrixxContext } from "../plugin/tool/context"
+import { log } from "../shared/runtime/logger"
 import { buildWindowsToastScript, escapeAppleScriptText, escapePowerShellSingleQuotedText } from "./session-notification-formatting"
 import {
   getAfplayPath,

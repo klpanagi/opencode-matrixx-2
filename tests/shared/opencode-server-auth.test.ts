@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { getServerBasicAuthHeader } from "../../src/shared/opencode-server-auth"
+import { getServerBasicAuthHeader } from "../../src/shared/opencode/opencode-server-auth"
 
 describe("opencode-server-auth", () => {
   let originalEnv: Record<string, string | undefined>

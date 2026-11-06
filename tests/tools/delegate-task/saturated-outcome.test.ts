@@ -10,7 +10,7 @@ import {
   formatSaturatedOutcome,
   isLaunchTerminalStatus,
   isQueueSaturated,
-} from "../../../src/shared/saturated-outcome"
+} from "../../../src/shared/outcome/saturated-outcome"
 
 function extractTaskMetadata(text: string): Record<string, unknown> {
   const match = text.match(/<task_metadata>([\s\S]*?)<\/task_metadata>/)

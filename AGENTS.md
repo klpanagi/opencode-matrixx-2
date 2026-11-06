@@ -132,7 +132,7 @@ matrixx/
 │   ├── cli/      → installer, doctor, config-manager
 │   ├── config/   → Zod schema
 │   ├── plugin/   → hook composition (create-core/continuation/skill-hooks)
-│   └── plugin-handlers/ → config-loading pipeline (6 phases)
+│   └── plugin/handlers/ → config-loading pipeline (6 phases)
 ├── bin/                            # Platform-detecting CLI wrappers
 ├── script/                         # build-schema, build-binaries, publish, run-ci.sh
 ├── packages/                       # 7 platform + 4 baseline binary packages
@@ -141,7 +141,7 @@ matrixx/
 └── dist/                           # Build output (ESM + .d.ts + schema)
 ```
 
-Per-area `AGENTS.md` in `src/`, `src/agents/`, `src/hooks/`, `src/tools/`, `src/features/`, `src/skills/`, `src/mcps/`, `src/shared/`, `src/config/`, `src/plugin-handlers/` — read when working in that area.
+Per-area `AGENTS.md` in `src/`, `src/agents/`, `src/hooks/`, `src/tools/`, `src/features/`, `src/skills/`, `src/mcps/`, `src/shared/`, `src/config/`, `src/plugin/` — read when working in that area.
 
 ## QUICK COMMANDS
 
@@ -187,7 +187,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 | New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{core,continuation,skill}-hooks.ts` |
 | New tool | `src/tools/<name>/` | Register in `src/plugin/tool-registry.ts` (needs `index, types, constants, tools` structure) |
 | New MCP | `src/mcps/` | Add to `createBuiltinMcps()` |
-| New built-in skill | `src/skills/skills/` | Export from `skills/index.ts`; add to `createBuiltinSkills()` |
+| New built-in skill | `src/skills/builtin/` | Export from `skills/index.ts`; add to `createBuiltinSkills()` |
 | New command | `src/features/builtin-commands/` | Add template + register in `commands.ts` |
 | Schema field | `src/config/schema/` | Run `bun run build:schema` → regenerates `dist/` and `assets/matrixx.schema.json` |
 | User-facing skill | `.opencode/skills/<name>/SKILL.md` | Loaded by OpenCode session — not the plugin |

@@ -2,12 +2,12 @@ import { describe, expect, mock, test } from "bun:test"
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { registerSubagentSession, unregisterSubagentSession } from "../../../src/features/session-state/state"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { handleNonIdleEvent } from "../../../src/hooks/task-continuation-enforcer/non-idle-events"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 function writeValidTask(dir: string, id: string, status = "pending", threadID?: string): void {
   const task: Record<string, unknown> = { id, subject: `task ${id}`, description: "d", status, blocks: [], blockedBy: [] }

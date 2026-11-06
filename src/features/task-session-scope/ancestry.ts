@@ -21,7 +21,7 @@
  * with no referential integrity, so matching on it would be unsound.
  */
 import { join } from "node:path"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { TaskObjectSchema } from "../../tools/task/types"
 import { readJsonSafe } from "../task-storage/storage"
 import type { Task } from "../task-storage/types"

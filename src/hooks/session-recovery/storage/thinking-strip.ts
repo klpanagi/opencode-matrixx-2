@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
 import { deletePart, isSqliteBackend, log } from "../../../shared"
-import type { SessionContextCarrier } from "../../../shared/session-context-source"
-import { fetchSessionMessages } from "../../../shared/session-context-source"
-import { contentOf, idOf } from "../../../shared/session-message"
+import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../../shared/session/session-context-source"
+import { contentOf, idOf } from "../../../shared/session/session-message"
 import { PART_STORAGE, THINKING_TYPES } from "../constants"
 import type { StoredPart } from "../types"
 

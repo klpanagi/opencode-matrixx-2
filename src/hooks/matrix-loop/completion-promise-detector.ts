@@ -1,11 +1,11 @@
 import { existsSync, readFileSync } from "node:fs"
-import { escapeRegExp as escapeRegex } from "../../shared/escape-regexp"
-import { log } from "../../shared/logger"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import type { SessionMessage } from "../../shared/session-message"
-import { contentOf, isAssistant } from "../../shared/session-message"
-import { withTimeout } from "../../shared/with-timeout"
+import { log } from "../../shared/runtime/logger"
+import { withTimeout } from "../../shared/runtime/with-timeout"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import type { SessionMessage } from "../../shared/session/session-message"
+import { contentOf, isAssistant } from "../../shared/session/session-message"
+import { escapeRegExp as escapeRegex } from "../../shared/text/escape-regexp"
 import { HOOK_NAME } from "./constants"
 
 export type OpenCodeSessionMessage = SessionMessage

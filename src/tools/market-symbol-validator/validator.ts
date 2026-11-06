@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
-import { escapeRegExp } from "../../shared/escape-regexp"
+import { escapeRegExp } from "../../shared/text/escape-regexp"
 import { CAPABILITIES, EXCHANGE_IDS, RULE_CATALOG, SYMBOL_EXTENSIONS } from "./constants"
 import type { SymbolFinding, SymbolSeverity, SymbolValidationResult } from "./types"
 

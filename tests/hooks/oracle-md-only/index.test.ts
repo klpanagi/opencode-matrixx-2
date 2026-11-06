@@ -4,15 +4,15 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { clearSessionAgent, setSessionAgent } from "../../../src/features/session-state/state"
-import { SYSTEM_DIRECTIVE_PREFIX } from "../../../src/shared/system-directive"
+import { SYSTEM_DIRECTIVE_PREFIX } from "../../../src/shared/text/system-directive"
 
-mock.module("../../../src/shared/opencode-storage-detection", () => ({
+mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
   resetSqliteBackendCache: () => {},
 }))
 
 const { createOracleMdOnlyHook } = await import("../../../src/hooks/oracle-md-only/hook")
-const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
+const { MESSAGE_STORAGE } = await import("../../../src/features/context-injection/hook-bridge")
 
 afterAll(() => {
   mock.restore()

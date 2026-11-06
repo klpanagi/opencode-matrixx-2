@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process"
 import { existsSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { getDataDir } from "../../shared/data-path"
+import { getDataDir } from "../../shared/config/data-path"
 import { downloadAndInstallRipgrep, getInstalledRipgrepPath } from "./downloader"
 
 export type GrepBackend = "rg" | "grep"

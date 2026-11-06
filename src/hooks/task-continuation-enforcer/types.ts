@@ -1,8 +1,8 @@
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import type { ToolPermission } from "../../features/hook-message-injector"
+import type { ToolPermission } from "../../features/context-injection/hook-bridge"
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export interface TaskContinuationEnforcerOptions {
   backgroundManager?: BackgroundManager
   skipAgents?: string[]

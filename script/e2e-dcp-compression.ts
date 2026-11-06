@@ -31,8 +31,8 @@ import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { parse as parseJsonc } from "jsonc-parser"
 
-import { switchProfile } from "../src/shared/dcp-switch-profile.ts"
-import { resolveDcpCompressionMode } from "../src/shared/dcp-guidance.ts"
+import { switchProfile } from "../src/shared/policy/dcp-switch-profile"
+import { resolveDcpCompressionMode } from "../src/shared/policy/dcp-guidance"
 
 const PROFILE = "min-band-test"
 const EXPECTED_MAX = "10%"

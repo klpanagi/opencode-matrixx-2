@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { createMarketSymbolValidatorTool } from "../../src/tools/market-symbol-validator/tools"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "market-symbol-validator")

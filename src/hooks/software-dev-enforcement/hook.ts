@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../../config"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import {
   isSoftwareDevOrchestratorTarget,
   resolveSoftwareDevEnforcementContent,

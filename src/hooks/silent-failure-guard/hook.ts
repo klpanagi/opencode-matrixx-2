@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs"
 import { isAbsolute, resolve } from "node:path"
 import picomatch from "picomatch"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared"
 import { scanPath } from "../../tools/silent-failure-scanner"
 import { getRuleInjectionFilePath } from "../rules-injector/output-path"

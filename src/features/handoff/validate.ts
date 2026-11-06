@@ -1,4 +1,4 @@
-import { parseFrontmatter } from "../../shared/frontmatter"
+import { parseFrontmatter } from "../../shared/io/frontmatter"
 import { type HandoffFileData, HandoffSchema } from "./schema"
 
 /**

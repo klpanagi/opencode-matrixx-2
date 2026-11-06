@@ -2,8 +2,8 @@
 
 
 import { getSessionAgent } from "../../features/session-state/state"
-import type { MatrixxContext } from "../../plugin/context"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 import { log } from "../../shared"
 import { FALLBACK_MESSAGE, GUARDED_TOOLS, HOOK_NAME, NUDGE_MESSAGE, OPERATOR_AGENT } from "./constants"
 

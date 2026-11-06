@@ -20,14 +20,14 @@
  *        legacy todo tools.
  */
 
-import { applyToolConfig } from "../src/plugin-handlers/tool-config-handler"
+import { applyToolConfig } from "../src/plugin/handlers/tool-config-handler"
 import type { MatrixxConfig } from "../src/config"
 
 const AGENTS = ["morpheus", "keymaker", "oracle", "niobe", "mouse"] as const
 const MUST_DENY = ["todowrite", "todoread"] as const
 const MUST_ALLOW = ["task", "task_*", "teammate"] as const
 /**
- * `keymaker` is intentionally narrower: `src/plugin-handlers/AGENTS.md` records
+ * `keymaker` is intentionally narrower: `src/plugin/handlers/AGENTS.md` records
  * its contract as "task, question allowed" — no `task_*` / `teammate` grant.
  * That predates Task 5 (set in Task 4) and is out of scope here, so it is
  * asserted as absent rather than allowed.

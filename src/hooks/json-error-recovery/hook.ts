@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 
 export const JSON_ERROR_TOOL_EXCLUDE_LIST = [
   "bash",

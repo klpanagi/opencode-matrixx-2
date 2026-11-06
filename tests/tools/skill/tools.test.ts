@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, mock } from "bun:test"
 import * as fs from "node:fs"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import type { LoadedSkill } from "../../../src/features/opencode-skill-loader/types"
 import { createSkillTool } from "../../../src/tools/skill/tools"
 

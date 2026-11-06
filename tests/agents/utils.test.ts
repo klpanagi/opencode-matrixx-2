@@ -3,8 +3,8 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import type { AgentConfig } from "../../src/agents/agent-config"
 import * as shared from "../../src/shared"
-import * as connectedProvidersCache from "../../src/shared/connected-providers-cache"
-import * as modelAvailability from "../../src/shared/model-availability"
+import * as connectedProvidersCache from "../../src/shared/model/connected-providers-cache"
+import * as modelAvailability from "../../src/shared/model/model-availability"
 import { createBuiltinAgents } from "../../src/agents/builtin-agents"
 
 const TEST_DEFAULT_MODEL = "anthropic/claude-opus-4-6"

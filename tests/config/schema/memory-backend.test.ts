@@ -9,7 +9,7 @@ import {
   getMemoryBackendMissingWarning,
   getMemoryBackendRoutingHint,
   isMemoryBackendSatisfied,
-} from "../../../src/shared/memory-backend-detect"
+} from "../../../src/shared/opencode/memory-backend-detect"
 
 describe("memory.backend selector", () => {
   test("defaults to off with empty input", () => {

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { MESSAGE_STORAGE, type StoredMessage } from "../hook-message-injector"
+import { MESSAGE_STORAGE, type StoredMessage } from "../context-injection/hook-bridge"
 
 const MESSAGE_DIR_CACHE_CAP = 1000
 const messageDirCache = new Map<string, string | null>()

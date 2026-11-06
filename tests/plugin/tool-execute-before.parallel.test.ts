@@ -27,8 +27,8 @@
  * CI's mock-heavy test list (see AGENTS.md "Tests that MUST be isolated").
  */
 import { afterEach, describe, expect, mock, spyOn, test } from "bun:test"
-import * as sessionAgentResolver from "../../src/plugin/session-agent-resolver"
-import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
+import * as sessionAgentResolver from "../../src/plugin/tool/session-agent-resolver"
+import { createToolExecuteBeforeHandler } from "../../src/plugin/tool/tool-execute-before"
 
 type CreatedHooks = Parameters<typeof createToolExecuteBeforeHandler>[0]["hooks"]
 type MatrixxContext = Parameters<typeof createToolExecuteBeforeHandler>[0]["ctx"]

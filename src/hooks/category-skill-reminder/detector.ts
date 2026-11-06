@@ -1,5 +1,5 @@
 import { getSessionAgent, subagentSessions } from "../../features/session-state/state"
-import { getAgentConfigKey } from "../../shared/agent-display-names"
+import { getAgentConfigKey } from "../../shared/agent/agent-display-names"
 
 const TARGET_AGENTS = new Set([
   "morpheus",

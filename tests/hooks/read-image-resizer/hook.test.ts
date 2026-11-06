@@ -1,8 +1,8 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
-import * as sessionModelState from "../../../src/shared/session-state"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
+import * as sessionModelState from "../../../src/shared/session/session-state"
 import { createReadImageResizerHook } from "../../../src/hooks/read-image-resizer/hook"
 import * as imageDimensions from "../../../src/hooks/read-image-resizer/image-dimensions"
 import * as imageResizer from "../../../src/hooks/read-image-resizer/image-resizer"
