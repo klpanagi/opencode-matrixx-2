@@ -276,7 +276,7 @@ describe("category-skill-reminder hook", () => {
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "5" }, output2)
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "6" }, output2)
 
-      // then - reminder should be shown again (state was reset)
+      // then - reminder should be shown again (deleted clears state + dedup)
       expect(output2.output).toContain("[Category+Skill Reminder]")
 
       clearSessionAgent(sessionID)
@@ -302,8 +302,9 @@ describe("category-skill-reminder hook", () => {
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "5" }, output2)
       await hook["tool.execute.after"]({ tool: "edit", sessionID, callID: "6" }, output2)
 
-      // then - reminder should be shown again (state was reset)
-      expect(output2.output).toContain("[Category+Skill Reminder]")
+      // then - reminder is suppressed: the 60s per-tool+skill dedup survives
+      // compaction (same session continues) even though progress state reset
+      expect(output2.output).not.toContain("[Category+Skill Reminder]")
 
       clearSessionAgent(sessionID)
     })
