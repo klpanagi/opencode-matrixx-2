@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test"
 
 import type { MatrixxConfig } from "../src/config"
 import { createTransformHooks } from "../src/plugin/hooks/create-transform-hooks"
-import { MATRIXX_CONTEXT_MODE_MARKER } from "../src/features/context-mode-routing/routing-block"
+import { MATRIXX_CONTEXT_MODE_MARKER } from "../src/features/context-injection/routing"
 
 const CTX = {} as never
 

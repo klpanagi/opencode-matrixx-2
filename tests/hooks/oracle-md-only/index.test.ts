@@ -12,7 +12,7 @@ mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
 }))
 
 const { createOracleMdOnlyHook } = await import("../../../src/hooks/oracle-md-only/hook")
-const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
+const { MESSAGE_STORAGE } = await import("../../../src/features/context-injection/hook-bridge")
 
 afterAll(() => {
   mock.restore()

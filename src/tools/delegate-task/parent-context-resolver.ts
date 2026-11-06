@@ -1,4 +1,4 @@
-import { resolveMessageContext } from "../../features/hook-message-injector"
+import { resolveMessageContext } from "../../features/context-injection/hook-bridge"
 import { getSessionAgent } from "../../features/session-state/state"
 import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
 import { log } from "../../shared/runtime/logger"

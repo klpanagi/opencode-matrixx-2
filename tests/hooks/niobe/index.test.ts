@@ -16,7 +16,7 @@ const TEST_STORAGE_ROOT = join(tmpdir(), `niobe-test-storage-${randomUUID()}`)
 const TEST_MESSAGE_STORAGE = join(TEST_STORAGE_ROOT, "messages")
 const TEST_PART_STORAGE = join(TEST_STORAGE_ROOT, "parts")
 
-mock.module("../../../src/features/hook-message-injector/constants", () => ({
+mock.module("../../../src/features/context-injection/hook-bridge/constants", () => ({
   OPENCODE_STORAGE: TEST_STORAGE_ROOT,
   MESSAGE_STORAGE: TEST_MESSAGE_STORAGE,
   PART_STORAGE: TEST_PART_STORAGE,
@@ -58,7 +58,7 @@ mock.module("../../../src/shared/session/session-utils", () => ({
 }))
 
 const { createNiobeHook } = await import("../../../src/hooks/niobe/niobe-hook")
-const { MESSAGE_STORAGE } = await import("../../../src/features/hook-message-injector")
+const { MESSAGE_STORAGE } = await import("../../../src/features/context-injection/hook-bridge")
 
 afterAll(() => {
   mock.restore()

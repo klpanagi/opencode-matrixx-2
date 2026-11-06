@@ -1,4 +1,4 @@
-import { findNearestMessageWithFields } from "../../features/hook-message-injector"
+import { findNearestMessageWithFields } from "../../features/context-injection/hook-bridge"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
 import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
 import { log } from "../../shared/runtime/logger"

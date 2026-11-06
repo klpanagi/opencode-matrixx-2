@@ -1,4 +1,4 @@
-import { type ContextCollector, contextCollector } from "../../features/context-injector"
+import { type ContextCollector, contextCollector } from "../../features/context-injection/injector"
 import { getMainSessionID } from "../../features/session-state/state"
 import { log } from "../../shared/runtime/logger"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"

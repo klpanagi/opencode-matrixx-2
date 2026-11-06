@@ -1,3 +1,9 @@
+/** Evolution layer cross-link (orchestration vs triggers vs actions):
+ * - Triggers: this hook (`hooks/evolution-hitl`, with `hooks/evolution-watcher`, `hooks/evolution-compressor`, `hooks/evolution-quality-gate`) observes session/tool events
+ *   and feeds the evolution pipeline.
+ * - Orchestration: `features/evolution/` owns the pipeline, store, and writer.
+ * - Actions: `tools/evolution` exposes agent-callable tools (propose/approve/query) on the store.
+ */
 /**
  * Local legacy `{info, parts}` shapes (Task 27: the V1 `experimental.chat.messages.transform`
  * fan-out is deleted, so `legacy V1 SDK` message types are no longer imported).

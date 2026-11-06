@@ -1,3 +1,9 @@
+/** Evolution layer cross-link (orchestration vs triggers vs actions):
+ * - Triggers: this hook (`hooks/evolution-watcher`, with `hooks/evolution-hitl`, `hooks/evolution-compressor`, `hooks/evolution-quality-gate`) observes session/tool events
+ *   and feeds the evolution pipeline.
+ * - Orchestration: `features/evolution/` owns the pipeline, store, and writer.
+ * - Actions: `tools/evolution` exposes agent-callable tools (propose/approve/query) on the store.
+ */
 import type { EvolutionConfig } from "../../config/schema/evolution"
 import { traceStore } from "../../features/evolution/store/trace-store"
 import type { TraceRecord } from "../../features/evolution/types"

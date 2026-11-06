@@ -1,6 +1,6 @@
 import { findFirstMessageWithAgent, 
   findFirstMessageWithAgentFromSDK,findNearestMessageWithFields, 
-  findNearestMessageWithFieldsFromSDK,} from "../../features/hook-message-injector"
+  findNearestMessageWithFieldsFromSDK,} from "../../features/context-injection/hook-bridge"
 import { readMissionState } from "../../features/mission-state"
 import { getSessionAgent } from "../../features/session-state/state"
 import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"

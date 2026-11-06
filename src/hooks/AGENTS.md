@@ -17,7 +17,7 @@ hooks/
 ├── category-skill-reminder/      # Category+skill delegation reminders (597 lines)
 ├── comment-checker/              # Prevents AI slop comments (710 lines)
 ├── compaction-context-injector/  # Injects context on compaction (128 lines)
-├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-mode-routing/` (~131 lines)
+├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/` (~131 lines)
 ├── context-window-monitor.ts     # Reminds of headroom at 70% (99 lines)
 ├── delegate-task-retry/          # Retries failed delegations (266 lines)
 ├── design-intent-preserver/      # Preserves design intent across edits

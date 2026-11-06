@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../../config"
-import { invalidateSdkMessageCache } from "../../features/hook-message-injector"
+import { invalidateSdkMessageCache } from "../../features/context-injection/hook-bridge"
 import {
   clearSessionAgent,
   getMainSessionID,

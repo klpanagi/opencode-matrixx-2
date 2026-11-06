@@ -6,7 +6,7 @@ import {
   findNearestMessageWithFields,
   findNearestMessageWithFieldsFromSDK,
   type ToolPermission,
-} from "../../features/hook-message-injector"
+} from "../../features/context-injection/hook-bridge"
 import { getSubagentSessionIDs, subagentSessions } from "../../features/session-state/state"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { Task } from "../../features/task-storage/types"

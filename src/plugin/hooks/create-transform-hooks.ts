@@ -2,8 +2,8 @@ import type { MatrixxConfig } from "../../config"
 import {
   contextCollector,
   createContextInjectorMessagesTransformHook,
-} from "../../features/context-injector"
-import { createContextModeSystemTransformHook } from "../../features/context-mode-routing/system-transform"
+} from "../../features/context-injection/injector"
+import { createContextModeSystemTransformHook } from "../../features/context-injection/routing"
 import { createRtkSystemTransformHook } from "../../features/rtk-routing/system-transform"
 
 import {

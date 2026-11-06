@@ -1,4 +1,4 @@
-import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../../features/hook-message-injector"
+import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../../features/context-injection/hook-bridge"
 import { getSessionAgent } from "../../features/session-state/state"
 import { getAgentConfigKey } from "../agent/agent-display-names"
 import { isSqliteBackend } from "../config/opencode-storage-detection"

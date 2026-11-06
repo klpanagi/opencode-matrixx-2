@@ -19,7 +19,7 @@ type Part = {
 };
 
 import type { KnowledgeHub } from "../../config/schema/knowledge";
-import { type ContextCollector, contextCollector } from "../../features/context-injector";
+import { type ContextCollector, contextCollector } from "../../features/context-injection/injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
 import { getMainSessionID } from "../../features/session-state/state";
 import type { MatrixxContext } from "../../plugin/tool/context";

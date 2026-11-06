@@ -1,4 +1,4 @@
-import { findNearestMessageWithFields } from "../../features/hook-message-injector"
+import { findNearestMessageWithFields } from "../../features/context-injection/hook-bridge"
 import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"

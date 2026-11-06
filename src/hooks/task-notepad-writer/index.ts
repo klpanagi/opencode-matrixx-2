@@ -1,0 +1,40 @@
+/** task-notepad-writer barrel: explicit named re-exports of local modules only. */
+export {
+  ADHOC_BUCKET,
+  COMPLETED_STATUS,
+  COMPLETION_SECTION_TITLE,
+  DEFAULT_PRIORITY,
+  HOOK_NAME,
+  MATRIXX_DIR_NAME,
+  NOTEPAD_EXTENSION,
+  NOTEPAD_SECTIONS,
+  NOTEPADS_SUBDIR,
+  PLAN_EXTENSION,
+  PLAN_NAME_METADATA_KEY,
+  PLANS_SUBDIR,
+  renderCompletionStamp,
+  renderNotepad,
+  SLUG_MAX_LENGTH,
+  TASK_CREATE_TOOL,
+  TASK_UPDATE_TOOL,
+  taskIdMarkerLine,
+  taskIdMarkerPresent,
+} from "./constants"
+export {
+  createTaskNotepadWriterHook,
+  type ToolAfterInput,
+  type ToolAfterOutput,
+} from "./hook"
+export {
+  type BucketReason,
+  countNotepadFiles,
+  extractPlanName,
+  findExistingNotepadForTask,
+  findNotepadForTask,
+  type NotepadResolution,
+  type NotepadTask,
+  notepadsRootFor,
+  resolveNotepadPath,
+  slugifySubject,
+  type TaskNotepadWriterContext,
+} from "./notepad-path"

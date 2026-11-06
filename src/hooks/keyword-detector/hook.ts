@@ -1,4 +1,4 @@
-import type { ContextCollector } from "../../features/context-injector"
+import type { ContextCollector } from "../../features/context-injection/injector"
 import {
   getMainSessionID,
   getSessionAgent,

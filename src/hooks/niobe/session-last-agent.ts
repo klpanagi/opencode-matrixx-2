@@ -1,4 +1,4 @@
-import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../../features/hook-message-injector"
+import { findNearestMessageWithFields, findNearestMessageWithFieldsFromSDK } from "../../features/context-injection/hook-bridge"
 import { getMessageDir, isSqliteBackend } from "../../shared"
 import type { SessionContextCarrier } from "../../shared/session/session-context-source"
 

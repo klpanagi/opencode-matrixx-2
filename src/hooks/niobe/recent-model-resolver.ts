@@ -1,7 +1,7 @@
 import {
   findNearestMessageWithFields,
   findNearestMessageWithFieldsFromSDK,
-} from "../../features/hook-message-injector"
+} from "../../features/context-injection/hook-bridge"
 import { getMessageDir, isSqliteBackend } from "../../shared"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"

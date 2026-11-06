@@ -67,7 +67,7 @@ const { createNiobeHook } = await import("../src/hooks/niobe/index")
 // PR #157 adds this module; it does not exist at the merge base, so the import
 // is optional and the script runs unmodified on both revisions.
 const { invalidateSdkMessageCache } = await import(
-  "../src/features/hook-message-injector/sdk-message-cache" as string
+  "../src/features/context-injection/hook-bridge" as string
 ).catch(() => ({ invalidateSdkMessageCache: null }))
 const { _resetForTesting, setSessionAgent } = await import("../src/features/session-state/state")
 const { createPlanCreateTool } = await import("../src/tools/plan/plan-create")

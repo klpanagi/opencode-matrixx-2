@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { ContextCollector } from "../../../src/features/context-injector"
+import { ContextCollector } from "../../../src/features/context-injection/injector"
 import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   applyContextInjectorMessagesTransform,
