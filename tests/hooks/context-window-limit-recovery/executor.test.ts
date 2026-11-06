@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test"
-import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/runtime/notify"
 import * as messagesReader from "../../../src/hooks/session-recovery/storage/messages-reader"
 import { executeCompact } from "../../../src/hooks/context-window-limit-recovery/executor"
 

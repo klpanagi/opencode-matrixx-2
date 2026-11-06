@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import {
   SESSION_INFO_DESCRIPTION,
@@ -32,7 +32,7 @@ import type { SearchResult, SessionInfoArgs, SessionListArgs, SessionReadArgs, S
 const SEARCH_TIMEOUT_MS = 60_000
 const MAX_SESSIONS_TO_SCAN = 50
 
-import { withTimeout } from "../../shared/with-timeout"
+import { withTimeout } from "../../shared/runtime/with-timeout"
 
 export function createSessionManagerTools(
   ctx: NativePluginContext,

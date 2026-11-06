@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { isTaskSystemEnabled, resolveTasksConfig, TASK_SYSTEM_DEFAULT } from "../../src/shared/task-system-gating"
+import { isTaskSystemEnabled, resolveTasksConfig, TASK_SYSTEM_DEFAULT } from "../../src/shared/config/task-system-gating"
 
 describe("isTaskSystemEnabled", () => {
   test("returns true when config is empty object", () => {

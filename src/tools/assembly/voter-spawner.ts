@@ -1,5 +1,5 @@
 import type { BackgroundManager } from "../../features/background-agent/manager"
-import { delay } from "../../shared/delay"
+import { delay } from "../../shared/runtime/delay"
 import { POLL_INTERVAL_MS, VOTER_TIMEOUT_MS } from "./constants"
 import type { ProviderModel, VoterResult } from "./types"
 

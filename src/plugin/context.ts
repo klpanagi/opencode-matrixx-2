@@ -28,7 +28,7 @@
  * that literal directly.
  */
 
-import type { NotifySink } from "../shared/notify"
+import type { NotifySink } from "../shared/runtime/notify"
 import type { MatrixxToolDefinition } from "../tools/shared/define-tool"
 
 export type Cleanup = () => unknown

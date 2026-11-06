@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it, mock } from "bun:test"
 
-mock.module("../../../src/shared/system-directive", () => ({
+mock.module("../../../src/shared/text/system-directive", () => ({
   createSystemDirective: (type: string) => `[DIRECTIVE:${type}]`,
   SystemDirectiveTypes: {
     TODO_CONTINUATION: "TODO CONTINUATION",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import * as sessionMessage from "../../src/shared/session-message"
-import type { ContentPart, SessionMessage, SessionRole } from "../../src/shared/session-message"
+import * as sessionMessage from "../../src/shared/session/session-message"
+import type { ContentPart, SessionMessage, SessionRole } from "../../src/shared/session/session-message"
 
 /**
  * Phase 3 shape lock (plan task 17).

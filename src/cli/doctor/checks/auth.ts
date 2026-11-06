@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import { readConnectedProvidersCache, readProviderModelsCache } from "../../../shared/connected-providers-cache"
-import { parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../shared/config/opencode-config-dir"
+import { readConnectedProvidersCache, readProviderModelsCache } from "../../../shared/model/connected-providers-cache"
+import { parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 import type { CheckResult, DoctorCheck } from "../types"
 
 type ProviderStatus = { provider: string; configured: boolean; detail?: string }

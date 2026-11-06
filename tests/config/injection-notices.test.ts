@@ -4,8 +4,8 @@ import {
   INJECTION_NOTICE_MAX_BODY_LENGTH,
   notifyInjection,
   resetInjectionNotifier,
-} from "../../src/shared/injection-notifier"
-import { SYSTEM_DIRECTIVE_PREFIX } from "../../src/shared/system-directive"
+} from "../../src/shared/policy/injection-notifier"
+import { SYSTEM_DIRECTIVE_PREFIX } from "../../src/shared/text/system-directive"
 
 //#given a mock ctx with TUI toast spy + session.prompt spy (headless harness shape)
 type ToastOpts = {

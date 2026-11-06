@@ -1,4 +1,4 @@
-import { isRecord } from "../shared/record-type-guard"
+import { isRecord } from "../shared/runtime/record-type-guard"
 
 type ChatParamsInput = {
   sessionID: string
@@ -58,7 +58,7 @@ function isChatParamsOutput(raw: unknown): raw is ChatParamsOutput {
 }
 
 import { setSessionModel } from "../features/session-state/state"
-import { clearSessionTemperature, getSessionTemperature } from "../shared/session-state"
+import { clearSessionTemperature, getSessionTemperature } from "../shared/session/session-state"
 
 export function createChatParamsHandler(args: {
   anthropicEffort: { "chat.params"?: (input: ChatParamsInput, output: ChatParamsOutput) => Promise<void> } | null

@@ -1,4 +1,4 @@
-import { log as defaultLog } from "../shared/logger"
+import { log as defaultLog } from "../shared/runtime/logger"
 import type { V2Event } from "./context"
 
 export const DISPATCH_BACKOFF_BASE_MS = 250

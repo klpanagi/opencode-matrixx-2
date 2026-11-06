@@ -12,8 +12,8 @@ import {
   RTK_NOTICE_MESSAGE,
   RTK_NOTICE_TITLE,
 } from "../../../src/features/rtk-routing/system-transform"
-import { notifyInjection, resetInjectionNotifier } from "../../../src/shared/injection-notifier"
-import { sanitizeKnownTags } from "../../../src/shared/system-directive"
+import { notifyInjection, resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
+import { sanitizeKnownTags } from "../../../src/shared/text/system-directive"
 
 function model() {
   return { providerID: "anthropic", modelID: "claude-opus-4-6" } as never

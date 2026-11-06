@@ -4,7 +4,7 @@ import {
   readConnectedProvidersCache,
   readProviderModelsCache,
 } from "../shared"
-import { mergeCategories } from "../shared/merge-categories"
+import { mergeCategories } from "../shared/tool/merge-categories"
 import type { BuiltinSkill } from "../skills"
 import { CATEGORY_DESCRIPTIONS } from "../tools/delegate-task/constants"
 import type { AgentConfig } from "./agent-config"

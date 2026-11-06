@@ -1,10 +1,10 @@
 import type { LlmUsage } from "../../features/evolution/compressor/interface"
-import { log } from "../../shared/logger"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import type { SessionMessage } from "../../shared/session-message"
-import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
-import { type EphemeralSessionHandle, withEphemeralSession } from "../../shared/with-ephemeral-session"
+import { log } from "../../shared/runtime/logger"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import type { SessionMessage } from "../../shared/session/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session/session-message"
+import { type EphemeralSessionHandle, withEphemeralSession } from "../../shared/session/with-ephemeral-session"
 import { parseModelString } from "../../tools/delegate-task/model-string-parser"
 
 function latestAssistantText(messages: SessionMessage[]): string | null {

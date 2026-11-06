@@ -1,4 +1,4 @@
-import { denyActions } from "../shared/permission-compat"
+import { denyActions } from "../shared/agent/permission-compat"
 import { DSL_CODEGEN_SKILL_NAME } from "../skills/skills/dsl/dsl-codegen"
 import { DSL_COMPOSITION_SKILL_NAME } from "../skills/skills/dsl/dsl-composition"
 import { DSL_CORE_SKILL_NAME } from "../skills/skills/dsl/dsl-core"

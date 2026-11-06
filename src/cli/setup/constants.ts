@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getOpenCodeConfigDir } from "../../shared/opencode-config-dir";
+import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir";
 import type { Platform } from "./types";
 
 export const REQUIRED_DEPS = ["bun", "opencode", "git"] as const;

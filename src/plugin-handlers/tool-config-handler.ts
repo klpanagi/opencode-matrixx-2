@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../config";
-import { type PermissionRule, rule } from "../shared/permission-compat";
+import { type PermissionRule, rule } from "../shared/agent/permission-compat";
 import {
   denyTodoPermissions,
   deriveTaskPermissions,

@@ -4,7 +4,7 @@ import { describe, expect, test } from "bun:test"
 import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
 import type { BackgroundManager } from "../../../src/features/background-agent"
 import type { BackgroundTask, BackgroundTaskStatus } from "../../../src/features/background-agent/types"
-import type { SessionContextCarrier } from "../../../src/shared/session-context-source"
+import type { SessionContextCarrier } from "../../../src/shared/session/session-context-source"
 import { createBackgroundCancel } from "../../../src/tools/background-task/create-background-cancel"
 import { createBackgroundOutput } from "../../../src/tools/background-task/create-background-output"
 import type {

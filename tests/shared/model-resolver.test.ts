@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import * as connectedProvidersCache from "../../src/shared/connected-providers-cache"
-import * as logger from "../../src/shared/logger"
-import { normalizeModel, resolveModelPipeline, type ModelResolutionRequest, type ModelResolutionProvenance, type ModelResolutionResult } from "../../src/shared/model-resolution-pipeline"
+import * as connectedProvidersCache from "../../src/shared/model/connected-providers-cache"
+import * as logger from "../../src/shared/runtime/logger"
+import { normalizeModel, resolveModelPipeline, type ModelResolutionRequest, type ModelResolutionProvenance, type ModelResolutionResult } from "../../src/shared/model/model-resolution-pipeline"
 
 describe("normalizeModel", () => {
   test("trims whitespace", () => {

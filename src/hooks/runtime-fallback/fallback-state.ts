@@ -1,5 +1,5 @@
 import type { RuntimeFallbackConfig } from "../../config"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { HOOK_NAME } from "./constants"
 import type { FallbackResult, FallbackState } from "./types"
 

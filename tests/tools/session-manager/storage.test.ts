@@ -26,19 +26,19 @@ mock.module("../../../src/tools/session-manager/constants", () => ({
   TOOL_NAME_PREFIX: "session_",
 }))
 
-mock.module("../../../src/shared/opencode-storage-detection", () => ({
+mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
   resetSqliteBackendCache: () => {},
 }))
 
-mock.module("../../../src/shared/opencode-storage-paths", () => ({
+mock.module("../../../src/shared/config/opencode-storage-paths", () => ({
   OPENCODE_STORAGE: TEST_DIR,
   MESSAGE_STORAGE: TEST_MESSAGE_STORAGE,
   PART_STORAGE: TEST_PART_STORAGE,
   SESSION_STORAGE: TEST_SESSION_STORAGE,
 }))
 
-mock.module("../../../src/shared/opencode-message-dir", () => ({
+mock.module("../../../src/shared/opencode/opencode-message-dir", () => ({
   getMessageDir: (sessionID: string) => {
     if (!sessionID.startsWith("ses_")) return null
     if (/[/\\]|\.\./.test(sessionID)) return null
@@ -380,7 +380,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     mockClient.session.list.mockImplementation(() => Promise.resolve({ data: mockSessions }))
 
     // Mock isSqliteBackend to return true
-    mock.module("../../../src/shared/opencode-storage-detection", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
       resetSqliteBackendCache: () => {},
     }))
@@ -409,7 +409,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     ]
     mockClient.session.list.mockImplementation(() => Promise.resolve({ data: mockSessions }))
 
-    mock.module("../../../src/shared/opencode-storage-detection", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
       resetSqliteBackendCache: () => {},
     }))
@@ -445,7 +445,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     ]
     mockClient.session.context.mockImplementation(() => Promise.resolve(mockMessages))
 
-    mock.module("../../../src/shared/opencode-storage-detection", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
       resetSqliteBackendCache: () => {},
     }))
@@ -500,7 +500,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
     // given
     mockClient.session.context.mockImplementation(() => Promise.reject(new Error("API error")))
 
-    mock.module("../../../src/shared/opencode-storage-detection", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
       resetSqliteBackendCache: () => {},
     }))
@@ -517,7 +517,7 @@ describe("session-manager storage - SDK path (beta mode)", () => {
 
   test("SDK path returns empty array when client is not set", async () => {
     //#given beta mode enabled but no client set
-    mock.module("../../../src/shared/opencode-storage-detection", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
       isSqliteBackend: () => true,
       resetSqliteBackendCache: () => {},
     }))

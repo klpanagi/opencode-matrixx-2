@@ -1,5 +1,5 @@
 import type { BrowserAutomationProvider, CategoriesConfig, CategoryConfig } from "../../config/schema"
-import { getAgentModelRequirements } from "../../shared/model-requirements"
+import { getAgentModelRequirements } from "../../shared/model/model-requirements"
 import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../agent-builder"
 import type { AgentConfig } from "../agent-config"
 import type { AvailableAgent, AvailableSkill } from "../dynamic-agent-prompt-builder"

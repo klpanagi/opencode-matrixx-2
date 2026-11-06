@@ -1,6 +1,6 @@
 import type { MatrixxContext } from "../../../plugin/context"
-import { log } from "../../../shared/logger"
-import { notify } from "../../../shared/notify"
+import { log } from "../../../shared/runtime/logger"
+import { notify } from "../../../shared/runtime/notify"
 
 export async function showUpdateAvailableToast(
   _ctx: MatrixxContext,

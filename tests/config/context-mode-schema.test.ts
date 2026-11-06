@@ -2,7 +2,7 @@
 
 import { describe, expect, test } from "bun:test"
 import { ContextModeConfigSchema } from "../../src/config/schema/context-mode"
-import { CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS } from "../../src/shared/context-mode-enforcement"
+import { CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS } from "../../src/shared/policy/context-mode-enforcement"
 
 describe("ContextModeConfigSchema blocked_tools", () => {
   test("defaults to the canonical blocked-tools constant", () => {

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { MatrixxContext } from "../../plugin/context"
-import { stateRootFromPluginContext } from "../../shared/state-root"
+import { stateRootFromPluginContext } from "../../shared/session/state-root"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { handleArchive } from "./archive-handler"
 import { HANDOFF_DESCRIPTION } from "./constants"

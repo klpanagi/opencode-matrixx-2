@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { PACKAGE_NAME, USER_CONFIG_DIR } from "./constants"
 
 interface BunLockfile {

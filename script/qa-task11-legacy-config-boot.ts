@@ -37,7 +37,7 @@ import {
   bindTaskSystemDeprecationToast,
   resetTaskSystemDeprecationWarning,
   resolveTasksConfig,
-} from "../src/shared/task-system-gating"
+} from "../src/shared/config/task-system-gating"
 
 // Derived from the real migration map rather than hardcoded: every name the map
 // marks `null` is a recognized name with no surviving target, i.e. exactly the

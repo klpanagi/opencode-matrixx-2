@@ -6,7 +6,7 @@ import {
   type KnowledgeConfig,
   type KnowledgeHub,
 } from "../../config/schema/knowledge"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 
 export interface LoadedHub {
   name: string

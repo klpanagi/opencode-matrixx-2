@@ -2,7 +2,7 @@
 
 import { afterAll, beforeEach, describe, expect, it } from "bun:test"
 import { injectContextDiscipline } from "../../src/plugin-handlers/agent-config-handler"
-import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../src/shared/policy/context-mode-enforcement"
 
 // T8: with the context-mode package installed the appended block is the
 // pointer (full routing arrives via the <context_window_protection> transform).

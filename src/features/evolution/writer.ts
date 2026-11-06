@@ -2,7 +2,7 @@ import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
 import type { EvolutionWriterConfig } from "../../config/schema/evolution"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { normalizeKnowledgeKind } from "./schema"
 import { supersedeSkill } from "./store/lifecycle";
 import { normalizeProjectId, projectSlugSuffix } from "./store/project-identity";

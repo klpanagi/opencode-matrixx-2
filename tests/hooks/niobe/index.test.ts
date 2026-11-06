@@ -22,19 +22,19 @@ mock.module("../../../src/features/hook-message-injector/constants", () => ({
   PART_STORAGE: TEST_PART_STORAGE,
 }))
 
-mock.module("../../../src/shared/opencode-message-dir", () => ({
+mock.module("../../../src/shared/opencode/opencode-message-dir", () => ({
   getMessageDir: (sessionID: string) => {
     const dir = join(TEST_MESSAGE_STORAGE, sessionID)
     return existsSync(dir) ? dir : null
   },
 }))
 
-mock.module("../../../src/shared/opencode-storage-detection", () => ({
+mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
   resetSqliteBackendCache: () => {},
 }))
 
-mock.module("../../../src/shared/session-utils", () => ({
+mock.module("../../../src/shared/session/session-utils", () => ({
   isCallerOrchestrator: async (sessionID: string | undefined) => {
     if (!sessionID) return false
     const { existsSync: fsExists, readdirSync, readFileSync } = require("node:fs")

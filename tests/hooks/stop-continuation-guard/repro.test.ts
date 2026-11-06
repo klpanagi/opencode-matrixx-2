@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, mock, test } from "bun:test"
 
-import { isAwaitingUserState, markAwaitingUser } from "../../../src/shared/awaiting-user"
+import { isAwaitingUserState, markAwaitingUser } from "../../../src/shared/session/awaiting-user"
 import type { SessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continuation-guard/hook"

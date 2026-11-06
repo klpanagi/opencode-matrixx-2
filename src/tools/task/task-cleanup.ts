@@ -5,8 +5,8 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir } from "../../features/task-storage/storage"
 import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enforcer/staleness"
 import type { MatrixxContext } from "../../plugin/context"
-import { log } from "../../shared/logger"
-import { stateRootFromToolContext } from "../../shared/state-root"
+import { log } from "../../shared/runtime/logger"
+import { stateRootFromToolContext } from "../../shared/session/state-root"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 
 const TERMINAL_STATUSES = new Set(["completed", "deleted"])

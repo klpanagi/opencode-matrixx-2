@@ -86,12 +86,12 @@ import { runtimeDepsCheck } from "../../../src/cli/doctor/checks/runtime"
 import { optionalToolsCheck } from "../../../src/cli/doctor/checks/optional"
 import { mcpPrerequisitesCheck } from "../../../src/cli/doctor/checks/mcp"
 import { ALL_CHECKS, getChecksByCategory, getCategories } from "../../../src/cli/doctor/checks"
-import { getOpenCodeConfigDir } from "../../../src/shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../src/shared/config/opencode-config-dir"
 import {
   _resetContextModeEnforcementForTesting,
   _setCtxToolsForTesting,
   _setDisciplinePathForTesting,
-} from "../../../src/shared/context-mode-enforcement"
+} from "../../../src/shared/policy/context-mode-enforcement"
 
 describe("check registry", () => {
   test("ALL_CHECKS has 13 entries", () => {

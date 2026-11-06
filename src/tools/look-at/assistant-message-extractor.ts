@@ -1,4 +1,4 @@
-import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
+import { contentOf, isAssistant, timeOf } from "../../shared/session/session-message"
 
 export function extractLatestAssistantText(messages: unknown): string | null {
   if (!Array.isArray(messages) || messages.length === 0) return null

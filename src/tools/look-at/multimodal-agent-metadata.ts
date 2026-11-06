@@ -1,7 +1,7 @@
 import { log } from "../../shared"
-import { isRecord } from "../../shared/record-type-guard"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { unwrapList } from "../../shared/unwrap-list"
+import { isRecord } from "../../shared/runtime/record-type-guard"
+import { unwrapList } from "../../shared/runtime/unwrap-list"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { CONSTRUCT_AGENT } from "./constants"
 
 type AgentModel = { providerID: string; modelID: string }

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { detectConfigFile, parseJsoncSafe } from "../../shared/jsonc-parser";
-import { getOpenCodeConfigDir } from "../../shared/opencode-config-dir";
+import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir";
+import { detectConfigFile, parseJsoncSafe } from "../../shared/text/jsonc-parser";
 import type { SetupState } from "./types";
 
 const CONTEXT_VARIANTS = ["context-mode", "@tarquinen/context-mode", "opencode-context-mode"];

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import { consumeNewMessages, resetMessageCursor } from "../../src/shared/session-cursor"
+import { consumeNewMessages, resetMessageCursor } from "../../src/shared/session/session-cursor"
 
 describe("consumeNewMessages", () => {
   const sessionID = "session-123"

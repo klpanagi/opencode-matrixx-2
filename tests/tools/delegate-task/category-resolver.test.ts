@@ -1,7 +1,7 @@
 declare const require: (name: string) => unknown
 const { describe, test, expect, beforeEach, afterEach, spyOn, mock } = require("bun:test")
 
-import * as connectedProvidersCache from "../../../src/shared/connected-providers-cache"
+import * as connectedProvidersCache from "../../../src/shared/model/connected-providers-cache"
 import { _resetPresetStateForTesting, setSessionPreset } from "../../../src/features/preset-state/manager"
 import { resolveCategoryExecution } from "../../../src/tools/delegate-task/category-resolver"
 import type { ExecutorContext } from "../../../src/tools/delegate-task/executor-types"

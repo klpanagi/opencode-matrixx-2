@@ -11,7 +11,7 @@ import { readMissionState } from "../../features/mission-state"
 import { buildRehydrationContext } from "../../features/mission-state/rehydrate"
 import type { PlanPersistenceOptions } from "../../features/mission-state/types"
 import type { MatrixxContext } from "../../plugin/context"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { collectLinkedTodos } from "./task-link"
 import { applyFilteredSync } from "./task-sync"
 

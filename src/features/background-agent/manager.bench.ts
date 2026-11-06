@@ -22,7 +22,7 @@ import {
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { BackgroundManager } from "./manager"
 import type { BackgroundTask } from "./types"
 
@@ -148,7 +148,7 @@ describe("BackgroundManager B2 baseline (2× readFileSync per file)", () => {
     const realReadFileSyncRef = realFsNs.readFileSync
     const realReaddirSyncRef = realFsNs.readdirSync
 
-    mock.module("../../shared/opencode-storage-paths", () => ({
+    mock.module("../../shared/config/opencode-storage-paths", () => ({
       OPENCODE_STORAGE: TEST_STORAGE,
       MESSAGE_STORAGE: TEST_MESSAGE_STORAGE,
       PART_STORAGE: join(TEST_STORAGE, "part"),

@@ -8,10 +8,10 @@
  * Building that shape here keeps the translation out of the registration path.
  */
 
-import type { PermissionRule } from "../shared/permission-compat"
+import type { PermissionRule } from "../shared/agent/permission-compat"
 
-export type { PermissionEffect, PermissionRule } from "../shared/permission-compat"
-export { rule } from "../shared/permission-compat"
+export type { PermissionEffect, PermissionRule } from "../shared/agent/permission-compat"
+export { rule } from "../shared/agent/permission-compat"
 
 /**
  * Agent mode determines UI model selection behavior:

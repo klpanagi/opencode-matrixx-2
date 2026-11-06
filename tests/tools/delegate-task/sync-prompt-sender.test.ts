@@ -86,7 +86,7 @@ bunDescribe("sendSyncPrompt (native session.prompt)", () => {
   bunTest("stores question=false in the session tools store", async () => {
     //#given
     const { sendSyncPrompt } = require("../../../src/tools/delegate-task/sync-prompt-sender")
-    const { getSessionTools } = require("../../../src/shared/session-state")
+    const { getSessionTools } = require("../../../src/shared/session/session-state")
     const captured: { args?: unknown } = {}
     const sendNativePrompt = bunMock(async (_s: unknown, args: unknown) => {
       captured.args = args
@@ -120,7 +120,7 @@ bunDescribe("sendSyncPrompt (native session.prompt)", () => {
     )
 
     //#then
-    const { getSessionTools } = require("../../../src/shared/session-state")
+    const { getSessionTools } = require("../../../src/shared/session/session-state")
     const tools = getSessionTools("ses-tools-trinity") as Record<string, unknown>
     bunExpect(tools.task).toBe(false)
   })

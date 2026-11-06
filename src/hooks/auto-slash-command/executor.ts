@@ -8,8 +8,8 @@ import {
   resolveCommandsInText,
   resolveFileReferencesInText,
 } from "../../shared"
-import { isMarkdownFile } from "../../shared/file-utils"
-import { sanitizeModelField } from "../../shared/model-sanitizer"
+import { isMarkdownFile } from "../../shared/io/file-utils"
+import { sanitizeModelField } from "../../shared/model/model-sanitizer"
 import type { BuiltinSkill } from "../../skills"
 import type { ParsedSlashCommand } from "./types"
 

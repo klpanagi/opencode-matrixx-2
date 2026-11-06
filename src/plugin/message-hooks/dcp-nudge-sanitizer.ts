@@ -18,7 +18,7 @@ import {
   NUDGE_MARKERS,
   normalizeNudgeText,
 } from "../../hooks/dcp-nudge-sanitizer/constants"
-import { sanitizeKnownTags } from "../../shared/system-directive"
+import { sanitizeKnownTags } from "../../shared/text/system-directive"
 import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../context"
 
 /** Minimal flat content block (text blocks carry `type: "text"` + `text`). */

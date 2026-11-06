@@ -1,5 +1,5 @@
 import { getMcpStartupNotice } from "../../../mcps/mcp-startup-notice"
-import { notify } from "../../../shared/notify"
+import { notify } from "../../../shared/runtime/notify"
 
 /**
  * Surface disabled-MCP startup failures as a user-visible warning on the

@@ -45,7 +45,7 @@ export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { lspManager }
 
 import type { BackgroundManager } from "../features/background-agent"
-import type { SessionContextCarrier } from "../shared/session-context-source"
+import type { SessionContextCarrier } from "../shared/session/session-context-source"
 import {
   createBackgroundCancel,
   createBackgroundOutput,

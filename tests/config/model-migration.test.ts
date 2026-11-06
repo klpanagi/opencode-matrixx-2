@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import { MatrixxConfigSchema } from "../../src/config/schema/matrixx-config"
 import { migrateMatrixxConfig, normalizeModelInput } from "../../src/config/migrations/model-migration"
-import * as logger from "../../src/shared/logger"
+import * as logger from "../../src/shared/runtime/logger"
 
 describe("normalizeModelInput", () => {
   let logSpy: ReturnType<typeof spyOn>

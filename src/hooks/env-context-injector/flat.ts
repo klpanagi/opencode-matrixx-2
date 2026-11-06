@@ -1,6 +1,6 @@
 import { createEnvContext } from "../../agents/env-context"
 import type { MatrixxContext } from "../../plugin/context"
-import { notifyInjection } from "../../shared/injection-notifier"
+import { notifyInjection } from "../../shared/policy/injection-notifier"
 
 export interface FlatContentPart {
   type?: string

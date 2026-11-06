@@ -1,4 +1,4 @@
-import type { NativePluginContext } from "../../shared/session-context-source"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { createNiobeEventHandler } from "./event-handler"
 import { createToolExecuteAfterHandler } from "./tool-execute-after"
 import { createToolExecuteBeforeHandler } from "./tool-execute-before"

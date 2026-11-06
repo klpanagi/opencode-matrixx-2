@@ -6,7 +6,7 @@ import {
   isCtxToolsAvailable,
   resolveContextModeDisciplineInfo,
   willBlockGrepGlob,
-} from "../../src/shared/context-mode-enforcement"
+} from "../../src/shared/policy/context-mode-enforcement"
 import { WARN_MESSAGE_READ } from "../../src/hooks/context-mode-enforcer/constants"
 
 describe("context-mode fail-open parity (P4-P6)", () => {

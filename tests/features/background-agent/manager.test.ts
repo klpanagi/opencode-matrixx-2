@@ -745,7 +745,7 @@ describe("getMessageDir cached after first call", () => {
   test("getMessageDir cached after first call", async () => {
     //#given
     // Mock storage paths to point to our tmpdir (same pattern as B2)
-    mock.module("../../../src/shared/opencode-storage-paths", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-paths", () => ({
       OPENCODE_STORAGE: testStorage,
       MESSAGE_STORAGE: testMessageStorage,
       PART_STORAGE: join(testStorage, "part"),
@@ -829,7 +829,7 @@ describe("findNearestMessageExcludingCompaction reads each file once", () => {
     const realReadFileSync = realFsNs.readFileSync
     const realReaddirSync = realFsNs.readdirSync
 
-    mock.module("../../../src/shared/opencode-storage-paths", () => ({
+    mock.module("../../../src/shared/config/opencode-storage-paths", () => ({
       OPENCODE_STORAGE: B2_TEST_STORAGE,
       MESSAGE_STORAGE: B2_TEST_MESSAGE_STORAGE,
       PART_STORAGE: join(B2_TEST_STORAGE, "part"),

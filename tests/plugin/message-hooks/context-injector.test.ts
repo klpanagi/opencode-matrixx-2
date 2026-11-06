@@ -6,7 +6,7 @@ import {
   registerContextInjectorMessagesTransform,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/context-injector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 function flatMessages(texts: Array<{ type: string; text?: string; content?: Array<{ type?: string; text?: string }> }>): SessionMessage[] {
   return texts.map((t) => ({ ...t }) as SessionMessage)

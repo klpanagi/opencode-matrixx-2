@@ -1,13 +1,13 @@
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { jsonSafeMetadata } from "../../shared"
-import { formatDetailedError } from "../../shared/error-formatting"
 import {
   formatLaunchFailure,
   formatSaturatedOutcome,
   isLaunchTerminalStatus,
   isQueueSaturated,
-} from "../../shared/saturated-outcome"
-import { getSessionTools } from "../../shared/session-state"
+} from "../../shared/outcome/saturated-outcome"
+import { getSessionTools } from "../../shared/session/session-state"
+import { formatDetailedError } from "../../shared/text/error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
 import { buildBackgroundTitle } from "./task-title"
 import { getTimingConfig } from "./timing"

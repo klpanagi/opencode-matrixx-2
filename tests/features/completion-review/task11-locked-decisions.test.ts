@@ -69,7 +69,7 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
     // "Global Constraints + Review Focus Present" checklist bullet so Smith's
     // blocker criteria name the same new H2s the grammar emits; Smith remains
     // the pre-execution reviewer and the pre/post split is untouched.
-    const FROZEN_MD5 = "2b592ffb75cb5634e52e6365ff929075"
+    const FROZEN_MD5 = "62053fdfceaa194cd7f160771c94d217"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/smith.ts")
@@ -116,7 +116,7 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // ({ event: { type, properties } }) => (event: V2Event) reading event.data,
     // V1 input -> NativePluginContext, and getLastAgentFromSession takes the
     // native ctx. Execution path unchanged; Niobe remains the plan EXECUTOR.
-    const FROZEN_MD5 = "1ec435b50b9d276d2a69282f72adbb32"
+    const FROZEN_MD5 = "6f9ea2137c867f549bff605ea9a4c179"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { BackgroundManager } from "../../features/background-agent"
-import { isNativeSessionId } from "../../shared/session-id"
+import { isNativeSessionId } from "../../shared/session/session-id"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import type { BackgroundCancelClient } from "./clients"
 import { BACKGROUND_CANCEL_DESCRIPTION } from "./constants"

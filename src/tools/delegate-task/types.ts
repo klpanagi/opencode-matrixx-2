@@ -4,7 +4,7 @@ import type {
 } from "../../agents/dynamic-agent-prompt-builder"
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements, SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
-import type { NativeDomains } from "../../shared/session-context-source"
+import type { NativeDomains } from "../../shared/session/session-context-source"
 
 export type NativeClient = NativeDomains
 

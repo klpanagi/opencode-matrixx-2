@@ -16,7 +16,7 @@ import {
   _setDisciplinePathForTesting,
   resolveGrepGlobUsable,
   setContextModeForPrompts,
-} from "../../src/shared/context-mode-enforcement"
+} from "../../src/shared/policy/context-mode-enforcement"
 
 const FAKE_PATH = "/nonexistent-fake/AGENTS.md"
 

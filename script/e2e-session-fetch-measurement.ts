@@ -55,7 +55,7 @@ mkdirSync(join(process.env.XDG_DATA_HOME, "opencode"), { recursive: true })
 await Bun.write(join(process.env.XDG_DATA_HOME, "opencode", "opencode.db"), "")
 
 const { mock } = await import("bun:test")
-mock.module("../src/shared/opencode-storage-detection", () => ({
+mock.module("../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => true,
   resetSqliteBackendCache: () => {},
 }))

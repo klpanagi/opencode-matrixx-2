@@ -8,8 +8,8 @@ import {
   updateSessionAgent,
 } from "../features/session-state/state"
 import { resetMessageCursor } from "../shared"
-import { log } from "../shared/logger"
-import type { NativePluginContext } from "../shared/session-context-source"
+import { log } from "../shared/runtime/logger"
+import type { NativePluginContext } from "../shared/session/session-context-source"
 import { lspManager } from "../tools"
 import type { MatrixxContext, V2Event } from "./context"
 import { DEDUPLICATE_WINDOW_MS } from "./event-dispatch"

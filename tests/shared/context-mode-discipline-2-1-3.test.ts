@@ -6,7 +6,7 @@ import {
   _resetContextModeEnforcementForTesting,
   deriveContextModeRootFromFile,
   resolveContextModeDisciplineInfo,
-} from "../../src/shared/context-mode-enforcement"
+} from "../../src/shared/policy/context-mode-enforcement"
 
 describe("context-mode discipline probe against installed 2.1.x layout", () => {
   test("installed package root resolves and reports a 2.1.x version", () => {

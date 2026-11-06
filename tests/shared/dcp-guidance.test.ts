@@ -7,7 +7,7 @@ import {
   _resetDcpGuidanceForTesting,
   _setDcpConfigPathForTesting,
   resolveDcpCompressionMode,
-} from "../../src/shared/dcp-guidance"
+} from "../../src/shared/policy/dcp-guidance"
 
 async function writeFixture(name: string, content: string): Promise<string> {
   const path = join(tmpdir(), `matrixx-dcp-guidance-${name}.jsonc`)

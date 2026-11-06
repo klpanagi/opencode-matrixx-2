@@ -5,7 +5,7 @@ import {
   StreamMessageReader,
   StreamMessageWriter,
 } from "vscode-jsonrpc/node"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { spawnProcess, type UnifiedProcess } from "./lsp-process"
 import type { Diagnostic, ResolvedServer } from "./types"
 export class LSPClientTransport {

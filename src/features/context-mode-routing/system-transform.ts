@@ -1,8 +1,8 @@
 import type { MatrixxConfig } from "../../config"
 import type { MatrixxContext } from "../../plugin/context"
 import type { Hooks } from "../../plugin/legacy-hooks"
-import { resolveContextModeEnforcement } from "../../shared/context-mode-enforcement"
-import { notifyInjection } from "../../shared/injection-notifier"
+import { resolveContextModeEnforcement } from "../../shared/policy/context-mode-enforcement"
+import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { buildContextModeRoutingBlock, containsContextModeMarker } from "./routing-block"
 
 export const HOOK_NAME = "context-mode-routing"

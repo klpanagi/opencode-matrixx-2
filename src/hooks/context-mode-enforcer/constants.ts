@@ -1,4 +1,4 @@
-import { CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS } from "../../shared/context-mode-enforcement"
+import { CONTEXT_MODE_DEFAULT_BLOCKED_TOOLS } from "../../shared/policy/context-mode-enforcement"
 
 export const HOOK_NAME = "context-mode-enforcer"
 

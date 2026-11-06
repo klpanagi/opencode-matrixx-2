@@ -10,7 +10,7 @@
  * agent's own rules.
  */
 
-import { type PermissionRule, rule } from "../shared/permission-compat"
+import { type PermissionRule, rule } from "../shared/agent/permission-compat"
 
 /** The legacy todo tools are denied for every task-capable agent. */
 export const denyTodoPermissions: PermissionRule[] = [

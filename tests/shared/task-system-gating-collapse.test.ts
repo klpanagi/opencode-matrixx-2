@@ -4,14 +4,14 @@ import { existsSync, closeSync, openSync, readSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-import { resetNotifySink, setNotifySink } from "../../src/shared/notify"
+import { resetNotifySink, setNotifySink } from "../../src/shared/runtime/notify"
 import {
   TASK_SYSTEM_DEFAULT,
   bindTaskSystemDeprecationToast,
   isTaskSystemEnabled,
   resetTaskSystemDeprecationWarning,
   resolveTasksConfig,
-} from "../../src/shared/task-system-gating"
+} from "../../src/shared/config/task-system-gating"
 
 const LOG_FILE = join(tmpdir(), "matrixx.log")
 const MARKER = "[task-system-legacy-keys]"

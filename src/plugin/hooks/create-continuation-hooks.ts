@@ -11,9 +11,9 @@ import {
   createStopContinuationGuardHook,
   createTaskContinuationEnforcer,
 } from "../../hooks"
-import { bindSafeHook } from "../../shared/safe-create-hook"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { stateRootFromPluginContext } from "../../shared/state-root"
+import { bindSafeHook } from "../../shared/agent/safe-create-hook"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { stateRootFromPluginContext } from "../../shared/session/state-root"
 import { createUnstableAgentBabysitter } from "../unstable-agent-babysitter"
 
 export type ContinuationHooks = {

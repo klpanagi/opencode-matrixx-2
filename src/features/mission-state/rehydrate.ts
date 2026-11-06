@@ -6,7 +6,7 @@
  */
 
 import { existsSync } from "node:fs"
-import { createSystemDirective } from "../../shared/system-directive"
+import { createSystemDirective } from "../../shared/text/system-directive"
 import { parseMetadataComment, readPlanFile } from "./plan-storage"
 import { getPlanProgress, readMissionState } from "./storage"
 import type { RehydrationContext } from "./types"

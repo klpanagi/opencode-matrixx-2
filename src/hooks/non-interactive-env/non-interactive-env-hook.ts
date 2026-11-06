@@ -1,6 +1,6 @@
 import type { MatrixxContext } from "../../plugin/context"
 import { buildEnvPrefix, log } from "../../shared"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
 import { HOOK_NAME, NON_INTERACTIVE_ENV, SHELL_COMMAND_PATTERNS } from "./constants"
 
 export * from "./constants"

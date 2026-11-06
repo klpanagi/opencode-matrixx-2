@@ -1,5 +1,5 @@
-import { getAgentDisplayName } from "../../shared/agent-display-names"
-import { createSystemDirective, SystemDirectiveTypes } from "../../shared/system-directive"
+import { getAgentDisplayName } from "../../shared/agent/agent-display-names"
+import { createSystemDirective, SystemDirectiveTypes } from "../../shared/text/system-directive"
 
 export const HOOK_NAME = "oracle-md-only"
 

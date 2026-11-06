@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "bun:test"
-import { formatWallclockTimeout, isWallclockTimeout } from "../../../src/shared/wallclock-outcome"
+import { formatWallclockTimeout, isWallclockTimeout } from "../../../src/shared/outcome/wallclock-outcome"
 
 describe("formatWallclockTimeout", () => {
   it("formats wall-clock-timeout with timedOut true", () => {

@@ -1,10 +1,10 @@
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 
 type SessionWithRemove = { remove(input: { sessionID: string }): Promise<unknown> }
 
-import { log } from "../../shared/logger"
-import { contentOf, isAssistant } from "../../shared/session-message"
+import { log } from "../../shared/runtime/logger"
+import { contentOf, isAssistant } from "../../shared/session/session-message"
 import type { OpenCodeSessionMessage } from "./completion-promise-detector"
 import { DEFAULT_VERIFICATION_AGENT, DEFAULT_VERIFICATION_TIMEOUT_MS, HOOK_NAME } from "./constants"
 

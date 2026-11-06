@@ -4,7 +4,7 @@ import { isGptModel } from "./types"
 
 const MODE: AgentMode = "primary"
 
-import { resolveGrepGlobUsable } from "../shared/context-mode-enforcement"
+import { resolveGrepGlobUsable } from "../shared/policy/context-mode-enforcement"
 import type { AvailableAgent, AvailableCategory, AvailableSkill, AvailableTool } from "./dynamic-agent-prompt-builder"
 import {
   buildAntiPatternsSection,

@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import { TasksConfigSchema } from "../../../src/config/schema/tasks"
 import { DEFAULT_BACKGROUND_STALE_AFTER_HOURS, DEFAULT_STALE_AFTER_HOURS, getBackgroundStaleAfterMs, getStaleAfterMs } from "../../../src/hooks/task-continuation-enforcer/staleness"
-import { resolveTasksConfig } from "../../../src/shared/task-system-gating"
+import { resolveTasksConfig } from "../../../src/shared/config/task-system-gating"
 
 const HOUR_MS = 60 * 60 * 1000
 

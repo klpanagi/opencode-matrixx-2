@@ -11,7 +11,7 @@ import {
   registerKnowledgeHubInjector,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/knowledge-hub-injector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 const INDEX_MARKER = "ROUTER-INDEX-CONTENT-abc123"
 const CORPUS_MARKER = "CORPUS-SECRET-CONTENT-xyz789"

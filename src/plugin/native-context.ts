@@ -1,5 +1,5 @@
 import { $ } from "bun"
-import type { NativePluginContext } from "../shared/session-context-source"
+import type { NativePluginContext } from "../shared/session/session-context-source"
 import type { MatrixxContext } from "./context"
 
 /**

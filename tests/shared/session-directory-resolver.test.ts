@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 
-import { isWindowsAppDataDirectory } from "../../src/shared/session-directory-resolver"
+import { isWindowsAppDataDirectory } from "../../src/shared/session/session-directory-resolver"
 
 describe("session-directory-resolver", () => {
   describe("isWindowsAppDataDirectory", () => {

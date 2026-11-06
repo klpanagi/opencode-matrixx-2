@@ -1,4 +1,4 @@
-import { log } from "../shared/logger"
+import { log } from "../shared/runtime/logger"
 
 type Platform = "darwin" | "linux" | "win32" | "unsupported"
 

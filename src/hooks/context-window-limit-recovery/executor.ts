@@ -1,5 +1,5 @@
 import type { ExperimentalConfig } from "../../config";
-import { notify } from "../../shared/notify"
+import { notify } from "../../shared/runtime/notify"
 import type { Client } from "./client";
 import { runSummarizeRetryStrategy } from "./summarize-retry-strategy";
 import type { AutoCompactState } from "./types";

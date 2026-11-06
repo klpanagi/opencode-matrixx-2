@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test, setSystemTime } from "bun:test"
 import { createEnvContextInjectorHook } from "../../../src/hooks/env-context-injector/index"
 import { detectDomainSkills } from "../../../src/hooks/domain-keyword-detector/detector"
 import { detectKeywordsWithType } from "../../../src/hooks/keyword-detector/detector"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
-import { sanitizeKnownTags } from "../../../src/shared/system-directive"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
+import { sanitizeKnownTags } from "../../../src/shared/text/system-directive"
 
 //#given a mock ctx with a TUI showToast spy (mirrors tests/shared/injection-notifier.test.ts)
 type ToastOpts = {

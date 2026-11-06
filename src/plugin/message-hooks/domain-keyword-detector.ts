@@ -15,8 +15,8 @@ import { getMainSessionID } from "../../features/session-state/state"
 import { DOMAIN_HINT_MARKER } from "../../hooks/domain-keyword-detector/constants"
 import { buildDomainHint, detectDomainSkills } from "../../hooks/domain-keyword-detector/detector"
 import { log, notifyInjection } from "../../shared"
-import { roleOf, type SessionMessage } from "../../shared/session-message"
-import { isSystemDirective, sanitizeKnownTags } from "../../shared/system-directive"
+import { roleOf, type SessionMessage } from "../../shared/session/session-message"
+import { isSystemDirective, sanitizeKnownTags } from "../../shared/text/system-directive"
 import type { MatrixxContext, V2Registration } from "../context"
 
 /** Minimal flat-message view of the native context/compaction event. */

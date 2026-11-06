@@ -11,7 +11,7 @@ import {
   getUltraworkState,
 } from "../features/ultrawork-state"
 import { log } from "../shared"
-import type { SessionContextCarrier } from "../shared/session-context-source"
+import type { SessionContextCarrier } from "../shared/session/session-context-source"
 import type { MatrixxContext } from "./context"
 import { resolveSessionAgent } from "./session-agent-resolver"
 import type { DomainHooks } from "./setup-domains"

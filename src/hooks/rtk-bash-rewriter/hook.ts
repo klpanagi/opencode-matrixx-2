@@ -1,7 +1,7 @@
 import type { MatrixxConfig } from "../../config"
 import type { MatrixxContext } from "../../plugin/context"
 import { log } from "../../shared"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
 import { RTK_BINARY_NAME, RTK_REWRITE_COMMAND } from "./constants"
 
 export function createRtkBashRewriterHook(_ctx: MatrixxContext, config: MatrixxConfig) {

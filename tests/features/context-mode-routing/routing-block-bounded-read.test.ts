@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test } from "bun:test"
 import {
   _resetContextModeEnforcementForTesting,
   _setCtxToolsForTesting,
-} from "../../../src/shared/context-mode-enforcement"
+} from "../../../src/shared/policy/context-mode-enforcement"
 import {
   buildContextModeRoutingBlock,
   buildFallbackRoutingBlock,

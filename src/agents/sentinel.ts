@@ -1,4 +1,4 @@
-import { denyActions } from "../shared/permission-compat"
+import { denyActions } from "../shared/agent/permission-compat"
 import { SECURITY_API_SKILL_NAME } from "../skills/skills/security/security-api"
 import { SECURITY_AUDIT_SKILL_NAME } from "../skills/skills/security/security-audit"
 import { SECURITY_CORE_SKILL_NAME } from "../skills/skills/security/security-core"

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { buildContextModeRoutingBlock } from "../../../src/features/context-mode-routing/routing-block"
-import { _setCtxToolsForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _setCtxToolsForTesting } from "../../../src/shared/policy/context-mode-enforcement"
 
 const V1_NAMES = ["ctx_batch_execute", "ctx_execute_file", "ctx_fetch_and_index"]
 

@@ -22,7 +22,7 @@ import { getModelDirectives } from "../../src/agents/model-directives"
 import { createDcpNudgeSanitizerHook } from "../../src/hooks/dcp-nudge-sanitizer/hook"
 import { createNudgeLoopBreakerHook } from "../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../src/hooks/nudge-loop-breaker/session-state"
-import type { NativePluginContext } from "../../src/shared/session-context-source"
+import type { NativePluginContext } from "../../src/shared/session/session-context-source"
 
 const DEEPSEEK_MODEL = "deepseek/deepseek-v4.1-flash"
 const ANTHROPIC_MODEL = "anthropic/claude-sonnet-4"

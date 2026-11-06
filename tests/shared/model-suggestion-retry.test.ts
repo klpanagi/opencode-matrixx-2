@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test"
-import { parseModelSuggestion, promptSyncWithModelSuggestionRetry, promptWithModelSuggestionRetry } from "../../src/shared/model-suggestion-retry"
+import { parseModelSuggestion, promptSyncWithModelSuggestionRetry, promptWithModelSuggestionRetry } from "../../src/shared/model/model-suggestion-retry"
 
 type Client = Parameters<typeof promptWithModelSuggestionRetry>[0]
 

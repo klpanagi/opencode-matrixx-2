@@ -2,11 +2,11 @@ import { statSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
 import type { Task } from "../../features/task-storage/types"
-import { DEFAULT_BACKGROUND_STALE_AFTER_HOURS, resolveTasksConfig } from "../../shared/task-system-gating"
+import { DEFAULT_BACKGROUND_STALE_AFTER_HOURS, resolveTasksConfig } from "../../shared/config/task-system-gating"
 
 export const DEFAULT_STALE_AFTER_HOURS = 24
 
-export { DEFAULT_BACKGROUND_STALE_AFTER_HOURS } from "../../shared/task-system-gating"
+export { DEFAULT_BACKGROUND_STALE_AFTER_HOURS } from "../../shared/config/task-system-gating"
 
 const HOUR_MS = 60 * 60 * 1000
 

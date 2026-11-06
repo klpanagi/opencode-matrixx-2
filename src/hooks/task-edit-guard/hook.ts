@@ -2,7 +2,7 @@ import type { MatrixxContext } from "../../plugin/context"
 import type { Hooks } from "../../plugin/legacy-hooks"
 
 import { log } from "../../shared"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
 import { BLOCKED_PATTERNS, HOOK_NAME, PLAN_READ_WARN, PLAN_WRITE_WARN } from "./constants"
 
 export function createTaskEditGuardHook(ctx: MatrixxContext): Hooks {

@@ -1,4 +1,4 @@
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { HOOK_NAME } from "./constants"
 import { createFallbackState } from "./fallback-state"
 import type { HookDeps } from "./types"

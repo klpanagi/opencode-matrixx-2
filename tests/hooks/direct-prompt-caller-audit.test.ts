@@ -5,7 +5,7 @@ import { join, relative } from "node:path"
 /**
  * Audit: no direct `session.promptAsync` callers may remain outside the
  * explicit allowlist. All hook/plugin prompt injections must go through the
- * guarded wrapper in src/shared/model-suggestion-retry.ts
+ * guarded wrapper in src/shared/model/model-suggestion-retry.ts
  * (promptWithModelSuggestionRetry / promptSyncWithModelSuggestionRetry),
  * which surfaces resolved `{ error }` envelopes as structured throws instead
  * of passing silently.
@@ -16,7 +16,7 @@ import { join, relative } from "node:path"
 
 // Files whose `session.promptAsync` occurrences are legitimate:
 // - the guarded wrapper itself (internal call + type-level Parameters reference)
-const ALLOWLISTED_FILES = new Set(["src/shared/model-suggestion-retry.ts"])
+const ALLOWLISTED_FILES = new Set(["src/shared/model/model-suggestion-retry.ts"])
 
 // A line counts as a *call* only when `.promptAsync` is followed by `(`.
 // This excludes comments, docs, type-only mentions, and mock object keys.

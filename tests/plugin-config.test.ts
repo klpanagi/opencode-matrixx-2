@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { MatrixxConfig } from "../src/config";
-import { ConfigError } from "../src/shared/config-errors";
+import { ConfigError } from "../src/shared/config/config-errors";
 import {
   _resetDisabledSetsCacheForTesting,
   getDisabledSets,

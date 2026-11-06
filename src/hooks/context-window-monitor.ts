@@ -8,9 +8,9 @@ import {
   DEFAULT_ANTHROPIC_ACTUAL_LIMIT,
   isAnthropicProvider,
   resolveWarningThreshold,
-} from "../shared/context-limits"
-import { createSystemDirective, SystemDirectiveTypes } from "../shared/system-directive"
-import { clearTokenCache, updateTokenCache } from "../shared/token-cache"
+} from "../shared/compaction/context-limits"
+import { clearTokenCache, updateTokenCache } from "../shared/compaction/token-cache"
+import { createSystemDirective, SystemDirectiveTypes } from "../shared/text/system-directive"
 
 const ANTHROPIC_ACTUAL_LIMIT =
   process.env.ANTHROPIC_1M_CONTEXT === "true" ||

@@ -11,7 +11,7 @@ function setOrchestrator(value: boolean): void {
 
 setOrchestrator(true)
 
-mock.module("../../../src/shared/session-utils", () => ({
+mock.module("../../../src/shared/session/session-utils", () => ({
   isCallerOrchestrator: async () =>
     (globalThis as unknown as Record<string, boolean>)[ORCHESTRATOR_FLAG_KEY] !== false,
 }))

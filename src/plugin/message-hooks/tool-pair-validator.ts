@@ -9,7 +9,7 @@
  * shape (`role` + `content`); messages without an array `content` never throw.
  */
 
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../context"
 
 const TOOL_RESULT_PLACEHOLDER = "Tool output unavailable (context compacted)"

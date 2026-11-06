@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { detectConfigFile, parseJsonc, parseJsoncSafe, readJsoncFile } from "../../src/shared/jsonc-parser"
+import { detectConfigFile, parseJsonc, parseJsoncSafe, readJsoncFile } from "../../src/shared/text/jsonc-parser"
 
 describe("parseJsonc", () => {
   test("parses plain JSON", () => {

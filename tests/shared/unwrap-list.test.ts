@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { unwrapList } from "../../src/shared/unwrap-list"
+import { unwrapList } from "../../src/shared/runtime/unwrap-list"
 
 describe("unwrapList", () => {
   it("returns an array input unchanged", () => {

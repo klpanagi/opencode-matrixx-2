@@ -18,7 +18,7 @@ mock.module("../../../src/features/tool-metadata-store", () => ({
   storeToolMetadata: mock(() => {}),
 }))
 
-mock.module("../../../src/shared/logger", () => ({
+mock.module("../../../src/shared/runtime/logger", () => ({
   log: mock(() => {}),
 }))
 

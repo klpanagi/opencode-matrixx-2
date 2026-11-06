@@ -1,5 +1,5 @@
-import type { SessionMessage } from "../../shared/session-message"
-import { contentOf, isAssistant, roleOf, textOf } from "../../shared/session-message"
+import type { SessionMessage } from "../../shared/session/session-message"
+import { contentOf, isAssistant, roleOf, textOf } from "../../shared/session/session-message"
 
 const MAX_LISTED = 6
 

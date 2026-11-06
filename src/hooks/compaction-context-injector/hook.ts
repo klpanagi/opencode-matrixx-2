@@ -7,7 +7,7 @@ import {
 import {
   createSystemDirective,
   SystemDirectiveTypes,
-} from "../../shared/system-directive"
+} from "../../shared/text/system-directive"
 
 export const MAX_TASK_HISTORY_CHARS = 1500;
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test"
-import { createSessionFacade, type SessionDomainLike } from "../../src/shared/session-facade"
+import { createSessionFacade, type SessionDomainLike } from "../../src/shared/session/session-facade"
 
 type Call = { method: string; args: unknown }
 

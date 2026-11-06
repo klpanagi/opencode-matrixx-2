@@ -17,8 +17,8 @@ import {
 import { createDcpNudgeSanitizerHook } from "../../hooks/dcp-nudge-sanitizer/hook"
 import { createDomainKeywordDetectorHook } from "../../hooks/domain-keyword-detector"
 import { createInputSecretGuardHook } from "../../hooks/input-secret-guard/hook"
-import { safeCreateHook } from "../../shared/safe-create-hook"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import { safeCreateHook } from "../../shared/agent/safe-create-hook"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 
 export type TransformHooks = {
   inputSecretGuard: ReturnType<typeof createInputSecretGuardHook> | null

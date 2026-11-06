@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { isAbortError } from "../../src/shared/is-abort-error"
+import { isAbortError } from "../../src/shared/runtime/is-abort-error"
 
 describe("isAbortError", () => {
   it("should return true for MessageAbortedError", () => {

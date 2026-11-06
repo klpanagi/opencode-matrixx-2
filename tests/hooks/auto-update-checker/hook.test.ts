@@ -45,7 +45,7 @@ mock.module("../../../src/hooks/auto-update-checker/checker", () => ({
   getLocalDevVersion: mockGetLocalDevVersion,
 }))
 
-mock.module("../../../src/shared/logger", () => ({
+mock.module("../../../src/shared/runtime/logger", () => ({
   // Transparent from birth: forward to the real log file (same format as
   // src/shared/logger.ts). Never references the mocked module.
   log: (message: string, data?: unknown) => {
@@ -107,7 +107,7 @@ describe("createAutoUpdateCheckerHook", () => {
     const { _resetMcpStartupFailuresForTesting, setMcpStartupFailures } = await import(
       "../../../src/mcps/mcp-startup-state"
     )
-    const { resetNotifySink, setNotifySink } = await import("../../../src/shared/notify")
+    const { resetNotifySink, setNotifySink } = await import("../../../src/shared/runtime/notify")
     const seen: Array<{ level: string; message: string }> = []
     setNotifySink((level, message) => {
       seen.push({ level, message: String(message) })

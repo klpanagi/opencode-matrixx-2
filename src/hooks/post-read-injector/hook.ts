@@ -1,5 +1,5 @@
 import type { MatrixxContext } from "../../plugin/context";
-import { createDynamicTruncator } from "../../shared/dynamic-truncator";
+import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator";
 import { clearInjectedPaths } from "../directory-agents-injector/storage";
 import { getRuleInjectionFilePath } from "../rules-injector/output-path";
 import { clearInjectedRules } from "../rules-injector/storage";

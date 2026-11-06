@@ -25,12 +25,12 @@ mock.module("../../../src/tools/session-manager/constants", () => ({
   TOOL_NAME_PREFIX: "session_",
 }))
 
-mock.module("../../../src/shared/opencode-storage-detection", () => ({
+mock.module("../../../src/shared/config/opencode-storage-detection", () => ({
   isSqliteBackend: () => false,
   resetSqliteBackendCache: () => {},
 }))
 
-mock.module("../../../src/shared/opencode-message-dir", () => ({
+mock.module("../../../src/shared/opencode/opencode-message-dir", () => ({
   getMessageDir: () => null,
 }))
 

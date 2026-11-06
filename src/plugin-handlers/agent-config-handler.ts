@@ -7,7 +7,7 @@ import {
 import { createMouseAgentWithOverrides } from "../agents/mouse";
 import type { MatrixxConfig } from "../config";
 import { log } from "../shared";
-import { type ContextModeConfigInput, getContextModeForPrompts, resolveGrepGlobUsable, setContextModeForPrompts } from "../shared/context-mode-enforcement";
+import { type ContextModeConfigInput, getContextModeForPrompts, resolveGrepGlobUsable, setContextModeForPrompts } from "../shared/policy/context-mode-enforcement";
 import { reorderAgentsByPriority } from "./agent-priority-order";
 import { buildOracleAgentConfig } from "./oracle-agent-config-builder";
 import { buildPlanDemoteConfig } from "./plan-model-inheritance";

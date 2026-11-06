@@ -1,6 +1,6 @@
 import { log } from "../shared"
-import type { SessionContextCarrier } from "../shared/session-context-source"
-import { fetchSessionMessages } from "../shared/session-context-source"
+import type { SessionContextCarrier } from "../shared/session/session-context-source"
+import { fetchSessionMessages } from "../shared/session/session-context-source"
 
 export async function resolveSessionAgent(
   client: SessionContextCarrier,

@@ -12,8 +12,8 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getPlanName, getPlanProgress, readPlanFile } from "../../features/mission-state"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { parsePlanFrontMatter } from "../../features/plan-contract"
-import { log } from "../../shared/logger"
-import { resolveTasksConfig } from "../../shared/task-system-gating"
+import { resolveTasksConfig } from "../../shared/config/task-system-gating"
+import { log } from "../../shared/runtime/logger"
 import { DEFAULT_STALE_AFTER_HOURS } from "../task-continuation-enforcer/staleness"
 
 const HOUR_MS = 60 * 60 * 1000

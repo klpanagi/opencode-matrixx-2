@@ -10,7 +10,7 @@
  * upstream tool-namer indirection collapses to direct references here.
  */
 
-import { isCtxToolsAvailable } from "../../shared/context-mode-enforcement"
+import { isCtxToolsAvailable } from "../../shared/policy/context-mode-enforcement"
 
 export const MATRIXX_CONTEXT_MODE_MARKER = "<context_window_protection>"
 

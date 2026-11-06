@@ -25,13 +25,13 @@
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
 import type { V2Event } from "../../plugin/context"
 import { getAgentToolRestrictions, isNativeSessionId, log } from "../../shared"
-import { delay } from "../../shared/delay"
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import { delay } from "../../shared/runtime/delay"
 import type {
   NativeDomains,
   NativePluginContext,
-} from "../../shared/session-context-source"
-import { setSessionTemperature, setSessionTools } from "../../shared/session-state"
+} from "../../shared/session/session-context-source"
+import { setSessionTemperature, setSessionTools } from "../../shared/session/session-state"
 import { getParentSessionID, getSubagentSessionIDs, registerSubagentSession } from "../session-state/state"
 import { getTaskToastManager } from "../task-toast-manager"
 import type {

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import type { MatrixxContext } from "../../plugin/context";
-import { notifyInjection } from "../../shared/injection-notifier";
+import { notifyInjection } from "../../shared/policy/injection-notifier";
 import { AGENTS_FILENAME } from "../directory-agents-injector/constants";
 import {
   loadInjectedPaths,

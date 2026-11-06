@@ -41,11 +41,11 @@ import {
   summarizeCompactionAppend,
   utf8ByteLength,
 } from "../shared"
-import { setContextModeForPrompts } from "../shared/context-mode-enforcement"
-import { switchProfile } from "../shared/dcp-switch-profile"
-import { createFirstMessageVariantGate } from "../shared/first-message-variant"
-import type { NativePluginContext, SessionContextCarrier } from "../shared/session-context-source"
-import { resolveTasksConfig } from "../shared/task-system-gating"
+import { resolveTasksConfig } from "../shared/config/task-system-gating"
+import { setContextModeForPrompts } from "../shared/policy/context-mode-enforcement"
+import { switchProfile } from "../shared/policy/dcp-switch-profile"
+import { createFirstMessageVariantGate } from "../shared/session/first-message-variant"
+import type { NativePluginContext, SessionContextCarrier } from "../shared/session/session-context-source"
 import type { BuiltinSkill } from "../skills"
 import { registerSkillTransform } from "../skills/skills.transform"
 import { startTmuxCheck } from "../tools"

@@ -17,7 +17,7 @@
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
 import { isTaskLinkedToMission, isTerminalTaskStatus } from "../../hooks/plan-persister/task-link"
-import { resolveTasksConfig } from "../../shared/task-system-gating"
+import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { TaskObjectSchema } from "../../tools/task/types"
 import type { MissionState } from "../mission-state/types"
 import { getTaskDir, listTaskFiles, readJsonSafe } from "../task-storage/storage"

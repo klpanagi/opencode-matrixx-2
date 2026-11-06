@@ -1,4 +1,4 @@
-import { hasSystemReminder, PRESENTATIONAL_TAGS } from "../../shared/system-directive"
+import { hasSystemReminder, PRESENTATIONAL_TAGS } from "../../shared/text/system-directive"
 
 export const MEMORY_DIR_NAME = ".matrixx" as const
 export const MEMORY_SUBDIR_NAME = "memory" as const

@@ -15,7 +15,7 @@ import {
   _setCtxToolsForTesting,
   _setDisciplinePathForTesting,
   hasWorkingSubstitute,
-} from "../../../src/shared/context-mode-enforcement"
+} from "../../../src/shared/policy/context-mode-enforcement"
 
 //#given: the ctx-absent fixture — discipline AGENTS.md resolves (override
 //#given: bypasses existsSync, mirroring a repo where the discipline file is

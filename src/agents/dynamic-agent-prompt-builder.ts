@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs"
+import { truncateDescription } from "../shared/compaction/truncate-description"
 import {
   hasWorkingSubstitute,
   isCtxToolsAvailable,
   resolveContextModeDisciplinePath,
   hasGrepGlobToolNames as sharedHasGrepGlobToolNames,
-} from "../shared/context-mode-enforcement"
-import { type DcpCompressionMode, resolveDcpCompressionMode } from "../shared/dcp-guidance"
-import { log } from "../shared/logger"
-import { truncateDescription } from "../shared/truncate-description"
+} from "../shared/policy/context-mode-enforcement"
+import { type DcpCompressionMode, resolveDcpCompressionMode } from "../shared/policy/dcp-guidance"
+import { log } from "../shared/runtime/logger"
 import { appendModelDirective } from "./model-directives"
 import type { AgentPromptMetadata } from "./types"
 

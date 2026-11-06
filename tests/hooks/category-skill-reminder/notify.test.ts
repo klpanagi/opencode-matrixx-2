@@ -6,7 +6,7 @@ import { describe, expect, test } from "bun:test"
 import type { MatrixxContext } from "../../../src/plugin/context"
 import { _resetForTesting, clearSessionAgent, updateSessionAgent } from "../../../src/features/session-state/state"
 import { createCategorySkillReminderHook } from "../../../src/hooks/category-skill-reminder/hook"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
 
 type ToastOpts = {
   body: { title: string; message: string; variant: "info" | "success"; duration: number }

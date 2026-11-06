@@ -5,7 +5,7 @@ import {
   isSystemDirective,
   removeSystemReminders,
   sanitizeKnownTags,
-} from "../../src/shared/system-directive"
+} from "../../src/shared/text/system-directive"
 
 describe("system-directive utilities", () => {
   describe("hasSystemReminder", () => {

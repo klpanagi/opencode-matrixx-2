@@ -1,8 +1,8 @@
 import type { CategoriesConfig, CategoryConfig, ModelPresetEntry, ModelRequirements } from "../../config/schema"
-import { log } from "../../shared/logger"
-import { isModelAvailable } from "../../shared/model-availability"
-import { getCategoryModelRequirements } from "../../shared/model-requirements"
-import { normalizeModel } from "../../shared/model-resolution-pipeline"
+import { isModelAvailable } from "../../shared/model/model-availability"
+import { getCategoryModelRequirements } from "../../shared/model/model-requirements"
+import { normalizeModel } from "../../shared/model/model-resolution-pipeline"
+import { log } from "../../shared/runtime/logger"
 import { CATEGORY_PROMPT_APPENDS, DEFAULT_CATEGORIES } from "./constants"
 
 interface ResolveCategoryConfigOptions {

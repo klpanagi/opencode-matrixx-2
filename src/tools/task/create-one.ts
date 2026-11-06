@@ -5,7 +5,7 @@ import {
   readJsonSafe,
   writeJsonAtomic,
 } from "../../features/task-storage/storage"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 import { DEDUP_WINDOW_MS } from "./constants"
 import type { TaskCreateInput, TaskObject } from "./types"
 import { TaskObjectSchema } from "./types"

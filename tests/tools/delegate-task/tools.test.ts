@@ -3,8 +3,8 @@ const { describe, test, expect, beforeEach, afterEach, spyOn, mock } = require("
 
 import type { CategoryConfig } from "../../../src/config/schema"
 import type { LaunchInput } from "../../../src/features/background-agent/types"
-import * as connectedProvidersCache from "../../../src/shared/connected-providers-cache"
-import { __resetModelCache } from "../../../src/shared/model-availability"
+import * as connectedProvidersCache from "../../../src/shared/model/connected-providers-cache"
+import { __resetModelCache } from "../../../src/shared/model/model-availability"
 import { CATEGORY_DESCRIPTIONS, CATEGORY_PROMPT_APPENDS, DEFAULT_CATEGORIES, isPlanAgent, isPlanFamily, PLAN_AGENT_NAMES, PLAN_FAMILY_NAMES } from "../../../src/tools/delegate-task/constants"
 import * as executor from "../../../src/tools/delegate-task/executor"
 import { __resetTimingConfig, __setTimingConfig } from "../../../src/tools/delegate-task/timing"
@@ -3810,7 +3810,7 @@ const tool = createDelegateTask({
       )
       
       //#then - plan agent should have task permission (stored per session)
-      const { getSessionTools } = require("../../../src/shared/session-state")
+      const { getSessionTools } = require("../../../src/shared/session/session-state")
       expect(getSessionTools("ses_plan_delegate")?.task).toBe(true)
     }, { timeout: 20000 })
 
@@ -3841,7 +3841,7 @@ const tool = createDelegateTask({
       )
       
       //#then
-      const { getSessionTools } = require("../../../src/shared/session-state")
+      const { getSessionTools } = require("../../../src/shared/session/session-state")
       expect(getSessionTools("ses_oracle_task")?.task).toBe(true)
     }, { timeout: 20000 })
 
@@ -3898,7 +3898,7 @@ const tool = createDelegateTask({
       )
       
       // then - oracle should NOT have task permission
-      const { getSessionTools } = require("../../../src/shared/session-state")
+      const { getSessionTools } = require("../../../src/shared/session/session-state")
       expect(getSessionTools("ses_oracle_no_delegate")?.task).toBe(true)
     }, { timeout: 20000 })
   })

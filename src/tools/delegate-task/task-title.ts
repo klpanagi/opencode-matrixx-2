@@ -1,4 +1,4 @@
-import { buildLabeledTitle } from "../../shared/agent-label";
+import { buildLabeledTitle } from "../../shared/agent/agent-label";
 
 export const FALLBACK_TASK_DESCRIPTION = "Background task";
 const MAX_DESCRIPTION_LENGTH = 80;

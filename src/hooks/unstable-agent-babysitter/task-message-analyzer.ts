@@ -1,5 +1,5 @@
 import type { BackgroundTask } from "../../features/background-agent"
-import { isRecord } from "../../shared/record-type-guard"
+import { isRecord } from "../../shared/runtime/record-type-guard"
 
 export const THINKING_SUMMARY_MAX_CHARS = 500 as const
 

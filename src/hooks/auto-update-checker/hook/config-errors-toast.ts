@@ -1,7 +1,7 @@
 import type { MatrixxContext } from "../../../plugin/context"
-import { clearConfigLoadErrors, getConfigLoadErrors } from "../../../shared/config-errors"
-import { log } from "../../../shared/logger"
-import { notify } from "../../../shared/notify"
+import { clearConfigLoadErrors, getConfigLoadErrors } from "../../../shared/config/config-errors"
+import { log } from "../../../shared/runtime/logger"
+import { notify } from "../../../shared/runtime/notify"
 
 export async function showConfigErrorsIfAny(_ctx: MatrixxContext): Promise<void> {
   const errors = getConfigLoadErrors()

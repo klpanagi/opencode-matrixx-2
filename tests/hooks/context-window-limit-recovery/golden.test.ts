@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test"
 import { loadCorpus } from "../../fixtures/messages/loader"
 import { getLastAssistant } from "../../../src/hooks/context-window-limit-recovery"
-import { createDynamicTruncator } from "../../../src/shared/dynamic-truncator"
+import { createDynamicTruncator } from "../../../src/shared/compaction/dynamic-truncator"
 
 type Client = Parameters<typeof getLastAssistant>[1]
 type TruncatorCtx = Parameters<typeof createDynamicTruncator>[0]

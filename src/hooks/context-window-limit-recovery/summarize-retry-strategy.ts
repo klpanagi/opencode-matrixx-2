@@ -1,4 +1,4 @@
-import { notify } from "../../shared/notify"
+import { notify } from "../../shared/runtime/notify"
 import type { Client } from "./client"
 import { fixEmptyMessages } from "./empty-content-recovery"
 import { sanitizeEmptyMessagesBeforeSummarize } from "./message-builder"

@@ -1,7 +1,7 @@
 import type { MatrixxContext } from "../../plugin/context"
 
 import { log } from "../../shared"
-import { isShellTool } from "../../shared/shell-tool-name"
+import { isShellTool } from "../../shared/io/shell-tool-name"
 import { isGitCommitOrPush, isGitPush } from "./git-command-detector"
 import { runGitleaksPrePushScan, runGitleaksStagedScan } from "./gitleaks-runner"
 import { extractRemoteBranch, formatFindings } from "./result-formatter"

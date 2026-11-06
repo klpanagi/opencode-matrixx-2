@@ -3,7 +3,7 @@ import { describe, test, expect, mock, beforeEach } from "bun:test"
 
 const logCalls: Array<{ msg: string; data?: unknown }> = []
 
-mock.module("../../../src/shared/logger", () => ({
+mock.module("../../../src/shared/runtime/logger", () => ({
   log: (msg: string, data?: unknown) => {
     logCalls.push({ msg, data })
   },

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as os from "node:os"
 import * as path from "node:path"
-import { detectExternalNotificationPlugin, getNotificationConflictWarning } from "../../src/shared/external-plugin-detector"
+import { detectExternalNotificationPlugin, getNotificationConflictWarning } from "../../src/shared/opencode/external-plugin-detector"
 
 describe("external-plugin-detector", () => {
   let tempDir: string

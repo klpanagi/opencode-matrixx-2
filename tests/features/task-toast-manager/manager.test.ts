@@ -1,7 +1,7 @@
 declare const require: (name: string) => unknown
 const { describe, test, expect, beforeEach, afterEach, mock } = require("bun:test")
 
-import { resetNotifySink, setNotifySink, type NotifyLevel } from "../../../src/shared/notify"
+import { resetNotifySink, setNotifySink, type NotifyLevel } from "../../../src/shared/runtime/notify"
 
 type TaskToastManagerClass = typeof import("../../../src/features/task-toast-manager/manager").TaskToastManager
 

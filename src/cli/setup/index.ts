@@ -6,7 +6,7 @@ export type { DepStatus, Platform, SetupState } from "./types";
 import { existsSync, readFileSync } from "node:fs";
 import * as p from "@clack/prompts";
 import type { MatrixxConfig } from "../../config/schema/matrixx-config";
-import { readJsoncFile } from "../../shared/jsonc-parser";
+import { readJsoncFile } from "../../shared/text/jsonc-parser";
 import { buildMatrixxConfig, previewDiff, resolveMatrixxConfigPath, writeMatrixxConfig } from "./config-writer";
 import { checkOptionalDeps, checkRequiredDeps, formatDepReport } from "./deps";
 import { syncOpencodePlugins } from "./opencode-sync";

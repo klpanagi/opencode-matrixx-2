@@ -3,9 +3,9 @@ import type {
 } from "../agents/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../config"
 import { resolvePlanCap } from "../features/mission-state/constants"
-import { filterDisabledTools } from "../shared/disabled-tools"
-import type { NativePluginContext } from "../shared/session-context-source"
-import { isTaskSystemEnabled } from "../shared/task-system-gating"
+import { isTaskSystemEnabled } from "../shared/config/task-system-gating"
+import type { NativePluginContext } from "../shared/session/session-context-source"
+import { filterDisabledTools } from "../shared/tool/disabled-tools"
 import {
   builtinTools,
   createAssemblyTool,

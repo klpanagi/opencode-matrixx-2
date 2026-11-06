@@ -1,6 +1,6 @@
-import { readConnectedProvidersCache, readProviderModelsCache } from "../../shared/connected-providers-cache"
-import { log } from "../../shared/logger"
-import { unwrapList } from "../../shared/unwrap-list"
+import { readConnectedProvidersCache, readProviderModelsCache } from "../../shared/model/connected-providers-cache"
+import { log } from "../../shared/runtime/logger"
+import { unwrapList } from "../../shared/runtime/unwrap-list"
 import type { NativeClient } from "./types"
 
 function addFromProviderModels(

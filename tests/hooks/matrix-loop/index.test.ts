@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
-import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/runtime/notify"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"

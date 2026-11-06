@@ -1,10 +1,10 @@
 import { findNearestMessageWithFields } from "../../features/hook-message-injector"
-import { log } from "../../shared/logger"
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import { getMessageDir } from "../../shared/opencode-message-dir"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import { withTimeout } from "../../shared/with-timeout"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import { log } from "../../shared/runtime/logger"
+import { withTimeout } from "../../shared/runtime/with-timeout"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 
 export async function injectContinuationPrompt(
 	ctx: NativePluginContext,

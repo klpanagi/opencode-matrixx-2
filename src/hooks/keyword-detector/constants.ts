@@ -1,4 +1,4 @@
-export { CODE_BLOCK_PATTERN, INLINE_CODE_PATTERN } from "../../shared/code-patterns"
+export { CODE_BLOCK_PATTERN, INLINE_CODE_PATTERN } from "../../shared/policy/code-patterns"
 export { ANALYZE_MESSAGE, ANALYZE_PATTERN } from "./analyze/default"
 export { DOCS_MESSAGE, DOCS_PATTERN } from "./docs/default"
 export { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search/default"

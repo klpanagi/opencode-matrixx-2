@@ -1,4 +1,4 @@
-import { isRecord } from "../../shared/record-type-guard"
+import { isRecord } from "../../shared/runtime/record-type-guard"
 export function formatMessageTime(value: unknown): string {
   if (typeof value === "string") {
     const date = new Date(value)

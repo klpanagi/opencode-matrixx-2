@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { parseJsoncSafe } from "../../../shared/jsonc-parser"
-import { getOpenCodeConfigDir } from "../../../shared/opencode-config-dir"
+import { getOpenCodeConfigDir } from "../../../shared/config/opencode-config-dir"
+import { parseJsoncSafe } from "../../../shared/text/jsonc-parser"
 import type { CheckResult, DoctorCheck } from "../types"
 import { readMatrixxConfig } from "./helpers"
 

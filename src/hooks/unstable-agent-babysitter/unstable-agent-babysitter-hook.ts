@@ -1,9 +1,9 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import { getMainSessionID, getSessionAgent } from "../../features/session-state/state"
-import { log } from "../../shared/logger"
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import type { SessionDomainLike } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import { log } from "../../shared/runtime/logger"
+import type { SessionDomainLike } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 import {
   buildReminder,
   extractMessages,

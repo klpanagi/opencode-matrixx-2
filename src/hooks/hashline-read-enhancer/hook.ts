@@ -1,5 +1,5 @@
 import type { MatrixxContext } from "../../plugin/context"
-import { isReadTool, isWriteTool } from "../../shared/tool-guards"
+import { isReadTool, isWriteTool } from "../../shared/tool/tool-guards"
 import { computeLineHash } from "../../tools/hashline-edit/hash-computation"
 
 const WRITE_SUCCESS_MARKER = "File written successfully."

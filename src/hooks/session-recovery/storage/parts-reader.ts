@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { isSqliteBackend } from "../../../shared"
-import type { SessionContextCarrier } from "../../../shared/session-context-source"
+import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
 import { PART_STORAGE } from "../constants"
 import type { StoredPart } from "../types"
 

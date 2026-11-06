@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "bun:test"
-import { notify, resetNotifySink, setNotifySink } from "../../src/shared/notify"
+import { notify, resetNotifySink, setNotifySink } from "../../src/shared/runtime/notify"
 
 afterEach(() => {
   resetNotifySink()

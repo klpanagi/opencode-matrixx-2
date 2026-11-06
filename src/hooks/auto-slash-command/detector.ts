@@ -1,4 +1,4 @@
-import { CODE_BLOCK_PATTERN } from "../../shared/code-patterns"
+import { CODE_BLOCK_PATTERN } from "../../shared/policy/code-patterns"
 import {
   EXCLUDED_COMMANDS,
   SLASH_COMMAND_PATTERN,

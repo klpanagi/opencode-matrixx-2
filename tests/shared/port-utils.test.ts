@@ -4,7 +4,7 @@ import {
   findAvailablePort,
   getAvailableServerPort,
   isPortAvailable,
-} from "../../src/shared/port-utils"
+} from "../../src/shared/io/port-utils"
 
 describe("port-utils", () => {
   describe("isPortAvailable", () => {

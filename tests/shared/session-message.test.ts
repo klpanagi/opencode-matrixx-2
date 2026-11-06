@@ -7,7 +7,7 @@ import {
   roleOf,
   textOf,
   timeOf,
-} from "../../src/shared/session-message"
+} from "../../src/shared/session/session-message"
 import { loadCorpus } from "../fixtures/messages/loader"
 
 const malformed: Array<[string, unknown]> = [

@@ -88,7 +88,7 @@ const mockLog = mock((message: string, data?: Record<string, unknown>) => {
   logCalls.push({ message, data })
 })
 
-mock.module("../../../src/shared/logger", () => ({
+mock.module("../../../src/shared/runtime/logger", () => ({
   log: mockLog,
 }))
 

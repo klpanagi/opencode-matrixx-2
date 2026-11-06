@@ -6,7 +6,7 @@ import {
   getCategoryModelRequirements,
   type FallbackEntry,
   type ModelRequirement,
-} from "../../src/shared/model-requirements"
+} from "../../src/shared/model/model-requirements"
 
 // helper to build ModelRequirements config with synthetic values
 function makeConfig(overrides: {

@@ -2,7 +2,7 @@ import type { MatrixxConfig } from "../config"
 import type { BackgroundManager } from "../features/background-agent"
 
 import { createUnstableAgentBabysitterHook } from "../hooks"
-import type { NativePluginContext } from "../shared/session-context-source"
+import type { NativePluginContext } from "../shared/session/session-context-source"
 
 export function createUnstableAgentBabysitter(args: {
   ctx: NativePluginContext

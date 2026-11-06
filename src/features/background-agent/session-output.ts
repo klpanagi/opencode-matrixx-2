@@ -1,8 +1,8 @@
 import { log } from "../../shared"
-import type { SessionContextCarrier } from "../../shared/session-context-source"
-import { fetchSessionMessages as fetchNativeSessionMessages } from "../../shared/session-context-source"
-import type { SessionMessage } from "../../shared/session-message"
-import { contentOf, roleOf } from "../../shared/session-message"
+import type { SessionContextCarrier } from "../../shared/session/session-context-source"
+import { fetchSessionMessages as fetchNativeSessionMessages } from "../../shared/session/session-context-source"
+import type { SessionMessage } from "../../shared/session/session-message"
+import { contentOf, roleOf } from "../../shared/session/session-message"
 
 export type SessionOutputClient = SessionContextCarrier
 

@@ -1,8 +1,8 @@
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import type { SessionDomainLike } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import { contentOf, idOf } from "../../shared/session-message"
+import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import type { SessionDomainLike } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { contentOf, idOf } from "../../shared/session/session-message"
 import { readParts } from "./storage"
 import type { MessageData } from "./types"
 

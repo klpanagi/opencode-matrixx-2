@@ -1,8 +1,8 @@
 import type { InputSecretGuardConfig } from "../../config/schema/security"
 import { log } from "../../shared"
-import { notify } from "../../shared/notify"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { createSystemDirective, isSystemDirective } from "../../shared/system-directive"
+import { notify } from "../../shared/runtime/notify"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { createSystemDirective, isSystemDirective } from "../../shared/text/system-directive"
 import { extractPromptText } from "../keyword-detector/detector"
 import { detectSecrets, hashFinding } from "./detector"
 import {

@@ -1,6 +1,6 @@
 import type { BackgroundManager } from "../../features/background-agent"
 import type { V2Event } from "../../plugin/context"
-import { log } from "../../shared/logger"
+import { log } from "../../shared/runtime/logger"
 
 /**
  * Background notification hook - handles event routing to BackgroundManager.

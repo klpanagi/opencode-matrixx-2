@@ -1,4 +1,4 @@
-import { log } from "../../../shared/logger"
+import { log } from "../../../shared/runtime/logger"
 import type { UpdateCheckResult } from "../types"
 import { extractChannel } from "../version-channel"
 import { getCachedVersion } from "./cached-version"

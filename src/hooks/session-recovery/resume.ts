@@ -1,6 +1,6 @@
-import { promptNativeWithModelSuggestionRetry } from "../../shared/model-suggestion-retry"
-import type { SessionDomainLike } from "../../shared/session-context-source"
-import { roleOf } from "../../shared/session-message"
+import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
+import type { SessionDomainLike } from "../../shared/session/session-context-source"
+import { roleOf } from "../../shared/session/session-message"
 import type { MessageData, ResumeConfig } from "./types"
 
 const RECOVERY_RESUME_TEXT = "[session recovered - continuing previous task]"

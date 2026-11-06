@@ -4,8 +4,8 @@ import type {
   AvailableSkill,
 } from "../../agents/dynamic-agent-prompt-builder"
 import { resolveSoftwareDevEnforcement, type SoftwareDevEnforcementConfigInput } from "../../config/schema"
-import { log } from "../../shared/logger"
-import { mergeCategories } from "../../shared/merge-categories"
+import { log } from "../../shared/runtime/logger"
+import { mergeCategories } from "../../shared/tool/merge-categories"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { CATEGORY_DESCRIPTIONS, isCodeWritingCategory, SHORT_CATEGORY_HINTS } from "./constants"
 import {

@@ -6,12 +6,12 @@ import {
 } from "../../features/session-state/state"
 import { getUltraworkState } from "../../features/ultrawork-state"
 import { log } from "../../shared"
-import { notify } from "../../shared/notify"
-import type { NativePluginContext } from "../../shared/session-context-source"
+import { notify } from "../../shared/runtime/notify"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
 import {
   isSystemDirective,
   sanitizeKnownTags,
-} from "../../shared/system-directive"
+} from "../../shared/text/system-directive"
 import { isPlannerAgent } from "./constants"
 import { detectKeywordsWithType, extractPromptText } from "./detector"
 

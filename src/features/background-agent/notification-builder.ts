@@ -1,7 +1,7 @@
 import { log } from "../../shared"
-import type { SessionContextCarrier } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import type { SessionMessage } from "../../shared/session-message"
+import type { SessionContextCarrier } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import type { SessionMessage } from "../../shared/session/session-message"
 import { isAbortedSessionError } from "./error-helpers"
 import {
   findNearestMessageExcludingCompaction,

@@ -9,7 +9,7 @@ import {
   readConnectedProvidersCache,
   resolveModelPipeline,
 } from "../shared"
-import { getAgentModelRequirements } from "../shared/model-requirements"
+import { getAgentModelRequirements } from "../shared/model/model-requirements"
 import { resolveCategoryConfig } from "./category-config-resolver"
 
 export async function buildOracleAgentConfig(params: {

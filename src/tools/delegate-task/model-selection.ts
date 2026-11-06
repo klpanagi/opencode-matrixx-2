@@ -1,5 +1,5 @@
-import { fuzzyMatchModel } from "../../shared/model-availability"
-import type { FallbackEntry } from "../../shared/model-requirements"
+import { fuzzyMatchModel } from "../../shared/model/model-availability"
+import type { FallbackEntry } from "../../shared/model/model-requirements"
 import { parseModelString } from "./model-string-parser"
 
 function normalizeModel(model?: string): string | undefined {

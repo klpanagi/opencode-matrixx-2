@@ -5,7 +5,7 @@ import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 function makeCtx(dir: string, bgTasks: Array<{ status: string }> = []): MatrixxContext {
   return {

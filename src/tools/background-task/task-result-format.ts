@@ -1,9 +1,9 @@
 import type { BackgroundTask } from "../../features/background-agent"
 import { formatDuration } from "../../shared"
-import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session-context-source"
-import { consumeNewMessages } from "../../shared/session-cursor"
-import type { SessionMessage } from "../../shared/session-message"
-import { contentOf, roleOf } from "../../shared/session-message"
+import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session/session-context-source"
+import { consumeNewMessages } from "../../shared/session/session-cursor"
+import type { SessionMessage } from "../../shared/session/session-message"
+import { contentOf, roleOf } from "../../shared/session/session-message"
 
 function getTimeString(value: unknown): string {
   return typeof value === "string" ? value : ""

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { afterEach, describe, expect, test } from "bun:test"
 
-import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting } from "../../../src/shared/policy/context-mode-enforcement"
 import type { MatrixxConfig } from "../../../src/config"
 import { buildContextModeRoutingBlock, MATRIXX_CONTEXT_MODE_MARKER } from "../../../src/features/context-mode-routing/routing-block"
 import { createContextModeSystemTransformHook } from "../../../src/features/context-mode-routing/system-transform"

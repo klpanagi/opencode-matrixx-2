@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSyn
 import { dirname, join } from "node:path"
 import { z } from "zod"
 import { log } from "../../shared"
-import { buildLabeledTitle } from "../../shared/agent-label"
+import { buildLabeledTitle } from "../../shared/agent/agent-label"
 import { TASK_TTL_MS } from "./constants"
 import type { BackgroundTask } from "./types"
 

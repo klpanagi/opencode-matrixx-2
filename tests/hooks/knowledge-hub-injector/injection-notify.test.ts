@@ -7,8 +7,8 @@ import { ContextCollector } from "../../../src/features/context-injector"
 import { detectDomainSkills } from "../../../src/hooks/domain-keyword-detector/detector"
 import { createKnowledgeHubInjectorHook } from "../../../src/hooks/knowledge-hub-injector/hook"
 import { detectKeywordsWithType } from "../../../src/hooks/keyword-detector/detector"
-import { resetInjectionNotifier } from "../../../src/shared/injection-notifier"
-import { sanitizeKnownTags } from "../../../src/shared/system-directive"
+import { resetInjectionNotifier } from "../../../src/shared/policy/injection-notifier"
+import { sanitizeKnownTags } from "../../../src/shared/text/system-directive"
 
 //#given a mock ctx with a TUI showToast spy (mirrors tests/shared/injection-notifier.test.ts)
 type ToastOpts = {

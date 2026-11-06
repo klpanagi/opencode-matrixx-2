@@ -1,7 +1,7 @@
 import { resolveMessageContext } from "../../features/hook-message-injector"
 import { getSessionAgent } from "../../features/session-state/state"
-import { log } from "../../shared/logger"
-import { getMessageDir } from "../../shared/opencode-message-dir"
+import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import { log } from "../../shared/runtime/logger"
 import type { ParentContext } from "./executor-types"
 import type { NativeClient, ToolContextWithMetadata } from "./types"
 

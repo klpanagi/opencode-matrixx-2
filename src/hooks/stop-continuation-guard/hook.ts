@@ -1,7 +1,7 @@
-import { hasPendingQuestionMessage } from "../../shared/awaiting-user"
-import { log } from "../../shared/logger"
-import type { NativePluginContext } from "../../shared/session-context-source"
-import { fetchSessionMessages } from "../../shared/session-context-source"
+import { log } from "../../shared/runtime/logger"
+import { hasPendingQuestionMessage } from "../../shared/session/awaiting-user"
+import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
 
 const HOOK_NAME = "stop-continuation-guard"
 

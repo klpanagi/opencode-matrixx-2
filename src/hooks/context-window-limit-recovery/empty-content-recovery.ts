@@ -1,7 +1,7 @@
-import { notify } from "../../shared/notify"
-import { isSqliteBackend } from "../../shared/opencode-storage-detection"
-import { fetchSessionMessages } from "../../shared/session-context-source"
-import { contentOf, idOf } from "../../shared/session-message"
+import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
+import { notify } from "../../shared/runtime/notify"
+import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { contentOf, idOf } from "../../shared/session/session-message"
 import {
   findEmptyMessageByIndex,
   findEmptyMessages,

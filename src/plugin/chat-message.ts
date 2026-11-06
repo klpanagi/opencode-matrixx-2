@@ -8,8 +8,8 @@ import {
   applyAgentVariant,
   resolveAgentVariant,
   resolveVariantForModel,
-} from "../shared/agent-variant"
-import { notify } from "../shared/notify"
+} from "../shared/agent/agent-variant"
+import { notify } from "../shared/runtime/notify"
 import type { MatrixxContext } from "./context"
 import type { DomainHooks } from "./setup-domains"
 

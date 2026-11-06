@@ -5,7 +5,7 @@ import * as sessionState from "../../../src/features/session-state/state"
 import { _resetForTesting, clearSessionAgent, setMainSession, updateSessionAgent } from "../../../src/features/session-state/state"
 import * as sharedModule from "../../../src/shared"
 import { createKeywordDetectorHook } from "../../../src/hooks/keyword-detector/hook"
-import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/runtime/notify"
 
 describe("keyword-detector message transform", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>

@@ -22,7 +22,7 @@ type Part = {
 }
 
 import type { MatrixxContext } from "../../plugin/context"
-import { sanitizeKnownTags } from "../../shared/system-directive"
+import { sanitizeKnownTags } from "../../shared/text/system-directive"
 import { guardCompressDirective, NUDGE_MARKERS, normalizeNudgeText } from "./constants"
 
 interface MessageWithParts {

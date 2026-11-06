@@ -1,7 +1,7 @@
 import type { MatrixxConfig } from "../config";
 import type { ModelCacheState } from "../plugin-state";
 import { log } from "../shared";
-import { bindTaskSystemDeprecationToast } from "../shared/task-system-gating";
+import { bindTaskSystemDeprecationToast } from "../shared/config/task-system-gating";
 import { applyAgentConfig } from "./agent-config-handler";
 import { applyCommandConfig } from "./command-config-handler";
 import { applyFormatterConfig } from "./formatter-config-handler";

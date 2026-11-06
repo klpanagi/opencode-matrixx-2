@@ -5,7 +5,7 @@ import {
   registerDomainKeywordDetector,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/domain-keyword-detector"
-import type { SessionMessage } from "../../../src/shared/session-message"
+import type { SessionMessage } from "../../../src/shared/session/session-message"
 
 function flatEvent(texts: Array<{ type: string; text?: string; content?: Array<{ type?: string; text?: string }> }>): FlatMessageHookEvent {
   return {

@@ -7,8 +7,8 @@ import {
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import type { MatrixxContext } from "../../plugin/context";
-import { log } from "../../shared/logger";
-import { stateRootFromToolContext } from "../../shared/state-root"
+import { log } from "../../shared/runtime/logger";
+import { stateRootFromToolContext } from "../../shared/session/state-root"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { createOneTask } from "./create-one";
 import type {

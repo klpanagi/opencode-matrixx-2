@@ -12,7 +12,7 @@ import { generateTaskId, getTaskDir, listTaskFiles, readJsonSafe, writeJsonAtomi
 import type { TaskObject } from "../src/tools/task/types.ts"
 import { TaskObjectSchema } from "../src/tools/task/types.ts"
 import { getIncompleteTaskCount } from "../src/hooks/task-continuation-enforcer/todo.ts"
-import { isTaskSystemEnabled } from "../src/shared/task-system-gating.ts"
+import { isTaskSystemEnabled } from "../src/shared/config/task-system-gating"
 import { applyToolConfig } from "../src/plugin-handlers/tool-config-handler.ts"
 import type { MatrixxConfig } from "../src/config/schema.ts"
 

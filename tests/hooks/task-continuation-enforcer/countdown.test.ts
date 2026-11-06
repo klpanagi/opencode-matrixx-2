@@ -5,7 +5,7 @@ import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/context"
 import { startCountdown } from "../../../src/hooks/task-continuation-enforcer/countdown"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 function makeCtx(dir: string, notifyMock: ReturnType<typeof mock>): MatrixxContext {
   setNotifySink(notifyMock)

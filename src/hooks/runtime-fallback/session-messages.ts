@@ -1,7 +1,7 @@
-import { isRecord } from "../../shared/record-type-guard"
-import type { ContentPart, SessionMessage } from "../../shared/session-message"
+import { isRecord } from "../../shared/runtime/record-type-guard"
+import type { ContentPart, SessionMessage } from "../../shared/session/session-message"
 
-export type { SessionMessage } from "../../shared/session-message"
+export type { SessionMessage } from "../../shared/session/session-message"
 export type SessionMessagePart = ContentPart
 
 

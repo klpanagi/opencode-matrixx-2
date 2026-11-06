@@ -8,7 +8,7 @@ import {
   resolveStateRoot,
   stateRootFromPluginContext,
   stateRootFromToolContext,
-} from "../../src/shared/state-root"
+} from "../../src/shared/session/state-root"
 
 function makeDir(prefix: string): string {
   const dir = join(tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`)

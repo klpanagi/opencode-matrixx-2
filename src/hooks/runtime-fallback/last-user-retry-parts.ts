@@ -1,4 +1,4 @@
-import { contentOf, roleOf, textOf } from "../../shared/session-message"
+import { contentOf, roleOf, textOf } from "../../shared/session/session-message"
 import { extractSessionMessages } from "./session-messages"
 
 export function getLastUserRetryParts(

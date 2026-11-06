@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { truncateDescription } from "../../src/shared/truncate-description"
+import { truncateDescription } from "../../src/shared/compaction/truncate-description"
 
 describe("truncateDescription", () => {
   it("returns description unchanged when under max length", () => {

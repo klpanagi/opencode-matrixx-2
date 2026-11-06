@@ -7,7 +7,7 @@ import {
   ensureCacheDir,
   ensureExecutable,
   extractTarGz as extractTarGzArchive,
-} from "../../shared/binary-downloader"
+} from "../../shared/io/binary-downloader"
 
 export function findFileRecursive(dir: string, filename: string): string | null {
   try {

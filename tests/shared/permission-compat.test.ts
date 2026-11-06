@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { allowActionsOnly, denyActions, rule } from "../../src/shared/permission-compat"
+import { allowActionsOnly, denyActions, rule } from "../../src/shared/agent/permission-compat"
 
 describe("permission-compat", () => {
   describe("rule", () => {

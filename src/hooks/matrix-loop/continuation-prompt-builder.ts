@@ -1,4 +1,4 @@
-import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/system-directive"
+import { SYSTEM_DIRECTIVE_PREFIX } from "../../shared/text/system-directive"
 import type { MatrixLoopState } from "./types"
 
 const CONTINUATION_PROMPT = `${SYSTEM_DIRECTIVE_PREFIX} - MATRIX LOOP {{ITERATION}}/{{MAX}}]

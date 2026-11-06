@@ -1,6 +1,6 @@
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { jsonSafeMetadata } from "../../shared"
-import { getSessionTools } from "../../shared/session-state"
+import { getSessionTools } from "../../shared/session/session-state"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
 import { buildContinuationTitle } from "./task-title"

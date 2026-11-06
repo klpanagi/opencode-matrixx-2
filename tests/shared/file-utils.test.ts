@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { isSymbolicLink, resolveSymlink, resolveSymlinkAsync } from "../../src/shared/file-utils"
+import { isSymbolicLink, resolveSymlink, resolveSymlinkAsync } from "../../src/shared/io/file-utils"
 
 const testDir = join(tmpdir(), `file-utils-test-${Date.now()}`)
 

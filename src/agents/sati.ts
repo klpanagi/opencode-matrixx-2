@@ -1,4 +1,4 @@
-import { denyActions } from "../shared/permission-compat"
+import { denyActions } from "../shared/agent/permission-compat"
 import { FRONTEND_A11Y_SKILL_NAME } from "../skills/skills/frontend/frontend-a11y"
 import { FRONTEND_BUILD_TOOLING_SKILL_NAME } from "../skills/skills/frontend/frontend-build-tooling"
 import { FRONTEND_PERF_SKILL_NAME } from "../skills/skills/frontend/frontend-perf"

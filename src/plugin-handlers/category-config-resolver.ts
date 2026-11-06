@@ -1,5 +1,5 @@
 import type { CategoryConfig } from "../config/schema";
-import { mergeCategories } from "../shared/merge-categories";
+import { mergeCategories } from "../shared/tool/merge-categories";
 
 export function resolveCategoryConfig(
   categoryName: string,

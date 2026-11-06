@@ -10,8 +10,8 @@ import { _resetThinkModeStateForTesting } from "../src/hooks/think-mode/hook"
 import { _resetNormalizeModelCacheForTesting } from "../src/hooks/think-mode/switcher"
 import { _resetDisabledSetsCacheForTesting } from "../src/plugin-config"
 import { _resetDisciplineCacheForTesting } from "../src/agents/dynamic-agent-prompt-builder"
-import { _resetContextModeEnforcementForTesting } from "../src/shared/context-mode-enforcement"
-import { _resetDcpGuidanceForTesting } from "../src/shared/dcp-guidance"
+import { _resetContextModeEnforcementForTesting } from "../src/shared/policy/context-mode-enforcement"
+import { _resetDcpGuidanceForTesting } from "../src/shared/policy/dcp-guidance"
 import { _resetSdkMessageCache } from "../src/features/hook-message-injector/sdk-message-cache"
 
 beforeEach(() => {

@@ -7,7 +7,7 @@ import { registerSubagentSession, unregisterSubagentSession } from "../../../src
 import { handleSessionIdle } from "../../../src/hooks/task-continuation-enforcer/idle-event"
 import { handleNonIdleEvent } from "../../../src/hooks/task-continuation-enforcer/non-idle-events"
 import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { setNotifySink } from "../../../src/shared/notify"
+import { setNotifySink } from "../../../src/shared/runtime/notify"
 
 function writeValidTask(dir: string, id: string, status = "pending", threadID?: string): void {
   const task: Record<string, unknown> = { id, subject: `task ${id}`, description: "d", status, blocks: [], blockedBy: [] }

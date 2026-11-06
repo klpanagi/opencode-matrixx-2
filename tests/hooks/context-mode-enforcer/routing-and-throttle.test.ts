@@ -12,7 +12,7 @@ import {
 } from "../../../src/hooks/context-mode-enforcer/constants"
 import { _resetGuidanceThrottleForTesting } from "../../../src/hooks/context-mode-enforcer/guidance-throttle"
 import { createContextModeEnforcerHook } from "../../../src/hooks/context-mode-enforcer/hook"
-import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/context-mode-enforcement"
+import { _resetContextModeEnforcementForTesting, _setCtxToolsForTesting, _setDisciplinePathForTesting } from "../../../src/shared/policy/context-mode-enforcement"
 
 const WORKING_SUBSTITUTE = "/nonexistent-fake/AGENTS.md"
 

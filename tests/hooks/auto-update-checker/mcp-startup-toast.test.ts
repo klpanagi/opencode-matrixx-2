@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import { showMcpStartupNoticeIfAny } from "../../../src/hooks/auto-update-checker/hook/mcp-startup-toast"
 import { _resetMcpStartupFailuresForTesting, setMcpStartupFailures } from "../../../src/mcps/mcp-startup-state"
-import { resetNotifySink, setNotifySink } from "../../../src/shared/notify"
+import { resetNotifySink, setNotifySink } from "../../../src/shared/runtime/notify"
 
 afterEach(() => {
   _resetMcpStartupFailuresForTesting()

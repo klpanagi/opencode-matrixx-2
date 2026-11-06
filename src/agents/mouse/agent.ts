@@ -13,7 +13,7 @@
  */
 
 import type { AgentOverrideConfig } from "../../config/schema"
-import { denyActions } from "../../shared/permission-compat"
+import { denyActions } from "../../shared/agent/permission-compat"
 import { type AgentConfig, parseModelRef } from "../agent-config"
 import type { AgentMode } from "../types"
 import {
