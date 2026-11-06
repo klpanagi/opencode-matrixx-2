@@ -11,8 +11,8 @@
  * (`{ id, setup }`), so no `definePlugin` helper is needed.
  */
 
-import type { Cleanup, MatrixxContext } from "./plugin/context"
 import { registerDomains, setupDomains } from "./plugin/setup-domains"
+import type { Cleanup, MatrixxContext } from "./plugin/tool/context"
 import { log } from "./shared"
 
 async function setup(ctx: MatrixxContext): Promise<Cleanup> {

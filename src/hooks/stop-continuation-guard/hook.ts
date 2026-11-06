@@ -15,7 +15,7 @@ interface StopContinuationGuardOptions {
   isAwaitingUser?: (sessionID: string) => boolean
 }
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export interface StopContinuationGuard {
   event: (event: V2Event) => Promise<void>
   "chat.message": (input: { sessionID?: string }) => Promise<void>

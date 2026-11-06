@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { isReadTool, isWriteTool } from "../../shared/tool/tool-guards"
 import { computeLineHash } from "../../tools/hashline-edit/hash-computation"
 

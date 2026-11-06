@@ -1,4 +1,4 @@
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { getTranscriptPath as getDefaultTranscriptPath } from "../../shared/session/transcript-path"
 import { createLoopSessionRecovery } from "./loop-session-recovery"

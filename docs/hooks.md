@@ -25,8 +25,8 @@
   figures are stale and superseded by the counts above; do not cite 76/60
   without this note.
 - Every tool call passes through `tool.execute.before` (18 invocations over
-  17 unique hooks in 3 waves, `src/plugin/tool-execute-before.ts`) **and**
-  `tool.execute.after` (19 invocations, `src/plugin/tool-execute-after.ts`).
+  17 unique hooks in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
+  `tool.execute.after` (19 invocations, `src/plugin/tool/tool-execute-after.ts`).
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
   (`oracle-md-only`, `mouse-notepad`, `niobe`), plus sequential `after`
@@ -91,18 +91,18 @@ handlers; each handler fans out to hook methods:
 
 | OpenCode event | Matrixx handler | Hooks attached |
 |---|---|---|
-| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool-execute-before.ts`) | 18 invocations, 3 waves (Section 1.3) |
-| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `preemptiveCompaction`/`qualityGate` + 16 sequential (Section 1.4) |
-| `chat.message` | `createChatMessageHandler` (`src/plugin/chat-message.ts`) | `inputSecretGuard`, `stopContinuationGuard`, `keywordDetector`, `autoSlashCommand`, `startWork` (conditional), `matrixLoop` template detection |
+| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 18 invocations, 3 waves (Section 1.3) |
+| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `preemptiveCompaction`/`qualityGate` + 16 sequential (Section 1.4) |
+| `chat.message` | `createChatMessageHandler` (`src/plugin/tool/chat-message.ts`) | `inputSecretGuard`, `stopContinuationGuard`, `keywordDetector`, `autoSlashCommand`, `startWork` (conditional), `matrixLoop` template detection |
 | `experimental.chat.messages.transform` | `createMessagesTransformHandler` (`src/plugin/messages-transform.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator`, `evolutionHitl` |
-| `chat.params` | `createChatParamsHandler` (`src/plugin/chat-params.ts`) | `anthropicEffort` only, plus one-shot category temperature |
-| `event` | `createEventHandler` (`src/plugin/event.ts`) | session, recovery, loop, guard, and injector hooks (Section 2.3) |
+| `chat.params` | `createChatParamsHandler` (`src/plugin/tool/chat-params.ts`) | `anthropicEffort` only, plus one-shot category temperature |
+| `event` | `createEventHandler` (`src/plugin/tool/event.ts`) | session, recovery, loop, guard, and injector hooks (Section 2.3) |
 | `experimental.session.compacting` | inline in `src/index.ts` | `compactionTodoPreserver.capture`, `compactionContextInjector()`, `planPersister.buildRehydrationContext` |
 | `tool.definition` / `config` | definition/config handlers | no hook logic today (`src/plugin/tool-definition.ts` is a pass-through) |
 
 ### 1.3 `tool.execute.before`: 3-wave pipeline
 
-Source: `src/plugin/tool-execute-before.ts`. Hook references are bound once at
+Source: `src/plugin/tool/tool-execute-before.ts`. Hook references are bound once at
 handler creation to skip per-call optional-chain cost. Waves run strictly in
 order; hooks inside Wave 1 and Wave 2 run concurrently.
 
@@ -127,7 +127,7 @@ agent routing in parallel with Wave 3 and serves `/matrix-loop`,
 
 ### 1.4 `tool.execute.after`: mostly sequential chain
 
-Source: `src/plugin/tool-execute-after.ts`.
+Source: `src/plugin/tool/tool-execute-after.ts`.
 
 ```text
 toolOutputTruncator (always first)
@@ -251,7 +251,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction
 | `evolution-compressor` | module hook | Compresses traces into distilled knowledge, budgeted per hour. Exists for async session learning; only when `evolution.enabled`. Currently has no call site (Section 2.4). |
 | `runtime-fallback` | module hook | Retries failed model calls on fallbacks with cooldown. Exists for provider resilience. Currently has no call site (Section 2.4). |
 
-Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/chat-params.ts`, `src/plugin/messages-transform.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/event.ts`, `src/plugin/event.ts` + `src/plugin/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
+Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/messages-transform.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
 
 For orchestration behavior (niobe, continuation enforcers, matrix loop)
 see `orchestration.md`; for the task substrate see
@@ -264,11 +264,11 @@ Six hooks formerly listed here are now wired into dispatchers (all honor
 
 | Hook | Defined handler | Status |
 |---|---|---|
-| `webfetch-redirect-guard` | `tool.execute.before` + `after` | Wired (`src/plugin/tool-execute-before.ts`, `src/plugin/tool-execute-after.ts`) |
+| `webfetch-redirect-guard` | `tool.execute.before` + `after` | Wired (`src/plugin/tool/tool-execute-before.ts`, `src/plugin/tool/tool-execute-after.ts`) |
 | `evolution-watcher` | `tool.execute.before` + `after` | Wired (also gated by `evolution.enabled`) |
-| `evolution-compressor` | module hook + `event` + compacting | Wired (`src/plugin/event.ts`, `src/index.ts`) (also gated by `evolution.enabled`) |
-| `runtime-fallback` | module hook + `event` + `chat.message` | Wired (`src/plugin/event.ts`, `src/plugin/chat-message.ts`) |
-| `design-intent-preserver` | `chat.message`-shaped | Wired in `src/plugin/chat-message.ts` |
+| `evolution-compressor` | module hook + `event` + compacting | Wired (`src/plugin/tool/event.ts`, `src/index.ts`) (also gated by `evolution.enabled`) |
+| `runtime-fallback` | module hook + `event` + `chat.message` | Wired (`src/plugin/tool/event.ts`, `src/plugin/tool/chat-message.ts`) |
+| `design-intent-preserver` | `chat.message`-shaped | Wired in `src/plugin/tool/chat-message.ts` |
 | `tool-pair-validator` | `experimental.chat.messages.transform`-shaped | Wired in `src/plugin/messages-transform.ts` |
 
 Removed: `failure-counter` (`tool.execute.after` + `event`) and
@@ -428,11 +428,11 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
   `src/plugin/hooks/create-transform-hooks.ts`,
   `src/plugin/hooks/create-continuation-hooks.ts`,
   `src/plugin/hooks/create-skill-hooks.ts`
-- `src/plugin/tool-execute-before.ts`, `src/plugin/tool-execute-after.ts`,
+- `src/plugin/tool/tool-execute-before.ts`, `src/plugin/tool/tool-execute-after.ts`,
   `src/plugin/tool-execute-before.bench.ts`,
   `src/plugin/hook-mutation-classification.md`
-- `src/plugin/chat-message.ts`, `src/plugin/chat-params.ts`,
-  `src/plugin/messages-transform.ts`, `src/plugin/event.ts`,
+- `src/plugin/tool/chat-message.ts`, `src/plugin/tool/chat-params.ts`,
+  `src/plugin/messages-transform.ts`, `src/plugin/tool/event.ts`,
   `src/plugin/tool-definition.ts`
 - `src/shared/safe-create-hook.ts`, `src/plugin-config.ts:155-176`
 - `src/hooks/AGENTS.md`, `src/hooks/index.ts`

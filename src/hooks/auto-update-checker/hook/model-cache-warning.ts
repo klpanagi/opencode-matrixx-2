@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import { isModelCacheAvailable } from "../../../shared/model/model-availability"
 import { log } from "../../../shared/runtime/logger"
 import { notify } from "../../../shared/runtime/notify"

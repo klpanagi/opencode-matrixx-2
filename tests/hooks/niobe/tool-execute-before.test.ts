@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { afterAll, describe, expect, mock, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 
 const ORCHESTRATOR_FLAG_KEY = "__niobeToolExecuteBeforeOrchestrator"
 

@@ -1,5 +1,5 @@
 import type { MatrixxConfig } from "../../config"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/io/shell-tool-name"
 import { hasWorkingSubstitute, isCtxToolsAvailable, resolveContextModeEnforcement } from "../../shared/policy/context-mode-enforcement"

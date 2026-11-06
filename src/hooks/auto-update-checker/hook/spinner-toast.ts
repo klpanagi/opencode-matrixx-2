@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import { notify } from "../../../shared/runtime/notify"
 
 export async function showSpinnerToast(_ctx: MatrixxContext, version: string, message: string): Promise<void> {

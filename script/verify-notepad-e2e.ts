@@ -7,7 +7,7 @@
  * `createTaskNotepadWriterHook` directly. It therefore still passes if the hook
  * is never dispatched — a hook can be exported, registered in the tool-guard
  * tier, and gated, yet never fire. That exact class of defect was found in
- * review, which is why the dispatch line in `src/plugin/tool-execute-after.ts`
+ * review, which is why the dispatch line in `src/plugin/tool/tool-execute-after.ts`
  * is a Definition-of-Done line.
  *
  * This script closes that gap. It:

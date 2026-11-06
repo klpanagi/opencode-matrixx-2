@@ -1,4 +1,4 @@
-import type { MatrixxContext, V2Event } from "../../plugin/context"
+import type { MatrixxContext, V2Event } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
 import { getCachedVersion, getLocalDevVersion } from "./checker"
 import { runBackgroundUpdateCheck } from "./hook/background-update-check"

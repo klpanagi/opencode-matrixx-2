@@ -8,7 +8,7 @@ import {
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { MAX_PLAN_FILE_BYTES } from "../../features/mission-state/constants"
 import { parsePlanFrontMatter } from "../../features/plan-contract"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { PLAN_FILENAME_KEBAB_REGEX, PLANS_DIR } from "./constants"
 import { resolveDirectory } from "./types"

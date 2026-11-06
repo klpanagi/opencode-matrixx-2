@@ -152,8 +152,8 @@ describe("config compatibility is preserved (pinned on purpose)", () => {
   test("9. the tool-config deny ruleset still hides both legacy todo tools", () => {
     //#given the tool config handler source plus the permission module it spreads
     const source =
-      readSrc("plugin-handlers/tool-config-handler.ts") +
-      readSrc("plugin-handlers/task-permissions.ts")
+      readSrc("plugin/handlers/tool-config-handler.ts") +
+      readSrc("plugin/handlers/task-permissions.ts")
 
     //#when the deny mechanism is inspected
     //#then the shared deny ruleset (no global tool map in V2) survives

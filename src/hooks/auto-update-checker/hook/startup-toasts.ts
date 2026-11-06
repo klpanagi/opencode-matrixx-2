@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import { log } from "../../../shared/runtime/logger"
 import { showSpinnerToast } from "./spinner-toast"
 

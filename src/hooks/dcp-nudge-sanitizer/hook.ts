@@ -21,7 +21,7 @@ type Part = {
   [key: string]: unknown
 }
 
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { sanitizeKnownTags } from "../../shared/text/system-directive"
 import { guardCompressDirective, NUDGE_MARKERS, normalizeNudgeText } from "./constants"
 

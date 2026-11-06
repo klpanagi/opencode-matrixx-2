@@ -1,4 +1,4 @@
-import type { MatrixxContext, V2Event } from "../../plugin/context";
+import type { MatrixxContext, V2Event } from "../../plugin/tool/context";
 import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator";
 
 export interface ToolExecuteInput {

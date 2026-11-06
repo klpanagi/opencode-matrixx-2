@@ -5,7 +5,7 @@ import {
   subagentSessions,
 } from "../features/session-state/state"
 import { hasIncompleteTasksForSession } from "../features/task-session-scope"
-import type { MatrixxContext } from "../plugin/context"
+import type { MatrixxContext } from "../plugin/tool/context"
 import { createIdleNotificationScheduler } from "./session-notification-scheduler"
 import {
   detectPlatform,
@@ -30,7 +30,7 @@ interface SessionNotificationConfig {
   maxTrackedSessions?: number
 }
 
-import type { V2Event } from "../plugin/context"
+import type { V2Event } from "../plugin/tool/context"
 export function createSessionNotification(
   ctx: MatrixxContext,
   config: SessionNotificationConfig = {},

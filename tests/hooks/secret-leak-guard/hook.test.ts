@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, mock, test } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 
 const stagedSpy = mock(() => Promise.resolve({ available: false, findings: [] }))
 const prePushSpy = mock(() => Promise.resolve({ available: false, findings: [] }))

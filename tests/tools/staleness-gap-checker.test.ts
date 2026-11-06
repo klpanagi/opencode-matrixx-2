@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { join } from "node:path"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { createStalenessGapCheckerTool } from "../../src/tools/staleness-gap-checker"
 
 const FIXTURES = join(import.meta.dir, "..", "fixtures", "staleness-gap-checker")

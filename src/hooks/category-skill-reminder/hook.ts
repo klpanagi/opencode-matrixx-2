@@ -1,6 +1,6 @@
 import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
 import { getSessionAgent, subagentSessions } from "../../features/session-state/state"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared"
 import { getAgentConfigKey } from "../../shared/agent/agent-display-names"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
@@ -65,7 +65,7 @@ function hashSnippet(value: string): string {
   return (hash >>> 0).toString(16)
 }
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createCategorySkillReminderHook(
   ctx: MatrixxContext,
   availableSkills: AvailableSkill[] = [],

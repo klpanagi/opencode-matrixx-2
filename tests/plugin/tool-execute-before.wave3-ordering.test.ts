@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
+import { createToolExecuteBeforeHandler } from "../../src/plugin/tool/tool-execute-before"
 
 describe("Wave 3 hook ordering", () => {
   test("rtkBashRewriter runs before nonInteractiveEnv", async () => {

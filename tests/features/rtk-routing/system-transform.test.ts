@@ -9,7 +9,7 @@ import {
 import { createContextModeSystemTransformHook as createCtxHook } from "../../../src/features/context-mode-routing/system-transform"
 import { containsRtkMarker, MATRIXX_RTK_MARKER } from "../../../src/features/rtk-routing/routing-block"
 import { createRtkSystemTransformHook } from "../../../src/features/rtk-routing/system-transform"
-import { setAvailableToolNames } from "../../../src/plugin-handlers/agent-config-handler"
+import { setAvailableToolNames } from "../../../src/plugin/handlers/agent-config-handler"
 
 function model() {
   return { providerID: "anthropic", modelID: "claude-opus-4-6" } as never

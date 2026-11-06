@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { runRgFiles } from "./cli"
 import { resolveGrepCliWithAutoInstall } from "./constants"

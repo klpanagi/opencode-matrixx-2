@@ -9,7 +9,7 @@ import {
 } from "./manifest"
 
 const EVENTS_DIR = import.meta.dir
-const EVENT_SOURCE = join(EVENTS_DIR, "..", "..", "..", "src", "plugin", "event.ts")
+const EVENT_SOURCE = join(EVENTS_DIR, "..", "..", "..", "src", "plugin", "tool", "event.ts")
 const MANIFEST_FIXTURE = "manifest.test.ts"
 
 function dispatchedHookNames(): string[] {
@@ -29,7 +29,7 @@ function fixtureFiles(): string[] {
 
 describe("event consumer manifest", () => {
   it("covers every hook dispatched by createEventHandler", () => {
-    // given the dispatch list parsed from src/plugin/event.ts
+    // given the dispatch list parsed from src/plugin/tool/event.ts
     const dispatched = dispatchedHookNames()
 
     // then every dispatched hook is mapped to a consumer

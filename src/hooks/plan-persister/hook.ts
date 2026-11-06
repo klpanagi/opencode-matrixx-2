@@ -10,14 +10,14 @@ import { existsSync } from "node:fs"
 import { readMissionState } from "../../features/mission-state"
 import { buildRehydrationContext } from "../../features/mission-state/rehydrate"
 import type { PlanPersistenceOptions } from "../../features/mission-state/types"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
 import { collectLinkedTodos } from "./task-link"
 import { applyFilteredSync } from "./task-sync"
 
 const HOOK_NAME = "plan-persister"
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export interface PlanPersister {
   buildRehydrationContext: (sessionID: string) => string | null
   capture: (sessionID: string) => Promise<void>

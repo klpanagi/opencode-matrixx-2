@@ -22,7 +22,7 @@ import type { KnowledgeHub } from "../../config/schema/knowledge";
 import { type ContextCollector, contextCollector } from "../../features/context-injector";
 import { expandHubPath } from "../../features/knowledge-hub/loader";
 import { getMainSessionID } from "../../features/session-state/state";
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator";
 import { notifyInjection } from "../../shared/policy/injection-notifier";
 import { log } from "../../shared/runtime/logger";
@@ -34,7 +34,7 @@ const INDEX_MAX_TOKENS = 6000;
 const ROUTER_DIRECTIVE =
   "Consult these hubs before websearch/webfetch; open files via @hub/path on demand, never bulk-read.";
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export interface KnowledgeHubInjectorOptions {
   hubs?: KnowledgeHub[];
   getHubs?: () => KnowledgeHub[];

@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 import { createPostReadInjectorHook } from "../post-read-injector/hook";
 
 export function createDirectoryAgentsInjectorHook(ctx: MatrixxContext) {

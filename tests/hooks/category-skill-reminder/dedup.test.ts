@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, test, expect, beforeEach } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   _resetForTesting,
   clearSessionAgent,

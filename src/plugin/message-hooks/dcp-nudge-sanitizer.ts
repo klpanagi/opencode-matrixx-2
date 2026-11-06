@@ -19,7 +19,7 @@ import {
   normalizeNudgeText,
 } from "../../hooks/dcp-nudge-sanitizer/constants"
 import { sanitizeKnownTags } from "../../shared/text/system-directive"
-import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../context"
+import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../tool/context"
 
 /** Minimal flat content block (text blocks carry `type: "text"` + `text`). */
 export type FlatContentBlock = {

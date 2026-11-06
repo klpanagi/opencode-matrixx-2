@@ -2,7 +2,7 @@
 
 import type { MatrixxConfig } from "../config"
 import type { ExperimentalConfig } from "../config/schema/experimental"
-import type { MatrixxContext } from "../plugin/context"
+import type { MatrixxContext } from "../plugin/tool/context"
 import {
   ANTHROPIC_DISPLAY_LIMIT,
   DEFAULT_ANTHROPIC_ACTUAL_LIMIT,
@@ -36,7 +36,7 @@ interface CachedTokenState {
   tokens: TokenInfo
 }
 
-import type { V2Event } from "../plugin/context"
+import type { V2Event } from "../plugin/tool/context"
 export function createContextWindowMonitorHook(
   _ctx: MatrixxContext,
   pluginConfig?: MatrixxConfig | { experimental?: ExperimentalConfig },

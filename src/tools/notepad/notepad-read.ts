@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { selectLines } from "../plan/plan-read-pagination"
 import { resolveDirectory } from "../plan/types"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"

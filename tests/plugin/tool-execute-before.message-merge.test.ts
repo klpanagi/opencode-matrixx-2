@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createToolExecuteBeforeHandler } from "../../src/plugin/tool-execute-before"
+import { createToolExecuteBeforeHandler } from "../../src/plugin/tool/tool-execute-before"
 
 const ENFORCER_MESSAGE = "[context-mode-enforcer] use ctx_execute instead"
 const GUARD_MESSAGE = "[bash-file-read-guard] use the read tool"

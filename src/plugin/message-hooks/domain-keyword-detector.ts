@@ -17,7 +17,7 @@ import { buildDomainHint, detectDomainSkills } from "../../hooks/domain-keyword-
 import { log, notifyInjection } from "../../shared"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"
 import { isSystemDirective, sanitizeKnownTags } from "../../shared/text/system-directive"
-import type { MatrixxContext, V2Registration } from "../context"
+import type { MatrixxContext, V2Registration } from "../tool/context"
 
 /** Minimal flat-message view of the native context/compaction event. */
 export interface FlatMessageHookEvent {

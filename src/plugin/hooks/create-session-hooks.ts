@@ -22,7 +22,7 @@ import {
   createThinkModeHook,
 } from "../../hooks"
 import { createAnthropicEffortHook } from "../../hooks/anthropic-effort/hook"
-import { getAvailableToolNames } from "../../plugin-handlers/agent-config-handler"
+import { getAvailableToolNames } from "../../plugin/handlers/agent-config-handler"
 import {
   detectExternalNotificationPlugin,
   detectMemoryBackendPlugins,

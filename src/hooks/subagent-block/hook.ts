@@ -1,7 +1,7 @@
 import type { SubagentBlockConfigInput } from "../../config/schema/subagent-block"
 import { resolveSubagentBlock } from "../../config/schema/subagent-block"
-import type { MatrixxContext } from "../../plugin/context"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 import { log } from "../../shared"
 import { BLOCK_MESSAGE, BYPASS_LOG_PREFIX, HOOK_NAME } from "./constants"
 

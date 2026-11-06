@@ -12,8 +12,8 @@ mock.module("../../src/shared/runtime/logger", () => ({
 }))
 
 import type { MatrixxConfig } from "../../src/config"
-import type { V2Event } from "../../src/plugin/context"
-import { createEventHandler } from "../../src/plugin/event"
+import type { V2Event } from "../../src/plugin/tool/context"
+import { createEventHandler } from "../../src/plugin/tool/event"
 import type { DomainHooks, DomainManagers } from "../../src/plugin/setup-domains"
 
 function buildHandler(onIdle: (event: V2Event) => void | Promise<void>) {

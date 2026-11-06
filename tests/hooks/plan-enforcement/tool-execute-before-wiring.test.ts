@@ -6,7 +6,7 @@ import * as os from "node:os"
 import * as path from "node:path"
 import { createTaskEditGuardHook } from "../../../src/hooks/task-edit-guard/hook"
 import { PLAN_WRITE_WARN } from "../../../src/hooks/task-edit-guard/constants"
-import { createToolExecuteBeforeHandler } from "../../../src/plugin/tool-execute-before"
+import { createToolExecuteBeforeHandler } from "../../../src/plugin/tool/tool-execute-before"
 
 /**
  * Regression suite for the tool-execute-before WIRING (Task 2 of

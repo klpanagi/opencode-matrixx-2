@@ -1,6 +1,6 @@
 import type { ZodType } from "zod";
 import { z } from "zod";
-import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "../../plugin/context"
+import type { V2ToolContext, V2ToolInfo, V2ToolResult } from "../../plugin/tool/context"
 import { jsonSafeMetadata, log } from "../../shared";
 import { TASK_TOOL_OPTIONS } from "../../tools/delegate-task/tool-options";
 

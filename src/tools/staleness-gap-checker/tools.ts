@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { isAbsolute, join } from "node:path"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { analyzeSamples, parseNdjson } from "./checker"
 import { STALENESS_GAP_CHECK_DESCRIPTION } from "./constants"

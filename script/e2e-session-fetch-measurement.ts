@@ -60,8 +60,8 @@ mock.module("../src/shared/config/opencode-storage-detection", () => ({
   resetSqliteBackendCache: () => {},
 }))
 
-const { createToolExecuteBeforeHandler } = await import("../src/plugin/tool-execute-before")
-const { createToolExecuteAfterHandler } = await import("../src/plugin/tool-execute-after")
+const { createToolExecuteBeforeHandler } = await import("../src/plugin/tool/tool-execute-before")
+const { createToolExecuteAfterHandler } = await import("../src/plugin/tool/tool-execute-after")
 const { createOracleMdOnlyHook } = await import("../src/hooks/oracle-md-only/hook")
 const { createNiobeHook } = await import("../src/hooks/niobe/index")
 // PR #157 adds this module; it does not exist at the merge base, so the import

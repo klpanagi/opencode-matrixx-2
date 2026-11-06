@@ -2,7 +2,7 @@
 import { describe, test, expect, beforeEach } from "bun:test"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import { resolveAny, listKnownSessions } from "../../../src/features/background-agent/manager"
-import type { NativePluginContext } from "../../../src/plugin/context"
+import type { NativePluginContext } from "../../../src/plugin/tool/context"
 
 function buildCtx(overrides: Record<string, unknown> = {}): NativePluginContext {
   return {

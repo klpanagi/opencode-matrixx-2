@@ -176,7 +176,7 @@ test("returns null (not undefined) when key is missing", () => {
 ### Hook or Tool (Matrixx-specific)
 \`\`\`typescript
 // Hook tests use mock plugin contexts
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 
 function buildMockContext(overrides?: Partial<MatrixxContext>): MatrixxContext {
   return {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxContext } from "../../../src/plugin/tool/context";
 import type { MessageHookRow } from "../../../src/plugin/message-hooks/index";
 import {
   MESSAGE_HOOK_TABLE,

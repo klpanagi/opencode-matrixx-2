@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../../plugin/context"
+import type { MatrixxContext } from "../../../plugin/tool/context"
 import {
   hasConnectedProvidersCache,
   updateConnectedProvidersCache,

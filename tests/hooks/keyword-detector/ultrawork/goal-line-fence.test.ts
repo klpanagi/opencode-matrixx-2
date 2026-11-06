@@ -11,11 +11,11 @@ import { ULTRAWORK_GLM_MESSAGE } from "../../../../src/hooks/keyword-detector/ul
 import { ULTRAWORK_GPT_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/gpt5.2"
 import { ULTRAWORK_MIMO_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/mimo"
 import type { MatrixxConfig } from "../../../../src/config"
-import { buildOracleAgentConfig } from "../../../../src/plugin-handlers/oracle-agent-config-builder"
-import { denyTodoPermissions, deriveTaskPermissions } from "../../../../src/plugin-handlers/task-permissions"
+import { buildOracleAgentConfig } from "../../../../src/plugin/handlers/oracle-agent-config-builder"
+import { denyTodoPermissions, deriveTaskPermissions } from "../../../../src/plugin/handlers/task-permissions"
 
 type Rule = { action: string; resource?: string; effect: string }
-import { applyToolConfig } from "../../../../src/plugin-handlers/tool-config-handler"
+import { applyToolConfig } from "../../../../src/plugin/handlers/tool-config-handler"
 
 const MODEL = "anthropic/claude-sonnet-4-5"
 

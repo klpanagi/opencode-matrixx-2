@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared"
 import {
   HOOK_NAME,

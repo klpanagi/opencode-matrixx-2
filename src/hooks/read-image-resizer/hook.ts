@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared"
 import { getSessionModel } from "../../shared/session/session-state"
 import { isReadTool } from "../../shared/tool/tool-guards"

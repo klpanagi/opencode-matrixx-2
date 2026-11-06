@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { resolveDirectory } from "../plan/types"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { NOTEPAD_ERROR_CODES } from "./constants"

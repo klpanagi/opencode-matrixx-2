@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 
 /**
  * Known Edit tool error patterns that indicate the AI made a mistake

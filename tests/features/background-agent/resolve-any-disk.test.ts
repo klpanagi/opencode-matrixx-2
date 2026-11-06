@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { writeHandle } from "../../../src/features/background-agent/handle-index"
 import { BackgroundManager, resolveAny } from "../../../src/features/background-agent/manager"
-import type { NativePluginContext } from "../../../src/plugin/context"
+import type { NativePluginContext } from "../../../src/plugin/tool/context"
 
 let dir = ""
 const managers: BackgroundManager[] = []

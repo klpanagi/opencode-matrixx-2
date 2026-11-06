@@ -8,7 +8,7 @@ import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncato
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { log } from "../../shared/runtime/logger"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"
-import type { MatrixxContext, V2Registration } from "../context"
+import type { MatrixxContext, V2Registration } from "../tool/context"
 
 const INDEX_MAX_TOKENS = 6000
 

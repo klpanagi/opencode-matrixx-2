@@ -35,7 +35,7 @@ import {
   OPENCODE_NATIVE_AGENTS_INJECTION_VERSION,
 } from "../../shared"
 import { bindSafeHook } from "../../shared/agent/safe-create-hook"
-import type { MatrixxContext } from "../context"
+import type { MatrixxContext } from "../tool/context"
 
 export type ToolGuardHooks = {
   backgroundTaskBlocker: ReturnType<typeof createBackgroundTaskBlockerHook> | null

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { createEmptyTaskResponseDetectorHook } from "../../src/hooks/empty-task-response-detector"
 
 //#given: a fake plugin input (the hook ignores ctx) and the after-hook

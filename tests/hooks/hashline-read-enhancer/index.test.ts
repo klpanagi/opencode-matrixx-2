@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { createHashlineReadEnhancerHook } from "../../../src/hooks/hashline-read-enhancer/hook"
 import { computeLineHash } from "../../../src/tools/hashline-edit/hash-computation"
 

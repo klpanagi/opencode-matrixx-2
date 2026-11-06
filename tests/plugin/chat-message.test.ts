@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import type { MatrixxConfig } from "../../src/config"
 import type { DomainHooks } from "../../src/plugin/setup-domains"
 import { getSessionModel } from "../../src/features/session-state/state"
-import { createChatMessageHandler } from "../../src/plugin/chat-message"
-import type { MatrixxContext } from "../../src/plugin/context"
+import { createChatMessageHandler } from "../../src/plugin/tool/chat-message"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 
 type ChatMessagePart = { type: string; text?: string; [key: string]: unknown }
 type ChatMessageHandlerOutput = { message: Record<string, unknown>; parts: ChatMessagePart[] }

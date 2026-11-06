@@ -1,4 +1,4 @@
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 import { isAbortError } from "../../shared/runtime/is-abort-error"
 import { log } from "../../shared/runtime/logger"
 import type { AutoRetryHelpers } from "./auto-retry"

@@ -43,7 +43,7 @@ async function handleVerificationFailure(
 	}
 }
 
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: MatrixLoopEventHandlerOptions) {
 	const inFlightSessions = new Set<string>()
 

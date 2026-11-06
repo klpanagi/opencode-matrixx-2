@@ -4,9 +4,9 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../src/config"
 import type { BackgroundManager } from "../../src/features/background-agent"
-import type { SkillContext } from "../../src/plugin/skill-context"
-import { createToolCatalog } from "../../src/plugin/tool-catalog"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { SkillContext } from "../../src/plugin/tool/skill-context"
+import { createToolCatalog } from "../../src/plugin/tool/tool-catalog"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 
 const NOTEPAD_TOOLS = ["notepad_create", "notepad_read", "notepad_append", "notepad_list"] as const
 

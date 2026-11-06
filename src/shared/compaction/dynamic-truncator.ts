@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 import { isRecord } from "../runtime/record-type-guard"
 import type { SessionContextCarrier } from "../session/session-context-source"
 import { fetchSessionMessages } from "../session/session-context-source"

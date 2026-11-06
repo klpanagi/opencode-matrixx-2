@@ -7,7 +7,7 @@
  * their existing `.catch(...)` handling.
  */
 
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import type { SessionDomainLike } from "./session-facade"
 import type { SessionMessage } from "./session-message"
 

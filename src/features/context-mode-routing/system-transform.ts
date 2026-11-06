@@ -1,6 +1,6 @@
 import type { MatrixxConfig } from "../../config"
-import type { MatrixxContext } from "../../plugin/context"
-import type { Hooks } from "../../plugin/legacy-hooks"
+import type { MatrixxContext } from "../../plugin/tool/context"
+import type { Hooks } from "../../plugin/tool/legacy-hooks"
 import { resolveContextModeEnforcement } from "../../shared/policy/context-mode-enforcement"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { buildContextModeRoutingBlock, containsContextModeMarker } from "./routing-block"

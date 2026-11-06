@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 
 import { describe, expect, test } from "bun:test"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { BASH_BLOCK_MESSAGE, BLOCKED_PATTERNS, READ_BLOCK_MESSAGE } from "../../src/hooks/document-reader-guard/constants"
 import { createDocumentReaderGuardHook } from "../../src/hooks/document-reader-guard/hook"
 

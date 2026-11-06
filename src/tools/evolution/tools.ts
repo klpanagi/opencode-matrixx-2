@@ -6,7 +6,7 @@ import { KNOWLEDGE_KINDS } from "../../features/evolution/schema";
 import { EVOLUTION_DIR, PENDING_DIR, TraceStore } from "../../features/evolution/store/trace-store";
 import type { SkillMeta } from "../../features/evolution/types";
 import { EvolutionWriter } from "../../features/evolution/writer";
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
 import { AUDIT_TAIL_LIMIT, EVOLUTION_DESCRIPTION, NO_PENDING_MESSAGE, SLUG_PATTERN } from "./constants";
 import { handleGetContext, handleSearch } from "./query-actions";

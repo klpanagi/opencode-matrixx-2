@@ -61,7 +61,7 @@ matrixx.jsonc
 | Component | Path | Behavior |
 |-----------|------|----------|
 | Tool registry | `src/plugin/tool-registry.ts` | 5 task tools registered |
-| Tool config (`tool-config-handler`) | `src/plugin-handlers/tool-config-handler.ts` | The two legacy todo tools stay denied globally plus per-agent, so nothing re-introduces the retired substrate |
+| Tool config (`tool-config-handler`) | `src/plugin/handlers/tool-config-handler.ts` | The two legacy todo tools stay denied globally plus per-agent, so nothing re-introduces the retired substrate |
 | `task-edit-guard` | `src/hooks/task-edit-guard/` | Blocks generic Write/Edit/Read on `.matrixx/plans`, plus bash mutation patterns on `.matrixx/plans` and `.matrixx/tasks` |
 | Agent prompts | `src/agents/`, `dynamic-agent-prompt-builder` | task discipline (`task_create`/`task_update` workflow) |
 | Storage | `src/features/task-storage/storage.ts` | file system (`.matrixx/tasks/` or global) |
@@ -166,7 +166,7 @@ grep -E "task.*dir|getTaskDir|migrateLegacy" /tmp/matrixx.log | tail -n 100
 
 ### 3.5 Task-Store Eligibility Policy
 
-The task store (`.matrixx/tasks/`) is a write channel separate from the codebase. Who may reach it is decided in exactly one place: `src/plugin-handlers/task-permissions.ts`, applied during `applyToolConfig`.
+The task store (`.matrixx/tasks/`) is a write channel separate from the codebase. Who may reach it is decided in exactly one place: `src/plugin/handlers/task-permissions.ts`, applied during `applyToolConfig`.
 
 **The criterion:**
 

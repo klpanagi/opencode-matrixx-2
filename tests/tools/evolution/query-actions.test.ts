@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxContext } from "../../../src/plugin/tool/context";
 import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
 import { CONTEXT_TRUNCATION_MARKER } from "../../../src/features/evolution/store/query";
 import { resolveProjectIdentity } from "../../../src/features/evolution/store/project-identity";

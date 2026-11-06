@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import * as path from "node:path"
 import { ContextCollector } from "../../../src/features/context-injector"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   _resetKnowledgeHubInjectorForTesting,
   applyKnowledgeHubInjector,

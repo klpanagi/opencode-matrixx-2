@@ -1,6 +1,6 @@
 import type { NativeMemoryConfig } from "../../config/schema/memory"
 import { appendMemoryEntry, isSyntheticMessage, type MemoryEntryInput } from "../../features/session-memory"
-import type { MatrixxContext, V2Event } from "../../plugin/context"
+import type { MatrixxContext, V2Event } from "../../plugin/tool/context"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { log } from "../../shared/runtime/logger"
 

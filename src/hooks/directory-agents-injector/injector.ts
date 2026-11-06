@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 
 import type { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator";
 import { notifyInjection } from "../../shared/policy/injection-notifier";

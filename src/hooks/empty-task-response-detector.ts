@@ -1,4 +1,4 @@
-import type { MatrixxContext } from "../plugin/context"
+import type { MatrixxContext } from "../plugin/tool/context"
 
 // Actionable replacement for an empty task result: the call completed but produced no
 // output. The orchestrator can fix and retry — the two causes below cover every observed

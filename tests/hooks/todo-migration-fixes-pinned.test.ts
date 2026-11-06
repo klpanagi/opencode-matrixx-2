@@ -260,8 +260,8 @@ describe("D4 and the config-compat surface are pinned on purpose", () => {
   test("27. tool-config-handler.ts still denies both legacy todo tools via ruleset", () => {
     //#given the tool config handler source plus the permission module it spreads
     const handler =
-      readSrc("plugin-handlers/tool-config-handler.ts") +
-      readSrc("plugin-handlers/task-permissions.ts")
+      readSrc("plugin/handlers/tool-config-handler.ts") +
+      readSrc("plugin/handlers/task-permissions.ts")
 
     //#when the deny ruleset is inspected
     //#then the shared deny ruleset survives — this is what keeps the

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { resolveSessionAgent } from "../../src/plugin/session-agent-resolver"
+import { resolveSessionAgent } from "../../src/plugin/tool/session-agent-resolver"
 
 describe("resolveSessionAgent", () => {
   test("returns agent from first message with agent field", async () => {

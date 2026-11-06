@@ -11,7 +11,7 @@
  *
  * Still load-bearing below this module (owned by later TODOs):
  * - the V1 `MatrixxContext` substrate (`./types`) every hook/tool is written against
- * - the 6-phase config pipeline (`../plugin-handlers/config-handler`) that feeds the config draft
+ * - the 6-phase config pipeline (`../plugin/handlers/config-handler`) that feeds the config draft
  * - the unified compaction hook (Task 8)
  *
  * Native background/session lifecycle landed in Task 7 (D5): the slim
@@ -31,9 +31,8 @@ import { BackgroundManager as BackgroundManagerImpl } from "../features/backgrou
 import { registerCommandTransform } from "../features/builtin-commands/commands.transform"
 import { initTaskToastManager } from "../features/task-toast-manager"
 import { registerMcpTransform } from "../mcps/mcp.transform"
+import { setAvailableToolNames } from "../plugin/handlers/agent-config-handler"
 import { loadPluginConfig } from "../plugin-config"
-import { createConfigHandler } from "../plugin-handlers"
-import { setAvailableToolNames } from "../plugin-handlers/agent-config-handler"
 import { createModelCacheState } from "../plugin-state"
 import {
   formatCompactionAppendLog,
@@ -52,17 +51,7 @@ import { startTmuxCheck } from "../tools"
 import { resolveSystemDefaultModel } from "../tools/delegate-task/default-model"
 import { setPollTimeoutMs } from "../tools/delegate-task/timing"
 import { emitToolInfo } from "../tools/shared/define-tool"
-import { createAvailableCategories } from "./available-categories"
-import { createChatMessageHandler } from "./chat-message"
-import { createChatParamsHandler } from "./chat-params"
-import type { MatrixxContext, ToolsRecord, 
-  V2Event, 
-  V2Registration,
-  V2SessionContextEvent,
-  V2SystemPart,
-  V2ToolEditor} from "./context"
-import { createEventHandler } from "./event"
-import { createEventDispatcher } from "./event-dispatch"
+import { createConfigHandler } from "./handlers"
 import type { ContinuationHooks } from "./hooks/create-continuation-hooks"
 import { createContinuationHooks } from "./hooks/create-continuation-hooks"
 import type { SessionHooks } from "./hooks/create-session-hooks"
@@ -73,14 +62,25 @@ import type { ToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import { createToolGuardHooks } from "./hooks/create-tool-guard-hooks"
 import type { TransformHooks } from "./hooks/create-transform-hooks"
 import { createTransformHooks } from "./hooks/create-transform-hooks"
-import type { Hooks } from "./legacy-hooks"
 import { registerMessageHooks } from "./message-hooks"
-import { createNativePluginContext } from "./native-context"
-import { createSkillContext } from "./skill-context"
-import { createToolCatalog } from "./tool-catalog"
-import { createToolDefinitionHandler } from "./tool-definition"
-import { createToolExecuteAfterHandler } from "./tool-execute-after"
-import { createToolExecuteBeforeHandler } from "./tool-execute-before"
+import { createAvailableCategories } from "./tool/available-categories"
+import { createChatMessageHandler } from "./tool/chat-message"
+import { createChatParamsHandler } from "./tool/chat-params"
+import type { MatrixxContext, ToolsRecord, 
+  V2Event, 
+  V2Registration,
+  V2SessionContextEvent,
+  V2SystemPart,
+  V2ToolEditor} from "./tool/context"
+import { createEventHandler } from "./tool/event"
+import { createEventDispatcher } from "./tool/event-dispatch"
+import type { Hooks } from "./tool/legacy-hooks"
+import { createNativePluginContext } from "./tool/native-context"
+import { createSkillContext } from "./tool/skill-context"
+import { createToolCatalog } from "./tool/tool-catalog"
+import { createToolDefinitionHandler } from "./tool/tool-definition"
+import { createToolExecuteAfterHandler } from "./tool/tool-execute-after"
+import { createToolExecuteBeforeHandler } from "./tool/tool-execute-before"
 
 /** Managers owned by the composition root (moved from `create-managers.ts`). */
 export type DomainManagers = {

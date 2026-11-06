@@ -9,7 +9,7 @@ import {
 } from "../../src/agents/dynamic-agent-prompt-builder"
 import { createContextModeEnforcerHook } from "../../src/hooks/context-mode-enforcer/hook"
 import type { MatrixxConfig } from "../../src/config"
-import { injectContextDiscipline } from "../../src/plugin-handlers/agent-config-handler"
+import { injectContextDiscipline } from "../../src/plugin/handlers/agent-config-handler"
 import {
   _resetContextModeEnforcementForTesting,
   _setCtxToolsForTesting,

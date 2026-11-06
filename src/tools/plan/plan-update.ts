@@ -10,7 +10,7 @@ import {
   shouldMigrate,
   validatePlanContract,
 } from "../../features/plan-contract"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { applyHashlineEditsWithReport } from "../hashline-edit/edit-operations"
 import { canonicalizeFileText, restoreFileText } from "../hashline-edit/file-text-canonicalization"
 import { executeHashlineEditTool } from "../hashline-edit/hashline-edit-executor"

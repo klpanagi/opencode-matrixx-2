@@ -13,7 +13,7 @@
 import { describe, expect, spyOn, test } from "bun:test"
 import { createBuiltinAgents } from "../../src/agents/builtin-agents"
 import { createMouseAgentWithOverrides } from "../../src/agents/mouse/agent"
-import { buildOracleAgentConfig } from "../../src/plugin-handlers/oracle-agent-config-builder"
+import { buildOracleAgentConfig } from "../../src/plugin/handlers/oracle-agent-config-builder"
 import * as shared from "../../src/shared"
 
 const TEST_DEFAULT_MODEL = "anthropic/claude-opus-4-6"

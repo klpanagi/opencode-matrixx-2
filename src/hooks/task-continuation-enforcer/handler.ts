@@ -1,7 +1,7 @@
 import type { MatrixxConfig } from "../../config/schema"
 import type { BackgroundManager } from "../../features/background-agent"
 import { subagentSessions } from "../../features/session-state/state"
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { DEFAULT_SKIP_AGENTS, HOOK_NAME } from "./constants"

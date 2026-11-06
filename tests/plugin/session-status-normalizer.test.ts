@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { normalizeSessionStatusToIdle } from "../../src/plugin/session-status-normalizer"
-import type { V2Event } from "../../src/plugin/context"
+import { normalizeSessionStatusToIdle } from "../../src/plugin/tool/session-status-normalizer"
+import type { V2Event } from "../../src/plugin/tool/context"
 
 type EventInput = V2Event
 

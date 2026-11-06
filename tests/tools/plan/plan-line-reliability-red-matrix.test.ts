@@ -3,7 +3,7 @@
  * Plan-tool reliability RED matrix (plan item 3) - 7 failure categories.
  *
  * SCOPE: reproduction ONLY. This file MUST NOT fix source. Each category targets
- * the plan-tool sources under src/tools/plan/ (NOT src/plugin-handlers/):
+ * the plan-tool sources under src/tools/plan/ (NOT src/plugin/handlers/):
  * section-edit.ts, section-locate.ts, plan-update.ts, plan-write-guard.ts,
  * plus the hashline-edit remap path (validation.ts / hashline-edit-executor.ts).
  *

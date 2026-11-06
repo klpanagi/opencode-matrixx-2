@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { createNiobeAgent } from "../../src/agents/niobe/agent"
-import { applyToolConfig } from "../../src/plugin-handlers/tool-config-handler"
+import { applyToolConfig } from "../../src/plugin/handlers/tool-config-handler"
 
 type Rule = { action: string; resource?: string; effect: string }
 

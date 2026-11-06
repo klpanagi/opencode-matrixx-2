@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { resolveDirectory } from "../plan/types"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import {

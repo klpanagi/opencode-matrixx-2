@@ -23,7 +23,7 @@
  */
 
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../config/schema"
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 import { getAgentToolRestrictions, isNativeSessionId, log } from "../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
 import { delay } from "../../shared/runtime/delay"

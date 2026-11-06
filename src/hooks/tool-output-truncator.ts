@@ -1,5 +1,5 @@
 import type { ExperimentalConfig } from "../config/schema"
-import type { MatrixxContext } from "../plugin/context"
+import type { MatrixxContext } from "../plugin/tool/context"
 import { createDynamicTruncator } from "../shared/compaction/dynamic-truncator"
 
 const DEFAULT_MAX_TOKENS = 50_000 // ~200k chars

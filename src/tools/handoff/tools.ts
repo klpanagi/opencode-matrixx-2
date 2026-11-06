@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { stateRootFromPluginContext } from "../../shared/session/state-root"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { handleArchive } from "./archive-handler"

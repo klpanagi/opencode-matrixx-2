@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { MatrixxContext } from "../../../src/plugin/context"
+import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { createEditErrorRecoveryHook, EDIT_ERROR_PATTERNS, EDIT_ERROR_REMINDER } from "../../../src/hooks/edit-error-recovery/hook"
 
 describe("createEditErrorRecoveryHook", () => {

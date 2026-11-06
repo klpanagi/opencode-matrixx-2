@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { createEventDispatcher } from "../../src/plugin/event-dispatch"
-import type { V2Event } from "../../src/plugin/context"
+import { createEventDispatcher } from "../../src/plugin/tool/event-dispatch"
+import type { V2Event } from "../../src/plugin/tool/context"
 
 const tick = (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve, 2))
 

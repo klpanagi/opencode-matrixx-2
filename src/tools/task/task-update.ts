@@ -8,7 +8,7 @@ import {
   writeJsonAtomic,
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
-import type { MatrixxContext } from "../../plugin/context";
+import type { MatrixxContext } from "../../plugin/tool/context";
 import { log } from "../../shared/runtime/logger";
 import { stateRootFromToolContext } from "../../shared/session/state-root"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";

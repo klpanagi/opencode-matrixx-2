@@ -116,7 +116,12 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // ({ event: { type, properties } }) => (event: V2Event) reading event.data,
     // V1 input -> NativePluginContext, and getLastAgentFromSession takes the
     // native ctx. Execution path unchanged; Niobe remains the plan EXECUTOR.
-    const FROZEN_MD5 = "6f9ea2137c867f549bff605ea9a4c179"
+    // NOTE (plugin phase 3, handlers/tool composition root): hash advanced from
+    // 6f9ea2137c867f549bff605ea9a4c179. The only delta is the mechanical
+    // plugin composition-root rewire ("../../plugin/context" ->
+    // "../../plugin/tool/context") after grouping the plugin loose files
+    // under src/plugin/tool/; execution path unchanged.
+    const FROZEN_MD5 = "627c4bce12082cc1e7130a4e0d762fdf"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")
@@ -155,7 +160,7 @@ describe("locked decision #3 — the reviewer is reachable only by explicit comm
   test("no module under an automation surface imports completion-review/**", () => {
     //#given the src/ module graph
     //#when every import specifier is walked and filtered to the feature
-    const AUTOMATION_DIRS = ["hooks", "plugin-handlers", "plugin", "tools", "cli"]
+    const AUTOMATION_DIRS = ["hooks", "plugin/handlers", "plugin", "tools", "cli"]
     const offenders: string[] = []
     for (const dir of AUTOMATION_DIRS) {
       for (const file of walk(join(SRC, dir))) {

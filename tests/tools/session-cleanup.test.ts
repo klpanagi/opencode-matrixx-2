@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test"
-import type { MatrixxContext } from "../../src/plugin/context"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { MatrixxConfigSchema } from "../../src/config"
-import { shouldEnableSessionCleanup } from "../../src/plugin/tool-policy"
+import { shouldEnableSessionCleanup } from "../../src/plugin/tool/tool-policy"
 import { createSessionCleanupTool } from "../../src/tools/session-cleanup"
 
 //#given A mock SDK client that records every session.list and session.delete call

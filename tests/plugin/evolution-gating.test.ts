@@ -10,8 +10,8 @@ import { readRetrievalRecords, searchRecords } from "../../src/features/evolutio
 import { EVOLUTION_TEMPLATE } from "../../src/features/builtin-commands/templates/evolution"
 import { createContinuationHooks } from "../../src/plugin/hooks/create-continuation-hooks"
 import { createToolGuardHooks } from "../../src/plugin/hooks/create-tool-guard-hooks"
-import { shouldEnableEvolutionTool } from "../../src/plugin/tool-policy"
-import type { MatrixxContext } from "../../src/plugin/context"
+import { shouldEnableEvolutionTool } from "../../src/plugin/tool/tool-policy"
+import type { MatrixxContext } from "../../src/plugin/tool/context"
 import { createEvolutionTool } from "../../src/tools/evolution"
 
 function makeBaseArgs(pluginConfig: MatrixxConfig) {

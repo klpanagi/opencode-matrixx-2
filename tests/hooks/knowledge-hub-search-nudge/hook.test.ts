@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { MatrixxContext } from "../../../src/plugin/context";
+import type { MatrixxContext } from "../../../src/plugin/tool/context";
 import type { LoadedHub } from "../../../src/features/knowledge-hub/loader";
 import { createKnowledgeHubSearchNudgeHook } from "../../../src/hooks/knowledge-hub-search-nudge/hook";
 

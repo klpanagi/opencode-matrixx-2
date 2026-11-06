@@ -4,7 +4,7 @@ import { countPlanProgressFromContent, readPlanFile } from "../../features/missi
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import { parsePlanContract, parsePlanFrontMatter } from "../../features/plan-contract"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES, MAX_PLAN_READ_RENDERED_BYTES } from "./constants"
 import { classifyReadRefusal, fileTooLargePayload, readFailedPayload } from "./error-codes"

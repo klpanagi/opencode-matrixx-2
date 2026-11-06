@@ -1,6 +1,6 @@
 import { clearMissionState, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { subagentSessions } from "../../features/session-state/state"
-import type { V2Event } from "../../plugin/context"
+import type { V2Event } from "../../plugin/tool/context"
 import { getAgentConfigKey } from "../../shared/agent/agent-display-names"
 import { isAbortError } from "../../shared/runtime/is-abort-error"
 import { log } from "../../shared/runtime/logger"

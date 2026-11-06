@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { isAbsolute, join } from "node:path"
 import { z } from "zod"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { DASHBOARD_FLUX_VALIDATE_DESCRIPTION } from "./constants"
 import type { FluxValidationResult } from "./types"

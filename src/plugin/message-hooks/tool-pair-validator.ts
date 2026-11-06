@@ -10,7 +10,7 @@
  */
 
 import { log } from "../../shared/runtime/logger"
-import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../context"
+import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../tool/context"
 
 const TOOL_RESULT_PLACEHOLDER = "Tool output unavailable (context compacted)"
 

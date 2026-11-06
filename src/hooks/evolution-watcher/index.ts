@@ -1,7 +1,7 @@
 import type { EvolutionConfig } from "../../config/schema/evolution"
 import { traceStore } from "../../features/evolution/store/trace-store"
 import type { TraceRecord } from "../../features/evolution/types"
-import type { MatrixxContext } from "../../plugin/context"
+import type { MatrixxContext } from "../../plugin/tool/context"
 import { classifySuccess, truncate } from "./utils"
 
 export { classifySuccess, truncate } from "./utils"
