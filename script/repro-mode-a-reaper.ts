@@ -24,7 +24,7 @@
  *                         skip if timeSinceLastUpdate <= 180s; else CANCEL
  *   On cancel: task.status = "cancelled", error set, abortSessionQuietly(sessionID) fired.
  */
-import { BackgroundManager } from "../src/features/background-agent/manager.ts"
+import { BackgroundManager } from "../src/features/background-agent/manager/index.ts"
 import {
   DEFAULT_STALE_TIMEOUT_MS,
   DEFAULT_MESSAGE_STALENESS_TIMEOUT_MS,

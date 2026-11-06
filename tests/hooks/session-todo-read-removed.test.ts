@@ -88,8 +88,10 @@ describe("the todo-read modules are gone", () => {
 
 describe("each former call site is clean", () => {
   test("4. the background-agent manager has neither the predicate nor the read", () => {
-    //#given the manager source
-    const source = readSrc("features/background-agent/manager.ts")
+    //#given the manager sources (Phase 5a: manager.ts split into manager/)
+    const source = sourceFilesUnder(path.join(SRC, "features/background-agent/manager"))
+      .map((file) => fs.readFileSync(file, "utf-8"))
+      .join("\n")
 
     //#when the removed symbols are searched for
     const hasPredicate = source.includes("checkSessionTodos")
