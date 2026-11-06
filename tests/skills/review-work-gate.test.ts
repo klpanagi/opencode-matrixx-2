@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { reviewWorkSkill } from "../../src/skills/skills/review-work"
-import { softwareDevSkill } from "../../src/skills/skills/software-dev"
+import { reviewWorkSkill } from "../../src/skills/skills/core/review-work"
+import { softwareDevSkill } from "../../src/skills/skills/core/software-dev"
 
 describe("review-work 5-vs-6 count drift + per-task lightweight gate (Item 7)", () => {
   test("header count is 6-agent, consistent with 6-agent body", () => {
