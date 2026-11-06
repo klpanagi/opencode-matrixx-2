@@ -39,7 +39,7 @@ describe("context-mode version floor (2.1.0)", () => {
   })
 
   test("2.1.3 passes the floor", () => {
-    //#given the locked version
+    //#given a 2.1.x sample version (historical floor data, not a pin — the dep rides 2.1.*)
     const version = "2.1.3"
 
     //#when evaluated

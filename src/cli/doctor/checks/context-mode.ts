@@ -44,7 +44,7 @@ export function evaluateContextModeToolCompat(toolNames: string[]): CheckResult 
       status: "fail",
       message: "context-mode tools not found — no ctx_* tools registered",
       detail:
-        "Install context-mode@2.1.3 and register it (plugin entry or " +
+        "Install context-mode@2.1 (any 2.1.x) and register it (plugin entry or " +
         "mcp.servers in opencode.jsonc), then re-run doctor. Expected V2 tools: " +
         `${[...CONTEXT_MODE_V2_TOOLS].join(", ")}.`,
     }
@@ -217,7 +217,7 @@ export function evaluateContextModeVersion(version: string | null | undefined): 
       name,
       status: "warn",
       message: `context-mode discipline v${version} is below the supported floor v${CONTEXT_MODE_VERSION_FLOOR}`,
-      detail: `Upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (locked 2.1.3) for the current discipline text.`,
+      detail: `Upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (any 2.1.x) for the current discipline text.`,
     }
   }
   return {
@@ -267,7 +267,7 @@ export const contextModeCheck: DoctorCheck = {
       : "Ctx-Tools: unavailable — enforcer fail-opens (warn-only)"
     const belowFloor = isContextModeVersionBelowFloor(discipline.version)
     const floorLine = belowFloor
-      ? `Version-Floor: v${discipline.version} below supported floor v${CONTEXT_MODE_VERSION_FLOOR} — upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (locked 2.1.3)`
+      ? `Version-Floor: v${discipline.version} below supported floor v${CONTEXT_MODE_VERSION_FLOOR} — upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (any 2.1.x)`
       : null
     return {
       name: "context-mode-integration",

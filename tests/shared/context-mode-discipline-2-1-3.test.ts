@@ -8,8 +8,8 @@ import {
   resolveContextModeDisciplineInfo,
 } from "../../src/shared/context-mode-enforcement"
 
-describe("context-mode discipline probe against installed 2.1.3 layout", () => {
-  test("installed package root resolves and reports version 2.1.3", () => {
+describe("context-mode discipline probe against installed 2.1.x layout", () => {
+  test("installed package root resolves and reports a 2.1.x version", () => {
     //#given the installed context-mode entry file anchored at the worktree
     _resetContextModeEnforcementForTesting()
     const entry = join(process.cwd(), "node_modules", "context-mode", "opencode", "plugin.js")
@@ -22,13 +22,13 @@ describe("context-mode discipline probe against installed 2.1.3 layout", () => {
         : null
     console.log(`discipline-probe evidence: entry=${entry} root=${root} version=${version}`)
 
-    //#then the root is the installed package and the version is the locked 2.1.3
+    //#then the root is the installed package and the version is on the 2.1.x line
     expect(root).not.toBeNull()
-    expect(version).toBe("2.1.3")
+    expect(typeof version === "string" ? version : "").toMatch(/^2\.1\.\d+/)
     _resetContextModeEnforcementForTesting()
   })
 
-  test("discipline probe fail-opens on the 2.1.3 layout (no configs/opencode/AGENTS.md)", () => {
+  test("discipline probe fail-opens on the 2.1.x layout (no configs/opencode/AGENTS.md)", () => {
     //#given a clean enforcement state with no testing override
     _resetContextModeEnforcementForTesting()
 
@@ -36,7 +36,7 @@ describe("context-mode discipline probe against installed 2.1.3 layout", () => {
     const info = resolveContextModeDisciplineInfo()
     console.log(`discipline-probe evidence: path=${info.path} version=${info.version}`)
 
-    //#then fail-open: nulls (2.1.3 ships no configs/opencode/AGENTS.md), never throws
+    //#then fail-open: nulls (2.1.x ships no configs/opencode/AGENTS.md), never throws
     expect(info).toEqual({ path: null, version: null })
     _resetContextModeEnforcementForTesting()
   })
