@@ -44,7 +44,7 @@ export function evaluateContextModeToolCompat(toolNames: string[]): CheckResult 
       status: "fail",
       message: "context-mode tools not found — no ctx_* tools registered",
       detail:
-        "Install context-mode@2.0.0-next.24 and register it (plugin entry or " +
+        "Install context-mode@2.1.3 and register it (plugin entry or " +
         "mcp.servers in opencode.jsonc), then re-run doctor. Expected V2 tools: " +
         `${[...CONTEXT_MODE_V2_TOOLS].join(", ")}.`,
     }
@@ -190,6 +190,43 @@ function loadContextModeMcpServer(): unknown {
   return undefined
 }
 
+export const CONTEXT_MODE_VERSION_FLOOR = "2.1.0"
+
+/**
+ * Pure floor check: major.minor numeric compare against 2.1.
+ * Prerelease suffixes (e.g. 2.1.0-next) are stripped before parsing;
+ * null/unparsable versions fail-open to false (never blocks doctor).
+ */
+export function isContextModeVersionBelowFloor(version: string | null | undefined): boolean {
+  if (typeof version !== "string" || version.length === 0) return false
+  const core = version.replace(/^[vV]/, "").split("-")[0] ?? ""
+  const parts = core.split(".")
+  const major = Number(parts[0])
+  const minor = parts.length > 1 ? Number(parts[1]) : 0
+  if (!Number.isFinite(major) || !Number.isFinite(minor)) return false
+  if (major < 2) return true
+  if (major > 2) return false
+  return minor < 1
+}
+
+/** Pure evaluator for the discipline version floor. Below 2.1.0 warns. */
+export function evaluateContextModeVersion(version: string | null | undefined): CheckResult {
+  const name = "context-mode-version"
+  if (isContextModeVersionBelowFloor(version)) {
+    return {
+      name,
+      status: "warn",
+      message: `context-mode discipline v${version} is below the supported floor v${CONTEXT_MODE_VERSION_FLOOR}`,
+      detail: `Upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (locked 2.1.3) for the current discipline text.`,
+    }
+  }
+  return {
+    name,
+    status: "pass",
+    message: `context-mode discipline version ${version ?? "unknown"} meets floor v${CONTEXT_MODE_VERSION_FLOOR}`,
+  }
+}
+
 export const contextModeCwdCheck: DoctorCheck = {
   name: "context-mode-cwd",
   category: "integrations",
@@ -228,11 +265,15 @@ export const contextModeCheck: DoctorCheck = {
     const ctxToolsLine = ctxTools
       ? "Ctx-Tools: available"
       : "Ctx-Tools: unavailable — enforcer fail-opens (warn-only)"
+    const belowFloor = isContextModeVersionBelowFloor(discipline.version)
+    const floorLine = belowFloor
+      ? `Version-Floor: v${discipline.version} below supported floor v${CONTEXT_MODE_VERSION_FLOOR} — upgrade context-mode to >=${CONTEXT_MODE_VERSION_FLOOR} (locked 2.1.3)`
+      : null
     return {
       name: "context-mode-integration",
-      status: !discipline.path || !ctxTools ? "warn" : "pass",
-      message: `context-mode plugin registered${hasCache ? ", cache present" : " (cache not yet created)"}${discipline.version ? `, discipline v${discipline.version}` : ""}`,
-      detail: `Cache: ${cacheDir}\n${substituteLine}\n${ctxToolsLine}\nPlan tools: plan_create/read/update/list/delete (unconditional)`,
+      status: !discipline.path || !ctxTools || belowFloor ? "warn" : "pass",
+      message: `context-mode plugin registered${hasCache ? ", cache present" : " (cache not yet created)"}${discipline.version ? `, discipline v${discipline.version}` : ""}${belowFloor ? ` (below floor v${CONTEXT_MODE_VERSION_FLOOR})` : ""}`,
+      detail: `Cache: ${cacheDir}\n${substituteLine}\n${ctxToolsLine}${floorLine ? `\n${floorLine}` : ""}\nPlan tools: plan_create/read/update/list/delete (unconditional)`,
     }
   },
 }
