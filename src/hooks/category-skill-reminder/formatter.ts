@@ -35,3 +35,13 @@ export function buildReminderMessage(availableSkills: AvailableSkill[]): string 
 
   return lines.join("\n")
 }
+
+
+export interface NudgeMessageEvent {
+  skill: string
+  reason: string
+}
+
+export function buildNudgeMessage(event: NudgeMessageEvent): string {
+  return `[Nudge] Use category "${event.skill}": ${event.reason}`
+}
