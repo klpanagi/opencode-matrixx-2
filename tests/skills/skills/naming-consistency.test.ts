@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
-import { documentReaderSkill } from "../../../src/skills/skills/document-reader"
-import { ulwResearchSkill } from "../../../src/skills/skills/ulw-research"
+import { documentReaderSkill } from "../../../src/skills/skills/core/document-reader"
+import { ulwResearchSkill } from "../../../src/skills/skills/core/ulw-research"
 import {
   FALLBACK_MESSAGE,
   GUARDED_TOOLS,

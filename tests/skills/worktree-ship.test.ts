@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { gitMasterSkill } from "../../src/skills/skills/git-master"
-import { softwareDevSkill } from "../../src/skills/skills/software-dev"
+import { gitMasterSkill } from "../../src/skills/skills/core/git-master"
+import { softwareDevSkill } from "../../src/skills/skills/core/software-dev"
 
 describe("software-dev worktree-first BUILD + SHIP hardening (Item 6)", () => {
   test("BUILD gains worktree-first create/use entry", () => {

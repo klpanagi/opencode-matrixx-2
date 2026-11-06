@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { softwareDevSkill } from "../../src/skills/skills/software-dev"
+import { softwareDevSkill } from "../../src/skills/skills/core/software-dev"
 
 describe("software-dev Consumes/Produces interface guidance (Wave 1 prose only)", () => {
   test("template contains Consumes and Produces interface contract labels", () => {

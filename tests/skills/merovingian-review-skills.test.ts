@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "../../src/agents/merovingian"
 import { createBuiltinSkills } from "../../src/skills/skills"
-import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../../src/skills/skills/market-data-robustness-review"
-import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../../src/skills/skills/resilience-failure-hunting"
+import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../../src/skills/skills/market-data/market-data-robustness-review"
+import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../../src/skills/skills/core/resilience-failure-hunting"
 
 const NEW_SKILLS = [MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME, RESILIENCE_FAILURE_HUNTING_SKILL_NAME]
 
