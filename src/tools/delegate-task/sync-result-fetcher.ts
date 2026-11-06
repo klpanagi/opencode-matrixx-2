@@ -2,6 +2,7 @@ import { fetchSessionMessages } from "../../shared/session-context-source"
 import type { SessionMessage } from "../../shared/session-message"
 import { contentOf, isAssistant, timeOf } from "../../shared/session-message"
 import { DIAGNOSTIC_CAUSES, describeMessageShape } from "./diagnostic-shape"
+import { completedOf, isStreamingAssistant } from "./sync-session-poller"
 import type { NativeClient } from "./types"
 
 /**
@@ -81,21 +82,39 @@ export async function fetchSyncResult(
     }
   }
 
+  const assistantMessages = messagesAfterAnchor
+    .filter((m) => isAssistant(m))
+    .sort((a, b) => timeOf(b) - timeOf(a))
+  const newestAssistant = assistantMessages[0]
+  const hostPublishesCompletion = messages.some(
+    (message) => isAssistant(message) && completedOf(message) !== undefined,
+  )
+
+  // A still-streaming newest assistant means the poll returned mid-turn: never
+  // hand its (empty or half-written) content, or an older interim narration
+  // step, back as the result. This guard must precede the deliverable-tag fast
+  // path — a half-streamed row can already contain a complete tag pair.
+  if (hostPublishesCompletion && isStreamingAssistant(newestAssistant, messages)) {
+    return {
+      ok: false,
+      error: `Session is still streaming its newest assistant message; the result is not complete yet. ${DIAGNOSTIC_CAUSES}\n\nSession ID: ${sessionID}`,
+    }
+  }
+  const candidates = hostPublishesCompletion
+    ? assistantMessages.filter((m) => completedOf(m) !== undefined)
+    : assistantMessages
+
   // If deliverableTag is set, prioritize tagged content over the naive latest message
   if (options?.deliverableTag) {
-    const tagged = extractTaggedDeliverable(messagesAfterAnchor, options.deliverableTag)
+    const tagged = extractTaggedDeliverable(candidates, options.deliverableTag)
     if (tagged) {
       const textContent = options.finalTextOnly ? messageFinalText(tagged.message) : tagged.text
       return { ok: true, textContent }
     }
     // No tagged message found — fall through to normal latest-message logic
   }
-
-  const assistantMessages = messagesAfterAnchor
-    .filter((m) => isAssistant(m))
-    .sort((a, b) => timeOf(b) - timeOf(a))
   const lastMessage =
-    assistantMessages.find((m) => messageText(m).length > 0) ?? assistantMessages[0]
+    candidates.find((m) => messageText(m).length > 0) ?? candidates[0]
 
   if (anchorMessageCount !== undefined && !lastMessage) {
     return {

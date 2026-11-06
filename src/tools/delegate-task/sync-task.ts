@@ -217,13 +217,22 @@ export async function executeSyncTask(
       didSucceed = true
       const duration = formatDuration(startTime)
 
+      const textContent = result.textContent.trim()
+      if (textContent.length === 0) {
+        return `Task returned no readable output (empty assistant text).
+
+Resume the same session instead of spawning a new one:
+  task(session_id="${sessionID}", prompt="...")
+
+Session ID: ${sessionID}`
+      }
       return `Task completed in ${duration}.
 
 Agent: ${agentToUse}${args.category ? ` (category: ${args.category})` : ""}
 
 ---
 
-${result.textContent || "(No text output)"}
+${textContent}
 
 <task_metadata>
 session_id: ${sessionID}
