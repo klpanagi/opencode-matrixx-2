@@ -23,6 +23,47 @@ function createdAtOf(message: SessionMessage | undefined): number | undefined {
   return created === 0 ? undefined : created
 }
 
+/**
+ * `time.completed` from the flat message shape. The shared `session-message`
+ * surface is frozen (see tests/shared/no-v1-shape.test.ts), so this accessor
+ * lives with its only consumer instead of graduating into `shared/`.
+ */
+export function completedOf(message: unknown): number | undefined {
+  const completed = (message as { time?: { completed?: number } } | null | undefined)?.time?.completed
+  // Epoch zero is never a real completion stamp — treat it as absent so the
+  // host-publishes-completion capability probe stays honest.
+  return typeof completed === "number" && completed > 0 ? completed : undefined
+}
+
+/**
+ * OpenCode V2 publishes `time.completed` on assistant messages: the row is
+ * created when a step starts and completed when it ends, so an assistant
+ * message without `time.completed` is still streaming. Older payloads (and
+ * test corpora) never carry the field — when no assistant message in the
+ * observed set carries it, the host does not expose completion and every
+ * message must be treated as settled.
+ */
+export function isStreamingAssistant(
+  message: SessionMessage | undefined,
+  messages: SessionMessage[],
+): boolean {
+  if (!message || !isAssistant(message)) return false
+  const hostPublishesCompletion = messages.some(
+    (candidate) => isAssistant(candidate) && completedOf(candidate) !== undefined,
+  )
+  if (!hostPublishesCompletion) return false
+  return completedOf(message) === undefined
+}
+
+function strippedAssistantText(message: SessionMessage): string {
+  return textOf(message).replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim()
+}
+
+function lastAssistantHasText(message: SessionMessage | undefined): boolean {
+  if (!message) return false
+  return strippedAssistantText(message).length > 0
+}
+
 export function isSessionComplete(messages: SessionMessage[]): boolean {
   let lastUser: SessionMessage | undefined
   let lastAssistant: SessionMessage | undefined
@@ -37,6 +78,7 @@ export function isSessionComplete(messages: SessionMessage[]): boolean {
   const finish = finishOf(lastAssistant)
   if (!finish) return false
   if (NON_TERMINAL_FINISH_REASONS.has(finish)) return false
+  if (isStreamingAssistant(lastAssistant, messages)) return false
 
   // Both user and assistant messages required for chronological ordering
   if (!lastUser) return false
@@ -83,11 +125,7 @@ export function hasToolResultAfterAssistant(messages: SessionMessage[]): boolean
 }
 
 export function hasAssistantContent(messages: SessionMessage[]): boolean {
-  return messages.some((m) => {
-    if (!isAssistant(m)) return false
-    const stripped = textOf(m).replace(/<analysis>[\s\S]*?<\/analysis>/gi, "").trim()
-    return stripped.length > 0
-  })
+  return messages.some((m) => isAssistant(m) && strippedAssistantText(m).length > 0)
 }
 
 export async function pollSyncSession(
@@ -164,6 +202,18 @@ export async function pollSyncSession(
     }
 
     const lastAssistant = [...msgs].reverse().find((m) => isAssistant(m))
+
+    // The host created a row for the step that is still streaming: its content is
+    // empty and its finish is not trustworthy yet. Count-based stability, the
+    // text fallback, and every stall heuristic would all misread that state, so
+    // reset them and keep polling until the step settles.
+    if (isStreamingAssistant(lastAssistant, msgs)) {
+      idleStallCount = 0
+      lastMsgCount = 0
+      stableIdlePolls = 0
+      continue
+    }
+
     const hasText = hasAssistantContent(msgs)
 
     if (!finishOf(lastAssistant) && hasText) {
@@ -222,7 +272,13 @@ export async function pollSyncSession(
       }
     }
 
-    if (lastAssistant && msgs.length > 0 && Date.now() - pollStart >= syncTiming.MIN_STABILITY_TIME_MS) {
+    if (
+      lastAssistant &&
+      msgs.length > 0 &&
+      Date.now() - pollStart >= syncTiming.MIN_STABILITY_TIME_MS &&
+      !isStreamingAssistant(lastAssistant, msgs) &&
+      lastAssistantHasText(lastAssistant)
+    ) {
       const currentMsgCount = msgs.length
       if (currentMsgCount === lastMsgCount) {
         stableIdlePolls++
@@ -252,7 +308,11 @@ export async function pollSyncSession(
   let lastAssistantText: string | undefined
   try {
     const timeoutMsgs = await fetchSessionMessages(client, input.sessionID)
-    const lastAssistant = [...timeoutMsgs].reverse().find((m) => isAssistant(m))
+    // Skip any row still streaming at timeout: quoting half-written text as the
+    // outcome would repeat the very bug this guard exists to prevent.
+    const lastAssistant = [...timeoutMsgs]
+      .reverse()
+      .find((m) => isAssistant(m) && !isStreamingAssistant(m, timeoutMsgs))
     const textParts = contentOf(lastAssistant).filter((p) => p.type === "text" && p.text).map((p) => p.text as string)
     if (textParts.length > 0) lastAssistantText = textParts.join("\n")
   } catch {

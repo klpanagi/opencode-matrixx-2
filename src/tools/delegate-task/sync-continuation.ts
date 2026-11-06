@@ -119,11 +119,20 @@ export async function executeSyncContinuation(
 
      const duration = formatDuration(startTime)
 
+     const textContent = result.textContent.trim()
+     if (textContent.length === 0) {
+       return `Task returned no readable output (empty assistant text).
+
+Resume the same session instead of spawning a new one:
+  task(session_id="${continuationID}", prompt="...")
+
+Session ID: ${continuationID}`
+     }
      return `Task continued and completed in ${duration}.
 
 ---
 
-${result.textContent || "(No text output)"}
+${textContent}
 
 <task_metadata>
 session_id: ${continuationID}
