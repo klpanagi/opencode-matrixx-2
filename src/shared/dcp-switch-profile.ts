@@ -76,7 +76,7 @@ export function buildInlineConfig(profile: string, options?: DcpSwitchProfileOpt
 
   return {
     $schema:
-      "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/v3.1.14/dcp.schema.json",
+      "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/v3.2.0/dcp.schema.json",
     enabled: true,
     autoUpdate: (merged.autoUpdate as boolean) ?? false,
     debug: (merged.debug as boolean) ?? false,
