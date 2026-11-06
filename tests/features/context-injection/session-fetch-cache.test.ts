@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
-import { findFirstMessageWithAgentFromSDK, findNearestMessageWithFieldsFromSDK } from "../../src/features/context-injection/hook-bridge"
-import { invalidateSdkMessageCache } from "../../src/features/context-injection/hook-bridge"
-import type { SessionContextCarrier } from "../../src/features/context-injection/hook-bridge/injector"
+import { findFirstMessageWithAgentFromSDK, findNearestMessageWithFieldsFromSDK } from "../../../src/features/context-injection/hook-bridge"
+import { invalidateSdkMessageCache } from "../../../src/features/context-injection/hook-bridge"
+import type { SessionContextCarrier } from "../../../src/features/context-injection/hook-bridge/injector"
 
 function makeClient(payload: unknown) {
   let calls = 0

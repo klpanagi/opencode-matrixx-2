@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test"
 import type { NativePluginContext } from "../../../src/shared/session/session-context-source"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { createLookAt, normalizeArgs, validateArgs } from "../../../src/tools/look-at/tools"
 
 describe("look-at tool", () => {

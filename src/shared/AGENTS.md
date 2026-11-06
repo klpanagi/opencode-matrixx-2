@@ -2,60 +2,40 @@
 
 ## OVERVIEW
 
-~85 cross-cutting utilities across 4 subdirectories. Import via barrel: `import { log, deepMerge } from "../../shared"`
+~120 cross-cutting utilities across 12 scoped domains + 5 legacy subdirs. Import via scope barrel (e.g. `import { log } from "../../shared/runtime"`) or the root barrel.
 
 ## STRUCTURE
+
+12 scoped domains + 5 legacy subdirs. Import via scope barrel (`../../shared/<scope>`) or the root barrel:
+
 ```
 shared/
-├── logger.ts                  # File logging (/tmp/matrixx.log) — 62 imports
-├── dynamic-truncator.ts       # Token-aware context window management (202 lines)
-├── model-resolver.ts          # 3-step resolution entry point (65 lines)
-├── model-availability.ts      # Provider model fetching & fuzzy matching (359 lines)
-├── model-requirements.ts      # Agent/category fallback chains (161 lines) — 11 imports
-├── model-resolution-pipeline.ts # Pipeline orchestration (176 lines)
-├── model-resolution-types.ts  # Resolution request/provenance types
-├── model-sanitizer.ts         # Model name sanitization
-├── model-suggestion-retry.ts  # Suggest models on failure (144 lines)
-├── model-cache-availability.ts # Cache availability checking
-├── fallback-model-availability.ts # Fallback model logic (67 lines)
-├── available-models-fetcher.ts # Fetch models from providers (114 lines)
-├── connected-providers-cache.ts # Provider caching (196 lines)
-├── system-directive.ts        # Unified message prefix & types (61 lines) — 11 imports
-├── session-utils.ts           # Session cursor, orchestrator detection
-├── session-cursor.ts          # Message cursor tracking (85 lines)
-├── session-injected-paths.ts  # Injected file path tracking
-├── permission-compat.ts       # Tool restriction enforcement (87 lines) — 9 imports
-├── agent-tool-restrictions.ts # Tool restriction definitions
-├── agent-variant.ts           # Agent variant from config (91 lines)
-├── agent-display-names.ts     # Agent display name mapping
-├── first-message-variant.ts   # First message variant types
-├── opencode-config-dir.ts     # ~/.config/opencode resolution (138 lines)
-├── claude-config-dir.ts       # ~/.claude resolution
-├── data-path.ts               # XDG-compliant storage (47 lines) — 11 imports
-├── dcp-switch-profile.ts      # DCP profile switch core (startup auto-activate, no LLM tool)
-├── jsonc-parser.ts            # JSONC with comment support (66 lines)
-├── frontmatter.ts             # YAML frontmatter extraction (31 lines) — 10 imports
-├── deep-merge.ts              # Recursive merge (proto-pollution safe, MAX_DEPTH=50)
-├── shell-env.ts               # Cross-platform shell environment (111 lines)
-├── opencode-version.ts        # Semantic version comparison (80 lines)
-├── external-plugin-detector.ts # Plugin conflict detection (137 lines)
-├── opencode-server-auth.ts    # Authentication utilities (190 lines)
-├── safe-create-hook.ts        # Hook error wrapper (24 lines)
-├── file-utils.ts              # File operations (34 lines) — 9 imports
-├── file-reference-resolver.ts # File reference resolution (85 lines)
-├── port-utils.ts              # Port management (48 lines)
-├── zip-extractor.ts           # ZIP extraction (83 lines)
-├── binary-downloader.ts       # Binary download (60 lines)
-├── command-executor/          # Shell execution (4 files, 181 lines)
-├── git-worktree/              # Git status/diff parsing (8 files, 311 lines)
-├── migration/                 # Legacy config migration (5 files, 341 lines)
-│   ├── config-migration.ts    # Migration orchestration (133 lines)
-│   ├── agent-names.ts         # Agent name mapping (70 lines)
-│   ├── hook-names.ts          # Hook name mapping (36 lines)
-│   └── model-versions.ts      # Model version migration (49 lines)
-└── tmux/                      # Tmux TUI integration (12 files, 427 lines)
-    └── tmux-utils/            # Pane spawn, close, replace, layout, health
+├── index.ts                      # Root barrel (explicit named re-exports)
+├── command-executor.ts           # Loose legacy entry (see command-executor/ scope)
+├── agent/                        # Agent variant, display names, labels (6 files)
+├── compaction/                   # Compaction log, model resolver, context limits (8 files)
+├── config/                       # Data paths, deep-merge, opencode dirs, version (9 files)
+├── io/                           # File utils, frontmatter, shell-env, zip, ports (9 files)
+├── migration/                    # Legacy config migration (legacy subdir; agent/hook/model names)
+├── model/                        # Model resolution pipeline, requirements, retry (8 files)
+├── opencode/                     # HTTP API, server auth, plugin detector (6 files)
+├── outcome/                      # Shared outcome types
+├── policy/                       # Context-mode enforcement, DCP, RTK, injection (8 files)
+├── runtime/                      # Logger, notify, abort-error + helpers (8 files)
+├── session/                      # Session utils, cursor, ephemeral sessions (15 files)
+├── text/                         # jsonc-parser, system-directive, formatting (8 files)
+├── tool/                         # define-tool, merge-categories + helpers (7 files)
+├── command-executor/             # Shell execution (legacy subdir, 3 files)
+├── git-worktree/                 # Git status/diff parsing (legacy subdir, 5 files)
+├── software-dev-enforcement/     # Software-dev gating helpers (legacy subdir, 3 files)
+└── tmux/                         # Tmux TUI integration (legacy subdir, 3 files)
 ```
+
+ scope rule: new cross-cutting code goes in the matching scoped dir
+ (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`, `outcome/`,
+ `policy/`, `runtime/`, `session/`, `text/`, `tool/`); the 5 legacy subdirs
+ (`command-executor/`, `git-worktree/`, `migration/`, `software-dev-enforcement/`,
+ `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability.
 
 ## MOST IMPORTED
 

@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import type { MatrixxContext } from "../../../src/plugin/tool/context";
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool";
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool";
 import { isHubWriteApproved } from "../../../src/hooks/knowledge-hub-guard/approvals";
 import { createKnowledgeHubConfirmTool } from "../../../src/tools/knowledge-hub-confirm/tools";
 

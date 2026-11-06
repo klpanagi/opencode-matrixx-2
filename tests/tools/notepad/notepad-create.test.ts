@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { findNotepadForTask, notepadsRootFor, taskIdMarkerLine } from "../../../src/tools/notepad/index"
 import { createNotepadCreateTool } from "../../../src/tools/notepad/notepad-create"
 

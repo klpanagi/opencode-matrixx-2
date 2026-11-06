@@ -9,7 +9,7 @@ import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/s
 import { isNativeSessionId } from "../../shared/session/session-id"
 import { contentOf, roleOf } from "../../shared/session/session-message"
 import { formatDetailedError } from "../../shared/text/error-formatting"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"

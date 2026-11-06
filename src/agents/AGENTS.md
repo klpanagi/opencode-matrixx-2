@@ -68,7 +68,7 @@ agents/
 
 ## TOOL RESTRICTIONS
 
-An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-step. The grant is derived from `mode` in `src/plugin-handlers/task-permissions.ts`, never from a name list, and the criterion is one-directional: `mode ∈ {primary, all}` ⇒ granted, never the converse. `Mouse` is the documented carve-out (`mode: "subagent"`, full task permissions — it owns the task-store records for the delegated work it runs). Full policy in `docs/task-system.md` §3.5.
+An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-step. The grant is derived from `mode` in `src/plugin/handlers/task-permissions.ts`, never from a name list, and the criterion is one-directional: `mode ∈ {primary, all}` ⇒ granted, never the converse. `Mouse` is the documented carve-out (`mode: "subagent"`, full task permissions — it owns the task-store records for the delegated work it runs). Full policy in `docs/task-system.md` §3.5.
 
 | Agent | Mode | Denied | Allowed |
 |-------|------|--------|---------|
@@ -101,7 +101,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 3. Re-export from `src/agents/index.ts`; add the name to `AgentName` in `src/agents/types.ts`
 4. Add the name to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`
 5. Add the entry to `AgentOverridesSchema` in `src/config/schema/agent-overrides.ts`
-6. Add the name to the explore-agent set in `src/plugin-handlers/agent-config-handler.ts`
+6. Add the name to the explore-agent set in `src/plugin/handlers/agent-config-handler.ts`
 7. Add the name to `src/hooks/runtime-fallback/agent-resolver.ts`
 8. Add tool restrictions in `src/shared/agent-tool-restrictions.ts`
 9. Add model requirements in `src/shared/model-requirements.ts`

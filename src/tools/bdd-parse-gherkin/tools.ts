@@ -3,7 +3,7 @@ import * as fs from "node:fs"
 import { generateMessages } from "@cucumber/gherkin"
 import { SourceMediaType } from "@cucumber/messages"
 import { z } from "zod"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 /**
  * Recursively convert a value to a plain JSON-serializable object.

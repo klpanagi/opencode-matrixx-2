@@ -1,6 +1,6 @@
 import { z } from "zod"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { TOOL_DESCRIPTION_NO_SKILLS, TOOL_DESCRIPTION_PREFIX } from "./constants"
 import type { SkillArgs, SkillInfo, SkillLoadOptions } from "./types"
 

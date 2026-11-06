@@ -172,7 +172,7 @@ All skills are loaded from `src/skills/builtin/<category>/` via `createBuiltinSk
 
 1. **Create the skill file in its category dir:** `src/skills/builtin/<category>/<name>.ts`, exporting a `Skill` object: `export const mySkill: Skill = { name, description, template, ... }`. Pick the existing category that fits (bdd / core / dsl / frontend / market-data / security / zeromq).
 2. **Re-export the category index and the root barrel:** add `export { mySkill, MY_SKILL_NAME } from "./my-name"` to `src/skills/builtin/<category>/index.ts`, and add the matching re-export line to the root `src/skills/builtin/index.ts` (type-level access).
-3. **Add the import + factory entry in `src/skills/loader/factories.ts`:** add a static import (`import { mySkill } from "./skills/<category>/my-name"`) plus a `skillFactories` entry (`"my-name": () => mySkill`). Content dirs are data only — no `require()` seam. Registration onto the domain goes through `registerSkillTransform` in `./skills.transform.ts`.
+3. **Add the import + factory entry in `src/skills/loader/factories.ts`:** add a static import (`import { mySkill } from "./builtin/<category>/my-name"`) plus a `skillFactories` entry (`"my-name": () => mySkill`). Content dirs are data only — no `require()` seam. Registration onto the domain goes through `registerSkillTransform` in `./skills.transform.ts`.
 4. **Add the skill name to the schema:** add `"my-name"` to `BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts` so `disabled_skills` accepts it (and rebuild the schema if the build embeds it).
 5. **Verify:** run typecheck (`bun run typecheck`) and the skills tests (`bun test` coverage for `skills.test.ts` / `lazy-skill-helper.test.ts`). The factory pattern plus the lazy wrapper handles hydration — no other change is needed.
 
@@ -184,7 +184,7 @@ Remove the static import and the `skillFactories` entry in `skills.ts`. Note: us
 
 - `src/skills/builtin/core/git-master.ts` — large skill with many workflow procedures
 - `src/skills/builtin/core/ulw-research.ts` — references the research skill
-- `src/skills/loader/factories.ts` `skillFactories` table — must stay in sync with `skills/<category>/*.ts` exports
+- `src/skills/loader/factories.ts` `skillFactories` table — must stay in sync with `builtin/<category>/*.ts` exports
 - `src/skills/builtin/core/playwright.ts` — dual export (`playwrightSkill` + `agentBrowserSkill`); only the `browserProvider`-selected one loads
 
 ## Skill Description SDO (Skill Discovery Optimization)

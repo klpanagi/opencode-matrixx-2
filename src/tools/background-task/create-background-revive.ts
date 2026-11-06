@@ -2,7 +2,7 @@ import { existsSync } from "node:fs"
 import { z } from "zod"
 import { getHandlePath } from "../../features/background-agent/handle-index"
 import { formatReviveOutcome, formatUnrevivable } from "../../shared/outcome/revive-outcome"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { BACKGROUND_REVIVE_DESCRIPTION } from "./constants"
 import type { BackgroundReviveArgs, BackgroundReviveManager } from "./types"
 

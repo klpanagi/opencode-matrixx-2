@@ -29,7 +29,7 @@
  */
 
 import type { NotifySink } from "../../shared/runtime/notify"
-import type { MatrixxToolDefinition } from "../../tools/shared/define-tool"
+import type { MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 export type Cleanup = () => unknown
 

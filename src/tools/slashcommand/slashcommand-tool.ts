@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { log } from "../../shared"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { discoverCommandsSync } from "./command-discovery"
 import { formatCommandList, formatLoadedCommand } from "./command-output-formatter"
 import { skillToCommandInfo } from "./skill-command-converter"

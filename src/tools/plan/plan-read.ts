@@ -3,8 +3,8 @@ import { z } from "zod"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { readPlanFile, readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import type { MatrixxContext } from "../../plugin/tool/context"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { formatHashLine } from "../hashline-edit/hash-computation"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
 import { MAX_PLAN_FILE_BYTES, MAX_PLAN_READ_RENDERED_BYTES } from "./constants"
 import {
   classifyReadRefusal,

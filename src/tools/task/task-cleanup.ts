@@ -7,7 +7,7 @@ import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enfo
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
 import { stateRootFromToolContext } from "../../shared/session/state-root"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 const TERMINAL_STATUSES = new Set(["completed", "deleted"])
 const ACTIVE_STATUSES = new Set(["pending", "in_progress"])

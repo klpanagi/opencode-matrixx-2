@@ -4,7 +4,7 @@ import { createRequire } from "node:module"
 // transparent for every path this suite does not own.
 const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
 import * as fs from "node:fs"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 
 // ---------------------------------------------------------------------------
 // Helpers for Bun.spawn / Bun.spawnSync mocking

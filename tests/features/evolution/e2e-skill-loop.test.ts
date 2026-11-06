@@ -9,7 +9,7 @@ import * as fs from "node:fs"
 import * as fsp from "node:fs/promises"
 import * as path from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/tool/context"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import type { LlmCall } from "../../../src/features/evolution/compressor/interface"
 import { runEvolutionPipeline } from "../../../src/features/evolution/pipeline"
 import { loadLedger } from "../../../src/features/evolution/store/budget-ledger";

@@ -1,4 +1,4 @@
-import { defineTool } from "../../tools/shared/define-tool";
+import { defineTool } from "../../shared/tool/define-tool";
 import type { DomainHooks } from "../setup-domains";
 
 export const toolAuthoringEntry = defineTool;

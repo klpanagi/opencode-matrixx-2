@@ -9,7 +9,7 @@ import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import type { MatrixxContext } from "../../plugin/tool/context";
 import { log } from "../../shared/runtime/logger";
 import { stateRootFromToolContext } from "../../shared/session/state-root"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool";
 import { createOneTask } from "./create-one";
 import type {
   CreatedTaskSummary,

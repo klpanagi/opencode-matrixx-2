@@ -11,7 +11,7 @@ import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import type { MatrixxContext } from "../../plugin/tool/context";
 import { log } from "../../shared/runtime/logger";
 import { stateRootFromToolContext } from "../../shared/session/state-root"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool";
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool";
 import { TASK_ID_PATTERN } from "./constants";
 import type { TaskObject } from "./types";
 import { TaskObjectSchema, TaskUpdateInputSchema } from "./types";

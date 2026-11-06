@@ -2,8 +2,8 @@ import { registerAgentTransform } from "../../agents/agents.transform"
 import { registerCommandTransform } from "../../features/builtin-commands/commands.transform"
 import { registerMcpTransform } from "../../mcps/mcp.transform"
 import { log } from "../../shared"
+import { emitToolInfo } from "../../shared/tool/define-tool"
 import { registerSkillTransform } from "../../skills/loader/skills.transform"
-import { emitToolInfo } from "../../tools/shared/define-tool"
 import { registerMessageHooks } from "../message-hooks"
 import type {
   MatrixxContext,

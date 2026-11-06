@@ -23,7 +23,7 @@ features/
 ├── context-injector/           # AGENTS.md, README.md, rules injection (6 files, 809 LOC)
 ├── handoff/                    # Multi-action handoff: create, read, list, archive
 ├── session-state/              # Subagent session state tracking (3 files)
-├── context-injection/hook-bridge/ # System message injection (4 files)
+├── context-injection/            # System message injection (hook-bridge/, injector/, routing/)
 ├── task-toast-manager/         # Task progress notifications (4 files)
 ├── mission-state/              # Persistent state for multi-step ops (9 files)
 └── tool-metadata-store/        # Tool execution metadata caching (3 files)```

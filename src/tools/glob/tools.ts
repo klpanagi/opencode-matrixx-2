@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { MatrixxContext } from "../../plugin/tool/context"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { runRgFiles } from "./cli"
 import { resolveGrepCliWithAutoInstall } from "./constants"
 import { formatGlobResult } from "./result-formatter"

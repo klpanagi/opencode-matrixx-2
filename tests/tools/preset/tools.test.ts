@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test"
 import { createRequire } from "node:module"
 import { homedir } from "node:os"
 import { join } from "node:path"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 // Unmockable real fs: mock.module("node:fs") below would otherwise poison plain
 // imports, breaking sibling suites that share this process.
 const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")

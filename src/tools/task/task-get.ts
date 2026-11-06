@@ -4,7 +4,7 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { stateRootFromToolContext } from "../../shared/session/state-root"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { TASK_ID_PATTERN } from "./constants"
 import { TaskGetInputSchema, TaskObjectSchema } from "./types"
 

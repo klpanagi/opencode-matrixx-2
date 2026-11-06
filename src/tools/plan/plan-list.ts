@@ -9,7 +9,7 @@ import { formatCompletionWarning, resolvePlanCompletion } from "../../features/m
 import { MAX_PLAN_FILE_BYTES } from "../../features/mission-state/constants"
 import { parsePlanFrontMatter } from "../../features/plan-contract"
 import type { MatrixxContext } from "../../plugin/tool/context"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { PLAN_FILENAME_KEBAB_REGEX, PLANS_DIR } from "./constants"
 import { resolveDirectory } from "./types"
 

@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import {
   SESSION_INFO_DESCRIPTION,
   SESSION_LIST_DESCRIPTION,

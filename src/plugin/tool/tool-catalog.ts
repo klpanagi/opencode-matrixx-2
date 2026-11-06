@@ -5,6 +5,7 @@ import type { MatrixxConfig } from "../../config"
 import { resolvePlanCap } from "../../features/mission-state/constants"
 import { isTaskSystemEnabled } from "../../shared/config/task-system-gating"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
+import type { MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { filterDisabledTools } from "../../shared/tool/disabled-tools"
 import {
   builtinTools,
@@ -52,7 +53,6 @@ import {
   interactive_bash,
 } from "../../tools"
 import { createPlanTasksTool } from "../../tools/plan"
-import type { MatrixxToolDefinition } from "../../tools/shared/define-tool"
 import type { DomainManagers } from "../setup-domains"
 import type { ToolsRecord } from "./context"
 import type { SkillContext } from "./skill-context"

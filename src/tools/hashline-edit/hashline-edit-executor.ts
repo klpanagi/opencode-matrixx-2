@@ -1,5 +1,5 @@
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
-import type { MatrixxToolContext } from "../shared/define-tool"
+import type { MatrixxToolContext } from "../../shared/tool/define-tool"
 import { countLineDiffs, generateUnifiedDiff } from "./diff-utils"
 import { applyHashlineEditsWithReport } from "./edit-operations"
 import { canonicalizeFileText, restoreFileText } from "./file-text-canonicalization"

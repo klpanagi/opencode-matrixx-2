@@ -3,7 +3,7 @@ import { log } from "../../shared"
 import { isRecord } from "../../shared/runtime/record-type-guard"
 import { unwrapList } from "../../shared/runtime/unwrap-list"
 import type { SessionDomainLike } from "../../shared/session/session-facade"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 type SessionCleanupSession = SessionDomainLike & {
   remove?(input: { sessionID: string }): Promise<unknown>

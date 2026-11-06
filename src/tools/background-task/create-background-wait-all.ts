@@ -3,7 +3,7 @@ import type { BackgroundManager } from "../../features/background-agent"
 import { listKnownSessions } from "../../features/background-agent/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { isLaunchTerminalStatus } from "../../shared/outcome/saturated-outcome"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { BACKGROUND_WAIT_ALL_DESCRIPTION } from "./constants"
 import type { ToolContextWithMetadata } from "./types"
 

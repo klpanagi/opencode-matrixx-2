@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { AssemblyConfig } from "../../config/schema/assembly"
 import type { BackgroundManager } from "../../features/background-agent/manager"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { executeAssembly } from "./assembly-executor"
 import { TOOL_DESCRIPTION } from "./tool-description"
 import { AssemblyArgsSchema } from "./types"

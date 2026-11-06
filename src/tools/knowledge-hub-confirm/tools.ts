@@ -3,7 +3,7 @@ import { z } from "zod"
 import { approveHubWrite, HUB_WRITE_APPROVAL_TTL_MS } from "../../hooks/knowledge-hub-guard/approvals"
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
-import { defineTool, type MatrixxToolDefinition } from "../shared/define-tool"
+import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 const HOOK_NAME = "knowledge-hub-guard"
 

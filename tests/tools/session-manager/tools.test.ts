@@ -4,7 +4,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/tool/context"
-import type { MatrixxToolContext } from "../../../src/tools/shared/define-tool"
+import type { MatrixxToolContext } from "../../../src/shared/tool/define-tool"
 import { createSessionManagerTools } from "../../../src/tools/session-manager/tools"
 import { readSessionTodos } from "../../../src/tools/session-manager/storage"
 

@@ -21,7 +21,7 @@ export type UserMessage = Record<string, unknown>
 export type ModelV2 = Record<string, unknown>
 export type ProviderV2 = Record<string, unknown>
 
-import type { MatrixxToolDefinition } from "../../tools/shared/define-tool"
+import type { MatrixxToolDefinition } from "../../shared/tool/define-tool"
 
 export type ProviderContext = {
   source: "env" | "config" | "custom" | "api"
