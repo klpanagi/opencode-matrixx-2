@@ -187,9 +187,7 @@ Wave 2 tasks declare `blockedBy: [Wave 1 ids]` and become runnable when
 are project-scoped by default and survive `/clear` and restarts, unlike
 ephemeral session todos.
 
-While incomplete tasks remain, `task-continuation-enforcer` re-injects them
-(Stop-handler with countdown and circuit-breaker checks). It is the only
-enforcer; the legacy todo one it replaced was removed. Full spec:
+While incomplete tasks remain, agents keep working them through `task_list` and `task_update`. The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). Full spec:
 [`docs/task-system.md`](./task-system.md), removal notes in
 [`docs/legacy-todo-migration.md`](./legacy-todo-migration.md).
 
