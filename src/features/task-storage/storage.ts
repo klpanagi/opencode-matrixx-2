@@ -6,6 +6,7 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { log } from "../../shared/runtime/logger"
+import { TypedReadError } from "./read-errors"
 
 export function getProjectTaskDir(directory: string): string {
   return join(directory, ".matrixx", "tasks")
@@ -217,36 +218,144 @@ export function migrateLegacyTasksIfNeeded(
   return { migrated, legacyDir, projectDir }
 }
 
-export function acquireLock(dirPath: string): { acquired: boolean; release: () => void } {
+export interface LockInfo {
+  id: string
+  ownerId: string
+  pid: number
+  generation: number
+  timestamp: number
+}
+
+export interface LockHandle {
+  acquired: boolean
+  ownerId?: string
+  release: () => void
+}
+
+export type LockResult = { ok: true } | { ok: false; error: TypedReadError }
+
+function lockFilePath(dirPath: string): string {
+  return join(dirPath, ".lock")
+}
+
+function parseLockInfo(content: string): LockInfo | null {
+  try {
+    const data = JSON.parse(content) as Partial<LockInfo>
+    if (typeof data.timestamp !== "number" || !Number.isFinite(data.timestamp)) return null
+    const id =
+      typeof data.id === "string" ? data.id : typeof data.ownerId === "string" ? data.ownerId : null
+    if (id === null) return null
+    return {
+      id,
+      ownerId: typeof data.ownerId === "string" ? data.ownerId : id,
+      pid: typeof data.pid === "number" ? data.pid : -1,
+      generation: typeof data.generation === "number" ? data.generation : 0,
+      timestamp: data.timestamp,
+    }
+  } catch {
+    return null
+  }
+}
+
+export function readLockFile(dirPath: string): LockInfo | null {
+  try {
+    if (!existsSync(lockFilePath(dirPath))) return null
+    return parseLockInfo(readFileSync(lockFilePath(dirPath), "utf-8"))
+  } catch {
+    return null
+  }
+}
+
+function isStaleInfo(info: LockInfo | null): boolean {
+  if (info === null) return true
+  return Date.now() - info.timestamp > STALE_LOCK_THRESHOLD_MS
+}
+
+function ownerMatches(info: LockInfo, ownerId: string): boolean {
+  return info.ownerId === ownerId || info.id === ownerId
+}
+
+function foreignLockError(lockPath: string, info: LockInfo): TypedReadError {
+  return new TypedReadError("Locked", lockPath, 0, ["foreign owner:", info.ownerId].join(" "))
+}
+
+export function releaseLock(dirPath: string, ownerId: string): LockResult {
+  const lockPath = lockFilePath(dirPath)
+  if (!existsSync(lockPath)) {
+    return { ok: false, error: new TypedReadError("NotFound", lockPath, 0, "no lock held") }
+  }
+  let info: LockInfo | null
+  try {
+    info = parseLockInfo(readFileSync(lockPath, "utf-8"))
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    return { ok: false, error: new TypedReadError("TransientIO", lockPath, 0, reason) }
+  }
+  if (info === null) {
+    try {
+      unlinkSync(lockPath)
+    } catch {
+    }
+    return { ok: false, error: new TypedReadError("Corrupt", lockPath, 0, "unparseable lock evicted") }
+  }
+  if (!ownerMatches(info, ownerId)) {
+    log("[task-storage] foreign unlock refused", { path: lockPath, owner: info.ownerId })
+    return { ok: false, error: foreignLockError(lockPath, info) }
+  }
+  try {
+    unlinkSync(lockPath)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    return { ok: false, error: new TypedReadError("TransientIO", lockPath, 0, reason) }
+  }
+  return { ok: true }
+}
+
+export function refreshLock(dirPath: string, ownerId: string): LockResult {
+  const lockPath = lockFilePath(dirPath)
+  if (!existsSync(lockPath)) {
+    return { ok: false, error: new TypedReadError("NotFound", lockPath, 0, "no lock held") }
+  }
+  let info: LockInfo | null
+  try {
+    info = parseLockInfo(readFileSync(lockPath, "utf-8"))
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    return { ok: false, error: new TypedReadError("TransientIO", lockPath, 0, reason) }
+  }
+  if (info === null) {
+    return { ok: false, error: new TypedReadError("Corrupt", lockPath, 0, "unparseable lock") }
+  }
+  if (!ownerMatches(info, ownerId)) {
+    log("[task-storage] foreign refresh refused", { path: lockPath, owner: info.ownerId })
+    return { ok: false, error: foreignLockError(lockPath, info) }
+  }
+  try {
+    const renewed: LockInfo = { ...info, timestamp: Date.now() }
+    writeFileSync(lockPath, JSON.stringify(renewed), { encoding: "utf-8" })
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    return { ok: false, error: new TypedReadError("TransientIO", lockPath, 0, reason) }
+  }
+  return { ok: true }
+}
+
+export function acquireLock(dirPath: string): LockHandle {
   const lockPath = join(dirPath, ".lock")
   const lockId = randomUUID()
 
-  const createLock = (timestamp: number) => {
-    writeFileSync(lockPath, JSON.stringify({ id: lockId, timestamp }), {
-      encoding: "utf-8",
-      flag: "wx",
-    })
+  const createLock = (timestamp: number, generation: number) => {
+    writeFileSync(
+      lockPath,
+      JSON.stringify({ id: lockId, ownerId: lockId, pid: process.pid, generation, timestamp }),
+      { encoding: "utf-8", flag: "wx" },
+    )
   }
 
-  const isStale = () => {
-    try {
-      const lockContent = readFileSync(lockPath, "utf-8")
-      const lockData = JSON.parse(lockContent)
-      const timestamp = lockData.timestamp
-      if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) {
-        return true
-      }
-      const lockAge = Date.now() - timestamp
-      return lockAge > STALE_LOCK_THRESHOLD_MS
-    } catch {
-      return true
-    }
-  }
-
-  const tryAcquire = () => {
+  const tryAcquire = (generation: number) => {
     const now = Date.now()
     try {
-      createLock(now)
+      createLock(now, generation)
       return true
     } catch (error) {
       if (error && typeof error === "object" && "code" in error && error.code === "EEXIST") {
@@ -258,15 +367,18 @@ export function acquireLock(dirPath: string): { acquired: boolean; release: () =
 
   ensureDir(dirPath)
 
-  let acquired = tryAcquire()
-  if (!acquired && isStale()) {
-    if (isStale()) {
-      try {
-        unlinkSync(lockPath)
-      } catch {
-        // Ignore cleanup errors
+  let acquired = tryAcquire(0)
+  if (!acquired) {
+    const current = readLockFile(dirPath)
+    if (isStaleInfo(current)) {
+      const fresh = readLockFile(dirPath)
+      if (isStaleInfo(fresh)) {
+        try {
+          unlinkSync(lockPath)
+        } catch {
+        }
+        acquired = tryAcquire((fresh?.generation ?? -1) + 1)
       }
-      acquired = tryAcquire()
     }
   }
 
@@ -274,22 +386,17 @@ export function acquireLock(dirPath: string): { acquired: boolean; release: () =
     return {
       acquired: false,
       release: () => {
-        // No-op release for failed acquisition
       },
     }
   }
 
   return {
     acquired: true,
+    ownerId: lockId,
     release: () => {
-      try {
-        if (!existsSync(lockPath)) return
-        const lockContent = readFileSync(lockPath, "utf-8")
-        const lockData = JSON.parse(lockContent)
-        if (lockData.id !== lockId) return
-        unlinkSync(lockPath)
-      } catch {
-        // Ignore cleanup errors
+      const result = releaseLock(dirPath, lockId)
+      if (!result.ok && result.error.kind === "Locked") {
+        log("[task-storage] release owner mismatch", { path: lockPath })
       }
     },
   }
