@@ -6,6 +6,7 @@ import { getTaskToastManager } from "../../task-toast-manager"
 import type { EventProperties } from "../constants"
 import { getSessionErrorMessage } from "../error-helpers"
 import { readHandles } from "../handle-index"
+import { buildCompletionNotification } from "../notification-builder"
 import {
   classifyRevivable,
   findRevivableHandle,
@@ -234,6 +235,42 @@ export function listRevivable(rt: ManagerRuntime,parentSessionID?: string): Arra
 }
 
 
+function formatParentNotificationDuration(task: BackgroundTask): string {
+  if (!task.startedAt) return "unknown"
+  const end = task.completedAt ?? new Date()
+  const seconds = Math.max(0, Math.round((end.getTime() - task.startedAt.getTime()) / 1000))
+  if (seconds < 60) return `${seconds}s`
+  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+}
+
+function deliverParentNotification(rt: ManagerRuntime, task: BackgroundTask): void {
+  const parentSessionID = task.parentSessionID
+  if (!parentSessionID) return
+  try {
+    const siblings = rt.store.getTasksByParentSession(parentSessionID)
+    const remainingCount = siblings.filter(
+      (t) => t.id !== task.id && (t.status === "running" || t.status === "pending"),
+    ).length
+    const completedTasks = siblings.filter(
+      (t) => t.status !== "running" && t.status !== "pending",
+    )
+    const text = buildCompletionNotification(
+      task,
+      remainingCount === 0,
+      completedTasks,
+      remainingCount,
+      formatParentNotificationDuration(task),
+      task.error ? `\n**Error:** ${task.error}` : "",
+    )
+    rt.native.session.prompt({ sessionID: parentSessionID, text }).catch((error) => {
+      log("[background-agent] parent notification failed:", error)
+    })
+  } catch (error) {
+    log("[background-agent] parent notification failed:", error)
+  }
+}
+
+
 export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
     const topLevelSessionID = (event as unknown as { sessionID?: unknown })
@@ -303,6 +340,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task completed (native session.idle):", task.id)
+      deliverParentNotification(rt, task)
       return
     }
 
@@ -317,6 +355,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task errored (native session.error):", task.id)
+      deliverParentNotification(rt, task)
       return
     }
 
@@ -338,6 +377,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task completed (native session.execution.succeeded):", task.id)
+      deliverParentNotification(rt, task)
       return
     }
 
@@ -352,6 +392,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task errored (native session.execution.failed):", task.id)
+      deliverParentNotification(rt, task)
       return
     }
 
