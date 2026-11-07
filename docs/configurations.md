@@ -1,6 +1,6 @@
 # Matrixx Configuration
 
-> Version 3.0.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+> Version 1.2.1. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
 
 > **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
 
@@ -254,7 +254,7 @@ Available agents: `morpheus`, `oracle`, `merovingian`, `operator`, `trinity`, `c
 Matrixx includes built-in skills that provide additional capabilities:
 
 - **playwright** (default) / **agent-browser**: Browser automation for web scraping, testing, screenshots, and browser interactions. See [Browser Automation](#browser-automation) for switching between providers.
-- **git-master**: Git expert for atomic commits, rebase/squash, and history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with `task(category='quick', load_skills=['git-master'], ...)` to save context.
+- **git-master**: Git expert for atomic commits, rebase/squash, and history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with `task(category='bullet-time', load_skills=['git-master'], ...)` to save context.
 
 Disable built-in skills via `disabled_skills` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
 
@@ -593,7 +593,7 @@ For more details, see the [OpenCode Server documentation](https://opencode.ai/do
 
 ## Git Master
 
-The `git-master` skill (`src/skills/builtin/git-master.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
+The `git-master` skill (`src/skills/builtin/core/git-master/index.ts`) drives commit/rebase/history behavior through its prompt template. There is no `git_master` top-level key in `src/config/schema/matrixx-config.ts` — do not add one (unknown keys are stripped by validation). Commit style (footers, trailers) follows the skill instructions and your repo conventions.
 
 ## Morpheus Agent
 
@@ -923,7 +923,7 @@ At runtime, Matrixx uses a 3-step resolution process to determine which model to
 
 ### Agent Provider Chains
 
-Each agent and category declares an ordered fallback chain of `<provider>/<model>` candidates; Matrixx selects the first whose provider is connected. Configure via `modelRequirements` (see `src/shared/model-requirements.ts`).
+Each agent and category declares an ordered fallback chain of `<provider>/<model>` candidates; Matrixx selects the first whose provider is connected. Configure via `modelRequirements` (see `src/shared/model/model-requirements.ts`).
 
 | Agent | Model (no prefix) | Fallback chain |
 |-------|-------------------|-------------------------|
@@ -1065,7 +1065,7 @@ Disable specific built-in hooks via `disabled_hooks` in `~/.config/opencode/matr
 }
 ```
 
-Available hooks (67 raw entries, 67 unique — see `src/config/schema/hooks.ts`; `task-continuation-enforcer` was removed, see below). Four of them, `compaction-todo-preserver`, `task-notepad`, `tasks-todowrite-disabler`, and `todo-continuation-enforcer`, are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `document-reader-guard`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `evolution-compressor`, `evolution-hitl`, `evolution-watcher`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `preemptive-compaction`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-notification`, `session-recovery`, `start-work`, `startup-toast`, `stop-continuation-guard`, `task-edit-guard`, `task-notepad`, `task-notepad-writer`, `task-resume-info`, `tasks-todowrite-disabler`, `think-mode`, `thinking-block-validator`, `todo-continuation-enforcer`, `tool-output-truncator`, `tool-pair-validator`, `unstable-agent-babysitter`, `webfetch-redirect-guard`, `write-existing-file-guard`
+Available hooks (65 live + 7 retained-deprecated no-op literals + 1 alias = 73 parseable — see `HookNameEnum` + `HookNameSchema` in `src/config/schema/hooks.ts`). Seven names — `todo-continuation-enforcer`, `compaction-todo-preserver`, `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`, `preemptive-compaction`, and `evolution-compressor` — are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. `anthropic-context-window-limit-recovery` is an alias for `context-window-limit-recovery`. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `docs-lookup-guard`, `document-reader-guard`, `domain-keyword-detector`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `evolution-hitl`, `evolution-watcher`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-memory`, `session-notification`, `session-recovery`, `silent-failure-guard`, `start-work`, `startup-toast`, `stop-continuation-guard`, `subagent-block`, `task-edit-guard`, `task-notepad-writer`, `task-resume-info`, `think-mode`, `thinking-block-validator`, `tool-output-truncator`, `tool-pair-validator`, `unstable-agent-babysitter`, `webfetch-redirect-guard`, `write-existing-file-guard`
 **Note on `directory-agents-injector`**: This hook is **automatically disabled** when running on OpenCode 1.1.37+ because OpenCode now has native support for dynamically resolving AGENTS.md files from subdirectories (PR #10678). This prevents duplicate AGENTS.md injection. For older OpenCode versions, the hook remains active to provide the same functionality.
 
 **Note on `auto-update-checker` and `startup-toast`**: The `startup-toast` hook is a sub-feature of `auto-update-checker`. To disable only the startup toast notification while keeping update checking enabled, add `"startup-toast"` to `disabled_hooks`. To disable all update checking features (including the toast), add `"auto-update-checker"` to `disabled_hooks`.
@@ -1082,7 +1082,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 }
 ```
 
-Available commands (23 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `ulw-loop`, `cancel-loop`, `refactor`, `start-work`, `stop-continuation`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-ultrawork`, `research`, `assembly`, `ultrawork`, `bdd-backend`, `bdd-contract`, `bdd-frontend`, `bdd-pipeline`, `bdd-tests`, `evolution`, `cleanup-tasks`, `task-list` (+ `ultrawork`/`ulw` keyword triggers)
+Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `ulw-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-ultrawork`, `research`, `assembly`, `ultrawork`, `bdd-pipeline`, `evolution`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `ultrawork`/`ulw` keyword triggers)
 ## Comment Checker
 
 Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.
@@ -1276,9 +1276,7 @@ Opt-in experimental features that may change or be removed in future versions. U
     "truncate_all_tool_outputs": true,
     "aggressive_truncation": true,
     "auto_resume": true,
-    "preemptive_compaction": true,
     "context_warning_threshold": 0.70,
-    "preemptive_compaction_threshold": 0.78,
     "hashline_edit": true
   }
 }
@@ -1290,9 +1288,9 @@ Opt-in experimental features that may change or be removed in future versions. U
 | `truncate_all_tool_outputs` | `false` | Truncates ALL tool outputs instead of just whitelisted tools (Grep, Glob, LSP, AST-grep). Tool output truncator is enabled by default - disable via `disabled_hooks`.                         |
 | `aggressive_truncation`     | `false` | When token limit is exceeded, aggressively truncates tool outputs to fit within limits. More aggressive than the default truncation behavior. Falls back to summarize/revert if insufficient. |
 | `auto_resume`               | `false` | Automatically resumes session after successful recovery from thinking block errors or thinking disabled violations. Extracts last user message and continues.                             |
-| `preemptive_compaction`     | `false` | Proactively compact context before hitting limits.                                                                                                                                          |
-| `context_warning_threshold` | `0.70`  | Warn threshold 0-1 for `context-window-monitor` (read-only, Anthropic only). Must be < `preemptive_compaction_threshold` or a warning is logged. 0.1-0.95. |
-| `preemptive_compaction_threshold` | `0.78`  | Proactive compaction trigger 0-1 for `preemptive-compaction`. Must exceed `context_warning_threshold`. 0.1-0.95. |
+| `preemptive_compaction`     | `false` | **Deprecated no-op** (the `preemptive-compaction` hook was removed; the single compaction hook owns compaction). Still parses.                                                                                                                                          |
+| `context_warning_threshold` | `0.70`  | Warn threshold 0-1 for `context-window-monitor` (read-only, Anthropic only). 0.1-0.95. |
+| `preemptive_compaction_threshold` | `0.78`  | **Deprecated no-op** (trigger deleted with the `preemptive-compaction` hook). Still parses; 0.1-0.95. |
 | `plugin_load_timeout_ms`    | `10000` | Timeout in ms for `loadAllPluginComponents` during config handler init (min: 1000).                                                             |
 | `safe_hook_creation`        | `true` (at call site) | Wrap hook creation in try/catch to prevent one failing hook from crashing the plugin.                                                  |
 | `hashline_edit`             | `true` (at call site) | Enable hashline-anchored `Edit` tool (line#hash IDs) for non-plan files — `.matrixx/plans/*.md` must use `plan_update`.                                     |
@@ -1384,7 +1382,7 @@ Dynamic Context Pruning — tiered pruning (`economy`/`balanced`/`performance`/`
 | `default_profile` | `string` | — | Default DCP tier. |
 | `profiles` | `object` | 4 built-in (`economy`/`balanced`/`performance`/`ultimate`) | Per-tier overrides keyed by profile name (`compress`/`strategies`/`commands`/`manualMode`/`pruneNotificationType`/`autoUpdate`/`debug`/`protectedFilePatterns`). |
 
-> Schema: `src/config/schema/dcp.ts` (~9.5k). Switch: set `dcp.default_profile` (applied on startup by `src/shared/dcp-switch-profile.ts`). Docs: [Context Management](./context-management.md).
+> Schema: `src/config/schema/dcp.ts` (~9.5k). Switch: set `dcp.default_profile` (applied on startup by `src/shared/policy/dcp-switch-profile.ts`). Docs: [Context Management](./context-management.md).
 
 ## Assembly
 
@@ -1538,7 +1536,7 @@ Redacted preview example: `openai-api-key: sk-proj…XXXX`, `aws-access-key: AKI
 
 Opt-in trace-driven skill evolution — watcher captures traces, compressor synthesizes, writer generates skills, governance approves, retention/budget gate.
 
-> **Gating**: evolution hooks (`evolution-watcher`, `evolution-compressor`, `evolution-hitl`) are only registered when `evolution.enabled: true` (default `false` — zero hook overhead when disabled). The quality gate `passesQualityGate()` is a pure function called inline by `pipeline.ts`, not a registered hook. **BREAKING**: `evolution-quality-gate` was never a functional hook name and was removed from the schema (61→60); remove it from `disabled_hooks` if present (it never had effect).
+> **Gating**: evolution hooks (`evolution-watcher`, `evolution-hitl`) are only registered when `evolution.enabled: true` (`evolution-compressor` is a retained-deprecated no-op literal, not a registered hook) (default `false` — zero hook overhead when disabled). The quality gate `passesQualityGate()` is a pure function called inline by `pipeline.ts`, not a registered hook. **BREAKING**: `evolution-quality-gate` was never a functional hook name and was removed from the schema; remove it from `disabled_hooks` if present (it never had effect).
 
 ```jsonc
 {
@@ -1665,6 +1663,10 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
     "agents": { "oracle": { "fallbackChain": [{ "providers": ["zai-coding-plan"], "model": "glm-4.7" }] } }
   },
   "complexityDowngrades": { "bullet-time": { "hard": "opencode/ling-3.0-flash-free" } },  // per-category downgrade targets (<provider>/<model>)
+  "subagent_block": { "enabled": true, "allowlist": [] },  // subagent-block hook: block nested subagents except allowlisted agents
+  "tool_gating": { "bdd_tools": true },  // startup-token tool auto-gating (bdd_tools, pdf_figures, look_at, preset_tools, session_cleanup; unset = auto-detect)
+  "plans": { "max_plan_file_bytes": 143360 },  // plan file size cap (10KB-512KB) + smith_max_review_rounds (2-20, default 8)
+  "morpheus": { "tasks": { "scope": "project" } },  // LEGACY (deprecated: use tasks.*) — same-named keys act as fallback
   "_migrations": ["model-v2"]  // migration history (prevents re-applying migrations)
 }
 ```
@@ -1680,6 +1682,10 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`). |
 | `modelRequirements` | `ModelRequirementsSchema` (`src/config/schema/model-config.ts`) | — | `agents`/`categories` maps with `fallbackChain` (`providers[]` + `model`), `requiresModel`, `requiresAnyModel`, `requiresProvider`, `variant`. |
 | `complexityDowngrades` | `ComplexityDowngradesSchema` (`src/config/schema/model-config.ts`) | — | Nested maps to `<provider>/<model>` values. |
+| `subagent_block` | `SubagentBlockConfigSchema` (`src/config/schema/subagent-block.ts`) | `enabled: true, allowlist: []` | Enables the `subagent-block` hook; `allowlist` exempts named agents. |
+| `tool_gating` | `ToolGatingConfigSchema` (`src/config/schema/tool-policy.ts`) | auto-detect | Defers rarely-needed LLM tools until auto-detect or opt-in (`bdd_tools`, `pdf_figures`, `look_at`, `preset_tools` default `false`, `session_cleanup` opt-in). |
+| `plans` | `PlansConfigSchema` (`src/config/schema/plans.ts`) | `max_plan_file_bytes: 140KB, smith_max_review_rounds: 8` | Plan file size cap (min 10KB, max 512KB); Smith review-round ceiling for Oracle high-accuracy mode (2-20). |
+| `morpheus` | `MorpheusConfigSchema` (`src/config/schema/morpheus.ts`) | — | Legacy; only `tasks` (`storage_path`, `task_list_id`, `scope`, `stale_after_hours`, `session_scoped`). Use `tasks.*`. |
 | `_migrations` | `string[]` | — | Internal migration history. |
 
 ## Environment Variables

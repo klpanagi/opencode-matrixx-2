@@ -1,7 +1,7 @@
 # Quality: BDD Pipeline & TDD Discipline
 
 > **Audience:** users implementing features or enforcing test discipline.
-> **Version:** 3.0.0.
+> **Version:** 1.2.1.
 > **See also:** `command-reference.md` (the `/bdd-pipeline` command), `orchestration.md` (how plans execute), `hooks.md` §2.1 (`oracle-md-only`, `quality-gate`).
 
 Two complementary workflows produce tested code. **BDD** starts from a `.feature` file and generates the implementation through a contract; **TDD** governs how any implementation is written (test first, then code, then refactor).
@@ -18,7 +18,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 # Part A — BDD Pipeline
 
 > **Status**: Shipped and verified
-> **Package**: `opencode-matrixx-v2` (v3.0.0)
+> **Package**: `opencode-matrixx-v2` (v1.2.1)
 > **Context**: Native matrixx feature — no Python, no external bundling
 
 ---
@@ -152,16 +152,26 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 
 ---
 
-### Available Slash Commands
+### Available Command & Tools
 
-There are **5 slash commands**, each accessible from the matrixx chat prompt:
+The pipeline exposes **one slash command** plus **four deterministic tools** (schema-gated by `tool_gating.bdd_tools`):
 
-#### 1. `/bdd-contract <feature-path> [--force]`
+| Surface | Name | Purpose |
+|---|---|---|
+| Command | `/bdd-pipeline <feature-path|dir|glob> --out <dir> [--force]` | Full pipeline in one call; delegates to the `bdd_pipeline_run` tool |
+| Tool | `bdd_parse_gherkin` | Parse a `.feature` file into a deterministic AST with `@cucumber/gherkin` |
+| Tool | `bdd_create_contract` | Turn the AST into a Contract JSON (Zod v4 schema) |
+| Tool | `bdd_validate_contract` | Validate a Contract JSON against the schema |
+| Tool | `bdd_pipeline_run` | Run parse → contract → 3 parallel subagents → ANALYSIS.md; returns per-stage status |
 
-**Purpose**: Parse a `.feature` file and produce a Contract JSON.
+Four `bdd-*` **skills** (`bdd-contract`, `bdd-tests`, `bdd-frontend`, `bdd-backend`) are injected into the subagents the pipeline spawns. They are skills, not slash commands.
+
+#### 1. `bdd_parse_gherkin` → `bdd_create_contract`
+
+**Purpose**: Parse a `.feature` file and produce a Contract JSON next to it.
 
 ```
-/bdd-contract demos/bdd/login/1001_username_password.feature
+bdd_create_contract({ featurePath: "demos/bdd/login/1001_username_password.feature", force: false })
 ```
 
 **What happens**:
@@ -204,71 +214,24 @@ There are **5 slash commands**, each accessible from the matrixx chat prompt:
 }
 ```
 
-#### 2. `/bdd-tests <contract.json>`
+#### 2. `bdd_validate_contract <contract.json>`
 
-**Purpose**: Generate Cucumber step definitions + page objects from a Contract JSON.
+Validates a Contract JSON against the schema without regenerating it. Use it in CI or after manual edits.
 
-```
-/bdd-tests demos/bdd/login/1001_username_password.contract.json
-```
+#### 3. `/bdd-pipeline <feature-path> --out <dir> [--force]`
 
-**What happens**:
-1. Reads the Contract JSON
-2. The `bdd-tests` skill (loaded into Morpheus) generates `*.steps.ts` files (Given/When/Then implementations)
-3. Generates page object files (encapsulating UI interactions)
-4. You run tests with `npx cucumber-js`
-
-**Output**: Step definition files + page object files
-
-#### 3. `/bdd-frontend <contract.json>`
-
-**Purpose**: Generate React components from a Contract JSON (using `@ui:*` annotations).
+**Purpose**: Run the full pipeline end-to-end.
 
 ```
-/bdd-frontend demos/bdd/login/1001_username_password.contract.json
+/bdd-pipeline demos/bdd/login/1001_username_password.feature --out ./generated
 ```
 
-**What happens**:
-1. Reads the Contract JSON
-2. The `bdd-frontend` skill (loaded into Morpheus) generates React components
-3. Uses `@ui:route`, `@ui:testid`, `@ui:string` annotations to drive component design
-4. Generates functional React components
+**Pipeline Stages**:
+1. Parse feature → generate Contract JSON (`bdd_parse_gherkin` + `bdd_create_contract`)
+2. Spawn 3 parallel subagents for tests, frontend, and backend (each uses its `bdd-*` skill)
+3. Run the file-existence gate and write `ANALYSIS.md`
 
-**Output**: `.tsx` component files
-
-#### 4. `/bdd-backend <contract.json>`
-
-**Purpose**: Generate typed API services from a Contract JSON (using `@api:*` annotations).
-
-```
-/bdd-backend demos/bdd/login/1001_username_password.contract.json
-```
-
-**What happens**:
-1. Reads the Contract JSON
-2. The `bdd-backend` skill (loaded into Morpheus) generates typed service files
-3. Uses `@api:endpoint` and `@api:response` annotations for request/response types
-4. Uses Zod schemas for runtime validation
-
-**Output**: `.ts` service files with Zod schemas
-
-#### 5. `/bdd-pipeline <feature-path> [--force]`
-
-**Purpose**: Run the full pipeline end-to-end — all 4 steps in sequence.
-
-```
-/bdd-pipeline demos/bdd/login/1001_username_password.feature
-```
-
-**Pipeline Steps**:
-1. `/bdd-contract` — Parse feature → generate Contract JSON
-2. `/bdd-tests` — Generate Cucumber step definitions + page objects
-3. `/bdd-frontend` — Generate React components
-4. `/bdd-backend` — Generate typed API services
-
-**Output**: All 4 artifacts produced in a single orchestrated run, plus `ANALYSIS.md` in the per-feature output dir (the `/bdd-pipeline` command delegates to the `bdd_pipeline_run` tool — it does not just chain the four commands)
-
-Validate a contract on its own at any point with `/bdd-pipeline`'s sibling tool `bdd_validate_contract`, or regenerate with `--force`.
+**Output**: All generated artifacts plus per-feature `ANALYSIS.md`. The command delegates to the `bdd_pipeline_run` tool — do not chain the stages by hand.
 
 ---
 
@@ -290,7 +253,7 @@ Feature: User Login
     And a welcome message should be displayed
 ```
 
-#### Step 1: `/bdd-contract login.feature`
+#### Step 1: `bdd_create_contract` on `login.feature`
 
 Produces `login.contract.json` — a structured representation containing:
 - Feature metadata (name, description)
@@ -298,7 +261,7 @@ Produces `login.contract.json` — a structured representation containing:
 - Extracted annotations grouped by type (`api`, `ui`, `state`, `assumptions`)
 - `schemaVersion: 1` for future compatibility
 
-#### Step 2: `/bdd-tests login.contract.json`
+#### Step 2: `bdd-tests` subagent on `login.contract.json`
 
 Produces Cucumber step definition files:
 ```typescript
@@ -318,7 +281,7 @@ When("the user enters {string} as the email", async (email: string) => {
 // ...
 ```
 
-#### Step 3: `/bdd-frontend login.contract.json`
+#### Step 3: `bdd-frontend` subagent on `login.contract.json`
 
 Produces a React component:
 ```tsx
@@ -337,7 +300,7 @@ export function Login({ onLogin }: LoginProps) {
 }
 ```
 
-#### Step 4: `/bdd-backend login.contract.json`
+#### Step 4: `bdd-backend` subagent on `login.contract.json`
 
 Produces a typed API service:
 ```typescript
@@ -393,7 +356,7 @@ export async function login(data: z.infer<typeof LoginRequestSchema>) {
 
 #### Agent Architecture
 
-| The `bdd-contract` skill follows the **Cipher template** (see `src/skills/builtin/bdd-contract.ts`): |
+| The `bdd-contract` skill follows the **Cipher template** (see `src/skills/builtin/bdd/bdd-contract.ts`): |
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -464,7 +427,7 @@ Annotations are NOT placed in `.feature` files. The `.feature` file must be 100%
 **`bdd_validate_contract`**
 - Input: path to a Contract JSON file
 - Output: schema validation result against `ContractSchema`
-- Use it to check a contract before running `/bdd-tests`, `/bdd-frontend`, or `/bdd-backend`
+- Use it to check a contract before running the tests, frontend, or backend pipeline stages
 
 **`bdd_pipeline_run`**
 - Input: one or more `.feature` file paths (or directories/globs) + output dir
@@ -502,7 +465,7 @@ Run per-demo tests with the `run-tests.sh` inside each demo dir.
 
 #### Prerequisites
 
-- matrixx (opencode-matrixx-v2 v3.0.0+)
+- matrixx (opencode-matrixx-v2 v1.2.1)
 - `@cucumber/gherkin` v34 (bundled dependency — auto-installed with matrixx)
 - `@cucumber/cucumber` and `@playwright/test` (user-installed per project)
 
@@ -512,15 +475,14 @@ Run per-demo tests with the `run-tests.sh` inside each demo dir.
 # 1. Full pipeline (recommended for new features)
 /bdd-pipeline src/features/my-feature.feature
 
-# 2. Individual steps
-/bdd-contract src/features/my-feature.feature
-/bdd-tests src/features/my-feature.contract.json
-/bdd-frontend src/features/my-feature.contract.json
-/bdd-backend src/features/my-feature.contract.json
+# 2. Individual tool steps (advanced)
+bdd_create_contract({ featurePath: "src/features/my-feature.feature" })
+bdd_validate_contract({ contractPath: "src/features/my-feature.contract.json" })
+#    tests/frontend/backend run as pipeline subagents, each with its bdd-* skill
 
 # 3. Overwrite existing artifacts
-/bdd-contract src/features/my-feature.feature --force
-/bdd-pipeline src/features/my-feature.feature --force
+bdd_create_contract({ featurePath: "src/features/my-feature.feature", force: true })
+/bdd-pipeline src/features/my-feature.feature --out ./generated --force
 ```
 
 #### Writing Good Feature Files
@@ -590,11 +552,7 @@ src/
 │   ├── bdd-frontend.ts        ← BDD frontend skill
 │   └── bdd-backend.ts         ← BDD backend skill
 └── features/builtin-commands/templates/
-    ├── bdd-contract.ts        ← /bdd-contract command template
-    ├── bdd-tests.ts           ← /bdd-tests command template
-    ├── bdd-frontend.ts        ← /bdd-frontend command template
-    ├── bdd-backend.ts         ← /bdd-backend command template
-    └── bdd-pipeline.ts        ← /bdd-pipeline command template
+    └── bdd-pipeline.ts        ← /bdd-pipeline command template (single BDD command)
 ```
 
 # Part B — TDD Discipline
@@ -734,7 +692,7 @@ Scenario: Successful login redirects to dashboard
 
 ### Layer 2: tdd-enforcer — Execution Enforcement
 
-The `tdd-enforcer` skill (`src/skills/builtin/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
+The `tdd-enforcer` skill (`src/skills/builtin/core/tdd-enforcer.ts`) is loaded by the Developer agent at execution time. It enforces the RED-GREEN-REFACTOR cycle defined in the plan.
 
 #### Prime Directive
 
@@ -788,7 +746,7 @@ Before marking task DONE:
 
 ### Pipeline Integration
 
-TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/builtin/software-dev.ts`):
+TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/builtin/core/software-dev.ts`):
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -799,7 +757,7 @@ TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/bu
 │ PLAN    │ Oracle      │ Generates TDD instructions in plan      │
 │ BUILD   │ Developer   │ Loads tdd-enforcer, follows RED-GREEN-REFACTOR │
 │ VERIFY  │ Quality     │ Runs bun test + typecheck + lint + build│
-│ REVIEW  │ 5-agent     │ Checks test coverage and quality        │
+│ REVIEW  │ 6-agent     │ Checks test coverage and quality        │
 │ SECURE  │ Sentinel    │ Reviews test isolation and mocking      │
 │ SHIP    │ Git-master  │ Ensures tests included in commits       │
 └─────────┴─────────────┴─────────────────────────────────────────┘
@@ -855,7 +813,7 @@ See `matrixx.example.jsonc` (`tdd_enforcer` block, active `enabled: true`) for t
 
 | File | Check |
 |------|-------|
-| `src/plugin/skill-context.ts` | Adds `tdd-enforcer` to `disabledSkills` only on explicit `enabled: false` |
+| `src/plugin/tool/skill-context.ts` | Adds `tdd-enforcer` to `disabledSkills` only on explicit `enabled: false` |
 | `src/plugin/handlers/agent-config-handler.ts` | Same gate for agent config: strips only on explicit opt-out |
 | `src/tools/delegate-task/tools.ts` | Hard requirement: `category="source"` fails without `tdd-enforcer` in `load_skills`, even when globally opted out |
 | `src/tools/delegate-task/constants.ts` (`TDD_TEST_FIRST_APPEND`) | Test-first banner (`NO IMPLEMENTATION WITHOUT A FAILING TEST FIRST`) injected into `source` prompts, visible even if the skill is omitted |

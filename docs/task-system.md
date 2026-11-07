@@ -2,7 +2,7 @@
 
 > **Scope:** Persistent, file-backed task management for Matrixx agent orchestration.
 > **Audience:** Engineers evolving the task system: storage, tools, hooks, scheduling, and agent integration.
-> **Version:** 3.0.0, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
+> **Version:** 1.2.1, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
 
 Every normative claim below traces to the source path cited beside it. Where behavior belongs to another doc, this spec cross-links instead of duplicating: hook internals → `docs/hooks.md`, orchestration and wave planning flow → `docs/orchestration.md`, command reference → `docs/command-reference.md`.
 
@@ -35,12 +35,12 @@ matrixx.jsonc
           session_scoped?, pollTimeoutMs? }   (canonical)
   morpheus.tasks.* / task.pollTimeoutMs (legacy fallback for storage keys only)
             │
-            ├─── Tool Registry (src/plugin/tool-registry.ts)
+            ├─── Tool Registry (src/plugin/tool/tool-catalog.ts)
             │     always registers 5 tools:
             │       task_create · task_get · task_list · task_update · task_cleanup
             │
             ├─── Hook Wiring (summaries here, internals in docs/hooks.md)
-            │     ├─ createContinuationHooks  → taskContinuationEnforcer (event:idle, 2s countdown)
+            │     ├─ createContinuationHooks  → (removed) task-continuation-enforcer deleted; completion wakes flow via BackgroundManager.handleEvent (see §8.1)
             │     ├─ createToolGuardHooks     → taskEditGuard (tool.execute.before, Write/Edit/Read/bash guard)
             │     └─ createSessionHooks       → taskResumeInfo (tool.execute.after, resume hint)
             │                                 → delegateTaskRetry, emptyTaskResponseDetector
@@ -60,7 +60,7 @@ matrixx.jsonc
 
 | Component | Path | Behavior |
 |-----------|------|----------|
-| Tool registry | `src/plugin/tool-registry.ts` | 5 task tools registered |
+| Tool registry | `src/plugin/tool/tool-catalog.ts` (policy in `src/plugin/tool/tool-policy.ts`) | 5 task tools registered |
 | Tool config (`tool-config-handler`) | `src/plugin/handlers/tool-config-handler.ts` | The two legacy todo tools stay denied globally plus per-agent, so nothing re-introduces the retired substrate |
 | `task-edit-guard` | `src/hooks/task-edit-guard/` | Blocks generic Write/Edit/Read on `.matrixx/plans`, plus bash mutation patterns on `.matrixx/plans` and `.matrixx/tasks` |
 | Agent prompts | `src/agents/`, `dynamic-agent-prompt-builder` | task discipline (`task_create`/`task_update` workflow) |
@@ -73,11 +73,11 @@ matrixx.jsonc
 
 ## 3. Configuration
 
-Canonical source: `TasksConfigSchema` in `src/config/schema/tasks.ts`. Resolution: `resolveTasksConfig()` in `src/shared/task-system-gating.ts`. Predicate: `isTaskSystemEnabled()` in the same file.
+Canonical source: `TasksConfigSchema` in `src/config/schema/tasks.ts`. Resolution: `resolveTasksConfig()` in `src/shared/config/task-system-gating.ts`. Predicate: `isTaskSystemEnabled()` in the same file.
 
 ### 3.1 No Master Gate: The System Is Unconditional
 
-There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered. The enforcer wiring is gone. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/task-system-gating.ts`). See `docs/legacy-todo-migration.md` for which keys those are.
+There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered. The enforcer wiring is gone. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/config/task-system-gating.ts`). See `docs/legacy-todo-migration.md` for which keys those are.
 
 ```jsonc
 // matrixx.jsonc — no `enabled` field
@@ -342,7 +342,7 @@ Guarantee: readers never see a half-written file.
 
 ### 5.5 Session-Scoped Operations
 
-Session helpers live in `src/features/task-storage/session-storage.ts`: thin wrappers over `storage.ts` plus `TaskObjectSchema` validation for session-scoped reads (formerly consumed by the removed enforcer; now in `src/features/task-session-scope/todo.ts`).
+Session helpers live in `src/features/task-session-scope/todo.ts`: thin wrappers over `storage.ts` plus `TaskObjectSchema` validation for session-scoped reads (formerly consumed by the removed enforcer; now in `src/features/task-session-scope/todo.ts`).
 
 **Session liveness and orphans:** tasks carry `threadID` (owning session). Subagent sessions are tracked in `src/features/session-state/state.ts` via `registerSubagentSession` / `unregisterSubagentSession`; `getSubagentSessionIDs(parent)` returns **only live** subagent sessions. The session filter (`filterTasksBySession` in `src/features/task-session-scope/todo.ts`) admits a task only when its `threadID` is the current session or a **live** subagent of it. Tasks orphaned by a dead subagent session are excluded from continuation directives. `unregisterSubagentSession` prunes both the live set and the parent map, so dead sessions never leak into the filter. When `tasks.session_scoped` is false, this filter is bypassed and all project tasks count.
 
@@ -350,7 +350,7 @@ Session helpers live in `src/features/task-storage/session-storage.ts`: thin wra
 
 ## 6. Tool API: Five Tools
 
-All five are `ToolDefinition` factories `createTask*(config, ctx)` in `src/tools/task/`, registered in `src/plugin/tool-registry.ts` when `isTaskSystemEnabled(config)`. Tool contexts take `ctx.directory` (project root) and `context.sessionID` (stamped as `threadID`).
+All five are `ToolDefinition` factories `createTask*(config, ctx)` in `src/tools/task/`, registered in `src/plugin/tool/tool-catalog.ts`; the file-backed task system is unconditional, so they are always registered. Tool contexts take `ctx.directory` (project root) and `context.sessionID` (stamped as `threadID`).
 
 ### 6.1 `task_create`
 
@@ -625,7 +625,7 @@ Full command reference lives in `docs/command-reference.md`. TUI behavior: compl
 
 ### 11.1 Gating: Single Predicate
 
-Source: `src/shared/task-system-gating.ts`.
+Source: `src/shared/config/task-system-gating.ts`.
 
 ```typescript
 export const TASK_SYSTEM_DEFAULT = true as const
@@ -635,7 +635,7 @@ export function isTaskSystemEnabled(config): boolean {
 }
 ```
 
-Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks` fields directly; always go through `isTaskSystemEnabled` (enablement) or `resolveTasksConfig` (full options).
+Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` fields directly; always go through `isTaskSystemEnabled` (enablement) or `resolveTasksConfig` (full options).
 
 ### 11.2 Compatibility Notes
 
@@ -660,7 +660,7 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 | `src/tools/task/index.ts` | Barrel re-exports |
 | `src/features/task-storage/storage.ts` | `getTaskDir`, `resolveTaskListId`, `sanitizePathSegment`, `readJsonSafe`, `writeJsonAtomic`, `acquireLock`, `acquireLockWithRetry`, `generateTaskId`, `listTaskFiles`, `migrateLegacyTasksIfNeeded`; `STALE_LOCK_THRESHOLD_MS = 30000` |
 | `src/features/task-storage/types.ts` | Storage `TaskSchema` / `Task` type |
-| `src/features/task-storage/session-storage.ts` | Session-scoped read helpers |
+| `src/features/task-session-scope/todo.ts` | Session-scoped read helpers |
 | `src/features/task-toast-manager/manager.ts` | Background-task toast lifecycle |
 | `src/features/task-toast-manager/types.ts` | `TrackedTask`, `TaskStatus` (`running\|queued\|completed\|error`), `TaskToastOptions` |
 | `src/tools/plan/plan-read.ts`, `plan-update.ts` | `plan_read` (hashline output), `plan_update` (`LINE#ID` edits) |
@@ -672,10 +672,10 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 | `src/config/schema/morpheus.ts` | Legacy `MorpheusTasksConfigSchema` fallback |
 | `src/config/schema/hooks.ts` | `HookNameSchema` (includes `task-edit-guard`, etc., plus retained-deprecated literals; `task-continuation-enforcer` was removed) |
 | `src/shared/migration/hook-names.ts` | `HOOK_NAME_MAP` — maps the 4 retired legacy hook names to `null` so old `disabled_hooks` lists strip cleanly |
-| `src/plugin/tool-registry.ts` | Registration of the 5 task tools |
+| `src/plugin/tool/tool-catalog.ts` | Registration of the 5 task tools (conditional policy in `tool-policy.ts`) |
 | `src/plugin/hooks/create-continuation-hooks.ts` | No longer gates an enforcer (removed) |
 | `src/plugin/hooks/create-session-hooks.ts` | Registers `taskResumeInfo` (always) |
-| `src/shared/task-system-gating.ts` | `resolveTasksConfig`, `isTaskSystemEnabled`, `TASK_SYSTEM_DEFAULT` |
+| `src/shared/config/task-system-gating.ts` | `resolveTasksConfig`, `isTaskSystemEnabled`, `TASK_SYSTEM_DEFAULT` |
 | `src/features/builtin-commands/templates/task-list.ts` | `/task-list` command |
 | `src/features/builtin-commands/templates/cleanup-tasks.ts` | `/cleanup-tasks` command |
 
@@ -696,7 +696,7 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 
 ### Adding a New Tool or Hook
 
-- **Tool:** new file `src/tools/task/task-*.ts` + Zod input schema in `types.ts` + barrel in `index.ts` + registration in `src/plugin/tool-registry.ts` + hook wiring when needed + tests alongside source (`*.test.ts` with `//#given` `//#when` `//#then`).
+- **Tool:** new file `src/tools/task/task-*.ts` + Zod input schema in `types.ts` + barrel in `index.ts` + registration in `src/plugin/tool/tool-catalog.ts` + hook wiring when needed + tests under `tests/` mirroring the `src/` path (`*.test.ts` with `//#given` `//#when` `//#then`).
 - **Hook:** new dir `src/hooks/<name>/` + entry in `HookNameSchema` (`src/config/schema/hooks.ts`) + factory `createXxxHook` + registration in the matching `src/plugin/hooks/create-*-hooks.ts` + `isTaskSystemEnabled` gate when task-related.
 
 ### Invariants to Preserve
@@ -715,7 +715,7 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 
 - **Mock-heavy isolation:** tests with `mock.module()` run isolated. Add new such files to both `.github/workflows/ci.yml` and `publish.yml` mock-heavy lists and the `grep -v -F` exclusion in `script/run-ci.sh`. Source of truth: `script/run-ci.sh`.
 - **Preload:** `tests/test-setup.ts` calls `_resetForTesting()` before each test.
-- **Existing suites:** `src/tools/task/task-cleanup.test.ts`, `src/features/task-storage/*.test.ts`, `src/features/task-session-scope/*.test.ts` (`staleness`, `todo`), `src/shared/task-system-gating.test.ts`, `tests/e2e-smoke-task-system.test.ts`.
+- **Existing suites:** `tests/tools/task/*.test.ts`, `tests/features/task-storage/*.test.ts`, `tests/features/task-session-scope/*.test.ts` (`staleness`, `todo`), `tests/shared/task-system-gating.test.ts`, `tests/e2e-smoke-task-system.test.ts`.
 
 ---
 

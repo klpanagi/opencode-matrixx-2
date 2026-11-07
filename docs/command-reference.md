@@ -1,10 +1,10 @@
 # Command Reference
 
-> Version 3.0.0. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> Version 1.2.1. All 24 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, and tool toggles.
+Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts:3` lists 23 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (21 files). `cancel-loop` and `ulw-loop` have no standalone template file (aliases): `ulw-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `ulw-loop` have no standalone template file (aliases): `ulw-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -35,6 +35,7 @@ Matrixx provides 23 built-in slash commands covering orchestration, research, re
 | `/quality-audit` | Read-only deterministic quality audit | — | — |
 | `/quality-assurance` | Bounded quality improvement loop | — | — |
 | `/humanize` | Quality-focused humanization pipeline | — | — |
+| `/security-audit` | Read-only scoped security audit with findings report | — | — |
 
 ### Legend
 
@@ -496,9 +497,26 @@ Guided quality-focused humanization pipeline for prose, comments, and code. Temp
 | `--mode` | — | `text`, `comments`, `code`, or `all` |
 | `--dry-run` | `false` | Preview without modifying |
 
+## 24. `/security-audit`
+
+Read-only deterministic security audit (v1 advisory-only). It reports findings; it never gates CI on its own. Template: `src/features/builtin-commands/templates/security-audit.ts`.
+
+```
+ /security-audit --scope=module --target=src/auth
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--scope` | `file` | `file`, `module`, or `project`; invalid values exit 2 |
+| `--target` | — | Path scoping the audit (required for `file`/`module`) |
+| `--full` | `false` | Opt-in full-tree audit (roughly an order of magnitude more tokens) |
+| `--budget` | — | Max findings fully evidenced; excess recorded as `deferred` |
+
+Finding statuses: `confirmed`, `needs_validation`, `rejected`, `deferred`. Coverage ledger run status: `complete` or `incomplete` when the budget gate is hit.
+
 ---
 
-In addition to the 23 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+In addition to the 24 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|
@@ -506,7 +524,7 @@ In addition to the 23 built-in commands above, Matrixx loads custom commands fro
 | 2 | `.config/opencode/commands/` (user global) |
 | 3 | `commands` entries in `.mcp.json` |
 
-Custom commands can define a `name`, `description`, `template`, optional `agent` override, and `argumentHint`. They are loaded by the Claude Code command loader and merged into Matrixx's command list.
+Custom commands can define a `name`, `description`, `template`, optional `agent` override, and `argumentHint`. They are loaded by the OpenCode command loader (`src/features/command-loader/`) and merged into Matrixx's command list.
 
 ---
 
@@ -522,7 +540,7 @@ Commands are registered in `src/features/builtin-commands/commands.ts` via the `
 
 ### Intercept Pattern
 
-Commands with imperative behavior (state mutation, background task cancellation) have intercepts in `src/plugin/tool-execute-before.ts`. When the LLM calls `slashcommand`, the intercept parses the command name and subcommand, then performs the side effect before the template is injected.
+Commands with imperative behavior (state mutation, background task cancellation) have intercepts in `src/plugin/tool/tool-execute-before.ts`. When the LLM calls `slashcommand`, the intercept parses the command name and subcommand, then performs the side effect before the template is injected.
 
 Commands with intercepts:
 - `/matrix-loop` — starts matrix loop tracking

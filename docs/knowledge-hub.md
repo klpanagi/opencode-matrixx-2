@@ -1,7 +1,7 @@
 # Knowledge Hub
 
 > **Audience:** users with an external knowledge corpus and engineers configuring `knowledge` hubs.
-> **Version:** 3.0.0.
+> **Version:** 1.2.1.
 > **See also:** `configurations.md` (the `knowledge` key), `hooks.md` §2.3 (`knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`).
 
 External knowledge-base routing with a read-only guard. Declare one or more hubs in config; agents consult the router index before answering domain questions and read single files on demand — never bulk-read the corpus. No source changes required.
@@ -138,7 +138,7 @@ denying. Never bypass the guard without asking the user first.
 
 ```bash
 bun test src/hooks/knowledge-hub-guard/ src/hooks/knowledge-hub-injector/
-rg knowledge-hub-injector src/plugin/messages-transform.ts
+rg knowledge-hub-injector src/plugin/message-hooks/
 ```
 
 ### Search nudge (web-first backstop)

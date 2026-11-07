@@ -1,32 +1,33 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 3.0.0, verified against `src/config/schema/hooks.ts:3-96` and `src/hooks/` disk listing.
-> **Scope:** `src/hooks/`, `src/create-hooks.ts`, `src/plugin/hooks/*`, `src/plugin-interface.ts`, `src/plugin/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
+> **Version:** 1.2.1, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
+> **Scope:** `src/hooks/`, `src/plugin/setup-domains.ts`, `src/plugin/hooks/`, `src/plugin/tool/tool-catalog.ts`, `src/plugin/tool/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 
 ## 0. TL;DR
 
-- `HookNameSchema` (`src/config/schema/hooks.ts:3-96`) accepts **72** names:
-  **65-enum** (`HookNameEnum`) + **7 literals** — 1 alias
+- `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **73** parseable names:
+  **65 live** (`HookNameEnum`) + **8 literals** — 1 alias
   (`anthropic-context-window-limit-recovery` maps to
-  `context-window-limit-recovery`), 4 retired legacy-todo literals
+  `context-window-limit-recovery`), 5 retired legacy-todo literals
   (`todo-continuation-enforcer`, `compaction-todo-preserver`,
-  `tasks-todowrite-disabler`, `task-notepad`) that map to null via
-  `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`) so old
-  `disabled_hooks` lists keep loading, plus 2 retained no-ops
-  (`preemptive-compaction`, `evolution-compressor`).
-- `src/hooks/` on disk holds **64 subdirectories** (63 hook dirs + `shared/`)
-  plus loose `.ts` files (`bash-file-read-guard.ts`,
+  `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`)
+  that map to null via `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`)
+  so old `disabled_hooks` lists keep loading, plus 2 retained no-ops
+  (`preemptive-compaction`, `evolution-compressor`; both deleted, retained as no-op literals).
+  Total: 65 live + 7 deprecated no-ops + 1 alias = 73 parseable.
+- `src/hooks/` on disk holds **64 hook subdirectories** (no `shared/`
+  directory) plus loose `.ts` files (`bash-file-read-guard.ts`,
   `context-window-monitor.ts`, `empty-task-response-detector.ts`,
   `tool-output-truncator.ts`, 5 `session-notification*`), plus `index.ts`,
-  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 64,
-  `shared/` included). NOTE: older docs claimed 76 entries / 60 dirs — those
-  figures are stale and superseded by the counts above; do not cite 76/60
-  without this note.
-- Every tool call passes through `tool.execute.before` (18 invocations over
-  17 unique hooks in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
-  `tool.execute.after` (19 invocations, `src/plugin/tool/tool-execute-after.ts`).
+  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 64).
+  NOTE: older docs claimed 76 entries / 60 dirs — those figures are stale and
+  superseded by the counts above; do not cite 76/60 without this note.
+- Every tool call passes through `tool.execute.before` (**23 invocations over
+  22 unique hooks** in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
+  `tool.execute.after` (**22 invocations over 22 unique hooks**,
+  `src/plugin/tool/tool-execute-after.ts`).
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
   (`oracle-md-only`, `mouse-notepad`, `niobe`), plus sequential `after`
@@ -40,37 +41,38 @@
 
 ## 1. Architecture
 
-### 1.1 Registration tiers (`src/create-hooks.ts`)
+### 1.1 Registration tiers (`src/plugin/setup-domains.ts`)
 
-`createHooks()` merges three tiers. All factories live under
-`src/plugin/hooks/`. The real files are `create-core-hooks.ts`,
+`setupDomains()` (`src/plugin/setup-domains.ts`) wires five hook tiers. All factories live under
+`src/plugin/hooks/`: `create-session-hooks.ts`,
+`create-tool-guard-hooks.ts`, `create-transform-hooks.ts`,
 `create-continuation-hooks.ts`, and `create-skill-hooks.ts`.
 
 ```text
-createHooks()                       src/create-hooks.ts
-+-- createCoreHooks()               src/plugin/hooks/create-core-hooks.ts
-|   +-- createSessionHooks()        src/plugin/hooks/create-session-hooks.ts
-|   +-- createToolGuardHooks()      src/plugin/hooks/create-tool-guard-hooks.ts
-|   +-- createTransformHooks()      src/plugin/hooks/create-transform-hooks.ts
+setupDomains()                      src/plugin/setup-domains.ts
++-- createSessionHooks()            src/plugin/hooks/create-session-hooks.ts
++-- createToolGuardHooks()          src/plugin/hooks/create-tool-guard-hooks.ts
++-- createTransformHooks()          src/plugin/hooks/create-transform-hooks.ts
 +-- createContinuationHooks()       src/plugin/hooks/create-continuation-hooks.ts
 +-- createSkillHooks()              src/plugin/hooks/create-skill-hooks.ts
 ```
 
-- Core/session builds prompt, guard, and lifecycle hooks (session recovery,
+- Session builds prompt, guard, and lifecycle hooks (session recovery,
   compaction, oracle/mouse, matrix loop, notifications).
-- Core/tool-guard builds the `tool.execute` hooks (guards, injectors,
+- Tool-guard builds the `tool.execute` hooks (guards, injectors,
   truncator, notepads).
-- Core/transform builds message-shape hooks (secret guard, keyword detector,
+- Transform builds message-shape hooks (secret guard, keyword detector,
   validators, design intent).
-- Continuation builds 11 entries: stop guard, two compaction helpers, the task
-  enforcer (gated by canonical `tasks.enabled` via `isTaskSystemEnabled`, which
-  now always resolves to `true`),
-  babysitter, background notification, niobe, plan persister, and two
-  evolution hooks (only when `evolution.enabled` is true).
+- Continuation builds **8 entries**: stop guard, compaction-context injector,
+  unstable-agent babysitter, nudge-loop breaker, background notification,
+  niobe, plan persister, and evolution HITL (only when `evolution.enabled`
+  is true). The old task-continuation enforcer is removed; background task
+  completion now notifies the parent session through the background manager
+  (`src/features/background-agent/manager/reconcile.ts`).
 - Skill builds 2 entries: `category-skill-reminder`, `auto-slash-command`.
 
 Every factory follows the safe-creation pattern
-(`src/shared/safe-create-hook.ts`):
+(`src/shared/agent/safe-create-hook.ts`):
 
 ```ts
 isHookEnabled("hook-name")
@@ -84,21 +86,22 @@ isHookEnabled("hook-name")
 wraps factories in try/catch; `false` runs raw factories (faster startup,
 louder failures).
 
-### 1.2 OpenCode dispatch (`src/plugin-interface.ts`, `src/index.ts`)
+### 1.2 OpenCode dispatch (`src/plugin/setup-domains.ts`, `src/index.ts`)
 
-`createPluginInterface()` (`src/plugin-interface.ts`) maps OpenCode events to
+The V2 `{ id, setup }` entry (`src/index.ts`) runs `setupDomains()` + `registerDomains()`
+(`src/plugin/setup-domains.ts`), which maps OpenCode events to
 handlers; each handler fans out to hook methods:
 
 | OpenCode event | Matrixx handler | Hooks attached |
 |---|---|---|
-| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 18 invocations, 3 waves (Section 1.3) |
-| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `preemptiveCompaction`/`qualityGate` + 16 sequential (Section 1.4) |
+| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 23 invocations over 22 unique hooks, 3 waves (Section 1.3) |
+| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `qualityGate` + 20 sequential (Section 1.4) |
 | `chat.message` | `createChatMessageHandler` (`src/plugin/tool/chat-message.ts`) | `inputSecretGuard`, `stopContinuationGuard`, `keywordDetector`, `autoSlashCommand`, `startWork` (conditional), `matrixLoop` template detection |
-| `experimental.chat.messages.transform` | `createMessagesTransformHandler` (`src/plugin/messages-transform.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator`, `evolutionHitl` |
+| `experimental.chat.messages.transform` | messages-transform wiring (`src/plugin/message-hooks/`, `src/plugin/setup-domains/hooks.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator`, `evolutionHitl` |
 | `chat.params` | `createChatParamsHandler` (`src/plugin/tool/chat-params.ts`) | `anthropicEffort` only, plus one-shot category temperature |
 | `event` | `createEventHandler` (`src/plugin/tool/event.ts`) | session, recovery, loop, guard, and injector hooks (Section 2.3) |
-| `experimental.session.compacting` | inline in `src/index.ts` | `compactionTodoPreserver.capture`, `compactionContextInjector()`, `planPersister.buildRehydrationContext` |
-| `tool.definition` / `config` | definition/config handlers | no hook logic today (`src/plugin/tool-definition.ts` is a pass-through) |
+| `experimental.session.compacting` | `src/plugin/setup-domains/{hooks,assemble}.ts` (`ctx.session.hook("compaction")`) | `compactionContextInjector()`, `planPersister.buildRehydrationContext` |
+| `tool.definition` / `config` | definition/config handlers | no hook logic today (`src/plugin/tool/tool-definition.ts` is a pass-through) |
 
 ### 1.3 `tool.execute.before`: 3-wave pipeline
 
@@ -121,7 +124,7 @@ order; hooks inside Wave 1 and Wave 2 run concurrently.
   so its reminder sits closest to the model.
 
 `oracleMdOnly` runs twice (once per Wave 2/3): 16 unique hooks,
-17 invocations per tool call. The same handler also resolves `task`-tool
+23 invocations over 22 unique hooks per tool call. The same handler also resolves `task`-tool
 agent routing in parallel with Wave 3 and serves `/matrix-loop`,
 `/stop-continuation`, `/assembly`, `/ultrawork` slash commands.
 
@@ -132,19 +135,20 @@ Source: `src/plugin/tool/tool-execute-after.ts`.
 ```text
 toolOutputTruncator (always first)
 + Promise.all([
-      preemptiveCompaction (60s session.summarize timeout, parallel, never blocks),
       qualityGate (Biome, parallel),
-      remainingHooks() sequential (16):
-        contextWindowMonitor -> commentChecker -> directoryAgentsInjector
-        -> rulesInjector -> emptyTaskResponseDetector -> agentUsageReminder
+      remainingHooks() sequential (20):
+        webfetchRedirectGuard -> evolutionWatcher -> contextWindowMonitor
+        -> commentChecker -> directoryAgentsInjector -> rulesInjector
+        -> emptyTaskResponseDetector -> agentUsageReminder
         -> categorySkillReminder -> interactiveBashSession -> editErrorRecovery
         -> delegateTaskRetry -> niobeHook -> taskResumeInfo
         -> taskNotepadWriter -> hashlineReadEnhancer
-        -> jsonErrorRecovery -> readImageResizer
+        -> jsonErrorRecovery -> readImageResizer -> silentFailureGuard
+        -> sessionMemory
     ])
 ```
 
-Total: 19 invocations. `qualityGate`/`commentChecker` are cheap in `before`
+Total: 22 invocations over 22 unique hooks (`preemptive-compaction` is deleted). `qualityGate`/`commentChecker` are cheap in `before`
 (Map register) and expensive in `after` (Biome/CLI).
 `directoryAgentsInjector`/`rulesInjector` are no-ops in `before` and do real
 work in `after`.
@@ -161,7 +165,7 @@ NETWORK (subprocess, SDK HTTP, or filesystem scan).
 Each entry states **what** the hook does, **why** it exists (the failure it
 prevents), and **when** it fires.
 
-### 2.1 `tool.execute.before` hot path (16 hooks, 17 invocations)
+### 2.1 `tool.execute.before` hot path (22 unique hooks, 23 invocations)
 
 Trigger for all rows: every tool call, before execution. The `When` column
 narrows which tool calls are affected.
@@ -187,7 +191,7 @@ narrows which tool calls are affected.
 
 Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/background-task-blocker/hook.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
 
-### 2.2 `tool.execute.after` (18 invocations)
+### 2.2 `tool.execute.after` (22 invocations)
 
 Trigger for all rows: after every tool call. The `When` column narrows the
 effective condition (many hooks are idle unless their condition holds).
@@ -195,7 +199,7 @@ effective condition (many hooks are idle unless their condition holds).
 | Hook | What + why | When it acts |
 |---|---|---|
 | `tool-output-truncator` | Truncates whitelisted tool outputs (50k tokens default, 10k for webfetch; opt-in all via `experimental`). Exists to stop huge outputs from blowing the context window. | After every whitelisted tool call; always runs first. |
-| `preemptive-compaction` | Runs `session.summarize()` with a 60s timeout. Exists to compact proactively at ~78% instead of crashing at the hard limit. | When the usage threshold is crossed; parallel, never blocks. |
+| `preemptive-compaction` (removed, deprecated no-op literal) | Hook deleted; the name still parses so old configs keep loading, but no code runs. Single compaction path now owns compaction. | Never fires. Listed in `disabled_hooks` only for backwards compatibility. |
 | `quality-gate` | Runs Biome lint on changed files. Exists to catch style and type errors immediately after edits. | After writes/edits registered in `before`. |
 | `comment-checker` | Runs the `@code-yeongyu/comment-checker` CLI on changed files. Exists for comment hygiene. | After changed files. |
 | `context-window-monitor` | Token accounting with a headroom reminder. Exists as the ~70% early warning before preemptive compaction. | After tool calls; read-only. |
@@ -214,7 +218,7 @@ effective condition (many hooks are idle unless their condition holds).
 | `read-image-resizer` | Downscales images past token limits. Exists to keep image reads inside context budgets. | After image reads over the limit. |
 | `task-notepad-writer` | Writes a scaffolded markdown notepad per task, into `.matrixx/notepads/<planName>/` or `adhoc/`, and appends a `## Completion` stamp on completion. Exists so findings survive compaction and restarts. Keyed on a `**Task ID**` marker in the file, so it is idempotent with no in-memory state. | After a non-deduplicated `task_create`, and after a `task_update` whose `status` is `completed`; never blocks or rewrites output. |
 
-Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction.ts:59-112`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/delegate-task-retry/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
+Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/delegate-task-retry/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
 
 ### 2.3 Prompt, message, and session triggers
 
@@ -248,28 +252,29 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction
 | `knowledge-hub-injector` | `experimental.chat.messages.transform` | Injects the hub router index once per session. Exists for zero-read KB routing. |
 | `knowledge-hub-search-nudge` | `tool.execute.before` | Warns (never blocks) when agents reach for websearch with hubs configured. Exists as a backstop for web-first habits. |
 | `evolution-watcher` | `tool.execute.before` + `after`-shaped | Records tool traces for the evolution loop. Exists to feed session learning; only when `evolution.enabled`. Currently has no call site (Section 2.4). |
-| `evolution-compressor` | module hook | Compresses traces into distilled knowledge, budgeted per hour. Exists for async session learning; only when `evolution.enabled`. Currently has no call site (Section 2.4). |
+| `evolution-compressor` (removed, deprecated no-op literal) | Hook deleted (context-freed=0 parentless leak); the name still parses so old configs keep loading, but no code runs. | Never fires. |
 | `runtime-fallback` | module hook | Retries failed model calls on fallbacks with cooldown. Exists for provider resilience. Currently has no call site (Section 2.4). |
 
-Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/messages-transform.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
+Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/setup-domains/hooks.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/unstable-agent-babysitter/unstable-agent-babysitter-hook.ts:116-168`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
 
 For orchestration behavior (niobe, continuation enforcers, matrix loop)
 see `orchestration.md`; for the task substrate see
 `task-system.md`; for full config keys see `configurations.md`.
 
-### 2.4 Previously unwired — now wired or removed
+### 2.4 Previously unwired — now wired, removed, or retained as no-ops
 
-Six hooks formerly listed here are now wired into dispatchers (all honor
-`disabled_hooks`); two dead hooks were removed outright:
+Four hooks formerly listed here are wired into dispatchers (all honor
+`disabled_hooks`); two dead hooks were removed outright; two compaction/evolution
+names are retained only as deprecated no-op literals (parseable, never dispatched):
 
 | Hook | Defined handler | Status |
 |---|---|---|
 | `webfetch-redirect-guard` | `tool.execute.before` + `after` | Wired (`src/plugin/tool/tool-execute-before.ts`, `src/plugin/tool/tool-execute-after.ts`) |
 | `evolution-watcher` | `tool.execute.before` + `after` | Wired (also gated by `evolution.enabled`) |
-| `evolution-compressor` | module hook + `event` + compacting | Wired (`src/plugin/tool/event.ts`, `src/index.ts`) (also gated by `evolution.enabled`) |
+| `evolution-compressor` | — | Removed (deleted hook). Name retained as a deprecated no-op literal so old `disabled_hooks` lists keep loading; never dispatched |
 | `runtime-fallback` | module hook + `event` + `chat.message` | Wired (`src/plugin/tool/event.ts`, `src/plugin/tool/chat-message.ts`) |
 | `design-intent-preserver` | `chat.message`-shaped | Wired in `src/plugin/tool/chat-message.ts` |
-| `tool-pair-validator` | `experimental.chat.messages.transform`-shaped | Wired in `src/plugin/messages-transform.ts` |
+| `tool-pair-validator` | `experimental.chat.messages.transform`-shaped | Wired in `src/plugin/setup-domains/hooks.ts` |
 
 Removed: `failure-counter` (`tool.execute.after` + `event`) and
 `hashline-edit-diff-enhancer` (`tool.execute.before` + `after`) — no call
@@ -278,9 +283,9 @@ these names are silently dropped via `migrateHookNames` for backwards
 compatibility.
 
 Partials: `think-mode` exposes a `chat.params`-shaped handler with no call
-site (only its `event` handler is dispatched); `preemptive-compaction`
-exposes an `event` cleanup handler with no call site (only its `after`
-handler runs). `startup-toast` has no factory at all: it is a boolean flag
+site (only its `event` handler is dispatched). `preemptive-compaction`
+is deleted and has no handler at all (deprecated no-op literal; never dispatched).
+`startup-toast` has no factory at all: it is a boolean flag
 read as `showStartupToast` by `auto-update-checker`
 (`src/plugin/hooks/create-session-hooks.ts:106`).
 
@@ -311,10 +316,10 @@ Schema: `disabled_hooks: z.array(HookNameSchema).optional()`
 
 | Gate | Effect | Source |
 |---|---|---|
-| `experimental.preemptive_compaction` | `preemptive-compaction` constructed only when true | `src/plugin/hooks/create-session-hooks.ts`, `src/config/schema/experimental.ts:6` |
+| `experimental.preemptive_compaction` (retired) | `preemptive-compaction` was deleted; the key no longer constructs anything (name retained as no-op) | `src/config/schema/experimental.ts:6`, `src/shared/migration/hook-names.ts` |
 | `experimental.hashline_edit` | hashline enhancers pass through when false | `src/plugin/hooks/create-tool-guard-hooks.ts` |
-| `tasks.enabled` (retained-deprecated, always resolves true) | The enforcer is gone, so there is no selection between enforcers; the legacy todo enforcer it used to be selected against was removed earlier | `src/plugin/hooks/create-continuation-hooks.ts`, `src/shared/task-system-gating.ts` |
-| `evolution.enabled` | `evolution-watcher`, `evolution-compressor`, `evolution-hitl` constructed only when true | `src/plugin/hooks/create-continuation-hooks.ts`, `create-tool-guard-hooks.ts` |
+| `tasks.enabled` (retained-deprecated, always resolves true) | The enforcer is gone, so there is no selection between enforcers; the legacy todo enforcer it used to be selected against was removed earlier | `src/plugin/hooks/create-continuation-hooks.ts`, `src/shared/config/task-system-gating.ts` |
+| `evolution.enabled` | `evolution-watcher`, `evolution-hitl` constructed only when true (`evolution-compressor` is deleted and never constructed) | `src/plugin/hooks/create-continuation-hooks.ts`, `create-tool-guard-hooks.ts` |
 | `rtk.enabled` | `rtk-bash-rewriter` constructed only when true (still passes through without binary) | `src/plugin/hooks/create-session-hooks.ts`, `src/hooks/rtk-bash-rewriter/hook.ts` |
 | `comment_checker`, `matrix_loop`, `context_mode`, `notification.force_enable` | per-feature config consumed by the matching hook | `src/config/schema/matrixx-config.ts` |
 
@@ -328,8 +333,11 @@ Check the hook factory before assuming cost.
 Minimal-write profile (keeps guards, drops NETWORK + heavy `after` work):
 
 ```jsonc
-{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction"] }
+{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker"] }
 ```
+
+> `preemptive-compaction` still parses in `disabled_hooks` (deprecated no-op literal)
+> but disables nothing, so it is omitted from the profiles.
 
 > Keep `secret-leak-guard` unless writes are trusted. It is the single
 > biggest `before` latency source (subprocess spawn per tool call).
@@ -337,7 +345,7 @@ Minimal-write profile (keeps guards, drops NETWORK + heavy `after` work):
 Nuclear debug profile (measure raw OpenCode overhead):
 
 ```jsonc
-{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction", "context-mode-enforcer", "task-edit-guard", "rules-injector", "directory-agents-injector"] }
+{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "context-mode-enforcer", "task-edit-guard", "rules-injector", "directory-agents-injector"] }
 ```
 
 ## 4. Performance model (why `write` feels slow)
@@ -349,7 +357,7 @@ treat the shape below as a benchmark):
 OpenCode dispatch
 + before: max(Wave1) + max(Wave2 incl. gitleaks spawn + existsSync + oracle NETWORK) + sum(Wave3 sequential mutators)
 + tool execution itself (Write)
-+ after: toolOutputTruncator + max(preemptiveCompaction, qualityGate Biome, 16 sequential afters)
++ after: toolOutputTruncator + max(qualityGate Biome, 20 sequential afters)
 ```
 
 Key points:
@@ -361,7 +369,7 @@ Key points:
    (`getAgentFromSession` / `isCallerOrchestrator`) with filesystem fallback
    scans on the critical path, and `oracleMdOnly` runs twice.
 3. `after` is the longer tail: 16 sequential awaits plus Biome plus the
-   comment-checker CLI. `preemptiveCompaction` already runs parallel for
+   comment-checker CLI. `qualityGate` runs parallel for
    this reason.
 4. Even no-op hooks (`directoryAgentsInjector`, `rulesInjector` in `before`)
    cost one microtask hop each. Only `disabled_hooks` removes them.
@@ -378,14 +386,15 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
   `taskEditGuard`, `contextModeEnforcer`, `backgroundTaskBlocker`, and
   `rtkBashRewriter`. Treat its table as evidence for the hooks it covers, not
   as a current inventory. Section 2 above is the current inventory.
-- `src/plugin/tool-execute-before.bench.ts` (run with
-  `bun test src/plugin/tool-execute-before.bench.ts`, skipped by CI test
-  sweeps by name) encodes an older wave shape (14 invocations). Production
-  now dispatches 17. Update the bench waves to the Section 1.3 shape before
+- `src/plugin/tool/tool-execute-before.bench.ts` (run with
+  `bun test src/plugin/tool/tool-execute-before.bench.ts`, skipped by CI test
+  sweeps by name) encodes an older wave shape. Production
+  dispatches the Section 1.3 shape (22 unique hooks, 23 invocations per tool call).
+  Update the bench waves to the Section 1.3 shape before
   trusting its numbers.
 - To get real per-hook timings: wrap each dispatch call in
   `tool-execute-before/after.ts` with `performance.now()` deltas logged via
-  `src/shared/logger.ts` (to `/tmp/matrixx.log`), gated behind a new
+  `src/shared/runtime/logger.ts` (to `/tmp/matrixx.log`), gated behind a new
   `experimental.hook_timing` flag (default off). Suggested ablation matrix on
   a fixed fixture (50 `write` new + 50 `edit`): all-on, minimal-write profile
   (3.3), nuclear profile, and single-hook toggles for `secret-leak-guard`,
@@ -400,8 +409,8 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
 ## 6. Guidance for contributors
 
 1. Keep the 3-wave `before` structure. Do not parallelize Wave 3 (mutation
-   order). Update the bench waves to the 18-invocation shape before trusting
-   its numbers again.
+   order). Update the bench waves to the Section 1.3 shape (16 unique hooks,
+   23 invocations) before trusting its numbers again.
 2. Biggest wins, in order: skip `gitleaks` for read-only tools or debounce
    it; memoize `getAgentFromSession`/`isCallerOrchestrator` per session;
    avoid the double `oracleMdOnly` invocation; parallelize or defer `after`
@@ -420,21 +429,20 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
 
 - `src/config/schema/hooks.ts`, `src/config/schema/matrixx-config.ts`,
   `src/config/schema/experimental.ts`
-- `src/create-hooks.ts`, `src/index.ts`
-- `src/plugin-interface.ts`
-- `src/plugin/hooks/create-core-hooks.ts`,
-  `src/plugin/hooks/create-session-hooks.ts`,
+- `src/index.ts`, `src/plugin/setup-domains.ts`, `src/plugin/setup-domains/`
+- `src/plugin/tool/tool-catalog.ts`, `src/plugin/tool/tool-policy.ts`
+- `src/plugin/hooks/create-session-hooks.ts`,
   `src/plugin/hooks/create-tool-guard-hooks.ts`,
   `src/plugin/hooks/create-transform-hooks.ts`,
   `src/plugin/hooks/create-continuation-hooks.ts`,
   `src/plugin/hooks/create-skill-hooks.ts`
 - `src/plugin/tool/tool-execute-before.ts`, `src/plugin/tool/tool-execute-after.ts`,
-  `src/plugin/tool-execute-before.bench.ts`,
+  `src/plugin/tool/tool-execute-before.bench.ts`,
   `src/plugin/hook-mutation-classification.md`
 - `src/plugin/tool/chat-message.ts`, `src/plugin/tool/chat-params.ts`,
-  `src/plugin/messages-transform.ts`, `src/plugin/tool/event.ts`,
-  `src/plugin/tool-definition.ts`
-- `src/shared/safe-create-hook.ts`, `src/plugin-config.ts:155-176`
+  `src/plugin/setup-domains/hooks.ts`, `src/plugin/tool/event.ts`,
+  `src/plugin/tool/tool-definition.ts`
+- `src/shared/agent/safe-create-hook.ts`, `src/plugin-config.ts:155-176`
 - `src/hooks/AGENTS.md`, `src/hooks/index.ts`
 - Related docs: `orchestration.md`, `task-system.md`,
   `configurations.md`, `research/cost-performance.md`
