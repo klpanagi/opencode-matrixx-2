@@ -2,6 +2,7 @@ import { log } from "../../shared/runtime/logger"
 import { hasPendingQuestionMessage } from "../../shared/session/awaiting-user"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { stopWithDeadline } from "./stop-deadline"
 
 const HOOK_NAME = "stop-continuation-guard"
 
@@ -22,6 +23,13 @@ interface StopContinuationGuardOptions {
   // consulted before cancelling background tasks so in-flight subagents
   // that asked a question are not killed while the user owes an answer.
   isAwaitingUser?: (sessionID: string) => boolean
+  // Settle probe + timer disarm for the deadline-bounded stop path (Task 9):
+  // pendingIds lists unsettled task ids for a session (drives Task 2 cancel
+  // wiring settlement check); disarm clears a leftover timer (Task 3 hygiene).
+  pendingIdsForSession?: (sessionID: string) => string[]
+  disarmTask?: (taskId: string) => void
+  disarmAllTasks?: () => void
+  stopDeadlineMs?: number
   // Authoritative busy/idle signal (B13 idle/cooldown API wiring point).
   // When provided and returns false, the session is considered idle and a
   // fresh stop entry no longer blocks. Defaults to busy (conservative,
@@ -41,6 +49,7 @@ export interface StopContinuationGuard {
   event: (event: V2Event) => Promise<void>
   "chat.message": (input: { sessionID?: string }) => Promise<void>
   stop: (sessionID: string) => Promise<void>
+  stopBounded: (sessionID: string) => Promise<{ forced: boolean; abandoned: string[] }>
   isStopped: (sessionID: string) => boolean
   shouldBlock: (sessionID: string) => StopBlockVerdict
   clear: (sessionID: string) => void
@@ -78,6 +87,31 @@ export function createStopContinuationGuardHook(
     if (cancelled > 0) {
       log(`[${HOOK_NAME}] Cancelled ${cancelled} background task(s) for session`, { sessionID })
     }
+  }
+
+  const stopBounded = async (
+    sessionID: string,
+  ): Promise<{ forced: boolean; abandoned: string[] }> => {
+    stoppedSessions.set(sessionID, nowMonotonic())
+    log(`[${HOOK_NAME}] Bounded continuation stop for session`, { sessionID })
+    if (await isSessionAwaitingUser(sessionID)) {
+      log(`[${HOOK_NAME}] Background cancellation suppressed: awaiting user`, { sessionID })
+      return { forced: false, abandoned: [] }
+    }
+    return stopWithDeadline(
+      sessionID,
+      {
+        cancel: () => {
+          const before = options?.pendingIdsForSession?.(sessionID) ?? []
+          options?.backgroundManager?.cancelAllForSession(sessionID)
+          return before
+        },
+        pendingIds: () => options?.pendingIdsForSession?.(sessionID) ?? [],
+        disarm: (taskId: string) => options?.disarmTask?.(taskId),
+        disarmAll: () => options?.disarmAllTasks?.(),
+      },
+      { deadlineMs: options?.stopDeadlineMs },
+    )
   }
 
   const shouldBlock = (sessionID: string): StopBlockVerdict => {
@@ -146,6 +180,7 @@ export function createStopContinuationGuardHook(
     event: eventHandler,
     "chat.message": chatMessage,
     stop,
+    stopBounded,
     isStopped,
     shouldBlock,
     clear,

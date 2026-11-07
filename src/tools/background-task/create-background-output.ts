@@ -86,6 +86,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
           full_session: args.full_session,
         })
         const ctx = toolContext as ToolContextWithMetadata
+        const abortSignal = (toolContext as { abort?: AbortSignal }).abort
         const rawTaskId = (args.task_id ?? "").trim()
         const rawSessionId = (args.session_id ?? "").trim()
         if (rawTaskId !== "" && rawSessionId !== "" && rawTaskId !== rawSessionId) {
@@ -176,7 +177,11 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
         if (shouldBlock && isTaskActiveStatus(task.status)) {
           const startTime = Date.now()
           while (Date.now() - startTime < timeoutMs) {
-            await delay(1000)
+            try {
+              await delay(1000, abortSignal)
+            } catch {
+              break
+            }
 
             const currentTask = manager.getTask(task.id)
             if (!currentTask) {

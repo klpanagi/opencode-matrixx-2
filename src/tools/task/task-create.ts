@@ -156,7 +156,9 @@ async function handleCreate(
 
     const taskDir = getTaskDir(config, directory)
     const lock = await acquireLockWithRetry(taskDir)
+    // INVARIANT (Task 5): never proceed on an unacquired lock — no fallthrough writes.
     if (!lock.acquired) {
+      log(`[task-create] lock contention, write skipped`, { taskDir })
       return JSON.stringify({ error: "task_lock_unavailable" })
     }
 

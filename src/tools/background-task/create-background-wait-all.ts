@@ -37,7 +37,17 @@ export function createBackgroundWaitAll(manager: BackgroundManager): MatrixxTool
           coverage = { bgPending: [], liveSes: [] }
         }
 
-        const result = await manager.waitForAllDescendants(ctx.sessionID, timeoutMs)
+        let result: Awaited<ReturnType<typeof manager.waitForAllDescendants>>
+        try {
+          result = await manager.waitForAllDescendants(ctx.sessionID, timeoutMs, undefined, {
+            signal: ctx.abort,
+          })
+        } catch (error) {
+          if (ctx.abort?.aborted) {
+            return "Wait cancelled before tasks completed."
+          }
+          throw error
+        }
 
         if (result.completed.length === 0 && result.timedOut.length === 0) {
           return "No background tasks were running or pending. Nothing to wait for."
