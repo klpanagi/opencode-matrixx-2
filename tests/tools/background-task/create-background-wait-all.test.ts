@@ -35,7 +35,9 @@ describe("background_wait_all", () => {
 
     // #then
     expect(output).toBe("No background tasks were running or pending. Nothing to wait for.")
-    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 30000)
+    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 30000, undefined, {
+      signal: expect.anything(),
+    })
   })
 
   test("returns completed tasks table", async () => {
@@ -116,7 +118,9 @@ describe("background_wait_all", () => {
     await tool.execute({ timeout: 5000 }, createMockContext())
 
     // #then
-    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 5000)
+    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 5000, undefined, {
+      signal: expect.anything(),
+    })
   })
 
   test("caps timeout at 120000", async () => {
@@ -130,7 +134,9 @@ describe("background_wait_all", () => {
     await tool.execute({ timeout: 999999 }, createMockContext())
 
     // #then - should be capped at 120000
-    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 120000)
+    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 120000, undefined, {
+      signal: expect.anything(),
+    })
   })
 
   test("defaults to 30000 when no timeout provided", async () => {
@@ -144,7 +150,9 @@ describe("background_wait_all", () => {
     await tool.execute({}, createMockContext())
 
     // #then
-    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 30000)
+    expect(mockManager.waitForAllDescendants).toHaveBeenCalledWith("test-session", 30000, undefined, {
+      signal: expect.anything(),
+    })
   })
 
   test("sets title metadata on execute", async () => {
@@ -217,5 +225,30 @@ describe("background_wait_all", () => {
     // #then
     expect(output).toContain("[ERROR]")
     expect(output).toContain("string error")
+  })
+
+  test("returns cancelled message when tool abort fires mid-wait", async () => {
+    //#given
+    const controller = new AbortController()
+    const mockManager = {
+      waitForAllDescendants: mock(
+        (_session: string, _timeout: number, _poll: unknown, opts?: { signal?: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            opts?.signal?.addEventListener("abort", () => reject(new Error("Wait cancelled")), {
+              once: true,
+            })
+          }),
+      ),
+    } as unknown as BackgroundManager
+    const tool = createBackgroundWaitAll(mockManager)
+    const ctx = { ...createMockContext(), abort: controller.signal }
+
+    //#when
+    const pending = tool.execute({}, ctx)
+    controller.abort(new Error("user cancelled"))
+    const output = await pending
+
+    //#then
+    expect(output).toBe("Wait cancelled before tasks completed.")
   })
 })

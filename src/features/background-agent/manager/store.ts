@@ -1,8 +1,9 @@
 import type { BackgroundTaskConfig } from "../../../config/schema"
 import { log } from "../../../shared"
 import { getParentSessionID, getSubagentSessionIDs } from "../../session-state/state"
+import { StaleGenerationError } from "../../task-storage/generation"
 import { TASK_TTL_MS } from "../constants"
-import { readHandles, writeHandle } from "../handle-index"
+import { bumpGeneration, currentGeneration, readHandle, readHandles, writeHandle } from "../handle-index"
 import type { BackgroundTask } from "../types"
 import { WallclockSupervisor } from "../wallclock"
 import type { NativeDescendant } from "./types"
@@ -25,6 +26,7 @@ export class ManagerStore {
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   readonly wallclock = new WallclockSupervisor()
   readonly pendingSpawns = new Set<string>()
+  readonly waiters = new Set<{ sessionID: string; reject: (err: unknown) => void }>()
   directory: string
   config?: BackgroundTaskConfig
 
@@ -134,6 +136,7 @@ export class ManagerStore {
       if (this.tasks.has(handle.taskId)) return this.tasks.get(handle.taskId)
       const uncertain = handle.status === "running" || handle.status === "pending"
       const task: BackgroundTask = {
+        generation: handle.generation,
         id: handle.taskId,
         parentSessionID: handle.parentSessionID,
         parentMessageID: handle.parentMessageID,
@@ -175,5 +178,20 @@ export class ManagerStore {
         error,
       })
     }
+  }
+  currentGeneration(taskId: string): number {
+    return currentGeneration(this.directory, taskId)
+  }
+  persistHandleFenced(task: BackgroundTask, expectedGeneration: number): void {
+    const persisted = readHandle(this.directory, task.id)?.generation ?? 0
+    if (persisted !== expectedGeneration) {
+      throw new StaleGenerationError(task.id, expectedGeneration, persisted)
+    }
+    task.generation = persisted
+    writeHandle(this.directory, task)
+  }
+  bumpTaskGeneration(taskId: string): number {
+    bumpGeneration(this.directory, taskId)
+    return currentGeneration(this.directory, taskId)
   }
 }

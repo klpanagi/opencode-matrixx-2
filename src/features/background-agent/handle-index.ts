@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { z } from "zod"
@@ -109,7 +110,7 @@ export function toHandle(task: BackgroundTask): BgHandle {
 }
 
 function atomicWriteFileSync(filePath: string, content: string): void {
-  const tempPath = `${filePath}.tmp.${process.pid}.${Date.now()}`
+  const tempPath = `${filePath}.tmp.${process.pid}.${randomUUID()}`
 
   try {
     writeFileSync(tempPath, content, "utf-8")
@@ -136,13 +137,13 @@ function readGenerationFile(directory: string, taskId: string): number {
   }
 }
 
-function currentGeneration(directory: string, taskId: string): number {
+export function currentGeneration(directory: string, taskId: string): number {
   const tombstone = readGenerationFile(directory, taskId)
   const existing = readHandleFile(getHandlePath(directory, taskId))
   return Math.max(tombstone, existing?.generation ?? 0)
 }
 
-function bumpGeneration(directory: string, taskId: string): void {
+export function bumpGeneration(directory: string, taskId: string): void {
   try {
     ensureDir(getBgHandleDir(directory))
     atomicWriteFileSync(getGenerationPath(directory, taskId), `${currentGeneration(directory, taskId) + 1}\n`)

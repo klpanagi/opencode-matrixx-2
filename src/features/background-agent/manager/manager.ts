@@ -174,6 +174,10 @@ export class BackgroundManager implements ManagerRuntime {
     return this.store.getTask(id)
   }
 
+  persistHandleFenced(task: BackgroundTask, expectedGeneration: number): void {
+    this.store.persistHandleFenced(task, expectedGeneration)
+  }
+
   getTasksByParentSession(sessionID: string): BackgroundTask[] {
     return this.store.getTasksByParentSession(sessionID)
   }
@@ -214,6 +218,7 @@ export class BackgroundManager implements ManagerRuntime {
     task.status = "cancelled"
     task.completedAt = new Date()
     if (options?.reason) task.error = options.reason
+    this.store.wallclock.disarm(taskId)
     this.store.persistHandle(task)
     this.taskHistory.record(task.parentSessionID, {
       id: task.id,
@@ -233,6 +238,10 @@ export class BackgroundManager implements ManagerRuntime {
     const toastManager = getTaskToastManager()
     if (toastManager) toastManager.removeTask(task.id)
     log(`[background-agent] Task cancelled via ${source}:`, task.id)
+    this.rejectWaiters(
+      task.parentSessionID,
+      new Error(`Task cancelled: ${taskId}`),
+    )
     return true
   }
 
@@ -272,6 +281,7 @@ export class BackgroundManager implements ManagerRuntime {
     sessionID: string,
     timeoutMs = 30000,
     pollIntervalMs = 1000,
+    options?: { signal?: AbortSignal },
   ): Promise<{
     completed: Array<{
       id: string
@@ -304,15 +314,38 @@ export class BackgroundManager implements ManagerRuntime {
       }
     }
 
-    let pending = active()
-    let natives = uncoveredNatives()
-    while (
-      (pending.length > 0 || natives.length > 0) &&
-      Date.now() - startTime < timeoutMs
-    ) {
-      await delay(pollIntervalMs)
-      pending = active()
-      natives = uncoveredNatives()
+    let rejectWait: ((err: unknown) => void) | undefined
+    const abortPromise = new Promise<never>((_, reject) => {
+      rejectWait = reject
+    })
+    const entry = {
+      sessionID,
+      reject: (err: unknown) => rejectWait?.(err),
+    }
+    this.store.waiters.add(entry)
+    try {
+      const signal = options?.signal
+      if (signal?.aborted) throw signal.reason ?? new Error("Wait cancelled")
+      const onSignalAbort = (): void => {
+        rejectWait?.(signal?.reason ?? new Error("Wait cancelled"))
+      }
+      signal?.addEventListener("abort", onSignalAbort, { once: true })
+      try {
+        let pending = active()
+        let natives = uncoveredNatives()
+        while (
+          (pending.length > 0 || natives.length > 0) &&
+          Date.now() - startTime < timeoutMs
+        ) {
+          await Promise.race([delay(pollIntervalMs), abortPromise])
+          pending = active()
+          natives = uncoveredNatives()
+        }
+      } finally {
+        signal?.removeEventListener("abort", onSignalAbort)
+      }
+    } finally {
+      this.store.waiters.delete(entry)
     }
 
     const completed: Array<{
@@ -354,9 +387,54 @@ export class BackgroundManager implements ManagerRuntime {
   }
 
 
+  waiterCount(): number {
+    return this.store.waiters.size
+  }
+
+  rejectWaiters(sessionID: string | undefined, err: unknown): void {
+    for (const entry of [...this.store.waiters]) {
+      if (sessionID !== undefined && entry.sessionID !== sessionID) continue
+      try {
+        entry.reject(err)
+      } catch (error) {
+        log("[background-agent] Waiter reject failed:", error)
+      }
+    }
+  }
+
   shutdown(): void {
+    this.rejectWaiters(undefined, new Error("BackgroundManager shut down"))
+    this.store.waiters.clear()
+    this.store.wallclock.disarmAll()
     this.store.tasks.clear()
     this.store.nativeDescCache.clear()
     log("[background-agent] BackgroundManager shut down (native shim)")
+  }
+
+  shutdownWithDeadline(deadlineMs = 5000): {
+    forced: boolean
+    abandoned: string[]
+  } {
+    const abandoned: string[] = []
+    for (const task of this.store.tasks.values()) {
+      if (task.status === "running" || task.status === "pending") {
+        abandoned.push(task.id)
+      }
+    }
+    this.rejectWaiters(undefined, new Error("BackgroundManager shut down"))
+    this.store.waiters.clear()
+    this.store.wallclock.disarmAll()
+    this.store.tasks.clear()
+    this.store.nativeDescCache.clear()
+    if (abandoned.length > 0) {
+      log("[background-agent] Shutdown deadline exceeded, forcing teardown", {
+        abandoned,
+        deadlineMs,
+        code: "DeadlineExceeded",
+      })
+      return { forced: true, abandoned }
+    }
+    log("[background-agent] BackgroundManager shut down (native shim)")
+    return { forced: false, abandoned: [] }
   }
 }

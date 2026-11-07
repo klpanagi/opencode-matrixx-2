@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { log } from "../../shared/runtime/logger"
 import { isSyntheticMessage, LOCK_RETRY_COUNT, MEMORY_DIR_NAME, MEMORY_FILE_NAME, MEMORY_LOCK_FILE_NAME, MEMORY_SUBDIR_NAME, STALE_LOCK_THRESHOLD_MS } from "./constants"
 import { type MemoryEntry, type MemoryEntryInput, MemoryEntrySchema } from "./types"
 
@@ -153,6 +154,12 @@ export function appendMemoryEntry(input: MemoryEntryInput, directory?: string): 
   const dir = getMemoryDir(directory)
   ensureDir(dir)
   const lock = acquireLock(dir)
+  // INVARIANT (Task 5): never proceed on an unacquired lock — contention means
+  // another writer owns the directory; fall through would interleave appends.
+  if (!lock.acquired) {
+    log(`[session-memory] appendMemoryEntry lock contention, write skipped`, { dir })
+    return null
+  }
   try {
     appendFileSync(join(dir, MEMORY_FILE_NAME), `${JSON.stringify(entry)}\n`, "utf-8")
   } finally {

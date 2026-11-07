@@ -18,6 +18,7 @@ export const TaskSchema = z
     parentID: z.string().optional(),
     threadID: z.string().optional(),
     projectRoot: z.string().optional(),
+    generation: z.number().int().nonnegative().default(0),
   })
   .strict()
 

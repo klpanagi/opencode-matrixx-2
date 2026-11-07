@@ -27,6 +27,7 @@ export const TaskObjectSchema = z
     threadID: z.string(),
     projectRoot: z.string().optional(),
     priority: TaskPrioritySchema.optional(),
+    generation: z.number().int().nonnegative().default(0),
   })
   .strict()
 

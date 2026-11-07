@@ -95,6 +95,7 @@ describe("task_get tool", () => {
         repoURL: "https://github.com/example/repo",
         parentID: "T-parent-123",
         threadID: TEST_SESSION_ID,
+        generation: 0,
       }
       const taskFile = join(testStorage, `${taskId}.json`)
       writeFileSync(taskFile, JSON.stringify(taskData, null, 2))

@@ -13,6 +13,7 @@ import {
   classifyRevivable,
   findRevivableHandle,
   isCorruptHandleValue,
+  probeReviveTarget,
   type ReviveBlockReason,
   toReviveTask,
 } from "../revive"
@@ -81,6 +82,7 @@ export function quarantineCorruptHandles(directory: string): number {
 
 export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise<BackgroundTask> {
     const id = input.taskId ?? input.sessionId ?? ""
+    let expectedGeneration: number | undefined
     let task =
       input.taskId !== undefined ? rt.store.tasks.get(input.taskId) : undefined
     if (!task && input.sessionId !== undefined) {
@@ -155,6 +157,7 @@ export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise
         throw new Error(guidance[handleEligibility.reason])
       }
       task = toReviveTask(handle, input.prompt)
+      expectedGeneration = handle.generation
     } else {
       const taskEligibility = classifyRevivable(task, { force: input.force })
       if (!taskEligibility.eligible) {
@@ -165,9 +168,23 @@ export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise
         throw new Error(guidance[taskEligibility.reason])
       }
       task.prompt = input.prompt
+      expectedGeneration = task.generation
     }
     if (!task.sessionID) throw new Error(`Task has no sessionID: ${task.id}`)
     const sessionID = task.sessionID
+
+    const probe = probeReviveTarget(
+      rt.directory,
+      { taskId: task.id, sessionID, generation: expectedGeneration },
+      { expectedGeneration },
+    )
+    if (!probe.alive) {
+      log("[background-agent] Revive probe failed - target dead, not resurrecting:", {
+        taskId: task.id,
+        reason: probe.reason,
+      })
+      throw probe.error
+    }
 
     task.status = "running"
     task.parentSessionID = input.parentSessionID
@@ -183,6 +200,7 @@ export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise
       lastUpdate: new Date(),
     }
     rt.store.tasks.set(task.id, task)
+    task.generation = rt.store.bumpTaskGeneration(task.id)
     rt.store.persistHandle(task)
     registerSubagentSession(sessionID, input.parentSessionID)
     rt.taskHistory.record(task.parentSessionID, {
@@ -393,6 +411,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
     if (event.type === "session.idle") {
       task.status = "completed"
       task.completedAt = new Date()
+      rt.store.wallclock.disarm(task.id)
       rt.store.nativeDescCache.clear()
       rt.store.persistHandle(task)
       rt.taskHistory.record(task.parentSessionID, {
@@ -418,6 +437,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
         getSessionErrorMessage(props as EventProperties) ??
         "Session reported an error"
       task.completedAt = new Date()
+      rt.store.wallclock.disarm(task.id)
       rt.store.nativeDescCache.clear()
       rt.store.persistHandle(task)
       const toastManager = getTaskToastManager()
@@ -430,6 +450,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
     if (event.type === "session.execution.succeeded") {
       task.status = "completed"
       task.completedAt = new Date()
+      rt.store.wallclock.disarm(task.id)
       rt.store.nativeDescCache.clear()
       rt.store.persistHandle(task)
       rt.taskHistory.record(task.parentSessionID, {
@@ -455,6 +476,7 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
         getSessionErrorMessage(props as EventProperties) ??
         "Session reported an error"
       task.completedAt = new Date()
+      rt.store.wallclock.disarm(task.id)
       rt.store.nativeDescCache.clear()
       rt.store.persistHandle(task)
       const toastManager = getTaskToastManager()
