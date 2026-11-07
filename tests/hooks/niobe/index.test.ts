@@ -1096,7 +1096,7 @@ describe("niobe hook", () => {
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
       const mockInput = createMockMatrixxContext({ promptMock })
-      const hook = createNiobeHook(mockInput)
+      const hook = createNiobeHook(mockInput, { directory: TEST_DIR, nowMonotonic: () => now })
 
       const originalDateNow = Date.now
       let now = 0
@@ -1142,7 +1142,7 @@ describe("niobe hook", () => {
       promptMock.mockImplementationOnce(() => Promise.reject(new Error("Bad Request")))
 
       const mockInput = createMockMatrixxContext({ promptMock })
-      const hook = createNiobeHook(mockInput)
+      const hook = createNiobeHook(mockInput, { directory: TEST_DIR, nowMonotonic: () => now })
 
       const originalDateNow = Date.now
       let now = 0
@@ -1178,7 +1178,7 @@ describe("niobe hook", () => {
 
       const promptMock = mock(() => Promise.reject(new Error("Bad Request")))
       const mockInput = createMockMatrixxContext({ promptMock })
-      const hook = createNiobeHook(mockInput)
+      const hook = createNiobeHook(mockInput, { directory: TEST_DIR, nowMonotonic: () => now })
 
       const originalDateNow = Date.now
       let now = 0

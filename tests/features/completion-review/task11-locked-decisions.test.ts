@@ -121,7 +121,12 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // plugin composition-root rewire ("../../plugin/context" ->
     // "../../plugin/tool/context") after grouping the plugin loose files
     // under src/plugin/tool/; execution path unchanged.
-    const FROZEN_MD5 = "627c4bce12082cc1e7130a4e0d762fdf"
+    // NOTE (orchestration-bugfixes B12/B13, INT-1-fix): hash advanced from
+    // 627c4bce12082cc1e7130a4e0d762fdf. The only delta is the legitimate
+    // B12 (runWithSessionLock + tryClaimContinuationSlot per-session
+    // serialization) + B13 (monotonic clock + revalidate-after-await gates)
+    // fix; execution path (Niobe remains the plan EXECUTOR) unchanged.
+    const FROZEN_MD5 = "1acfba886008358784afce331e1904a0"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")

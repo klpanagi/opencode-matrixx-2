@@ -11,7 +11,68 @@ import { injectMissionContinuation } from "./mission-continuation-injector"
 import { getLastAgentFromSession } from "./session-last-agent"
 import type { NiobeHookOptions, SessionState } from "./types"
 
-const CONTINUATION_COOLDOWN_MS = 5000
+export const CONTINUATION_COOLDOWN_MS = 5000
+
+const sessionContinuationLocks = new Map<string, Promise<void>>()
+
+export function _resetSessionLocksForTesting(): void {
+  sessionContinuationLocks.clear()
+}
+
+export function runWithSessionLock<T>(sessionID: string, fn: () => Promise<T>): Promise<T> {
+  const previous = sessionContinuationLocks.get(sessionID) ?? Promise.resolve()
+  let release!: () => void
+  const current = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  sessionContinuationLocks.set(sessionID, current)
+  return previous.then(fn).finally(() => {
+    if (sessionContinuationLocks.get(sessionID) === current) {
+      sessionContinuationLocks.delete(sessionID)
+    }
+    release()
+  })
+}
+
+export function getMonotonicNow(): number {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now()
+  }
+  return Date.now()
+}
+
+export interface ContinuationGates {
+  hasMission: boolean
+  missionComplete: boolean
+  isContinuationStopped: boolean
+  abortBeforeIdle: boolean
+  bgRunning: boolean
+  promptFailuresExceeded: boolean
+}
+
+export function isContinuationValid(gates: ContinuationGates): boolean {
+  if (!gates.hasMission) return false
+  if (gates.missionComplete) return false
+  if (gates.isContinuationStopped) return false
+  if (gates.abortBeforeIdle) return false
+  if (gates.bgRunning) return false
+  if (gates.promptFailuresExceeded) return false
+  return true
+}
+
+export function tryClaimContinuationSlot(
+  state: SessionState,
+  now: number,
+  cooldownMs: number = CONTINUATION_COOLDOWN_MS,
+): boolean {
+  const last = state.lastContinuationInjectedAt
+  if (last !== undefined) {
+    if (now - last < cooldownMs) return false
+    if (now <= last) return false
+  }
+  state.lastContinuationInjectedAt = now
+  return true
+}
 
 export function createNiobeEventHandler(input: {
   ctx: NativePluginContext
@@ -117,16 +178,42 @@ export function createNiobeEventHandler(input: {
         return
       }
 
-      const now = Date.now()
-      if (state.lastContinuationInjectedAt && now - state.lastContinuationInjectedAt < CONTINUATION_COOLDOWN_MS) {
+      const nowFn = options?.nowMonotonic ?? getMonotonicNow
+      const decision = await runWithSessionLock(sessionID, async () => {
+        const now = nowFn()
+        const claimed = tryClaimContinuationSlot(state, now)
+        if (!claimed) {
+          return { claimed: false as const, valid: false as const, now }
+        }
+        const freshMission = readMissionState(stateRoot)
+        const freshProgress = freshMission ? getPlanProgress(freshMission.active_plan) : null
+        const freshBgRunning = backgroundManager
+          ? backgroundManager.getTasksByParentSession(sessionID).some((t: { status: string }) => t.status === "running")
+          : false
+        const valid = isContinuationValid({
+          hasMission: freshMission !== null && freshMission !== undefined,
+          missionComplete: freshProgress?.isComplete ?? true,
+          isContinuationStopped: options?.isContinuationStopped?.(sessionID) ?? false,
+          abortBeforeIdle: state.lastEventWasAbortError ?? false,
+          bgRunning: freshBgRunning,
+          promptFailuresExceeded: state.promptFailureCount >= 2,
+        })
+        return { claimed: true as const, valid, now }
+      })
+      if (!decision.claimed) {
         log(`[${HOOK_NAME}] Skipped: continuation cooldown active`, {
           sessionID,
-          cooldownRemaining: CONTINUATION_COOLDOWN_MS - (now - state.lastContinuationInjectedAt),
+          cooldownRemaining: Math.max(
+            0,
+            CONTINUATION_COOLDOWN_MS - (nowFn() - (state.lastContinuationInjectedAt ?? 0)),
+          ),
         })
         return
       }
-
-      state.lastContinuationInjectedAt = now
+      if (!decision.valid) {
+        log(`[${HOOK_NAME}] Skipped: gates changed during await gap`, { sessionID })
+        return
+      }
       const remaining = progress.total - progress.completed
       try {
         await injectMissionContinuation({
