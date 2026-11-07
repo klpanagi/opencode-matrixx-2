@@ -12,7 +12,7 @@ const MEROVINGIAN_SKILLS = [
   RESILIENCE_FAILURE_HUNTING_SKILL_NAME,
 ]
 
-export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
+export const MEROVINGIAN_PROMPT_METADATA: AgentPromptMetadata = {
   category: "advisor",
   cost: "EXPENSIVE",
   promptAlias: "Consultant",
@@ -43,7 +43,7 @@ export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
   ],
 }
 
-export const ORACLE_PLAN_BUILDER_METADATA: AgentPromptMetadata = {
+export const ORACLE_PROMPT_METADATA: AgentPromptMetadata = {
   category: "advisor",
   cost: "EXPENSIVE",
   keyTrigger: "Complex feature implementation, refactoring, or architecture design → consult Oracle for planning first",
@@ -70,7 +70,7 @@ export const ORACLE_PLAN_BUILDER_METADATA: AgentPromptMetadata = {
   ],
 }
 
-const ORACLE_SYSTEM_PROMPT = `You are a strategic technical advisor with deep reasoning capabilities, operating as a specialized consultant within an AI-assisted development environment.
+const MEROVINGIAN_SYSTEM_PROMPT = `You are a strategic technical advisor with deep reasoning capabilities, operating as a specialized consultant within an AI-assisted development environment.
 
 <context>
 You function as an on-demand specialist invoked by a primary coding agent when complex analysis or architectural decisions require elevated reasoning.
@@ -190,7 +190,7 @@ export function createMerovingianAgent(model: string): AgentConfig {
     skills: MEROVINGIAN_SKILLS,
     request: { body: { temperature: 0.1 } },
     permissions: denyActions(["edit", "subagent", "task"]),
-    system: ORACLE_SYSTEM_PROMPT,
+    system: MEROVINGIAN_SYSTEM_PROMPT,
   }
 
   if (isGptModel(model)) {

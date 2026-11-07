@@ -10,7 +10,7 @@ import { CATEGORY_DESCRIPTIONS } from "../../tools/delegate-task/constants"
 import { CIPHER_PROMPT_METADATA, createCipherAgent } from "../definitions/cipher"
 import { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "../definitions/construct"
 import { createKeymakerAgent } from "../definitions/keymaker"
-import { createMerovingianAgent, ORACLE_PLAN_BUILDER_METADATA, ORACLE_PROMPT_METADATA } from "../definitions/merovingian"
+import { createMerovingianAgent, MEROVINGIAN_PROMPT_METADATA, ORACLE_PROMPT_METADATA } from "../definitions/merovingian"
 import { createMorpheusAgent } from "../definitions/morpheus"
 import { createNiobeAgent, niobePromptMetadata } from "../definitions/niobe"
 import { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "../definitions/operator"
@@ -52,8 +52,8 @@ const agentSources: Partial<Record<BuiltinAgentName, AgentSource>> = {
  * (Delegation Table, Tool Selection, Key Triggers, etc.)
  */
 const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
-  merovingian: ORACLE_PROMPT_METADATA,
-  oracle: ORACLE_PLAN_BUILDER_METADATA,
+  merovingian: MEROVINGIAN_PROMPT_METADATA,
+  oracle: ORACLE_PROMPT_METADATA,
   operator: OPERATOR_PROMPT_METADATA,
   trinity: TRINITY_PROMPT_METADATA,
   construct: CONSTRUCT_PROMPT_METADATA,
