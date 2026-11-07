@@ -1,13 +1,13 @@
 # Installation
 
-> **Audience:** new users (humans and LLM agents). **Version:** 3.0.0.
+> **Audience:** new users (humans and LLM agents). **Version:** 1.2.1.
 > **See also:** `overview.md` (what you get), `../cli-guide.md` (`doctor`, `install --no-tui`), `../configurations.md` (post-install tuning).
 
 ## Prerequisites
 
 | Requirement | Version | Install |
 |-------------|---------|---------|
-| **Bun** | 1.4.0 | https://bun.sh — `curl -fsSL https://bun.sh/install | bash` |
+| **Bun** | 1.4.4 | https://bun.sh — `curl -fsSL https://bun.sh/install | bash` |
 | **OpenCode** | ≥ 1.0.150 | https://opencode.ai/docs — `curl -fsSL https://opencode.ai/install | bash` |
 | **Node.js** | ≥ 18 | https://nodejs.org |
 | **Git** | any | — |
@@ -15,7 +15,7 @@
 Verify before installing Matrixx:
 
 ```bash
-bun --version        # should be 1.4.0
+bun --version        # should be 1.4.4
 opencode --version   # should be >= 1.0.150
 node --version
 git --version
@@ -172,8 +172,8 @@ Authenticated via `opencode auth login` provider selection as well.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `could not determine executable to run for package opencode-matrixx` | Stale Bun cache or old package (pre-2.6.0) | `bun pm cache rm && bunx opencode-matrixx-v2@latest --help`; ensure you're on ≥ 2.6.0 |
-| `opencode-matrixx-v2 doctor` says `No API providers configured` after `opencode auth login` | Doctor checked wrong file (fixed in 2.6.0) | Update: `bunx opencode-matrixx-v2@latest doctor`; verify auth storage: `cat ~/.local/share/opencode/auth.json` or `opencode auth list` |
+| `could not determine executable to run for package opencode-matrixx` | Stale Bun cache or old package (pre-1.x) | `bun pm cache rm && bunx opencode-matrixx-v2@latest --help`; ensure you're on the latest 1.x |
+| `opencode-matrixx-v2 doctor` says `No API providers configured` after `opencode auth login` | Doctor checked wrong file (fixed in recent releases) | Update: `bunx opencode-matrixx-v2@latest doctor`; verify auth storage: `cat ~/.local/share/opencode/auth.json` or `opencode auth list` |
 | Plugin not loading in OpenCode | Plugin entry is `file://` pointing to deleted temp dir | Re-run `bunx opencode-matrixx-v2 install` (without `--local`); check `cat ~/.config/opencode/opencode.jsonc` contains `"opencode-matrixx-v2"` |
 | `opencode.json` vs `opencode.jsonc` | OpenCode supports both; doctor checks both + `.jsonc` comments | Ensure your config is valid JSONC: `cat ~/.config/opencode/opencode.jsonc` |
 | `bunx` not found | Bun not installed or not in PATH | `curl -fsSL https://bun.sh/install | bash` then reopen shell |

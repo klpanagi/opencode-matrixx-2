@@ -1,7 +1,7 @@
 # Context Management in Matrixx
 
 > **Audience:** operators tuning context behavior and engineers working on the context stack.
-> **Version:** 3.0.0. Canonical page for all context topics; other docs summarize and link here.
+> **Version:** 1.2.1. Canonical page for all context topics; other docs summarize and link here.
 > **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys), `research/cost-performance.md` (background analysis).
 
 Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. For background and cost analysis see [cost-performance proposals](research/cost-performance.md) P6 (RTK), P7 (context-mode), and P16 (Headroom).
@@ -28,7 +28,7 @@ Every layer handles one concern and delegates the rest. The result is orthogonal
 
 | Layer | Owner | Mechanism | Reduction | Config Key | Hook / Tool |
 |-------|-------|-----------|-----------|------------|-------------|
-| L0 Native | Matrixx | 70% warning, 78% preemptive compaction, anthropic recovery, output truncators | Prevents OOM, keeps headroom | `experimental.*`, `disabled_hooks` | `context-window-monitor`, `preemptive-compaction`, `compaction-*`, `tool-output-truncator` |
+| L0 Native | Matrixx | 70% warning, anthropic recovery, compaction injection, output truncators | Prevents OOM, keeps headroom | `experimental.*`, `disabled_hooks` | `context-window-monitor`, `compaction-context-injector`, `context-window-limit-recovery`, `tool-output-truncator` |
 | L1 RTK | `rtk-ai/rtk` | Bash output rewrite via filtering, grouping, deduplication | 60-90% on bash | `rtk` | `rtk-bash-rewriter` (`tool.execute.before`) |
 | L2 context-mode | `mksglu/context-mode` | FTS5 sandbox, `ctx_*` tools, Think-in-Code | Up to 98% tool output | `context_mode` (`enabled`/`enforce`/`blocked_tools`) + external `plugin: ["context-mode"]` | `ctx_batch_execute`, `ctx_execute`, `ctx_search`, `ctx_stats`, `compress` + `context-mode-enforcer` hook |
 | L3 DCP | `@tarquinen/opencode-dcp` | Profile-tiered pruning `economy` to `ultimate` | Tiered, see profiles | `dcp` | `dcp.default_profile` |
@@ -196,7 +196,7 @@ ctx stats
 
 > **MCP form (verified working):** context-mode is configured as a local MCP server in `opencode.jsonc` (`"mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } }`) and shows as `context-mode · Connected` under MCP in the OpenCode TUI. Upstream also documents a `"plugin": ["context-mode"]` in-process form — either delivery works with matrixx (enforcer + routing block match on the `ctx_*` tool names regardless of transport); do not enable both forms at once.
 >
-> `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-mode-routing/routing-block.ts`).
+> `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-injection/routing/routing-block.ts`).
 >
 
 #### MCP registration & working directory (cwd)
@@ -446,7 +446,7 @@ Package versions: `npm: headroom-ai@0.37.0`, `PyPI: headroom-ai[all]`. Docs at `
 
 | Layer | Owner | Mechanism | Reduction |
 |-------|-------|-----------|-----------|
-| L0 Native | Matrixx | 70% warn, preemptive-compaction, anthropic-recovery | Prevents OOM |
+| L0 Native | Matrixx | 70% warn, compaction injection, anthropic-recovery | Prevents OOM |
 | L1 RTK | RTK hook | Bash output compression | 60 to 90% bash |
 | L2 context-mode | context-mode plugin | FTS5 sandbox `ctx_*` | 98% sandbox |
 | L3 DCP | `@tarquinen/opencode-dcp` | Pruning tiers `economy` to `ultimate` | Tiered pruning |
@@ -478,17 +478,9 @@ These hooks ship with Matrixx and need no external install. Each can be disabled
 
 Source: `src/hooks/context-window-monitor.ts`.
 
-### 3.2 preemptive-compaction
+### 3.2 preemptive-compaction (REMOVED — retained-deprecated no-op)
 
-| Property | Value |
-|----------|-------|
-| Event | `tool.execute.after` (also listens to `message.updated` for token updates) |
-| Threshold | 78% of Anthropic actual limit — configurable via `experimental.preemptive_compaction_threshold` (default 0.78) |
-| Behavior | Triggers `session.summarize({ auto: true })` with 60s timeout and 60s cooldown, guards `compactionInProgress`, Anthropic only. |
-| Config key | `experimental.preemptive_compaction` (boolean, optional) + `experimental.preemptive_compaction_threshold` (number 0.1-0.95, default 0.78). Hook is active when provider is Anthropic and not disabled |
-| Disable | `"preemptive-compaction"` in `disabled_hooks`, or set `experimental.preemptive_compaction: false` |
-
-Source: `src/hooks/preemptive-compaction.ts`.
+The `preemptive-compaction` hook was deleted; the single compaction hook owns compaction. The name `preemptive-compaction` (plus `experimental.preemptive_compaction` and `experimental.preemptive_compaction_threshold`) still parses so old configs keep loading, but it resolves to a no-op. Do not add it to `disabled_hooks` for effect; it has none. Compaction behavior now lives in `compaction-context-injector` (§3.3) and `context-window-limit-recovery` (§3.4).
 
 ### 3.3 compaction-context-injector
 
@@ -617,15 +609,14 @@ Unified `matrixx.jsonc` showing every context management key. All keys are optio
   "experimental": {
     "aggressive_truncation": false,         // optional, used by anthropic recovery
     "truncate_all_tool_outputs": false,     // optional, when true truncates every tool output
-    "preemptive_compaction": true,          // optional, controls 78% auto compaction
-    "context_warning_threshold": 0.70,      // optional, 0.1-0.95, monitor warn (default 0.70)
-    "preemptive_compaction_threshold": 0.78 // optional, 0.1-0.95, preemptive trigger (default 0.78, must exceed warning)
+    "context_warning_threshold": 0.70       // optional, 0.1-0.95, monitor warn (default 0.70)
+    // NOTE: preemptive_compaction + preemptive_compaction_threshold are
+    // retained-deprecated no-ops (hook removed); they still parse, with no effect.
   },
 
   // Disable any hook by name
   "disabled_hooks": [
     // "context-window-monitor",
-    // "preemptive-compaction",
     // "compaction-context-injector",
     // "context-window-limit-recovery",
     // "tool-output-truncator",
@@ -663,7 +654,7 @@ Notes:
 | Headroom detection | In agent prompt, look for Headroom discipline | Discipline table injected | Check `headroom.enabled`, restart |
 | Native hooks | `grep disabled_hooks matrixx.jsonc` | No context hooks disabled unless intended | Remove unintended entries from `disabled_hooks` |
 | Truncation | Trigger a large grep, observe output length | Output capped near 50k tokens | Check `truncate_all_tool_outputs` |
-| Preemptive compaction | Reach ~78% Anthropic usage | Session auto summarizes with 60s timeout | Check Anthropic provider, 1M flag, cooldown |
+| Compaction injection | Trigger a compaction | Summary includes Goal / Work Completed / Remaining Work sections | Check `compaction-context-injector` is not in `disabled_hooks` |
 
 ### Common Issues
 

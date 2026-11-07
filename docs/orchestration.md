@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 3.0.0 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Version:** 1.2.1 · **Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).
@@ -254,10 +254,11 @@ work complete. It cannot delegate further and cannot touch plan files.
 
 Specialist roster (Trinity, Operator, Sati, Cipher, Sentinel, Merovingian, Construct, and others): see [`docs/agents.md`](./agents.md) — linked, not duplicated here.
 
-The full registry (17 built-ins) lives in
+The full registry (13 built-ins: morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati) lives in
 `src/agents/builtin-agents.ts` with the schema in
-`src/config/schema/agent-names.ts`. Mouse is created dynamically as the
-delegated executor. Models resolve from your configured providers with
+`src/config/schema/agent-names.ts` (`BuiltinAgentNameSchema`, 13 names).
+Mouse (`src/agents/mouse/`) is the delegated executor spawned by categories, not one of the 13 built-ins.
+Models resolve from your configured providers with
 fallback chains; worker agents default to temperature 0.1 (Seraph uses 0.3).
 For the full roster and per-agent detail, see [`docs/agents.md`](./agents.md).
 
@@ -286,8 +287,9 @@ task(category="construct", load_skills=["frontend-ui-ux"], prompt="...")
 task(category="bullet-time", load_skills=["playwright"], prompt="...")
 ```
 
-Skills prepend domain instructions to the worker prompt. All 50 built-in
-skills (frontend, DSL, security, testing, and more) are domain-specific, so
+Skills prepend domain instructions to the worker prompt. All 70 built-in
+skills (`BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts`;
+frontend, DSL, security, testing, and more) are domain-specific, so
 for pure prose and docs tasks `load_skills=[]` is intentional, not an
 omission.
 
@@ -341,8 +343,13 @@ is reached. `/ulw-loop` is the same loop with ultrawork mode active.
 
 Full reference with arguments and intercepts:
 [`docs/command-reference.md`](./command-reference.md)
-(23 built-ins covering orchestration, research, refactoring, handoffs,
-tasks, BDD, and toggles).
+(24 built-ins covering orchestration, research, refactoring, handoffs,
+tasks, BDD, and toggles — see `src/features/builtin-commands/types.ts`
+`BuiltinCommandName`: init-deep, matrix-loop, ulw-loop, cancel-loop, refactor,
+plan-review, start-work, stop-continuation, humanize, handoff, pickup,
+remove-deadcode, preset, end-ultrawork, research, assembly, ultrawork,
+bdd-pipeline, evolution, cleanup-tasks, task-list, quality-audit,
+quality-assurance, security-audit).
 
 ## Configuration
 

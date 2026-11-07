@@ -1,4 +1,4 @@
-> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (1.2.1, OpenCode V2-only). Current plan contract lives in `src/features/plan-contract/` with plan tools in `src/tools/plan/`.
 
 # Plan QA Scenarios — Agent-Executed Verification Guide
 

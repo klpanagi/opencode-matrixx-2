@@ -1,4 +1,4 @@
-> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (1.2.1, OpenCode-v2-only).
 
 # Matrixx Cost/Performance Improvement Proposals
 
@@ -6,8 +6,8 @@
 
 **Status:** Living document — per-proposal status tracked inline (Implemented / Partial / Proposed with source evidence)
 > Point-in-time analysis as of v2.6.10: historical dates, version stamps, and v2.0.0 evidences below are preserved as written; counts re-verified against current `src/` where noted.
-**Date:** 2026-07-09 (status refresh: v2.6.10)
-**Scope:** Matrixx v2.6.10 + 15 comparator projects
+**Date:** 2026-07-09 (status refresh carried forward; current plugin version 1.2.1)
+**Scope:** Matrixx v2.6.10-era codebase + 15 comparator projects (inventory counts below re-verified against current `src/` at v1.2.1)
 **Authors:** Morpheus research mode
 
 ---
@@ -61,12 +61,12 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 | Model presets | `src/config/schema/model-presets.ts` | Named static model bundles per agent/category; switch via `/preset` |
 | Runtime model fallback | `src/hooks/runtime-fallback/` | Auto-downgrade on failure |
 | Context window monitor (70% warn) | `src/hooks/context-window-monitor.ts` | Pre-empts overload |
-| Preemptive compaction | `src/hooks/preemptive-compaction.ts` | Optional |
+| ~~Preemptive compaction~~ (REMOVED: retained-deprecated no-op literal; single compaction hook owns compaction) | ~~`src/hooks/preemptive-compaction.ts`~~ (does not exist) | Proposal only, not current behavior |
 | Multi-strategy context recovery | `src/hooks/context-window-limit-recovery/ (~1100 LOC)
 | Concurrency limits + circuit breakers | `src/features/background-agent/concurrency.ts` | Model-specific limits |
 | 8-category delegation routing | `src/tools/delegate-task/constants.ts` (591 LOC) | Has per-category models |
-| 45 built-in skills | `src/skills/builtin/` | **Lazy-loaded since v2.0.0** — see P1 (`lazy-skill-helper.ts`, `skills.ts`) |
-| 4 MCP servers | `src/mcps/index.ts` | Lazy hydration — see P1 |
+| 70 built-in skills (schema `BuiltinSkillNameSchema`; 86 skill asset files under the loader) | `src/skills/builtin/` | **Lazy-loaded** — see P1 (`src/skills/loader/factories.ts`, `src/skills/loader/lazy-skill-helper.ts`) |
+| 2 built-in MCPs (`context7`, `document-reader`) | `src/mcps/index.ts` | Lazy hydration — see P1 |
 | `handoff` tool | `src/tools/handoff/` | Already supports file-based state |
 
 ---
@@ -78,11 +78,11 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 > **Status:** Implemented (v2.0.0). Evidence: `src/skills/loader/factories.ts` (lazy loaders), `src/skills/loader/lazy-skill-helper.ts`. See `docs/features.md` § "Lazy Skill Loading".
 
 
-- **What:** Defer loading of 45 skills + 3 MCPs until first reference. Register lightweight stubs at init, hydrate on demand.
+- **What (proposal, historical wording):** Defer loading of skills + MCPs until first reference (written when the inventory was 45 skills + 3 MCPs; current inventory is 70 schema skills / 86 asset files + 2 MCPs). Register lightweight stubs at init, hydrate on demand.
 - **Cost impact:** **~6.6K tokens saved per session startup** (barkain-validated). Multiplied across long sessions.
 - **Performance impact:** Faster plugin init, smaller first-message context.
 - **Complexity:** **Low.** Already have registry pattern; just split into "registered" vs "loaded".
-- **Where:** `src/skills/loader/factories.ts`, `src/mcps/index.ts`, `src/create-tools.ts`
+- **Where:** `src/skills/loader/factories.ts`, `src/mcps/index.ts` (proposal text named `src/create-tools.ts`, which does not exist; current tool wiring lives in `src/plugin/tool/tool-catalog.ts` + `src/plugin/tool/tool-policy.ts`)
 - **Source:** barkain/claude-code-workflow-orchestration
 
 ### P2. Prefix-Cache Stability (DeepSeek-Reasonix pattern)
@@ -115,7 +115,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 - **Cost impact:** Prevents skill-misuse retries and re-explanations. **10–30% reduction in skill-related rework.**
 - **Performance impact:** More reliable, faster skill activation.
 - **Complexity:** **Low.** Documentation/audit task, no code change.
-- **Where:** `src/skills/builtin/*.ts` (45 files)
+- **Where:** `src/skills/builtin/*.ts` (proposal text said 45 files; current inventory is 70 schema skills / 86 asset files)
 - **Source:** obra/superpowers (Skill Discovery Optimization)
 
 ### P5. Plan-as-File (planning-with-files pattern)

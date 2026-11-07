@@ -1,7 +1,7 @@
 # Category & Skill System Guide
 
-> Version 3.0.0. **Audience:** users composing delegated work and engineers adding skills.
-> 8 categories (`src/features/delegate-task/`), 50 skills (`src/skills/`).
+> Version 1.2.1. **Audience:** users composing delegated work and engineers adding skills.
+> 8 categories (`src/tools/delegate-task/`), 70 skills (`src/skills/builtin/`).
 
 This document provides a comprehensive guide to the **Category** and **Skill** systems, which form the extensibility core of Matrixx. For delegation flows, see [Orchestration](orchestration.md). For the agent roster, see [Agents](agents.md).
 
@@ -38,7 +38,7 @@ A Category is an agent configuration preset optimized for specific domains.
 Each category declares a fallback chain of `<provider>/<model>` candidates; Matrixx
 selects the first whose provider is connected. Shipped defaults are illustrative —
 override via `modelRequirements` or `model_presets` (see
-`src/shared/model-requirements.ts`). The IDs in this table are OpenCode's free tier —
+`src/shared/model/model-requirements.ts`). The IDs in this table are OpenCode's free tier —
 copy-paste as-is, or substitute any `<provider>/<model>` from your own provider.
 
 ### Usage
@@ -64,9 +64,9 @@ When you use a Category, a special agent called **Mouse** performs the work.
 
 A Skill is a mechanism that injects **specialized knowledge (Context)** and **tools (MCP)** for specific domains into agents.
 
-### Built-in Skills (50 total)
+### Built-in Skills (70 total)
 
-50 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/builtin/` and load via `createBuiltinSkills()`.
+70 names verified against `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); templates live in `src/skills/builtin/` and load via `createBuiltinSkills()`.
 
 **Development & Tools (6):**
 - **`git-master`** — Git expert. Detects commit styles, splits atomic commits, rebase strategies.
@@ -74,7 +74,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 - **`tdd-enforcer`** — TDD workflow enforcement (RED → GREEN → REFACTOR).
 - **`quality-gate`** — Automated quality verification: lint, typecheck, test, build.
 - **`software-dev`** — Structured 6-phase development pipeline (PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP).
-- **`review-work`** — Post-implementation review orchestrator with 5 parallel agents.
+- **`review-work`** — Post-implementation review orchestrator with 6 parallel agents.
 
 **Frontend & Browser (4):**
 - **`playwright`** — Browser automation. Web page testing, screenshots, scraping. MCP: `@playwright/mcp` (auto-executed)
@@ -82,7 +82,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 - **`agent-browser`** — Agent-controlled browser automation.
 - **`frontend-ui-ux`** — Designer mindset. Color, typography, motion guidelines.
 
-Skill counts, honest version: **50** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **66** files in `src/skills/builtin/` (65 skill modules + `index.ts`). The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `document-reader`).
+Skill counts, honest version: **70** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **86** skill asset files under the skill loader. The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `react-nextjs-patterns`, `svelte-sveltekit-patterns`, `document-reader`).
 
 **DSL Engineering (11):**
 - **`dsl-core`**, **`dsl-grammar`**, **`dsl-codegen`**, **`dsl-metamodel`**, **`dsl-tooling`**

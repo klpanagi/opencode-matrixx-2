@@ -1,4 +1,4 @@
-> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (1.2.1, OpenCode V2-only).
 
 # Websearch Migration: Custom MCP to Native Tool
 

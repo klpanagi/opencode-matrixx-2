@@ -1,19 +1,21 @@
 # Matrixx Self-Evolution Loop
 
 > **Audience:** users opting into session learning and engineers extending the loop.
-> **Version:** 3.0.0. Default **off** (`evolution.enabled: false` = zero overhead).
-> **See also:** `command-reference.md` (`/evolution`), `hooks.md` (`evolution-watcher`, `evolution-compressor`, `evolution-hitl`), `configurations.md` (`evolution.*`).
+> **Version:** 1.2.1. Default **off** (`evolution.enabled: false` = zero overhead).
+> **See also:** `command-reference.md` (`/evolution`), `hooks.md` (`evolution-watcher`, `evolution-hitl`), `configurations.md` (`evolution.*`).
+>
+> **Note:** `evolution-compressor` is REMOVED (retained-deprecated no-op literal so old configs keep loading; stripped by migration, see `src/shared/migration/hook-names.ts`). Do not reference it as a live hook.
 
 Self-evolution records what happens in sessions, compresses traces into reusable knowledge, and governs promotion with human-in-the-loop approval. Every session makes the next one smarter.
 
-_Registration gating_: all 3 hooks register only when `evolution.enabled:true` (default `false` = zero overhead; handlers keep defense-in-depth `if (!config?.enabled) return`).
+_Registration gating_: both live hooks (`evolution-watcher`, `evolution-hitl`) register only when `evolution.enabled:true` (default `false` = zero overhead; handlers keep defense-in-depth `if (!config?.enabled) return`).
 
 ## Architecture, 4 Layers
 
 | Layer | Hook / Module | Trigger | Output |
 |-------|---------------|---------|--------|
 | 1 Watcher | `evolution-watcher` (`tool.execute.after`) | Every tool call | `TraceRecord` JSONL |
-| 2 Compressor | `evolution-compressor` (`compacting` + `idle`/`error`) | Context ~78%, idle >5 traces, error | `DistilledKnowledge` |
+| 2 Compressor | REMOVED (`evolution-compressor` is a retained-deprecated no-op; single compaction hook owns compaction) | n/a | n/a |
 | 3 Writer | `EvolutionWriter` | Distilled knowledge | `pending/<slug>.md` + `skills/<slug>/SKILL.md` |
 | 4 Governance | `evolution-hitl` + `passesQualityGate()` + `/evolution` tool | Confidence / approval | Promotion to `.opencode/skills/` |
 
@@ -231,13 +233,13 @@ Regenerate schemas after schema edits: `bun run build:schema` produces `dist/mat
 | Trigger | Hook | Action |
 |---------|------|--------|
 | `tool.execute.after` | `evolution-watcher` | `traceStore.append` (truncated args/output, `classifySuccess`, recursion guard) |
-| `experimental.session.compacting` | `evolution-compressor` | Primary: context about to be lost |
-| `session.idle` | `evolution-compressor` | Opportunistic if `traces >= minTraces` |
-| `session.error` | `evolution-compressor` | Failure trajectory capture |
+| `experimental.session.compacting` | ~~`evolution-compressor`~~ REMOVED (no-op literal) | n/a |
+| `session.idle` | ~~`evolution-compressor`~~ REMOVED (no-op literal) | n/a |
+| `session.error` | ~~`evolution-compressor`~~ REMOVED (no-op literal) | n/a |
 
 ## Quality Gate
 
-Runs inline in the pipeline before `writer.stage` (`passesQualityGate` in `src/hooks/evolution-quality-gate`, invoked by `src/features/evolution/pipeline.ts`):
+Runs inline in the pipeline before `writer.stage` (`passesQualityGate` in `src/hooks/evolution-quality-gate/`, invoked by `src/features/evolution/pipeline.ts`):
 
 - `confidence >= governance.minConfidence` (default 0.7) -- otherwise discarded
 - `skillDraft` non-empty

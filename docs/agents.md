@@ -1,4 +1,4 @@
-# Matrixx Agents (v3.0.0)
+# Matrixx Agents (v1.2.1)
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
@@ -14,7 +14,7 @@ In The Matrix, Morpheus was the captain who saw the truth beyond the simulation 
 
 **Yes! LLM Agents are no different from us. They can write code as brilliant as ours and work just as excellently — if you give them great tools and solid teammates.**
 
-> **How models are chosen:** Matrixx is Claude-only — per-agent fallback chains of `claude-opus-4-6` / `claude-sonnet-4-6` / `claude-haiku-4-5` declared in `src/shared/model-requirements.ts`. Matrixx selects the first chain entry whose provider (`anthropic`, `github-copilot`, `opencode`) is connected. Override via `modelRequirements` (same file).
+> **How models are chosen:** Matrixx ships Claude-first model defaults — per-agent fallback chains of `claude-opus-4-6` / `claude-sonnet-4-6` / `claude-haiku-4-5` declared in `src/shared/model/model-requirements.ts`. Matrixx selects the first chain entry whose provider (`anthropic`, `github-copilot`, `opencode`) is connected; any agent or category can be repointed to another model/provider in `matrixx.jsonc`. Override the chains via `modelRequirements` (same file).
 
 Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is customizable. All features are enabled by default. Battery included, works out of the box.
 
@@ -45,16 +45,16 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | **Sati** | Frontend specialist (components, a11y, perf, testing) | `claude-sonnet-4-6` |
 | **Sentinel** | Security auditor | `claude-sonnet-4-6` |
 
-The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Twelve are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model-requirements.ts`.
+The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Twelve are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model/model-requirements.ts`.
 
 ### Built-in Capabilities
 
 - Full LSP / AST-Grep support
 - Lifecycle hooks — context injection, think mode, comment checking, background-task parent notification, error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
-- 22 Tool Directories (40 registrations) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
+- 31 Tool Directories (`src/tools/`) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
 - File-backed tasks — `.matrixx/tasks` keep the agent on mission (survives `/clear`; see [Task System](./task-system.md))
 
-- Claude Code Compatibility — commands, agents, skills, MCPs, hooks
+- No Claude Code compatibility layer — the legacy `.claude/` loaders and `claude_code` config keys no longer exist in-tree; custom commands and skills load from OpenCode paths only (`.opencode/command/`, `.opencode/skills/`)
 - Curated MCPs: Context7 (official docs), Document Reader + native `websearch` tool and native `github_search` tool (local gh/git/rg, no third-party services)
 - Interactive terminal via Tmux integration
 - Async background agents
@@ -95,7 +95,7 @@ Cipher is the agent you call when you need to design, build, or extend domain-sp
 
 | Property | Value |
 |----------|-------|
-| **Model** | `claude-opus-4-6` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`) |
+| **Model** | `claude-opus-4-6` (provider-resolved fallback chain — see `src/shared/model/model-requirements.ts`) |
 | **Mode** | `all` — selectable in agent menu AND spawnable as subagent |
 | **Thinking** | Extended thinking enabled (32k budget) |
 | **Max Tokens** | 64,000 — DSL tasks produce large outputs (grammars + parsers + code generators) |
@@ -227,7 +227,7 @@ Sati is the dedicated frontend specialist. Self-contained execution — Sati han
 ### Agent Characteristics
 
 - **Role**: Frontend specialist
-- **Model**: `claude-sonnet-4-6` (provider-resolved fallback chain — see `src/shared/model-requirements.ts`)
+- **Model**: `claude-sonnet-4-6` (provider-resolved fallback chain — see `src/shared/model/model-requirements.ts`)
 - **Tool Restrictions**: Cannot use `task` or `delegate_agent` (self-contained execution)
 - **Skills**: 8 frontend and browser skills (`frontend-react-nextjs`, `frontend-svelte-sveltekit`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright`, verified in `src/agents/sati.ts` via `SATI_FRONTEND_SKILLS`)
 - **Mode**: `subagent` — explicitly invokable only
@@ -270,7 +270,7 @@ Workers must be **stateless and disposable**. The Niobe remains in context and a
 
 | Property | Value |
 |----------|-------|
-| **Model** | Category-resolved (`source` → `claude-opus-4-6`, see `src/shared/model-requirements.ts`) — configurable via `agents.mouse.model` |
+| **Model** | Category-resolved (`source` → `claude-opus-4-6`, see `src/shared/model/model-requirements.ts`) — configurable via `agents.mouse.model` |
 | **Mode** | `subagent` — spawnable only, never appears in agent menu |
 | **Max Tokens** | 64,000 |
 | **Temperature** | 0.1 |
@@ -344,7 +344,7 @@ stays tracked and visible to `background_output` / `background_wait_all`.
 
 ## Agent Roster by Layer
 
-The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
+The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
 
 ### The Orchestration Layer (3 agents)
 
@@ -376,7 +376,7 @@ The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions**
 
 ### BDD Contract Skill
 
-- **bdd-contract** (skill): BDD contract generation from Gherkin files (see `/bdd-contract` in the [Command Reference](command-reference.md)).
+- **bdd-contract** (skill): BDD contract generation from Gherkin files. It is a skill injected into BDD pipeline subagents, not a slash command; the pipeline is driven by `/bdd-pipeline` and the `bdd_*` tools (see [Quality, Part A](quality.md)).
 
 ### Design Rationale
 
@@ -532,9 +532,8 @@ flowchart LR
         R4["matrix-bend → Creative"]
         R5["bullet-time → Trivial"]
         R6["broadcast → Documentation"]
-        R7["quick → Simple tasks"]
-        R8["blue-pill → Low effort"]
-        R9["red-pill → High effort"]
+        R7["blue-pill → Low effort"]
+        R8["red-pill → High effort"]
     end
 
     subgraph RESOLUTION["Agent Resolution"]
@@ -563,7 +562,7 @@ flowchart LR
 
 ```mermaid
 graph TD
-    subgraph SKILL_REGISTRY["Skill Registry (37 Built-in Skills)"]
+    subgraph SKILL_REGISTRY["Skill Registry (70 Built-in Skills)"]
         subgraph DSL_SKILLS["Cipher's DSL Skills (11)"]
             S1["dsl-core"]
             S2["dsl-grammar"]
@@ -717,7 +716,7 @@ flowchart TD
 3. **Task system is the execution substrate** — `.matrixx/tasks/T-*.json` (scope:project default, file-backed, survives `/clear`; see [Task System](./task-system.md))
 4. **Skills are composable** — Any agent can load any skill via `load_skills`
 5. **Session continuity** — Every delegation returns a `session_id` for efficient follow-up (`task(session_id="…")`)
-6. **Model fallback chains** — Every agent has a fallback chain for provider flexibility (see `src/shared/model-requirements.ts`)
+6. **Model fallback chains** — Every agent has a fallback chain for provider flexibility (see `src/shared/model/model-requirements.ts`)
 7. **Tool restrictions enforce roles** — Read-only agents can't write; executors can't delegate; `task-edit-guard` blocks raw bash on `.matrixx/tasks`
 8. **Two-phase execution** — Sync (blocking) for critical path, async (background) for exploration; task waves add a third (DAG-scheduled)
 

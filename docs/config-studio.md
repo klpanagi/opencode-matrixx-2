@@ -1,4 +1,4 @@
-> Archived / historical — preserved as-is, do not rely on counts/versions; superseded by v2-native docs (2.0.0, OpenCode-v2-only).
+> Version 1.2.1 (OpenCode V2 only). Pointer page — canonical docs live with the app; do not rely on this page for counts or schema details.
 
 # Matrixx Config Studio — Setup & Build Guide
 

@@ -1,6 +1,6 @@
 # Matrixx CLI Guide
 
-> Version 3.0.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
+> Version 1.2.1. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
 
 This document provides a comprehensive guide to using the Matrixx CLI tools.
 
@@ -72,7 +72,7 @@ Preseed provider subscriptions without prompts:
 
 ## 4. `doctor` - Environment Diagnostics
 
-Diagnoses your environment to ensure Matrixx is functioning correctly. Runs 12 checks (`ALL_CHECKS` in `src/cli/doctor/checks/index.ts`).
+Diagnoses your environment to ensure Matrixx is functioning correctly. Runs 13 checks (`ALL_CHECKS` in `src/cli/doctor/checks/index.ts`).
 
 ### Usage
 
@@ -121,7 +121,7 @@ Authentication
   ✗ Google API key not found
 
 Dependencies
-  ✓ Bun 1.4.0 installed
+  ✓ Bun 1.4.4 installed
   ✓ Node.js 23.0.0 installed
   ✓ Git 2.45.0 installed
 
@@ -264,7 +264,7 @@ src/cli/
 │   ├── opencode-sync.ts  # opencode.json sync
 │   ├── deps.ts           # Dependency checks
 │   └── constants.ts      # Setup constants
-├── doctor/               # Health check system (12 checks)
+├── doctor/               # Health check system (13 checks)
 │   ├── index.ts          # Doctor command entry
 │   ├── types.ts          # DoctorCheck types
 │   ├── format.ts         # Output formatting
@@ -273,7 +273,7 @@ src/cli/
 │                         # runtime, tmux (+ helpers, index)
 ```
 
-Config loading lives outside the CLI: Zod schemas in `src/config/schema/`, JSONC parsing in `src/shared/jsonc-parser.ts`.
+Config loading lives outside the CLI: Zod schemas in `src/config/schema/`, JSONC parsing in `src/shared/text/jsonc-parser.ts`.
 
 ### Adding New Doctor Checks
 
