@@ -76,6 +76,8 @@ export interface BackgroundTask {
 
   /** Compressed result payload for handoff to parent session (set by tryCompleteTask) */
   compactedResult?: string
+  /** Monotonic epoch fencing token: bumped on revive/takeover, stale writers are rejected */
+  generation?: number
 }
 
 export interface LaunchInput {

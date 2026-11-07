@@ -6,6 +6,7 @@
  */
 
 import type { BgHandle } from "./handle-index"
+import { readHandle } from "./handle-index"
 import type { BackgroundTask } from "./types"
 
 export const REVIVABLE_STATUSES = ["cancelled", "stopped", "interrupt", "error", "completed"] as const
@@ -112,6 +113,67 @@ export function findRevivableHandle(
  * caller and `status` restarts at `"pending"`; `startedAt` is left unset (it
  * is assigned on admission) and `completedAt`/`error` are cleared.
  */
+export type DeadTargetReason = "expired" | "stale-generation" | "session-dead"
+
+export class DeadReviveTargetError extends Error {
+  kind = "DeadTarget" as const
+  reason: DeadTargetReason
+  taskId: string
+  constructor(taskId: string, reason: DeadTargetReason, detail: string) {
+    super(`[revive] DeadTarget: task=${taskId} reason=${reason} ${detail}`)
+    this.name = "DeadReviveTargetError"
+    this.reason = reason
+    this.taskId = taskId
+  }
+}
+
+export type ProbeCandidate = { taskId: string; sessionID?: string; generation?: number }
+
+export type ProbeResult = { alive: true } | { alive: false; reason: DeadTargetReason; error: DeadReviveTargetError }
+
+export function probeReviveTarget(
+  directory: string,
+  candidate: ProbeCandidate,
+  opts?: { expectedGeneration?: number; isSessionLive?: (sessionID: string) => boolean },
+): ProbeResult {
+  if (candidate.sessionID === undefined || candidate.sessionID.trim().length === 0) {
+    return {
+      alive: false,
+      reason: "session-dead",
+      error: new DeadReviveTargetError(candidate.taskId, "session-dead", "no session to probe"),
+    }
+  }
+  const onDisk = readHandle(directory, candidate.taskId)
+  if (onDisk === null) {
+    return {
+      alive: false,
+      reason: "expired",
+      error: new DeadReviveTargetError(candidate.taskId, "expired", "handle missing or swept from disk"),
+    }
+  }
+  const expected = opts?.expectedGeneration ?? candidate.generation
+  if (expected !== undefined && onDisk.generation !== expected) {
+    return {
+      alive: false,
+      reason: "stale-generation",
+      error: new DeadReviveTargetError(
+        candidate.taskId,
+        "stale-generation",
+        `expected gen ${expected}, found gen ${onDisk.generation}`,
+      ),
+    }
+  }
+  const live = opts?.isSessionLive?.(candidate.sessionID) ?? true
+  if (!live) {
+    return {
+      alive: false,
+      reason: "session-dead",
+      error: new DeadReviveTargetError(candidate.taskId, "session-dead", `session ${candidate.sessionID} no longer live`),
+    }
+  }
+  return { alive: true }
+}
+
 export function toReviveTask(handle: BgHandle, prompt: string): BackgroundTask {
   return {
     id: handle.taskId,

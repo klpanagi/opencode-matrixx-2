@@ -48,6 +48,7 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
       const uncertain =
         handle.status === "running" || handle.status === "pending"
       rt.store.tasks.set(handle.taskId, {
+        generation: handle.generation,
         id: handle.taskId,
         parentSessionID: handle.parentSessionID,
         parentMessageID: handle.parentMessageID,
