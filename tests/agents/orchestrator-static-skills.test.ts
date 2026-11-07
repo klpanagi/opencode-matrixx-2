@@ -11,8 +11,8 @@
  */
 
 import { describe, expect, spyOn, test } from "bun:test"
-import { createBuiltinAgents } from "../../src/agents/builtin-agents"
-import { createMouseAgentWithOverrides } from "../../src/agents/mouse/agent"
+import { createBuiltinAgents } from "../../src/agents/registry"
+import { createMouseAgentWithOverrides } from "../../src/agents/definitions/mouse/agent"
 import { buildOracleAgentConfig } from "../../src/plugin/handlers/oracle-agent-config-builder"
 import * as shared from "../../src/shared"
 

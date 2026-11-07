@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { getModelDirectives } from "../../../src/agents/model-directives"
+import { getModelDirectives } from "../../../src/agents/shared/model-directives"
 import { injectContextDiscipline } from "../../../src/plugin/handlers/agent-config-handler"
 
 const DEEPSEEK = "deepseek/deepseek-v4.1-flash"

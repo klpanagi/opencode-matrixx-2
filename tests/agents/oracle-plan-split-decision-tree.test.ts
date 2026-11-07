@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { ORACLE_IDENTITY_CONSTRAINTS } from "../../src/agents/oracle/identity-constraints"
+import { ORACLE_IDENTITY_CONSTRAINTS } from "../../src/agents/definitions/oracle/identity-constraints"
 
 /**
  * The split-decision-tree region is everything between the 6.1 heading and the

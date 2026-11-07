@@ -3,8 +3,8 @@
 import { describe, expect, test } from "bun:test"
 import * as fs from "node:fs"
 import * as path from "node:path"
-import { ORACLE_PERMISSION } from "../../../src/agents/oracle/system-prompt"
-import { SMITH_SYSTEM_PROMPT } from "../../../src/agents/smith"
+import { ORACLE_PERMISSION } from "../../../src/agents/definitions/oracle/system-prompt"
+import { SMITH_SYSTEM_PROMPT } from "../../../src/agents/definitions/smith"
 import { START_WORK_TEMPLATE } from "../../../src/features/builtin-commands/templates/start-work"
 
 /**
@@ -32,7 +32,7 @@ function oraclePermissionMap(): Record<string, string> {
 describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
   test("behavioral-summary.ts mandates plan_* tools", () => {
     //#given the rewritten behavioral summary
-    const content = readSource("agents/oracle/behavioral-summary.ts")
+    const content = readSource("agents/definitions/oracle/behavioral-summary.ts")
     //#then it mandates plan_* tools and no longer says raw write
     expect(content).toContain("via plan_* tools (plan_create, plan_read, plan_update, plan_list)")
     expect(content).not.toContain("write .matrixx/*.md files")
@@ -40,7 +40,7 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
 
   test("plan-generation.ts generates via plan_create", () => {
     //#given the rewritten plan generation prompt
-    const content = readSource("agents/oracle/plan-generation.ts")
+    const content = readSource("agents/definitions/oracle/plan-generation.ts")
     //#then it routes generation through plan_create
     expect(content).toContain("via plan_create")
     expect(content).not.toContain("Generate work plan to")
@@ -48,7 +48,7 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
 
   test("plan-template.ts generates via plan_create", () => {
     //#given the rewritten plan template
-    const content = readSource("agents/oracle/plan-template.ts")
+    const content = readSource("agents/definitions/oracle/plan-template.ts")
     //#then it routes generation through plan_create
     expect(content).toContain("via plan_create")
     expect(content).not.toContain("Generate plan to:")
@@ -56,7 +56,7 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
 
   test("system-prompt.ts denies edit and allows plan_update", () => {
     //#given the rewritten system prompt + permission config
-    const content = readSource("agents/oracle/system-prompt.ts")
+    const content = readSource("agents/definitions/oracle/system-prompt.ts")
     //#then the permission config denies generic edit and allows plan_update
     const permission = oraclePermissionMap()
     expect(permission.edit).toBe("deny")
@@ -67,7 +67,7 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
 
   test("smith.ts reads plans via plan_read", () => {
     //#given the rewritten smith prompt
-    const content = readSource("agents/smith.ts")
+    const content = readSource("agents/definitions/smith.ts")
     //#then it reads plans via plan_read, never bare Read
     expect(SMITH_SYSTEM_PROMPT).toContain("via plan_read")
     expect(content).toContain("via plan_read")
@@ -90,7 +90,7 @@ describe("prompt-text audit: plan_* mandate present in rewritten files", () => {
 describe("prompt-text audit: identity-constraints.ts mandates plan_* tools (Gap 2 resolved)", () => {
   test("identity-constraints.ts <write_protocol> uses plan_create/plan_update, never generic Write/Edit on plans", () => {
     //#given the rewritten identity-constraints write_protocol
-    const content = readSource("agents/oracle/identity-constraints.ts")
+    const content = readSource("agents/definitions/oracle/identity-constraints.ts")
     //#then it mandates plan_create (atomic) + plan_update (LINE#ID anchors) exclusively
     expect(content).toContain("<write_protocol>")
     expect(content).toContain("plan_create")

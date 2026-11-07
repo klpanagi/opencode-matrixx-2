@@ -4,11 +4,11 @@ import {
   SMITH_MAX_REVIEW_ROUNDS,
   createOracleHighAccuracyMode,
   resolveSmithMaxReviewRounds,
-} from "../../src/agents/oracle/high-accuracy-mode"
+} from "../../src/agents/definitions/oracle/high-accuracy-mode"
 import {
   ORACLE_SYSTEM_PROMPT,
   createOracleSystemPrompt,
-} from "../../src/agents/oracle/system-prompt"
+} from "../../src/agents/definitions/oracle/system-prompt"
 import { PlansConfigSchema } from "../../src/config/schema/plans"
 
 describe("SMITH_MAX_REVIEW_ROUNDS default", () => {

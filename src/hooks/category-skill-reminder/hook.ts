@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../../agents/shared/dynamic-agent-prompt-builder"
 import { getSessionAgent, subagentSessions } from "../../features/session-state/state"
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared"

@@ -11,7 +11,7 @@ import {
   contextModeDisciplinePointerBody,
   fallbackCompactDiscipline,
   fallbackFullDiscipline,
-} from "../src/agents/dynamic-agent-prompt-builder"
+} from "../src/agents/shared/dynamic-agent-prompt-builder"
 import {
   _resetContextModeEnforcementForTesting,
   _setCtxToolsForTesting,

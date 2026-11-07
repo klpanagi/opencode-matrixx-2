@@ -1,8 +1,8 @@
-import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../../agents/agent-builder"
-import { type AgentConfig, parseModelRef } from "../../agents/agent-config"
-import { mergeAgentConfig } from "../../agents/builtin-agents/agent-overrides"
-import { createOracleSystemPrompt, ORACLE_PERMISSION } from "../../agents/oracle"
-import type { AgentOverrideConfig } from "../../agents/types"
+import { createOracleSystemPrompt, ORACLE_PERMISSION } from "../../agents/definitions/oracle"
+import { mergeAgentConfig } from "../../agents/registry/agent-overrides"
+import { ORCHESTRATOR_STATIC_SKILLS, prependStaticSkillTemplates } from "../../agents/shared/agent-builder"
+import { type AgentConfig, parseModelRef } from "../../agents/shared/agent-config"
+import type { AgentOverrideConfig } from "../../agents/shared/types"
 import type { BrowserAutomationProvider, CategoryConfig, ModelRequirements } from "../../config/schema"
 import {
   fetchAvailableModels,

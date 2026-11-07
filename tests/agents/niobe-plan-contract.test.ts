@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 
 const REPO_ROOT = resolve(import.meta.dir, "..", "..")
-const AGENT_DIR = join(REPO_ROOT, "src", "agents", "niobe")
+const AGENT_DIR = join(REPO_ROOT, "src", "agents", "definitions", "niobe")
 
 function readVariant(file: string): string {
   return readFileSync(join(AGENT_DIR, file), "utf8")
@@ -116,7 +116,7 @@ describe("global obsolete-recovery-protocol sweep", () => {
   ]
 
   /**
-   * src/agents/smith.ts is EXPLICITLY EXCLUDED and MUST stay excluded.
+   * src/agents/definitions/smith.ts is EXPLICITLY EXCLUDED and MUST stay excluded.
    * Reason: it is byte-frozen by a mission guardrail — it is not owned here and
    * must not be edited to satisfy a documentation test. A silent skip would be
    * a false pass (the next reader would assume the file was checked), so the
@@ -124,7 +124,7 @@ describe("global obsolete-recovery-protocol sweep", () => {
    * it must be the ONLY exclusion. If the freeze is ever lifted — or a second
    * carve-out is added for convenience — these tests fail.
    */
-  const FROZEN_DOC_SWEEP_SITES = ["src/agents/smith.ts"]
+  const FROZEN_DOC_SWEEP_SITES = ["src/agents/definitions/smith.ts"]
 
   const SWEEP_ROOTS = ["src/agents", "src/features/builtin-commands/templates"] as const
 
@@ -159,7 +159,7 @@ describe("global obsolete-recovery-protocol sweep", () => {
     expect(files.length).toBeGreaterThan(0)
     expect(files.some((f) => f.startsWith("src/agents/"))).toBe(true)
     expect(files.some((f) => f.startsWith("src/features/builtin-commands/templates/"))).toBe(true)
-    expect(files).toContain("src/agents/smith.ts")
+    expect(files).toContain("src/agents/definitions/smith.ts")
   })
 
   test("the smith.ts carve-out is the only exclusion, and the file is genuinely frozen", () => {
@@ -170,10 +170,10 @@ describe("global obsolete-recovery-protocol sweep", () => {
     const actual = sweptFiles()
 
     //#then smith.ts is in the tree, it is the sole exclusion, and it is a real agent source
-    expect(actual).toContain("src/agents/smith.ts")
-    expect(frozen).toEqual(["src/agents/smith.ts"])
-    expect(actual.filter((f) => frozen.includes(f))).toEqual(["src/agents/smith.ts"])
-    expect(statSync(join(REPO_ROOT, "src/agents/smith.ts")).isFile()).toBe(true)
+    expect(actual).toContain("src/agents/definitions/smith.ts")
+    expect(frozen).toEqual(["src/agents/definitions/smith.ts"])
+    expect(actual.filter((f) => frozen.includes(f))).toEqual(["src/agents/definitions/smith.ts"])
+    expect(statSync(join(REPO_ROOT, "src/agents/definitions/smith.ts")).isFile()).toBe(true)
   })
 
   test("no swept file reintroduces an obsolete recovery-protocol phrase", () => {

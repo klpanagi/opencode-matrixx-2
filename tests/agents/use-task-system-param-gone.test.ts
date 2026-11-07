@@ -5,8 +5,8 @@
  * (correction C7) — not merely defaulted to `true`.
  *
  * Today it appears in 3 shapes at 10+ anchors:
- *   - 6 `= false` defaults  (builtin-agents.ts, mouse/agent.ts, keymaker, morpheus)
- *   - 2 pass-throughs        (builtin-agents.ts)
+ *   - 6 `= false` defaults  (registry/index.ts, definitions/mouse/agent.ts, keymaker, morpheus)
+ *   - 2 pass-throughs        (registry/index.ts)
  *   - 2 optional-param sites (niobe-agent.ts, general-agents.ts)
  * plus 3 interpolated `| Tracking | ${useTaskSystem ? ... } |` prompt rows.
  *
@@ -137,7 +137,7 @@ describe("rendered prompts name only the task tools (R8)", () => {
 
   test("morpheus prompt advertises only task tools", async () => {
     //#given the morpheus factory invoked with non-legacy arguments only
-    const { createMorpheusAgent } = await import("../../src/agents/morpheus")
+    const { createMorpheusAgent } = await import("../../src/agents/definitions/morpheus")
 
     //#when the prompt is rendered
     const prompt = promptOf(
@@ -150,7 +150,7 @@ describe("rendered prompts name only the task tools (R8)", () => {
 
   test("keymaker prompt advertises only task tools", async () => {
     //#given the keymaker factory invoked with non-legacy arguments only
-    const { createKeymakerAgent } = await import("../../src/agents/keymaker")
+    const { createKeymakerAgent } = await import("../../src/agents/definitions/keymaker")
 
     //#when the prompt is rendered
     const prompt = promptOf(createKeymakerAgent("gpt-5.3-codex"))
@@ -161,7 +161,7 @@ describe("rendered prompts name only the task tools (R8)", () => {
 
   test("mouse prompt advertises only task tools for every model variant", async () => {
     //#given the mouse factory invoked with non-legacy arguments only, once per variant
-    const { createMouseAgentWithOverrides } = await import("../../src/agents/mouse/agent")
+    const { createMouseAgentWithOverrides } = await import("../../src/agents/definitions/mouse/agent")
     const models = [
       "anthropic/claude-sonnet-4-5",
       "openai/gpt-5.3",

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { AvailableAgent } from "../../src/agents/dynamic-agent-prompt-builder"
-import { createKeymakerAgent } from "../../src/agents/keymaker"
+import type { AvailableAgent } from "../../src/agents/shared/dynamic-agent-prompt-builder"
+import { createKeymakerAgent } from "../../src/agents/definitions/keymaker"
 
 const MODEL = "anthropic/claude-sonnet-4"
 

@@ -1,10 +1,10 @@
 import { createBuiltinAgents } from "../../agents";
+import { createMouseAgentWithOverrides } from "../../agents/definitions/mouse";
 import {
   buildCompactContextDisciplineSection,
   buildExploreDisciplineSection,
   buildHeadroomSection,
-} from "../../agents/dynamic-agent-prompt-builder";
-import { createMouseAgentWithOverrides } from "../../agents/mouse";
+} from "../../agents/shared/dynamic-agent-prompt-builder";
 import type { MatrixxConfig } from "../../config";
 import { log } from "../../shared";
 import { type ContextModeConfigInput, getContextModeForPrompts, resolveGrepGlobUsable, setContextModeForPrompts } from "../../shared/policy/context-mode-enforcement";

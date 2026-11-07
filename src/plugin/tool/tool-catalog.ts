@@ -1,6 +1,6 @@
 import type {
   AvailableCategory,
-} from "../../agents/dynamic-agent-prompt-builder"
+} from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../../config"
 import { resolvePlanCap } from "../../features/mission-state/constants"
 import { isTaskSystemEnabled } from "../../shared/config/task-system-gating"

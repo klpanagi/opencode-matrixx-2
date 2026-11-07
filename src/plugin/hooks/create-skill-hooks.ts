@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { HookName } from "../../config"
 import { createAutoSlashCommandHook, createCategorySkillReminderHook } from "../../hooks"
 import { bindSafeHook } from "../../shared/agent/safe-create-hook"

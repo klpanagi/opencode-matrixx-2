@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { ORACLE_PLAN_GENERATION, ORACLE_SYSTEM_PROMPT } from "../../src/agents/oracle"
+import { ORACLE_PLAN_GENERATION, ORACLE_SYSTEM_PROMPT } from "../../src/agents/definitions/oracle"
 
 describe("ORACLE_SYSTEM_PROMPT Smith invocation policy", () => {
   test("should direct providing ONLY the file path string when invoking Smith", () => {

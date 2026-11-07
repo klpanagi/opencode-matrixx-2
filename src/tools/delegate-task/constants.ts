@@ -1,7 +1,7 @@
 import type {
    AvailableCategory,
    AvailableSkill,
- } from "../../agents/dynamic-agent-prompt-builder"
+ } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { CategoryConfig } from "../../config/schema"
 import { truncateDescription } from "../../shared/compaction/truncate-description"
 

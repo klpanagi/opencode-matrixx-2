@@ -2,7 +2,7 @@ import { z } from "zod"
 import type {
   AvailableCategory,
   AvailableSkill,
-} from "../../agents/dynamic-agent-prompt-builder"
+} from "../../agents/shared/dynamic-agent-prompt-builder"
 import { resolveSoftwareDevEnforcement, type SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import { log } from "../../shared/runtime/logger"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"

@@ -1,8 +1,8 @@
 /// <reference types="bun-types" />
 import { readFileSync } from "node:fs"
 import { describe, expect, test } from "bun:test"
-import { NIOBE_SYSTEM_PROMPT } from "../../../src/agents/niobe/default"
-import { NIOBE_GPT_SYSTEM_PROMPT } from "../../../src/agents/niobe/gpt"
+import { NIOBE_SYSTEM_PROMPT } from "../../../src/agents/definitions/niobe/default"
+import { NIOBE_GPT_SYSTEM_PROMPT } from "../../../src/agents/definitions/niobe/gpt"
 import { buildOrchestratorReminder } from "../../../src/hooks/niobe/verification-reminders"
 import { MISSION_CONTINUATION_PROMPT } from "../../../src/hooks/niobe/system-reminder-templates"
 import {

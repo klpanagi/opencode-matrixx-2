@@ -8,7 +8,7 @@
  * is a test that FAILS if the decision is broken.
  *
  * SIX DECISIONS:
- *   1. `src/agents/smith.ts` is byte-frozen — Smith is the PRE-execution
+ *   1. `src/agents/definitions/smith.ts` is byte-frozen — Smith is the PRE-execution
  *      reviewer; the POST-execution reviewer (ex-`auditor`) was consolidated
  *      into merovingian skills (see decision-1b). Smith stands alone.
  *   2. `src/hooks/niobe/event-handler.ts` is byte-frozen.
@@ -59,7 +59,7 @@ function walk(dir: string, acc: string[] = []): string[] {
 }
 
 describe("locked decision #1 — Smith is byte-frozen", () => {
-  test("src/agents/smith.ts is unchanged from pre-Plan-B", () => {
+  test("src/agents/definitions/smith.ts is unchanged from pre-Plan-B", () => {
     //#given the Smith prompt as it stood before the post-execution reviewer existed
     // NOTE (native-v2, feat/v2-native-agent-vocabulary): re-baselined for the
     // V2 agent envelope (ModelRef/request-body/ruleset). The prompt body and
@@ -69,10 +69,15 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
     // "Global Constraints + Review Focus Present" checklist bullet so Smith's
     // blocker criteria name the same new H2s the grammar emits; Smith remains
     // the pre-execution reviewer and the pre/post split is untouched.
-    const FROZEN_MD5 = "62053fdfceaa194cd7f160771c94d217"
+    // NOTE (agents-restructure): hash advanced from 62053fdfceaa194cd7f160771c94d217.
+    // The only delta is the mechanical definitions/ move: src/agents/smith.ts
+    // -> src/agents/definitions/smith.ts with import paths rewired
+    // ("./agent-config" -> "../shared/agent-config", etc.); prompt body and
+    // pre-execution reviewer role untouched.
+    const FROZEN_MD5 = "6aff8b2e1ef610b457579147cca8c1cb"
 
     //#when its bytes are hashed
-    const actual = md5Of("src/agents/smith.ts")
+    const actual = md5Of("src/agents/definitions/smith.ts")
 
     //#then the file is untouched — the pre-execution reviewer still exists, and
     //#then the new agent ADDS a reviewer rather than replacing one
@@ -81,7 +86,7 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
 
   test("Smith stands alone — auditor.ts is gone (consolidated into merovingian skills)", () => {
     //#given the agent sources post-consolidation
-    const smith = readFileSync(join(SRC, "agents/smith.ts"), "utf-8")
+    const smith = readFileSync(join(SRC, "agents/definitions/smith.ts"), "utf-8")
 
     //#when the old post-execution reviewer path is probed
     //#then Smith is intact and auditor.ts no longer exists on disk
@@ -135,7 +140,7 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     expect(actual).toBe(FROZEN_MD5)
   })
 
-  test("src/agents/niobe/default.ts is unchanged", () => {
+  test("src/agents/definitions/niobe/default.ts is unchanged", () => {
     //#given the niobe default agent as it stood before Plan B
     // NOTE (PR #173): hash advanced from 8038fa9c6e2cb2c6a11a9c3c68b69a07.
     // The only delta is REQUIRED description params in task() examples
@@ -154,7 +159,7 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     const FROZEN_MD5 = "fe3dc21a0f7f8160d2af3ab533e962ff"
 
     //#when its bytes are hashed
-    const actual = md5Of("src/agents/niobe/default.ts")
+    const actual = md5Of("src/agents/definitions/niobe/default.ts")
 
     //#then the plan EXECUTOR was not repurposed as the plan REVIEWER
     expect(actual).toBe(FROZEN_MD5)

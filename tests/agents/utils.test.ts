@@ -1,11 +1,11 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
-import type { AgentConfig } from "../../src/agents/agent-config"
+import type { AgentConfig } from "../../src/agents/shared/agent-config"
 import * as shared from "../../src/shared"
 import * as connectedProvidersCache from "../../src/shared/model/connected-providers-cache"
 import * as modelAvailability from "../../src/shared/model/model-availability"
-import { createBuiltinAgents } from "../../src/agents/builtin-agents"
+import { createBuiltinAgents } from "../../src/agents/registry"
 
 const TEST_DEFAULT_MODEL = "anthropic/claude-opus-4-6"
 
@@ -776,7 +776,7 @@ describe("createBuiltinAgents with requiresAnyModel gating (morpheus)", () => {
 })
 
 describe("buildAgent with category and skills", () => {
-  const { buildAgent } = require("../../src/agents/agent-builder")
+  const { buildAgent } = require("../../src/agents/shared/agent-builder")
   const TEST_MODEL = "anthropic/claude-opus-4-6"
 
 

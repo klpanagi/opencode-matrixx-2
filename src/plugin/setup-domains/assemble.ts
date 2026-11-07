@@ -1,4 +1,4 @@
-import { registerAgentTransform } from "../../agents/agents.transform"
+import { registerAgentTransform } from "../../agents/shared/agents.transform"
 import { registerCommandTransform } from "../../features/builtin-commands/commands.transform"
 import { registerMcpTransform } from "../../mcps/mcp.transform"
 import { log } from "../../shared"
