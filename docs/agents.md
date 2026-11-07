@@ -25,7 +25,7 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 3. **Specialist delegation** — UI work goes to Sati (`claude-sonnet-4-6`). Debugging goes to Merovingian (`claude-sonnet-4-6`). The right model for the right job.
 4. **Contextual awareness** — spawns subagents to digest source code and documentation in real-time when working with unfamiliar frameworks.
 5. **Clean code enforcement** — either justifies a comment's existence or nukes it. Code should be indistinguishable from human-written.
-6. **Relentless execution** — bound by the task list (`.matrixx/tasks`, see [Task System](./task-system.md)). If he doesn't finish, `task-continuation-enforcer` forces him back — tasks survive `/clear`. Your task gets done, period.
+6. **Relentless execution** — bound by the task list (`.matrixx/tasks`, see [Task System](./task-system.md)). Tasks survive `/clear`, so work picks up where it left off. Your task gets done, period.
 7. **One keyword** — type `ultrawork` (or just `ulw`). Morpheus analyzes, gathers context, digs through external source code, and keeps going until the job is 100% complete.
 
 ### Morpheus's Teammates
@@ -50,9 +50,9 @@ The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNam
 ### Built-in Capabilities
 
 - Full LSP / AST-Grep support
-- Lifecycle hooks — context injection, think mode, comment checking, task/todo continuation enforcement (`task-continuation-enforcer` + sibling), error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
+- Lifecycle hooks — context injection, think mode, comment checking, background-task parent notification, error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
 - 22 Tool Directories (40 registrations) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
-- Task Continuation Enforcer — file-backed `.matrixx/tasks` keep the agent on mission (survives `/clear`; see [Task System](./task-system.md))
+- File-backed tasks — `.matrixx/tasks` keep the agent on mission (survives `/clear`; see [Task System](./task-system.md))
 
 - Claude Code Compatibility — commands, agents, skills, MCPs, hooks
 - Curated MCPs: Context7 (official docs), Document Reader + native `websearch` tool and native `github_search` tool (local gh/git/rg, no third-party services)
@@ -504,7 +504,7 @@ sequenceDiagram
             MO-->>M: Implementation + task_update(completed)
         end
     end
-    Note over M: task-continuation-enforcer keeps session alive while tasks remain
+    Note over M: background parent notification wakes the session when tasks complete
 
 
     Note over M: Phase 3: Verify & Report

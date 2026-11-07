@@ -15,6 +15,9 @@ export const HOOK_NAME_MAP: Record<string, string | null> = {
   "compaction-todo-preserver": null,
   "tasks-todowrite-disabler": null,
   "task-notepad": null,
+  // Removed: task-continuation-enforcer replaced by unified async parent
+  // notification in BackgroundManager.handleEvent. `null` = strip with one warn.
+  "task-continuation-enforcer": null,
   // Deleted (D6): preemptive-compaction removed in favor of the single
   // compaction hook. `null` = strip from effective disabled_hooks with one warn.
   "preemptive-compaction": null,

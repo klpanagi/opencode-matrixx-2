@@ -35,7 +35,6 @@ export function createEventHandler(args: {
     await Promise.resolve(hooks.autoUpdateChecker?.event?.(event))
     await Promise.resolve(hooks.backgroundNotificationHook?.event?.(event))
     await Promise.resolve(hooks.sessionNotification?.(event))
-    await Promise.resolve(hooks.taskContinuationEnforcer?.handler?.(event))
     await Promise.resolve(hooks.unstableAgentBabysitter?.event?.(event))
     await Promise.resolve(hooks.nudgeLoopBreaker?.event?.(event))
     await Promise.resolve(hooks.contextWindowMonitor?.event?.(event))

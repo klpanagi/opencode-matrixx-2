@@ -65,7 +65,7 @@ matrixx.jsonc
 | `task-edit-guard` | `src/hooks/task-edit-guard/` | Blocks generic Write/Edit/Read on `.matrixx/plans`, plus bash mutation patterns on `.matrixx/plans` and `.matrixx/tasks` |
 | Agent prompts | `src/agents/`, `dynamic-agent-prompt-builder` | task discipline (`task_create`/`task_update` workflow) |
 | Storage | `src/features/task-storage/storage.ts` | file system (`.matrixx/tasks/` or global) |
-| Continuation | `src/hooks/task-continuation-enforcer/` | `event:idle` countdown, unconditional |
+| Continuation (removed) | `src/features/task-session-scope/` (`staleness.ts`, `todo.ts`) | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. |
 | Persistence | — | survives restart, migratable |
 | Plan files | `src/tools/plan/` (plan_create/read/update/list/delete + plan_tasks for manifest) | `.matrixx/plans/*.md` edited only via `plan_*` tools with `LINE#ID` anchors (see §9) |
 
@@ -77,7 +77,7 @@ Canonical source: `TasksConfigSchema` in `src/config/schema/tasks.ts`. Resolutio
 
 ### 3.1 No Master Gate: The System Is Unconditional
 
-There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered and the enforcer is always wired. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/task-system-gating.ts`). See `docs/legacy-todo-migration.md` for which keys those are.
+There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered. The enforcer wiring is gone. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/task-system-gating.ts`). See `docs/legacy-todo-migration.md` for which keys those are.
 
 ```jsonc
 // matrixx.jsonc — no `enabled` field
@@ -89,7 +89,7 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
 ```
 
 - **Canonical predicate:** `isTaskSystemEnabled(config)` returns `resolveTasksConfig(config).enabled`, which is always `true`. Keep calling the predicate rather than reading config fields, so a future gate has one place to land.
-- **Wiring:** `createContinuationHooks` gates `task-continuation-enforcer` on this predicate. `task-edit-guard` and `task-resume-info` are unconditional (they match on their own path patterns).
+- **Wiring:** `createContinuationHooks` no longer wires an enforcer. `task-edit-guard` and `task-resume-info` are unconditional (they match on their own path patterns).
 - **First-load migration:** the `_migrations` marker `task_system_default_true` still marks fresh clones; no user action needed.
 
 ### 3.2 Storage and Enforcer Options: `tasks.*`
@@ -100,9 +100,9 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
     "storage_path": "/custom/path", // absolute path used verbatim; relative path joins cwd
     "task_list_id": "my-project",   // explicit list ID, alternative to ULTRAWORK_TASK_LIST_ID
     "scope": "project",             // "project" | "global"
-    "stale_after_hours": 24,        // stale-task threshold for task-continuation enforcer
+    "stale_after_hours": 24,        // stale-task threshold (formerly used by the removed enforcer)
     "background_stale_after_hours": 2, // background completion-gate staleness window
-    "session_scoped": true,         // enforcer sees only current session + live subagents
+    "session_scoped": true,         // session filter for task reads (current session + live subagents)
     "pollTimeoutMs": 600000         // blocking task() poll budget, minimum 60000
   }
 }
@@ -116,17 +116,17 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
 | `scope` | `"project" \| "global"` | `"project"` | `project` → `.matrixx/tasks` in the project root. `global` → `~/.config/opencode/tasks/{listId}` via `getOpenCodeConfigDir()`. |
 | `stale_after_hours` | `number`, min `0.25` | `24` | Pending/in_progress tasks with no file activity for this many hours count as stale. Stale-only queues skip the continuation directive; mixed queues annotate stale entries. Fractional hours are accepted (floor 0.25 = 15 minutes), because the background gate's window is too coarse at a 1-hour floor. |
 | `background_stale_after_hours` | `number`, min `0.25` | `2` | Window used only by the background-agent completion gates. A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
-| `session_scoped` | `boolean` | `true` | When true, the task-continuation-enforcer only considers tasks created by the current session (or its live subagent sessions). When false, all project tasks count regardless of origin. |
+| `session_scoped` | `boolean` | `true` | When true, task reads only consider tasks created by the current session (or its live subagent sessions). When false, all project tasks count regardless of origin. |
 | `pollTimeoutMs` | `number`, min 60000 | `600000` (10 min) | Poll timeout for blocking `task()` calls. Raise for agents that delegate to subagents with long wall times. |
 | `claude_code_compat` | `boolean` | `false` | Legacy `morpheus.tasks` flag, reserved path-compatibility marker. No behavior is keyed on it in the current tree. |
 
 Legacy mirror: `MorpheusTasksConfigSchema` in `src/config/schema/morpheus.ts` keeps `storage_path`, `task_list_id`, `scope`, `stale_after_hours`, `session_scoped` as fallbacks. Resolution order per key: `tasks.*` → `morpheus.tasks.*` → default. `task.pollTimeoutMs` falls back to `tasks.pollTimeoutMs` the same way. `background_stale_after_hours` has **no** legacy mirror: it is canonical-only and resolves to its default when the canonical key is absent.
 
-**Two staleness windows.** The two thresholds are independent knobs, resolved by different functions in `src/hooks/task-continuation-enforcer/staleness.ts`, and they exist because their failure costs differ:
+**Two staleness windows.** The two thresholds are independent knobs, resolved by different functions in `src/features/task-session-scope/staleness.ts`, and they exist because their failure costs differ:
 
 | Window | Default | Consumer | Why |
 |--------|---------|----------|-----|
-| `stale_after_hours` | 24 | `task-continuation-enforcer` | A long-running task is normal here, and a missed continuation nudge is cheap. The 24h default stays. |
+| `stale_after_hours` | 24 | Task reads (was: removed enforcer) | A long-running task is normal here, and a missed continuation nudge was cheap. The 24h default stays. |
 | `background_stale_after_hours` | 2 | Background-agent completion gates (`session.idle`, polling, reconcile probe) | A task that stays `pending`/`in_progress` with no file activity while its worker is gone is a wedged handle, not a slow one. Releasing it is what lets the session complete. |
 
 Both read the same basis, the task file's mtime. The wall-clock backstop is a third, separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0` (off).
@@ -342,9 +342,9 @@ Guarantee: readers never see a half-written file.
 
 ### 5.5 Session-Scoped Operations
 
-Session helpers live in `src/features/task-storage/session-storage.ts`: thin wrappers over `storage.ts` plus `TaskObjectSchema` validation for session-scoped reads used by the continuation enforcer.
+Session helpers live in `src/features/task-storage/session-storage.ts`: thin wrappers over `storage.ts` plus `TaskObjectSchema` validation for session-scoped reads (formerly consumed by the removed enforcer; now in `src/features/task-session-scope/todo.ts`).
 
-**Session liveness and orphans:** tasks carry `threadID` (owning session). Subagent sessions are tracked in `src/features/session-state/state.ts` via `registerSubagentSession` / `unregisterSubagentSession`; `getSubagentSessionIDs(parent)` returns **only live** subagent sessions. The enforcer's session filter (`filterTasksBySession` in `src/hooks/task-continuation-enforcer/todo.ts`) admits a task only when its `threadID` is the current session or a **live** subagent of it. Tasks orphaned by a dead subagent session are excluded from continuation directives. `unregisterSubagentSession` prunes both the live set and the parent map, so dead sessions never leak into the filter. When `tasks.session_scoped` is false, this filter is bypassed and all project tasks count.
+**Session liveness and orphans:** tasks carry `threadID` (owning session). Subagent sessions are tracked in `src/features/session-state/state.ts` via `registerSubagentSession` / `unregisterSubagentSession`; `getSubagentSessionIDs(parent)` returns **only live** subagent sessions. The session filter (`filterTasksBySession` in `src/features/task-session-scope/todo.ts`) admits a task only when its `threadID` is the current session or a **live** subagent of it. Tasks orphaned by a dead subagent session are excluded from continuation directives. `unregisterSubagentSession` prunes both the live set and the parent map, so dead sessions never leak into the filter. When `tasks.session_scoped` is false, this filter is bypassed and all project tasks count.
 
 ---
 
@@ -529,19 +529,19 @@ task_update({ id:t3.task.id, status:"completed" })
 
 One-paragraph summaries here. Full hook internals (state machines, prompts, countdown mechanics) belong to `docs/hooks.md`.
 
-### 8.1 `task-continuation-enforcer`: Auto-Continue While Tasks Remain
+### 8.1 `task-continuation-enforcer` (removed): Auto-Continue While Tasks Remain
 
-**Files:** `src/hooks/task-continuation-enforcer/` (`handler.ts`, `idle-event.ts`, `continuation-injection.ts`, `countdown.ts`, `session-state.ts`, `staleness.ts`, `todo.ts`, `abort-detection.ts`, `message-directory.ts`, `non-idle-events.ts`, `types.ts`, `constants.ts`).
+The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts.
 
-**Wiring:** `src/plugin/hooks/create-continuation-hooks.ts`, gated on `isTaskSystemEnabled(config)` (always `true`) plus `isHookEnabled("task-continuation-enforcer")`. **Trigger:** `event:idle` (session idle).
+**Wiring (past tense):** it was gated on `isTaskSystemEnabled(config)` plus `isHookEnabled("task-continuation-enforcer")` with trigger `event:idle`. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). See `src/features/background-agent/manager/reconcile.ts` (`handleManagerEvent`, `deliverParentNotification`).
 
-**Constants** (`constants.ts`): `HOOK_NAME = "task-continuation-enforcer"`, `DEFAULT_SKIP_AGENTS = ["oracle", "compaction"]`, `COUNTDOWN_SECONDS = 2`, `TOAST_DURATION_MS = 900`, `COUNTDOWN_GRACE_PERIOD_MS = 500`, `ABORT_WINDOW_MS = 3000`, `CONTINUATION_COOLDOWN_MS = 30_000`, `MAX_CONSECUTIVE_FAILURES = 5`, `FAILURE_RESET_WINDOW_MS = 5 * 60 * 1000` (5 min).
+**Past behavior (kept for history):** countdown constants (`COUNTDOWN_SECONDS = 2`, `CONTINUATION_COOLDOWN_MS = 30_000`, `MAX_CONSECUTIVE_FAILURES = 5`) drove the idle countdown and injection path described below in past tense.
 
-**Behavior:** on idle, the handler skips during recovery, right after an abort, while background tasks run, when continuation is stopped, past the failure circuit breaker, or inside cooldown. Otherwise it counts incomplete tasks: zero → done; all stale → skip with a log line; otherwise a 2-second countdown injects the `CONTINUATION_PROMPT` directive (work next pending task, mark `in_progress`/`completed`, respect `blockedBy`). Injection failures increment the consecutive-failure counter.
+**Past behavior:** on idle, the handler skipped during recovery, right after an abort, while background tasks ran, when continuation was stopped, past the failure circuit breaker, or inside cooldown. Otherwise it counted incomplete tasks: zero meant done; all stale meant skip with a log line; otherwise a 2-second countdown injected the `CONTINUATION_PROMPT` directive. That idle re-prompt path is gone.
 
-**Cross-session scope and liveness:** the enforcer reads the project-wide store, so a directive reflects the union of sessions in the project. With `tasks.session_scoped: true` (default), tasks are admitted only when their `threadID` is the current session or a live subagent of it; orphaned tasks from dead sessions are excluded. Pre-migration tasks without `threadID` are always included. Stale handling keys on `tasks.stale_after_hours` (enforcer default 24): all-stale queues skip on both the idle path and the post-countdown injection path; mixed queues annotate stale entries with a `(stale: Nh)` suffix plus an orphan-suspect note.
+**Cross-session scope and liveness (now in task-session-scope):** session filtering reads the project-wide store with the same rule. With `tasks.session_scoped: true` (default), tasks are admitted only when their `threadID` is the current session or a live subagent of it; orphaned tasks from dead sessions are excluded. Pre-migration tasks without `threadID` are always included. Stale handling keys on `tasks.stale_after_hours` (default 24); see `src/features/task-session-scope/staleness.ts` and `todo.ts`.
 
-**Durable ancestry scope (background completion gate).** Session scoping follows the durable `parentID` chain, not just live-session membership. `src/features/task-session-scope/ancestry.ts` walks `parentID` ancestors up to `DEFAULT_ANCESTRY_DEPTH = 3` hops, so a delegated subagent's or grandchild's task still counts toward the gate even when the intermediate session is already gone. The walk stops on a cycle, and only an in-scope ancestor admits a descendant, so an unrelated open task can never wedge a handle. The default applies at every call site; no config key selects the depth. Staleness composes with the expansion rather than bypassing it, so an expanded-but-stale grandchild still drops out — and it drops out on the gate's own window, `tasks.background_stale_after_hours` (default 2), not the enforcer's 24. The two differ because a missed continuation nudge is cheap while a handle held `running` past its worker is not. The wall-clock backstop (`background_task.wallClockTimeoutMs`, default `0`, off) is unchanged.
+**Durable ancestry scope (background completion gate).** Session scoping follows the durable `parentID` chain, not just live-session membership. `src/features/task-session-scope/ancestry.ts` walks `parentID` ancestors up to `DEFAULT_ANCESTRY_DEPTH = 3` hops, so a delegated subagent's or grandchild's task still counts toward the gate even when the intermediate session is already gone. The walk stops on a cycle, and only an in-scope ancestor admits a descendant, so an unrelated open task can never wedge a handle. The default applies at every call site; no config key selects the depth. Staleness composes with the expansion rather than bypassing it, so an expanded-but-stale grandchild still drops out — and it drops out on the gate's own window, `tasks.background_stale_after_hours` (default 2), not the old enforcer idle-path 24. The two differ because a missed continuation nudge is cheap while a handle held `running` past its worker is not. The wall-clock backstop (`background_task.wallClockTimeoutMs`, default `0`, off) is unchanged.
 
 **Subtask rollup:** a task with `parentID` is a subtask. Subtasks whose parent is `completed`/`deleted` count as resolved and leave the incomplete set (`dropSubtasksWithResolvedParent` in `todo.ts`, applied before session filtering on both paths). A parent with incomplete subtasks stays incomplete through its own status.
 
@@ -664,16 +664,16 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 | `src/features/task-toast-manager/manager.ts` | Background-task toast lifecycle |
 | `src/features/task-toast-manager/types.ts` | `TrackedTask`, `TaskStatus` (`running\|queued\|completed\|error`), `TaskToastOptions` |
 | `src/tools/plan/plan-read.ts`, `plan-update.ts` | `plan_read` (hashline output), `plan_update` (`LINE#ID` edits) |
-| `src/hooks/task-continuation-enforcer/` | Enforcer factory, idle handler, injection, countdown, staleness, session filter |
+| `src/features/task-session-scope/` (`staleness.ts`, `todo.ts`) | Kept helpers from the removed enforcer: staleness plus session filter |
 | `src/hooks/task-edit-guard/` | Write/Edit/Read + bash guard for `.matrixx/plans` and `.matrixx/tasks` |
 | `src/hooks/task-resume-info/` | Resume hint `task(session_id="…")` |
 | `src/tools/delegate-task/sync-task-deps.ts` | Bidirectional dep sync |
 | `src/config/schema/tasks.ts` | Canonical `TasksConfigSchema` |
 | `src/config/schema/morpheus.ts` | Legacy `MorpheusTasksConfigSchema` fallback |
-| `src/config/schema/hooks.ts` | `HookNameSchema` (includes `task-continuation-enforcer`, `task-edit-guard`, etc., plus 4 retained-deprecated legacy literals) |
+| `src/config/schema/hooks.ts` | `HookNameSchema` (includes `task-edit-guard`, etc., plus retained-deprecated literals; `task-continuation-enforcer` was removed) |
 | `src/shared/migration/hook-names.ts` | `HOOK_NAME_MAP` — maps the 4 retired legacy hook names to `null` so old `disabled_hooks` lists strip cleanly |
 | `src/plugin/tool-registry.ts` | Registration of the 5 task tools |
-| `src/plugin/hooks/create-continuation-hooks.ts` | Gates `taskContinuationEnforcer` |
+| `src/plugin/hooks/create-continuation-hooks.ts` | No longer gates an enforcer (removed) |
 | `src/plugin/hooks/create-session-hooks.ts` | Registers `taskResumeInfo` (always) |
 | `src/shared/task-system-gating.ts` | `resolveTasksConfig`, `isTaskSystemEnabled`, `TASK_SYSTEM_DEFAULT` |
 | `src/features/builtin-commands/templates/task-list.ts` | `/task-list` command |
@@ -707,7 +707,7 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 - **Lock verification:** `release()` checks holder `id` before unlink. Never delete `.lock` unconditionally. Stale threshold is 30 s; do not lengthen without contention data.
 - **Single owner:** one `in_progress` task per agent at a time (prompt invariant the enforcer assumes).
 - **Unresolved filter is the scheduler:** `task_list` must filter `blockedBy` to unresolved entries; changing this breaks wave planning.
-- **Liveness filter:** `getSubagentSessionIDs` returns only live subagent sessions; `filterTasksBySession` must never admit tasks owned by dead sessions (prevents false continuation directives). `tasks.session_scoped: false` is the only bypass.
+- **Liveness filter:** `getSubagentSessionIDs` returns only live subagent sessions; `filterTasksBySession` must never admit tasks owned by dead sessions. `tasks.session_scoped: false` is the only bypass.
 - **Gating via predicate:** always `isTaskSystemEnabled(config)` / `resolveTasksConfig(config)`; never read config fields inline.
 - **No bash edits:** `.matrixx/tasks/T-*.json` and `.matrixx/plans/*.md` are guarded by `task-edit-guard`; use `task_*` and `plan_*` tools.
 
@@ -715,7 +715,7 @@ Used by: `create-continuation-hooks`, `tool-registry`. Never read `config.tasks`
 
 - **Mock-heavy isolation:** tests with `mock.module()` run isolated. Add new such files to both `.github/workflows/ci.yml` and `publish.yml` mock-heavy lists and the `grep -v -F` exclusion in `script/run-ci.sh`. Source of truth: `script/run-ci.sh`.
 - **Preload:** `tests/test-setup.ts` calls `_resetForTesting()` before each test.
-- **Existing suites:** `src/tools/task/task-cleanup.test.ts`, `src/features/task-storage/*.test.ts`, `src/hooks/task-continuation-enforcer/*.test.ts` (`awaiting-user`, `continuation-injection`, `countdown`, `idle-event`, `staleness`, `todo`, `ulw-bootstrap`), `src/shared/task-system-gating.test.ts`, `tests/e2e-smoke-task-system.test.ts`.
+- **Existing suites:** `src/tools/task/task-cleanup.test.ts`, `src/features/task-storage/*.test.ts`, `src/features/task-session-scope/*.test.ts` (`staleness`, `todo`), `src/shared/task-system-gating.test.ts`, `tests/e2e-smoke-task-system.test.ts`.
 
 ---
 

@@ -233,7 +233,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/preemptive-compaction
 | `evolution-hitl` | `experimental.chat.messages.transform` | Human-in-the-loop gate for evolution writes. Exists for governance over self-modification; only when `evolution.enabled`. |
 | `think-mode` | `event` (session cleanup) | Dynamic thinking budget; prompt switching lives in its module state. Exists to scale reasoning effort per session. |
 | `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/ulw-loop` workflows. |
-| `task-continuation-enforcer` | `event` via `.handler` | Forces task completion with countdown nudges. Exists so multi-step work is not dropped. It counts file-backed tasks only; the legacy todo enforcer it replaced is gone (see `docs/legacy-todo-migration.md`). |
+| `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). |
 | `session-recovery` | `event` session.error branch (direct call) | Recovers and re-prompts after recoverable errors. Exists to survive transient session failures. |
 | `context-window-limit-recovery` | `event` (error/idle/updated) | Provider-agnostic context recovery; parses token-limit errors only (reactive). Exists as the last resort after monitor (70%) and preemptive compaction (78%). |
 | `auto-update-checker` | `event` session.created | Plugin update check and startup toasts. Exists to notify about new versions. |
@@ -313,7 +313,7 @@ Schema: `disabled_hooks: z.array(HookNameSchema).optional()`
 |---|---|---|
 | `experimental.preemptive_compaction` | `preemptive-compaction` constructed only when true | `src/plugin/hooks/create-session-hooks.ts`, `src/config/schema/experimental.ts:6` |
 | `experimental.hashline_edit` | hashline enhancers pass through when false | `src/plugin/hooks/create-tool-guard-hooks.ts` |
-| `tasks.enabled` (retained-deprecated, always resolves true) | `task-continuation-enforcer` is the only enforcer; the legacy todo enforcer it used to be selected against was removed | `src/plugin/hooks/create-continuation-hooks.ts`, `src/shared/task-system-gating.ts` |
+| `tasks.enabled` (retained-deprecated, always resolves true) | The enforcer is gone, so there is no selection between enforcers; the legacy todo enforcer it used to be selected against was removed earlier | `src/plugin/hooks/create-continuation-hooks.ts`, `src/shared/task-system-gating.ts` |
 | `evolution.enabled` | `evolution-watcher`, `evolution-compressor`, `evolution-hitl` constructed only when true | `src/plugin/hooks/create-continuation-hooks.ts`, `create-tool-guard-hooks.ts` |
 | `rtk.enabled` | `rtk-bash-rewriter` constructed only when true (still passes through without binary) | `src/plugin/hooks/create-session-hooks.ts`, `src/hooks/rtk-bash-rewriter/hook.ts` |
 | `comment_checker`, `matrix_loop`, `context_mode`, `notification.force_enable` | per-feature config consumed by the matching hook | `src/config/schema/matrixx-config.ts` |
@@ -337,7 +337,7 @@ Minimal-write profile (keeps guards, drops NETWORK + heavy `after` work):
 Nuclear debug profile (measure raw OpenCode overhead):
 
 ```jsonc
-{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction", "context-mode-enforcer", "task-edit-guard", "task-continuation-enforcer", "rules-injector", "directory-agents-injector"] }
+{ "disabled_hooks": ["secret-leak-guard", "oracle-md-only", "mouse-notepad", "niobe", "quality-gate", "comment-checker", "preemptive-compaction", "context-mode-enforcer", "task-edit-guard", "rules-injector", "directory-agents-injector"] }
 ```
 
 ## 4. Performance model (why `write` feels slow)

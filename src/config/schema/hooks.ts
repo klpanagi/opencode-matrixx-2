@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 const HookNameEnum = z.enum([
-  "task-continuation-enforcer",
   "context-window-monitor",
   "session-recovery",
   "session-notification",
@@ -90,6 +89,8 @@ export const HookNameSchema = z.union([
   z.literal("tasks-todowrite-disabler"),
   /** @deprecated no-op since v2.7 — hook removed, name retained so existing configs keep loading. Remove in v3.0. */
   z.literal("task-notepad"),
+  /** @deprecated no-op — hook removed, name retained so existing configs keep loading. Remove in v3.0. */
+  z.literal("task-continuation-enforcer"),
   /** @deprecated no-op (D6) — preemptive-compaction deleted, single compaction hook owns compaction. Retained so existing configs keep loading. */
   z.literal("preemptive-compaction"),
   /** @deprecated no-op (D6) — evolution-compressor deleted (context-freed=0 parentless leak), single compaction hook owns compaction. Retained so existing configs keep loading. */

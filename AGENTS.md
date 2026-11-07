@@ -166,7 +166,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 **Dual test layout** — CI discovers tests via `find tests script -name '*.test.ts'`, so files under `tests/**` run in CI while co-located `src/**/*.test.ts` are CI-orphaned (never discovered by the `find` glob). NEVER write test files in `src/` — always put them under `tests/` mirroring the `src/` path (e.g. `src/tools/foo/bar.ts` → `tests/tools/foo/bar.test.ts`, importing via `../../../src/...`). The mock-heavy isolation list has a single source of truth: `script/mock-heavy-list.txt`. Both `.github/workflows/ci.yml` and `publish.yml` read it; `script/run-ci.sh` also reads it for the catch-all exclusion. Never duplicate the list inline in a workflow file.
 
-**Task system is execution substrate** — the file-backed `.matrixx/tasks/T-{uuid}.json` store is unconditional (project-scoped via `getTaskDir()`, atomic `tmp+renameSync`, `task-continuation-enforcer` with 30s lock). Never mutate `.matrixx/tasks/` via bash/`sed`; use `task_create/update/get/list/cleanup` tools. `.matrixx/plans/*.md` checkbox `- [ ]`→`- [x]` via `plan_read`→`plan_update` with LINE#ID only (generic `Read`/`Edit` blocked by `task-edit-guard`).
+**Task system is execution substrate** — the file-backed `.matrixx/tasks/T-{uuid}.json` store is unconditional (project-scoped via `getTaskDir()`, atomic `tmp+renameSync`, 30s stale lock). Never mutate `.matrixx/tasks/` via bash/`sed`; use `task_create/update/get/list/cleanup` tools. `.matrixx/plans/*.md` checkbox `- [ ]`→`- [x]` via `plan_read`→`plan_update` with LINE#ID only (generic `Read`/`Edit` blocked by `task-edit-guard`).
 
 `bunfig.toml` preloads `tests/test-setup.ts` → `_resetForTesting()` before each test.
 
@@ -265,7 +265,7 @@ Never `bun publish` or bump `package.json` version locally.
 
 ## HOTSPOTS
 
-`features/background-agent/manager/` (lifecycle, reconcile, store) + `shared/outcome/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `task-continuation-enforcer` hook (file-backed `.matrixx/tasks/T-{uuid}.json`, atomic write, 30s stale lock) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
+`features/background-agent/manager/` (lifecycle, reconcile, store; restart reconciliation and unified parent notification via `handleEvent`) + `shared/outcome/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `features/task-session-scope/` (`staleness.ts`, `todo.ts`, kept from the removed enforcer) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
 
 ## NOTES
 

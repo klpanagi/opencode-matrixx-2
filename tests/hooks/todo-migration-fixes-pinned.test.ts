@@ -21,7 +21,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { getBackgroundStaleAfterMs, getStaleAfterMs } from "../../src/hooks/task-continuation-enforcer/staleness"
+import { getBackgroundStaleAfterMs, getStaleAfterMs } from "../../src/features/task-session-scope/staleness"
 import { DEFAULT_ANCESTRY_DEPTH } from "../../src/features/task-session-scope/ancestry"
 import { readSessionTasks } from "../../src/features/task-session-scope/session-task-pending"
 import { TaskObjectSchema } from "../../src/tools/task/types"
@@ -219,7 +219,7 @@ describe("D4 and the config-compat surface are pinned on purpose", () => {
     //#given the enforcer staleness module
     //#when its default is read
     //#then 24h survives — the 2h window is a SEPARATE knob, not a lowered one
-    expect(readSrc("hooks/task-continuation-enforcer/staleness.ts")).toMatch(
+    expect(readSrc("features/task-session-scope/staleness.ts")).toMatch(
       /export const DEFAULT_STALE_AFTER_HOURS = 24\b/,
     )
   })

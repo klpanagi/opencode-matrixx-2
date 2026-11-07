@@ -9,7 +9,6 @@ import {
   createNudgeLoopBreakerHook,
   createPlanPersister,
   createStopContinuationGuardHook,
-  createTaskContinuationEnforcer,
 } from "../../hooks"
 import { bindSafeHook } from "../../shared/agent/safe-create-hook"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
@@ -19,7 +18,6 @@ import { createUnstableAgentBabysitter } from "../tool/unstable-agent-babysitter
 export type ContinuationHooks = {
   stopContinuationGuard: ReturnType<typeof createStopContinuationGuardHook> | null
   compactionContextInjector: ReturnType<typeof createCompactionContextInjector> | null
-  taskContinuationEnforcer: ReturnType<typeof createTaskContinuationEnforcer> | null
   unstableAgentBabysitter: ReturnType<typeof createUnstableAgentBabysitter> | null
   nudgeLoopBreaker: ReturnType<typeof createNudgeLoopBreakerHook> | null
   backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
@@ -41,31 +39,16 @@ export function createContinuationHooks(args: {
   backgroundManager: BackgroundManager
   sessionRecovery: SessionRecovery
 }): ContinuationHooks {
-  const {
-    ctx,
-    pluginConfig,
-    isHookEnabled,
-    safeHookEnabled,
-    backgroundManager,
-    sessionRecovery,
-  } = args
+  const { ctx, pluginConfig, isHookEnabled, safeHookEnabled, backgroundManager } = args
+  void args.sessionRecovery
 
   const safeHook = bindSafeHook(safeHookEnabled)
 
   const evolutionEnabled = pluginConfig.evolution?.enabled === true
 
-  // Lazy bridge: the stop guard consults the active continuation enforcer's
-  // awaiting-user state before cancelling background tasks. The enforcer is
-  // created after the guard, so resolve it at call time.
-  let activeContinuationEnforcer: { isAwaitingUser: (sessionID: string) => boolean } | null = null
-
   const stopContinuationGuard = isHookEnabled("stop-continuation-guard")
     ? safeHook("stop-continuation-guard", () =>
-        createStopContinuationGuardHook(ctx, {
-          backgroundManager,
-          isAwaitingUser: (sessionID: string) =>
-            activeContinuationEnforcer?.isAwaitingUser(sessionID) ?? false,
-        }))
+        createStopContinuationGuardHook(ctx, { backgroundManager }))
     : null
 
   const compactionMemoryEnabled =
@@ -76,18 +59,6 @@ export function createContinuationHooks(args: {
         createCompactionContextInjector(backgroundManager, { enabled: compactionMemoryEnabled }))
     : null
 
-  const taskContinuationEnforcer = isHookEnabled("task-continuation-enforcer")
-    ? safeHook("task-continuation-enforcer", () => {
-        const enforcer = createTaskContinuationEnforcer(ctx, {
-          backgroundManager,
-          isContinuationStopped: stopContinuationGuard?.isStopped,
-          config: pluginConfig,
-        })
-        activeContinuationEnforcer = enforcer
-        return enforcer
-      })
-    : null
-
   const unstableAgentBabysitter = isHookEnabled("unstable-agent-babysitter")
     ? safeHook("unstable-agent-babysitter", () =>
         createUnstableAgentBabysitter({ ctx, backgroundManager, pluginConfig }))
@@ -96,28 +67,6 @@ export function createContinuationHooks(args: {
   const nudgeLoopBreaker = isHookEnabled("nudge-loop-breaker")
     ? safeHook("nudge-loop-breaker", () => createNudgeLoopBreakerHook(ctx))
     : null
-
-  if (sessionRecovery) {
-    const onAbortCallbacks: Array<(sessionID: string) => void> = []
-    const onRecoveryCompleteCallbacks: Array<(sessionID: string) => void> = []
-
-    if (taskContinuationEnforcer) {
-      onAbortCallbacks.push(taskContinuationEnforcer.markRecovering)
-      onRecoveryCompleteCallbacks.push(taskContinuationEnforcer.markRecoveryComplete)
-    }
-
-    if (onAbortCallbacks.length > 0) {
-      sessionRecovery.setOnAbortCallback((sessionID: string) => {
-        for (const callback of onAbortCallbacks) callback(sessionID)
-      })
-    }
-
-    if (onRecoveryCompleteCallbacks.length > 0) {
-      sessionRecovery.setOnRecoveryCompleteCallback((sessionID: string) => {
-        for (const callback of onRecoveryCompleteCallbacks) callback(sessionID)
-      })
-    }
-  }
 
   const backgroundNotificationHook = isHookEnabled("background-notification")
     ? safeHook("background-notification", () => createBackgroundNotificationHook(backgroundManager))
@@ -146,7 +95,6 @@ export function createContinuationHooks(args: {
   return {
     stopContinuationGuard,
     compactionContextInjector,
-    taskContinuationEnforcer,
     unstableAgentBabysitter,
     nudgeLoopBreaker,
     backgroundNotificationHook,
