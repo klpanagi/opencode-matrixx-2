@@ -5,7 +5,7 @@ import { setSessionTemperature, setSessionTools } from "../../../shared/session/
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
 import { buildSubagentTitle, readHandles, sweepStaleHandles } from "../handle-index"
-import type { BackgroundTask, LaunchInput, ResumeInput } from "../types"
+import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import type { ManagerRuntime } from "./types"
 
 /**
@@ -16,6 +16,27 @@ import type { ManagerRuntime } from "./types"
  * delegating methods on `BackgroundManager` preserve the public API.
  */
 
+
+export function isSettled(status: BackgroundTaskStatus): boolean {
+  return status !== "pending" && status !== "running"
+}
+
+function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
+  const timeoutMs = rt.config?.wallClockTimeoutMs
+  const startedAtMs = task.startedAt?.getTime()
+  if (timeoutMs === undefined || startedAtMs === undefined) return
+  rt.store.wallclock.arm(task.id, startedAtMs, timeoutMs, () => {
+    if (isSettled(task.status)) return
+    task.status = "error"
+    task.error = `Wall-clock timeout exceeded`
+    task.terminalReason = "wall-clock-timeout"
+    task.completedAt = new Date()
+    rt.store.persistHandle(task)
+    if (task.sessionID !== undefined) {
+      abortSessionQuietly(rt.native, task.sessionID, "wall-clock-timeout")
+    }
+  })
+}
 
 export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
     const swept = sweepStaleHandles(rt.directory, rt.store.taskTtlMs())
@@ -153,6 +174,7 @@ export async function launchTask(rt: ManagerRuntime,
     }
 
     let created: { id?: string }
+    rt.store.pendingSpawns.add(task.id)
     try {
       created = (await rt.native.session.create({
         parentID: input.parentSessionID,
@@ -169,12 +191,26 @@ export async function launchTask(rt: ManagerRuntime,
           : {}),
       })) as { id?: string }
     } catch (error) {
+      rt.store.pendingSpawns.delete(task.id)
       const message = error instanceof Error ? error.message : String(error)
       task.status = "error"
       task.error = `Failed to create background session: ${message}`
       task.completedAt = new Date()
       rt.store.persistHandle(task)
       throw new Error(task.error)
+    }
+
+    rt.store.pendingSpawns.delete(task.id)
+    if (isSettled(task.status)) {
+      if (created.id) abortSessionQuietly(rt.native, created.id, "aborted-during-await")
+      task.terminalReason = "aborted"
+      rt.store.persistHandle(task)
+      rt.store.wallclock.disarm(task.id)
+      log("[background-agent] launch aborted during session.create - cleaning up:", {
+        taskId: task.id,
+        status: task.status,
+      })
+      return task
     }
 
     if (!created.id) {
@@ -217,7 +253,17 @@ export async function launchTask(rt: ManagerRuntime,
       setSessionTemperature(sessionID, input.model.temperature)
     }
 
+    armWallclock(rt, task)
+
     firePrompt(rt.native, task, input.prompt, input.skillContent).catch((error) => {
+      rt.store.wallclock.disarm(task.id)
+      if (isSettled(task.status)) {
+        log("[background-agent] prompt error after settle - keeping terminal state:", {
+          taskId: task.id,
+          status: task.status,
+        })
+        return
+      }
       log("[background-agent] prompt error:", error)
       task.status = "interrupt"
       task.error = error instanceof Error ? error.message : String(error)
@@ -346,7 +392,17 @@ export async function resumeTask(rt: ManagerRuntime,input: ResumeInput): Promise
       sessionID: existingTask.sessionID,
     })
 
+    armWallclock(rt, existingTask)
+
     firePrompt(rt.native, existingTask, input.prompt).catch((error) => {
+      rt.store.wallclock.disarm(existingTask.id)
+      if (isSettled(existingTask.status)) {
+        log("[background-agent] resume prompt error after settle - keeping terminal state:", {
+          taskId: existingTask.id,
+          status: existingTask.status,
+        })
+        return
+      }
       log("[background-agent] resume prompt error:", error)
       existingTask.status = "interrupt"
       existingTask.error =

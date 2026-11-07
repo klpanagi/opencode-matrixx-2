@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, readFileSync, renameSync } from "node:fs"
+import { join } from "node:path"
 import type { V2Event } from "../../../plugin/tool/context"
 import { isNativeSessionId, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
@@ -5,11 +7,12 @@ import { getParentSessionID, registerSubagentSession } from "../../session-state
 import { getTaskToastManager } from "../../task-toast-manager"
 import type { EventProperties } from "../constants"
 import { getSessionErrorMessage } from "../error-helpers"
-import { readHandles } from "../handle-index"
+import { BG_HANDLE_FILE_PREFIX, getBgHandleDir, readHandles } from "../handle-index"
 import { buildCompletionNotification } from "../notification-builder"
 import {
   classifyRevivable,
   findRevivableHandle,
+  isCorruptHandleValue,
   type ReviveBlockReason,
   toReviveTask,
 } from "../revive"
@@ -33,6 +36,49 @@ const SESSION_LIST_TTL_MS = 30000
 let sessionListCache: { at: number; ids: string[] } | null = null
 
 
+/**
+ * B11 minimal gate: quarantine corrupt handle files before revival.
+ *
+ * Links the B7 error contract (`StorageCorruptError` in task-storage):
+ * unreadable or shape-invalid `bg_*.json` files are renamed aside to
+ * `<name>.corrupt` + logged (never deleted, never crash revival).
+ * Best-effort: individual failures are logged and skipped.
+ */
+export function quarantineCorruptHandles(directory: string): number {
+  const dir = getBgHandleDir(directory)
+  if (!existsSync(dir)) return 0
+  let quarantined = 0
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(BG_HANDLE_FILE_PREFIX) || !name.endsWith(".json")) continue
+    const filePath = join(dir, name)
+    let value: unknown
+    try {
+      value = JSON.parse(readFileSync(filePath, "utf-8"))
+    } catch (error) {
+      value = undefined
+      log("[background-agent] Revive quarantining unreadable handle:", {
+        filePath,
+        reason: error instanceof Error ? error.message : String(error),
+      })
+    }
+    if (value === undefined || isCorruptHandleValue(value)) {
+      if (value !== undefined) {
+        log("[background-agent] Revive quarantining corrupt handle:", { filePath })
+      }
+      try {
+        renameSync(filePath, `${filePath}.corrupt`)
+        quarantined++
+      } catch (error) {
+        log("[background-agent] Revive quarantine failed:", {
+          filePath,
+          reason: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+  }
+  return quarantined
+}
+
 export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise<BackgroundTask> {
     const id = input.taskId ?? input.sessionId ?? ""
     let task =
@@ -55,6 +101,7 @@ export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise
       expired: `Task ${id} expired: its handle was removed after the 30-minute retention window.`,
     }
     if (!task) {
+      quarantineCorruptHandles(rt.directory)
       const handle = findRevivableHandle(readHandles(rt.directory), {
         taskId: input.taskId,
         sessionId: input.sessionId,
@@ -101,15 +148,23 @@ export async function reviveTask(rt: ManagerRuntime,input: ReviveInput): Promise
         force: input.force,
       })
       if (!handleEligibility.eligible) {
+        log("[background-agent] Revive skipped - handle not revivable:", {
+          taskId: handle.taskId,
+          reason: handleEligibility.reason,
+        })
         throw new Error(guidance[handleEligibility.reason])
       }
       task = toReviveTask(handle, input.prompt)
     } else {
-      task.prompt = input.prompt
       const taskEligibility = classifyRevivable(task, { force: input.force })
       if (!taskEligibility.eligible) {
+        log("[background-agent] Revive skipped - task not revivable:", {
+          taskId: task.id,
+          reason: taskEligibility.reason,
+        })
         throw new Error(guidance[taskEligibility.reason])
       }
+      task.prompt = input.prompt
     }
     if (!task.sessionID) throw new Error(`Task has no sessionID: ${task.id}`)
     const sessionID = task.sessionID
@@ -296,6 +351,19 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
     if (!task) {
       const owner = getParentSessionID(sessionID)
       if (owner !== undefined) {
+        const cancelledSibling = [...rt.store.tasks.values()].some(
+          (t) =>
+            t.status === "cancelled" &&
+            t.parentSessionID === owner &&
+            t.concurrencyKey?.startsWith(`${owner}:`),
+        )
+        if (cancelledSibling) {
+          log("[background-agent] Auto-track skipped: cancelled sibling with same concurrencyKey", {
+            sessionID,
+            parentSessionID: owner,
+          })
+          return
+        }
         const auto: BackgroundTask = {
           id: `bg_${crypto.randomUUID().slice(0, 8)}`,
           parentSessionID: owner,
