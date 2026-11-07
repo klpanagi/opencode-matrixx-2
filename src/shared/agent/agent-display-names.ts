@@ -1,10 +1,10 @@
 /**
  * Agent config keys to display names mapping.
  * Config keys are lowercase (e.g., "morpheus", "niobe").
- * Display names include suffixes for UI/logs (e.g., "Morpheus (Ultraworker)").
+ * Display names include suffixes for UI/logs (e.g., "Morpheus (Redpiller)").
  */
 export const AGENT_DISPLAY_NAMES: Record<string, string> = {
-  morpheus: "Morpheus (Ultraworker)",
+  morpheus: "Morpheus (Redpiller)",
   keymaker: "Keymaker (Deep Agent)",
   niobe: "Niobe (Plan Execution Orchestrator)",
   oracle: "Oracle (Plan Builder)",

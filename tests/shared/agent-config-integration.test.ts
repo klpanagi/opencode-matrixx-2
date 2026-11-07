@@ -13,7 +13,7 @@ describe("Agent Config Integration", () => {
       const displayNames = agents.map((agent) => getAgentDisplayName(agent))
 
       // then - display names are correct
-      expect(displayNames).toContain("Morpheus (Ultraworker)")
+      expect(displayNames).toContain("Morpheus (Redpiller)")
       expect(displayNames).toContain("Niobe (Plan Execution Orchestrator)")
       expect(displayNames).toContain("Oracle (Plan Builder)")
       expect(displayNames).toContain("Seraph (Plan Consultant)")
@@ -32,7 +32,7 @@ describe("Agent Config Integration", () => {
       const displayNames = keys.map((key) => getAgentDisplayName(key))
 
       // then - correct display names are returned
-      expect(displayNames[0]).toBe("Morpheus (Ultraworker)")
+      expect(displayNames[0]).toBe("Morpheus (Redpiller)")
       expect(displayNames[1]).toBe("Atlas")
       expect(displayNames[2]).toBe("SISYPHUS")
       expect(displayNames[3]).toBe("Niobe (Plan Execution Orchestrator)")

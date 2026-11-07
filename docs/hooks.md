@@ -126,7 +126,7 @@ order; hooks inside Wave 1 and Wave 2 run concurrently.
 `oracleMdOnly` runs twice (once per Wave 2/3): 16 unique hooks,
 23 invocations over 22 unique hooks per tool call. The same handler also resolves `task`-tool
 agent routing in parallel with Wave 3 and serves `/matrix-loop`,
-`/stop-continuation`, `/assembly`, `/ultrawork` slash commands.
+`/stop-continuation`, `/assembly`, `/redpill` slash commands.
 
 ### 1.4 `tool.execute.after`: mostly sequential chain
 
@@ -225,9 +225,9 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | Hook | Trigger (when) | What + why |
 |---|---|---|
 | `input-secret-guard` | `chat.message` | Blocks prompts containing secrets (allow-once/session overrides). Exists to keep credentials out of the conversation. |
-| `keyword-detector` | `chat.message` | Detects ultrawork/search/analyze keywords and switches modes. Exists to route terse user intents to the right workflow. |
+| `keyword-detector` | `chat.message` | Detects redpill/search/analyze keywords and switches modes. Exists to route terse user intents to the right workflow. |
 | `auto-slash-command` | `chat.message` | Detects and executes `/command` patterns. Exists so slash commands work inline. |
-| `start-work` | `chat.message` (conditional on output shape) | Starts mission state on ultrawork keywords. Exists to bootstrap orchestration without an explicit command. |
+| `start-work` | `chat.message` (conditional on output shape) | Starts mission state on redpill keywords. Exists to bootstrap orchestration without an explicit command. |
 | `stop-continuation-guard` | `chat.message` + `event` | Cancels background work on stop; consulted by enforcers so in-flight agents that asked a question are not killed. Exists for clean shutdowns. |
 | `anthropic-effort` | `chat.params` | Effort override for max variants; the only hook `createChatParamsHandler` invokes. Exists to control reasoning effort per model. |
 | `env-context-injector` | `experimental.chat.messages.transform` | Injects env context into messages. Exists so agents see the working environment. |
@@ -236,7 +236,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `design-intent-preserver` | `chat.message`-shaped | Preserves design intent across turns. Currently has no call site (Section 2.4). |
 | `evolution-hitl` | `experimental.chat.messages.transform` | Human-in-the-loop gate for evolution writes. Exists for governance over self-modification; only when `evolution.enabled`. |
 | `think-mode` | `event` (session cleanup) | Dynamic thinking budget; prompt switching lives in its module state. Exists to scale reasoning effort per session. |
-| `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/ulw-loop` workflows. |
+| `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/rp-loop` workflows. |
 | `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). |
 | `session-recovery` | `event` session.error branch (direct call) | Recovers and re-prompts after recoverable errors. Exists to survive transient session failures. |
 | `context-window-limit-recovery` | `event` (error/idle/updated) | Provider-agnostic context recovery; parses token-limit errors only (reactive). Exists as the last resort after monitor (70%) and preemptive compaction (78%). |

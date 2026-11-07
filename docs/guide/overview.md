@@ -11,7 +11,7 @@ Learn about Matrixx, a plugin that transforms OpenCode into the best agent harne
 
 > **Model defaults matter.** The bundled config pins a model per agent and category (see the [Configuration Guide](../configurations.md)); run `opencode models` to see what is available in your environment. Swapping defaults may degrade orchestration quality.
 
-**Feeling lazy?** Just include `ultrawork` (or `ulw`) in your prompt. That's it. The agent figures out the rest.
+**Feeling lazy?** Just include `redpill` (or `rp`) in your prompt. That's it. The agent figures out the rest.
 
 **Need precision?** Press **Tab** to enter Oracle (Planner) mode, create a work plan through an interview process, then run `/start-work` to execute it with full orchestration.
 
@@ -28,12 +28,12 @@ Learn about Matrixx, a plugin that transforms OpenCode into the best agent harne
 
 ## Two Ways to Work
 
-### Option 1: Ultrawork Mode (For Quick Work)
+### Option 1: Redpill Mode (For Quick Work)
 
-If you're feeling lazy, just include **`ultrawork`** (or **`ulw`**) in your prompt:
+If you're feeling lazy, just include **`redpill`** (or **`rp`**) in your prompt:
 
 ```
-ulw add authentication to my Next.js app
+rp add authentication to my Next.js app
 ```
 
 The agent will automatically:
@@ -175,7 +175,7 @@ For detailed configuration options including per-agent settings, category custom
 ## Next Steps
 
 - [Matrixx Orchestration](../orchestration.md) - Deep dive into Oracle → Niobe → Mouse workflow
-- [Ultrawork mode](../command-reference.md) - `/ultrawork` toggle and ultrawork workflow
+- [Redpill mode](../command-reference.md) - `/redpill` toggle and redpill workflow
 - [Installation Guide](./installation.md) - Detailed installation instructions
 - [Configuration Guide](../configurations.md) - Customize agents, models, and behaviors
 - [Features Reference](../features.md) - Complete feature documentation

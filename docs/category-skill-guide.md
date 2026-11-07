@@ -96,7 +96,7 @@ Skill counts, honest version: **70** names in `BuiltinSkillNameSchema` (`src/con
 
 **BDD & Research (5):**
 - **`bdd-backend`**, **`bdd-contract`**, **`bdd-frontend`**, **`bdd-tests`** — BDD pipeline (Gherkin → contract → tests/frontend/backend).
-- **`ulw-research`** — Saturation research orchestrator.
+- **`rp-research`** — Saturation research orchestrator.
 
 **Configuration & Cleanup (2):**
 - **`matrixx-self-config`** — Configure and tune Matrixx for the current user.

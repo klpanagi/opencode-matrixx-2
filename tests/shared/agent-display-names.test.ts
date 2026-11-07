@@ -9,8 +9,8 @@ describe("getAgentDisplayName", () => {
     // when getAgentDisplayName called
     const result = getAgentDisplayName(configKey)
 
-    // then returns "Morpheus (Ultraworker)"
-    expect(result).toBe("Morpheus (Ultraworker)")
+    // then returns "Morpheus (Redpiller)"
+    expect(result).toBe("Morpheus (Redpiller)")
   })
 
   it("returns display name for uppercase config key (old format - case-insensitive)", () => {
@@ -20,8 +20,8 @@ describe("getAgentDisplayName", () => {
     // when getAgentDisplayName called
     const result = getAgentDisplayName(configKey)
 
-    // then returns "Morpheus (Ultraworker)" (case-insensitive lookup)
-    expect(result).toBe("Morpheus (Ultraworker)")
+    // then returns "Morpheus (Redpiller)" (case-insensitive lookup)
+    expect(result).toBe("Morpheus (Redpiller)")
   })
 
   it("returns original key for unknown agents (fallback)", () => {
@@ -150,7 +150,7 @@ describe("AGENT_DISPLAY_NAMES", () => {
   it("contains all expected agent mappings", () => {
     // given expected mappings
     const expectedMappings = {
-      morpheus: "Morpheus (Ultraworker)",
+      morpheus: "Morpheus (Redpiller)",
       keymaker: "Keymaker (Deep Agent)",
       niobe: "Niobe (Plan Execution Orchestrator)",
       oracle: "Oracle (Plan Builder)",

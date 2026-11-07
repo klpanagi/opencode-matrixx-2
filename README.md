@@ -44,7 +44,7 @@ Morpheus                    → Plans the implementation
 | Fragile refactoring | **Deterministic tools** — LSP (goto-def, rename, diagnostics) + AST-Grep (structural search & replace) |
 | Secrets leak into commits | **Security by default** — secret scanning + env-file guards + read-only auditor |
 
-> Don't want to read docs? Just include `ultrawork` (or `ulw`) in your prompt. Parallel agents, deep exploration, relentless execution until completion.
+> Don't want to read docs? Just include `redpill` (or `rp`) in your prompt. Parallel agents, deep exploration, relentless execution until completion.
 
 ---
 
@@ -58,10 +58,10 @@ Matrixx is a plugin for OpenCode. Install it, and OpenCode gains a 3-tier runtim
 
 ### Two ways to work
 
-**Ultrawork — for speed.** Add `ultrawork` to any prompt:
+**Redpill — for speed.** Add `redpill` to any prompt:
 
 ```
-ulw add authentication to my Next.js app
+rp add authentication to my Next.js app
 ```
 
 The agent explores your codebase, researches best practices, implements following your conventions, and verifies with diagnostics and tests. No planning ceremony.
@@ -154,7 +154,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 **Trade-offs to know**
 
 - **OpenCode-only.** Matrixx is a plugin, not a standalone agent or IDE. You adopt OpenCode to use it.
-- **Learning curve.** 13 agents, 8 categories, 70 skills, 24 commands — `ultrawork` hides this well, but mastery takes time.
+- **Learning curve.** 13 agents, 8 categories, 70 skills, 24 commands — `redpill` hides this well, but mastery takes time.
 - **Multiple providers help.** It runs on one provider, but the multi-model value shows with two or more connected (or the OpenCode free tier).
 - **Orchestration overhead.** Delegation costs extra tokens on trivial one-line tasks — use direct mode for those.
 - **Pinned toolchain.** Bun 1.4.4 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.

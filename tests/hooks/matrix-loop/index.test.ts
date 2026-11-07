@@ -93,8 +93,8 @@ describe("matrix-loop", () => {
       expect(readResult?.session_id).toBe("test-session-123")
     })
 
-    test("should handle ultrawork field", () => {
-      // given - a state object with ultrawork enabled
+    test("should handle redpill field", () => {
+      // given - a state object with redpill enabled
       const state: MatrixLoopState = {
         active: true,
         iteration: 1,
@@ -103,15 +103,15 @@ describe("matrix-loop", () => {
         started_at: "2025-12-30T01:00:00Z",
         prompt: "Build a REST API",
         session_id: "test-session-123",
-        ultrawork: true,
+        redpill: true,
       }
 
       // when - write and read state
       writeState(TEST_DIR, state)
       const readResult = readState(TEST_DIR)
 
-      // then - ultrawork field should be preserved
-      expect(readResult?.ultrawork).toBe(true)
+      // then - redpill field should be preserved
+      expect(readResult?.redpill).toBe(true)
     })
 
     test("should return null for non-existent state", () => {
@@ -186,28 +186,28 @@ describe("matrix-loop", () => {
       expect(state?.session_id).toBe("session-123")
     })
 
-    test("should accept ultrawork option in startLoop", () => {
+    test("should accept redpill option in startLoop", () => {
       // given - hook instance
       const hook = createMatrixLoopHook(createMockMatrixxContext())
 
-      // when - start loop with ultrawork
-      hook.startLoop("session-123", "Build something", { ultrawork: true })
+      // when - start loop with redpill
+      hook.startLoop("session-123", "Build something", { redpill: true })
 
-      // then - state should have ultrawork=true
+      // then - state should have redpill=true
       const state = hook.getState()
-      expect(state?.ultrawork).toBe(true)
+      expect(state?.redpill).toBe(true)
     })
 
-    test("should handle missing ultrawork option in startLoop", () => {
+    test("should handle missing redpill option in startLoop", () => {
       // given - hook instance
       const hook = createMatrixLoopHook(createMockMatrixxContext())
 
-      // when - start loop without ultrawork
+      // when - start loop without redpill
       hook.startLoop("session-123", "Build something")
 
-      // then - state should have ultrawork=undefined
+      // then - state should have redpill=undefined
       const state = hook.getState()
-      expect(state?.ultrawork).toBeUndefined()
+      expect(state?.redpill).toBeUndefined()
     })
 
     test("should inject continuation when loop active and no completion detected", async () => {
@@ -856,26 +856,26 @@ Original task: Build something`
       expect(messagesCalls.length).toBe(0)
     })
 
-    test("should show ultrawork completion toast", async () => {
-      // given - hook with ultrawork mode and completion in transcript
+    test("should show redpill completion toast", async () => {
+      // given - hook with redpill mode and completion in transcript
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
       const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
       })
       writeFileSync(transcriptPath, `${JSON.stringify({ type: "tool_result", tool_name: "write", tool_output: { output: "<promise>DONE</promise>" } })}\n`)
-      hook.startLoop("test-id", "Build API", { ultrawork: true })
+      hook.startLoop("test-id", "Build API", { redpill: true })
 
       // when - idle event triggered
       await hook.event({  type: "session.idle", data: { sessionID: "test-id" }  })
 
-      // then - ultrawork toast shown
-      const completionToast = toastCalls.find(t => t.title === "ULTRAWORK LOOP COMPLETE!")
+      // then - redpill toast shown
+      const completionToast = toastCalls.find(t => t.title === "REDPILL LOOP COMPLETE!")
       expect(completionToast).toBeDefined()
-      expect(completionToast?.message).toMatch(/JUST ULW ULW!/)
+      expect(completionToast?.message).toMatch(/JUST rp rp!/)
     })
 
-    test("should show regular completion toast when ultrawork disabled", async () => {
-      // given - hook without ultrawork
+    test("should show regular completion toast when redpill disabled", async () => {
+      // given - hook without redpill
       const transcriptPath = join(TEST_DIR, "transcript.jsonl")
       const hook = createMatrixLoopHook(createMockMatrixxContext(), {
         getTranscriptPath: () => transcriptPath,
@@ -890,23 +890,23 @@ Original task: Build something`
       expect(toastCalls.some(t => t.title === "Matrix Loop Complete!")).toBe(true)
     })
 
-    test("should prepend ultrawork to continuation prompt when ultrawork=true", async () => {
-      // given - hook with ultrawork mode enabled
+    test("should prepend redpill to continuation prompt when redpill=true", async () => {
+      // given - hook with redpill mode enabled
       const hook = createMatrixLoopHook(createMockMatrixxContext())
-      hook.startLoop("session-123", "Build API", { ultrawork: true })
+      hook.startLoop("session-123", "Build API", { redpill: true })
 
       // when - session goes idle (continuation triggered)
       await hook.event({
          type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
-      // then - prompt should start with "ultrawork "
+      // then - prompt should start with "redpill "
       expect(promptCalls.length).toBe(1)
-      expect(promptCalls[0].text).toMatch(/^ultrawork /)
+      expect(promptCalls[0].text).toMatch(/^redpill /)
     })
 
-    test("should NOT prepend ultrawork to continuation prompt when ultrawork=false", async () => {
-      // given - hook without ultrawork mode
+    test("should NOT prepend redpill to continuation prompt when redpill=false", async () => {
+      // given - hook without redpill mode
       const hook = createMatrixLoopHook(createMockMatrixxContext())
       hook.startLoop("session-123", "Build API")
 
@@ -915,9 +915,9 @@ Original task: Build something`
          type: "session.idle", data: { sessionID: "session-123" } ,
       })
 
-      // then - prompt should NOT start with "ultrawork "
+      // then - prompt should NOT start with "redpill "
       expect(promptCalls.length).toBe(1)
-      expect(promptCalls[0].text).not.toMatch(/^ultrawork /)
+      expect(promptCalls[0].text).not.toMatch(/^redpill /)
     })
   })
 
@@ -960,10 +960,10 @@ Original task: Build something`
       } as unknown as Parameters<typeof createMatrixLoopHook>[0]
     }
 
-    //#given ultrawork loop with verification enabled and completion detected (H4: tag in preFetchedMessages)
+    //#given redpill loop with verification enabled and completion detected (H4: tag in preFetchedMessages)
     //#when session goes idle
     //#then verifyCompletion is called before clearing state
-    test("should call verification before clearing state on ultrawork completion", async () => {
+    test("should call verification before clearing state on redpill completion", async () => {
       mockSessionMessages = [
         {
           type: "assistant",
@@ -975,7 +975,7 @@ Original task: Build something`
         getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
         verification: { enabled: true, timeoutMs: 1000 },
       })
-      hook.startLoop("session-123", "Build API", { ultrawork: true })
+      hook.startLoop("session-123", "Build API", { redpill: true })
 
       await hook.event({
          type: "session.idle", data: { sessionID: "session-123" } ,
@@ -983,7 +983,7 @@ Original task: Build something`
 
       expect(sessionCreateCalls.length).toBe(0)
       expect(hook.getState()).toBeNull()
-      expect(toastCalls.some((t) => t.title === "ULTRAWORK LOOP COMPLETE!")).toBe(true)
+      expect(toastCalls.some((t) => t.title === "REDPILL LOOP COMPLETE!")).toBe(true)
     })
 
     //#given verification returns verified=true (H4: tag present in preFetchedMessages)
@@ -1077,9 +1077,9 @@ Original task: Build something`
       expect(toastCalls.some((t) => t.variant === "warning" && t.message.includes("verification"))).toBe(true)
     })
 
-    //#given regular (non-ultrawork) loop with verification not explicitly enabled
+    //#given regular (non-redpill) loop with verification not explicitly enabled
     //#when completion detected
-    //#then verification is skipped (disabled by default for non-ultrawork)
+    //#then verification is skipped (disabled by default for non-redpill)
     test("should skip verification for regular loops when not explicitly enabled", async () => {
       mockSessionMessages = [
         { type: "assistant", content: [{ type: "text", text: "<promise>DONE</promise>" }] },

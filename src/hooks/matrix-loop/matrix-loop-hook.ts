@@ -10,7 +10,7 @@ export interface MatrixLoopHook {
   startLoop: (
     sessionID: string,
     prompt: string,
-    options?: { maxIterations?: number; completionPromise?: string; ultrawork?: boolean }
+    options?: { maxIterations?: number; completionPromise?: string; redpill?: boolean }
   ) => boolean
   cancelLoop: (sessionID: string) => boolean
   getState: () => MatrixLoopState | null

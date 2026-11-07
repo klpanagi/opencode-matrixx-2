@@ -16,12 +16,12 @@ import { removeAiSlopsSkill } from "../builtin/core/remove-ai-slops"
 import { resilienceErrorTaxonomySkill } from "../builtin/core/resilience-error-taxonomy"
 import { resilienceFailureHuntingSkill } from "../builtin/core/resilience-failure-hunting"
 import { reviewWorkSkill } from "../builtin/core/review-work"
+import { ulwResearchSkill } from "../builtin/core/rp-research"
 import { silentFailureDetectionSkill } from "../builtin/core/silent-failure-detection"
 import { softwareDevSkill } from "../builtin/core/software-dev"
 import { systematicDebuggingSkill } from "../builtin/core/systematic-debugging"
 import { tddEnforcerSkill } from "../builtin/core/tdd-enforcer"
 import { telegramBotSkill } from "../builtin/core/telegram-bot"
-import { ulwResearchSkill } from "../builtin/core/ulw-research"
 import { dslCodegenSkill } from "../builtin/dsl/dsl-codegen"
 import { dslCompositionSkill } from "../builtin/dsl/dsl-composition"
 import { dslCoreSkill } from "../builtin/dsl/dsl-core"
@@ -125,7 +125,7 @@ const skillFactories: Record<string, () => BuiltinSkill> = {
   "quality-gate": () => qualityGateSkill,
   "software-dev": () => softwareDevSkill,
   "matrixx-self-config": () => matrixxSelfConfigSkill,
-  "ulw-research": () => ulwResearchSkill,
+  "rp-research": () => ulwResearchSkill,
   "remove-ai-slops": () => removeAiSlopsSkill,
   "zeromq-core": () => zeromqCoreSkill,
   "zeromq-sockets-patterns": () => zeromqSocketsPatternsSkill,

@@ -5,7 +5,7 @@ import {
 } from "./constants"
 
 interface DetectedKeyword {
-  type: "ultrawork" | "search" | "analyze" | "docs"
+  type: "redpill" | "search" | "analyze" | "docs"
   message: string
 }
 
@@ -26,7 +26,7 @@ function resolveMessage(
 
 export function detectKeywordsWithType(text: string, agentName?: string, modelID?: string): DetectedKeyword[] {
   const textWithoutCode = removeCodeBlocks(text)
-  const types: Array<"ultrawork" | "search" | "analyze" | "docs"> = ["ultrawork", "search", "analyze", "docs"]
+  const types: Array<"redpill" | "search" | "analyze" | "docs"> = ["redpill", "search", "analyze", "docs"]
   const result: DetectedKeyword[] = []
   for (let i = 0; i < KEYWORD_DETECTORS.length; i++) {
     const detector = KEYWORD_DETECTORS[i]

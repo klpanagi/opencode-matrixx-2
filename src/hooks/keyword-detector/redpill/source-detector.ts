@@ -1,5 +1,5 @@
 /**
- * Agent/model detection utilities for ultrawork message routing.
+ * Agent/model detection utilities for redpill message routing.
  *
  * Routing logic:
  * 1. Planner agents (oracle, plan) → planner.ts
@@ -15,7 +15,7 @@ import { isGptModel, isMimoModel } from "../../../agents/shared/types"
 
 /**
  * Checks if agent is a planner-type agent.
- * Planners don't need ultrawork injection (they ARE the planner).
+ * Planners don't need redpill injection (they ARE the planner).
  */
 export function isPlannerAgent(agentName?: string): boolean {
   if (!agentName) return false
@@ -28,7 +28,7 @@ export function isPlannerAgent(agentName?: string): boolean {
 
 /**
  * Checks if agent is a non-Matrixx agent (e.g., OpenCode's built-in Builder/Plan).
- * Non-Matrixx agents should not receive ultrawork injection.
+ * Non-Matrixx agents should not receive redpill injection.
  */
 export function isNonOmoAgent(agentName?: string): boolean {
   if (!agentName) return false
@@ -62,16 +62,16 @@ export function isDeepseekModel(model: string): boolean {
   return DEEPSEEK_INDICATORS.some((indicator) => lowered.includes(indicator))
 }
 
-/** Ultrawork message source type */
-export type UltraworkSource = "planner" | "deepseek" | "mimo" | "gpt" | "gemini" | "glm" | "default"
+/** Redpill message source type */
+export type RedpillSource = "planner" | "deepseek" | "mimo" | "gpt" | "gemini" | "glm" | "default"
 
 /**
- * Determines which ultrawork message source to use.
+ * Determines which redpill message source to use.
  */
-export function getUltraworkSource(
+export function getRedpillSource(
   agentName?: string,
   modelID?: string
-): UltraworkSource {
+): RedpillSource {
   // Priority 1: Planner agents
   if (isPlannerAgent(agentName)) {
     return "planner"

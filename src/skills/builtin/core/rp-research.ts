@@ -1,6 +1,6 @@
 import type { BuiltinSkill } from "../../loader/types"
 
-const ULW_RESEARCH_SKILL_NAME = "ulw-research"
+const ULW_RESEARCH_SKILL_NAME = "rp-research"
 
 const ULW_RESEARCH_SKILL_DESCRIPTION =
   "Use when conducting deep research, investigating complex topics, or exploring codebases across multiple sources — spawns parallel search agents across code, docs, web, and OSS repos with recursive convergence. Related: dev-browser, document-reader."
@@ -22,7 +22,7 @@ export const ulwResearchSkill: BuiltinSkill = {
     "context7_resolve-library-id",
     "context7_query-docs",
   ],
-  template: `# ULW-Research — Saturation Research Orchestrator
+  template: `# rp-Research — Saturation Research Orchestrator
 
 Run a systematic, multi-round research process that converges on comprehensive coverage.
 

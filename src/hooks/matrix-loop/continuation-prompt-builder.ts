@@ -23,5 +23,5 @@ export function buildContinuationPrompt(state: MatrixLoopState): string {
 		.replace("{{PROMISE}}", state.completion_promise)
 		.replace("{{PROMPT}}", state.prompt)
 
-	return state.ultrawork ? `ultrawork ${continuationPrompt}` : continuationPrompt
+	return state.redpill ? `redpill ${continuationPrompt}` : continuationPrompt
 }

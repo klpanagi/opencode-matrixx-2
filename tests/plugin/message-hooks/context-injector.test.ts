@@ -38,9 +38,9 @@ describe("contextInjectorMessagesTransform flat port", () => {
     const collector = new ContextCollector()
     const sessionID = "ses_transform1"
     collector.register(sessionID, {
-      id: "ulw",
+      id: "rp",
       source: "keyword-detector",
-      content: "Ultrawork context",
+      content: "Redpill context",
     })
     const event = userEvent(sessionID, [
       { type: "user", text: "First message" },
@@ -51,7 +51,7 @@ describe("contextInjectorMessagesTransform flat port", () => {
     await applyContextInjectorMessagesTransform(event, { collector })
     //#then the merged context is prepended to the last user text, mirroring the V1 synthetic-part splice
     expect(event.messages).toHaveLength(3)
-    expect(event.messages[2].text).toBe("Ultrawork context\n\n---\n\nSecond message")
+    expect(event.messages[2].text).toBe("Redpill context\n\n---\n\nSecond message")
     expect(event.messages[0].text).toBe("First message")
   })
 

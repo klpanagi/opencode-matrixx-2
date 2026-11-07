@@ -4,12 +4,12 @@ import {
   isAssemblyDisabled,
 } from "../../features/assembly-state"
 import { clearMissionState } from "../../features/mission-state"
-import { getMainSessionID } from "../../features/session-state/state"
 import {
-  disableUltrawork,
-  enableUltrawork,
-  getUltraworkState,
-} from "../../features/ultrawork-state"
+  disableRedpill,
+  enableRedpill,
+  getRedpillState,
+} from "../../features/redpill-state"
+import { getMainSessionID } from "../../features/session-state/state"
 import { log } from "../../shared"
 import type { SessionContextCarrier } from "../../shared/session/session-context-source"
 import type { DomainHooks } from "../setup-domains"
@@ -20,7 +20,7 @@ import { resolveSessionAgent } from "./session-agent-resolver"
 // once at module load (Task T1.6) so the regex template `.compile()` cost
 // (~1us per literal in V8) is paid once instead of per handler invocation.
 const LEADING_SLASH_RE = /^\//
-const LOOP_COMMAND_RE = /^\/?(matrix-loop|ulw-loop)\s*/i
+const LOOP_COMMAND_RE = /^\/?(matrix-loop|rp-loop)\s*/i
 const QUOTED_STRING_RE = /^["'](.+?)["']/
 const FLAG_SPLIT_RE = /\s+--/
 const MAX_ITERATIONS_RE = /--max-iterations=(\d+)/i
@@ -196,7 +196,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
           })
         } else if (command === "cancel-loop" && sessionID) {
           hooks.matrixLoop.cancelLoop(sessionID)
-        } else if (command === "ulw-loop" && sessionID) {
+        } else if (command === "rp-loop" && sessionID) {
           const rawArgs = rawCommand?.replace(LOOP_COMMAND_RE, "") || ""
           const taskMatch = rawArgs.match(QUOTED_STRING_RE)
           const prompt =
@@ -208,7 +208,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
           const promiseMatch = rawArgs.match(COMPLETION_PROMISE_RE)
 
           hooks.matrixLoop.startLoop(sessionID, prompt, {
-            ultrawork: true,
+            redpill: true,
             maxIterations: maxIterMatch ? parseInt(maxIterMatch[1], 10) : undefined,
             completionPromise: promiseMatch?.[1],
           })
@@ -236,21 +236,21 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
         }
       }
 
-      if (command === "ultrawork" && sessionID) {
-        const subcommand = rawCommand?.replace(/^\/?ultrawork\s*/i, "").trim().toLowerCase()
+      if (command === "redpill" && sessionID) {
+        const subcommand = rawCommand?.replace(/^\/?redpill\s*/i, "").trim().toLowerCase()
         if (subcommand === "disable" || subcommand === "off") {
-          disableUltrawork(sessionID)
+          disableRedpill(sessionID)
         } else if (subcommand === "enable" || subcommand === "on") {
-          enableUltrawork(sessionID)
+          enableRedpill(sessionID)
         } else {
-          const state = getUltraworkState(sessionID) ?? "default (keyword-triggered)"
-          log("[ultrawork] Ultrawork state check", { sessionID, state })
+          const state = getRedpillState(sessionID) ?? "default (keyword-triggered)"
+          log("[redpill] Redpill state check", { sessionID, state })
         }
       }
 
-      if (command === "end-ultrawork" && sessionID) {
-        disableUltrawork(sessionID)
-        log("[end-ultrawork] Ultrawork disabled via /end-ultrawork", { sessionID })
+      if (command === "end-redpill" && sessionID) {
+        disableRedpill(sessionID)
+        log("[end-redpill] Redpill disabled via /end-redpill", { sessionID })
       }
     }
   }

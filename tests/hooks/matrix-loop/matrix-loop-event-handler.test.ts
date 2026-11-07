@@ -55,7 +55,7 @@ describe("matrix-loop event handler", () => {
 			getTranscriptPath: () => join(TEST_DIR, "nonexistent.jsonl"),
 			verification: { enabled: true, timeoutMs: 1000 },
 		})
-		hook.startLoop("session-123", "Build API", { ultrawork: true })
+		hook.startLoop("session-123", "Build API", { redpill: true })
 
 		// when - session.idle event triggers both detection AND verification
 		await hook.event({

@@ -13,7 +13,7 @@ describe("detectKeywordsWithType short-circuit (Task T3.24)", () => {
   })
 
   test("keyword detector short-circuits on first match", () => {
-    //#given - text matches ONLY the first detector (ultrawork), and every detector
+    //#given - text matches ONLY the first detector (redpill), and every detector
     //         uses a function-typed message so we can count resolveMessage calls
     const spies = KEYWORD_DETECTORS.map(() =>
       mock((_agentName?: string, _modelID?: string) => "[resolved]")
@@ -21,7 +21,7 @@ describe("detectKeywordsWithType short-circuit (Task T3.24)", () => {
     KEYWORD_DETECTORS.forEach((d, i) => {
       d.message = spies[i] as (typeof KEYWORD_DETECTORS)[number]["message"]
     })
-    const text = "please do ultrawork on this task"
+    const text = "please do redpill on this task"
 
     //#when - detectKeywordsWithType runs against the text
     const result = detectKeywordsWithType(text)
@@ -31,7 +31,7 @@ describe("detectKeywordsWithType short-circuit (Task T3.24)", () => {
     //        must NOT have been called (proving resolveMessage short-circuits).
     const totalResolveCalls = spies.reduce((sum, s) => sum + s.mock.calls.length, 0)
     expect(result).toHaveLength(1)
-    expect(result[0].type).toBe("ultrawork")
+    expect(result[0].type).toBe("redpill")
     expect(result[0].message).toBe("[resolved]")
     expect(spies[0].mock.calls.length).toBe(1)
     expect(spies[1].mock.calls.length).toBe(0)

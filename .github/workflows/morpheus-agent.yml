@@ -193,7 +193,7 @@ jobs:
 
           MATRIXX_JSON=~/.config/opencode/matrixx.json
           PROMPT_APPEND=$(cat << 'PROMPT_EOF'
-          <ultrawork-mode>
+          <redpill-mode>
           [CODE RED] Maximum precision required. Ultrathink before acting.
 
           YOU MUST LEVERAGE ALL AVAILABLE AGENTS TO THEIR FULLEST POTENTIAL.
@@ -239,7 +239,7 @@ jobs:
 
           THE USER ASKED FOR X. DELIVER EXACTLY X. NOT A SUBSET. NOT A DEMO. NOT A STARTING POINT.
 
-          </ultrawork-mode>
+          </redpill-mode>
 
           ---
 

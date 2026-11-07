@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
 import { documentReaderSkill } from "../../../src/skills/builtin/core/document-reader"
-import { ulwResearchSkill } from "../../../src/skills/builtin/core/ulw-research"
+import { ulwResearchSkill } from "../../../src/skills/builtin/core/rp-research"
 import {
   FALLBACK_MESSAGE,
   GUARDED_TOOLS,
@@ -76,8 +76,8 @@ describe("naming consistency: context7 surfaces", () => {
     expect(NUDGE_MESSAGE).toContain("context7_get-library-docs")
   })
 
-  test("ulw-research template uses canonical context7_* names", async () => {
-    //#given the ulw-research skill template
+  test("rp-research template uses canonical context7_* names", async () => {
+    //#given the rp-research skill template
     const template = ulwResearchSkill.template
 
     //#when inspecting the delegate-via-operator instruction
@@ -86,8 +86,8 @@ describe("naming consistency: context7 surfaces", () => {
     expect(template.includes("(resolve-library-id then query-docs)")).toBe(false)
   })
 
-  test("ulw-research allowedTools use verbatim registered names", async () => {
-    //#given the ulw-research allowed tools
+  test("rp-research allowedTools use verbatim registered names", async () => {
+    //#given the rp-research allowed tools
     //#when inspecting membership
     //#then verbatim registered names are listed
     expect(ulwResearchSkill.allowedTools).toContain("context7_resolve-library-id")

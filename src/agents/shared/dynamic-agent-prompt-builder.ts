@@ -648,7 +648,7 @@ export function buildExploreDisciplineSection(hasContextMode = false, hasHeadroo
   return appendModelDirective(`### Context Discipline (when available)\n\n${parts.join(" ")}`, modelID);
 }
 
-export function buildUltraworkSection(
+export function buildRedpillSection(
   agents: AvailableAgent[],
   categories: AvailableCategory[],
   skills: AvailableSkill[]
@@ -688,10 +688,10 @@ export function buildUltraworkSection(
   }
 
   if (agents.length > 0) {
-    const ultraworkAgentPriority = ["trinity", "operator", "plan", "oracle", "merovingian"]
+    const redpillAgentPriority = ["trinity", "operator", "plan", "oracle", "merovingian"]
     const sortedAgents = [...agents].sort((a, b) => {
-      const aIdx = ultraworkAgentPriority.indexOf(a.name)
-      const bIdx = ultraworkAgentPriority.indexOf(b.name)
+      const aIdx = redpillAgentPriority.indexOf(a.name)
+      const bIdx = redpillAgentPriority.indexOf(b.name)
       if (aIdx === -1 && bIdx === -1) return 0
       if (aIdx === -1) return 1
       if (bIdx === -1) return -1

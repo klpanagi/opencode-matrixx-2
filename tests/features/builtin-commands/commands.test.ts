@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { buildBuiltinCommandEntries } from "../../../src/features/builtin-commands/commands.transform"
-import { END_ULTRAWORK_TEMPLATE } from "../../../src/features/builtin-commands/templates/end-ultrawork"
+import { END_REDPILL_TEMPLATE } from "../../../src/features/builtin-commands/templates/end-redpill"
 import { HANDOFF_TEMPLATE } from "../../../src/features/builtin-commands/templates/handoff"
 import { REMOVE_DEADCODE_TEMPLATE } from "../../../src/features/builtin-commands/templates/remove-deadcode"
 import type { BuiltinCommandName } from "../../../src/features/builtin-commands/types"
@@ -117,8 +117,8 @@ describe("buildBuiltinCommandEntries - remove-deadcode", () => {
   })
 })
 
-describe("buildBuiltinCommandEntries - end-ultrawork", () => {
-  test("should include end-ultrawork command in loaded commands", () => {
+describe("buildBuiltinCommandEntries - end-redpill", () => {
+  test("should include end-redpill command in loaded commands", () => {
     //#given
     const disabledCommands: BuiltinCommandName[] = []
 
@@ -126,49 +126,49 @@ describe("buildBuiltinCommandEntries - end-ultrawork", () => {
     const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
-    expect(commands["end-ultrawork"]).toBeDefined()
-    expect(commands["end-ultrawork"].name).toBe("end-ultrawork")
+    expect(commands["end-redpill"]).toBeDefined()
+    expect(commands["end-redpill"].name).toBe("end-redpill")
   })
 
-  test("should exclude end-ultrawork when disabled", () => {
+  test("should exclude end-redpill when disabled", () => {
     //#given
-    const disabledCommands: BuiltinCommandName[] = ["end-ultrawork"]
+    const disabledCommands: BuiltinCommandName[] = ["end-redpill"]
 
     //#when
     const commands = buildBuiltinCommandEntries(disabledCommands)
 
     //#then
-    expect(commands["end-ultrawork"]).toBeUndefined()
+    expect(commands["end-redpill"]).toBeUndefined()
   })
 
-  test("should include end-ultrawork template content in command template", () => {
+  test("should include end-redpill template content in command template", () => {
     //#given - no disabled commands
 
     //#when
     const commands = buildBuiltinCommandEntries()
 
     //#then
-    expect(commands["end-ultrawork"].template).toContain(END_ULTRAWORK_TEMPLATE)
+    expect(commands["end-redpill"].template).toContain(END_REDPILL_TEMPLATE)
   })
 
-  test("should include $ARGUMENTS in end-ultrawork template", () => {
+  test("should include $ARGUMENTS in end-redpill template", () => {
     //#given - no disabled commands
 
     //#when
     const commands = buildBuiltinCommandEntries()
 
     //#then
-    expect(commands["end-ultrawork"].template).toContain("$ARGUMENTS")
+    expect(commands["end-redpill"].template).toContain("$ARGUMENTS")
   })
 
-  test("should have correct description for end-ultrawork", () => {
+  test("should have correct description for end-redpill", () => {
     //#given - no disabled commands
 
     //#when
     const commands = buildBuiltinCommandEntries()
 
     //#then
-    expect(commands["end-ultrawork"].description).toContain("ultrawork")
+    expect(commands["end-redpill"].description).toContain("redpill")
   })
 })
 

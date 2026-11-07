@@ -52,7 +52,7 @@ export function readState(directory: string, customPath?: string): MatrixLoopSta
       started_at: stripQuotes(data.started_at) || new Date().toISOString(),
       prompt: body.trim(),
       session_id: data.session_id ? stripQuotes(data.session_id) : undefined,
-      ultrawork: data.ultrawork === true || data.ultrawork === "true" ? true : undefined,
+      redpill: data.redpill === true || data.redpill === "true" ? true : undefined,
       verification_failed_count: verificationFailedCount && !Number.isNaN(verificationFailedCount) ? verificationFailedCount : undefined,
     }
   } catch {
@@ -74,7 +74,7 @@ export function writeState(
     }
 
     const sessionIdLine = state.session_id ? `session_id: "${state.session_id}"\n` : ""
-    const ultraworkLine = state.ultrawork !== undefined ? `ultrawork: ${state.ultrawork}\n` : ""
+    const redpillLine = state.redpill !== undefined ? `redpill: ${state.redpill}\n` : ""
     const verificationLine = state.verification_failed_count !== undefined ? `verification_failed_count: ${state.verification_failed_count}\n` : ""
     const content = `---
 active: ${state.active}
@@ -82,7 +82,7 @@ iteration: ${state.iteration}
 max_iterations: ${state.max_iterations}
 completion_promise: "${state.completion_promise}"
 started_at: "${state.started_at}"
-${sessionIdLine}${ultraworkLine}${verificationLine}---
+${sessionIdLine}${redpillLine}${verificationLine}---
 ${state.prompt}
 `
 

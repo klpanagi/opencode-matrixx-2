@@ -40,4 +40,4 @@ All artifacts written to \`.matrixx/research-<topic>-<timestamp>/\`:
 
 ---
 
-Execute the full research protocol using the ulw-research skill.`
+Execute the full research protocol using the rp-research skill.`

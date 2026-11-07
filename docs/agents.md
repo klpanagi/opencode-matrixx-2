@@ -26,7 +26,7 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 4. **Contextual awareness** — spawns subagents to digest source code and documentation in real-time when working with unfamiliar frameworks.
 5. **Clean code enforcement** — either justifies a comment's existence or nukes it. Code should be indistinguishable from human-written.
 6. **Relentless execution** — bound by the task list (`.matrixx/tasks`, see [Task System](./task-system.md)). Tasks survive `/clear`, so work picks up where it left off. Your task gets done, period.
-7. **One keyword** — type `ultrawork` (or just `ulw`). Morpheus analyzes, gathers context, digs through external source code, and keeps going until the job is 100% complete.
+7. **One keyword** — type `redpill` (or just `rp`). Morpheus analyzes, gathers context, digs through external source code, and keeps going until the job is 100% complete.
 
 ### Morpheus's Teammates
 

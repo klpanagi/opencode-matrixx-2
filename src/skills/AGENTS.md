@@ -28,7 +28,7 @@ skills/
 │   ├── bdd/                      # 4 skills (bdd-backend, bdd-contract, bdd-frontend, bdd-tests)
 │   ├── core/                     # 20 skills, 19 files (playwright.ts exports 2: playwright + agent-browser)
 │   │                             # git-master, docker-master, dev-browser, tdd-enforcer, quality-gate,
-│   │                             # software-dev, review-work, matrixx-self-config, ulw-research, ...
+│   │                             # software-dev, review-work, matrixx-self-config, rp-research, ...
 │   ├── dsl/                      # 11 skills (dsl-core, dsl-grammar, dsl-codegen, dsl-metamodel, ...)
 │   ├── frontend/                 # 8 skills (frontend-ui-ux, frontend-a11y, frontend-perf, ...)
 │   ├── market-data/              # 10 skills (ccxt-rest, ccxt-pro-websockets, market-data-bus, ...)
@@ -176,7 +176,7 @@ Remove the static import and the `skillFactories` entry in `src/skills/loader/fa
 ## KNOWN HOTSPOTS
 
 - `src/skills/builtin/core/git-master.ts` — large skill with many workflow procedures
-- `src/skills/builtin/core/ulw-research.ts` — references the research skill
+- `src/skills/builtin/core/rp-research.ts` — references the research skill
 - `src/skills/loader/factories.ts` `skillFactories` table — must stay in sync with `builtin/<category>/*.ts` exports
 - `src/skills/builtin/core/playwright.ts` — dual export (`playwrightSkill` + `agentBrowserSkill`); only the `browserProvider`-selected one loads
 

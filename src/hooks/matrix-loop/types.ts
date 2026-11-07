@@ -8,7 +8,7 @@ export interface MatrixLoopState {
   started_at: string
   prompt: string
   session_id?: string
-  ultrawork?: boolean
+  redpill?: boolean
   verification_in_progress?: boolean
   verification_failed_count?: number
 }
