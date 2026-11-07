@@ -5,7 +5,7 @@
 # Matrixx
 
 [![npm](https://img.shields.io/npm/v/opencode-matrixx.svg)](https://www.npmjs.com/package/opencode-matrixx)
-[![License: SUL-1.0](https://img.shields.io/badge/license-SUL--1.0-blue.svg)](https://github.com/klpanagi/opencode-matrixx/blob/master/LICENSE)
+[![License: SUL-1.0](https://img.shields.io/badge/license-SUL--1.0-blue.svg)](https://github.com/klpanagi/opencode-matrixx-2/blob/dev/LICENSE.md)
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
@@ -190,12 +190,6 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 
 Full index: [docs/README.md](docs/README.md)
 
-
-## Acknowledgment
-
-Matrixx is a personal contribution by the author, [@klpanagi](https://github.com/klpanagi). It is not funded by, affiliated with, or supported by any laboratory or institution; it is an independent personal project released under the SUL-1.0 license.
-
----
 
 If this saves you time, a ⭐ goes a long way.
 
