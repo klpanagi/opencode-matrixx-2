@@ -9,52 +9,39 @@ Main plugin entry point and orchestration layer. Plugin initialization, hook reg
 ```
 src/
 ├── index.ts                          # V2-native { id, setup } entry → setup-domains
-├── plugin-config.ts                  # Config loading orchestration (user + project merge, 180 lines)
-├── plugin-state.ts                   # Model cache state (context limits, anthropic 1M flag, 12 lines)
-├── agents/                           # 13 AI agents (32 files) — see agents/AGENTS.md
-├── cli/                              # CLI installer, doctor (107+ files) — see cli/AGENTS.md
+├── tool-entry.ts                     # Side-effect-free bench/sandbox entry (not the plugin entry)
+├── plugin-config.ts                  # Config loading orchestration (user + project merge)
+├── plugin-state.ts                   # Model cache state (context limits)
+├── agents/                           # 13 AI agents (50 files) — see agents/AGENTS.md
+├── cli/                              # CLI installer, doctor (27 files, no per-area AGENTS.md)
 ├── config/                           # Zod schema — see config/AGENTS.md
-├── features/                         # Background agents, commands (23 dirs) — see features/AGENTS.md
-├── hooks/                            # Leaf hook domains (HookNameSchema 65 enum + 7 literals) — see hooks/AGENTS.md
+├── features/                         # Background agents, commands (21 dirs) — see features/AGENTS.md
+├── hooks/                            # Leaf hook domains (HookNameSchema 66 enum + 7 literals) — see hooks/AGENTS.md
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
-├── shared/                           # Cross-cutting utilities (~85 files) — see shared/AGENTS.md
-├── skills/                           # 50 built-in skills (66 files, builtin/ + loader/) — see skills/AGENTS.md
-└── tools/                            # 30 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-policy.ts) — see tools/AGENTS.md
+├── shared/                           # Cross-cutting utilities (~118 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
+├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
+└── tools/                            # 31 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```
 
 ## PLUGIN INITIALIZATION (`setup-domains.ts`)
 
-1. Server auth header (`getServerBasicAuthHeader`, native HTTP API) — Auth injection
+1. `createNativePluginContext(ctx)` — in-process V2 context (no HTTP; the old server-auth injection has no native twin)
 2. `startTmuxCheck()` — Tmux availability
-3. `loadPluginConfig(ctx.directory, ctx)` — User + project config merge → Zod validation
+3. `loadPluginConfig(...)` — User + project config merge → Zod validation (+ DCP `default_profile` switch)
 4. `createFirstMessageVariantGate()` — First message variant override gate
-5. Domain managers (tmux, background, config handler) — inline, no wrapper
+5. `createDomainManagers(...)` — Tmux/background/session managers
 6. `setupToolsDomain(...)` → skill context + categories + tool catalog
-7. Leaf hook domains → `setupChatHooks` + `setupToolHooks` + `setupCompactionHooks`
-8. Assemble `Hooks` + `registerDomains(...)` onto the V2 context
+7. Hook tiers (session, tool-guard, transform, continuation, skill) + `setupChatHooks` + `setupToolHooks` + `setupCompactionHooks`
+8. Assemble `Hooks` + `registerDomains(...)` onto the V2 context (+ dispose cleanup)
 
-## HOOK REGISTRATION (leaf domains, no tiers)
+## HOOK REGISTRATION (5 factories in `src/plugin/hooks/`)
 
-**Session** (`create-session-hooks.ts`):
-- context-window-monitor, session-recovery, think-mode, matrix-loop, anthropic-effort, ...
-
-## HOOK REGISTRATION (3 tiers)
-
-**Core Hooks** (`create-core-hooks.ts`):
-- Session (20): context-window-monitor, session-recovery, think-mode, matrix-loop, anthropic-effort, ...
-- Tool Guard (8): comment-checker, tool-output-truncator, rules-injector, write-existing-file-guard, ...
-- Transform (3): keyword-detector, context-injector, thinking-block-validator
-
-**Continuation** (`create-continuation-hooks.ts`):
-- 8 hooks: `stop-continuation-guard`, `compaction-context-injector`, `task-continuation-enforcer` (file-backed `.matrixx/tasks`, project-scoped), `unstable-agent-babysitter`, `nudge-loop-breaker`, `background-notification`, `niobe`, `plan-persister` ...
-
-**Skill** (`create-skill-hooks.ts`):
-- 2 hooks: category-skill-reminder, auto-slash-command
-
-**Transform** (`create-transform-hooks.ts` + `create-tool-guard-hooks.ts`):
-- keyword-detector, context-injector, thinking-block-validator, comment-checker,
-  tool-output-truncator, rules-injector, write-existing-file-guard, ...
+- **Session** (`create-session-hooks.ts`): context-window-monitor, session-recovery, think-mode, matrix-loop, anthropic-effort, ...
+- **Tool guard** (`create-tool-guard-hooks.ts`): comment-checker, tool-output-truncator, rules-injector, write-existing-file-guard, ...
+- **Transform** (`create-transform-hooks.ts`): keyword-detector, context-injector, thinking-block-validator, ...
+- **Continuation** (`create-continuation-hooks.ts`): stop-continuation-guard, compaction-context-injector, task-continuation-enforcer, unstable-agent-babysitter, nudge-loop-breaker, background-notification, niobe, plan-persister, ...
+- **Skill** (`create-skill-hooks.ts`): category-skill-reminder, auto-slash-command
 
 ## PLUGIN INTERFACE (assembled `Hooks`)
 

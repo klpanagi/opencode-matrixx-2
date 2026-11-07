@@ -2,20 +2,20 @@
 
 ## OVERVIEW
 
-30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, delegate-task (`task`), background-task ×3 `output/cancel/revive`, handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, evolution). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool-policy.ts` — bdd/pdf-figures/look_at/knowledge-hub-confirm/preset/evolution only load when relevant (see TOOL GATING).
+31 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, delegate-task (`task`), background-task ×4 `output/cancel/revive/wait_all`, handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, evolution, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset/evolution only load when relevant (see `tool-policy.ts`).
 
 ## STRUCTURE
 ```
 tools/
-├── delegate-task/    # Category routing (constants.ts 569 lines, tools.ts 213 lines) + complexity routing
-├── task/             # 5 individual tools: create, list, get, update, cleanup (task-create.ts, task-list.ts, task-get.ts, task-update.ts)
+├── delegate-task/    # Category routing + complexity routing
+├── task/             # 5 individual tools: create, list, get, update, cleanup (task-create.ts, task-list.ts, task-get.ts, task-update.ts, task-cleanup.ts)
 ├── plan/             # 5 plan tools: create, read, update, list, delete for `.matrixx/plans/*.md` (kebab-case, hashline IDs, atomicWrite, unconditional registry)
 ├── lsp/              # 6 LSP tools: goto_definition, find_references, symbols, diagnostics, prepare_rename, rename
 ├── ast-grep/         # 2 tools: search, replace (25 languages)
 ├── grep/             # Custom grep (60s timeout, 10MB limit)
 ├── glob/             # File search (60s timeout, 100 file limit)
 ├── session-manager/  # 4 tools: list, read, search, info
-├── background-task/  # background_output, background_cancel, background_revive
+├── background-task/  # background_output, background_cancel, background_revive, background_wait_all
 ├── handoff/          # Multi-action handoff: create, read, list, archive
 ├── hashline-edit/    # Hash-based line-precise file editing
 ├── interactive-bash/ # Tmux session management
@@ -31,6 +31,12 @@ tools/
 ├── pdf-extract-figures/ # PDF figure extraction (gated: *.pdf file or override)
 ├── preset/            # Model preset switch (opt-in only)
 ├── evolution/         # Evolution governance: list/get/approve/reject/status + read-only retrieval (search/get_context, 4000-char cap) (gated: evolution.enabled)
+├── dashboard-flux-validator/ # Grafana dashboard validation
+├── market-symbol-validator/ # Market symbol validation
+├── notepad/           # Persistent notepads (create/append/list/read)
+├── session-cleanup/   # Session cleanup (gated: opt-in)
+├── silent-failure-scanner/ # Silent-failure scan
+├── staleness-gap-checker/ # Staleness gap check
 └── slashcommand/     # Slash command dispatch
 ```
 
@@ -208,7 +214,7 @@ The `<task_metadata>` line carries a JSON payload for programmatic parsing. A de
 
 1. Create `src/tools/[name]/` with index.ts, tools.ts, types.ts, constants.ts
 2. Static tools → `builtinTools` export, Factory → separate export
-3. Register in `src/plugin/tool-catalog.ts`
+3. Register in `src/plugin/tool/tool-catalog.ts`
 
 ## NAMING
 

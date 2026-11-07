@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 3.0.0 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.4.4
+**Version:** 1.2.1 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.4.4
 
 ---
 
@@ -100,13 +100,13 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 17 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 65-enum hooks (+7 literals) and 30 custom tool dirs (conditional registration via `src/plugin/tool-gating.ts`). 23 built-in commands, 50 schema skills / 66 skill files, 23 features, 2 MCPs. ~960 TS source files, 246 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 13 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 66-enum hooks (+7 literals) and 31 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 24 built-in commands, 70 schema skills / 86 skill files, 21 features, 2 MCPs. ~1200 TS source files, ~615 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). `2.6.18` is the legacy V1 API (`@opencode-ai/plugin` v1.3.15) release line and does not load in OpenCode V2.
 
 | Aspect | Value |
 |---|---|
-| Package | `opencode-matrixx-v2` (npm, v3.0.0) |
+| Package | `opencode-matrixx-v2` (npm, v1.2.1) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
 | Stack | Bun 1.4.4 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |
@@ -116,23 +116,20 @@ Matrixx is a multi-agent orchestration **plugin for OpenCode**. 17 built-in agen
 ```
 matrixx/
 ├── src/
-│   ├── index.ts                    # MatrixxPlugin factory — never export functions from here
-│   ├── create-hooks.ts             # Core + Continuation + Skill hook tiers
-│   ├── create-managers.ts          # Tmux / Background / SkillMcp / Config managers
-│   ├── create-tools.ts             # Tool registry + skill context composition
+│   ├── index.ts                    # Thin V2 { id, setup } entry — setupDomains + registerDomains; never export functions
+│   ├── tool-entry.ts               # Side-effect-free entry for bench/sandbox use (not the plugin entry)
 │   ├── plugin-config.ts            # Config load + Zod validation
 │   ├── plugin-state.ts             # Model context-limit cache
-│   ├── agents/   → 17 agents + AGENTS.md
-│   ├── hooks/    → 65-enum hooks (+7 literals) in 3 tiers
-│   ├── tools/    → 30 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via tool-gating.ts)
-│   ├── features/ → 23 dirs (background-agent, builtin-commands, task-storage, handoff, knowledge-hub, ...)
-│   ├── shared/   → 80+ utilities (logger → /tmp/matrixx.log)
-│   ├── skills/   → 50 schema skills / 66 skill files + AGENTS.md
-│   ├── mcps/     → 2 built-in MCPs + native `github_search` tool
+│   ├── agents/   → 13 agents + AGENTS.md
+│   ├── hooks/    → 66-enum hooks (+7 literals) in 5 factories
+│   ├── tools/    → 31 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; gated via plugin/tool/tool-policy.ts)
+│   ├── features/ → 21 dirs (background-agent, builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
+│   ├── shared/   → scoped dirs (agent, config, io, model, outcome, policy, runtime, session, text, tmux, tool, ...) + AGENTS.md
+│   ├── skills/   → builtin/<category>/ (70 schema skills) + loader/ + <skill>/SKILL.md assets + AGENTS.md
+│   ├── mcps/     → context7 + document-reader (+ native `github_search` tool in `src/tools/`)
 │   ├── cli/      → installer, doctor, config-manager
 │   ├── config/   → Zod schema
-│   ├── plugin/   → hook composition (create-core/continuation/skill-hooks)
-│   └── plugin/handlers/ → config-loading pipeline (6 phases)
+│   └── plugin/   → composition root: index.ts barrel; setup-domains.ts + setup-domains/; handlers/ (6-phase config pipeline); tool/ (catalog + policy + chat/event handlers); hooks/ (5 factories); message-hooks/
 ├── bin/                            # Platform-detecting CLI wrappers
 ├── script/                         # build-schema, build-binaries, publish, run-ci.sh
 ├── packages/                       # 7 platform + 4 baseline binary packages
@@ -165,7 +162,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 **Bun pinned to 1.4.4** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
 
-**Mock-heavy isolation** — ~30 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
+**Mock-heavy isolation** — ~44 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
 
 **Dual test layout** — CI discovers tests via `find tests script -name '*.test.ts'`, so files under `tests/**` run in CI while co-located `src/**/*.test.ts` are CI-orphaned (never discovered by the `find` glob). NEVER write test files in `src/` — always put them under `tests/` mirroring the `src/` path (e.g. `src/tools/foo/bar.ts` → `tests/tools/foo/bar.test.ts`, importing via `../../../src/...`). The mock-heavy isolation list has a single source of truth: `script/mock-heavy-list.txt`. Both `.github/workflows/ci.yml` and `publish.yml` read it; `script/run-ci.sh` also reads it for the catch-all exclusion. Never duplicate the list inline in a workflow file.
 
@@ -173,9 +170,11 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 `bunfig.toml` preloads `tests/test-setup.ts` → `_resetForTesting()` before each test.
 
-## PLUGIN INIT — `src/index.ts` (10 steps)
+## PLUGIN INIT — `src/index.ts` → `src/plugin/setup-domains.ts`
 
-1. `injectServerAuthIntoClient` 2. `startTmuxCheck` 3. `loadPluginConfig` (Zod) 4. `createFirstMessageVariantGate` 5. `createModelCacheState` 6. `createManagers` (4) 7. `createTools` 8. `createHooks` (3 tiers) 9. `createPluginInterface` (8 handlers + `experimental.session.compacting`) 10. Return plugin
+`src/index.ts` is a thin V2 `{ id, setup }` entry: `setup()` runs `setupDomains()` then `registerDomains()`. The full init sequence lives in `setupDomains()` (`src/plugin/setup-domains.ts`, per-domain modules in `setup-domains/{assemble,hooks,managers,tools}`):
+
+1. `createNativePluginContext` 2. `startTmuxCheck` 3. `loadPluginConfig` (Zod) + DCP `default_profile` switch 4. `createFirstMessageVariantGate` 5. `createDomainManagers` 6. `setupToolsDomain` (catalog + policy) 7. Hook tiers: session, tool-guard, transform, continuation, skill 8. Chat/compaction/tool setup 9. `registerDomains` onto the V2 context (+ dispose cleanup)
 
 **Never export functions from `src/index.ts`** — OpenCode treats every export as a plugin instance. Only re-export types (see file footer).
 
@@ -184,10 +183,10 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 | Task | Location | Notes |
 |------|----------|-------|
 | New agent | `src/agents/<name>.ts` | Add to `agentSources` in `src/agents/builtin-agents.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
-| New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{core,continuation,skill}-hooks.ts` |
-| New tool | `src/tools/<name>/` | Register in `src/plugin/tool-registry.ts` (needs `index, types, constants, tools` structure) |
-| New MCP | `src/mcps/` | Add to `createBuiltinMcps()` |
-| New built-in skill | `src/skills/builtin/` | Export from `skills/index.ts`; add to `createBuiltinSkills()` |
+| New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{session,tool-guard,transform,continuation,skill}-hooks.ts` |
+| New tool | `src/tools/<name>/` | Register in `src/plugin/tool/tool-catalog.ts` (conditional policy in `tool-policy.ts`; needs `index, types, constants, tools` structure) |
+| New MCP | `src/mcps/` | Add to `createBuiltinMcps()` in `src/mcps/index.ts` |
+| New built-in skill | `src/skills/builtin/<category>/` | Add `<name>.ts`; re-exported via `builtin/index.ts` (type-level only — runtime loads lazily via `createBuiltinSkills()` in `src/skills/loader/factories.ts`); add name to `BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts` |
 | New command | `src/features/builtin-commands/` | Add template + register in `commands.ts` |
 | Schema field | `src/config/schema/` | Run `bun run build:schema` → regenerates `dist/` and `assets/matrixx.schema.json` |
 | User-facing skill | `.opencode/skills/<name>/SKILL.md` | Loaded by OpenCode session — not the plugin |
@@ -222,7 +221,7 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 - **Build** — `bun build` (ESM, target bun) + `tsc --emitDeclarationOnly` + `build:schema`.
 - **Exports** — barrel via `index.ts`, type-only re-exports preferred.
 - **Naming** — kebab-case dirs, `createXXXHook` / `createXXXTool` factories.
-- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/background-agent/manager.ts` is ~2400 LOC and `tests/` legitimately reaches ~4900. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
+- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/background-agent/manager/` is split (manager, lifecycle, reconcile, store, types) and `tests/` legitimately reaches ~4900 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
 - **Temperature** — 0.1 for code agents, max 0.3.
 - **Parallelism** — never sequential `task()` calls; use `run_in_background=true` and collect via `background_output`.
 - **Git** — no `git add -i`, `rebase -i`, `--no-verify`, no force push without request.
@@ -240,9 +239,9 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 | Bash | `sleep N` (use conditional waits); `cd dir && cmd` (use `workdir`) |
 | Publishing | `bun publish` directly — CI only, never bump version locally |
 
-## AGENTS (17 via `BuiltinAgentNameSchema`)
+## AGENTS (13 via `BuiltinAgentNameSchema`)
 
-17 agents total via `BuiltinAgentNameSchema` (see `src/agents/AGENTS.md` for model/temperature/fallback chains).
+13 agents total via `BuiltinAgentNameSchema` (see `src/agents/AGENTS.md` for model/temperature/fallback chains).
 
 ## DEPLOYMENT
 
@@ -256,24 +255,24 @@ Never `bun publish` or bump `package.json` version locally.
 ## CONFIG
 
 - Zod schema in `src/config/schema/` → project `matrixx.json`/`.jsonc` → user `~/.config/opencode/matrixx.json` → defaults
-- JSONC via `jsonc-parser` — use `src/shared/jsonc-parser.ts`, not `JSON.parse`
+- JSONC via `jsonc-parser` — use `src/shared/text/jsonc-parser.ts`, not `JSON.parse`
 - Legacy auto-migrated by `src/shared/migration/`
 
 ## MCP (2 tiers)
 
-1. Built-in `src/mcps/`: `websearch`, `context7`, `document-reader` (+ native `github_search` tool in `src/tools/`)
+1. Built-in `src/mcps/`: `context7`, `document-reader` (+ native `github_search` tool in `src/tools/`)
 2. Plugin-config / user-configured MCPs
 
 ## HOTSPOTS
 
-`background-agent/manager.ts` + `background-agent/reconcile.ts` (restart reconciliation) + `background-agent/admission.ts` (nested-admission classifier) + `shared/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `task-continuation-enforcer/` (file-backed `.matrixx/tasks/T-{uuid}.json`, atomic write, 30s stale lock) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
+`features/background-agent/manager/` (lifecycle, reconcile, store) + `shared/outcome/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `task-continuation-enforcer` hook (file-backed `.matrixx/tasks/T-{uuid}.json`, atomic write, 30s stale lock) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
 
 ## NOTES
 
 - OpenCode SDK `>= 1.0.150`
 - Trusted deps: `@ast-grep/cli`, `@code-yeongyu/comment-checker`
 - Platform packages: 7 + 4 baseline (glibc x86_64)
-- Logger: `src/shared/logger.ts` → `/tmp/matrixx.log`
+- Logger: `src/shared/runtime/logger.ts` → `/tmp/matrixx.log`
 - Local dev state: `.matrixx/` (handoff, notepads), `UNIQUE_BRANCH_MARKER.md` — gitignored
 - Flaky: `matrix-loop` (timeout), `session-state` (parallel pollution)
 - Project skills: `github-issue-triage`, `github-pr-triage`
