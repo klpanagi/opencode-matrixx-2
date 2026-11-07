@@ -12,6 +12,7 @@ import {
   buildKeyTriggersSection,
   buildLibrarianSection,
   buildOracleSection,
+  buildSmithSection,
   buildToolSelectionTable,
   categorizeTools,
 } from "./dynamic-agent-prompt-builder"
@@ -86,6 +87,7 @@ function buildKeymakerPrompt(
   const categorySkillsGuide = buildCategorySkillsDelegationGuide(availableCategories, availableSkills)
   const delegationTable = buildDelegationTable(availableAgents)
   const oracleSection = buildOracleSection(availableAgents)
+  const smithSection = buildSmithSection(availableAgents)
   const hardBlocks = buildHardBlocksSection()
   const antiPatterns = buildAntiPatternsSection()
   const hasContextMode = availableTools.some((t) => t.name.startsWith("ctx_"))
@@ -148,6 +150,8 @@ A task is COMPLETE when ALL of the following are TRUE:
 7. Evidence provided for each verification step
 
 **If ANY criterion is unmet, the task is NOT complete.**
+
+**Plan-only prohibition (NON-NEGOTIABLE):** A plan file (\`.matrixx/plans/*.md\`) or a Smith [OKAY] verdict alone is NEVER completion. Only EXECUTE + VERIFY with captured evidence completes a task.
 
 ## Phase 0 - Intent Gate (EVERY task)
 
@@ -314,6 +318,9 @@ After collecting exploration results, create a concrete work plan:
 - Identify dependencies between changes
 - Estimate complexity (trivial / moderate / complex)
 
+**Hard chain (MANDATORY for non-trivial plans):**
+\`task(subagent_type='oracle')\` produces the plan at \`.matrixx/plans/*.md\` → Smith pre-execution review (\`task(subagent_type='smith')\` with exactly ONE \`.matrixx/plans/*.md\` path, expect a binary \`[OKAY]\`/\`[REJECT]\` verdict, max 3 blockers) → \`[OKAY]\`: EXECUTE + VERIFY with evidence → \`[REJECT]\`: revise the plan via Oracle and re-submit, cap 2 re-reviews, then escalate to the user. Canonical example: \`.matrixx/plans/dcp-install-fix.md\`.
+
 ### Step 3: DECIDE (Self vs Delegate)
 
 For EACH task in your plan, explicitly decide:
@@ -353,6 +360,16 @@ ${todoDiscipline}
 ${categorySkillsGuide}
 
 ${delegationTable}
+
+### Routing Table — oracle vs merovingian (exact \`subagent_type\`)
+
+| Agent | \`subagent_type\` | Role | May write \`.matrixx/plans/*.md\`? |
+|-------|-----------------|------|----------------------------------|
+| Oracle | \`subagent_type='oracle'\` | Plan Builder ONLY — creates/edits work plans | YES |
+| Merovingian | \`subagent_type='merovingian'\` | Consultant ONLY — read-only second opinion | NO |
+| Smith | \`subagent_type='smith'\` | Pre-execution plan reviewer — binary verdict | NO |
+
+Never cast Oracle as the executor and never cast Smith as the planner.
 
 ### Delegation Prompt Structure (MANDATORY - ALL 6 sections):
 
@@ -395,6 +412,10 @@ Every \`task()\` output includes a session_id. **USE IT.**
 
 ${oracleSection ? `
 ${oracleSection}
+` : ""}
+
+${smithSection ? `
+${smithSection}
 ` : ""}
 
 ## Role & Agency (CRITICAL - READ CAREFULLY)
@@ -552,6 +573,18 @@ When working on long sessions or complex multi-file tasks:
 1. Fix root causes, not symptoms
 2. Re-verify after EVERY fix attempt
 3. Never shotgun debug
+
+### Infra-Failure Track (BEFORE any Oracle consult)
+
+Classify the failure FIRST — infrastructure failures are NOT planning problems:
+
+| Class | Examples | First action |
+|-------|----------|--------------|
+| **transient** | network blip, flaky test, timeout, 5xx | retry once, then verify state |
+| **fatal** | auth failure, permission denied, corrupt lock/state | fix the environment; do NOT reinterpret as a design problem |
+| **version-arithmetic** | ERESOLVE / semver peer conflict (e.g. \`^0.4.2\` vs \`0.5.10\`), DCP npm ERESOLVE | resolve the dependency arithmetic directly |
+
+**Workaround gate (NON-NEGOTIABLE):** attempt at least 2 DIFFERENT workarounds with captured command evidence (exact command + exit code) BEFORE consulting Oracle. ERESOLVE-class failures NEVER route to Oracle planning as a first action.
 
 ### After Failure (AUTONOMOUS RECOVERY)
 

@@ -7,6 +7,7 @@ import {
   type AvailableCategory,
   type AvailableSkill,
   buildNiobeReferralSection,
+  buildSmithSection,
   buildCategorySkillsDelegationGuide,
   buildUltraworkSection,
   formatCustomSkillsBlock,
@@ -725,5 +726,43 @@ describe("DCP compression no-substitute guard (issue #165)", () => {
     //#then substitute ban present alongside existing ownership wording
     expect(guided).toContain("the `compress` tool is DCP's")
     expect(guided).toContain("no prose substitute")
+  })
+})
+
+describe("buildSmithSection", () => {
+  //#given an available-agents list without smith
+  //#when buildSmithSection is called
+  //#then it returns an empty string
+  it("returns empty string when smith is absent", () => {
+    expect(buildSmithSection([])).toBe("")
+  })
+
+  //#given smith is an available agent with metadata
+  //#when buildSmithSection is called
+  //#then the rendered section carries the full review chain contract
+  it("renders the Smith review chain", () => {
+    const section = buildSmithSection([
+      {
+        name: "smith",
+        description: "Plan reviewer",
+        metadata: {
+          category: "advisor",
+          cost: "EXPENSIVE",
+          triggers: [],
+          useWhen: ["After Oracle creates a work plan"],
+          avoidWhen: ["Trivial plans"],
+        },
+      },
+    ])
+    expect(section).toContain("Smith")
+    expect(section).toContain("[OKAY]")
+    expect(section).toContain("[REJECT]")
+    expect(section).toContain("max 3")
+    expect(section).toContain("Step-0")
+    expect(section).toContain(".matrixx/plans/")
+    expect(section).toContain("dcp-install-fix.md")
+    expect(section).toContain("EXECUTE")
+    expect(section).toContain("Cap 2")
+    expect(section).toContain("After Oracle creates a work plan")
   })
 })

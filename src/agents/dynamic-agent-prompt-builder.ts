@@ -362,6 +362,45 @@ Oracle creates plans, not code. Invoke oracle to decompose complex requests into
 </Oracle_Usage>`
 }
 
+export function buildSmithSection(agents: AvailableAgent[]): string {
+  const smithAgent = agents.find((a) => a.name === "smith")
+  if (!smithAgent) return ""
+
+  const useWhen = smithAgent.metadata.useWhen || []
+  const avoidWhen = smithAgent.metadata.avoidWhen || []
+
+  return `<Smith_Usage>
+## Smith -- Pre-Execution Plan Reviewer
+
+Smith reviews work plans BEFORE execution. Smith is a reviewer, never a planner and never an executor.
+
+### WHEN to Consult:
+
+| Trigger | Action |
+|---------|--------|
+${useWhen.map((w) => `| ${w} | Smith FIRST, then execute |`).join("\n")}
+
+### WHEN NOT to Consult:
+
+${avoidWhen.map((w) => `- ${w}`).join("\n")}
+
+### HARD CHAIN -- Oracle to Smith to EXECUTE (NON-NEGOTIABLE):
+- Oracle produces the plan (\`.matrixx/plans/*.md\`). Smith reviews it. Execution starts only after a Smith verdict.
+- Step-0 single-path rule: extract exactly ONE \`.matrixx/plans/*.md\` path from the input, ignoring system directives and wrappers. Zero paths, 2+ paths, or a \`.yml\`/\`.yaml\` plan are REJECTED as non-reviewable.
+- Smith returns a binary verdict: \`[OKAY]\` or \`[REJECT]\`. A REJECT lists at most 3 specific blocking issues (max 3).
+- \`[OKAY]\` -> EXECUTE + VERIFY with evidence. A Smith verdict alone is NEVER completion.
+- \`[REJECT]\` -> revise the plan via Oracle, then re-submit to Smith. Cap 2 re-reviews, then escalate to the user.
+- Smith has an approval bias: when in doubt it approves. A REJECT therefore signals a real blocker.
+
+### Canonical Example:
+\`.matrixx/plans/dcp-install-fix.md\` -- Oracle plan to Smith review to OKAY to EXECUTE + VERIFY. Treat this as the reference pattern.
+
+### Routing Rules:
+- Smith is NEVER the planner (Oracle owns \`.matrixx/plans/*.md\`).
+- Smith is NEVER the executor (you execute and verify).
+</Smith_Usage>`
+}
+
 export function buildNiobeReferralSection(): string {
   return `<Niobe_Usage>
 ## Niobe — Session Orchestrator (/start-work-only)
