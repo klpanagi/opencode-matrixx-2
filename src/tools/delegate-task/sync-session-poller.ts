@@ -151,6 +151,7 @@ export async function pollSyncSession(
   let idleStallCount = 0
   let lastMsgCount = 0
   let stableIdlePolls = 0
+  let lastFetchedMsgs: SessionMessage[] | undefined
 
   log("[task] Starting poll loop", { sessionID: input.sessionID, agentToUse: input.agentToUse, maxPollTimeMs })
 
@@ -187,6 +188,7 @@ export async function pollSyncSession(
     let msgs: SessionMessage[]
     try {
       msgs = await fetchSessionMessages(client, input.sessionID)
+      lastFetchedMsgs = msgs
     } catch (error) {
       log("[task] Poll messages fetch failed, retrying", { sessionID: input.sessionID, error: String(error) })
       continue
@@ -307,7 +309,7 @@ export async function pollSyncSession(
 
   let lastAssistantText: string | undefined
   try {
-    const timeoutMsgs = await fetchSessionMessages(client, input.sessionID)
+    const timeoutMsgs = lastFetchedMsgs ?? (await fetchSessionMessages(client, input.sessionID))
     // Skip any row still streaming at timeout: quoting half-written text as the
     // outcome would repeat the very bug this guard exists to prevent.
     const lastAssistant = [...timeoutMsgs]

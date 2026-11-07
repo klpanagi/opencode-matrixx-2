@@ -1,6 +1,7 @@
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata } from "../../shared"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import type { SessionMessage } from "../../shared/session/session-message"
 import { contentOf, isAssistant, timeOf } from "../../shared/session/session-message"
 import { getSessionTools } from "../../shared/session/session-state"
 import { formatDetailedError } from "./error-formatting"
@@ -81,6 +82,7 @@ export async function executeUnstableAgentTask(
     const pollStart = Date.now()
     let lastMsgCount = 0
     let stablePolls = 0
+    let lastPolledMsgs: SessionMessage[] | undefined
     let terminalStatus: { status: string; error?: string } | undefined
 
     while (Date.now() - pollStart < timingCfg.MAX_POLL_TIME_MS) {
@@ -99,6 +101,7 @@ export async function executeUnstableAgentTask(
       if (Date.now() - pollStart < timingCfg.MIN_STABILITY_TIME_MS) continue
 
       const msgs = await fetchSessionMessages(client, sessionID)
+      lastPolledMsgs = msgs
       const currentMsgCount = msgs.length
 
       if (currentMsgCount === lastMsgCount) {
@@ -128,7 +131,7 @@ session_id: ${sessionID}
 </task_metadata>`
     }
 
-    const messages = await fetchSessionMessages(client, sessionID)
+    const messages = lastPolledMsgs ?? (await fetchSessionMessages(client, sessionID))
 
     const assistantMessages = messages
       .filter((m) => isAssistant(m))
