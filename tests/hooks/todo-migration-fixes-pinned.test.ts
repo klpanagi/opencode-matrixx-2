@@ -92,7 +92,7 @@ describe("R1: D5 removed the completion gates — completion is native events on
   })
 
   test("13. stale-handle expiry is the throttle-free TTL sweep", () => {
-    expect(source).toContain("sweepStaleHandles")
+    expect(source).toContain("sweepAndReadHandles")
     // the reset-hook comment below names the removed throttle; no live code may use it
     expect(source).not.toMatch(/this\.lastPruneAt|lastPruneAt:/)
   })

@@ -124,7 +124,7 @@ export async function executeSyncTask(
     // Derived from MAX_POLL_TIME_MS with one poll interval of grace so a
     // healthy in-flight poll wins the race and keeps its structured outcome.
     const syncTiming = getTimingConfig()
-    const hardTimeoutMs = Math.max(syncTiming.MAX_POLL_TIME_MS, 50) + syncTiming.POLL_INTERVAL_MS
+    const hardTimeoutMs = Math.max(syncTiming.MAX_POLL_TIME_MS, syncTiming.MIN_POLL_TIME_FLOOR_MS) + syncTiming.POLL_INTERVAL_MS
     let hardTimedOut = false
     const hardTimeoutError = (): string =>
       formatDetailedError(

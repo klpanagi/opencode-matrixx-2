@@ -12,6 +12,7 @@ export {
   getBgHandleDir,
   getHandlePath,
   readHandles,
+  sweepAndReadHandles,
   sweepStaleHandles,
   toHandle,
   writeHandle,

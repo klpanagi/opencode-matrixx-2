@@ -4,7 +4,7 @@ import type { NativeDomains } from "../../../shared/session/session-context-sour
 import { setSessionTemperature, setSessionTools } from "../../../shared/session/session-state"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
-import { buildSubagentTitle, readHandles, sweepStaleHandles } from "../handle-index"
+import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import type { ManagerRuntime } from "./types"
 
@@ -39,8 +39,7 @@ function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
 }
 
 export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
-    const swept = sweepStaleHandles(rt.directory, rt.store.taskTtlMs())
-    const handles = readHandles(rt.directory)
+    const { handles, removed: swept } = sweepAndReadHandles(rt.directory, rt.store.taskTtlMs())
 
     let restored = 0
     for (const handle of handles) {

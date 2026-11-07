@@ -200,10 +200,6 @@ function getPendingByParent(manager: BackgroundManager): Map<string, Set<string>
   return (manager as unknown as { pendingByParent: Map<string, Set<string>> }).pendingByParent
 }
 
-function getCompletionTimers(manager: BackgroundManager): Map<string, ReturnType<typeof setTimeout>> {
-  return (manager as unknown as { completionTimers: Map<string, ReturnType<typeof setTimeout>> }).completionTimers
-}
-
 function getQueuesByKey(
   manager: BackgroundManager
 ): Map<string, Array<{ task: BackgroundTask; input: import("../../../src/features/background-agent/types").LaunchInput }>> {
