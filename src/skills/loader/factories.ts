@@ -159,7 +159,14 @@ export interface CreateBuiltinSkillsOptions {
 
 export function createBuiltinSkills(options: CreateBuiltinSkillsOptions = {}): BuiltinSkill[] {
   const { browserProvider = "playwright", disabledSkills: rawDisabledSkills } = options
-  const disabledSkills = rawDisabledSkills instanceof Set ? rawDisabledSkills : new Set(rawDisabledSkills ?? [])
+  const disabledCopy = rawDisabledSkills instanceof Set ? new Set(rawDisabledSkills) : new Set(rawDisabledSkills ?? [])
+  const disabledSkills = disabledCopy
+  // The playwright-cli factory intentionally outputs name "playwright" (canonical
+  // browser skill name swapped behind browserProvider). Map the schema name to the
+  // output name so disabled_skills: ["playwright-cli"] actually disables it.
+  if (browserProvider === "playwright-cli" && disabledSkills.has("playwright-cli")) {
+    disabledSkills.add("playwright")
+  }
 
   // Determine which browser skill to use (selected eagerly, others excluded)
   const browserSkillName = browserProvider === "agent-browser"
