@@ -47,13 +47,13 @@ skills/
 
 | Category dir | Skills | Files | Notes |
 |--------------|--------|-------|-------|
-| `skills/bdd/` | 4 | 4 + `index.ts` | BDD workflow skills |
-| `skills/core/` | 20 | 19 + `index.ts` | Cross-cutting skills; `playwright.ts` exports both `playwrightSkill` and `agentBrowserSkill` |
-| `skills/dsl/` | 11 | 11 + `index.ts` | DSL design/implementation skills |
-| `skills/frontend/` | 8 | 8 + `index.ts` | Frontend framework/pattern skills |
-| `skills/market-data/` | 10 | 10 + `index.ts` | Market-data pipeline skills |
-| `skills/security/` | 10 | 10 + `index.ts` | Security review/audit skills |
-| `skills/zeromq/` | 7 | 7 + `index.ts` | ZeroMQ messaging skills |
+| `skills/builtin/bdd/` | 4 | 4 + `index.ts` | BDD workflow skills |
+| `skills/builtin/core/` | 20 | 17 top-level + `docker-master/` + `git-master/` multi-file skills + `index.ts` | Cross-cutting skills; `playwright.ts` exports both `playwrightSkill` and `agentBrowserSkill` |
+| `skills/builtin/dsl/` | 11 | 11 + `index.ts` | DSL design/implementation skills |
+| `skills/builtin/frontend/` | 8 | 8 + `index.ts` | Frontend framework/pattern skills |
+| `skills/builtin/market-data/` | 10 | 10 + `index.ts` | Market-data pipeline skills |
+| `skills/builtin/security/` | 10 | 10 + `index.ts` | Security review/audit skills |
+| `skills/builtin/zeromq/` | 7 | 7 + `index.ts` | ZeroMQ messaging skills |
 | **Total** | **70** | **69 + 7 `index.ts`** | |
 
 Each category dir has an `index.ts` that re-exports its skill objects (e.g. `export { bddBackendSkill, BDD_BACKEND_SKILL_NAME } from "./bdd-backend"`). The root `skills/index.ts` re-exports everything for type-level access only — runtime template loading goes through `createBuiltinSkills()`, never through direct imports.
@@ -119,7 +119,7 @@ Disabled skills are filtered **AFTER** creation at the array level (`allSkills.f
 `src/skills/*/SKILL.md` files (e.g. `agent-browser/SKILL.md`, `git-master/SKILL.md`) are **document-only triage copies** — they are NOT loaded at runtime. The runtime path is exclusively:
 
 ```
-src/skills/builtin/<category>/*.ts → skillFactories (skills.ts) → createBuiltinSkills() → registerSkillTransform
+src/skills/builtin/<category>/*.ts → skillFactories (loader/factories.ts) → createBuiltinSkills() → registerSkillTransform
 ```
 
 Do not edit or delete `SKILL.md` files when adding/removing skills; they exist for human/agent triage reading only.
@@ -178,7 +178,7 @@ All skills are loaded from `src/skills/builtin/<category>/` via `createBuiltinSk
 
 ## HOW TO REMOVE A BUILT-IN SKILL
 
-Remove the static import and the `skillFactories` entry in `skills.ts`. Note: users with `disabled_skills: ["my-skill"]` will see a benign "not found" message.
+Remove the static import and the `skillFactories` entry in `src/skills/loader/factories.ts`. Note: users with `disabled_skills: ["my-skill"]` will see a benign "not found" message.
 
 ## KNOWN HOTSPOTS
 

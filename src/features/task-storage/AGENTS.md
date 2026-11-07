@@ -22,13 +22,11 @@ Hybrid layout selected by `morpheus.tasks.scope` (default `project`) and resolve
 ```
 task-storage/
 ├── types.ts               # Task schema (Zod)
-├── types.test.ts          # Schema validation tests
 ├── storage.ts             # File operations (atomic write, locking)
-├── storage.test.ts        # Storage tests (30 tests, 543 lines)
-├── session-storage.ts     # Session-scoped task storage
-├── session-storage.test.ts
 └── index.ts               # Barrel exports
 ```
+
+(Tests mirror under `tests/features/task-storage/`.)
 
 ## TASK SCHEMA
 
@@ -63,7 +61,6 @@ interface Task {
 | `writeJsonAtomic(path, data)` | Atomic write via temp + rename |
 | `acquireLock(dirPath)` | File lock with 30s stale threshold |
 | `generateTaskId()` | `T-{uuid}` format |
-| `findTaskAcrossSessions(config, taskId)` | Locate task in any session |
 
 ## TODO SYNC
 

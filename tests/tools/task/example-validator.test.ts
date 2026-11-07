@@ -26,7 +26,7 @@ const SRC = join(ROOT, "src")
 
 /** Canonical single-object example, pinned by the plan. */
 const CANONICAL_MD = "src/tools/AGENTS.md"
-const CANONICAL_LINE = 93
+const CANONICAL_LINE = 99
 
 type Extracted = {
   rel: string

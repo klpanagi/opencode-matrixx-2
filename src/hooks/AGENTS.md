@@ -2,49 +2,49 @@
 
 ## OVERVIEW
 
-73 hook entries (64 dirs + 9 loose `.ts` files) intercepting/modifying agent behavior across 7 event types. Three-tier registration: Core (session ~21 + tool-guard ~24 + transform 8) → Continuation (11) → Skill (2). `HookNameSchema` holds 65 enum members plus 7 retained literals = 72 accepted values.
+73 accepted hook names (66 enum + 7 retained literals; 65 dirs + 9 loose `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
 
 ## STRUCTURE
 ```
 hooks/
-├── agent-usage-reminder/         # Specialized agent hints (109 lines)
-├── context-window-limit-recovery/ # Provider-agnostic recovery (~1100 lines)
-├── anthropic-effort/             # Effort=max for Opus max variant (56 lines)
-├── niobe/                        # Main orchestration hook (1976 lines)
-├── auto-slash-command/           # Detects /command patterns (1134 lines)
-├── auto-update-checker/          # Plugin update check (1140 lines)
-├── background-notification/      # OS notifications (33 lines)
-├── category-skill-reminder/      # Category+skill delegation reminders (597 lines)
-├── comment-checker/              # Prevents AI slop comments (710 lines)
-├── compaction-context-injector/  # Injects context on compaction (128 lines)
-├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/` (~131 lines)
-├── context-window-monitor.ts     # Reminds of headroom at 70% (99 lines)
-├── delegate-task-retry/          # Retries failed delegations (266 lines)
+├── agent-usage-reminder/         # Specialized agent hints
+├── context-window-limit-recovery/ # Provider-agnostic recovery
+├── anthropic-effort/             # Effort=max for Opus max variant
+├── niobe/                        # Main orchestration hook
+├── auto-slash-command/           # Detects /command patterns
+├── auto-update-checker/          # Plugin update check
+├── background-notification/      # OS notifications
+├── category-skill-reminder/      # Category+skill delegation reminders
+├── comment-checker/              # Prevents AI slop comments
+├── compaction-context-injector/  # Injects context on compaction
+├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/`
+├── context-window-monitor.ts     # Reminds of headroom at 70%
+├── delegate-task-retry/          # Retries failed delegations
 ├── design-intent-preserver/      # Preserves design intent across edits
-├── directory-agents-injector/    # Auto-injects AGENTS.md (195 lines)
-├── edit-error-recovery/          # Recovers from edit failures (188 lines)
-├── empty-task-response-detector.ts # Detects empty responses (27 lines)
-├── interactive-bash-session/     # Tmux session management (695 lines)
-├── keyword-detector/             # ultrawork/search/analyze modes (1665 lines)
-├── non-interactive-env/          # Non-TTY handling (483 lines)
-├── preemptive-compaction.ts      # Auto-compact at 78% usage (108 lines)
-├── plan-persister/              # Persists plan state to disk on idle + compact (132 lines)
-├── oracle-md-only/           # Planner read-only mode (955 lines)
+├── directory-agents-injector/    # Auto-injects AGENTS.md
+├── edit-error-recovery/          # Recovers from edit failures
+├── empty-task-response-detector.ts # Detects empty responses
+├── interactive-bash-session/     # Tmux session management
+├── keyword-detector/             # ultrawork/search/analyze modes
+├── non-interactive-env/          # Non-TTY handling
+├── preemptive-compaction.ts      # Auto-compact at 78% usage
+├── plan-persister/              # Persists plan state to disk on idle + compact
+├── oracle-md-only/           # Planner read-only mode
 ├── quality-gate/                 # Post-task quality verification
-├── matrix-loop/                   # Self-referential dev loop (1687 lines)
-├── rules-injector/               # Conditional .morpheus/rules injection (1604 lines)
-├── session-notification.ts       # OS idle notifications (108 lines)
-├── session-recovery/             # Auto-recovers from crashes (1279 lines)
-├── mouse-notepad/      # Junior notepad directive (76 lines)
-├── start-work/                   # Morpheus work session starter (648 lines)
-├── stop-continuation-guard/      # Guards stop continuation (214 lines)
-├── task-resume-info/             # Resume info for cancelled tasks (39 lines)
-├── think-mode/                   # Dynamic thinking budget (1365 lines)
-├── thinking-block-validator/     # Validates thinking blocks (169 lines)
-├── tool-output-truncator.ts      # Prevents context bloat (62 lines)
-├── unstable-agent-babysitter/    # Monitors unstable behavior (451 lines)
+├── matrix-loop/                   # Self-referential dev loop
+├── rules-injector/               # Conditional .morpheus/rules injection
+├── session-notification.ts       # OS idle notifications
+├── session-recovery/             # Auto-recovers from crashes
+├── mouse-notepad/      # Junior notepad directive
+├── start-work/                   # Morpheus work session starter
+├── stop-continuation-guard/      # Guards stop continuation
+├── task-resume-info/             # Resume info for cancelled tasks
+├── think-mode/                   # Dynamic thinking budget
+├── thinking-block-validator/     # Validates thinking blocks
+├── tool-output-truncator.ts      # Prevents context bloat
+├── unstable-agent-babysitter/    # Monitors unstable behavior
 ├── task-edit-guard/               # Blocks raw bash edits to .matrixx/plans and .matrixx/tasks — enforces plan_*/task_* tools; BLOCKs generic Write/Edit to plans (tool.execute.before)
-└── write-existing-file-guard/    # Guards against file overwrite (356 lines)
+└── write-existing-file-guard/    # Guards against file overwrite
 ```
 
 ## EVENT TYPES
@@ -59,7 +59,7 @@ hooks/
 | MessagesTransform | `experimental.chat.messages.transform` | No | 1 |
 | Compaction | `onSummarize` | No | 1 |
 
-## BLOCKING HOOKS (10)
+## BLOCKING HOOKS (7)
 
 | Hook | Event | Blocks When |
 |------|-------|-------------|
@@ -74,8 +74,8 @@ hooks/
 ## EXECUTION ORDER
 
 **UserPromptSubmit**: keywordDetector → autoSlashCommand → startWork
-**PreToolUse**: subagentQuestionBlocker → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → morpheusJuniorNotepad → writeExistingFileGuard → niobeHook
-**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → niobeHook → taskResumeInfo → taskReminder
+**PreToolUse**: subagentBlock → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → mouseNotepad → writeExistingFileGuard → niobeHook
+**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → niobeHook → taskResumeInfo
 
 ## HOW TO ADD
 

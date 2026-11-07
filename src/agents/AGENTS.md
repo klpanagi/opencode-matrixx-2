@@ -9,17 +9,17 @@
 ## STRUCTURE
 ```
 agents/
-├── morpheus.ts                 # Main orchestrator (530 lines)
-├── keymaker.ts               # Autonomous deep worker (624 lines)
-├── seraph.ts                    # Pre-planning analysis (347 lines)
+├── morpheus.ts                 # Main orchestrator (508 lines)
+├── keymaker.ts               # Autonomous deep worker (604 lines)
+├── seraph.ts                    # Pre-planning analysis (369 lines)
 ├── oracle/                     # Plan Builder / Planner
 │   ├── index.ts
 │   ├── system-prompt.ts        # 6-section prompt assembly
-│   ├── plan-template.ts        # Work plan structure (423 lines)
-│   ├── interview-mode.ts       # Interview flow (335 lines)
+│   ├── plan-template.ts        # Work plan structure
+│   ├── interview-mode.ts       # Interview flow
 │   ├── plan-generation.ts
 │   ├── high-accuracy-mode.ts
-│   ├── identity-constraints.ts # Identity rules (301 lines)
+│   ├── identity-constraints.ts # Identity rules
 │   └── behavioral-summary.ts
 ├── niobe/                      # Master orchestrator
 │   ├── agent.ts                # Niobe factory
@@ -27,10 +27,10 @@ agents/
 │   ├── gpt.ts                  # GPT-optimized prompt
 │   └── index.ts
 ├── cipher.ts                    # DSL engineering specialist
-├── sentinel.ts                 # Security auditor (220 lines)
+├── sentinel.ts                 # Security auditor
 ├── merovingian.ts              # High-IQ consultation
-├── smith.ts                    # Plan validator (244 lines) — pre-execution reviewer
-├── construct.ts        # Media analyzer (58 lines)
+├── smith.ts                    # Plan validator (245 lines) — pre-execution reviewer
+├── construct.ts        # Media analyzer
 ├── sati.ts                     # Frontend specialist
 ├── trinity.ts                  # Codebase search
 ├── operator.ts                 # Library research
@@ -40,10 +40,15 @@ agents/
 │   ├── gpt.ts                  # GPT prompt
 │   └── index.ts
 ├── agent-builder.ts            # Agent builder utility
-├── dynamic-agent-prompt-builder.ts  # Dynamic prompt generation (431 lines)
-├── builtin-agents.ts          # Agent registry (factories + metadata maps)
-├── utils.ts                    # Agent creation, model fallback resolution (571 lines)
-├── types.ts                    # AgentModelConfig, AgentPromptMetadata
+├── agent-config.ts             # Agent definition registered with OpenCode
+├── agents.transform.ts         # V2 agent-domain transform (pure replay onto ctx.agent.transform)
+├── builtin-agents.ts          # Agent registry (agentSources + metadata maps; sibling builtin-agents/ holds helpers)
+├── builtin-agents/             # Registry helpers (agent-overrides, available-skills, model-resolution, per-agent builders)
+├── custom-agent-summaries.ts   # Custom agent description summaries
+├── dynamic-agent-prompt-builder.ts  # Dynamic prompt generation
+├── env-context.ts              # Matrixx env context (time, timezone, locale)
+├── model-directives.ts         # Per-model directives (anti-echo, nudge handling)
+├── types.ts                    # AgentName, AgentModelConfig, AgentPromptMetadata
 └── index.ts                    # Exports
 ```
 
@@ -97,15 +102,15 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 ## HOW TO ADD
 
 1. Create `src/agents/my-agent.ts` exporting factory + metadata
-2. Add to `agentSources` **and** the metadata map in `src/agents/builtin-agents.ts` (a FILE, not a directory)
+2. Add to `agentSources` **and** the metadata map in `src/agents/builtin-agents.ts` (the file; the sibling `builtin-agents/` dir holds registry helpers)
 3. Re-export from `src/agents/index.ts`; add the name to `AgentName` in `src/agents/types.ts`
 4. Add the name to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`
 5. Add the entry to `AgentOverridesSchema` in `src/config/schema/agent-overrides.ts`
 6. Add the name to the explore-agent set in `src/plugin/handlers/agent-config-handler.ts`
 7. Add the name to `src/hooks/runtime-fallback/agent-resolver.ts`
-8. Add tool restrictions in `src/shared/agent-tool-restrictions.ts`
-9. Add model requirements in `src/shared/model-requirements.ts`
-10. Add the display name in `src/shared/agent-display-names.ts`
+8. Add tool restrictions in `src/shared/tool/agent-tool-restrictions.ts`
+9. Add model requirements in `src/shared/model/model-requirements.ts`
+10. Add the display name in `src/shared/agent/agent-display-names.ts`
 
 ## KEY PATTERNS
 

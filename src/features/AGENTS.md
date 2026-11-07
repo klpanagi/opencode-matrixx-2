@@ -2,31 +2,36 @@
 
 ## OVERVIEW
 
-23 feature modules (background-agent, tmux-subagent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injector, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+21 feature modules (background-agent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
 features/
-├── background-agent/           # Task lifecycle, concurrency, restart reconciliation (33 files, ~5600 LOC)
-│   ├── manager.ts              # Main task orchestration (2165 lines, grandfathered over the 200-LOC limit)
-│   ├── concurrency.ts          # Parallel execution limits per provider/model
-│   ├── reconcile.ts            # Restart reconciliation: classifies persisted in-flight handles
-│   ├── admission.ts            # Nested-admission classifier (`classifyAdmission`)
-│   ├── session-output.ts       # Shared output-validation helpers (assistant output, recorded errors)
-│   ├── revive.ts               # Session revive: revivable-set classifier + handle rehydration
-│   └── handle-index.ts         # File-backed handle index (`BgHandleSchema`, `.matrixx/bg-handles/`)
-├── tmux-subagent/              # Tmux integration (25 files, ~3000 LOC)
-│   └── manager.ts              # Pane management, grid planning (350 lines)
-├── builtin-commands/           # 23 commands (see templates/ list below; 21 templates via matrix-loop fan-out; config-schema command count of 17 is known-stale drift)
-│   └── templates/              # 21 templates: refactor, matrix-loop, init-deep, handoff, start-work, research, assembly, bdd-*, evolution... (23 commands official per features types.ts + definitions)
-├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`, `addBlocks`/`addBlockedBy` Set) — 7 files, 1165 LOC + `task-toast-manager/`
-├── context-injector/           # AGENTS.md, README.md, rules injection (6 files, 809 LOC)
+├── background-agent/           # Task lifecycle, restart reconciliation (20 files; orchestration split in manager/) — see background-agent/AGENTS.md
+│   └── manager/                # manager.ts + lifecycle.ts + reconcile.ts + store.ts + types.ts
+├── builtin-commands/           # 24 commands, 22 templates
+├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 3 files + `task-toast-manager/` — see task-storage/AGENTS.md
+├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)
+├── assembly-state/             # Assembly voting state (enable/disable, reset)
+├── bdd/                        # BDD contract schemas + pipeline support
+├── command-loader/             # User/project command discovery + loading
+├── completion-review/          # Post-completion review + evidence handling
+├── evolution/                  # Evolution layer (orchestration vs triggers vs actions)
 ├── handoff/                    # Multi-action handoff: create, read, list, archive
-├── session-state/              # Subagent session state tracking (3 files)
-├── context-injection/            # System message injection (hook-bridge/, injector/, routing/)
-├── task-toast-manager/         # Task progress notifications (4 files)
-├── mission-state/              # Persistent state for multi-step ops (9 files)
-└── tool-metadata-store/        # Tool execution metadata caching (3 files)```
+├── knowledge-hub/              # Knowledge-hub loading + path expansion
+├── mission-state/              # Persistent state for multi-step ops (10 files)
+├── plan-contract/              # Plan contract: canonical sections, task grammar
+├── preset-state/               # Model preset state
+├── rtk-routing/                # RTK shell-discipline routing block
+├── session-memory/             # Session memory + compaction snippets
+├── session-state/              # Subagent session state tracking (2 files)
+├── task-session-scope/         # Task session scoping + ancestry
+├── task-toast-manager/         # Task progress notifications (3 files)
+├── tool-metadata-store/        # Tool execution metadata caching (3 files)
+└── ultrawork-state/            # Ultrawork loop state
+```
+
+Tmux integration lives in `src/shared/tmux/` (no feature dir).
 
 ## KEY PATTERNS
 
@@ -40,7 +45,7 @@ Task creation → Queue → Admission check → Concurrency check → Execute �
 
 **`BackgroundTerminalReason`** (optional, persisted on handle): `queue-saturated | no-output | uncertain | aborted | stale | nested-depth-exceeded`. Written to `BgHandleSchema.terminalReason` in `<project>/.matrixx/bg-handles/<taskId>.json`. Old handle files without these fields still load.
 
-**Restart reconciliation** (`reconcile.ts`): On plugin start, `restoreHandles()` probes the live host for each persisted `running|pending` handle and classifies it as `completed | error | running | stopped | statusUncertain` instead of blindly flattening to `interrupt`. A still-running child is re-registered and polling restarts; concurrency is deliberately NOT re-acquired. Lookup failure degrades to `statusUncertain` (never assumes completion).
+**Restart reconciliation** (`manager/reconcile.ts`): On plugin start, `restoreHandles()` probes the live host for each persisted `running|pending` handle and classifies it as `completed | error | running | stopped | statusUncertain` instead of blindly flattening to `interrupt`. A still-running child is re-registered and polling restarts; concurrency is deliberately NOT re-acquired. Lookup failure degrades to `statusUncertain` (never assumes completion).
 
 **Bounded admission** (removed PR-2: queue admission/semaphores deleted, keys gone; `queue-saturated` retained as compat-only handle value).
 
@@ -48,7 +53,7 @@ Task creation → Queue → Admission check → Concurrency check → Execute �
 
 **Session revive** (`revive.ts`, `background_revive` tool): A terminal task whose handle is still on disk can be resumed with a NEW instruction. Retention IS the existing handle files — there is no separate store — bounded by `TASK_TTL_MS` (30 min). Revivable: `cancelled | stopped | interrupt | error | completed` (each requires a `sessionID`); `statusUncertain` requires `force: true`; `pending | running` must use `background_output` instead; a handle that never produced a session (e.g. `queue-saturated`) is unrevivable. `manager.revive()` falls back to disk on an in-memory map miss, then re-admits through bounded/nested admission — and a nested revive bypasses the semaphore entirely so it can never await it unboundedly. `manager.resume()` remains the in-memory-only path.
 
-**Tier-3 wake scheduler + job board** (`wake-scheduler.ts`, `task-history.ts`, `notification-builder.ts`): helper modules, NOT new hooks — `manager.ts` Tier-3 diff confined to wake-timer wiring (≤30 lines).
+**Tier-3 wake scheduler + job board** (`task-history.ts`, `notification-builder.ts`): helper modules, NOT new hooks — `manager/` Tier-3 diff confined to wake-timer wiring (≤30 lines).
 - **Wake scheduler** (`wakeScheduler: { enabled: boolean (default true), intervalMs` default `300000`, min `60000` }): per-session recursive `setTimeout().unref()` (no `setInterval`) sends a static `<system-reminder>` nudge when the parent is idle with pending todos. Todo-gated, 2-wake no-progress cap with reset-on-activity.
 - **Job board** (`jobBoard: { enabled: boolean (default true), strategy: "latest"|"checkpoint-compatible" (default "latest"), maxRetainedSnapshots: 1..100 (default 20) }`): `latest` strip-and-replaces the snapshot; `checkpoint-compatible` appends to a bounded ledger with oldest-eviction. Surfaced on history + notification paths.
 - **Default conservation** (U9): `run_in_background` default stays `false`. `true` is async fan-out (returns `task_id`, retrieve via `background_output`); `false` is sync inline. Never call `task()` sequentially for independent work.

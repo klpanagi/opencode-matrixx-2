@@ -10,9 +10,8 @@ Tier 1 of two-tier MCP system: 2 built-in MCPs (1 remote HTTP + 1 local stdio).
 
 ## STRUCTURE
 ```
-mcp/
+mcps/
 ├── index.ts           # createBuiltinMcps() factory
-├── index.test.ts      # Tests
 ├── context7.ts        # Library documentation
 ├── document-reader.ts # Microsoft MarkItDown (PDF, DOCX, XLSX, PPTX, images)
 └── types.ts           # McpNameSchema
