@@ -2,9 +2,29 @@
 import { describe, expect, mock, test } from "bun:test"
 
 import { isAwaitingUserState, markAwaitingUser } from "../../../src/shared/session/awaiting-user"
-import type { SessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
-import { createSessionStateStore } from "../../../src/hooks/task-continuation-enforcer/session-state"
 import { createStopContinuationGuardHook } from "../../../src/hooks/stop-continuation-guard/hook"
+
+interface SessionStateStore {
+  getState: (sessionID: string) => unknown
+  getExistingState: (sessionID: string) => unknown
+  shutdown: () => void
+}
+
+function createSessionStateStore(): SessionStateStore {
+  const states = new Map<string, Record<string, unknown>>()
+  return {
+    getState: (sessionID: string) => {
+      let record = states.get(sessionID)
+      if (!record) {
+        record = {}
+        states.set(sessionID, record)
+      }
+      return record
+    },
+    getExistingState: (sessionID: string) => states.get(sessionID),
+    shutdown: () => {},
+  }
+}
 
 function makeMockMatrixxContext(): unknown {
   return {
