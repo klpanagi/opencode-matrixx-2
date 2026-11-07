@@ -25,7 +25,7 @@ hooks/
 ├── edit-error-recovery/          # Recovers from edit failures
 ├── empty-task-response-detector.ts # Detects empty responses
 ├── interactive-bash-session/     # Tmux session management
-├── keyword-detector/             # ultrawork/search/analyze modes
+├── keyword-detector/             # redpill/search/analyze modes
 ├── non-interactive-env/          # Non-TTY handling
 ├── preemptive-compaction.ts      # Auto-compact at 78% usage
 ├── plan-persister/              # Persists plan state to disk on idle + compact

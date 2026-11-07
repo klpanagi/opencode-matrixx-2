@@ -133,7 +133,7 @@
   //   "enabled": true,                      // DEPRECATED no-op (default: true); parsed, ignored, warns once. Omit it.
   //   "scope": "project",                   // "project" → .matrixx/tasks per project (default) | "global" → ~/.config/opencode/tasks/{listId}
   //   "storage_path": ".matrixx/tasks",     // absolute or relative path override
-  //   "task_list_id": "my-list",            // force task list ID (alt to ULTRAWORK_TASK_LIST_ID env)
+  //   "task_list_id": "my-list",            // force task list ID (alt to REDPILL_TASK_LIST_ID env)
   //   "stale_after_hours": 24,              // stale threshold for continuation directives (default: 24)
   //   "session_scoped": true,               // only current-session tasks drive directives (default: true)
   //   "pollTimeoutMs": 600000               // blocking task() poll budget in ms (default: 600000, min: 60000)

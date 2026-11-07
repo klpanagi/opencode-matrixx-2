@@ -169,7 +169,7 @@ For Google Gemini, Matrixx recommends the external [`opencode-antigravity-auth`]
 
 These are slash commands used within OpenCode sessions during active conversations. They are **not** CLI subcommands — see [Command Reference](command-reference.md) for the full documentation:
 
-- [`/end-ultrawork`](command-reference.md) — deactivate ultrawork mode for the current session.
+- [`/end-redpill`](command-reference.md) — deactivate redpill mode for the current session.
 - [`/handoff`](command-reference.md) — create `.matrixx/handoff.md` for continuation in a new session.
 - [`/pickup`](command-reference.md) — load handoff context from a previous session.
 

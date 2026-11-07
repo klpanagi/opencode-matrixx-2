@@ -1,10 +1,10 @@
 import type { ContextCollector } from "../../features/context-injection/injector"
+import { getRedpillState } from "../../features/redpill-state"
 import {
   getMainSessionID,
   getSessionAgent,
   subagentSessions,
 } from "../../features/session-state/state"
-import { getUltraworkState } from "../../features/ultrawork-state"
 import { log } from "../../shared"
 import { notify } from "../../shared/runtime/notify"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
@@ -44,7 +44,7 @@ export function createKeywordDetectorHook(_ctx: NativePluginContext, _collector?
       let detectedKeywords = detectKeywordsWithType(cleanText, currentAgent, modelID)
 
       if (isPlannerAgent(currentAgent)) {
-        detectedKeywords = detectedKeywords.filter((k) => k.type !== "ultrawork")
+        detectedKeywords = detectedKeywords.filter((k) => k.type !== "redpill")
       }
 
       if (detectedKeywords.length === 0) {
@@ -62,9 +62,9 @@ export function createKeywordDetectorHook(_ctx: NativePluginContext, _collector?
       const isNonMainSession = mainSessionID && input.sessionID !== mainSessionID
 
       if (isNonMainSession) {
-        detectedKeywords = detectedKeywords.filter((k) => k.type === "ultrawork")
+        detectedKeywords = detectedKeywords.filter((k) => k.type === "redpill")
         if (detectedKeywords.length === 0) {
-          log(`[keyword-detector] Skipping non-ultrawork keywords in non-main session`, {
+          log(`[keyword-detector] Skipping non-redpill keywords in non-main session`, {
             sessionID: input.sessionID,
             mainSessionID,
           })
@@ -72,24 +72,24 @@ export function createKeywordDetectorHook(_ctx: NativePluginContext, _collector?
         }
       }
 
-      const ultraworkState = getUltraworkState(input.sessionID)
-      const hasUltrawork = detectedKeywords.some((k) => k.type === "ultrawork")
-      const isUltraworkBlocked = ultraworkState === "disabled"
-      const isUltraworkForced = ultraworkState === "enabled"
+      const redpillState = getRedpillState(input.sessionID)
+      const hasRedpill = detectedKeywords.some((k) => k.type === "redpill")
+      const isRedpillBlocked = redpillState === "disabled"
+      const isRedpillForced = redpillState === "enabled"
 
-      if (isUltraworkBlocked) {
-        log(`[keyword-detector] Ultrawork blocked by runtime state`, { sessionID: input.sessionID })
+      if (isRedpillBlocked) {
+        log(`[keyword-detector] Redpill blocked by runtime state`, { sessionID: input.sessionID })
         return
       }
 
-      if (hasUltrawork || isUltraworkForced) {
-        log(`[keyword-detector] Ultrawork mode activated`, { sessionID: input.sessionID })
+      if (hasRedpill || isRedpillForced) {
+        log(`[keyword-detector] Redpill mode activated`, { sessionID: input.sessionID })
 
         if (output.message.variant === undefined) {
           output.message.variant = "max"
         }
 
-        notify("success", "Ultrawork Mode Activated: Maximum precision engaged. All agents at your disposal.")
+        notify("success", "Redpill Mode Activated: Maximum precision engaged. All agents at your disposal.")
       }
 
       const textPartIndex = output.parts.findIndex((p) => p.type === "text" && p.text !== undefined)

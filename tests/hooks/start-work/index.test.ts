@@ -287,8 +287,8 @@ describe("start-work hook", () => {
       expect(output.parts[0].text).not.toContain("old-plan")
     })
 
-    test("should strip ultrawork/ulw keywords from plan name argument", async () => {
-      // given - plan with ultrawork keyword in user-request
+    test("should strip redpill/rp keywords from plan name argument", async () => {
+      // given - plan with redpill keyword in user-request
       const plansDir = join(testDir, ".matrixx", "plans")
       mkdirSync(plansDir, { recursive: true })
 
@@ -301,25 +301,25 @@ describe("start-work hook", () => {
           {
             type: "text",
             text: `<session-context>
-<user-request>my-feature-plan ultrawork</user-request>
+<user-request>my-feature-plan redpill</user-request>
 </session-context>`,
           },
         ],
       }
 
-      // when - user specifies plan with ultrawork keyword
+      // when - user specifies plan with redpill keyword
       await hook["chat.message"](
         { sessionID: "session-123" },
         output
       )
 
-      // then - should find plan without ultrawork suffix
+      // then - should find plan without redpill suffix
       expect(output.parts[0].text).toContain("my-feature-plan")
       expect(output.parts[0].text).toContain("Auto-Selected Plan")
     })
 
-    test("should strip ulw keyword from plan name argument", async () => {
-      // given - plan with ulw keyword in user-request
+    test("should strip rp keyword from plan name argument", async () => {
+      // given - plan with rp keyword in user-request
       const plansDir = join(testDir, ".matrixx", "plans")
       mkdirSync(plansDir, { recursive: true })
 
@@ -332,7 +332,7 @@ describe("start-work hook", () => {
           {
             type: "text",
             text: `<session-context>
-<user-request>api-refactor ulw</user-request>
+<user-request>api-refactor rp</user-request>
 </session-context>`,
           },
         ],
@@ -344,7 +344,7 @@ describe("start-work hook", () => {
         output
       )
 
-      // then - should find plan without ulw suffix
+      // then - should find plan without rp suffix
       expect(output.parts[0].text).toContain("api-refactor")
       expect(output.parts[0].text).toContain("Auto-Selected Plan")
     })

@@ -4,12 +4,12 @@ import { createCipherAgent } from "../../../../src/agents/definitions/cipher"
 import { createKeymakerAgent } from "../../../../src/agents/definitions/keymaker"
 import { createMorpheusAgent } from "../../../../src/agents/definitions/morpheus"
 import { createSentinelAgent } from "../../../../src/agents/definitions/sentinel"
-import { ULTRAWORK_DEEPSEEK_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/deepseek"
-import { ULTRAWORK_DEFAULT_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/default"
-import { ULTRAWORK_GEMINI_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/gemini"
-import { ULTRAWORK_GLM_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/glm"
-import { ULTRAWORK_GPT_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/gpt5.2"
-import { ULTRAWORK_MIMO_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/mimo"
+import { REDPILL_DEEPSEEK_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/deepseek"
+import { REDPILL_DEFAULT_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/default"
+import { REDPILL_GEMINI_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/gemini"
+import { REDPILL_GLM_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/glm"
+import { REDPILL_GPT_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/gpt5.2"
+import { REDPILL_MIMO_MESSAGE } from "../../../../src/hooks/keyword-detector/redpill/mimo"
 import type { MatrixxConfig } from "../../../../src/config"
 import { buildOracleAgentConfig } from "../../../../src/plugin/handlers/oracle-agent-config-builder"
 import { denyTodoPermissions, deriveTaskPermissions } from "../../../../src/plugin/handlers/task-permissions"
@@ -20,16 +20,9 @@ import { applyToolConfig } from "../../../../src/plugin/handlers/tool-config-han
 const MODEL = "anthropic/claude-sonnet-4-5"
 
 /**
- * Every ultrawork variant, with the fallback anchor each one actually ships.
- *
- * `notepad` is deliberately scoped, NOT universal. The plan asked for a
- * "Durable Notepad present in all 6" assertion; measured, that is false:
- * glm.ts says "working notes" instead and mimo.ts carries no fallback block at
- * all. Fencing it as universal would have produced a permanent failure for a
- * prompt nobody intends to change. A fence too strict gets deleted by the next
- * person who trips it, so the universal claim is dropped and the four variants
- * that DO ship a notepad are pinned instead. `null` means "intentionally no
- * fallback block" — it must not grow a "missing notepad" failure.
+ * Every redpill variant now composes the shared Matrixx manifesto, so every
+ * variant must ship the same fallback anchor. A variant that omits it is a
+ * regression in the injected contract, not an intentional difference.
  */
 const VARIANTS: {
   name: string;
@@ -38,28 +31,28 @@ const VARIANTS: {
 }[] = [
   {
     name: "default",
-    message: ULTRAWORK_DEFAULT_MESSAGE,
-    notepad: /^\s*#{2,4} *durable notepad *$/im,
+    message: REDPILL_DEFAULT_MESSAGE,
+    notepad: /\bDurable Notepad\b/i,
   },
   {
     name: "deepseek",
-    message: ULTRAWORK_DEEPSEEK_MESSAGE,
-    notepad: /^\s*#{2,4} *durable notepad *$/im,
+    message: REDPILL_DEEPSEEK_MESSAGE,
+    notepad: /\bDurable Notepad\b/i,
   },
   {
     name: "gemini",
-    message: ULTRAWORK_GEMINI_MESSAGE,
+    message: REDPILL_GEMINI_MESSAGE,
     // uppercase heading, heading level differs from default/deepseek
-    notepad: /^\s*#{2,4} *durable notepad *$/im,
+    notepad: /\bDurable Notepad\b/i,
   },
   {
     name: "gpt5.2",
-    message: ULTRAWORK_GPT_MESSAGE,
+    message: REDPILL_GPT_MESSAGE,
     // `##` here, `###` elsewhere — the regex is level-agnostic on purpose
-    notepad: /^\s*#{2,4} *durable notepad *$/im,
+    notepad: /\bDurable Notepad\b/i,
   },
-  { name: "glm", message: ULTRAWORK_GLM_MESSAGE, notepad: /\bin your working notes\b/ },
-  { name: "mimo", message: ULTRAWORK_MIMO_MESSAGE, notepad: null },
+  { name: "glm", message: REDPILL_GLM_MESSAGE, notepad: /\bDurable Notepad\b/i },
+  { name: "mimo", message: REDPILL_MIMO_MESSAGE, notepad: /\bDurable Notepad\b/i },
 ]
 
 /** Lines that name the tool at all — the surface a mandate would live on. */
@@ -67,7 +60,7 @@ function linesNamingTaskCreate(message: string): string[] {
   return message.split("\n").filter((line) => line.includes("`task_create`"))
 }
 
-describe("ultrawork goal line is capability-SAFE", () => {
+describe("redpill goal line is capability-SAFE", () => {
   test.each(VARIANTS)("$name hedges the task_create mandate", ({ name, message }) => {
     //#given
     const lines = linesNamingTaskCreate(message)

@@ -24,7 +24,7 @@ export const TasksConfigSchema = z.object({
     .describe("Task storage scope: project → .matrixx/tasks per project (default), global → <opencode-config>/tasks/{listId}"),
   /** Absolute or relative storage path override. When set, bypasses scope resolution. */
   storage_path: z.string().optional(),
-  /** Force task list ID (alternative to env ULTRAWORK_TASK_LIST_ID) */
+  /** Force task list ID (alternative to env REDPILL_TASK_LIST_ID) */
   task_list_id: z.string().optional(),
   /** Pending tasks with no file activity for this many hours are considered
    * stale (default: 24). Stale tasks are excluded from task-continuation directives.

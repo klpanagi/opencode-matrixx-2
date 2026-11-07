@@ -34,7 +34,7 @@ export function sanitizePathSegment(value: string): string {
 }
 
 export function resolveTaskListId(config: Partial<MatrixxConfig> = {}): string {
-  const envId = process.env.ULTRAWORK_TASK_LIST_ID?.trim()
+  const envId = process.env.REDPILL_TASK_LIST_ID?.trim()
   if (envId) return sanitizePathSegment(envId)
 
 

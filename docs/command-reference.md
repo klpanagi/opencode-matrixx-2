@@ -4,7 +4,7 @@
 
 Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `ulw-loop` have no standalone template file (aliases): `ulw-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -14,7 +14,7 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 |---------|---------|:---:|:---:|
 | `/init-deep` | Generate AGENTS.md knowledge base | — | — |
 | `/matrix-loop` | Start self-referential dev loop | ✅ | — |
-| `/ulw-loop` | Start dev loop with ultrawork mode | ✅ | — |
+| `/rp-loop` | Start dev loop with redpill mode | ✅ | — |
 | `/cancel-loop` | Cancel active dev loop | ✅ | — |
 | `/refactor` | Guided refactoring (LSP + AST-grep + TDD) | — | — |
 | `/start-work` | Execute Oracle work plan | — | niobe |
@@ -23,10 +23,10 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 | `/pickup` | Resume from handoff | — | — |
 | `/remove-deadcode` | Delete unused code (LSP-verified) | — | — |
 | `/preset` | List/show/set model presets (live switch; `--save` persists) | — | — |
-| `/end-ultrawork` | Deactivate ultrawork mode | ✅ | — |
+| `/end-redpill` | Deactivate redpill mode | ✅ | — |
 | `/research` | Saturation research (multi-round) | — | — |
 | `/assembly` | Toggle assembly tool at runtime | ✅ | — |
-| `/ultrawork` | Toggle ultrawork mode at runtime | ✅ | — |
+| `/redpill` | Toggle redpill mode at runtime | ✅ | — |
 | `/task-list` | List active tasks (`task_list`) | — | — |
 | `/cleanup-tasks` | Clean completed tasks (`task_cleanup`) | — | — |
 | `/evolution` | Self-evolution proposals (approve/reject/list) | — | — |
@@ -81,25 +81,25 @@ Start a self-referential development loop. The agent continuously works on a tas
 
 This command has an **imperative intercept** — it calls the matrix-loop manager to start tracking the loop via `hooks.matrixLoop?.startControllerSession()`.
 
-**Related:** `/cancel-loop` to stop, `/ulw-loop` for ultrawork variant.
+**Related:** `/cancel-loop` to stop, `/rp-loop` for redpill variant.
 
 ---
 
-## 3. `/ulw-loop`
+## 3. `/rp-loop`
 
-Alias of `/matrix-loop` (no standalone template file — reuses `MATRIX_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). Identical behavior but activates ultrawork mode for the duration of the loop. Same arguments:
+Alias of `/matrix-loop` (no standalone template file — reuses `MATRIX_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). Identical behavior but activates redpill mode for the duration of the loop. Same arguments:
 
 ```
-/ulw-loop Implement critical auth flow --max-iterations=15
+/rp-loop Implement critical auth flow --max-iterations=15
 ```
 
-This command has an **imperative intercept** — same as matrix-loop but activates ultrawork state.
+This command has an **imperative intercept** — same as matrix-loop but activates redpill state.
 
 ---
 
 ## 4. `/cancel-loop`
 
-Cancel an active Matrix Loop or ULW Loop.
+Cancel an active Matrix Loop or rp Loop.
 
 ```
 /cancel-loop
@@ -243,20 +243,20 @@ Find and remove unused code using LSP reference analysis. 5-phase workflow with 
 
 ---
 
-## 11. `/end-ultrawork`
+## 11. `/end-redpill`
 
-Deactivate ultrawork mode and return to default behavior.
+Deactivate redpill mode and return to default behavior.
 
 ```
-/end-ultrawork
-/end-ultrawork Continue with the auth implementation
+/end-redpill
+/end-redpill Continue with the auth implementation
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `follow-up task` (optional) | Task to continue with after deactivating ultrawork |
+| `follow-up task` (optional) | Task to continue with after deactivating redpill |
 
-This command has an **imperative intercept** — it calls `ultraworkState.disable(sessionID)` to persist the disabled state, so subsequent messages won't trigger ultrawork even if they contain the keyword.
+This command has an **imperative intercept** — it calls `redpillState.disable(sessionID)` to persist the disabled state, so subsequent messages won't trigger redpill even if they contain the keyword.
 
 ---
 
@@ -317,32 +317,43 @@ This command has an **imperative intercept** — it calls `assemblyState.disable
 
 ---
 
-## 14. `/ultrawork`
+## 14. `/redpill`
 
-Control ultrawork mode at runtime with three states: force-on, force-off, or default (keyword-triggered).
+Control redpill mode at runtime with three states: force-on, force-off, or default (keyword-triggered).
 
 ```
-/ultrawork
-/ultrawork enable
-/ultrawork disable
-/ultrawork status
+/redpill
+/redpill enable
+/redpill disable
+/redpill status
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `enable` | Force ultrawork ON for all messages (even without keyword) |
-| `disable` | Block ultrawork entirely (keyword won't activate) |
-| `status` | Show current ultrawork state |
+| `enable` | Force redpill ON for all messages (even without keyword) |
+| `disable` | Block redpill entirely (keyword won't activate) |
+| `status` | Show current redpill state |
 
 | State | Behavior |
 |-------|----------|
-| `undefined` (default) | Ultrawork activates when message contains "ultrawork" or "ulw" keyword |
-| `enabled` | Every message gets ultrawork injection regardless of content |
-| `disabled` | Ultrawork never activates, even with keyword |
+| `undefined` (default) | Redpill activates when message contains "redpill" or "rp" keyword |
+| `enabled` | Every message gets redpill injection regardless of content |
+| `disabled` | Redpill never activates, even with keyword |
 
-This command has an **imperative intercept** — it calls `ultraworkState.enable(sessionID)` or `ultraworkState.disable(sessionID)`.
+This command has an **imperative intercept** — it calls `redpillState.enable(sessionID)` or `redpillState.disable(sessionID)`.
 
-**Related:** `/end-ultrawork` is equivalent to `/ultrawork disable` but additionally injects a follow-up task template.
+### Philosophy: The Matrixx Manifesto
+
+When redpill activates, the agent receives **The Matrixx Manifesto** — a Matrix-themed doctrine grounded in *A Manifesto for Reproducible Science* (Munafò et al., *Nature Human Behaviour*, 2017). The paper's five pillars (methods, reporting & dissemination, reproducibility, evaluation, incentives) map to four engineering values and twelve binding principles:
+
+1. Reproducible evidence over confident assertion.
+2. Working code over plausible code.
+3. Transparent method over heroic result.
+4. Independent verification over self-review.
+
+The manifesto lives in `src/hooks/keyword-detector/redpill/manifesto.ts` as the single source of truth; model variants (`default`, `deepseek`, `gemini`, `glm`, `gpt5.2`, `mimo`, `planner`) compose it and add only model-specific calibration.
+
+**Related:** `/end-redpill` is equivalent to `/redpill disable` but additionally injects a follow-up task template.
 
 ---
 
@@ -544,13 +555,13 @@ Commands with imperative behavior (state mutation, background task cancellation)
 
 Commands with intercepts:
 - `/matrix-loop` — starts matrix loop tracking
-- `/ulw-loop` — starts matrix loop + ultrawork
+- `/rp-loop` — starts matrix loop + redpill
 - `/cancel-loop` — cancels all loops
 - `/stop-continuation` — sets stop state + cancels background tasks
 - `/assembly` — toggles assembly state
-- `/ultrawork` — toggles ultrawork state
-- `/end-ultrawork` — disables ultrawork state
+- `/redpill` — toggles redpill state
+- `/end-redpill` — disables redpill state
 
 ### State Lifecycle
 
-Per-session state (stop-continuation, assembly, ultrawork) is stored in-memory `Set` or `Map` structures. State is automatically cleaned up on `session.deleted` events. State does not persist across OpenCode restarts.
+Per-session state (stop-continuation, assembly, redpill) is stored in-memory `Set` or `Map` structures. State is automatically cleaned up on `session.deleted` events. State does not persist across OpenCode restarts.

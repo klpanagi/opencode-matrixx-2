@@ -8,7 +8,7 @@
 
 | Page | Audience | What you get |
 |---|---|---|
-| `guide/overview.md` | New users | Two ways to work (ultrawork vs. `/start-work`), what Matrixx adds to OpenCode |
+| `guide/overview.md` | New users | Two ways to work (redpill vs. `/start-work`), what Matrixx adds to OpenCode |
 | `guide/installation.md` | New users (humans + LLM agents) | Prerequisites, install, auth, troubleshooting, uninstalling |
 | `features.md` | Evaluators | Capability index with links -- one line per feature, details elsewhere |
 

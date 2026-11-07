@@ -19,22 +19,22 @@ const TEST_DIR = ".test-task-storage"
 const TEST_DIR_ABS = join(process.cwd(), TEST_DIR)
 
 describe("getTaskDir", () => {
-  const originalTaskListId = process.env.ULTRAWORK_TASK_LIST_ID
+  const originalTaskListId = process.env.REDPILL_TASK_LIST_ID
 
   beforeEach(() => {
     if (originalTaskListId === undefined) {
-      delete process.env.ULTRAWORK_TASK_LIST_ID
+      delete process.env.REDPILL_TASK_LIST_ID
     } else {
-      process.env.ULTRAWORK_TASK_LIST_ID = originalTaskListId
+      process.env.REDPILL_TASK_LIST_ID = originalTaskListId
     }
 
   })
 
   afterEach(() => {
     if (originalTaskListId === undefined) {
-      delete process.env.ULTRAWORK_TASK_LIST_ID
+      delete process.env.REDPILL_TASK_LIST_ID
     } else {
-      process.env.ULTRAWORK_TASK_LIST_ID = originalTaskListId
+      process.env.REDPILL_TASK_LIST_ID = originalTaskListId
     }
 
   })
@@ -52,9 +52,9 @@ describe("getTaskDir", () => {
     expect(result).toBe(join(configDir, "tasks", expectedListId))
   })
 
-  test("respects ULTRAWORK_TASK_LIST_ID env var", () => {
+  test("respects REDPILL_TASK_LIST_ID env var", () => {
     //#given
-    process.env.ULTRAWORK_TASK_LIST_ID = "custom list/id"
+    process.env.REDPILL_TASK_LIST_ID = "custom list/id"
     const configDir = getOpenCodeConfigDir({ binary: "opencode" })
 
     //#when
@@ -67,7 +67,7 @@ describe("getTaskDir", () => {
 
   test("falls back to sanitized cwd basename when env var not set", () => {
     //#given
-    delete process.env.ULTRAWORK_TASK_LIST_ID
+    delete process.env.REDPILL_TASK_LIST_ID
     const configDir = getOpenCodeConfigDir({ binary: "opencode" })
     const expectedListId = sanitizePathSegment(basename(process.cwd()))
 
@@ -114,29 +114,29 @@ describe("getTaskDir", () => {
 })
 
 describe("resolveTaskListId", () => {
-  const originalTaskListId = process.env.ULTRAWORK_TASK_LIST_ID
+  const originalTaskListId = process.env.REDPILL_TASK_LIST_ID
 
   beforeEach(() => {
     if (originalTaskListId === undefined) {
-      delete process.env.ULTRAWORK_TASK_LIST_ID
+      delete process.env.REDPILL_TASK_LIST_ID
     } else {
-      process.env.ULTRAWORK_TASK_LIST_ID = originalTaskListId
+      process.env.REDPILL_TASK_LIST_ID = originalTaskListId
     }
 
   })
 
   afterEach(() => {
     if (originalTaskListId === undefined) {
-      delete process.env.ULTRAWORK_TASK_LIST_ID
+      delete process.env.REDPILL_TASK_LIST_ID
     } else {
-      process.env.ULTRAWORK_TASK_LIST_ID = originalTaskListId
+      process.env.REDPILL_TASK_LIST_ID = originalTaskListId
     }
 
   })
 
   test("returns env var when set", () => {
     //#given
-    process.env.ULTRAWORK_TASK_LIST_ID = "custom-list"
+    process.env.REDPILL_TASK_LIST_ID = "custom-list"
 
     //#when
     const result = resolveTaskListId()
@@ -149,7 +149,7 @@ describe("resolveTaskListId", () => {
 
   test("sanitizes special characters", () => {
     //#given
-    process.env.ULTRAWORK_TASK_LIST_ID = "custom list/id"
+    process.env.REDPILL_TASK_LIST_ID = "custom list/id"
 
     //#when
     const result = resolveTaskListId()
@@ -160,7 +160,7 @@ describe("resolveTaskListId", () => {
 
   test("returns sanitized cwd basename when env var not set", () => {
     //#given
-    delete process.env.ULTRAWORK_TASK_LIST_ID
+    delete process.env.REDPILL_TASK_LIST_ID
     const expected = sanitizePathSegment(basename(process.cwd()))
 
     //#when

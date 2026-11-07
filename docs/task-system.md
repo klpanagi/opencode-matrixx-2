@@ -98,7 +98,7 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
 {
   "tasks": {
     "storage_path": "/custom/path", // absolute path used verbatim; relative path joins cwd
-    "task_list_id": "my-project",   // explicit list ID, alternative to ULTRAWORK_TASK_LIST_ID
+    "task_list_id": "my-project",   // explicit list ID, alternative to REDPILL_TASK_LIST_ID
     "scope": "project",             // "project" | "global"
     "stale_after_hours": 24,        // stale-task threshold (formerly used by the removed enforcer)
     "background_stale_after_hours": 2, // background completion-gate staleness window
@@ -112,7 +112,7 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | **Retained-deprecated.** Parsed but ignored: the system is unconditional. Setting it to `false` logs a one-time deprecation warning. |
 | `storage_path` | `string` | none | Absolute path used verbatim; relative path resolves as `join(cwd, storage_path)`. When set, bypasses `scope`/`listId` resolution. |
-| `task_list_id` | `string` | none | Explicit list ID. Alternative to the `ULTRAWORK_TASK_LIST_ID` env var. Sanitized to `[a-zA-Z0-9_-]`. |
+| `task_list_id` | `string` | none | Explicit list ID. Alternative to the `REDPILL_TASK_LIST_ID` env var. Sanitized to `[a-zA-Z0-9_-]`. |
 | `scope` | `"project" \| "global"` | `"project"` | `project` → `.matrixx/tasks` in the project root. `global` → `~/.config/opencode/tasks/{listId}` via `getOpenCodeConfigDir()`. |
 | `stale_after_hours` | `number`, min `0.25` | `24` | Pending/in_progress tasks with no file activity for this many hours count as stale. Stale-only queues skip the continuation directive; mixed queues annotate stale entries. Fractional hours are accepted (floor 0.25 = 15 minutes), because the background gate's window is too coarse at a 1-hour floor. |
 | `background_stale_after_hours` | `number`, min `0.25` | `2` | Window used only by the background-agent completion gates. A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
@@ -137,7 +137,7 @@ Implemented in `getTaskDir()` plus `resolveTaskListId()` in `src/features/task-s
 
 **Priority for `listId`:**
 
-1. `ULTRAWORK_TASK_LIST_ID` env (trimmed)
+1. `REDPILL_TASK_LIST_ID` env (trimmed)
 2. `config.tasks.task_list_id`, else legacy `config.morpheus.tasks.task_list_id` (trimmed)
 3. `basename(process.cwd())`, sanitized
 
@@ -158,7 +158,7 @@ else → join(directory, ".matrixx", "tasks")   // default: project-scoped
 
 ```bash
 # Env override check (global scope only changes the path; project scope keeps .matrixx/tasks)
-ULTRAWORK_TASK_LIST_ID=my-list opencode
+REDPILL_TASK_LIST_ID=my-list opencode
 
 # Log grep (after enabling the task system)
 grep -E "task.*dir|getTaskDir|migrateLegacy" /tmp/matrixx.log | tail -n 100

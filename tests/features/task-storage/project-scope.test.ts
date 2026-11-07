@@ -14,10 +14,10 @@ function tmpDir(prefix: string): string {
 }
 
 describe("project-scoped storage", () => {
-  const savedEnv = process.env.ULTRAWORK_TASK_LIST_ID
+  const savedEnv = process.env.REDPILL_TASK_LIST_ID
   afterEach(() => {
-    if (savedEnv === undefined) delete process.env.ULTRAWORK_TASK_LIST_ID
-    else process.env.ULTRAWORK_TASK_LIST_ID = savedEnv
+    if (savedEnv === undefined) delete process.env.REDPILL_TASK_LIST_ID
+    else process.env.REDPILL_TASK_LIST_ID = savedEnv
   })
 
   test("getProjectTaskDir returns .matrixx/tasks", () => {
@@ -102,8 +102,8 @@ describe("project-scoped storage", () => {
   test("migrateLegacyTasksIfNeeded copies legacy when project empty", () => {
     //#given
     const uid = `test-migrate-${Date.now()}`
-    const saved = process.env.ULTRAWORK_TASK_LIST_ID
-    process.env.ULTRAWORK_TASK_LIST_ID = uid
+    const saved = process.env.REDPILL_TASK_LIST_ID
+    process.env.REDPILL_TASK_LIST_ID = uid
     const config: Partial<MatrixxConfig> = { morpheus: { tasks: { scope: "project" } as any } }
     const legacyDir = join(getOpenCodeConfigDir({ binary: "opencode" }), "tasks", uid)
     const proj = tmpDir("proj-migrate")
@@ -123,15 +123,15 @@ describe("project-scoped storage", () => {
     // cleanup
     rmSync(legacyDir, { recursive: true, force: true })
     rmSync(proj, { recursive: true, force: true })
-    if (saved === undefined) delete process.env.ULTRAWORK_TASK_LIST_ID
-    else process.env.ULTRAWORK_TASK_LIST_ID = saved
+    if (saved === undefined) delete process.env.REDPILL_TASK_LIST_ID
+    else process.env.REDPILL_TASK_LIST_ID = saved
   })
 
   test("migrate does not overwrite existing dest", () => {
     //#given
     const uid = `test-migrate-nooverwrite-${Date.now()}`
-    const saved = process.env.ULTRAWORK_TASK_LIST_ID
-    process.env.ULTRAWORK_TASK_LIST_ID = uid
+    const saved = process.env.REDPILL_TASK_LIST_ID
+    process.env.REDPILL_TASK_LIST_ID = uid
     const config: Partial<MatrixxConfig> = { morpheus: { tasks: { scope: "project" } as any } }
     const legacyDir = join(getOpenCodeConfigDir({ binary: "opencode" }), "tasks", uid)
     const proj = tmpDir("proj-nooverwrite")
@@ -147,13 +147,13 @@ describe("project-scoped storage", () => {
     expect(destContent.subject).toBe("project-existing")
     rmSync(legacyDir, { recursive: true, force: true })
     rmSync(proj, { recursive: true, force: true })
-    if (saved === undefined) delete process.env.ULTRAWORK_TASK_LIST_ID
-    else process.env.ULTRAWORK_TASK_LIST_ID = saved
+    if (saved === undefined) delete process.env.REDPILL_TASK_LIST_ID
+    else process.env.REDPILL_TASK_LIST_ID = saved
   })
 
   test("env-override precedence via resolveTaskListId", () => {
     //#given
-    process.env.ULTRAWORK_TASK_LIST_ID = "env-override-id"
+    process.env.REDPILL_TASK_LIST_ID = "env-override-id"
     //#when
     const result = resolveTaskListId({})
     //#then

@@ -1082,7 +1082,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 }
 ```
 
-Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `ulw-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-ultrawork`, `research`, `assembly`, `ultrawork`, `bdd-pipeline`, `evolution`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `ultrawork`/`ulw` keyword triggers)
+Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `evolution`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
 ## Comment Checker
 
 Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.
@@ -1144,7 +1144,7 @@ system is unconditional: there is no master switch. Legacy `morpheus.tasks` and
 | -------------------- | -------- | ------------------ | ------------------------------------------------------------------------- |
 | `enabled`            | `boolean` | `true`            | **Retained-deprecated.** Parsed but ignored: the task system is unconditional. `false` logs a one-time deprecation warning. See `docs/legacy-todo-migration.md`. |
 | `storage_path`       | `string` | — (runtime default: `.matrixx/tasks` when `scope=project`) | Absolute or relative path override. When set, bypasses `scope`/`listId` resolution. |
-| `task_list_id`       | `string` | — (falls back to `basename(cwd)` sanitized) | Force task list ID (alternative to `ULTRAWORK_TASK_LIST_ID` / `CLAUDE_CODE_TASK_LIST_ID` env). Sanitized to `[a-zA-Z0-9_-]`. |
+| `task_list_id`       | `string` | — (falls back to `basename(cwd)` sanitized) | Force task list ID (alternative to `REDPILL_TASK_LIST_ID` / `CLAUDE_CODE_TASK_LIST_ID` env). Sanitized to `[a-zA-Z0-9_-]`. |
 | `scope`              | `"global" \| "project"` | `"project"` | `project` → `.matrixx/tasks` per project (default). `global` → `~/.config/opencode/tasks/{listId}`. |
 | `stale_after_hours`  | `number`   | `24` (min `0.25`)  | Pending/in_progress tasks with no file activity for this many hours count as stale (the enforcer that used this is removed; kept helpers live in `src/features/task-session-scope/`). Fractional hours are accepted, so the floor is 15 minutes rather than 1 hour. |
 | `background_stale_after_hours` | `number` | `2` (min `0.25`) | Window used **only** by the background-agent completion gates (`session.idle`, polling, and the restart reconcile probe). A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |

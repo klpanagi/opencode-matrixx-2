@@ -2,7 +2,7 @@ import type { CommandDefinition } from "../command-loader"
 import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
 import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
 import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
-import { END_ULTRAWORK_TEMPLATE } from "./templates/end-ultrawork"
+import { END_REDPILL_TEMPLATE } from "./templates/end-redpill"
 import { EVOLUTION_TEMPLATE } from "./templates/evolution"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import { HUMANIZE_TEMPLATE } from "./templates/humanize"
@@ -13,6 +13,7 @@ import { PLAN_REVIEW_TEMPLATE } from "./templates/plan-review"
 import { PRESET_TEMPLATE } from "./templates/preset"
 import { QUALITY_ASSURANCE_TEMPLATE } from "./templates/quality-assurance"
 import { QUALITY_AUDIT_TEMPLATE } from "./templates/quality-audit"
+import { REDPILL_TEMPLATE } from "./templates/redpill"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
 import { REMOVE_DEADCODE_TEMPLATE } from "./templates/remove-deadcode"
 import { RESEARCH_TEMPLATE } from "./templates/research"
@@ -20,7 +21,6 @@ import { SECURITY_AUDIT_TEMPLATE } from "./templates/security-audit"
 import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { TASK_LIST_TEMPLATE } from "./templates/task-list"
-import { ULTRAWORK_TEMPLATE } from "./templates/ultrawork"
 import type { BuiltinCommandName } from "./types"
 
 export const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
@@ -46,8 +46,8 @@ $ARGUMENTS
 </user-task>`,
      argumentHint: '"task description" [--completion-promise=TEXT] [--max-iterations=N]',
    },
-   "ulw-loop": {
-     description: "(builtin) Start ultrawork loop - continues until completion with ultrawork mode",
+   "rp-loop": {
+     description: "(builtin) Start redpill loop - continues until completion with redpill mode",
      template: `<command-instruction>
 ${MATRIX_LOOP_TEMPLATE}
 </command-instruction>
@@ -161,10 +161,10 @@ $ARGUMENTS
 </user-request>`,
     argumentHint: "[list|show|set <name> [--save [--global|--project]]]",
   },
-  "end-ultrawork": {
-    description: "(builtin) Deactivate ultrawork mode and return to default Matrixx behavior for the current session",
+  "end-redpill": {
+    description: "(builtin) Deactivate redpill mode and return to default Matrixx behavior for the current session",
     template: `<command-instruction>
-${END_ULTRAWORK_TEMPLATE}
+${END_REDPILL_TEMPLATE}
 </command-instruction>
 
 <user-request>
@@ -196,11 +196,11 @@ $ARGUMENTS
 </user-request>`,
     argumentHint: "[enable|disable|status]",
   },
-  ultrawork: {
+  redpill: {
     description:
-      "(builtin) Toggle ultrawork mode on/off for the current session",
+      "(builtin) Toggle redpill mode on/off for the current session",
     template: `<command-instruction>
-${ULTRAWORK_TEMPLATE}
+${REDPILL_TEMPLATE}
 </command-instruction>
 
 <user-request>

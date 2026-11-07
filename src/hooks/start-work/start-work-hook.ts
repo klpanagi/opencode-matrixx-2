@@ -18,7 +18,7 @@ import { classifyPlans, formatPlanListLine } from "./plan-filter"
 
 export const HOOK_NAME = "start-work" as const
 
-const KEYWORD_PATTERN = /\b(ultrawork|ulw)\b/gi
+const KEYWORD_PATTERN = /\b(redpill|rp)\b/gi
 
 interface StartWorkHookInput {
   sessionID: string

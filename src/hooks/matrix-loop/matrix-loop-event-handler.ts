@@ -161,8 +161,8 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 					}
 
 					options.loopState.clear()
-					const title = state.ultrawork ? "ULTRAWORK LOOP COMPLETE!" : "Matrix Loop Complete!"
-					const message = state.ultrawork ? `JUST ULW ULW! Task completed after ${state.iteration} iteration(s)` : `Task completed after ${state.iteration} iteration(s)`
+					const title = state.redpill ? "REDPILL LOOP COMPLETE!" : "Matrix Loop Complete!"
+					const message = state.redpill ? `JUST rp rp! Task completed after ${state.iteration} iteration(s)` : `Task completed after ${state.iteration} iteration(s)`
 					notify("success", `${title}: ${message}`)
 					return
 				}

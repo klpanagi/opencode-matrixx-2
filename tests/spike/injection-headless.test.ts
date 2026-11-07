@@ -64,10 +64,10 @@ describe("spike: injection-headless", () => {
     const seen: ToastOpts[] = []
     const client: HeadlessClient = { tui: { showToast: async (o) => { seen.push(o); return {} } } }
     const sent: ToastOpts[] = []
-    await guardedToast(client, { body: { title: "Ultrawork Mode Activated", message: "Maximum precision engaged.", variant: "success", duration: 3000 } }, sent)
+    await guardedToast(client, { body: { title: "Redpill Mode Activated", message: "Maximum precision engaged.", variant: "success", duration: 3000 } }, sent)
     //#then signature matches keyword-detector precedent: {body:{title,message,variant,duration}} + .catch
     expect(seen.length).toBe(1)
-    expect(seen[0]).toEqual({ body: { title: "Ultrawork Mode Activated", message: "Maximum precision engaged.", variant: "success", duration: 3000 } })
+    expect(seen[0]).toEqual({ body: { title: "Redpill Mode Activated", message: "Maximum precision engaged.", variant: "success", duration: 3000 } })
   })
 
   test("(a) rejected showToast is swallowed fail-open (never throws)", async () => {

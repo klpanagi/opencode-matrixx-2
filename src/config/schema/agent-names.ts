@@ -62,7 +62,7 @@ export const BuiltinSkillNameSchema = z.enum([
   "quality-gate",
   "software-dev",
   "matrixx-self-config",
-  "ulw-research",
+  "rp-research",
   "remove-ai-slops",
   "zeromq-core",
   "zeromq-sockets-patterns",

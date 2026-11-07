@@ -31,14 +31,14 @@ describe("keyword-detector message transform", () => {
     return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
-  test("should prepend ultrawork message to text part", async () => {
+  test("should prepend redpill message to text part", async () => {
     // given - a fresh ContextCollector and keyword-detector hook
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "test-session-123"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork do something" }],
+      parts: [{ type: "text", text: "redpill do something" }],
     }
 
     // when - keyword detection runs
@@ -120,7 +120,7 @@ describe("keyword-detector session filtering", () => {
     return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
-  test("should skip non-ultrawork keywords in non-main session (using mainSessionID check)", async () => {
+  test("should skip non-redpill keywords in non-main session (using mainSessionID check)", async () => {
     // given - main session is set, different session submits search keyword
     const mainSessionID = "main-123"
     const subagentSessionID = "subagent-456"
@@ -139,12 +139,12 @@ describe("keyword-detector session filtering", () => {
     )
 
     // then - search keyword should be filtered out based on mainSessionID comparison
-    const skipLog = logCalls.find(c => c.msg.includes("Skipping non-ultrawork keywords in non-main session"))
+    const skipLog = logCalls.find(c => c.msg.includes("Skipping non-redpill keywords in non-main session"))
     expect(skipLog).toBeDefined()
   })
 
-  test("should allow ultrawork keywords in non-main session", async () => {
-    // given - main session is set, different session submits ultrawork keyword
+  test("should allow redpill keywords in non-main session", async () => {
+    // given - main session is set, different session submits redpill keyword
     const mainSessionID = "main-123"
     const subagentSessionID = "subagent-456"
     setMainSession(mainSessionID)
@@ -153,18 +153,18 @@ describe("keyword-detector session filtering", () => {
     const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork mode" }],
+      parts: [{ type: "text", text: "redpill mode" }],
     }
 
-    // when - non-main session triggers ultrawork keyword
+    // when - non-main session triggers redpill keyword
     await hook["chat.message"](
       { sessionID: subagentSessionID },
       output
     )
 
-    // then - ultrawork should still work (variant set to max)
+    // then - redpill should still work (variant set to max)
     expect(output.message.variant).toBe("max")
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(true)
   })
 
   test("should allow all keywords in main session", async () => {
@@ -198,7 +198,7 @@ describe("keyword-detector session filtering", () => {
     const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork search" }],
+      parts: [{ type: "text", text: "redpill search" }],
     }
 
     // when - any session triggers keyword detection
@@ -209,7 +209,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - all keywords should work
     expect(output.message.variant).toBe("max")
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(true)
   })
 
   test("should not override existing variant", async () => {
@@ -220,10 +220,10 @@ describe("keyword-detector session filtering", () => {
     const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: { variant: "low" } as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork mode" }],
+      parts: [{ type: "text", text: "redpill mode" }],
     }
 
-    // when - ultrawork keyword triggers
+    // when - redpill keyword triggers
     await hook["chat.message"](
       { sessionID: "main-123" },
       output
@@ -231,7 +231,7 @@ describe("keyword-detector session filtering", () => {
 
     // then - existing variant should remain
     expect(output.message.variant).toBe("low")
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(true)
   })
 })
 
@@ -261,8 +261,8 @@ describe("keyword-detector word boundary", () => {
     return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
-  test("should NOT trigger ultrawork on partial matches like 'StatefulWidget' containing 'ulw'", async () => {
-    // given - text contains 'ulw' as part of another word (StatefulWidget)
+  test("should NOT trigger redpill on partial matches like 'StatefulWidget' containing 'rp'", async () => {
+    // given - text contains 'rp' as part of another word (StatefulWidget)
     setMainSession(undefined)
 
     const toastCalls: string[] = []
@@ -272,41 +272,41 @@ describe("keyword-detector word boundary", () => {
       parts: [{ type: "text", text: "refactor the StatefulWidget component" }],
     }
 
-    // when - message with partial 'ulw' match is processed
+    // when - message with partial 'rp' match is processed
     await hook["chat.message"](
       { sessionID: "any-session" },
       output
     )
 
-    // then - ultrawork should NOT be triggered
+    // then - redpill should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(false)
   })
 
-  test("should trigger ultrawork on standalone 'ulw' keyword", async () => {
-    // given - text contains standalone 'ulw'
+  test("should trigger redpill on standalone 'rp' keyword", async () => {
+    // given - text contains standalone 'rp'
     setMainSession(undefined)
 
     const toastCalls: string[] = []
     const hook = createKeywordDetectorHook(createMockMatrixxContext({ toastCalls }))
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ulw do this task" }],
+      parts: [{ type: "text", text: "rp do this task" }],
     }
 
-    // when - message with standalone 'ulw' is processed
+    // when - message with standalone 'rp' is processed
     await hook["chat.message"](
       { sessionID: "any-session" },
       output
     )
 
-    // then - ultrawork should be triggered
+    // then - redpill should be triggered
     expect(output.message.variant).toBe("max")
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(true)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(true)
   })
 
-  test("should NOT trigger ultrawork on file references containing 'ulw' substring", async () => {
-    // given - file reference contains 'ulw' as substring
+  test("should NOT trigger redpill on file references containing 'rp' substring", async () => {
+    // given - file reference contains 'rp' as substring
     setMainSession(undefined)
 
     const toastCalls: string[] = []
@@ -316,15 +316,15 @@ describe("keyword-detector word boundary", () => {
       parts: [{ type: "text", text: "@StatefulWidget.tsx please review this file" }],
     }
 
-    // when - message referencing file with 'ulw' substring is processed
+    // when - message referencing file with 'rp' substring is processed
     await hook["chat.message"](
       { sessionID: "any-session" },
       output
     )
 
-    // then - ultrawork should NOT be triggered
+    // then - redpill should NOT be triggered
     expect(output.message.variant).toBeUndefined()
-    expect(toastCalls.some((message) => message.startsWith("Ultrawork Mode Activated"))).toBe(false)
+    expect(toastCalls.some((message) => message.startsWith("Redpill Mode Activated"))).toBe(false)
   })
 })
 
@@ -514,7 +514,7 @@ Please explore the codebase and discover patterns.
   })
 })
 
-describe("keyword-detector agent-specific ultrawork messages", () => {
+describe("keyword-detector agent-specific redpill messages", () => {
   let logCalls: Array<{ msg: string; data?: unknown }>
   let logSpy: ReturnType<typeof spyOn>
 
@@ -536,81 +536,81 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     return { directory: "/tmp/test" } as unknown as MatrixxContext
   }
 
-  test("should skip ultrawork injection when agent is oracle", async () => {
+  test("should skip redpill injection when agent is oracle", async () => {
     // given - collector and oracle agent
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "oracle-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork plan this feature" }],
+      parts: [{ type: "text", text: "redpill plan this feature" }],
     }
 
-    // when - ultrawork keyword detected with oracle agent
+    // when - redpill keyword detected with oracle agent
     await hook["chat.message"]({ sessionID, agent: "oracle" }, output)
 
-    // then - ultrawork should be skipped for planner agents, text unchanged
+    // then - redpill should be skipped for planner agents, text unchanged
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
-    expect(textPart?.text).toBe("ultrawork plan this feature")
+    expect(textPart?.text).toBe("redpill plan this feature")
     expect(textPart?.text).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
     expect(textPart?.text).not.toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
   })
 
-  test("should skip ultrawork injection when agent name contains 'planner'", async () => {
+  test("should skip redpill injection when agent name contains 'planner'", async () => {
     // given - collector and agent with 'planner' in name
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "planner-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ulw create a work plan" }],
+      parts: [{ type: "text", text: "rp create a work plan" }],
     }
 
-    // when - ultrawork keyword detected with planner agent
+    // when - redpill keyword detected with planner agent
     await hook["chat.message"]({ sessionID, agent: "Oracle (Planner)" }, output)
 
-    // then - ultrawork should be skipped, text unchanged
+    // then - redpill should be skipped, text unchanged
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
-    expect(textPart?.text).toBe("ulw create a work plan")
+    expect(textPart?.text).toBe("rp create a work plan")
     expect(textPart?.text).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 
-  test("should skip ultrawork injection when agent name contains 'plan' token", async () => {
+  test("should skip redpill injection when agent name contains 'plan' token", async () => {
     //#given - collector and agent name that includes a plan token
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "plan-agent-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork draft a plan" }],
+      parts: [{ type: "text", text: "redpill draft a plan" }],
     }
 
-    //#when - ultrawork keyword detected with plan-like agent name
+    //#when - redpill keyword detected with plan-like agent name
     await hook["chat.message"]({ sessionID, agent: "Plan Agent" }, output)
 
-    //#then - ultrawork should be skipped, text unchanged
+    //#then - redpill should be skipped, text unchanged
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
-    expect(textPart?.text).toBe("ultrawork draft a plan")
+    expect(textPart?.text).toBe("redpill draft a plan")
     expect(textPart?.text).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 
-  test("should use normal ultrawork message when agent is Morpheus", async () => {
+  test("should use normal redpill message when agent is Morpheus", async () => {
     // given - collector and Morpheus agent
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "morpheus-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement this feature" }],
+      parts: [{ type: "text", text: "redpill implement this feature" }],
     }
 
-    // when - ultrawork keyword detected with Morpheus agent
+    // when - redpill keyword detected with Morpheus agent
     await hook["chat.message"]({ sessionID, agent: "morpheus" }, output)
 
-    // then - should use normal ultrawork message with agent utilization instructions
+    // then - should use normal redpill message with agent utilization instructions
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
     expect(textPart?.text).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
@@ -619,20 +619,20 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("implement this feature")
   })
 
-  test("should use normal ultrawork message when agent is undefined", async () => {
+  test("should use normal redpill message when agent is undefined", async () => {
     // given - collector with no agent specified
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "no-agent-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork do something" }],
+      parts: [{ type: "text", text: "redpill do something" }],
     }
 
-    // when - ultrawork keyword detected without agent
+    // when - redpill keyword detected without agent
     await hook["chat.message"]({ sessionID }, output)
 
-    // then - should use normal ultrawork message (default behavior)
+    // then - should use normal redpill message (default behavior)
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
     expect(textPart?.text).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
@@ -641,7 +641,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("do something")
   })
 
-  test("should skip ultrawork for oracle but inject for morpheus", async () => {
+  test("should skip redpill for oracle but inject for morpheus", async () => {
     // given - two sessions, one with oracle, one with morpheus
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
@@ -650,7 +650,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     const oracleSessionID = "oracle-first"
     const oracleOutput = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork plan" }],
+      parts: [{ type: "text", text: "redpill plan" }],
     }
     await hook["chat.message"]({ sessionID: oracleSessionID, agent: "oracle" }, oracleOutput)
 
@@ -658,13 +658,13 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     const morpheusSessionID = "morpheus-second"
     const morpheusOutput = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement" }],
+      parts: [{ type: "text", text: "redpill implement" }],
     }
     await hook["chat.message"]({ sessionID: morpheusSessionID, agent: "morpheus" }, morpheusOutput)
 
-    // then - oracle should have no injection, morpheus should have normal ultrawork
+    // then - oracle should have no injection, morpheus should have normal redpill
     const oracleTextPart = oracleOutput.parts.find(p => p.type === "text")
-    expect(oracleTextPart?.text).toBe("ultrawork plan")
+    expect(oracleTextPart?.text).toBe("redpill plan")
 
     const morpheusTextPart = morpheusOutput.parts.find(p => p.type === "text")
     expect(morpheusTextPart?.text).toContain("YOU MUST LEVERAGE ALL AVAILABLE AGENTS")
@@ -672,20 +672,20 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(morpheusTextPart?.text).toContain("implement")
   })
 
-  //#given ultrawork mode activated for default model
-  //#when the ultrawork message is generated
-  //#then it contains "MANDATORY: ACCEPTANCE CRITERIA DEFINITION" section
-  test("should contain MANDATORY ACCEPTANCE CRITERIA DEFINITION section in default ultrawork message", async () => {
+  //#given redpill mode activated for default model
+  //#when the redpill message is generated
+  //#then it contains the unified acceptance criteria + QA section
+  test("should contain MANDATORY ACCEPTANCE CRITERIA DEFINITION section in default redpill message", async () => {
     // given - collector with no agent specified (default model)
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "ac-test-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
 
-    // when - ultrawork keyword detected
+    // when - redpill keyword detected
     await hook["chat.message"]({ sessionID }, output)
 
     // then - should contain mandatory acceptance criteria section
@@ -697,20 +697,20 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("Verification Commands")
   })
 
-  //#given ultrawork mode activated for default model
-  //#when the ultrawork message is generated
+  //#given redpill mode activated for default model
+  //#when the redpill message is generated
   //#then it contains "MANDATORY: QA EXECUTION" section
-  test("should contain MANDATORY QA EXECUTION section in default ultrawork message", async () => {
+  test("should contain MANDATORY QA EXECUTION section in default redpill message", async () => {
     // given - collector with no agent specified (default model)
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "qa-test-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
 
-    // when - ultrawork keyword detected
+    // when - redpill keyword detected
     await hook["chat.message"]({ sessionID }, output)
 
     // then - should contain mandatory QA execution section
@@ -722,20 +722,20 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("NO EVIDENCE = NOT VERIFIED = NOT DONE")
   })
 
-  //#given ultrawork mode activated for GPT model
-  //#when the ultrawork message is generated
+  //#given redpill mode activated for GPT model
+  //#when the redpill message is generated
   //#then it contains acceptance criteria and QA sections
-  test("should contain acceptance criteria and QA sections in GPT ultrawork message", async () => {
+  test("should contain acceptance criteria and QA sections in GPT redpill message", async () => {
     // given - collector with GPT model
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "gpt-qa-test-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
 
-    // when - ultrawork keyword detected with GPT model
+    // when - redpill keyword detected with GPT model
     await hook["chat.message"](
       { sessionID, model: { providerID: "openai", modelID: "openai/gpt-5.2" } },
       output
@@ -744,8 +744,8 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     // then - should contain both acceptance criteria and QA sections
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
-    expect(textPart?.text).toContain("MANDATORY: ACCEPTANCE CRITERIA DEFINITION")
-    expect(textPart?.text).toContain("MANDATORY: QA EXECUTION")
+    expect(textPart?.text).toContain("MANDATORY: ACCEPTANCE CRITERIA + QA EXECUTION")
+    expect(textPart?.text).toContain("Verification Commands")
     expect(textPart?.text).toContain("QA Report")
     expect(textPart?.text).toContain("NO EVIDENCE = NOT VERIFIED = NOT DONE")
   })
@@ -761,7 +761,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement this" }],
+      parts: [{ type: "text", text: "redpill implement this" }],
     }
 
     // when - hook receives stale input.agent="oracle" but session state says "Morpheus"
@@ -779,7 +779,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     clearSessionAgent(sessionID)
   })
 
-  test("should fall back to input.agent when session state is empty and skip ultrawork for oracle", async () => {
+  test("should fall back to input.agent when session state is empty and skip redpill for oracle", async () => {
     // given - no session state, only input.agent available
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
@@ -790,28 +790,28 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork plan this" }],
+      parts: [{ type: "text", text: "redpill plan this" }],
     }
 
     // when - hook receives input.agent="oracle" with no session state
     await hook["chat.message"]({ sessionID, agent: "oracle" }, output)
 
-    // then - oracle fallback from input.agent, ultrawork skipped
+    // then - oracle fallback from input.agent, redpill skipped
     const textPart = output.parts.find(p => p.type === "text")
     expect(textPart).toBeDefined()
-    expect(textPart?.text).toBe("ultrawork plan this")
+    expect(textPart?.text).toBe("redpill plan this")
     expect(textPart?.text).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 
   // ─── Model variant routing tests ─────────────────────────────────────
 
-  test("should inject DeepSeek ultrawork variant for deepseek model", async () => {
+  test("should inject DeepSeek redpill variant for deepseek model", async () => {
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "deepseek-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
     await hook["chat.message"](
       { sessionID, model: { providerID: "deepseek", modelID: "deepseek/deepseek-v4-flash" } },
@@ -826,13 +826,13 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("Scenario Contract")
   })
 
-  test("should inject Mimo ultrawork variant for mimo model", async () => {
+  test("should inject Mimo redpill variant for mimo model", async () => {
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "mimo-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
     await hook["chat.message"](
       { sessionID, model: { providerID: "xiaomi", modelID: "opencode-go/mimo-v2.5" } },
@@ -846,13 +846,13 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("TDD Workflow")
   })
 
-  test("should inject Gemini ultrawork variant for gemini model", async () => {
+  test("should inject Gemini redpill variant for gemini model", async () => {
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "gemini-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
     await hook["chat.message"](
       { sessionID, model: { providerID: "google", modelID: "gemini-2.5-pro" } },
@@ -866,13 +866,13 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart?.text).toContain("DELEGATION IS MANDATORY")
   })
 
-  test("should inject GLM ultrawork variant for glm model", async () => {
+  test("should inject GLM redpill variant for glm model", async () => {
     const collector = new ContextCollector()
     const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
     const sessionID = "glm-session"
     const output = {
       message: {} as Record<string, unknown>,
-      parts: [{ type: "text", text: "ultrawork implement feature" }],
+      parts: [{ type: "text", text: "redpill implement feature" }],
     }
     await hook["chat.message"](
       { sessionID, model: { providerID: "zhipu", modelID: "glm-5" } },

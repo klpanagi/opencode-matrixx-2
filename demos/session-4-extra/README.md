@@ -57,7 +57,7 @@ NEW Order:
 | Candidate | Why Not Selected |
 |-----------|-----------------|
 | Matrix Loop (`/matrix-loop`) | Cool but takes 5+ min to demonstrate meaningfully; eats the entire slot |
-| Ultrawork `/research` | Best shown in a different context (offline prep); not a live-stage capability |
+| Redpill `/research` | Best shown in a different context (offline prep); not a live-stage capability |
 | Background agent swarm | Already hinted in Demo 3 (parallel agents); showing a dedicated version is repetitive |
 | remove-ai-slops + comment-checker | **Factually corrected**: Comment-checker is non-blocking (PostToolUse only); remove-ai-slops requires interactive per-fix approval — too slow for live demo |
 | Git-master skill | Standalone git demo is not visually impressive; better as sub-narrative in another demo |

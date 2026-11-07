@@ -9,7 +9,7 @@ import {
   buildNiobeReferralSection,
   buildSmithSection,
   buildCategorySkillsDelegationGuide,
-  buildUltraworkSection,
+  buildRedpillSection,
   formatCustomSkillsBlock,
   categorizeTools,
   buildContextDisciplineSection,
@@ -137,7 +137,7 @@ describe("buildCategorySkillsDelegationGuide", () => {
   })
 })
 
-describe("buildUltraworkSection", () => {
+describe("buildRedpillSection", () => {
   const agents: AvailableAgent[] = []
 
   it("should separate builtin and custom skills", () => {
@@ -147,8 +147,8 @@ describe("buildUltraworkSection", () => {
       { name: "react-19", description: "React 19 patterns", location: "user" },
     ]
 
-    //#when: building ultrawork section
-    const result = buildUltraworkSection(agents, [], skills)
+    //#when: building redpill section
+    const result = buildRedpillSection(agents, [], skills)
 
     //#then: should have separate sections
     expect(result).toContain("Built-in Skills")
@@ -162,8 +162,8 @@ describe("buildUltraworkSection", () => {
       { name: "playwright", description: "Browser automation", location: "plugin" },
     ]
 
-    //#when: building ultrawork section
-    const result = buildUltraworkSection(agents, [], skills)
+    //#when: building redpill section
+    const result = buildRedpillSection(agents, [], skills)
 
     //#then: should have single section
     expect(result).toContain("Built-in Skills")

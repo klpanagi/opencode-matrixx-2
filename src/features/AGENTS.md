@@ -28,7 +28,7 @@ features/
 ├── task-session-scope/         # Task session scoping + ancestry
 ├── task-toast-manager/         # Task progress notifications (3 files)
 ├── tool-metadata-store/        # Tool execution metadata caching (3 files)
-└── ultrawork-state/            # Ultrawork loop state
+└── redpill-state/            # Redpill loop state
 ```
 
 Tmux integration lives in `src/shared/tmux/` (no feature dir).

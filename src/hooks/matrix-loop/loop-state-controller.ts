@@ -23,7 +23,7 @@ export function createLoopStateController(options: {
 			loopOptions?: {
 				maxIterations?: number
 				completionPromise?: string
-				ultrawork?: boolean
+				redpill?: boolean
 			},
 		): boolean {
 			const state: MatrixLoopState = {
@@ -36,7 +36,7 @@ export function createLoopStateController(options: {
 				completion_promise:
 					loopOptions?.completionPromise ??
 					DEFAULT_COMPLETION_PROMISE,
-				ultrawork: loopOptions?.ultrawork,
+				redpill: loopOptions?.redpill,
 				started_at: new Date().toISOString(),
 				prompt,
 				session_id: sessionID,

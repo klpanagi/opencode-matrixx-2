@@ -19,7 +19,7 @@ Execution state lives in file-backed tasks. See
 | Complexity | Approach | When to Use |
 |------------|----------|-------------|
 | **Simple** | Just prompt | Quick fixes, single-file changes |
-| **Complex + Lazy** | Type `ulw` or `ultrawork` | Explaining full context is tedious, let the agent figure it out |
+| **Complex + Lazy** | Type `rp` or `redpill` | Explaining full context is tedious, let the agent figure it out |
 | **Complex + Precise** | `@plan` then `/start-work` | Multi-step work needing verifiable execution; Oracle plans, Niobe executes |
 
 **Decision flow:**
@@ -28,10 +28,10 @@ Execution state lives in file-backed tasks. See
 Is it a quick fix or simple task?
   |- YES -> Just prompt normally
   |- NO  -> Is explaining the full context tedious?
-             |- YES -> Type "ulw" and let the agent figure it out
+             |- YES -> Type "rp" and let the agent figure it out
              |- NO  -> Do you need precise, verifiable execution?
                         |- YES -> Use @plan for Oracle planning, then /start-work
-                        |- NO  -> Just use "ulw"
+                        |- NO  -> Just use "rp"
 ```
 
 ## The Three Layers
@@ -293,11 +293,12 @@ frontend, DSL, security, testing, and more) are domain-specific, so
 for pure prose and docs tasks `load_skills=[]` is intentional, not an
 omission.
 
-## Execution Modes: Keymaker vs Morpheus + ultrawork
+## Execution Modes: Keymaker vs Morpheus + redpill
 
-| Aspect | Keymaker | Morpheus + `ulw` / `ultrawork` |
+| Aspect | Keymaker | Morpheus + `rp` / `redpill` |
 |--------|-----------|-------------------------------|
-| **What** | Dedicated agent for autonomous deep work | Keyword that activates ultrawork mode in any session |
+| **What** | Dedicated agent for autonomous deep work | Keyword that activates redpill mode in any session |
+| **Doctrine** | Autonomous reasoning, self-directed | The Matrixx Manifesto: reproducible evidence over assertion, working code over plausible code |
 | **Model** | `opencode/minimax-m3-free` | Your configured default model |
 | **Planning** | Self-plans during execution | Uses Oracle plans when available, explores autonomously otherwise |
 | **Best for** | Deep architectural reasoning, hard debugging, cross-domain synthesis | General complex tasks, "just do it" scenarios |
@@ -306,11 +307,11 @@ omission.
 reasoning: designing a plugin system, tracing a race condition across
 15 files, migrating databases with zero downtime.
 
-**Use `ulw`** (stay in Morpheus, type `ulw fix the failing tests`) when you
+**Use `rp`** (stay in Morpheus, type `rp fix the failing tests`) when you
 want the agent to figure it out: well-scoped complex tasks, existing
 patterns to follow, or honest laziness about writing requirements.
 
-**Default advice:** `ulw` covers roughly 90 percent of complex tasks.
+**Default advice:** `rp` covers roughly 90 percent of complex tasks.
 Reach for Keymaker when a problem specifically benefits from its
 reasoning style and fully autonomous explore-first approach.
 
@@ -322,10 +323,10 @@ tracked background tasks: queue, concurrency check per provider and model
 1 tasks run in parallel instead of one at a time.
 
 **Matrix loop** (hook tier at `src/hooks/matrix-loop/`, commands
-`/matrix-loop`, `/ulw-loop`, `/cancel-loop` from
+`/matrix-loop`, `/rp-loop`, `/cancel-loop` from
 `src/features/builtin-commands/templates/matrix-loop.ts`) keeps working a
 task across iterations until a completion promise holds or the iteration cap
-is reached. `/ulw-loop` is the same loop with ultrawork mode active.
+is reached. `/rp-loop` is the same loop with redpill mode active.
 `/cancel-loop` stops it.
 
 ## Commands
@@ -334,8 +335,8 @@ is reached. `/ulw-loop` is the same loop with ultrawork mode active.
 |---------|---------|
 | `@plan [request]` | Route to Oracle, start a planning session from Morpheus |
 | `/start-work` | Execute the plan (find or resume via `mission.json`, switch to Niobe) |
-| `/matrix-loop`, `/ulw-loop`, `/cancel-loop` | Start or stop a self-referential dev loop |
-| `/ultrawork`, `/end-ultrawork` | Toggle ultrawork mode at runtime |
+| `/matrix-loop`, `/rp-loop`, `/cancel-loop` | Start or stop a self-referential dev loop |
+| `/redpill`, `/end-redpill` | Toggle redpill mode at runtime |
 | `/task-list`, `/cleanup-tasks` | Inspect and clean task state |
 | `/stop-continuation` | Pause automated continuation |
 | `/handoff`, `/pickup` | Hand off a session, resume from a handoff |
@@ -345,9 +346,9 @@ Full reference with arguments and intercepts:
 [`docs/command-reference.md`](./command-reference.md)
 (24 built-ins covering orchestration, research, refactoring, handoffs,
 tasks, BDD, and toggles — see `src/features/builtin-commands/types.ts`
-`BuiltinCommandName`: init-deep, matrix-loop, ulw-loop, cancel-loop, refactor,
+`BuiltinCommandName`: init-deep, matrix-loop, rp-loop, cancel-loop, refactor,
 plan-review, start-work, stop-continuation, humanize, handoff, pickup,
-remove-deadcode, preset, end-ultrawork, research, assembly, ultrawork,
+remove-deadcode, preset, end-redpill, research, assembly, redpill,
 bdd-pipeline, evolution, cleanup-tasks, task-list, quality-audit,
 quality-assurance, security-audit).
 
@@ -388,8 +389,8 @@ Type `exit` or start a new session. Niobe is entered through
 No functional difference. `@plan` is the shortcut, switching agents is
 explicit control.
 
-**"Keymaker or ulw?"**
-`ulw` for most tasks. Keymaker for deep architectural work that benefits
+**"Keymaker or rp?"**
+`rp` for most tasks. Keymaker for deep architectural work that benefits
 from its autonomous reasoning style.
 
 ## Appendix A: Figures
@@ -644,4 +645,4 @@ DO NOT respond until all todos are marked completed.
 - [`docs/agents.md`](./agents.md): per-agent reference, diagrams, delegation, roster
 - [`docs/category-skill-guide.md`](./category-skill-guide.md): categories and skills
 - [`docs/guide/overview.md`](./guide/overview.md): quick start
-- [`docs/command-reference.md`](./command-reference.md#14-ultrawork): `/ultrawork` philosophy and usage
+- [`docs/command-reference.md`](./command-reference.md#14-redpill): `/redpill` philosophy and usage

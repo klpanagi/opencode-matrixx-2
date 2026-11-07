@@ -1,6 +1,6 @@
 import type { CommandDefinition } from "../command-loader"
 
-export type BuiltinCommandName = "init-deep" | "matrix-loop" | "cancel-loop" | "ulw-loop" | "refactor" | "start-work" | "stop-continuation" | "handoff" | "pickup" | "remove-deadcode" | "preset" | "end-ultrawork" | "research" | "assembly" | "ultrawork" | "bdd-pipeline" | "evolution" | "cleanup-tasks" | "task-list" | "plan-review" | "quality-audit" | "quality-assurance" | "humanize" | "security-audit"
+export type BuiltinCommandName = "init-deep" | "matrix-loop" | "cancel-loop" | "rp-loop" | "refactor" | "start-work" | "stop-continuation" | "handoff" | "pickup" | "remove-deadcode" | "preset" | "end-redpill" | "research" | "assembly" | "redpill" | "bdd-pipeline" | "evolution" | "cleanup-tasks" | "task-list" | "plan-review" | "quality-audit" | "quality-assurance" | "humanize" | "security-audit"
 
 export type BuiltinCommands = Record<string, CommandDefinition>
 

@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import {
-  getUltraworkSource,
+  getRedpillSource,
   isDeepseekModel,
   isGeminiModel,
   isGlmModel,
   isNonOmoAgent,
   isPlannerAgent,
-} from "../../../../src/hooks/keyword-detector/ultrawork/source-detector"
+} from "../../../../src/hooks/keyword-detector/redpill/source-detector"
 
 describe("isDeepseekModel", () => {
   test("matches official API ID", () => {
@@ -121,60 +121,60 @@ describe("isPlannerAgent", () => {
   })
 })
 
-describe("getUltraworkSource", () => {
+describe("getRedpillSource", () => {
   // Priority 1: Planner agents (overrides model)
   test("returns planner for oracle agent regardless of model", () => {
-    expect(getUltraworkSource("oracle", "deepseek-v4-flash")).toBe("planner")
-    expect(getUltraworkSource("oracle", "mimo-v2.5")).toBe("planner")
-    expect(getUltraworkSource("oracle", "gpt-5.2")).toBe("planner")
+    expect(getRedpillSource("oracle", "deepseek-v4-flash")).toBe("planner")
+    expect(getRedpillSource("oracle", "mimo-v2.5")).toBe("planner")
+    expect(getRedpillSource("oracle", "gpt-5.2")).toBe("planner")
   })
 
   // Priority 2: DeepSeek
   test("returns deepseek for deepseek model", () => {
-    expect(getUltraworkSource(undefined, "deepseek-v4-flash")).toBe("deepseek")
-    expect(getUltraworkSource(undefined, "deepseek/deepseek-v4-flash")).toBe("deepseek")
+    expect(getRedpillSource(undefined, "deepseek-v4-flash")).toBe("deepseek")
+    expect(getRedpillSource(undefined, "deepseek/deepseek-v4-flash")).toBe("deepseek")
   })
 
   // Priority 3: Mimo
   test("returns mimo for mimo model", () => {
-    expect(getUltraworkSource(undefined, "mimo-v2.5")).toBe("mimo")
-    expect(getUltraworkSource(undefined, "opencode-go/mimo-v2.5")).toBe("mimo")
+    expect(getRedpillSource(undefined, "mimo-v2.5")).toBe("mimo")
+    expect(getRedpillSource(undefined, "opencode-go/mimo-v2.5")).toBe("mimo")
   })
 
   // Priority 4: GPT
   test("returns gpt for GPT model", () => {
-    expect(getUltraworkSource(undefined, "gpt-5.2")).toBe("gpt")
-    expect(getUltraworkSource(undefined, "openai/gpt-5.2")).toBe("gpt")
+    expect(getRedpillSource(undefined, "gpt-5.2")).toBe("gpt")
+    expect(getRedpillSource(undefined, "openai/gpt-5.2")).toBe("gpt")
   })
 
   // Priority 5: Gemini
   test("returns gemini for Gemini model", () => {
-    expect(getUltraworkSource(undefined, "gemini-2.5-pro")).toBe("gemini")
+    expect(getRedpillSource(undefined, "gemini-2.5-pro")).toBe("gemini")
   })
 
   // Priority 6: GLM
   test("returns glm for GLM model", () => {
-    expect(getUltraworkSource(undefined, "glm-5")).toBe("glm")
+    expect(getRedpillSource(undefined, "glm-5")).toBe("glm")
   })
 
   // Default
   test("returns default for unknown models", () => {
-    expect(getUltraworkSource(undefined, "claude-opus-4-6")).toBe("default")
-    expect(getUltraworkSource(undefined, "anthropic/claude-sonnet-4-6")).toBe("default")
+    expect(getRedpillSource(undefined, "claude-opus-4-6")).toBe("default")
+    expect(getRedpillSource(undefined, "anthropic/claude-sonnet-4-6")).toBe("default")
   })
 
   test("returns default when no model or agent provided", () => {
-    expect(getUltraworkSource(undefined, undefined)).toBe("default")
+    expect(getRedpillSource(undefined, undefined)).toBe("default")
   })
 
   // Routing priority: deepseek before mimo
   test("deepseek has priority over mimo when both match", () => {
     // Model IDs that might match both patterns
-    expect(getUltraworkSource(undefined, "deepseek/mimo")).toBe("deepseek")
+    expect(getRedpillSource(undefined, "deepseek/mimo")).toBe("deepseek")
   })
 
   // Routing priority: mimo before GPT  
   test("mimo has priority over GPT when both match", () => {
-    expect(getUltraworkSource(undefined, "mimo-gpt")).toBe("mimo")
+    expect(getRedpillSource(undefined, "mimo-gpt")).toBe("mimo")
   })
 })
