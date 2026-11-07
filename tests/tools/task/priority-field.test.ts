@@ -3,7 +3,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { readSessionTasks } from "../../../src/features/task-session-scope/session-task-pending"
 import type { Task } from "../../../src/features/task-storage/types"
-import { getIncompleteTasks } from "../../../src/hooks/task-continuation-enforcer/todo"
+import { getIncompleteTasks } from "../../../src/features/task-session-scope/todo"
 import {
   TaskCreateInputSchema,
   TaskObjectSchema,
