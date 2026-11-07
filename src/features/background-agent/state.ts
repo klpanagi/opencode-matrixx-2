@@ -1,33 +1,26 @@
 import { log } from "../../shared"
 import { unregisterSubagentSession } from "../session-state/state"
 import type { QueueItem } from "./constants"
+import { TaskMap } from "./task-map"
 import type { BackgroundTask, LaunchInput } from "./types"
 export class TaskStateManager {
-  readonly tasks: Map<string, BackgroundTask> = new Map()
+  readonly tasks: TaskMap<BackgroundTask> = new TaskMap()
   readonly notifications: Map<string, BackgroundTask[]> = new Map()
   readonly pendingByParent: Map<string, Set<string>> = new Map()
   readonly queuesByKey: Map<string, QueueItem[]> = new Map()
   readonly processingKeys: Set<string> = new Set()
-  readonly completionTimers: Map<string, ReturnType<typeof setTimeout>> = new Map()
   getTask(id: string): BackgroundTask | undefined {
     return this.tasks.get(id)
   }
   findBySession(sessionID: string): BackgroundTask | undefined {
-    for (const task of this.tasks.values()) {
-      if (task.sessionID === sessionID) {
-        return task
-      }
-    }
-    return undefined
+    const hit = this.tasks.bySession(sessionID)
+    if (hit) return hit
+    if (!this.tasks.dirty) return undefined
+    this.tasks.rebuild()
+    return this.tasks.bySession(sessionID)
   }
   getTasksByParentSession(sessionID: string): BackgroundTask[] {
-    const result: BackgroundTask[] = []
-    for (const task of this.tasks.values()) {
-      if (task.parentSessionID === sessionID) {
-        result.push(task)
-      }
-    }
-    return result
+    return this.tasks.byParent(sessionID)
   }
 
   getAllDescendantTasks(sessionID: string): BackgroundTask[] {
@@ -151,27 +144,7 @@ export class TaskStateManager {
     return true
   }
 
-  setCompletionTimer(taskId: string, timer: ReturnType<typeof setTimeout>): void {
-    this.completionTimers.set(taskId, timer)
-  }
-
-  clearCompletionTimer(taskId: string): void {
-    const timer = this.completionTimers.get(taskId)
-    if (timer) {
-      clearTimeout(timer)
-      this.completionTimers.delete(taskId)
-    }
-  }
-
-  clearAllCompletionTimers(): void {
-    for (const timer of this.completionTimers.values()) {
-      clearTimeout(timer)
-    }
-    this.completionTimers.clear()
-  }
-
   clear(): void {
-    this.clearAllCompletionTimers()
     this.tasks.clear()
     this.notifications.clear()
     this.pendingByParent.clear()

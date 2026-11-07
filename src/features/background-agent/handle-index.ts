@@ -281,3 +281,55 @@ export function sweepStaleHandles(directory: string, ttlMs = TASK_TTL_MS, now = 
 
   return removed
 }
+
+/**
+ * Single-pass sweep + read: one `readdirSync` and one `readHandleFile` per
+ * handle file. Semantics match `sweepStaleHandles` followed by `readHandles`:
+ * corrupt/unparseable files are swept (never bump generation for them — there
+ * is no taskId), stale or timestamp-less readable handles are swept with a
+ * generation bump, fresh handles are returned. Files swept here never appear
+ * in `handles`. Missing directory yields an empty result without throwing.
+ */
+export function sweepAndReadHandles(
+  directory: string,
+  ttlMs = TASK_TTL_MS,
+  now = Date.now(),
+): { handles: BgHandle[]; removed: number } {
+  const dir = getBgHandleDir(directory)
+  if (!existsSync(dir)) {
+    return { handles: [], removed: 0 }
+  }
+
+  const handles: BgHandle[] = []
+  let removed = 0
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(BG_HANDLE_FILE_PREFIX) || !name.endsWith(".json")) {
+      continue
+    }
+
+    const filePath = join(dir, name)
+    const handle = readHandleFile(filePath)
+    const timestamp = handle?.completedAt ?? handle?.startedAt ?? handle?.queuedAt
+
+    if (handle && timestamp !== undefined && now - timestamp <= ttlMs) {
+      handles.push(handle)
+      continue
+    }
+
+    try {
+      unlinkSync(filePath)
+      if (handle) {
+        bumpGeneration(directory, handle.taskId)
+      }
+      removed++
+    } catch {
+      // Ignore individual unlink failures — sweep is best-effort and bounded.
+    }
+  }
+
+  if (removed > 0) {
+    log(`[bg-handles] Swept ${removed} stale handle file(s) from ${dir}`)
+  }
+
+  return { handles, removed }
+}

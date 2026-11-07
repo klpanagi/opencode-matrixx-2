@@ -4,6 +4,7 @@ import { getParentSessionID, getSubagentSessionIDs } from "../../session-state/s
 import { StaleGenerationError } from "../../task-storage/generation"
 import { TASK_TTL_MS } from "../constants"
 import { bumpGeneration, currentGeneration, readHandle, readHandles, writeHandle } from "../handle-index"
+import { TaskMap } from "../task-map"
 import type { BackgroundTask } from "../types"
 import { WallclockSupervisor } from "../wallclock"
 import type { NativeDescendant } from "./types"
@@ -21,7 +22,7 @@ const NATIVE_CACHE_TTL_MS = 1000
  * store through `ManagerRuntime` — they never touch `BackgroundManager`.
  */
 export class ManagerStore {
-  readonly tasks = new Map<string, BackgroundTask>()
+  readonly tasks = new TaskMap<BackgroundTask>((sessionID) => ManagerStore.normalizeSessionID(sessionID))
   readonly knownSessions = new Set<string>()
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   readonly wallclock = new WallclockSupervisor()
@@ -56,23 +57,19 @@ export class ManagerStore {
 
 
   getTasksByParentSession(sessionID: string): BackgroundTask[] {
-    const result: BackgroundTask[] = []
-    for (const task of this.tasks.values()) {
-      if (task.parentSessionID === sessionID) result.push(task)
-    }
-    return result
+    return this.tasks.byParent(sessionID)
   }
 
 
   getAllDescendantTasks(sessionID: string): BackgroundTask[] {
     const result: BackgroundTask[] = []
-    const directChildren = this.getTasksByParentSession(sessionID)
-    for (const child of directChildren) {
-      result.push(child)
-      if (child.sessionID) {
-        result.push(...this.getAllDescendantTasks(child.sessionID))
+    const walk = (parentSessionID: string): void => {
+      for (const child of this.tasks.byParent(parentSessionID)) {
+        result.push(child)
+        if (child.sessionID) walk(child.sessionID)
       }
     }
+    walk(sessionID)
     return result
   }
 
@@ -110,15 +107,11 @@ export class ManagerStore {
 
 
   findBySession(sessionID: string): BackgroundTask | undefined {
-    const wanted = ManagerStore.normalizeSessionID(sessionID)
-    for (const task of this.tasks.values()) {
-      if (
-        task.sessionID !== undefined &&
-        ManagerStore.normalizeSessionID(task.sessionID) === wanted
-      )
-        return task
-    }
-    return undefined
+    const hit = this.tasks.bySession(sessionID)
+    if (hit) return hit
+    if (!this.tasks.dirty) return undefined
+    this.tasks.rebuild()
+    return this.tasks.bySession(sessionID)
   }
 
 
