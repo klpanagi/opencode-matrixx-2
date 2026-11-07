@@ -1,5 +1,5 @@
 export { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "./definitions/construct"
-export { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "./definitions/merovingian"
+export { createMerovingianAgent, MEROVINGIAN_PROMPT_METADATA, ORACLE_PROMPT_METADATA } from "./definitions/merovingian"
 export { createMorpheusAgent } from "./definitions/morpheus"
 export { createNiobeAgent, niobePromptMetadata } from "./definitions/niobe"
 export { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "./definitions/operator"

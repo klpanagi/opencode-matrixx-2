@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "../../src/agents/definitions/merovingian"
+import { createMerovingianAgent, MEROVINGIAN_PROMPT_METADATA } from "../../src/agents/definitions/merovingian"
 import { createBuiltinSkills } from "../../src/skills/loader/factories"
 import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../../src/skills/builtin/market-data/market-data-robustness-review"
 import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../../src/skills/builtin/core/resilience-failure-hunting"
@@ -32,8 +32,8 @@ describe("merovingian review skills (neo/tank consolidation)", () => {
   test("merovingian metadata covers both review triggers", () => {
     //#given the merovingian prompt metadata
     //#when domains and useWhen are read
-    const domains = ORACLE_PROMPT_METADATA.triggers.map((t) => t.domain).join("\n")
-    const useWhen = (ORACLE_PROMPT_METADATA.useWhen ?? []).join("\n")
+    const domains = MEROVINGIAN_PROMPT_METADATA.triggers.map((t) => t.domain).join("\n")
+    const useWhen = (MEROVINGIAN_PROMPT_METADATA.useWhen ?? []).join("\n")
 
     //#then the old neo/tank key-trigger domains are named
     expect(domains).toMatch(/Market-Data Pipeline Review/i)
