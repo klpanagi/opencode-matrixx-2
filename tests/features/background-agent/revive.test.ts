@@ -318,3 +318,70 @@ describe("isUnrevivableReason", () => {
     }
   })
 })
+
+describe("B11 revive terminal filter + corrupt quarantine", () => {
+  test("filterRevivableHandles skips terminal-without-session, keeps eligible cancelled+sessionID", async () => {
+    //#given handles seeded with completed/error/cancelled lacking sessions plus one eligible cancelled
+    const { filterRevivableHandles } = await import("../../../src/features/background-agent/revive")
+    const handles = [
+      { status: "completed", taskId: "bg_c", parentSessionID: "p", parentMessageID: "m", description: "c", agent: "a" },
+      { status: "error", taskId: "bg_e", parentSessionID: "p", parentMessageID: "m", description: "e", agent: "a" },
+      { status: "cancelled", taskId: "bg_x", parentSessionID: "p", parentMessageID: "m", description: "x", agent: "a" },
+      { status: "cancelled", taskId: "bg_ok", parentSessionID: "p", parentMessageID: "m", description: "ok", agent: "a", sessionID: "ses_1" },
+      { status: "pending", taskId: "bg_p", parentSessionID: "p", parentMessageID: "m", description: "pe", agent: "a", sessionID: "ses_2" },
+    ] as never[]
+
+    //#when filtering for revival
+    const result = filterRevivableHandles(handles as never)
+
+    //#then only the eligible cancelled+sessionID is revivable; terminal-without-session and pending are skipped + logged with reasons
+    expect(result.eligible.map((h: { taskId: string }) => h.taskId)).toEqual(["bg_ok"])
+    expect(result.skipped.map((s: { reason: string }) => s.reason).sort()).toEqual(["active", "no-session", "no-session", "no-session"])
+  })
+
+  test("isCorruptHandleValue quarantines corrupt entries instead of crashing", async () => {
+    //#given a corrupt raw handle value (missing taskId, bad status) and a valid one
+    const { isCorruptHandleValue } = await import("../../../src/features/background-agent/revive")
+    const corrupt = { status: "bogus", parentSessionID: "p" }
+    const valid = { status: "cancelled", taskId: "bg_ok", parentSessionID: "p", parentMessageID: "m", description: "d", agent: "a", sessionID: "ses_1" }
+
+    //#when checking corruption
+    const corruptResult = isCorruptHandleValue(corrupt)
+    const validResult = isCorruptHandleValue(valid)
+
+    //#then corrupt is flagged for quarantine, valid passes through
+    expect(corruptResult).toBe(true)
+    expect(validResult).toBe(false)
+  })
+})
+
+describe("B11 quarantineCorruptHandles gate", () => {
+  test("renames corrupt handle files aside and leaves valid handles readable", async () => {
+    //#given a handle dir with one corrupt file, one shape-invalid file, and one valid handle
+    const { mkdtempSync, writeFileSync, existsSync, rmSync } = await import("node:fs")
+    const { tmpdir } = await import("node:os")
+    const { join } = await import("node:path")
+    const { quarantineCorruptHandles } = await import("../../../src/features/background-agent/manager/reconcile")
+    const dir = mkdtempSync(join(tmpdir(), "b11-quarantine-"))
+    try {
+      const handleDir = join(dir, ".matrixx", "bg-handles")
+      const { mkdirSync } = await import("node:fs")
+      mkdirSync(handleDir, { recursive: true })
+      writeFileSync(join(handleDir, "bg_bad.json"), "{not-json", "utf-8")
+      writeFileSync(join(handleDir, "bg_noid.json"), JSON.stringify({ status: "completed" }), "utf-8")
+      const valid = { taskId: "bg_ok", parentSessionID: "p", parentMessageID: "m", description: "d", agent: "a", status: "cancelled", sessionID: "ses_1" }
+      writeFileSync(join(handleDir, "bg_ok.json"), JSON.stringify(valid), "utf-8")
+
+      //#when quarantining corrupt handles
+      const count = quarantineCorruptHandles(dir)
+
+      //#then both corrupt files are renamed aside, the valid handle survives
+      expect(count).toBe(2)
+      expect(existsSync(join(handleDir, "bg_bad.json.corrupt"))).toBe(true)
+      expect(existsSync(join(handleDir, "bg_noid.json.corrupt"))).toBe(true)
+      expect(existsSync(join(handleDir, "bg_ok.json"))).toBe(true)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})

@@ -15,6 +15,19 @@ type SessionRecovery = { isRecovering: (sessionID: string) => boolean; markRecov
 type LoopStateController = { getState: () => MatrixLoopState | null; clear: () => boolean; incrementIteration: () => MatrixLoopState | null }
 type MatrixLoopEventHandlerOptions = { directory: string; apiTimeoutMs: number; getTranscriptPath: (sessionID: string) => string | undefined; checkSessionExists?: MatrixLoopOptions["checkSessionExists"]; sessionRecovery: SessionRecovery; loopState: LoopStateController; verification?: MatrixLoopOptions["verification"] }
 
+export function isLoopStateStillValid(
+  entry: MatrixLoopState | null,
+  current: MatrixLoopState | null,
+  sessionID: string,
+): boolean {
+  if (!entry?.active) return false
+  if (!current?.active) return false
+  if (current.session_id !== entry.session_id) return false
+  if (entry.session_id !== undefined && sessionID !== entry.session_id) return false
+  if (current.iteration < entry.iteration) return false
+  return true
+}
+
 async function handleVerificationFailure(
 	ctx: NativePluginContext,
 	options: MatrixLoopEventHandlerOptions,
@@ -59,6 +72,7 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 			}
 			inFlightSessions.add(sessionID)
 			try {
+				const entryState = options.loopState.getState()
 				if (options.sessionRecovery.isRecovering(sessionID)) {
 					log(`[${HOOK_NAME}] Skipped: in recovery`, { sessionID })
 					return
@@ -101,6 +115,10 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 					}
 				}
 
+				if (!isLoopStateStillValid(entryState, options.loopState.getState(), sessionID)) {
+					log(`[${HOOK_NAME}] Skipped: loop state changed during message fetch`, { sessionID })
+					return
+				}
 				const completionViaApi = completionViaTranscript
 					? false
 					: await detectCompletionInSessionMessages(ctx, {
@@ -111,6 +129,10 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 							preFetchedMessages: messages,
 						})
 
+				if (!isLoopStateStillValid(entryState, options.loopState.getState(), sessionID)) {
+					log(`[${HOOK_NAME}] Skipped: loop state changed during detection`, { sessionID })
+					return
+				}
 				if (completionViaTranscript || completionViaApi) {
 					log(`[${HOOK_NAME}] Completion detected!`, { sessionID, iteration: state.iteration, promise: state.completion_promise, detectedVia: completionViaTranscript ? "transcript_file" : "session_messages_api" })
 
@@ -152,6 +174,10 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 					return
 				}
 
+				if (!isLoopStateStillValid(entryState, options.loopState.getState(), sessionID)) {
+					log(`[${HOOK_NAME}] Skipped: loop state changed before continue`, { sessionID })
+					return
+				}
 				const newState = options.loopState.incrementIteration()
 				if (!newState) {
 					log(`[${HOOK_NAME}] Failed to increment iteration`, { sessionID })

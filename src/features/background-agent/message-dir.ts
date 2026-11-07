@@ -1,24 +1,49 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
-import { join } from "node:path"
+import { join, resolve, sep } from "node:path"
 import { MESSAGE_STORAGE, type StoredMessage } from "../context-injection/hook-bridge"
 
 const MESSAGE_DIR_CACHE_CAP = 1000
 const messageDirCache = new Map<string, string | null>()
 
+const VALID_SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/
+
+export function isValidSessionID(sessionID: string): boolean {
+  if (!VALID_SESSION_ID.test(sessionID)) return false
+  if (sessionID.includes("..")) return false
+  return true
+}
+
+export function assertValidSessionID(sessionID: string): void {
+  if (!isValidSessionID(sessionID)) {
+    throw new Error(`Invalid session ID: ${JSON.stringify(sessionID)}`)
+  }
+}
+
+export function resolveSessionDirPath(baseDir: string, sessionID: string): string {
+  assertValidSessionID(sessionID)
+  const base = resolve(baseDir)
+  const resolved = resolve(base, sessionID)
+  if (resolved !== base && !resolved.startsWith(base + sep)) {
+    throw new Error(`Session path escapes base dir: ${JSON.stringify(sessionID)}`)
+  }
+  return resolved
+}
+
 function computeMessageDir(sessionID: string): string | null {
   if (!existsSync(MESSAGE_STORAGE)) return null
 
-  const directPath = join(MESSAGE_STORAGE, sessionID)
+  const directPath = resolveSessionDirPath(MESSAGE_STORAGE, sessionID)
   if (existsSync(directPath)) return directPath
 
   for (const dir of readdirSync(MESSAGE_STORAGE)) {
-    const sessionPath = join(MESSAGE_STORAGE, dir, sessionID)
+    const sessionPath = resolveSessionDirPath(join(MESSAGE_STORAGE, dir), sessionID)
     if (existsSync(sessionPath)) return sessionPath
   }
   return null
 }
 
 export function getMessageDir(sessionID: string): string | null {
+  assertValidSessionID(sessionID)
   const cached = messageDirCache.get(sessionID)
   if (cached !== undefined) {
     messageDirCache.delete(sessionID)

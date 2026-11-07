@@ -4,6 +4,7 @@ import { getParentSessionID, getSubagentSessionIDs } from "../../session-state/s
 import { TASK_TTL_MS } from "../constants"
 import { readHandles, writeHandle } from "../handle-index"
 import type { BackgroundTask } from "../types"
+import { WallclockSupervisor } from "../wallclock"
 import type { NativeDescendant } from "./types"
 
 /** Short-TTL cache for native descendant listings (T3). In-memory only. */
@@ -22,6 +23,8 @@ export class ManagerStore {
   readonly tasks = new Map<string, BackgroundTask>()
   readonly knownSessions = new Set<string>()
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
+  readonly wallclock = new WallclockSupervisor()
+  readonly pendingSpawns = new Set<string>()
   directory: string
   config?: BackgroundTaskConfig
 
@@ -153,6 +156,10 @@ export class ManagerStore {
     return undefined
   }
 
+
+  disarmWallclock(taskId: string): void {
+    this.wallclock.disarm(taskId)
+  }
 
   taskTtlMs(): number {
     return this.config?.handleTtlMs ?? TASK_TTL_MS

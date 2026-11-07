@@ -8,6 +8,7 @@ export interface NiobeHookOptions {
   backgroundManager?: BackgroundManager
   isContinuationStopped?: (sessionID: string) => boolean
   agentOverrides?: AgentOverrides
+  nowMonotonic?: () => number
 }
 
 export interface ToolExecuteAfterInput {

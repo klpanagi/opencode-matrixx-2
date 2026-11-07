@@ -42,6 +42,53 @@ export function classifyRevivable(
 }
 
 /**
+ * B11: corrupt-handle predicate (pure, no I/O).
+ *
+ * Links the B7 error contract (`StorageCorruptError` in task-storage):
+ * callers quarantine (rename aside + log, never delete) any value for
+ * which this returns true instead of letting it crash revival. A handle
+ * is corrupt when it is not an object or lacks the required shape
+ * (`taskId` string + recognised `status` string). Unknown statuses are
+ * NOT corrupt — they are ineligible (`unknown-task`) via
+ * `classifyRevivable`, not quarantine candidates.
+ */
+export function isCorruptHandleValue(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return true
+  const record = value as Record<string, unknown>
+  if (typeof record.taskId !== "string" || record.taskId.length === 0) return true
+  if (typeof record.status !== "string") return true
+  return false
+}
+
+export type ReviveSkip = { handle: BgHandle; reason: ReviveBlockReason }
+
+/**
+ * B11: partition handles into revivable vs skipped (pure, no I/O).
+ *
+ * Terminal handles WITHOUT a session (`completed`/`error`/`cancelled`
+ * with no `sessionID`) are never resurrected — they land in `skipped`
+ * with reason `no-session`. Active handles (`pending`/`running`) land
+ * in `skipped` with reason `active` (inspect via `background_output`,
+ * not revive). Callers MUST log each skip (reason + taskId).
+ */
+export function filterRevivableHandles(
+  handles: BgHandle[],
+  opts?: { force?: boolean },
+): { eligible: BgHandle[]; skipped: ReviveSkip[] } {
+  const eligible: BgHandle[] = []
+  const skipped: ReviveSkip[] = []
+  for (const handle of handles) {
+    const result = classifyRevivable(handle, opts)
+    if (result.eligible) {
+      eligible.push(handle)
+    } else {
+      skipped.push({ handle, reason: result.reason })
+    }
+  }
+  return { eligible, skipped }
+}
+
+/**
  * Locate a revivable handle by task id or session id. `taskId` wins when
  * both are supplied. Returns `undefined` when neither matches.
  */
