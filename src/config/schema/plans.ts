@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { SMITH_MAX_REVIEW_ROUNDS } from "../../agents/oracle/high-accuracy-mode"
+import { SMITH_MAX_REVIEW_ROUNDS } from "../../agents/definitions/oracle/high-accuracy-mode"
 import { MAX_PLAN_FILE_BYTES } from "../../features/mission-state/constants"
 
 export const PlansConfigSchema = z.object({

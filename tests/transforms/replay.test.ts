@@ -8,7 +8,7 @@ import {
   type AgentTransformEditor,
   type AgentTransformInfo,
   registerAgentTransform,
-} from "../../src/agents/agents.transform"
+} from "../../src/agents/shared/agents.transform"
 import { buildBuiltinCommandEntries, registerCommandTransform } from "../../src/features/builtin-commands/commands.transform"
 import { registerSkillTransform } from "../../src/skills/loader/skills.transform"
 import { buildBuiltinMcpEntries, registerMcpTransform, toV2McpEntry } from "../../src/mcps/mcp.transform"

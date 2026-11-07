@@ -1,4 +1,4 @@
-import type { AvailableSkill } from "../../agents/dynamic-agent-prompt-builder"
+import type { AvailableSkill } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../../config"
 import type { BrowserAutomationProvider } from "../../config/schema/browser-automation"
 import { type BuiltinSkill, createBuiltinSkills } from "../../skills"

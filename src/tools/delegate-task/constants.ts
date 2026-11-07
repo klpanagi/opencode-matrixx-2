@@ -1,7 +1,7 @@
 import type {
    AvailableCategory,
    AvailableSkill,
- } from "../../agents/dynamic-agent-prompt-builder"
+ } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { CategoryConfig } from "../../config/schema"
 import { truncateDescription } from "../../shared/compaction/truncate-description"
 
@@ -619,4 +619,25 @@ export function isPlanFamily(category: string | undefined): boolean {
   return PLAN_FAMILY_NAMES.some(
     (name) => lowerCategory === name || lowerCategory.includes(name)
   )
+}
+
+/**
+ * Advisory per-category skill suggestions (non-enforcing).
+ * Rendered as a hint when the caller passes no skillContent; never blocks.
+ * All names must exist in BuiltinSkillNameSchema (covered by suggested-skills.test.ts).
+ */
+export const CATEGORY_SUGGESTED_SKILLS: Record<string, string[]> = {
+  "construct": ["frontend-ui-ux", "frontend-a11y", "frontend-perf", "frontend-testing", "frontend-state-data", "frontend-build-tooling", "react-nextjs-patterns", "svelte-sveltekit-patterns", "playwright"],
+  "source": ["tdd-enforcer", "software-dev", "quality-gate", "systematic-debugging", "review-work", "silent-failure-detection"],
+  "deep-jack": ["ulw-research", "systematic-debugging", "document-reader", "software-dev"],
+  "matrix-bend": ["software-dev", "ulw-research"],
+  "bullet-time": ["software-dev"],
+  "blue-pill": ["software-dev", "document-reader"],
+  "red-pill": ["software-dev", "systematic-debugging", "review-work", "quality-gate"],
+  "broadcast": ["software-dev", "remove-ai-slops"],
+}
+
+export function getSuggestedSkillsForCategory(category: string | undefined): string[] {
+  if (!category) return []
+  return CATEGORY_SUGGESTED_SKILLS[category] ?? []
 }

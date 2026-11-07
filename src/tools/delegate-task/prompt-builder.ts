@@ -1,4 +1,4 @@
-import { buildPlanAgentSystemPrepend, isCodeWritingCategory, isPlanAgent, TDD_TEST_FIRST_APPEND } from "./constants"
+import { buildPlanAgentSystemPrepend, getSuggestedSkillsForCategory, isCodeWritingCategory, isPlanAgent, TDD_TEST_FIRST_APPEND } from "./constants"
 import type { BuildSystemContentInput } from "./types"
 
 /**
@@ -32,6 +32,13 @@ export function buildSystemContent(input: BuildSystemContentInput): string | und
 
   if (categoryPromptAppend) {
     parts.push(categoryPromptAppend)
+  }
+
+  if (!skillContent && category) {
+    const suggested = getSuggestedSkillsForCategory(category)
+    if (suggested.length > 0) {
+      parts.push(`<Suggested_Skills>Consider load_skills: ${suggested.join(", ")}</Suggested_Skills>`)
+    }
   }
 
   if (isCodeWritingCategory(category)) {

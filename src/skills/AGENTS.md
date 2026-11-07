@@ -35,11 +35,6 @@ skills/
 │   ├── security/                 # 10 skills (security-core, security-api, security-audit, ...)
 │   ├── zeromq/                   # 7 skills (zeromq-core, zeromq-pubsub, zeromq-reliability, ...)
 │   └── index.ts                  # Type-level barrel re-exports (NOT runtime loading)
-├── agent-browser/SKILL.md        # Document-only triage copies (see SKILL.MD TRIAGE below)
-├── dev-browser/SKILL.md
-├── docker-master/SKILL.md
-├── frontend-ui-ux/SKILL.md
-├── git-master/SKILL.md
 └── ...
 ```
 
@@ -114,15 +109,13 @@ Disabled skills are filtered **AFTER** creation at the array level (`allSkills.f
 - Accepts `Record<string, unknown> | BuiltinSkill[] | undefined`; the callback only calls `editor.add(record)`, so re-running over the same entries replays identically.
 - Returns `{ registration, registered: string[] }` — the skill names replayed onto the domain.
 
-## SKILL.MD TRIAGE (DOCUMENT-ONLY)
+## SKILL.MD TRIAGE (REMOVED 2026-11-07)
 
-`src/skills/*/SKILL.md` files (e.g. `agent-browser/SKILL.md`, `git-master/SKILL.md`) are **document-only triage copies** — they are NOT loaded at runtime. The runtime path is exclusively:
-
-```
-src/skills/builtin/<category>/*.ts → skillFactories (loader/factories.ts) → createBuiltinSkills() → registerSkillTransform
-```
-
-Do not edit or delete `SKILL.md` files when adding/removing skills; they exist for human/agent triage reading only.
+Top-level `src/skills/*/SKILL.md` triage copies were removed — they duplicated a
+subset of `builtin/` content and drifted. The `src/skills/dev-browser/references/`
+docs were removed as well: nothing loads `.md` at runtime (loader uses `builtin/`
+`.ts` only) and the template already inlines the essential setup/scraping
+guidance. Do not re-add top-level `SKILL.md` copies or `references/` dirs.
 
 ## LAZY LOADING (P1 OPTIMIZATION)
 

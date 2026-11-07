@@ -17,8 +17,8 @@ type Part = {
   [key: string]: unknown
 }
 
-import { buildContextDisciplineSection } from "../../src/agents/dynamic-agent-prompt-builder"
-import { getModelDirectives } from "../../src/agents/model-directives"
+import { buildContextDisciplineSection } from "../../src/agents/shared/dynamic-agent-prompt-builder"
+import { getModelDirectives } from "../../src/agents/shared/model-directives"
 import { createDcpNudgeSanitizerHook } from "../../src/hooks/dcp-nudge-sanitizer/hook"
 import { createNudgeLoopBreakerHook } from "../../src/hooks/nudge-loop-breaker/hook"
 import { computeBackoffDelay } from "../../src/hooks/nudge-loop-breaker/session-state"

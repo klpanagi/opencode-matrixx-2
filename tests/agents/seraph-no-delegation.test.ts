@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { SERAPH_SYSTEM_PROMPT } from "../../src/agents/seraph"
+import { SERAPH_SYSTEM_PROMPT } from "../../src/agents/definitions/seraph"
 
 describe("seraph no-delegation", () => {
   test("prompt contains no task(subagent_type delegation examples", () => {

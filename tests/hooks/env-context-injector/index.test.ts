@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, setSystemTime } from "bun:test"
-import { createKeymakerAgent } from "../../../src/agents/keymaker"
-import { createMorpheusAgent } from "../../../src/agents/morpheus"
-import { createOperatorAgent } from "../../../src/agents/operator"
+import { createKeymakerAgent } from "../../../src/agents/definitions/keymaker"
+import { createMorpheusAgent } from "../../../src/agents/definitions/morpheus"
+import { createOperatorAgent } from "../../../src/agents/definitions/operator"
 
 import { createEnvContextInjectorHook } from "../../../src/hooks/env-context-injector/index"
 

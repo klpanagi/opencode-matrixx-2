@@ -1,9 +1,9 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { createCipherAgent } from "../../../../src/agents/cipher"
-import { createKeymakerAgent } from "../../../../src/agents/keymaker"
-import { createMorpheusAgent } from "../../../../src/agents/morpheus"
-import { createSentinelAgent } from "../../../../src/agents/sentinel"
+import { createCipherAgent } from "../../../../src/agents/definitions/cipher"
+import { createKeymakerAgent } from "../../../../src/agents/definitions/keymaker"
+import { createMorpheusAgent } from "../../../../src/agents/definitions/morpheus"
+import { createSentinelAgent } from "../../../../src/agents/definitions/sentinel"
 import { ULTRAWORK_DEEPSEEK_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/deepseek"
 import { ULTRAWORK_DEFAULT_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/default"
 import { ULTRAWORK_GEMINI_MESSAGE } from "../../../../src/hooks/keyword-detector/ultrawork/gemini"

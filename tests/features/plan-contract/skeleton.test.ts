@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { createHash } from "node:crypto"
 import { describe, expect, test } from "bun:test"
-import { ORACLE_PLAN_TEMPLATE } from "../../../src/agents/oracle/plan-template"
+import { ORACLE_PLAN_TEMPLATE } from "../../../src/agents/definitions/oracle/plan-template"
 import {
   CANONICAL_SECTIONS,
   renderPlanSkeleton,

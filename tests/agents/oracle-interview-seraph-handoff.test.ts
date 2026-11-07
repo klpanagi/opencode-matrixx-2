@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { ORACLE_INTERVIEW_MODE } from "../../src/agents/oracle/interview-mode"
+import { ORACLE_INTERVIEW_MODE } from "../../src/agents/definitions/oracle/interview-mode"
 
 const REPO_ROOT = join(import.meta.dir, "..", "..")
 
@@ -62,7 +62,7 @@ describe("Oracle interview Seraph handoff artifact (Item 8)", () => {
   test("zero human-manual QA phrases in interview-mode source", () => {
     //#given the interview-mode source file
     const source = readFileSync(
-      join(REPO_ROOT, "src/agents/oracle/interview-mode.ts"),
+      join(REPO_ROOT, "src/agents/definitions/oracle/interview-mode.ts"),
       "utf8",
     )
 

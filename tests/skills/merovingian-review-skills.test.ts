@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "../../src/agents/merovingian"
+import { createMerovingianAgent, ORACLE_PROMPT_METADATA } from "../../src/agents/definitions/merovingian"
 import { createBuiltinSkills } from "../../src/skills/loader/factories"
 import { MARKET_DATA_ROBUSTNESS_REVIEW_SKILL_NAME } from "../../src/skills/builtin/market-data/market-data-robustness-review"
 import { RESILIENCE_FAILURE_HUNTING_SKILL_NAME } from "../../src/skills/builtin/core/resilience-failure-hunting"

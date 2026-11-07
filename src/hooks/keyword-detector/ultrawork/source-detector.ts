@@ -11,7 +11,7 @@
  * 7. Everything else (Claude, etc.) → default.ts
  */
 
-import { isGptModel, isMimoModel } from "../../../agents/types"
+import { isGptModel, isMimoModel } from "../../../agents/shared/types"
 
 /**
  * Checks if agent is a planner-type agent.

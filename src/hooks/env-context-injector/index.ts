@@ -15,7 +15,7 @@ type Part = {
   [key: string]: unknown
 }
 
-import { createEnvContext } from "../../agents/env-context"
+import { createEnvContext } from "../../agents/shared/env-context"
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 

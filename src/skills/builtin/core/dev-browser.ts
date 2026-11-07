@@ -16,7 +16,7 @@ Browser automation that maintains page state across script executions. Write sma
 
 ## Setup
 
-**IMPORTANT**: Before using this skill, ensure the server is running. See [references/installation.md](references/installation.md) for platform-specific setup instructions (macOS, Linux, Windows).
+**IMPORTANT**: Before using this skill, ensure the server is running (use the Standalone Mode commands below; ask the user which mode if unclear).
 
 Two modes available. Ask the user if unclear which to use.
 
@@ -135,7 +135,7 @@ const text = await page.evaluate(() => {
 
 ## Scraping Data
 
-For scraping large datasets, intercept and replay network requests rather than scrolling the DOM. See [references/scraping.md](references/scraping.md) for the complete guide.
+For scraping large datasets, intercept and replay network requests rather than scrolling the DOM.
 
 ## Client API
 

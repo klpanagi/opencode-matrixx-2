@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } fr
 import { tmpdir } from "node:os"
 import { join, relative, resolve } from "node:path"
 
-import { ORACLE_PERMISSION, ORACLE_SYSTEM_PROMPT } from "../../src/agents/oracle/system-prompt"
+import { ORACLE_PERMISSION, ORACLE_SYSTEM_PROMPT } from "../../src/agents/definitions/oracle/system-prompt"
 import { createPlanCreateTool } from "../../src/tools/plan/plan-create"
 import { createPlanDeleteTool } from "../../src/tools/plan/plan-delete"
 import { createPlanListTool } from "../../src/tools/plan/plan-list"
@@ -61,7 +61,7 @@ function walk(dir: string, acc: string[] = []): string[] {
 describe("plan access rule (system-prompt.ts prose half)", () => {
   test("states that plan files are modified ONLY via plan_update", () => {
     //#given the Oracle planner prompt
-    const source = readFileSync(join(REPO_ROOT, "src/agents/oracle/system-prompt.ts"), "utf8")
+    const source = readFileSync(join(REPO_ROOT, "src/agents/definitions/oracle/system-prompt.ts"), "utf8")
 
     //#when the rule is read
     const matches = source.match(/.*modified ONLY via plan_update.*/g) ?? []
@@ -257,7 +257,7 @@ describe("plan_update is the sole plan-mutation path", () => {
 
 describe("every plan_read doc site teaches the section selector", () => {
   /**
-   * src/agents/smith.ts is EXPLICITLY SKIPPED and MUST stay skipped.
+   * src/agents/definitions/smith.ts is EXPLICITLY SKIPPED and MUST stay skipped.
    * Reason: smith.ts mentions plan_read at lines 21 and 110, but the file is
    * byte-frozen by a mission guardrail — it is not owned by this task and must
    * not be edited to satisfy a documentation-coverage test. A silent skip
@@ -265,7 +265,7 @@ describe("every plan_read doc site teaches the section selector", () => {
    * so the exclusion is asserted here: if the freeze is ever lifted, this test
    * fails and the exemption has to be removed deliberately.
    */
-  const FROZEN_PLAN_READ_SITES = ["src/agents/smith.ts"]
+  const FROZEN_PLAN_READ_SITES = ["src/agents/definitions/smith.ts"]
 
   const DOC_ROOTS = ["src/agents", "src/features/builtin-commands"]
 
@@ -289,8 +289,8 @@ describe("every plan_read doc site teaches the section selector", () => {
     const actual = filesMentioningPlanRead()
 
     //#then smith.ts is present (it is a real orphan) and the list stays minimal
-    expect(actual).toContain("src/agents/smith.ts")
-    expect(frozen).toEqual(["src/agents/smith.ts"])
+    expect(actual).toContain("src/agents/definitions/smith.ts")
+    expect(frozen).toEqual(["src/agents/definitions/smith.ts"])
   })
 
   test("every plan_read doc site except the frozen ones also mentions the section selector", () => {
