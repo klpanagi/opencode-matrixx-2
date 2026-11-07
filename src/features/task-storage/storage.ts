@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs"
 import { basename, dirname, isAbsolute, join } from "node:path"
 import type { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
@@ -49,6 +49,19 @@ function ensureDir(dirPath: string): void {
   }
 }
 
+export class StorageCorruptError extends Error {
+  path: string
+  byteSize: number
+  reason: string
+  constructor(path: string, byteSize: number, reason: string) {
+    super(`[task-storage] corrupt read: path=${path} bytes=${byteSize} reason=${reason}`)
+    this.name = "StorageCorruptError"
+    this.path = path
+    this.byteSize = byteSize
+    this.reason = reason
+  }
+}
+
 export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | null {
   try {
     if (!existsSync(filePath)) {
@@ -56,24 +69,51 @@ export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | nul
     }
 
     const content = readFileSync(filePath, "utf-8")
-    const parsed = JSON.parse(content)
+    const byteSize = Buffer.byteLength(content, "utf-8")
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(content)
+    } catch (error) {
+      log(`[task-storage] readJsonSafe parse failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
+      return null
+    }
     const result = schema.safeParse(parsed)
 
     if (!result.success) {
+      log(`[task-storage] readJsonSafe schema mismatch`, { path: filePath, byteSize })
       return null
     }
 
     return result.data
-  } catch {
+  } catch (error) {
+    let byteSize = 0
+    try {
+      byteSize = statSync(filePath).size
+    } catch {
+      byteSize = 0
+    }
+    log(`[task-storage] readJsonSafe read failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
     return null
   }
+}
+
+export function readJsonStrict<T>(filePath: string, schema: z.ZodType<T>): T {
+  const result = readJsonSafe(filePath, schema)
+  if (result !== null) return result
+  let byteSize = 0
+  try {
+    byteSize = statSync(filePath).size
+  } catch {
+    byteSize = 0
+  }
+  throw new StorageCorruptError(filePath, byteSize, "unreadable or invalid")
 }
 
 export function writeJsonAtomic(filePath: string, data: unknown): void {
   const dir = dirname(filePath)
   ensureDir(dir)
 
-  const tempPath = `${filePath}.tmp.${Date.now()}`
+  const tempPath = `${filePath}.tmp.${process.pid}.${randomUUID()}`
 
   try {
     writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf-8")
@@ -92,15 +132,18 @@ export function writeJsonAtomic(filePath: string, data: unknown): void {
 
 const STALE_LOCK_THRESHOLD_MS = 30000
 
+export const MAX_RETRIES = 4
+export const RETRY_DELAY_MS = 15
+
 export async function acquireLockWithRetry(
   dirPath: string,
-  retries = 4,
+  retries = MAX_RETRIES,
 ): Promise<{ acquired: boolean; release: () => void }> {
   for (let attempt = 0; attempt < retries; attempt++) {
     const lock = acquireLock(dirPath)
     if (lock.acquired) return lock
     if (attempt < retries - 1) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 15 * 2 ** attempt))
+      await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS * 2 ** attempt))
     }
   }
   return { acquired: false, release: () => {} }
@@ -189,7 +232,11 @@ export function acquireLock(dirPath: string): { acquired: boolean; release: () =
     try {
       const lockContent = readFileSync(lockPath, "utf-8")
       const lockData = JSON.parse(lockContent)
-      const lockAge = Date.now() - lockData.timestamp
+      const timestamp = lockData.timestamp
+      if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) {
+        return true
+      }
+      const lockAge = Date.now() - timestamp
       return lockAge > STALE_LOCK_THRESHOLD_MS
     } catch {
       return true
@@ -213,12 +260,14 @@ export function acquireLock(dirPath: string): { acquired: boolean; release: () =
 
   let acquired = tryAcquire()
   if (!acquired && isStale()) {
-    try {
-      unlinkSync(lockPath)
-    } catch {
-      // Ignore cleanup errors
+    if (isStale()) {
+      try {
+        unlinkSync(lockPath)
+      } catch {
+        // Ignore cleanup errors
+      }
+      acquired = tryAcquire()
     }
-    acquired = tryAcquire()
   }
 
   if (!acquired) {
