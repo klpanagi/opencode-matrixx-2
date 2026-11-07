@@ -26,7 +26,6 @@ export const EVENT_CONSUMERS = [
   "session-state",
   "session-status-normalizer",
   "stop-continuation-guard",
-  "task-continuation-enforcer",
   "think-mode",
   "unstable-agent-babysitter",
 ] as const
@@ -53,7 +52,6 @@ export const HOOK_CONSUMER_MAP: Record<string, EventConsumer> = {
   sessionNotification: "session-notification",
   sessionRecovery: "session-recovery",
   stopContinuationGuard: "stop-continuation-guard",
-  taskContinuationEnforcer: "task-continuation-enforcer",
   thinkMode: "think-mode",
   unstableAgentBabysitter: "unstable-agent-babysitter",
 }

@@ -1,13 +1,13 @@
 import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
-import { getStaleAfterMs, isTaskStale } from "../../hooks/task-continuation-enforcer/staleness"
-import { getIncompleteTasks } from "../../hooks/task-continuation-enforcer/todo"
 import { log } from "../../shared/runtime/logger"
 import { TaskObjectSchema } from "../../tools/task/types"
 import { getTaskDir, readJsonSafe } from "../task-storage/storage"
 import type { Task } from "../task-storage/types"
 import { expandByParentAncestry } from "./ancestry"
+import { getStaleAfterMs, isTaskStale } from "./staleness"
+import { getIncompleteTasks } from "./todo"
 
 const LOG_SCOPE = "[task-session-scope]"
 

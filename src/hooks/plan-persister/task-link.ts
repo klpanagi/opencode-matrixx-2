@@ -17,12 +17,12 @@ import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
 import type { MissionState } from "../../features/mission-state/types"
+import { getStaleAfterMs, isTaskStale } from "../../features/task-session-scope/staleness"
 import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { log } from "../../shared/runtime/logger"
 import type { TaskObject } from "../../tools/task/types"
 import { TaskObjectSchema } from "../../tools/task/types"
-import { getStaleAfterMs, isTaskStale } from "../task-continuation-enforcer/staleness"
 
 const HOOK_NAME = "plan-sync"
 

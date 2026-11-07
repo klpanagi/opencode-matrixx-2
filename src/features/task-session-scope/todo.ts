@@ -1,4 +1,4 @@
-import type { Task } from "../../features/task-storage/types"
+import type { Task } from "../task-storage/types"
 
 export function getIncompleteCount(todos: { status: string }[]): number {
   return todos.filter(

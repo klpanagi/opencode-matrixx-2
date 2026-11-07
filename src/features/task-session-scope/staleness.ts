@@ -1,8 +1,8 @@
 import { statSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
-import type { Task } from "../../features/task-storage/types"
 import { DEFAULT_BACKGROUND_STALE_AFTER_HOURS, resolveTasksConfig } from "../../shared/config/task-system-gating"
+import type { Task } from "../task-storage/types"
 
 export const DEFAULT_STALE_AFTER_HOURS = 24
 
@@ -26,7 +26,7 @@ export function getStaleAfterMs(config?: Partial<MatrixxConfig>): number {
  * mtime basis as `getStaleAfterMs`, but a much shorter window because a task
  * held `pending`/`in_progress` with no file activity is a far stronger signal
  * when it is blocking a background handle than when it is merely delaying a
- * continuation nudge. The enforcer's 24h default deliberately stays at 24.
+ * continuation nudge. The 24h default deliberately stays at 24.
  */
 export function getBackgroundStaleAfterMs(config?: Partial<MatrixxConfig>): number {
   const hours = resolveTasksConfig(config).background_stale_after_hours ?? DEFAULT_BACKGROUND_STALE_AFTER_HOURS
