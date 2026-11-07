@@ -144,7 +144,7 @@ export async function pollSyncSession(
   }
 ): Promise<string | null> {
   const syncTiming = getTimingConfig()
-  const maxPollTimeMs = Math.max(syncTiming.MAX_POLL_TIME_MS, 50)
+  const maxPollTimeMs = Math.max(syncTiming.MAX_POLL_TIME_MS, syncTiming.MIN_POLL_TIME_FLOOR_MS)
   const pollStart = Date.now()
   let pollCount = 0
   let timedOut = false
