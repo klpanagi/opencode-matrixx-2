@@ -1,5 +1,3 @@
-[![Matrixx](./.github/assets/orchestrator-niobe.png?v=3)](https://github.com/klpanagi/opencode-matrixx)
-
 <div align="center">
 
 # Matrixx
@@ -11,7 +9,7 @@
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
 **13 specialized agents. 65 lifecycle hooks. 31 tool dirs. 70 skills. 24 commands. One plugin.**
 
-> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2 (the OpenCode-v2-only line). Current release: `1.2.1`. `2.6.18` was the last legacy V1 release; V2 is the current line.
+> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. Current release: `1.2.1`.
 
 [Quick Start](#quick-start) · [Why Matrixx?](#why-matrixx) · [How It Works](#how-it-works) · [Features](#features) · [Comparison](#how-matrixx-compares) · [Docs](docs/README.md)
 
