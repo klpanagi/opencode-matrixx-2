@@ -119,9 +119,9 @@ describe("morpheus-task", () => {
       expect(category.variant).toBe("max")
     })
 
-    test("deep-jack category has no hardcoded model or tier, keeps variant", () => {
+    test("rabbit-hole category has no hardcoded model or tier, keeps variant", () => {
       // given
-      const category = DEFAULT_CATEGORIES["deep-jack"]
+      const category = DEFAULT_CATEGORIES["rabbit-hole"]
 
       // when / #then
       expect(category).toBeDefined()
@@ -150,9 +150,9 @@ describe("morpheus-task", () => {
       expect(promptAppend).toContain("Strategic advisor")
     })
 
-    test("deep-jack category has goal-oriented autonomous prompt", () => {
+    test("rabbit-hole category has goal-oriented autonomous prompt", () => {
       // given
-      const promptAppend = CATEGORY_PROMPT_APPENDS["deep-jack"]
+      const promptAppend = CATEGORY_PROMPT_APPENDS["rabbit-hole"]
 
       // when / #then
       expect(promptAppend).toContain("GOAL-ORIENTED")
@@ -172,9 +172,9 @@ describe("morpheus-task", () => {
       }
     })
 
-    test("red-pill category exists and has description", () => {
+    test("the-one category exists and has description", () => {
       // given / #when
-      const description = CATEGORY_DESCRIPTIONS["red-pill"]
+      const description = CATEGORY_DESCRIPTIONS["the-one"]
 
       // then
       expect(description).toBeDefined()
@@ -742,9 +742,9 @@ describe("morpheus-task", () => {
       expect(result).toBeNull()
     })
 
-    test("resolves deep-jack when availability includes anthropic (no requiresModel restriction)", () => {
-      // given - deep-jack has no built-in model, falls back to systemDefaultModel
-      const categoryName = "deep-jack"
+    test("resolves rabbit-hole when availability includes anthropic (no requiresModel restriction)", () => {
+      // given - rabbit-hole has no built-in model, falls back to systemDefaultModel
+      const categoryName = "rabbit-hole"
       const availableModels = new Set<string>(["anthropic/claude-opus-4-6"])
 
       // when
@@ -758,9 +758,9 @@ describe("morpheus-task", () => {
       expect(result?.config.model).toBe(SYSTEM_DEFAULT_MODEL)
     })
 
-    test("resolves deep-jack with system default when availability is empty", () => {
-      // given - deep-jack has no built-in model, uses systemDefaultModel
-      const categoryName = "deep-jack"
+    test("resolves rabbit-hole with system default when availability is empty", () => {
+      // given - rabbit-hole has no built-in model, uses systemDefaultModel
+      const categoryName = "rabbit-hole"
       const availableModels = new Set<string>()
 
       // when
@@ -776,10 +776,10 @@ describe("morpheus-task", () => {
 
     test("bypasses requiresModel when explicit user config provided", () => {
 // #given
-      const categoryName = "deep-jack"
+      const categoryName = "rabbit-hole"
       const availableModels = new Set<string>(["anthropic/claude-opus-4-6", "openai/gpt-5.3-codex"])
       const userCategories = {
-        "deep-jack": { model: "anthropic/claude-opus-4-6" }
+        "rabbit-hole": { model: "anthropic/claude-opus-4-6" }
       }
 
       // #when
@@ -1174,12 +1174,12 @@ describe("morpheus-task", () => {
         abort: new AbortController().signal
       }
 
-      // when - red-pill has variant: "max" in DEFAULT_CATEGORIES
+      // when - the-one has variant: "max" in DEFAULT_CATEGORIES
       await tool.execute(
         {
-          description: "Test red-pill default variant",
+          description: "Test the-one default variant",
           prompt: "Do something",
-          category: "red-pill",
+          category: "the-one",
           run_in_background: true,
           load_skills: ["git-master"]
         },
@@ -1238,12 +1238,12 @@ describe("morpheus-task", () => {
         abort: new AbortController().signal
       }
 
-      // when - red-pill has variant: "max" in DEFAULT_CATEGORIES
+      // when - the-one has variant: "max" in DEFAULT_CATEGORIES
       await tool.execute(
         {
-          description: "Test red-pill sync variant",
+          description: "Test the-one sync variant",
           prompt: "Do something",
-          category: "red-pill",
+          category: "the-one",
           run_in_background: false,
           load_skills: ["git-master"]
         },
@@ -2219,8 +2219,8 @@ describe("morpheus-task", () => {
       expect(result).toContain("Artistry result here")
     }, { timeout: 20000 })
 
-    test("custom-broadcast category (is_unstable_agent=true) with run_in_background=false should force background but wait for result", async () => {
-      // given - custom broadcast category with is_unstable_agent=true (broadcast now uses claude-sonnet-4-6, not gemini)
+    test("custom-transmission category (is_unstable_agent=true) with run_in_background=false should force background but wait for result", async () => {
+      // given - custom transmission category with is_unstable_agent=true (broadcast now uses claude-sonnet-4-6, not gemini)
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       let launchCalled = false
       
@@ -2262,7 +2262,7 @@ describe("morpheus-task", () => {
          manager: mockManager,
          client: mockClient,
          userCategories: {
-           "custom-broadcast": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true }
+           "custom-transmission": { model: "anthropic/claude-sonnet-4-6", is_unstable_agent: true }
          }
        })
       
@@ -2273,12 +2273,12 @@ describe("morpheus-task", () => {
         abort: new AbortController().signal
       }
       
-      // when - custom broadcast category with is_unstable_agent=true
+      // when - custom transmission category with is_unstable_agent=true
       const result = await tool.execute(
         {
           description: "Test writing forced background",
           prompt: "Write something",
-          category: "custom-broadcast",
+          category: "custom-transmission",
           run_in_background: false,
           load_skills: ["git-master"]
         },
@@ -2940,7 +2940,7 @@ const tool = createDelegateTask({
 
       const availableCategories = [
         {
-          name: "deep-jack",
+          name: "rabbit-hole",
           description: "Goal-oriented autonomous problem-solving",
           model: "openai/gpt-5.3-codex"
         },
@@ -2964,7 +2964,7 @@ const tool = createDelegateTask({
       expect(result).toContain("<system>")
       expect(result).toContain("MANDATORY CONTEXT GATHERING PROTOCOL")
       expect(result).toContain("### AVAILABLE CATEGORIES")
-      expect(result).toContain("`deep-jack`")
+      expect(result).toContain("`rabbit-hole`")
       expect(result).not.toContain("prompt-engineer")
       expect(result).toBe(buildPlanAgentSystemPrepend(availableCategories, availableSkills))
     })

@@ -202,7 +202,7 @@ const TASK_SUBFIELD_BODIES: Record<PlanTaskSubfield, string> = {
   - [Test cases to cover]`,
   "Must NOT do": `  - [Specific exclusions from guardrails]`,
   "Recommended Agent Profile": `  > Select category + skills based on task domain. Justify each choice.
-  - **Category**: \`[construct | source | matrix-bend | quick | blue-pill | red-pill | writing]\`
+  - **Category**: \`[construct | source | rabbit-hole | glitch | bullet-time | blue-pill | the-one | transmission]\`
     - Reason: [Why this category fits the task domain]
   - **Skills**: [\`skill-1\`, \`skill-2\`]
     - \`skill-1\`: [Why needed - domain overlap explanation]

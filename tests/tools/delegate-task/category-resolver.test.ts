@@ -43,9 +43,9 @@ describe("resolveCategoryExecution", () => {
 	}
 
 	test("returns clear error when category exists but required model is not available", async () => {
-		//#given - deep-jack now uses Claude-only chain, so it resolves successfully
+		//#given - rabbit-hole now uses Claude-only chain, so it resolves successfully
 		const args = {
-			category: "deep-jack",
+			category: "rabbit-hole",
 			prompt: "test prompt",
 			description: "Test task",
 			run_in_background: false,
@@ -60,7 +60,7 @@ describe("resolveCategoryExecution", () => {
 		//#when
 		const result = await resolveCategoryExecution(args, executorCtx, inheritedModel, systemDefaultModel)
 
-		//#then - deep-jack resolves via system default (no requiresModel restriction)
+		//#then - rabbit-hole resolves via system default (no requiresModel restriction)
 		expect(result.error).toBeUndefined()
 		expect(result.actualModel).toBeDefined()
 		expect(result.actualModel).toContain("anthropic")

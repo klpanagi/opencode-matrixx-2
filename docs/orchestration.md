@@ -274,9 +274,9 @@ task(category="bullet-time", prompt="...")  // trivial tasks, fast and minimal
 ```
 
 Built-in categories (`src/tools/delegate-task/constants.ts`): `source`,
-`construct`, `deep-jack` (deep analysis and debugging), `matrix-bend`
-(creative problem solving), `blue-pill` (conservative, safe), `red-pill`
-(bold, transformative), `broadcast` (docs and prose), `bullet-time`
+`construct`, `rabbit-hole` (deep analysis and debugging), `glitch`
+(creative problem solving), `blue-pill` (conservative, safe), `the-one`
+(bold, transformative), `transmission` (docs and prose), `bullet-time`
 (trivial tasks). Custom categories can be defined in `matrixx.json`. Guide:
 [`docs/category-skill-guide.md`](./category-skill-guide.md).
 

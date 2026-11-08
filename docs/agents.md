@@ -528,12 +528,12 @@ flowchart LR
         direction TB
         R1["construct → Frontend/UI"]
         R2["source → Hard logic"]
-        R3["deep-jack → Goal-oriented"]
-        R4["matrix-bend → Creative"]
+        R3["rabbit-hole → Goal-oriented"]
+        R4["glitch → Creative"]
         R5["bullet-time → Trivial"]
-        R6["broadcast → Documentation"]
+        R6["transmission → Documentation"]
         R7["blue-pill → Low effort"]
-        R8["red-pill → High effort"]
+        R8["the-one → High effort"]
     end
 
     subgraph RESOLUTION["Agent Resolution"]

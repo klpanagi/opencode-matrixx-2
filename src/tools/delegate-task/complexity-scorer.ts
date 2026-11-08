@@ -43,11 +43,11 @@ export const CATEGORY_BASELINE: Partial<Record<string, ComplexityLevel>> = {
   "bullet-time": 1,
   "blue-pill": 2,
   "construct": 3,
-  "broadcast": 3,
-  "matrix-bend": 3,
+  "transmission": 3,
+  "glitch": 3,
   "source": 4,
-  "deep-jack": 4,
-  "red-pill": 4,
+  "rabbit-hole": 4,
+  "the-one": 4,
 }
 
 /**

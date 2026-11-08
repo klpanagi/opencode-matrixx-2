@@ -76,7 +76,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 
 | Area | What you get | Details |
 |------|--------------|---------|
-| **Agent Orchestration** | 13 agents, category routing (`source`, `deep-jack`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
+| **Agent Orchestration** | 13 agents, category routing (`source`, `rabbit-hole`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
 | **Lifecycle Hooks (65-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
 | **Skills (70)** | DSL engineering (11), security (9), frontend (7), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |

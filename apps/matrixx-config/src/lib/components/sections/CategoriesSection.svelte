@@ -11,8 +11,8 @@
   import ToolsEditor from "$lib/components/config/ToolsEditor.svelte"
 
   const BUILTIN_CATEGORIES = [
-    "construct", "source", "deep-jack", "matrix-bend",
-    "bullet-time", "blue-pill", "red-pill", "broadcast",
+    "construct", "source", "rabbit-hole", "glitch",
+    "bullet-time", "blue-pill", "the-one", "transmission",
   ] as const
 
   let config = $state(configStore.getSnapshot())

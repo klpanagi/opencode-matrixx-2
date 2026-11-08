@@ -461,7 +461,7 @@ describe("CategoryConfigSchema", () => {
 describe("BuiltinCategoryNameSchema", () => {
   test("accepts all builtin category names", () => {
     // given
-    const categories = ["construct", "source", "deep-jack", "matrix-bend", "bullet-time", "blue-pill", "red-pill", "broadcast"]
+    const categories = ["construct", "source", "rabbit-hole", "glitch", "bullet-time", "blue-pill", "the-one", "transmission"]
 
     // when / #then
     for (const cat of categories) {

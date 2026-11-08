@@ -149,7 +149,7 @@ cheap for trivial work):
   "categories": {
     // Override categories for cost optimization
     "bullet-time": { "model": "opencode/ling-3.0-flash-free" },
-    "broadcast": { "model": "opencode/nemotron-3-super-free" }
+    "transmission": { "model": "opencode/nemotron-3-super-free" }
   },
   "experimental": {
     "aggressive_truncation": true

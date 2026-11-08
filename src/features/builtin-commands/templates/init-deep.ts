@@ -245,7 +245,7 @@ Launch writing tasks for each location:
 
 \`\`\`
 for loc in AGENTS_LOCATIONS (except root):
-  task(category="broadcast", load_skills=[], run_in_background=false, description="Generate AGENTS.md", prompt=\\\`
+  task(category="transmission", load_skills=[], run_in_background=false, description="Generate AGENTS.md", prompt=\\\`
     Generate AGENTS.md for: \${loc.path}
     - Reason: \${loc.reason}
     - 30-80 lines max
