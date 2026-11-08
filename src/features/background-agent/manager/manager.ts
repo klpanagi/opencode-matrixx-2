@@ -1,4 +1,5 @@
 import type { BackgroundTaskConfig, MatrixxConfig } from "../../../config/schema"
+import type { EffortConfig } from "../../../config/schema/effort"
 import type { V2Event } from "../../../plugin/tool/context"
 import { log } from "../../../shared"
 import { delay } from "../../../shared/runtime/delay"
@@ -73,6 +74,7 @@ export class BackgroundManager implements ManagerRuntime {
   readonly native: NativeDomains
   readonly directory: string
   readonly config?: BackgroundTaskConfig
+  readonly effortConfig?: EffortConfig
   readonly taskHistory = new TaskHistory()
 
   constructor(
@@ -90,7 +92,7 @@ export class BackgroundManager implements ManagerRuntime {
     this.native = ctx
     this.directory = ctx.directory
     this.config = config
-    void options
+    this.effortConfig = options?.pluginConfig?.effort
   }
 
   /**
@@ -162,8 +164,8 @@ export class BackgroundManager implements ManagerRuntime {
    * Completion is detected from native session lifecycle events only —
    * no polling, no reconcile probes.
    */
-  handleEvent(event: V2Event): void {
-    handleManagerEvent(this, event)
+  async handleEvent(event: V2Event): Promise<void> {
+    return handleManagerEvent(this, event)
   }
 
   getKnownSessionIds(): Set<string> {

@@ -1,4 +1,5 @@
 import type { BackgroundTaskConfig } from "../../../config/schema"
+import type { EffortConfig } from "../../../config/schema/effort"
 import type { NativeDomains } from "../../../shared/session/session-context-source"
 import type { TaskHistory } from "../task-history"
 import type { ManagerStore } from "./store"
@@ -13,6 +14,7 @@ export interface ManagerRuntime {
   readonly native: NativeDomains
   readonly directory: string
   readonly config?: BackgroundTaskConfig
+  readonly effortConfig?: EffortConfig
   readonly taskHistory: TaskHistory
 }
 

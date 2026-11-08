@@ -2,6 +2,7 @@ import { getAgentToolRestrictions, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
 import type { NativeDomains } from "../../../shared/session/session-context-source"
 import { setSessionTemperature, setSessionTools } from "../../../shared/session/session-state"
+import { recordEffortForBackground } from "../../agent-effort/background"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
 import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
@@ -32,6 +33,7 @@ function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
     task.terminalReason = "wall-clock-timeout"
     task.completedAt = new Date()
     rt.store.persistHandle(task)
+    void recordEffortForBackground(rt, task, rt.effortConfig)
     if (task.sessionID !== undefined) {
       abortSessionQuietly(rt.native, task.sessionID, "wall-clock-timeout")
     }

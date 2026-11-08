@@ -3,6 +3,7 @@ import { join } from "node:path"
 import type { V2Event } from "../../../plugin/tool/context"
 import { isNativeSessionId, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
+import { recordEffortForBackground } from "../../agent-effort/background"
 import { getParentSessionID, registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
 import type { EventProperties } from "../constants"
@@ -316,7 +317,11 @@ function formatParentNotificationDuration(task: BackgroundTask): string {
   return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
 }
 
-function deliverParentNotification(rt: ManagerRuntime, task: BackgroundTask): void {
+function deliverParentNotification(
+  rt: ManagerRuntime,
+  task: BackgroundTask,
+  effortLine?: string | null,
+): void {
   const parentSessionID = task.parentSessionID
   if (!parentSessionID) return
   try {
@@ -333,7 +338,7 @@ function deliverParentNotification(rt: ManagerRuntime, task: BackgroundTask): vo
       completedTasks,
       remainingCount,
       formatParentNotificationDuration(task),
-      task.error ? `\n**Error:** ${task.error}` : "",
+      `${task.error ? `\n**Error:** ${task.error}` : ""}${effortLine ? `\n\n${effortLine}` : ""}`,
     )
     rt.native.session.prompt({ sessionID: parentSessionID, text }).catch((error) => {
       log("[background-agent] parent notification failed:", error)
@@ -344,7 +349,7 @@ function deliverParentNotification(rt: ManagerRuntime, task: BackgroundTask): vo
 }
 
 
-export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
+export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Promise<void> {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
     const topLevelSessionID = (event as unknown as { sessionID?: unknown })
       .sessionID
@@ -427,7 +432,8 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task completed (native session.idle):", task.id)
-      deliverParentNotification(rt, task)
+      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
+      deliverParentNotification(rt, task, effort?.line)
       return
     }
 
@@ -443,7 +449,8 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task errored (native session.error):", task.id)
-      deliverParentNotification(rt, task)
+      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
+      deliverParentNotification(rt, task, effort?.line)
       return
     }
 
@@ -466,7 +473,8 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task completed (native session.execution.succeeded):", task.id)
-      deliverParentNotification(rt, task)
+      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
+      deliverParentNotification(rt, task, effort?.line)
       return
     }
 
@@ -482,7 +490,8 @@ export function handleManagerEvent(rt: ManagerRuntime,event: V2Event): void {
       const toastManager = getTaskToastManager()
       if (toastManager) toastManager.removeTask(task.id)
       log("[background-agent] Task errored (native session.execution.failed):", task.id)
-      deliverParentNotification(rt, task)
+      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
+      deliverParentNotification(rt, task, effort?.line)
       return
     }
 
