@@ -115,6 +115,13 @@ export class ManagerStore {
   }
 
 
+  // Call immediately after in-place task.sessionID assignment; never use tasks.set
+  // for this (it moves parentIndex order).
+  reindexTask(task: BackgroundTask): void {
+    this.tasks.reindexSession(task)
+  }
+
+
   findDiskTaskBySession(sessionID: string): BackgroundTask | undefined {
     const wanted = ManagerStore.normalizeSessionID(sessionID)
     let handles: ReturnType<typeof readHandles>
