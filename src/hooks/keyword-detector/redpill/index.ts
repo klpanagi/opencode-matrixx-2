@@ -13,10 +13,19 @@
 
 export { getDeepseekRedpillMessage, REDPILL_DEEPSEEK_MESSAGE } from "./deepseek"
 export { getDefaultRedpillMessage, REDPILL_DEFAULT_MESSAGE } from "./default"
+export { detectRedpillDomain } from "./domain"
 export { getGeminiRedpillMessage, REDPILL_GEMINI_MESSAGE } from "./gemini"
 export { getGlmRedpillMessage, REDPILL_GLM_MESSAGE } from "./glm"
 export { getGptRedpillMessage, REDPILL_GPT_MESSAGE } from "./gpt5.2"
-export { MATRIXX_ACTIVATION, MATRIXX_MANIFESTO_BODY, MATRIXX_PLANNER_OATH } from "./manifesto"
+export {
+  composeManifesto,
+  MATRIXX_ACTIVATION,
+  MATRIXX_MANIFESTO_BODY,
+  MATRIXX_PLANNER_OATH,
+  MATRIXX_SOFTWARE_DOMAIN_PACK,
+  MATRIXX_UNIVERSAL_MANIFESTO,
+  type RedpillDomain,
+} from "./manifesto"
 export { getMimoRedpillMessage, REDPILL_MIMO_MESSAGE } from "./mimo"
 export { getPlannerRedpillMessage, REDPILL_PLANNER_SECTION } from "./planner"
 export type { RedpillSource } from "./source-detector"
@@ -24,9 +33,11 @@ export { getRedpillSource, isDeepseekModel, isGeminiModel, isGlmModel, isGptMode
 
 import { getDeepseekRedpillMessage } from "./deepseek"
 import { getDefaultRedpillMessage } from "./default"
+import { detectRedpillDomain } from "./domain"
 import { getGeminiRedpillMessage } from "./gemini"
 import { getGlmRedpillMessage } from "./glm"
 import { getGptRedpillMessage } from "./gpt5.2"
+import type { RedpillDomain } from "./manifesto"
 import { getMimoRedpillMessage } from "./mimo"
 import { getPlannerRedpillMessage } from "./planner"
 import { getRedpillSource } from "./source-detector"
@@ -34,23 +45,24 @@ import { getRedpillSource } from "./source-detector"
 /**
  * Gets the appropriate redpill message based on agent and model context.
  */
-export function getRedpillMessage(agentName?: string, modelID?: string): string {
+export function getRedpillMessage(agentName?: string, modelID?: string, promptText?: string): string {
   const source = getRedpillSource(agentName, modelID)
+  const domain: RedpillDomain = promptText === undefined ? "software" : detectRedpillDomain(promptText)
 
   switch (source) {
     case "planner":
       return getPlannerRedpillMessage()
     case "deepseek":
-      return getDeepseekRedpillMessage()
+      return getDeepseekRedpillMessage(domain)
     case "mimo":
-      return getMimoRedpillMessage()
+      return getMimoRedpillMessage(domain)
     case "gpt":
-      return getGptRedpillMessage()
+      return getGptRedpillMessage(domain)
     case "gemini":
-      return getGeminiRedpillMessage()
+      return getGeminiRedpillMessage(domain)
     case "glm":
-      return getGlmRedpillMessage()
+      return getGlmRedpillMessage(domain)
     default:
-      return getDefaultRedpillMessage()
+      return getDefaultRedpillMessage(domain)
   }
 }

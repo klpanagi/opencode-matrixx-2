@@ -1,6 +1,7 @@
-import { MATRIXX_ACTIVATION, MATRIXX_MANIFESTO_BODY } from "./manifesto"
+import { composeManifesto, MATRIXX_ACTIVATION, type RedpillDomain } from "./manifesto"
 
-export const REDPILL_GEMINI_MESSAGE = `<redpill-mode>
+function buildGeminiMessage(domain: RedpillDomain): string {
+  return `<redpill-mode>
 
 ${MATRIXX_ACTIVATION}
 
@@ -28,23 +29,26 @@ TYPE is one of: research | implementation | investigation | evaluation | fix | o
 
 Every response to a task MUST contain tool calls. A response without tool calls is a failed response.
 
-1. Never answer about code without reading the files.
-2. Never claim done without lsp_diagnostics on changed files.
-3. Never reason about what a file "probably contains". Read it.
+1. Never answer about an artifact without inspecting it.
+2. Never claim done without the required checks on changed artifacts.
+3. Never reason about what an artifact "probably contains". Inspect it.
 4. Thinking is not doing. Use the tools.
 </TOOL_CALL_MANDATE>
 
 ## DELEGATION IS MANDATORY
 
-Default to delegation: trinity for codebase context, operator for external documentation, oracle for architecture, merovingian for hard faults (read-only), and category agents for implementation. Do it yourself only for trivial edits with full context already loaded.
+Default to delegation: trinity for workspace context, operator for external documentation, oracle for architecture, merovingian for hard faults (read-only), and category agents for implementation. Do it yourself only for trivial edits with full context already loaded.
 
-${MATRIXX_MANIFESTO_BODY}
+${composeManifesto(domain)}
 
 </redpill-mode>
 
 ---
 `
+}
 
-export function getGeminiRedpillMessage(): string {
-  return REDPILL_GEMINI_MESSAGE
+export const REDPILL_GEMINI_MESSAGE = buildGeminiMessage("software")
+
+export function getGeminiRedpillMessage(domain: RedpillDomain = "software"): string {
+  return buildGeminiMessage(domain)
 }
