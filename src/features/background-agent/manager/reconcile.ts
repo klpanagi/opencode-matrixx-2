@@ -387,22 +387,38 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
           })
           return
         }
-        const auto: BackgroundTask = {
-          id: `bg_${crypto.randomUUID().slice(0, 8)}`,
-          parentSessionID: owner,
-          parentMessageID: "",
-          description: `tracked native session ${sessionID}`,
-          prompt: "",
-          agent: "native",
-          status: "running",
-          startedAt: new Date(),
-          sessionID,
+        const covered = [...rt.store.tasks.values()].find(
+          (candidate) =>
+            candidate.sessionID !== undefined &&
+            candidate.parentSessionID === owner &&
+            ManagerStore.normalizeSessionID(candidate.sessionID) === sessionID,
+        )
+        if (covered !== undefined) {
+          log("[background-agent] Auto-track suppressed: session already covered", {
+            sessionID,
+            taskId: covered.id,
+            status: covered.status,
+          })
+          rt.store.reindexTask(covered)
+          task = covered
+        } else {
+          const auto: BackgroundTask = {
+            id: `bg_${crypto.randomUUID().slice(0, 8)}`,
+            parentSessionID: owner,
+            parentMessageID: "",
+            description: `tracked native session ${sessionID}`,
+            prompt: "",
+            agent: "native",
+            status: "running",
+            startedAt: new Date(),
+            sessionID,
+          }
+          rt.store.tasks.set(auto.id, auto)
+          rt.store.knownSessions.add(sessionID)
+          rt.store.persistHandle(auto)
+          log("[background-agent] Auto-tracked native session:", { sessionID, taskId: auto.id })
+          task = auto
         }
-        rt.store.tasks.set(auto.id, auto)
-        rt.store.knownSessions.add(sessionID)
-        rt.store.persistHandle(auto)
-        log("[background-agent] Auto-tracked native session:", { sessionID, taskId: auto.id })
-        task = auto
       }
     }
     if (!task || (task.status !== "running" && task.status !== "pending")) {

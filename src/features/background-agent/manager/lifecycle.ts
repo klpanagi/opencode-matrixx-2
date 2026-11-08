@@ -231,6 +231,8 @@ export async function launchTask(rt: ManagerRuntime,
     task.status = "running"
     task.startedAt = new Date()
     task.sessionID = sessionID
+    // Atomic handoff: index the session before the next event can observe the task.
+    rt.store.reindexTask(task)
     task.progress = { toolCalls: 0, lastUpdate: new Date() }
     rt.store.persistHandle(task)
     rt.taskHistory.record(input.parentSessionID, {
