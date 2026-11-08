@@ -42,6 +42,14 @@
 |---|---|---|
 | `session-memory-fts.md` | Engineers | Session memory Phase 2 FTS design note (design only, no code) |
 
+## Doctrine
+
+| Page | Audience | What you get |
+|---|---|---|
+| `redpill-manifesto.md` | Users + contributors | Domain-neutral Matrixx manifesto (layer 1 of the two-layer doctrine) |
+| `redpill-sources.md` | Reviewers + contributors | Graded evidence map: every principle to sources, grade, and caveat (layer 2) |
+| `redpill-domain-software.md` | Engineers | Software domain pack: TDD, verification gates, delegation roster (layer 3) |
+
 ## Research & historical
 
 Archived pages: preserved as-is, do not rely on their counts or versions.
