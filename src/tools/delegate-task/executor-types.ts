@@ -1,4 +1,5 @@
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements } from "../../config/schema"
+import type { EffortConfig } from "../../config/schema/effort"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { NativeClient } from "./types"
 
@@ -20,6 +21,8 @@ export interface ExecutorContext {
   /** Invoking (parent) session ID — its preset overlay propagates to delegated tasks. */
   sessionID?: string
   onSyncSessionCreated?: (event: { sessionID: string; parentID: string; title: string }) => Promise<void>
+  /** Per-session effort accounting config; undefined disables foreground effort recording. */
+  effortConfig?: EffortConfig
 }
 
 export interface ParentContext {

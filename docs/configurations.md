@@ -1115,6 +1115,50 @@ Configure notification behavior for background task completion.
 | -------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | `force_enable` | - (absent = `false`) | Force enable session-notification even if external notification plugins are detected. |
 
+## Effort
+
+Per-session effort accounting (weighted compute/action/epistemic/coordination
+score plus token cost). The block is optional; omitting it uses the defaults
+below, and the feature is on by default.
+
+```json
+{
+  "effort": {
+    "enabled": true,
+    "report": ["parent"],
+    "weights": {
+      "compute": 0.5,
+      "action": 0.25,
+      "epistemic": 0.15,
+      "coord": 0.1
+    },
+    "prices": {
+      "inputPer1k": 0.003,
+      "outputPer1k": 0.015,
+      "cacheReadPer1k": 0.0003,
+      "cacheWritePer1k": 0.00375
+    },
+    "toolCosts": {
+      "bash": 0.005
+    },
+    "maxMessages": 200,
+    "maxBytes": 2097152,
+    "rollup": false
+  }
+}
+```
+
+| Option        | Type                          | Default                          | Description                                                                 |
+| ------------- | ----------------------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| `enabled`     | `boolean`                     | `true`                           | Turn effort accounting on or off.                                           |
+| `report`      | `("toast" \| "log" \| "parent" \| "off")[]` | `["parent"]`    | Where the report is delivered. `parent` surfaces it to the calling agent.   |
+| `weights`     | `object`                      | `{compute:0.5, action:0.25, epistemic:0.15, coord:0.1}` | Relative weight of each effort dimension.                     |
+| `prices`      | `object`                      | `{inputPer1k:0.003, outputPer1k:0.015, cacheReadPer1k:0.0003, cacheWritePer1k:0.00375}` | USD cost per 1k tokens.              |
+| `toolCosts`   | `Record<string, number>`      | `{}`                             | Flat USD cost per tool invocation, keyed by tool name.                      |
+| `maxMessages` | `integer` (min `1`)           | `200`                            | Maximum messages retained per effort trace.                                 |
+| `maxBytes`    | `integer` (min `1024`)        | `2097152`                        | Maximum serialized trace size (2 MiB).                                      |
+| `rollup`      | `boolean`                     | `false`                          | Aggregate child-agent effort into the parent report.                        |
+
 ## Tasks
 
 Canonical task-system configuration (storage, enforcer, poll timeout). The task

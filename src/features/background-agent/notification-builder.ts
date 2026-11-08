@@ -49,12 +49,13 @@ export function buildCompletionNotification(
     const lines = visibleTasks.map((t) => `- \`${t.id}\`: ${t.description}`)
     if (hiddenCount > 0) lines.push(`- ... +${hiddenCount} more tasks`)
     const completedTasksText = lines.join("\n")
+    const trailingDetail = errorInfo.length > 0 ? errorInfo : ""
 
     return `<system-reminder>
 [ALL BACKGROUND TASKS COMPLETE]
 
 **Completed:**
-${completedTasksText || `- \`${task.id}\`: ${task.description}`}
+${completedTasksText || `- \`${task.id}\`: ${task.description}`}${trailingDetail}
 
 Use \`background_output(task_id="<id>")\` to retrieve each result.
 </system-reminder>`

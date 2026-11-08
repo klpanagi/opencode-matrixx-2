@@ -12,6 +12,7 @@ import { BuiltinCommandNameSchema } from "./commands"
 import { CommentCheckerConfigSchema } from "./comment-checker"
 import { ContextModeConfigSchema } from "./context-mode"
 import { DcpConfigSchema } from "./dcp"
+import { EffortConfigSchema } from "./effort"
 import { EvolutionConfigSchema } from "./evolution"
 import { ExperimentalConfigSchema } from "./experimental"
 import { HeadroomConfigSchema } from "./headroom"
@@ -77,6 +78,8 @@ export const MatrixxConfigSchema = z.object({
   matrix_loop: MatrixLoopConfigSchema.optional(),
   background_task: BackgroundTaskConfigSchema.optional(),
   notification: NotificationConfigSchema.optional(),
+  /** Per-session effort accounting: weights, prices, trace limits, report channels */
+  effort: EffortConfigSchema.optional(),
   plans: PlansConfigSchema.optional(),
   babysitting: BabysittingConfigSchema.optional(),
   /** Canonical task-system configuration (master switch, storage, enforcer, poll timeout).

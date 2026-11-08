@@ -50,7 +50,9 @@ export function createBackgroundNotificationHook(manager: BackgroundManager) {
         type: event.type,
       })
     }
-    manager.handleEvent(event)
+    void Promise.resolve(manager.handleEvent(event)).catch((error) =>
+      log("[background-notification] handleEvent failed:", error),
+    )
   }
 
   return {

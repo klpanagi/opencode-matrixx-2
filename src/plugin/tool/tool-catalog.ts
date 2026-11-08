@@ -132,6 +132,7 @@ export function createToolCatalog(args: {
     activePreset: pluginConfig.active_preset,
     agentOverrides: pluginConfig.agents,
     systemDefaultModel,
+    effortConfig: pluginConfig.effort,
   })
 
   const skillTool = createSkillTool({

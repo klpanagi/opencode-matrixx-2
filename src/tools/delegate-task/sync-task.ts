@@ -1,3 +1,4 @@
+import { type ForegroundEffortResult, recordEffortForForeground } from "../../features/agent-effort/foreground"
 import { registerSubagentSession, releaseSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
 import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
@@ -215,6 +216,44 @@ export async function executeSyncTask(
       }
 
       didSucceed = true
+
+      let effortMeta: ForegroundEffortResult | null = null
+      try {
+        effortMeta = await recordEffortForForeground({
+          client,
+          directory,
+          sessionID,
+          config: executorCtx.effortConfig,
+          startedAt: startTime,
+          parentID: args.parentID,
+          parentSessionID: parentContext.sessionID,
+        })
+        if (effortMeta !== null) {
+          await ctx.metadata?.(
+            jsonSafeMetadata({
+              title: buildTaskTitle(args.description, agentToUse, args.category),
+              metadata: {
+                prompt: args.prompt,
+                agent: agentToUse,
+                category: args.category,
+                load_skills: args.load_skills,
+                description: args.description,
+                run_in_background: args.run_in_background,
+                sessionId: sessionID,
+                sync: true,
+                command: args.command,
+                effort: effortMeta.record,
+              },
+            }),
+          )
+        }
+      } catch (error) {
+        log("[task] foreground effort metadata emission failed", {
+          sessionID,
+          reason: error instanceof Error ? error.message : String(error),
+        })
+      }
+
       const duration = formatDuration(startTime)
 
       const textContent = result.textContent.trim()

@@ -3,6 +3,7 @@ import type {
   AvailableSkill,
 } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { AgentOverrides, BrowserAutomationProvider, CategoriesConfig, ComplexityDowngrades, ModelPresets, ModelRequirements, SoftwareDevEnforcementConfigInput } from "../../config/schema"
+import type { EffortConfig } from "../../config/schema/effort"
 import type { BackgroundManager } from "../../features/background-agent"
 import type { NativeDomains } from "../../shared/session/session-context-source"
 
@@ -21,6 +22,8 @@ export interface DelegateTaskArgs {
     task_id: string
     task_dir?: string
   }
+  /** Parent task-system ID; effort is attached only when it maps to an existing task. */
+  parentID?: string
   /**
    * Task complexity level (1-5) or "auto" for automatic scoring.
    * When < 3, model may be downgraded to a cheaper tier.
@@ -85,6 +88,8 @@ export interface DelegateTaskToolOptions {
   onSyncSessionCreated?: (event: SyncSessionCreatedEvent) => Promise<void>
   /** Resolves the live system default model (provider/model); absence falls back to category resolution. */
   systemDefaultModel?: () => Promise<string | undefined>
+  /** Per-session effort accounting config; undefined disables foreground effort recording. */
+  effortConfig?: EffortConfig
 }
 
 export interface BuildSystemContentInput {
