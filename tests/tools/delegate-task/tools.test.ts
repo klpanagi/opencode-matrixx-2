@@ -348,7 +348,7 @@ describe("morpheus-task", () => {
       const args: DelegateTaskArgsWithSerializedSkills = {
         description: "Parse valid string",
         prompt: "Load skill parsing test",
-        category: "quick",
+        category: "bullet-time",
         run_in_background: true,
         load_skills: '["playwright", "git-master"]'
       }
@@ -412,7 +412,7 @@ describe("morpheus-task", () => {
       const args: DelegateTaskArgsWithSerializedSkills = {
         description: "Parse malformed string",
         prompt: "Load skill parsing test",
-        category: "quick",
+        category: "bullet-time",
         run_in_background: true,
         load_skills: '["playwright", "git-master"'
       }
@@ -2220,7 +2220,7 @@ describe("morpheus-task", () => {
     }, { timeout: 20000 })
 
     test("custom-transmission category (is_unstable_agent=true) with run_in_background=false should force background but wait for result", async () => {
-      // given - custom transmission category with is_unstable_agent=true (broadcast now uses claude-sonnet-4-6, not gemini)
+      // given - custom transmission category with is_unstable_agent=true (transmission now uses claude-sonnet-4-6, not gemini)
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       let launchCalled = false
       
@@ -2418,7 +2418,7 @@ describe("morpheus-task", () => {
         abort: new AbortController().signal
       }
 
-      // when - using "quick" category which should use "anthropic/claude-haiku-4-5"
+      // when - using "bullet-time" category which should use "anthropic/claude-haiku-4-5"
       await tool.execute(
         {
           description: "Test category fallback",
@@ -2488,7 +2488,7 @@ const tool = createDelegateTask({
         abort: new AbortController().signal
       }
 
-      // when - using "quick" category which resolves via preset to "anthropic/claude-haiku-4-5"
+      // when - using "bullet-time" category which resolves via preset to "anthropic/claude-haiku-4-5"
       await tool.execute(
         {
           description: "UI model inheritance test",
@@ -3009,7 +3009,7 @@ const tool = createDelegateTask({
 
       const availableCategories = [
         {
-          name: "writing",
+          name: "transmission",
           description: "Documentation, prose, technical writing",
           model: "kimi-for-coding/k2p5"
         },

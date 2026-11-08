@@ -32,7 +32,7 @@ describe("TaskHistory", () => {
     it("upserts without clobbering undefined fields", () => {
       //#given
       const history = new TaskHistory()
-      history.record("parent-1", { id: "t1", agent: "explore", description: "Find auth", status: "pending", category: "quick" })
+      history.record("parent-1", { id: "t1", agent: "explore", description: "Find auth", status: "pending", category: "bullet-time" })
 
       //#when
       history.record("parent-1", { id: "t1", agent: "explore", description: "Find auth", status: "running" })
@@ -41,7 +41,7 @@ describe("TaskHistory", () => {
       const entries = history.getByParentSession("parent-1")
       expect(entries).toHaveLength(1)
       expect(entries[0].status).toBe("running")
-      expect(entries[0].category).toBe("quick")
+      expect(entries[0].category).toBe("bullet-time")
     })
 
     it("caps entries at MAX_ENTRIES_PER_PARENT (50)", () => {
@@ -133,13 +133,13 @@ describe("TaskHistory", () => {
     it("includes category when present", () => {
       //#given
       const history = new TaskHistory()
-      history.record("parent-1", { id: "t1", agent: "explore", description: "Find auth", status: "running", category: "quick" })
+      history.record("parent-1", { id: "t1", agent: "explore", description: "Find auth", status: "running", category: "bullet-time" })
 
       //#when
       const result = history.formatForCompaction("parent-1")
 
       //#then
-      expect(result).toContain("[quick]")
+      expect(result).toContain("[bullet-time]")
     })
 
     it("includes session_id when present", () => {
@@ -172,14 +172,14 @@ describe("TaskHistory", () => {
     it("returns rows with agent, category, status, description, and session", () => {
       //#given
       const history = new TaskHistory()
-      history.record("parent-1", { id: "t1", sessionID: "ses_abc", agent: "explore", description: "Find auth", status: "completed", category: "quick" })
+      history.record("parent-1", { id: "t1", sessionID: "ses_abc", agent: "explore", description: "Find auth", status: "completed", category: "bullet-time" })
 
       //#when
       const rows = history.getJobBoardEntries("parent-1")
 
       //#then
       expect(rows).toHaveLength(1)
-      expect(rows[0]).toEqual({ agent: "explore", category: "quick", status: "completed", description: "Find auth", session: "ses_abc" })
+      expect(rows[0]).toEqual({ agent: "explore", category: "bullet-time", status: "completed", description: "Find auth", session: "ses_abc" })
     })
 
     it("strips newlines from descriptions like formatForCompaction", () => {
@@ -291,13 +291,13 @@ describe("TaskHistory", () => {
     it("compaction format unchanged for existing fixtures", () => {
       //#given
       const history = new TaskHistory()
-      history.record("parent-1", { id: "t1", sessionID: "ses_abc123", agent: "oracle", description: "Review arch", status: "completed", category: "quick" })
+      history.record("parent-1", { id: "t1", sessionID: "ses_abc123", agent: "oracle", description: "Review arch", status: "completed", category: "bullet-time" })
 
       //#when
       const result = history.formatForCompaction("parent-1")
 
       //#then
-      expect(result).toBe("- **oracle**[quick](completed): Review arch | session: `ses_abc123`")
+      expect(result).toBe("- **oracle**[bullet-time](completed): Review arch | session: `ses_abc123`")
     })
 
     it("caps compaction format to 5 entries with a +N more line", () => {

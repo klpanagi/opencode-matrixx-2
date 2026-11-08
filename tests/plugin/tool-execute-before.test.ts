@@ -45,7 +45,7 @@ describe("createToolExecuteBeforeHandler", () => {
       const ctx = createCtxWithSessionMessages()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { category: "quick", description: "Test" } as Record<string, unknown> }
+      const output = { args: { category: "bullet-time", description: "Test" } as Record<string, unknown> }
 
       //#when
       await handler(input, output)
@@ -73,7 +73,7 @@ describe("createToolExecuteBeforeHandler", () => {
       const ctx = createCtxWithSessionMessages()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { category: "quick", subagent_type: "oracle", description: "Test" } as Record<string, unknown> }
+      const output = { args: { category: "bullet-time", subagent_type: "oracle", description: "Test" } as Record<string, unknown> }
 
       //#when
       await handler(input, output)
@@ -136,13 +136,13 @@ describe("createToolExecuteBeforeHandler", () => {
       const ctx = createCtxWithSessionMessages()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "subagent", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { category: "quick", description: "Test delegation" } as Record<string, unknown> }
+      const output = { args: { category: "bullet-time", description: "Test delegation" } as Record<string, unknown> }
 
       //#when
       await handler(input, output)
 
       //#then passthrough, no task aliasing applied
-      expect(output.args).toEqual({ category: "quick", description: "Test delegation" })
+      expect(output.args).toEqual({ category: "bullet-time", description: "Test delegation" })
     })
 
     test("does not modify args for non-task tools", async () => {

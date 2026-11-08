@@ -580,7 +580,7 @@ describe("Mouse agent override", () => {
           category: "source",
         },
         smith: {
-          category: "quick",
+          category: "bullet-time",
         },
       },
     }
@@ -592,7 +592,7 @@ describe("Mouse agent override", () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.agents?.seraph?.category).toBe("source")
-      expect(result.data.agents?.smith?.category).toBe("quick")
+      expect(result.data.agents?.smith?.category).toBe("bullet-time")
     }
   })
 })

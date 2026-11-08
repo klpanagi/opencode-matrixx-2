@@ -624,14 +624,14 @@ describe("runtime-fallback", () => {
         {
           config: createMockConfig({ notify_on_fallback: false }),
           pluginConfig: createMockPluginConfigWithCategoryModel(
-            "quick",
+            "bullet-time",
             "anthropic/claude-haiku-4-5",
             ["openai/gpt-5.4(high)"],
           ),
         },
       )
       const sessionID = "test-session-category-bootstrap-session-error"
-      SessionCategoryRegistry.register(sessionID, "quick")
+      SessionCategoryRegistry.register(sessionID, "bullet-time")
 
       //#when
       await hook.event({
@@ -653,7 +653,7 @@ describe("runtime-fallback", () => {
       )
       expect(bootstrapLog?.data).toMatchObject({
         sessionID,
-        category: "quick",
+        category: "bullet-time",
         model: "anthropic/claude-haiku-4-5",
       })
     })
