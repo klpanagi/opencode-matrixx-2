@@ -19,7 +19,7 @@
  * the tmux pane mirror is gone.
  */
 
-import type { HookName, TmuxConfig } from "../config"
+import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
 import { loadPluginConfig } from "../plugin-config"
 import { log } from "../shared"
 import { setContextModeForPrompts } from "../shared/policy/context-mode-enforcement"
@@ -55,6 +55,7 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
   directory: string
   worktree: string
   hooks: Hooks
+  pluginConfig: MatrixxConfig
 }> {
   log("[MatrixxPlugin] ENTRY - plugin loading", {
     directory: ctx.location?.directory,
@@ -182,6 +183,7 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
   return {
     directory: pctx.directory,
     worktree: pctx.worktree,
+    pluginConfig,
     hooks: assembled,
   }
 }

@@ -21,8 +21,8 @@ async function setup(ctx: MatrixxContext): Promise<Cleanup> {
     opencode: ctx.app?.version,
   })
 
-  const { hooks, directory, worktree } = await setupDomains(ctx)
-  const bridge = await registerDomains({ ctx, hooks, directory, worktree })
+  const { hooks, directory, worktree, pluginConfig } = await setupDomains(ctx)
+  const bridge = await registerDomains({ ctx, hooks, directory, worktree, pluginConfig })
 
   log("[matrixx] ready", { registrations: bridge.registrations.length })
 

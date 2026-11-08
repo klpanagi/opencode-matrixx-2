@@ -272,6 +272,21 @@ Four built-in tiers:
 
 Set `dcp.default_profile` in `matrixx.jsonc` to switch tiers; on next startup the plugin writes an inline `dcp.jsonc` to `~/.config/opencode/dcp.jsonc` with the selected profile. Matrixx bridge overhead stays below 10ms.
 
+#### Compress watchdog
+
+`maxContextLimit` is advisory: above it DCP only nudges, and a session can stay over the ceiling indefinitely when per-turn growth matches per-call savings. The Matrixx watchdog makes the ceiling enforceable from the plugin side.
+
+When the newest assistant message reports usage at or above `dcp.watchdog.abovePercent` and the `compress` tool is available, Matrixx prepends an explicit directive to the tail of the last user message: compress the largest contiguous closed span, then repeat until usage is at or below `targetPercent`. Injection is tail-only (prompt-cache prefix untouched), idempotent (marker sentinel), cooled down by `cooldownTurns`, and never applied to subagent sessions.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | Turn the directive on or off |
+| `abovePercent` | `25` | Arm at or above this percentage of the model window |
+| `targetPercent` | `10` | Percentage the directive asks the model to reach (clamped below `abovePercent`) |
+| `cooldownTurns` | `2` | Context builds to wait between directives while still over the ceiling |
+
+Disable the hook itself with `"disabled_hooks": ["compress-watchdog"]`. Resolution needs the model window from the provider list; an unknown model fails open (no directive).
+
 #### Performance Impact
 
 | Metric | Value |
@@ -304,6 +319,12 @@ Configure in `matrixx.jsonc` (Matrixx bridge). Full defaults live in `src/config
     "default_profile": "balanced",       // optional, default "balanced"
     "profiles": {                        // optional override, defaults to BUILTIN_DCP_PROFILES
       // "my-tier": { "compress": { "maxContextLimit": "50%" } }
+    },
+    "watchdog": {                        // explicit compress directive above a configured %
+      "enabled": true,                   // default: true
+      "abovePercent": 25,                // default: 25
+      "targetPercent": 10,               // default: 10
+      "cooldownTurns": 2                 // default: 2
     },
     "base": {
       "autoUpdate": false,               // default: false

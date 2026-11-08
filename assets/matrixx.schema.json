@@ -252,6 +252,7 @@
               "knowledge-hub-injector",
               "knowledge-hub-search-nudge",
               "dcp-nudge-sanitizer",
+              "compress-watchdog",
               "nudge-loop-breaker",
               "task-notepad-writer",
               "session-memory",
@@ -3050,12 +3051,53 @@
             "keepLast"
           ],
           "additionalProperties": false
+        },
+        "watchdog": {
+          "default": {
+            "enabled": true,
+            "abovePercent": 25,
+            "targetPercent": 10,
+            "cooldownTurns": 2
+          },
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "type": "boolean"
+            },
+            "abovePercent": {
+              "default": 25,
+              "type": "number",
+              "minimum": 1,
+              "maximum": 95
+            },
+            "targetPercent": {
+              "default": 10,
+              "type": "number",
+              "minimum": 1,
+              "maximum": 94
+            },
+            "cooldownTurns": {
+              "default": 2,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "enabled",
+            "abovePercent",
+            "targetPercent",
+            "cooldownTurns"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
         "enabled",
         "profiles",
-        "handoffCompression"
+        "handoffCompression",
+        "watchdog"
       ],
       "additionalProperties": false
     },

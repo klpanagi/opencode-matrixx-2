@@ -1,4 +1,5 @@
 import { registerAgentTransform } from "../../agents/shared/agents.transform"
+import type { MatrixxConfig } from "../../config"
 import { registerCommandTransform } from "../../features/builtin-commands/commands.transform"
 import { registerMcpTransform } from "../../mcps/mcp.transform"
 import { log } from "../../shared"
@@ -66,6 +67,7 @@ export interface RegisterDomainsInput {
   hooks: Hooks
   directory: string
   worktree: string
+  pluginConfig?: MatrixxConfig
 }
 
 export interface DomainRegistration {
@@ -255,7 +257,12 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
 
   // Task 25: native per-hook message registrations (flat-Message[] bodies land in Task 26).
   const messageHookRegistrations = await guard("registerMessageHooks", () =>
-    registerMessageHooks(ctx),
+    registerMessageHooks(ctx, {
+      compressWatchdog: {
+        config: input.pluginConfig?.dcp?.watchdog,
+        hookEnabled: !(input.pluginConfig?.disabled_hooks ?? []).includes("compress-watchdog"),
+      },
+    }),
   )
   if (messageHookRegistrations) registrations.push(...messageHookRegistrations)
 

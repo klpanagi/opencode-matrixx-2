@@ -1,6 +1,7 @@
 import type { EvolutionHitlDeps } from "../../hooks/evolution-hitl/flat"
 import type { SessionMessage } from "../../shared/session/session-message"
 import type { MatrixxContext, V2Registration } from "../tool/context"
+import { type CompressWatchdogOptions, registerCompressWatchdog } from "./compress-watchdog"
 import { type ContextInjectorDeps, registerContextInjectorMessagesTransform } from "./context-injector"
 import { registerDcpNudgeSanitizer } from "./dcp-nudge-sanitizer"
 import { registerDomainKeywordDetector } from "./domain-keyword-detector"
@@ -126,6 +127,7 @@ export interface MessageHookDeps {
   readonly knowledgeHub?: KnowledgeHubInjectorDeps
   readonly contextInjector?: ContextInjectorDeps
   readonly evolutionHitl?: EvolutionHitlDeps & { readonly config?: unknown }
+  readonly compressWatchdog?: CompressWatchdogOptions
 }
 
 /**
@@ -151,6 +153,9 @@ export async function registerMessageHooks(
   registrations.push(...(await registerThinkingBlockValidator(ctx)))
   registrations.push(...(await registerEvolutionHitl(ctx, deps.evolutionHitl)))
   registrations.push(...(await registerDcpNudgeSanitizer(ctx)))
+  if (deps.compressWatchdog) {
+    registrations.push(...(await registerCompressWatchdog(ctx, deps.compressWatchdog)))
+  }
   registrations.push(...(await registerToolPairValidator(ctx)))
   return registrations
 }
