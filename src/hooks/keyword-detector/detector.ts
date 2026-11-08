@@ -17,11 +17,12 @@ export function removeCodeBlocks(text: string): string {
  * Resolves message to string, handling both static strings and dynamic functions.
  */
 function resolveMessage(
-  message: string | ((agentName?: string, modelID?: string) => string),
+  message: string | ((agentName?: string, modelID?: string, promptText?: string) => string),
   agentName?: string,
-  modelID?: string
+  modelID?: string,
+  promptText?: string
 ): string {
-  return typeof message === "function" ? message(agentName, modelID) : message
+  return typeof message === "function" ? message(agentName, modelID, promptText) : message
 }
 
 export function detectKeywordsWithType(text: string, agentName?: string, modelID?: string): DetectedKeyword[] {
@@ -33,7 +34,7 @@ export function detectKeywordsWithType(text: string, agentName?: string, modelID
     if (detector.pattern.test(textWithoutCode)) {
       result.push({
         type: types[i],
-        message: resolveMessage(detector.message, agentName, modelID),
+        message: resolveMessage(detector.message, agentName, modelID, text),
       })
     }
   }

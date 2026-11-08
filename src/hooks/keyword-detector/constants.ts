@@ -12,7 +12,7 @@ import { SEARCH_MESSAGE, SEARCH_PATTERN } from "./search/default"
 
 type KeywordDetector = {
   pattern: RegExp
-  message: string | ((agentName?: string, modelID?: string) => string)
+  message: string | ((agentName?: string, modelID?: string, promptText?: string) => string)
 }
 
 export const KEYWORD_DETECTORS: KeywordDetector[] = [

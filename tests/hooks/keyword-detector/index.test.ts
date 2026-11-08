@@ -886,4 +886,20 @@ describe("keyword-detector agent-specific redpill messages", () => {
     expect(textPart?.text).toContain("VERIFICATION GUARANTEE")
   })
 
+  test("should inject the universal layer for non-software work", async () => {
+    const collector = new ContextCollector()
+    const hook = createKeywordDetectorHook(createMockMatrixxContext(), collector)
+    const sessionID = "universal-session"
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "redpill write a market analysis report" }],
+    }
+    await hook["chat.message"]({ sessionID }, output)
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart?.text).toContain("ultimate work")
+    expect(textPart?.text).not.toContain("TDD Workflow")
+    expect(textPart?.text).not.toContain("lsp_diagnostics")
+  })
+
 })
