@@ -5,11 +5,13 @@ import { computeEffort } from "./calculate"
 import { collectTelemetry } from "./collect"
 import { attachEffortToTask } from "./persist"
 import { formatEffortLine, routeReport } from "./report"
+import { resolveEffortTaskId } from "./resolve-task"
 import type { EffortConfig, EffortRecord } from "./types"
 
 export interface BackgroundEffortTask {
   id: string
   sessionID?: string
+  parentSessionID?: string
   startedAt?: Date
   completedAt?: Date
 }
@@ -59,6 +61,21 @@ export async function recordEffortForBackground(
         taskId: task.id,
         reason: reasonOf(error),
       })
+    }
+
+    const resolvedTaskId = resolveEffortTaskId({
+      directory: rt.directory,
+      parentSessionID: task.parentSessionID,
+    })
+    if (resolvedTaskId !== undefined && resolvedTaskId !== task.id) {
+      try {
+        await attachEffortToTask(rt.directory, resolvedTaskId, record)
+      } catch (error) {
+        log("[agent-effort] background effort parent persist failed", {
+          taskId: resolvedTaskId,
+          reason: reasonOf(error),
+        })
+      }
     }
 
     try {

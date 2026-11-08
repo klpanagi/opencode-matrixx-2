@@ -4,6 +4,7 @@ import { computeEffort } from "./calculate"
 import { type CollectTiming, collectTelemetry } from "./collect"
 import { attachEffortToTask } from "./persist"
 import { formatEffortLine, routeReport } from "./report"
+import { resolveEffortTaskId } from "./resolve-task"
 import type { EffortConfig, EffortRecord } from "./types"
 
 export interface ForegroundEffortInput {
@@ -14,6 +15,7 @@ export interface ForegroundEffortInput {
   startedAt?: Date
   completedAt?: Date
   parentID?: string
+  parentSessionID?: string
 }
 
 export interface ForegroundEffortResult {
@@ -44,8 +46,13 @@ export async function recordEffortForForeground(
       missing: collected.missing,
     })
 
-    if (input.parentID !== undefined) {
-      await attachEffortToTask(input.directory, input.parentID, record)
+    const taskId = resolveEffortTaskId({
+      directory: input.directory,
+      explicitTaskId: input.parentID,
+      parentSessionID: input.parentSessionID,
+    })
+    if (taskId !== undefined) {
+      await attachEffortToTask(input.directory, taskId, record)
     }
 
     const line = formatEffortLine(record)

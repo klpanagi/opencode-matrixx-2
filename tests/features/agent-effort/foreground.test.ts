@@ -161,6 +161,67 @@ describe("recordEffortForForeground", () => {
     expect(stored?.metadata?.other).toBe("keep-me")
   })
 
+  test("attaches effort through parentSessionID when exactly one task is active", async () => {
+    //#given
+    const parentSessionID = "ses_foreground_parent"
+    const task: Task = {
+      ...makeTask("T-session-single"),
+      status: "in_progress",
+      threadID: parentSessionID,
+    }
+    const taskPath = join(getTaskDir({}, directory), `${task.id}.json`)
+    writeJsonAtomic(taskPath, task)
+    const client = makeClient([assistantMessage()])
+
+    //#when
+    const result = await recordEffortForForeground({
+      client,
+      directory,
+      sessionID: "ses_child_run",
+      config: makeConfig(),
+      parentSessionID,
+    })
+
+    //#then
+    expect(result).not.toBeNull()
+    const stored = readJsonSafe(taskPath, TaskSchema)
+    const effort = (stored?.metadata?.effort ?? {}) as Record<string, unknown>
+    expect(effort.total).toBe(result?.record.total)
+  })
+
+  test("does not attach effort through parentSessionID when two tasks are active", async () => {
+    //#given
+    const parentSessionID = "ses_foreground_parent_two"
+    const first: Task = {
+      ...makeTask("T-session-a"),
+      status: "in_progress",
+      threadID: parentSessionID,
+    }
+    const second: Task = {
+      ...makeTask("T-session-b"),
+      status: "pending",
+      threadID: parentSessionID,
+    }
+    const firstPath = join(getTaskDir({}, directory), `${first.id}.json`)
+    const secondPath = join(getTaskDir({}, directory), `${second.id}.json`)
+    writeJsonAtomic(firstPath, first)
+    writeJsonAtomic(secondPath, second)
+    const client = makeClient([assistantMessage()])
+
+    //#when
+    await recordEffortForForeground({
+      client,
+      directory,
+      sessionID: "ses_child_run_two",
+      config: makeConfig(),
+      parentSessionID,
+    })
+
+    //#then
+    expect(readJsonSafe(firstPath, TaskSchema)?.metadata?.effort).toBeUndefined()
+    expect(readJsonSafe(secondPath, TaskSchema)?.metadata?.effort).toBeUndefined()
+  })
+
   test("resolves null instead of throwing when the client rejects", async () => {
     //#given
     const client = {

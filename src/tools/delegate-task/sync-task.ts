@@ -226,6 +226,7 @@ export async function executeSyncTask(
           config: executorCtx.effortConfig,
           startedAt: startTime,
           parentID: args.parentID,
+          parentSessionID: parentContext.sessionID,
         })
         if (effortMeta !== null) {
           await ctx.metadata?.(

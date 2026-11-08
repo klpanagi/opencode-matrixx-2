@@ -8,6 +8,8 @@ import type { ExecutorContext, ParentContext } from "../../../src/tools/delegate
 import { executeSyncTask } from "../../../src/tools/delegate-task/sync-task"
 import type { SyncTaskDeps } from "../../../src/tools/delegate-task/sync-task-deps"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "../../../src/tools/delegate-task/types"
+import { getTaskDir, readJsonSafe, writeJsonAtomic } from "../../../src/features/task-storage/storage"
+import { type Task, TaskSchema } from "../../../src/features/task-storage/types"
 
 const CONFIG: EffortConfig = {
   enabled: true,
@@ -132,6 +134,55 @@ describe("agent-effort wiring: foreground sync path", () => {
     expect(metadataCalls.length).toBeGreaterThanOrEqual(2)
     expect(metadataCalls[0].metadata?.effort).toBeUndefined()
     expect(metadataCalls[metadataCalls.length - 1].metadata?.effort).toBeDefined()
+  })
+
+  test("attaches effort to the parent session's single active task", async () => {
+    //#given
+    const parentContext = buildParentContext()
+    const parentTask: Task = {
+      id: "T-sync-parent",
+      subject: "Sync parent task",
+      description: "Task that should receive the delegated run's effort",
+      status: "in_progress",
+      blocks: [],
+      blockedBy: [],
+      generation: 1,
+      threadID: parentContext.sessionID,
+    }
+    const taskPath = join(getTaskDir({}, dir), `${parentTask.id}.json`)
+    writeJsonAtomic(taskPath, parentTask)
+    const ctx = {
+      sessionID: parentContext.sessionID,
+      messageID: "msg_parent",
+      agent: "morpheus",
+      abort: new AbortController().signal,
+      metadata: async () => {},
+    } as unknown as ToolContextWithMetadata
+    const executorCtx = {
+      client: buildClient(async () => [assistantMessage()]),
+      directory: dir,
+      onSyncSessionCreated: null,
+      effortConfig: CONFIG,
+    } as unknown as ExecutorContext
+
+    //#when
+    const result = await executeSyncTask(
+      buildArgs(),
+      ctx,
+      executorCtx,
+      parentContext,
+      "test-agent",
+      undefined,
+      undefined,
+      undefined,
+      buildDeps(),
+    )
+
+    //#then
+    expect(result.startsWith("Task completed in")).toBe(true)
+    expect(result).toContain("done")
+    const persisted = readJsonSafe(taskPath, TaskSchema)
+    expect(persisted?.metadata?.effort).toBeDefined()
   })
 
   test("without effort config the return contract is unchanged and no effort metadata is emitted", async () => {

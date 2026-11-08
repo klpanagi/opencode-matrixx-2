@@ -132,6 +132,9 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
       subagent_type: z.string().optional().describe("REQUIRED if category not provided. Do NOT provide both category and subagent_type."),
       session_id: z.string().optional().describe("Existing Task session to continue (full context preserved). Use when: task failed/incomplete (fix: <issue>), follow-up on previous result, or multi-turn with same agent. NEVER start fresh for follow-ups."),
       command: z.string().optional().describe("The command that triggered this task"),
+      parentID: z.string().optional().describe(
+        "Optional T-{uuid} task id. When it maps to an existing task record, this run's effort metrics are applied to task.metadata.effort. If omitted, effort is attached only when the calling session has exactly one active task."
+      ),
       complexity: z.union([
         z.literal(1),
         z.literal(2),

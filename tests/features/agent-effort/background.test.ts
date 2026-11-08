@@ -152,6 +152,36 @@ describe("recordEffortForBackground", () => {
     expect(persisted?.metadata?.effort).toBeDefined()
   })
 
+  test("attaches effort to the parent session's single active task via parentSessionID", async () => {
+    //#given
+    const parentSessionID = "ses_bg_parent"
+    const parentTask: Task = {
+      id: "T-bg-parent",
+      subject: "Parent background task",
+      description: "Task that should receive the delegated run's effort",
+      status: "in_progress",
+      blocks: [],
+      blockedBy: [],
+      generation: 1,
+      threadID: parentSessionID,
+    }
+    const taskPath = join(getTaskDir({}, directory), `${parentTask.id}.json`)
+    writeJsonAtomic(taskPath, parentTask)
+    const runtime = makeRuntime(directory)
+
+    //#when
+    await recordEffortForBackground(
+      runtime,
+      { ...makeTask("bg_child"), parentSessionID },
+      makeConfig(),
+    )
+
+    //#then
+    const persisted = readJsonSafe(taskPath, TaskSchema)
+    const effort = (persisted?.metadata?.effort ?? {}) as Record<string, unknown>
+    expect(effort.total).toBeTypeOf("number")
+  })
+
   test("fails open when the session context rejects", async () => {
     //#given
     const runtime = makeRuntime(directory, async () => {
