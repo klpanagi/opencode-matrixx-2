@@ -72,6 +72,18 @@ export const DcpManualModeSchema = z.object({
 })
 export type DcpManualMode = z.infer<typeof DcpManualModeSchema>
 
+export const DcpWatchdogSchema = z.object({
+  /** Enable the compress watchdog directive. Default: true */
+  enabled: z.boolean().default(true),
+  /** Usage percentage that arms the directive (1-95). Default: 25 */
+  abovePercent: z.number().min(1).max(95).default(25),
+  /** Usage percentage the directive asks the model to reach (1-94). Default: 10 */
+  targetPercent: z.number().min(1).max(94).default(10),
+  /** Context builds to wait between directives while still over the ceiling. Default: 2 */
+  cooldownTurns: z.number().int().min(1).default(2),
+})
+export type DcpWatchdog = z.infer<typeof DcpWatchdogSchema>
+
 export const DcpProfileDefinitionSchema = z.object({
   pruneNotification: z.enum(["off", "minimal", "detailed"]).optional(),
   pruneNotificationType: z.enum(["chat", "toast"]).optional(),
@@ -227,6 +239,14 @@ export const DcpConfigSchema = z.object({
     maxMessages: 6,
     keepFirst: 2,
     keepLast: 3,
+  }),
+
+  /** Compress watchdog: injects an explicit compress directive above abovePercent. */
+  watchdog: DcpWatchdogSchema.default({
+    enabled: true,
+    abovePercent: 25,
+    targetPercent: 10,
+    cooldownTurns: 2,
   }),
 })
 

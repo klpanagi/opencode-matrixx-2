@@ -64,6 +64,7 @@ const HookNameEnum = z.enum([
   "knowledge-hub-injector",
   "knowledge-hub-search-nudge",
   "dcp-nudge-sanitizer",
+  "compress-watchdog",
   "nudge-loop-breaker",
   "task-notepad-writer",
   "session-memory",

@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { BUILTIN_DCP_PROFILES, DcpCompressOverrideSchema } from "../../../src/config/schema/dcp"
+import { BUILTIN_DCP_PROFILES, DcpCompressOverrideSchema, DcpConfigSchema, DcpWatchdogSchema } from "../../../src/config/schema/dcp"
 
 describe("BUILTIN_DCP_PROFILES.brutal", () => {
   test("nudges every 2 turns with strong force", () => {
@@ -53,6 +53,39 @@ describe("DcpCompressOverrideSchema model limits", () => {
 
     //#when
     const parsed = DcpCompressOverrideSchema.safeParse(input)
+
+    //#then
+    expect(parsed.success).toBe(false)
+  })
+})
+
+describe("DcpWatchdogSchema", () => {
+  test("defaults the watchdog on with 25% ceiling and 10% target", () => {
+    //#given an empty dcp config
+    //#when
+    const parsed = DcpConfigSchema.parse({})
+
+    //#then
+    expect(parsed.watchdog).toEqual({
+      enabled: true,
+      abovePercent: 25,
+      targetPercent: 10,
+      cooldownTurns: 2,
+    })
+  })
+
+  test("accepts a matrixx.jsonc override", () => {
+    //#given overrides mirroring a tuned brutal profile
+    //#when
+    const parsed = DcpWatchdogSchema.parse({ abovePercent: 15, targetPercent: 8, cooldownTurns: 1 })
+
+    //#then
+    expect(parsed).toEqual({ enabled: true, abovePercent: 15, targetPercent: 8, cooldownTurns: 1 })
+  })
+
+  test("rejects out-of-range percentages", () => {
+    //#given / #when
+    const parsed = DcpWatchdogSchema.safeParse({ abovePercent: 100 })
 
     //#then
     expect(parsed.success).toBe(false)
