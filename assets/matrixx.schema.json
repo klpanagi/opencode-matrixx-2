@@ -3439,6 +3439,144 @@
       },
       "additionalProperties": false
     },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "report": {
+          "default": [
+            "parent"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "toast",
+              "log",
+              "parent",
+              "off"
+            ]
+          }
+        },
+        "weights": {
+          "default": {
+            "compute": 0.5,
+            "action": 0.25,
+            "epistemic": 0.15,
+            "coord": 0.1
+          },
+          "type": "object",
+          "properties": {
+            "compute": {
+              "default": 0.5,
+              "type": "number",
+              "minimum": 0
+            },
+            "action": {
+              "default": 0.25,
+              "type": "number",
+              "minimum": 0
+            },
+            "epistemic": {
+              "default": 0.15,
+              "type": "number",
+              "minimum": 0
+            },
+            "coord": {
+              "default": 0.1,
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "compute",
+            "action",
+            "epistemic",
+            "coord"
+          ],
+          "additionalProperties": false
+        },
+        "prices": {
+          "default": {
+            "inputPer1k": 0.003,
+            "outputPer1k": 0.015,
+            "cacheReadPer1k": 0.0003,
+            "cacheWritePer1k": 0.00375
+          },
+          "type": "object",
+          "properties": {
+            "inputPer1k": {
+              "default": 0.003,
+              "type": "number",
+              "minimum": 0
+            },
+            "outputPer1k": {
+              "default": 0.015,
+              "type": "number",
+              "minimum": 0
+            },
+            "cacheReadPer1k": {
+              "default": 0.0003,
+              "type": "number",
+              "minimum": 0
+            },
+            "cacheWritePer1k": {
+              "default": 0.00375,
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "inputPer1k",
+            "outputPer1k",
+            "cacheReadPer1k",
+            "cacheWritePer1k"
+          ],
+          "additionalProperties": false
+        },
+        "toolCosts": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "maxMessages": {
+          "default": 200,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxBytes": {
+          "default": 2097152,
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 9007199254740991
+        },
+        "rollup": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "report",
+        "weights",
+        "prices",
+        "toolCosts",
+        "maxMessages",
+        "maxBytes",
+        "rollup"
+      ],
+      "additionalProperties": false
+    },
     "plans": {
       "type": "object",
       "properties": {
