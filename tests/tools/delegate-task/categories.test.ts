@@ -23,8 +23,8 @@ describe("DEFAULT_CATEGORIES", () => {
   it("#given the registry #when inspected #then variant defaults are preserved", () => {
     //#then
     expect(DEFAULT_CATEGORIES.source.variant).toBe("max")
-    expect(DEFAULT_CATEGORIES["deep-jack"].variant).toBe("max")
-    expect(DEFAULT_CATEGORIES["red-pill"].variant).toBe("max")
+    expect(DEFAULT_CATEGORIES["rabbit-hole"].variant).toBe("max")
+    expect(DEFAULT_CATEGORIES["the-one"].variant).toBe("max")
     expect(DEFAULT_CATEGORIES.construct.variant).toBeUndefined()
   })
 })

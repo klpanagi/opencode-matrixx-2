@@ -92,17 +92,17 @@
   // top_p, maxTokens, thinking, reasoningEffort, textVerbosity, tools,
   // prompt_append, is_unstable_agent, disable, fallback_models,
   // complexity_downgrades
-  // Built-in categories: construct, source, deep-jack, matrix-bend,
-  // bullet-time, blue-pill, red-pill, broadcast
+  // Built-in categories: construct, source, rabbit-hole, glitch,
+  // bullet-time, blue-pill, the-one, transmission
   // ─────────────────────────────────────────────────────────────────────────
   // "categories": {
   //   "source": { "model": "<provider>/<model>", "temperature": 0.1 }, // replace with live model
-  //   "deep-jack": { "model": "<provider>/<model>", "variant": "medium" }, // replace with live model
-  //   "matrix-bend": { "model": "<provider>/<model>" }, // replace with live model
+  //   "rabbit-hole": { "model": "<provider>/<model>", "variant": "medium" }, // replace with live model
+  //   "glitch": { "model": "<provider>/<model>" }, // replace with live model
   //   "construct": { "model": "<provider>/<model>" }, // replace with live model
-  //   "red-pill": { "model": "<provider>/<model>", "variant": "max" }, // replace with live model
+  //   "the-one": { "model": "<provider>/<model>", "variant": "max" }, // replace with live model
   //   "blue-pill": { "model": "<provider>/<model>" }, // replace with live model
-  //   "broadcast": { "model": "<provider>/<model>", "temperature": 0.5 }, // replace with live model
+  //   "transmission": { "model": "<provider>/<model>", "temperature": 0.5 }, // replace with live model
   //   "bullet-time": { "model": "<provider>/<model>" }, // replace with live model
   //   "my-custom-category": {
   //     "description": "Data science / ML pipelines",

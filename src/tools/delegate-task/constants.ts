@@ -61,7 +61,7 @@ export function isCodeWritingCategory(category: string | undefined): boolean {
   return category === "source"
 }
 
-const MATRIX_BEND_CATEGORY_PROMPT_APPEND = `<Category_Context>
+const GLITCH_CATEGORY_PROMPT_APPEND = `<Category_Context>
 You are working on HIGHLY CREATIVE / ARTISTIC tasks.
 
 Artistic genius mindset:
@@ -135,7 +135,7 @@ You are working on tasks that don't fit specific categories but require moderate
 
 <Selection_Gate>
 BEFORE selecting this category, VERIFY ALL conditions:
-1. Task does NOT fit: quick (trivial), construct (UI), source (deep logic), matrix-bend (creative), writing (docs)
+1. Task does NOT fit: bullet-time (trivial), construct (UI), source (deep logic), glitch (creative), transmission (docs)
 2. Task requires more than trivial effort but is NOT system-wide
 3. Scope is contained within a few files/modules
 
@@ -158,12 +158,12 @@ You are working on tasks that don't fit specific categories but require substant
 
 <Selection_Gate>
 BEFORE selecting this category, VERIFY ALL conditions:
-1. Task does NOT fit: quick (trivial), construct (UI), source (deep logic), matrix-bend (creative), writing (docs)
+1. Task does NOT fit: bullet-time (trivial), construct (UI), source (deep logic), glitch (creative), transmission (docs)
 2. Task requires substantial effort across multiple systems/modules
 3. Changes have broad impact or require careful coordination
 4. NOT just "complex" - must be genuinely unclassifiable AND high-effort
 
-If task fits ANY other category, DO NOT select red-pill.
+If task fits ANY other category, DO NOT select the-one.
 If task is unclassifiable but moderate-effort, use blue-pill instead.
 </Selection_Gate>
 </Category_Context>`
@@ -228,45 +228,45 @@ You are NOT an interactive assistant. You are an autonomous problem-solver.
 export const DEFAULT_CATEGORIES: Record<string, CategoryConfig> = {
   "construct": {},
   "source": { variant: "max" },
-  "deep-jack": { variant: "max" },
-  "matrix-bend": {},
+  "rabbit-hole": { variant: "max" },
+  "glitch": {},
   "bullet-time": {},
   "blue-pill": {},
-  "red-pill": { variant: "max" },
-  "broadcast": {},
+  "the-one": { variant: "max" },
+  "transmission": {},
 }
 
 export const CATEGORY_PROMPT_APPENDS: Record<string, string> = {
   "construct": VISUAL_CATEGORY_PROMPT_APPEND,
   "source": SOURCE_CATEGORY_PROMPT_APPEND,
-  "deep-jack": DEEP_CATEGORY_PROMPT_APPEND,
-  "matrix-bend": MATRIX_BEND_CATEGORY_PROMPT_APPEND,
+  "rabbit-hole": DEEP_CATEGORY_PROMPT_APPEND,
+  "glitch": GLITCH_CATEGORY_PROMPT_APPEND,
   "bullet-time": QUICK_CATEGORY_PROMPT_APPEND,
   "blue-pill": UNSPECIFIED_LOW_CATEGORY_PROMPT_APPEND,
-  "red-pill": UNSPECIFIED_HIGH_CATEGORY_PROMPT_APPEND,
-  "broadcast": WRITING_CATEGORY_PROMPT_APPEND,
+  "the-one": UNSPECIFIED_HIGH_CATEGORY_PROMPT_APPEND,
+  "transmission": WRITING_CATEGORY_PROMPT_APPEND,
 }
 
 export const CATEGORY_DESCRIPTIONS: Record<string, string> = {
   "construct": "Frontend, UI/UX, design, styling, animation. Executed via Mouse (leaf) for task(category=\"construct\"). For dedicated frontend specialist work, invoke Sati directly via `task(subagent_type=\"sati\")` or `@sati` — construct does NOT auto-spawn Sati.",
   "source": "Use ONLY for genuinely hard, logic-heavy tasks. Give clear goals only, not step-by-step instructions.",
-  "deep-jack": "Goal-oriented autonomous problem-solving. Thorough research before action. For hairy problems requiring deep understanding.",
-  "matrix-bend": "Complex problem-solving with unconventional, creative approaches - beyond standard patterns",
+  "rabbit-hole": "Goal-oriented autonomous problem-solving. Thorough research before action. For hairy problems requiring deep understanding.",
+  "glitch": "Complex problem-solving with unconventional, creative approaches - beyond standard patterns",
   "bullet-time": "Trivial tasks - single file changes, typo fixes, simple modifications",
   "blue-pill": "Tasks that don't fit other categories, low effort required",
-  "red-pill": "Tasks that don't fit other categories, high effort required",
-  "broadcast": "Documentation, prose, technical writing",
+  "the-one": "Tasks that don't fit other categories, high effort required",
+  "transmission": "Documentation, prose, technical writing",
 }
 
 export const SHORT_CATEGORY_HINTS: Record<string, string> = {
   "construct": "frontend/UI",
   "source": "hard logic",
-  "deep-jack": "deep research",
-  "matrix-bend": "creative",
+  "rabbit-hole": "deep research",
+  "glitch": "creative",
   "bullet-time": "trivial 1-file",
   "blue-pill": "easy misc",
-  "red-pill": "hard misc",
-  "broadcast": "docs",
+  "the-one": "hard misc",
+  "transmission": "docs",
 }
 
 /**
@@ -629,12 +629,12 @@ export function isPlanFamily(category: string | undefined): boolean {
 export const CATEGORY_SUGGESTED_SKILLS: Record<string, string[]> = {
   "construct": ["frontend-ui-ux", "frontend-a11y", "frontend-perf", "frontend-testing", "frontend-state-data", "frontend-build-tooling", "react-nextjs-patterns", "svelte-sveltekit-patterns", "playwright"],
   "source": ["tdd-enforcer", "software-dev", "quality-gate", "systematic-debugging", "review-work", "silent-failure-detection"],
-  "deep-jack": ["rp-research", "systematic-debugging", "document-reader", "software-dev"],
-  "matrix-bend": ["software-dev", "rp-research"],
+  "rabbit-hole": ["rp-research", "systematic-debugging", "document-reader", "software-dev"],
+  "glitch": ["software-dev", "rp-research"],
   "bullet-time": ["software-dev"],
   "blue-pill": ["software-dev", "document-reader"],
-  "red-pill": ["software-dev", "systematic-debugging", "review-work", "quality-gate"],
-  "broadcast": ["software-dev", "remove-ai-slops"],
+  "the-one": ["software-dev", "systematic-debugging", "review-work", "quality-gate"],
+  "transmission": ["software-dev", "remove-ai-slops"],
 }
 
 export function getSuggestedSkillsForCategory(category: string | undefined): string[] {

@@ -16,7 +16,7 @@ config/
 │   ├── babysitting.ts
 │   ├── background-task.ts     # BackgroundTaskConfigSchema
 │   ├── browser-automation.ts  # BrowserAutomationConfigSchema
-│   ├── categories.ts          # 8 categories: construct, source, deep-jack, matrix-bend, bullet-time, blue-pill, red-pill, broadcast
+│   ├── categories.ts          # 8 categories: construct, source, rabbit-hole, glitch, bullet-time, blue-pill, the-one, transmission
 │   ├── commands.ts            # BuiltinCommandNameSchema (24 commands)
 │   ├── comment-checker.ts     # CommentCheckerConfigSchema
 │   ├── context-mode.ts

@@ -175,7 +175,7 @@ task_update({
 
 ## DELEGATION SYSTEM (delegate-task)
 
-8 built-in categories: `construct`, `source`, `deep-jack`, `matrix-bend`, `bullet-time`, `blue-pill`, `red-pill`, `broadcast`
+8 built-in categories: `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`
 
 Each category defines: model, variant, temperature, max tokens, thinking/reasoning config, prompt append, stability flag.
 

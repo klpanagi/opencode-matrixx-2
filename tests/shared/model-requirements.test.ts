@@ -195,13 +195,13 @@ describe("getCategoryModelRequirements", () => {
         construct: {
           fallbackChain: [{ providers: ["provider-a"], model: "model-a" }], // fixture: synthetic
         },
-        "deep-jack": {
+        "rabbit-hole": {
           fallbackChain: [{ providers: ["provider-a"], model: "model-b", variant: "max" }], // fixture: synthetic
         },
         "bullet-time": {
           fallbackChain: [{ providers: ["provider-b"], model: "model-c" }], // fixture: synthetic
         },
-        broadcast: {
+        transmission: {
           fallbackChain: [{ providers: ["provider-a"], model: "model-a" }], // fixture: synthetic
         },
       },
@@ -209,14 +209,14 @@ describe("getCategoryModelRequirements", () => {
     const result = getCategoryModelRequirements(cfg)
     expect(Object.keys(result)).toHaveLength(4)
     expect(result.construct.fallbackChain[0].model).toBe("model-a") // fixture: synthetic
-    expect(result["deep-jack"].fallbackChain[0].variant).toBe("max")
+    expect(result["rabbit-hole"].fallbackChain[0].variant).toBe("max")
     expect(result["bullet-time"].fallbackChain[0].providers).toEqual(["provider-b"])
   })
 
   test("factory with config containing fallbackChain returns expected chain length and providers", () => {
     const cfg = makeConfig({
       categories: {
-        "red-pill": {
+        "the-one": {
           fallbackChain: [
             { providers: ["provider-a", "provider-b", "provider-c"], model: "model-x", variant: "max" }, // fixture: synthetic
             { providers: ["provider-a", "provider-b", "provider-c"], model: "model-y" }, // fixture: synthetic
@@ -225,10 +225,10 @@ describe("getCategoryModelRequirements", () => {
       },
     })
     const result = getCategoryModelRequirements(cfg)
-    expect(result["red-pill"].fallbackChain).toHaveLength(2)
-    expect(result["red-pill"].fallbackChain[0].providers).toEqual(["provider-a", "provider-b", "provider-c"])
-    expect(result["red-pill"].fallbackChain[0].model).toBe("model-x") // fixture: synthetic
-    expect(result["red-pill"].fallbackChain[1].model).toBe("model-y") // fixture: synthetic
+    expect(result["the-one"].fallbackChain).toHaveLength(2)
+    expect(result["the-one"].fallbackChain[0].providers).toEqual(["provider-a", "provider-b", "provider-c"])
+    expect(result["the-one"].fallbackChain[0].model).toBe("model-x") // fixture: synthetic
+    expect(result["the-one"].fallbackChain[1].model).toBe("model-y") // fixture: synthetic
   })
 
   test("preserves requiresModel field when provided", () => {
@@ -237,14 +237,14 @@ describe("getCategoryModelRequirements", () => {
         source: {
           fallbackChain: [{ providers: ["provider-a"], model: "model-a" }], // fixture: synthetic
         },
-        "deep-jack": {
+        "rabbit-hole": {
           fallbackChain: [{ providers: ["provider-a"], model: "model-b" }], // fixture: synthetic
         },
       },
     })
     const result = getCategoryModelRequirements(cfg)
     expect(result.source.requiresModel).toBeUndefined()
-    expect(result["deep-jack"].requiresModel).toBeUndefined()
+    expect(result["rabbit-hole"].requiresModel).toBeUndefined()
   })
 
   test("hardcoded literals are not required for categories", () => {
@@ -253,14 +253,14 @@ describe("getCategoryModelRequirements", () => {
         "blue-pill": {
           fallbackChain: [{ providers: ["provider-a"], model: "model-a" }], // fixture: synthetic
         },
-        "matrix-bend": {
+        "glitch": {
           fallbackChain: [{ providers: ["provider-b"], model: "model-b" }], // fixture: synthetic
         },
       },
     })
     const result = getCategoryModelRequirements(cfg)
     expect(result["blue-pill"].fallbackChain[0].model).toBe("model-a") // fixture: synthetic
-    expect(result["matrix-bend"].fallbackChain[0].providers).toEqual(["provider-b"])
+    expect(result["glitch"].fallbackChain[0].providers).toEqual(["provider-b"])
   })
 })
 

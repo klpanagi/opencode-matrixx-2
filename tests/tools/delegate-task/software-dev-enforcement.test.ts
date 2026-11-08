@@ -233,12 +233,12 @@ describe("isCodeWritingCategory single source of truth", () => {
     expect(isCodeWritingCategory("source")).toBe(true)
     for (const category of [
       "construct",
-      "deep-jack",
-      "matrix-bend",
+      "rabbit-hole",
+      "glitch",
       "bullet-time",
       "blue-pill",
-      "red-pill",
-      "broadcast",
+      "the-one",
+      "transmission",
       undefined,
       "",
       "Source",

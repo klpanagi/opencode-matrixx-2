@@ -73,12 +73,12 @@ describe("resolveSoftwareDevEnforcementContent (spec split-payloads sections 4-9
     const agentToUse = "mouse"
     const categories = [
       "construct",
-      "deep-jack",
-      "matrix-bend",
+      "rabbit-hole",
+      "glitch",
       "bullet-time",
       "blue-pill",
-      "red-pill",
-      "broadcast",
+      "the-one",
+      "transmission",
       undefined,
     ] as const
 

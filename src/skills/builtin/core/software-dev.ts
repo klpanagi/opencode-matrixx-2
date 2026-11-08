@@ -32,7 +32,7 @@ This skill defines a 6-phase software development pipeline with specialized role
 |------|-------------|--------|---------|
 | Architect | \`subagent_type="oracle"\` | — | Design, architecture decisions |
 | Developer | \`category="source"\` | git-master, tdd-enforcer | Implementation + tests |
-| Quality Evaluator | \`category="red-pill"\` | quality-gate, review-work | Lint, typecheck, review |
+| Quality Evaluator | \`category="the-one"\` | quality-gate, review-work | Lint, typecheck, review |
 | Security Expert | \`subagent_type="sentinel"\` | security-core, security-sast, security-api, security-dependencies | Security audit |
 
 ---
@@ -127,7 +127,7 @@ Fire 6-agent parallel review:
 
 \`\`\`
 task(
-  category="red-pill",
+  category="the-one",
   load_skills=["quality-gate", "review-work"],
   run_in_background=true,
   description="Review implementation",

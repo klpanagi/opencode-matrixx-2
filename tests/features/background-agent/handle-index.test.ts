@@ -243,7 +243,7 @@ describe("toHandle", () => {
     //#given a fully populated task
     const task = makeTask({
       model: { providerID: "anthropic", modelID: "claude-sonnet-4" },
-      category: "quick",
+      category: "bullet-time",
       concurrencyGroup: "anthropic/claude-sonnet-4",
     })
 
@@ -257,7 +257,7 @@ describe("toHandle", () => {
     expect(handle.agent).toBe(task.agent)
     expect(handle.status).toBe(task.status)
     expect(handle.model).toEqual(task.model)
-    expect(handle.category).toBe("quick")
+    expect(handle.category).toBe("bullet-time")
     expect(handle.concurrencyGroup).toBe("anthropic/claude-sonnet-4")
     expect(handle.queuedAt).toBe(task.queuedAt?.getTime())
     expect(handle.startedAt).toBe(task.startedAt?.getTime())

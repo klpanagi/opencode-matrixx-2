@@ -113,13 +113,13 @@ export const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequiremen
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
     ],
   },
-  "deep-jack": {
+  "rabbit-hole": {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
     ],
   },
-  "matrix-bend": {
+  "glitch": {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
@@ -137,13 +137,13 @@ export const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequiremen
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback
     ],
   },
-  "red-pill": {
+  "the-one": {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
     ],
   },
-  broadcast: {
+  transmission: {
     fallbackChain: [
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback

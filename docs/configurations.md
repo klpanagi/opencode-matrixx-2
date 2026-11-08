@@ -736,12 +736,12 @@ All 8 categories come with optimal model defaults, but **you must configure them
 | -------------------- | ---------------------------------- | -------------------------------------------------------------------- |
 | `construct`          | `opencode/qwen3.6-plus-free`       | Frontend, UI/UX, design, styling, animation                          |
 | `source`             | `opencode/kimi-k2.5-free`          | Deep logical reasoning, complex architecture decisions               |
-| `deep-jack`          | `opencode/kimi-k2.5-free`          | Goal-oriented autonomous problem-solving, thorough research          |
-| `matrix-bend`        | `opencode/qwen3.6-plus-free`       | Complex problem-solving with creative approaches                     |
+| `rabbit-hole`          | `opencode/kimi-k2.5-free`          | Goal-oriented autonomous problem-solving, thorough research          |
+| `glitch`        | `opencode/qwen3.6-plus-free`       | Complex problem-solving with creative approaches                     |
 | `bullet-time`        | `opencode/ling-3.0-flash-free`     | Trivial tasks - single file changes, typo fixes, simple modifications|
 | `blue-pill`          | `opencode/qwen3.6-plus-free`       | Tasks that don't fit other categories, low effort required           |
-| `red-pill`           | `opencode/kimi-k2.5-free` (max)    | Tasks that don't fit other categories, high effort required          |
-| `broadcast`          | `opencode/nemotron-3-super-free`   | Documentation, prose, technical writing                              |
+| `the-one`           | `opencode/kimi-k2.5-free` (max)    | Tasks that don't fit other categories, high effort required          |
+| `transmission`          | `opencode/nemotron-3-super-free`   | Documentation, prose, technical writing                              |
 
 ### ⚠️ Critical: Model Resolution Priority
 
@@ -779,24 +779,24 @@ All 8 categories come with optimal model defaults, but **you must configure them
     "source": { 
       "model": "opencode/kimi-k2.5-free"      // Deep reasoning & architecture
     },
-    "deep-jack": { 
+    "rabbit-hole": { 
       "model": "opencode/kimi-k2.5-free",     // Goal-oriented problem solving
       "variant": "medium"
     },
-    "matrix-bend": { 
+    "glitch": { 
       "model": "opencode/qwen3.6-plus-free"   // Creative problem solving
     },
     "construct": { 
       "model": "opencode/qwen3.6-plus-free"   // Frontend, UI/UX, design
     },
-    "red-pill": { 
+    "the-one": { 
       "model": "opencode/kimi-k2.5-free",     // High effort, complex
       "variant": "max"
     },
     "blue-pill": { 
       "model": "opencode/qwen3.6-plus-free"   // Low effort, general
     },
-    "broadcast": { 
+    "transmission": { 
       "model": "opencode/nemotron-3-super-free" // Documentation, prose
     },
     "bullet-time": { 
@@ -852,7 +852,7 @@ Each category can define a `temperature` that overrides the agent's default temp
       "model": "opencode/kimi-k2.5-free",
       "temperature": 0.1
     },
-    "broadcast": {
+    "transmission": {
       "model": "opencode/nemotron-3-super-free",
       "temperature": 0.5
     }
@@ -947,12 +947,12 @@ Categories follow the same resolution logic:
 |----------|-------------------|-------------------------|
 | **construct** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) |
 | **source** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (deepseek-v4-flash-free) |
-| **deep-jack** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (qwen3.6-plus-free) |
-| **matrix-bend** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (glm-5-free) |
+| **rabbit-hole** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (qwen3.6-plus-free) |
+| **glitch** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (glm-5-free) |
 | **bullet-time** | `ling-3.0-flash-free` | zai-coding-plan → opencode (ling-3.0-flash-free) → opencode (deepseek-v4-flash-free) |
 | **blue-pill** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (deepseek-v4-flash-free) |
-| **red-pill** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
-| **broadcast** | `nemotron-3-super-free` | zai-coding-plan → opencode (nemotron-3-super-free) → opencode (kimi-k2.5-free) |
+| **the-one** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
+| **transmission** | `nemotron-3-super-free` | zai-coding-plan → opencode (nemotron-3-super-free) → opencode (kimi-k2.5-free) |
 
 ### Checking Your Configuration
 

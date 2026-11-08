@@ -8,7 +8,7 @@ describe("category suggested skills", () => {
     //#given
     const valid = new Set(BuiltinSkillNameSchema.options)
     //#when
-    for (const category of ["construct", "source", "deep-jack", "matrix-bend", "bullet-time", "blue-pill", "red-pill", "broadcast"]) {
+    for (const category of ["construct", "source", "rabbit-hole", "glitch", "bullet-time", "blue-pill", "the-one", "transmission"]) {
       const suggested = getSuggestedSkillsForCategory(category)
       //#then
       expect(suggested.length).toBeGreaterThan(0)

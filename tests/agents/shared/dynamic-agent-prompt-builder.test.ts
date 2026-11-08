@@ -23,7 +23,7 @@ import {
 describe("buildCategorySkillsDelegationGuide", () => {
   const categories: AvailableCategory[] = [
     { name: "construct", description: "Frontend, UI/UX" },
-    { name: "quick", description: "Trivial tasks" },
+    { name: "bullet-time", description: "Trivial tasks" },
   ]
 
   const builtinSkills: AvailableSkill[] = [

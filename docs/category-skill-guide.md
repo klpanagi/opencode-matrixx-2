@@ -22,18 +22,18 @@ A Category is an agent configuration preset optimized for specific domains.
 
 ### Available Built-in Categories
 
-8 categories verified against `BuiltinCategoryNameSchema` (`src/config/schema/categories.ts`): `construct`, `source`, `deep-jack`, `matrix-bend`, `bullet-time`, `blue-pill`, `red-pill`, `broadcast`. Resolution logic lives in `src/tools/delegate-task/` (`category-resolver.ts`, `categories.ts`).
+8 categories verified against `BuiltinCategoryNameSchema` (`src/config/schema/categories.ts`): `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`. Resolution logic lives in `src/tools/delegate-task/` (`category-resolver.ts`, `categories.ts`).
 
 | Category | Default Model | Use Cases |
 |----------|---------------|-----------|
 | `construct` | `opencode/qwen3.6-plus-free` | Frontend, UI/UX, design, styling, animation |
 | `source` | `opencode/kimi-k2.5-free` | Hard logic, backend, core implementation |
-| `deep-jack` | `opencode/kimi-k2.5-free` | Goal-oriented autonomous problem-solving. Thorough research before action. |
-| `matrix-bend` | `opencode/minimax-m3-free` | Creative tasks, novel ideas |
+| `rabbit-hole` | `opencode/kimi-k2.5-free` | Goal-oriented autonomous problem-solving. Thorough research before action. |
+| `glitch` | `opencode/minimax-m3-free` | Creative tasks, novel ideas |
 | `bullet-time` | `opencode/ling-3.0-flash-free` | Quick fixes, trivial tasks — single file changes, typo fixes |
 | `blue-pill` | `opencode/glm-5-free` | General tasks, moderate effort |
-| `red-pill` | `opencode/kimi-k2.5-free` | Complex tasks, high effort |
-| `broadcast` | `opencode/nemotron-3-super-free` | Documentation, prose, technical writing |
+| `the-one` | `opencode/kimi-k2.5-free` | Complex tasks, high effort |
+| `transmission` | `opencode/nemotron-3-super-free` | Documentation, prose, technical writing |
 
 Each category declares a fallback chain of `<provider>/<model>` candidates; Matrixx
 selects the first whose provider is connected. Shipped defaults are illustrative —
@@ -148,7 +148,7 @@ You can create powerful specialized agents by combining Categories and Skills.
 - **Effect**: Implements aesthetic UI and verifies rendering results directly in browser.
 
 ### 🏗️ The Niobe (Design Review)
-- **Category**: `red-pill`
+- **Category**: `the-one`
 - **load_skills**: `[]` (pure reasoning)
 - **Effect**: Leverages the strongest available reasoning model for in-depth system architecture analysis.
 

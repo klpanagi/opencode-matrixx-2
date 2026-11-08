@@ -469,7 +469,7 @@ Ordered (the **MVP gate** = items 1–3 green in CI before anything else):
 | T2.D · record alert events; 30 d retention | `influxdb-timeseries` | retention + alerts measurement | Covered |
 | T2.E · Grafana dashboard JSON committed | `grafana-dashboards` + `dashboard-flux-validator` | dashboard spec | Covered |
 | T2.F · swallowed failure | `silent-failure-detection` + scanner + `tank` | §8 four-part capability | Covered |
-| T2 · deliverables (README, design note, logs, Grafana creds) | `broadcast`/docs | deliverable checklist | **Gap — add** |
+| T2 · deliverables (README, design note, logs, Grafana creds) | `transmission`/docs | deliverable checklist | **Gap — add** |
 
 Legend: **Covered** · **Design only** · **Gap/Add** = must be folded into the relevant skill body or the acceptance artifact before an implementer starts.
 

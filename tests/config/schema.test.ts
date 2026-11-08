@@ -461,7 +461,7 @@ describe("CategoryConfigSchema", () => {
 describe("BuiltinCategoryNameSchema", () => {
   test("accepts all builtin category names", () => {
     // given
-    const categories = ["construct", "source", "deep-jack", "matrix-bend", "bullet-time", "blue-pill", "red-pill", "broadcast"]
+    const categories = ["construct", "source", "rabbit-hole", "glitch", "bullet-time", "blue-pill", "the-one", "transmission"]
 
     // when / #then
     for (const cat of categories) {
@@ -580,7 +580,7 @@ describe("Mouse agent override", () => {
           category: "source",
         },
         smith: {
-          category: "quick",
+          category: "bullet-time",
         },
       },
     }
@@ -592,7 +592,7 @@ describe("Mouse agent override", () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.agents?.seraph?.category).toBe("source")
-      expect(result.data.agents?.smith?.category).toBe("quick")
+      expect(result.data.agents?.smith?.category).toBe("bullet-time")
     }
   })
 })
