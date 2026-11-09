@@ -15,6 +15,8 @@ export const HOOK_NAME_MAP: Record<string, string | null> = {
   "compaction-todo-preserver": null,
   "tasks-todowrite-disabler": null,
   "task-notepad": null,
+  // Implementation removed (R17): babysitter hook unwired. `null` = strip with one warn.
+  "unstable-agent-babysitter": null,
   // Removed: task-continuation-enforcer replaced by unified async parent
   // notification in BackgroundManager.handleEvent. `null` = strip with one warn.
   "task-continuation-enforcer": null,

@@ -132,3 +132,38 @@ describe("legacy names migrate to a null target (no surviving hook)", () => {
     expect(result.changed).toBe(true)
   })
 })
+
+describe("unstable-agent-babysitter alias is retained after unwiring (R17)", () => {
+  test("schema accepts disabled_hooks carrying the retired name", () => {
+    //#given a config written before the hook implementation was removed
+    const legacy = ["unstable-agent-babysitter"]
+
+    //#when the hook-name schema parses it as a disabled_hooks list
+    const result = HookNameSchema.array().safeParse(legacy)
+
+    //#then it loads without invalid_enum
+    expect(result.success).toBe(true)
+  })
+
+  test("HOOK_NAME_MAP maps it to null", () => {
+    //#given the migration map
+    const map: Record<string, string | null> = HOOK_NAME_MAP
+
+    //#then it is recognized with no surviving target
+    expect(Object.hasOwn(map, "unstable-agent-babysitter")).toBe(true)
+    expect(map["unstable-agent-babysitter"]).toBeNull()
+  })
+
+  test("migrateHookNames strips it and reports it removed", () => {
+    //#given a disabled_hooks list written before the removal
+    const hooks = ["unstable-agent-babysitter", "session-notification"]
+
+    //#when the migration runs
+    const result = migrateHookNames(hooks)
+
+    //#then it is stripped and a surviving name is untouched
+    expect(result.removed).toEqual(["unstable-agent-babysitter"])
+    expect(result.migrated).toEqual(["session-notification"])
+    expect(result.changed).toBe(true)
+  })
+})

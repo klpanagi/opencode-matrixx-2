@@ -9,6 +9,10 @@ import {
   registerSubagentSession,
 } from "../../../src/features/session-state/state"
 import * as connectedProvidersCache from "../../../src/shared/model/connected-providers-cache"
+import type { MatrixxConfig } from "../../../src/config"
+import type { BackgroundManager } from "../../../src/features/background-agent"
+import { createContinuationHooks } from "../../../src/plugin/hooks/create-continuation-hooks"
+import type { NativePluginContext } from "../../../src/shared/session/session-context-source"
 
 const ARGS: DelegateTaskArgs = {
   prompt: "test prompt",
@@ -202,5 +206,23 @@ describe("isUnstableAgent retention (D7 port from deleted babysitter hook test)"
 
     //#then
     expect(result.isUnstableAgent).toBe(false)
+  })
+})
+
+describe("continuation hooks smoke", () => {
+  test("the unwired babysitter leaves no slot on the continuation hooks object", () => {
+    //#given headless continuation wiring with every hook disabled
+    const hooks = createContinuationHooks({
+      ctx: {} as NativePluginContext,
+      pluginConfig: {} as MatrixxConfig,
+      isHookEnabled: () => false,
+      safeHookEnabled: false,
+      backgroundManager: {} as BackgroundManager,
+      sessionRecovery: {} as never,
+    })
+
+    //#when the returned wiring is inspected
+    //#then the removed hook has no property
+    expect("unstableAgentBabysitter" in hooks).toBe(false)
   })
 })

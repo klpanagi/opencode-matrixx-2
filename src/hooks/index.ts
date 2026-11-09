@@ -62,6 +62,5 @@ export { createThinkModeHook } from "./think-mode";
 export { createThinkingBlockValidatorHook } from "./thinking-block-validator/hook";
 export { createToolOutputTruncatorHook } from "./tool-output-truncator";
 export { createToolPairValidatorHook } from "./tool-pair-validator/hook"
-export { createUnstableAgentBabysitterHook } from "./unstable-agent-babysitter";
 export { createWebFetchRedirectGuardHook } from "./webfetch-redirect-guard/hook"
 export { createWriteExistingFileGuardHook } from "./write-existing-file-guard/hook";
