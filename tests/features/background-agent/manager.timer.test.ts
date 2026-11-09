@@ -17,6 +17,7 @@ function createManager(
       create: async () => ({ id: `ses_${Math.random().toString(36).slice(2, 8)}` }),
       prompt: async () => ({}),
       interrupt: async () => ({}),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
       ...session,
     },
     agent: { list: async () => [] },
@@ -84,7 +85,7 @@ describe("B1 settled-guard: no double terminal writes", () => {
     const task = seedTask(manager, { id: "t-idle", sessionID: "ses_idle1", status: "running" })
 
     //#when
-    manager.handleEvent({ type: "session.idle", data: { sessionID: "ses_idle1" } } as unknown as Parameters<
+    await manager.handleEvent({ type: "session.idle", data: { sessionID: "ses_idle1" } } as unknown as Parameters<
       BackgroundManager["handleEvent"]
     >[0])
     expect(task.status).toBe("completed")

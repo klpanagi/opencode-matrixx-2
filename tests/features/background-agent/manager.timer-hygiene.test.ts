@@ -16,6 +16,7 @@ function createManager(
       create: async () => ({ id: `ses_${Math.random().toString(36).slice(2, 8)}` }),
       prompt: async () => ({}),
       interrupt: async () => ({}),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
       ...session,
     },
     agent: { list: async () => [] },
@@ -84,7 +85,7 @@ describe("timer hygiene: zero live timers on every exit path", () => {
     expect(wallclockSize(manager)).toBe(0)
   })
 
-  test("session.idle success path disarms the wallclock timer", () => {
+  test("session.idle success path disarms the wallclock timer", async () => {
     //#given
     const manager = createManager(dir)
     const task = seedTask(manager, { id: "bg_idle1", sessionID: "ses_idle9" })
@@ -92,7 +93,7 @@ describe("timer hygiene: zero live timers on every exit path", () => {
     expect(wallclockSize(manager)).toBe(1)
 
     //#when
-    manager.handleEvent(idleEvent("ses_idle9"))
+    await manager.handleEvent(idleEvent("ses_idle9"))
 
     //#then
     expect(task.status).toBe("completed")
@@ -114,7 +115,7 @@ describe("timer hygiene: zero live timers on every exit path", () => {
     expect(wallclockSize(manager)).toBe(0)
   })
 
-  test("execution.succeeded/failed paths disarm the wallclock timer", () => {
+  test("execution.succeeded/failed paths disarm the wallclock timer", async () => {
     //#given
     const manager = createManager(dir)
     const ok = seedTask(manager, { id: "bg_ok1", sessionID: "ses_ok9" })
@@ -124,8 +125,8 @@ describe("timer hygiene: zero live timers on every exit path", () => {
     expect(wallclockSize(manager)).toBe(2)
 
     //#when
-    manager.handleEvent({ type: "session.execution.succeeded", data: { sessionID: "ses_ok9" } } as unknown as HandleEventArg)
-    manager.handleEvent({ type: "session.execution.failed", data: { sessionID: "ses_bad9", error: "x" } } as unknown as HandleEventArg)
+    await manager.handleEvent({ type: "session.execution.succeeded", data: { sessionID: "ses_ok9" } } as unknown as HandleEventArg)
+    await manager.handleEvent({ type: "session.execution.failed", data: { sessionID: "ses_bad9", error: "x" } } as unknown as HandleEventArg)
 
     //#then
     expect(ok.status).toBe("completed")

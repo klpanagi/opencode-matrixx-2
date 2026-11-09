@@ -103,7 +103,7 @@ describe("waitForAllDescendants native gate", () => {
     })
     unregisterSubagentSession("ses_nat")
     //#when
-    manager.handleEvent({
+    await manager.handleEvent({
       type: "session.idle",
       data: { sessionID: "ses_bg9" },
     } as unknown as V2Event)

@@ -20,6 +20,7 @@ import type { BackgroundTask, ReviveInput } from "../types"
 import { finalizeTask, NOTIFY_PARENT, RECORD_HISTORY, REMOVE_TOAST, SKIP_HISTORY } from "./finalize"
 import { abortSessionQuietly, firePrompt } from "./lifecycle"
 import type { BackgroundManager } from "./manager"
+import { validateSessionHasOutput } from "./output-guard"
 import { ManagerStore } from "./store"
 import type { ManagerRuntime, ResolveAnyResult } from "./types"
 
@@ -422,6 +423,20 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
     }
 
     if (event.type === "session.idle") {
+      if (!(await validateSessionHasOutput({ session: rt.native.session }, sessionID))) {
+        task.terminalReason = "no-output"
+        await finalizeTask(rt, task, {
+          status: "error",
+          source: "output-guard",
+          notify: NOTIFY_PARENT,
+          removeToast: REMOVE_TOAST,
+          recordHistory: SKIP_HISTORY,
+          incomingError: "Session produced no assistant or tool output",
+          logMessage: "[background-agent] Task errored (output guard):",
+          computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+        })
+        return
+      }
       await finalizeTask(rt, task, {
         status: "completed",
         source: "native session.idle",
@@ -447,6 +462,20 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
       return
     }
     if (event.type === "session.execution.succeeded") {
+      if (!(await validateSessionHasOutput({ session: rt.native.session }, sessionID))) {
+        task.terminalReason = "no-output"
+        await finalizeTask(rt, task, {
+          status: "error",
+          source: "output-guard",
+          notify: NOTIFY_PARENT,
+          removeToast: REMOVE_TOAST,
+          recordHistory: SKIP_HISTORY,
+          incomingError: "Session produced no assistant or tool output",
+          logMessage: "[background-agent] Task errored (output guard):",
+          computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+        })
+        return
+      }
       await finalizeTask(rt, task, {
         status: "completed",
         source: "native session.execution.succeeded",

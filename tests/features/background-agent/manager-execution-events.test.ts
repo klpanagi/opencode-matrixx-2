@@ -9,7 +9,7 @@ function createBackgroundManager(): BackgroundManager {
     session: {
       prompt: async () => ({}),
       interrupt: async () => ({}),
-      context: async () => ({ messages: [] }),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
     },
     agent: { list: async () => [] },
     model: { list: async () => [] },
@@ -34,7 +34,7 @@ function getTaskMap(manager: BackgroundManager): Map<string, BackgroundTask> {
 }
 
 describe("BackgroundManager.handleEvent - session.execution terminal events", () => {
-  test("completes running task on session.execution.succeeded", () => {
+  test("completes running task on session.execution.succeeded", async () => {
     //#given
     const manager = createBackgroundManager()
     const sessionID = "ses_exec_ok_1"
@@ -46,7 +46,7 @@ describe("BackgroundManager.handleEvent - session.execution terminal events", ()
     getTaskMap(manager).set(task.id, task)
 
     //#when
-    manager.handleEvent({ type: "session.execution.succeeded", data: { sessionID } })
+    await manager.handleEvent({ type: "session.execution.succeeded", data: { sessionID } })
 
     //#then
     expect(task.status).toBe("completed")
