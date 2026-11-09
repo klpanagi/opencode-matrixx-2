@@ -4,6 +4,18 @@ import type { NativeDomains } from "../../../shared/session/session-context-sour
 import type { TaskHistory } from "../task-history"
 import type { ManagerStore } from "./store"
 
+/** Handle returned by {@link ManagerTimers.setTimeout}. */
+export type ManagerTimerHandle = ReturnType<typeof setTimeout>
+
+/**
+ * Injectable timer surface so lifecycle/reconcile code can run against a
+ * deterministic clock in tests. Defaults to the global timer functions.
+ */
+export interface ManagerTimers {
+  setTimeout(callback: () => void, delayMs?: number): ManagerTimerHandle
+  clearTimeout(handle: ManagerTimerHandle): void
+}
+
 /**
  * Shared runtime handed to the lifecycle/reconcile function modules.
  * `BackgroundManager` satisfies this structurally; the function modules
@@ -16,6 +28,9 @@ export interface ManagerRuntime {
   readonly config?: BackgroundTaskConfig
   readonly effortConfig?: EffortConfig
   readonly taskHistory: TaskHistory
+  readonly now?: () => number
+  readonly timers?: ManagerTimers
+  notify?: (payload: unknown) => void | Promise<void>
 }
 
 
