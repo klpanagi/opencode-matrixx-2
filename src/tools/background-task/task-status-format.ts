@@ -60,6 +60,7 @@ ${truncated}
    }
 
   const durationLabel = task.status === "pending" ? "Queued for" : "Duration"
+  const sessionIdLabel = task.sessionID ? `\`${task.sessionID}\`` : "—"
 
   return `# Task Status
 
@@ -70,7 +71,7 @@ ${truncated}
 | Agent | ${task.agent} |
 | Status | **${task.status}** |
 | ${durationLabel} | ${duration} |
-| Session ID | \`${task.sessionID}\` |${progressSection}
+| Session ID | ${sessionIdLabel} |${progressSection}
 ${statusNote}
 ## Original Prompt
 
