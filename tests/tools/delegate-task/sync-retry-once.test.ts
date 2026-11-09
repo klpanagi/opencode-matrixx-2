@@ -79,7 +79,7 @@ function buildHarness(messagesImpl: () => Promise<unknown>) {
   const fetchSyncResult = mock(() => Promise.resolve({ ok: true as const, textContent: "completed" }))
   const deps = {
     createSyncSession: mock(() =>
-      Promise.resolve({ ok: true as const, sessionID: SESSION_ID, parentDirectory: "/tmp" }),
+      Promise.resolve({ ok: true as const, sessionID: SESSION_ID }),
     ),
     sendSyncPrompt,
     pollSyncSession,

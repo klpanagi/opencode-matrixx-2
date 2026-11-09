@@ -13,16 +13,10 @@ export async function createSyncSession(
     parentSessionID: string
     agentToUse: string
     description: string
-    defaultDirectory: string
     category?: string
     model?: SyncSessionModel
   }
-): Promise<{ ok: true; sessionID: string; parentDirectory: string } | { ok: false; error: string }> {
-  const parentSession = (await client.session
-    .get({ sessionID: input.parentSessionID })
-    .catch(() => null)) as { directory?: string } | null
-  const parentDirectory = parentSession?.directory ?? input.defaultDirectory
-
+): Promise<{ ok: true; sessionID: string } | { ok: false; error: string }> {
   try {
     const created = (await client.session.create({
       parentID: input.parentSessionID,
@@ -39,7 +33,7 @@ export async function createSyncSession(
         : {}),
     })) as { id: string }
 
-    return { ok: true, sessionID: created.id, parentDirectory }
+    return { ok: true, sessionID: created.id }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     return { ok: false, error: `Failed to create session: ${message}` }
