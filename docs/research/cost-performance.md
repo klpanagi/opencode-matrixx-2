@@ -63,7 +63,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 | Context window monitor (70% warn) | `src/hooks/context-window-monitor.ts` | Pre-empts overload |
 | ~~Preemptive compaction~~ (REMOVED: retained-deprecated no-op literal; single compaction hook owns compaction) | ~~`src/hooks/preemptive-compaction.ts`~~ (does not exist) | Proposal only, not current behavior |
 | Multi-strategy context recovery | `src/hooks/context-window-limit-recovery/ (~1100 LOC)
-| Concurrency limits + circuit breakers | `src/features/background-agent/concurrency.ts` | Model-specific limits |
+| ~~Concurrency limits + circuit breakers~~ (REMOVED: admission semaphores and the loop detector are gone; related config keys are deprecated) | — | Not current behavior |
 | 8-category delegation routing | `src/tools/delegate-task/constants.ts` (591 LOC) | Has per-category models |
 | 70 built-in skills (schema `BuiltinSkillNameSchema`; 86 skill asset files under the loader) | `src/skills/builtin/` | **Lazy-loaded** — see P1 (`src/skills/loader/factories.ts`, `src/skills/loader/lazy-skill-helper.ts`) |
 | 2 built-in MCPs (`context7`, `document-reader`) | `src/mcps/index.ts` | Lazy hydration — see P1 |

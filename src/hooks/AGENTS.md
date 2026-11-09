@@ -42,10 +42,11 @@ hooks/
 ├── think-mode/                   # Dynamic thinking budget
 ├── thinking-block-validator/     # Validates thinking blocks
 ├── tool-output-truncator.ts      # Prevents context bloat
-├── unstable-agent-babysitter/    # Monitors unstable behavior
 ├── task-edit-guard/               # Blocks raw bash edits to .matrixx/plans and .matrixx/tasks — enforces plan_*/task_* tools; BLOCKs generic Write/Edit to plans (tool.execute.before)
 └── write-existing-file-guard/    # Guards against file overwrite
 ```
+
+`unstable-agent-babysitter` is a deprecated alias only — its implementation was removed, the name still parses so old configs keep loading, and it resolves to a no-op.
 
 ## EVENT TYPES
 
