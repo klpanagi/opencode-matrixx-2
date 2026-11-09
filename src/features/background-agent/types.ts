@@ -15,11 +15,9 @@ export type BackgroundTerminalReason =
   | "no-output"
   | "uncertain"
   | "aborted"
-  | "stale"
   // producer: a delegation attempted from a session already at depth 1 (nested depth cap)
   | "nested-depth-exceeded"
   | "wall-clock-timeout"
-  | "expired"
 
 export interface ToolCallWindow {
   lastSignature: string

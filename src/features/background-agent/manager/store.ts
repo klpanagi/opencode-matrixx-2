@@ -3,11 +3,23 @@ import { log } from "../../../shared"
 import { getParentSessionID, getSubagentSessionIDs } from "../../session-state/state"
 import { StaleGenerationError } from "../../task-storage/generation"
 import { KNOWN_SESSIONS_MAX, TASK_TTL_MS } from "../constants"
+import type { BgHandle } from "../handle-index"
 import { bumpGeneration, currentGeneration, readHandle, readHandles, writeHandle } from "../handle-index"
 import { TaskMap } from "../task-map"
-import type { BackgroundTask } from "../types"
+import type { BackgroundTask, BackgroundTerminalReason } from "../types"
 import { WallclockSupervisor } from "../wallclock"
 import type { ManagerTimerHandle, ManagerTimers, NativeDescendant } from "./types"
+
+/**
+ * Narrow a persisted handle reason onto the current terminal-reason union.
+ * `stale`/`expired` survive only in old handles, so restored tasks drop them.
+ */
+export function toRestoredReason(
+  reason: BgHandle["terminalReason"],
+): BackgroundTerminalReason | undefined {
+  if (reason === "stale" || reason === "expired") return undefined
+  return reason
+}
 
 /** Short-TTL cache for native descendant listings (T3). In-memory only. */
 const NATIVE_CACHE_TTL_MS = 1000
@@ -185,7 +197,7 @@ export class ManagerStore {
         agent: handle.agent,
         status: uncertain ? "statusUncertain" : handle.status,
         sessionID: handle.sessionID,
-        terminalReason: uncertain ? "uncertain" : handle.terminalReason,
+        terminalReason: uncertain ? "uncertain" : toRestoredReason(handle.terminalReason),
         queuedAt: handle.queuedAt !== undefined ? new Date(handle.queuedAt) : undefined,
         startedAt: handle.startedAt !== undefined ? new Date(handle.startedAt) : undefined,
         completedAt: handle.completedAt !== undefined ? new Date(handle.completedAt) : undefined,

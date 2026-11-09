@@ -11,6 +11,7 @@ import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import { isWallclockEnabled, MAX_WALLCLOCK_TIMEOUT_MS } from "../wallclock"
 import { finalizeTask } from "./finalize"
+import { toRestoredReason } from "./store"
 import type { LaunchResult, ManagerRuntime } from "./types"
 
 /**
@@ -92,7 +93,7 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
         agent: handle.agent,
         status: uncertain ? "statusUncertain" : handle.status,
         sessionID: handle.sessionID,
-        terminalReason: uncertain ? "uncertain" : handle.terminalReason,
+        terminalReason: uncertain ? "uncertain" : toRestoredReason(handle.terminalReason),
         queuedAt:
           handle.queuedAt !== undefined ? new Date(handle.queuedAt) : undefined,
         startedAt:
