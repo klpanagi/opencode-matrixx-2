@@ -91,3 +91,102 @@ describe("resolveAny", () => {
     expect(Array.isArray(known.liveSes)).toBe(true)
   })
 })
+
+describe("resolveAny origin classification", () => {
+  test("reports foreign when native messages resolve but id is not a known session", async () => {
+    //#given a native client that resolves messages for an id absent from knownSessions
+    const ctx = buildCtx({
+      session: {
+        messages: async () => [{ role: "user", content: "hi" }],
+        list: async () => [],
+      },
+    })
+    const mgr = new BackgroundManager(ctx)
+
+    //#when resolving the ses_ id
+    const result = await resolveAny(mgr, "ses_unknown42")
+
+    //#then it is classified foreign, never ses
+    expect(result.origin).toBe("foreign")
+    if (result.origin === "ses" || result.origin === "foreign") {
+      expect(result.sessionId).toBe("ses_unknown42")
+    }
+  })
+
+  test("reports foreign for an id discovered only by the backfill list sweep", async () => {
+    //#given native messages resolve to nothing but the session list contains the id
+    const ctx = buildCtx({
+      session: {
+        messages: async () => undefined,
+        list: async () => [{ id: "ses_swept7" }],
+      },
+    })
+    const mgr = new BackgroundManager(ctx)
+
+    //#when resolving the swept ses_ id
+    const result = await resolveAny(mgr, "ses_swept7")
+
+    //#then it is classified foreign with an empty output
+    expect(result).toEqual({ origin: "foreign", sessionId: "ses_swept7", output: [] })
+  })
+
+  test("reports ses with fetched output when the id is a known session", async () => {
+    //#given a native client that resolves messages and a remembered known session
+    const messages = [{ role: "user", content: "hi" }]
+    const ctx = buildCtx({
+      session: {
+        messages: async () => messages,
+        list: async () => [],
+      },
+    })
+    const mgr = new BackgroundManager(ctx)
+    mgr.store.rememberKnownSession("ses_known9")
+
+    //#when resolving the known ses_ id
+    const result = await resolveAny(mgr, "ses_known9")
+
+    //#then it keeps the ses origin and carries the fetched output
+    expect(result.origin).toBe("ses")
+    if (result.origin === "ses" || result.origin === "foreign") {
+      expect(result.sessionId).toBe("ses_known9")
+      expect(result.output).toEqual(messages)
+    }
+  })
+
+  test("returns not_found for an unrelated ses_ id absent from every source", async () => {
+    //#given native messages resolve to nothing and the session list is empty
+    const ctx = buildCtx({
+      session: {
+        messages: async () => undefined,
+        list: async () => [],
+      },
+    })
+    const mgr = new BackgroundManager(ctx)
+
+    //#when resolving an unrelated ses_ id
+    const result = await resolveAny(mgr, "ses_unrelated5")
+
+    //#then it is a typed not_found error, never ses
+    expect(result).toEqual({ error: "not_found", id: "ses_unrelated5" })
+  })
+
+  test("does not throw when the disk lookup throws", async () => {
+    //#given a manager whose disk lookup fails
+    const ctx = buildCtx({
+      session: {
+        messages: async () => undefined,
+        list: async () => [],
+      },
+    })
+    const mgr = new BackgroundManager(ctx)
+    mgr.findDiskTaskBySession = () => {
+      throw new Error("disk boom")
+    }
+
+    //#when resolving a ses_ id
+    const result = await resolveAny(mgr, "ses_diskboom3")
+
+    //#then it continues to the native paths without throwing
+    expect(result).toEqual({ error: "not_found", id: "ses_diskboom3" })
+  })
+})

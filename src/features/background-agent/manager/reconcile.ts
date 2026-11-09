@@ -544,7 +544,8 @@ export async function resolveAny(
   try {
     const onDisk = manager.findDiskTaskBySession?.(raw)
     if (onDisk !== undefined) return { origin: "bg", task: onDisk }
-  } catch {
+  } catch (error: unknown) {
+    log("[background-agent] resolveAny disk lookup failed:", error)
   }
   if (!raw.startsWith("ses_")) return { error: "not_found", id: raw }
   const native = (manager as unknown as { native?: { session?: unknown } }).native
@@ -565,11 +566,12 @@ export async function resolveAny(
       }
       if (messages !== undefined && messages !== null) {
         const known = manager.getKnownSessionIds()
-        const origin = known.has(raw) ? "ses" : "ses"
+        const origin = known.has(raw) ? "ses" : "foreign"
         return { origin, sessionId: raw, output: messages, messages }
       }
-    } catch {
+    } catch (error: unknown) {
       // Fall through to bounded list sweep below.
+      log("[background-agent] resolveAny native session lookup failed:", error)
     }
   }
   const swept = await backfillKnownSessions(manager)
