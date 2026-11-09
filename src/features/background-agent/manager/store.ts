@@ -35,6 +35,8 @@ export interface Waiter {
  */
 export class ManagerStore {
   readonly tasks = new TaskMap<BackgroundTask>((sessionID) => ManagerStore.normalizeSessionID(sessionID))
+  // Per-instance: each manager owns one store for one project directory, so
+  // these caches are already directory-scoped and need no extra key.
   readonly knownSessions = new Set<string>()
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   readonly wallclock = new WallclockSupervisor()

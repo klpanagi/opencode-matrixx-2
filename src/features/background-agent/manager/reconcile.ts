@@ -34,8 +34,14 @@ import type { ManagerRuntime, ResolveAnyResult } from "./types"
  */
 
 
+// Session lists are project-scoped, so one cache per manager directory is
+// required: a single shared entry leaks session ids across projects.
 const SESSION_LIST_TTL_MS = 30000
-let sessionListCache: { at: number; ids: string[] } | null = null
+const sessionListCaches = new Map<string, { at: number; ids: string[] }>()
+
+export function _resetSessionListCacheForTesting(): void {
+  sessionListCaches.clear()
+}
 
 
 /**
@@ -581,9 +587,11 @@ export async function resolveAny(
 
 
 async function backfillKnownSessions(manager: BackgroundManager): Promise<string[]> {
+  const directory = manager.directory
   const now = Date.now()
-  if (sessionListCache !== null && now - sessionListCache.at < SESSION_LIST_TTL_MS) {
-    return sessionListCache.ids
+  const cached = sessionListCaches.get(directory)
+  if (cached !== undefined && now - cached.at < SESSION_LIST_TTL_MS) {
+    return cached.ids
   }
   const native = (manager as unknown as { native?: { session?: unknown } }).native
   const session = native?.session as
@@ -608,7 +616,7 @@ async function backfillKnownSessions(manager: BackgroundManager): Promise<string
       ids = []
     }
   }
-  sessionListCache = { at: now, ids }
+  sessionListCaches.set(directory, { at: now, ids })
   return ids
 }
 

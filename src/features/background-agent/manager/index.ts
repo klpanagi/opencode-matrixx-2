@@ -6,6 +6,7 @@ export type {
 export { BackgroundManager } from "./manager"
 export {
   _resetPruneThrottleForTesting,
+  _resetSessionListCacheForTesting,
   listKnownSessions,
   resolveAny,
 } from "./reconcile"

@@ -5,6 +5,9 @@ import {
   setSubagentParent,
 } from "./parent-registry"
 
+// Both this set and the parent-registry/agent/model maps are keyed by
+// `ses_` ids, which are globally unique across project directories, so they
+// cannot collide when several projects share the process.
 export const subagentSessions = new Set<string>()
 
 export function registerSubagentSession(sessionID: string, parentSessionID: string): void {
