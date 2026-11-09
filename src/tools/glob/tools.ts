@@ -12,6 +12,7 @@ export function createGlobTools(ctx: MatrixxContext): Record<string, MatrixxTool
       "Supports glob patterns like \"**/*.js\" or \"src/**/*.ts\". " +
       "Returns matching file paths sorted by modification time. " +
       "Use this tool when you need to find files by name patterns.",
+    options: { codemode: false },
     args: {
       pattern: z.string().describe("The glob pattern to match files against"),
       path: z

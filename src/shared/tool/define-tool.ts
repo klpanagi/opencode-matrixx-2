@@ -44,6 +44,7 @@ export interface MatrixxToolDefinition<
   ): Promise<MatrixxToolResult>;
   options?: {
     codemode?: boolean;
+    permission?: string;
   };
 }
 
@@ -215,7 +216,7 @@ export function emitToolInfo(
   } catch {
     return undefined;
   }
-  const options = REGISTRATION_OPTIONS[name];
+  const options = definition.options ?? REGISTRATION_OPTIONS[name];
   return {
     name,
     description: definition.description,

@@ -18,6 +18,7 @@ function isPlansPath(filePath: string): boolean {
 export function createHashlineEditTool(): MatrixxToolDefinition {
   return defineTool("edit", {
     description: HASHLINE_EDIT_DESCRIPTION,
+    options: { codemode: false, permission: "edit" },
     args: {
       filePath: z.string().describe("Absolute path to the file to edit"),
       delete: z.boolean().optional().describe("Delete file instead of editing"),
