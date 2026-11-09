@@ -9,6 +9,9 @@ export async function resolveParentContext(
   ctx: ToolContextWithMetadata,
   client: NativeClient
 ): Promise<ParentContext> {
+  if (typeof ctx.sessionID !== "string" || ctx.sessionID.trim() === "") {
+    throw new Error("Parent session ID is required to resolve parent context")
+  }
   const messageDir = getMessageDir(ctx.sessionID)
   const { prevMessage, firstMessageAgent } = await resolveMessageContext(
     ctx.sessionID,

@@ -10,7 +10,7 @@ import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import { isWallclockEnabled, MAX_WALLCLOCK_TIMEOUT_MS } from "../wallclock"
 import { finalizeTask } from "./finalize"
-import type { ManagerRuntime } from "./types"
+import type { LaunchResult, ManagerRuntime } from "./types"
 
 /**
  * Task lifecycle: restore, launch, track, resume, prompt.
@@ -140,6 +140,40 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
 }
 
 
+function isBlankParentField(value: unknown): boolean {
+  return typeof value !== "string" || value.trim() === ""
+}
+
+/**
+ * Validate the launch parent before any task, handle, toast, or session is
+ * created. A missing/blank id is always rejected. When the native session
+ * domain cannot be probed (no `get`, or a transport error) the check fails
+ * open so an unverifiable environment never produces a phantom rejection.
+ */
+export async function validateLaunchParent(
+  rt: ManagerRuntime,
+  parentSessionID: unknown,
+): Promise<LaunchResult> {
+  if (typeof parentSessionID !== "string" || parentSessionID.trim() === "") {
+    return { ok: false, error: "Parent session ID is required to launch a background task" }
+  }
+  const probeSession = rt.native.session.get
+  if (typeof probeSession !== "function") return { ok: true }
+  let probe: unknown
+  try {
+    probe = await probeSession({ sessionID: parentSessionID })
+  } catch {
+    return { ok: true }
+  }
+  if (probe === undefined || probe === null) {
+    return { ok: false, error: `Parent session is unknown: ${String(parentSessionID)}` }
+  }
+  if (typeof probe === "object" && probe !== null && Reflect.get(probe, "error")) {
+    return { ok: false, error: `Parent session is unknown: ${String(parentSessionID)}` }
+  }
+  return { ok: true }
+}
+
 export async function launchTask(rt: ManagerRuntime,
     input: LaunchInput & {
       sessionId?: string
@@ -161,8 +195,6 @@ export async function launchTask(rt: ManagerRuntime,
       if (aliasedMsg !== undefined) input.parentMessageID = aliasedMsg
     }
     if (input.agent === undefined || input.agent === null) input.agent = 'task'
-    if (input.parentSessionID === undefined) input.parentSessionID = 'ses_parent'
-    if (input.parentMessageID === undefined) input.parentMessageID = 'msg_1'
     log("[background-agent] launch() called with:", {
       agent: input.agent,
       model: input.model,
@@ -172,6 +204,18 @@ export async function launchTask(rt: ManagerRuntime,
 
     if (!input.agent || input.agent.trim() === "") {
       throw new Error("Agent parameter is required")
+    }
+    if (isBlankParentField(input.parentSessionID)) {
+      throw new Error("Parent session ID is required to launch a background task")
+    }
+    if (isBlankParentField(input.parentMessageID)) {
+      throw new Error("Parent message ID is required to launch a background task")
+    }
+    if (typeof rt.native.session.get === "function") {
+      const parentValidation = await validateLaunchParent(rt, input.parentSessionID)
+      if (!parentValidation.ok) {
+        throw new Error(parentValidation.error)
+      }
     }
 
     if (
