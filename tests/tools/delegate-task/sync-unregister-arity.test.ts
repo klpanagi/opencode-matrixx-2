@@ -64,7 +64,7 @@ function buildHarness(overrides: HarnessOverrides = {}) {
 
   const deps: SyncTaskDeps = {
     createSyncSession: mock(() =>
-      Promise.resolve({ ok: true as const, sessionID: SESSION_ID, parentDirectory: "/tmp" }),
+      Promise.resolve({ ok: true as const, sessionID: SESSION_ID }),
     ),
     sendSyncPrompt: mock(() => Promise.resolve(null)),
     pollSyncSession: mock(() => Promise.resolve(null)),

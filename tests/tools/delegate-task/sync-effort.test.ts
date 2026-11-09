@@ -62,7 +62,6 @@ function buildDeps(): SyncTaskDeps {
     createSyncSession: async () => ({
       ok: true as const,
       sessionID: SESSION_ID,
-      parentDirectory: "/tmp",
     }),
     sendSyncPrompt: async () => null,
     pollSyncSession: async () => null,

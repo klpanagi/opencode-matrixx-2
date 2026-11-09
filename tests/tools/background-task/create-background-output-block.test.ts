@@ -15,17 +15,32 @@ const baseCtx = {
   callID: "test-call",
 }
 
+const outputBySession = new Map<string, string>()
+
+function setOutput(id: string, text: string): void {
+  outputBySession.set(`sess-${id}`, text)
+}
+
 const mockClient = {
   session: {
-    context: mock(() => Promise.resolve({ messages: [] })),
+    context: mock((input: { sessionID: string }) =>
+      Promise.resolve({
+        messages: outputBySession.has(input.sessionID)
+          ? [
+              {
+                id: `${input.sessionID}-message`,
+                type: "assistant",
+                time: { created: 1 },
+                content: [{ type: "text", text: outputBySession.get(input.sessionID) }],
+              },
+            ]
+          : [],
+      }),
+    ),
   },
 } as unknown as MatrixxContext["client"]
 
-function makeTask(
-  id: string,
-  status: string,
-  options?: { compactedResult?: string },
-): Record<string, unknown> {
+function makeTask(id: string, status: string): Record<string, unknown> {
   return {
     id,
     sessionID: `sess-${id}`,
@@ -38,7 +53,6 @@ function makeTask(
     status,
     startedAt: new Date(),
     ...(status === "completed" ? { completedAt: new Date() } : {}),
-    ...(options?.compactedResult !== undefined ? { compactedResult: options.compactedResult } : {}),
   }
 }
 
@@ -49,7 +63,7 @@ function makeWakeableManager(
 ): { manager: BackgroundManager; notify: () => void } {
   let pending: (() => void) | undefined
   const manager = {
-    getTask: mock(() => makeTask(getId(), getStatus(), { compactedResult: "woke output" })),
+    getTask: mock(() => makeTask(getId(), getStatus())),
     waitForTaskSettled: mock(
       () =>
         new Promise<void>((resolve) => {
@@ -68,13 +82,9 @@ function makeWakeableManager(
 }
 
 /** Manager whose settle wait falls back to a real timer (the 1s floor). */
-function makeFloorManager(
-  getId: () => string,
-  getStatus: () => string,
-  result?: string,
-): BackgroundManager {
+function makeFloorManager(getId: () => string, getStatus: () => string): BackgroundManager {
   return {
-    getTask: mock(() => makeTask(getId(), getStatus(), { compactedResult: result })),
+    getTask: mock(() => makeTask(getId(), getStatus())),
     waitForTaskSettled: mock(
       (_taskId: string, timeoutMs: number) =>
         new Promise<void>((resolve) => {
@@ -87,7 +97,8 @@ function makeFloorManager(
 describe("createBackgroundOutput block", () => {
   test("A: completed entry returns terminal outcome, no timeout footer", async () => {
     //#given - native event already completed the task in the Map (D5)
-    const task = makeTask("task-a", "completed", { compactedResult: "done output" })
+    setOutput("task-a", "done output")
+    const task = makeTask("task-a", "completed")
     const manager = {
       getTask: mock(() => task),
     } as unknown as BackgroundManager
@@ -117,6 +128,7 @@ describe("createBackgroundOutput block", () => {
 
   test("event-wake: a settle notification returns well under the 1s floor", async () => {
     //#given a running task that turns terminal 50ms after the call starts
+    setOutput("task-wake", "woke output")
     let status = "running"
     const { manager, notify } = makeWakeableManager(() => "task-wake", () => status)
     const tool = createBackgroundOutput(manager, mockClient)
@@ -143,11 +155,11 @@ describe("createBackgroundOutput block", () => {
 
   test("1s-floor: status change mid-wait is re-checked at the floor tick", async () => {
     //#given a task that reports running until 1.1s, while the settle wait only times out
+    setOutput("task-floor", "floor output")
     const startedAt = Date.now()
     const manager = makeFloorManager(
       () => "task-floor",
       () => (Date.now() - startedAt >= 1100 ? "completed" : "running"),
-      "floor output",
     )
     const tool = createBackgroundOutput(manager, mockClient)
     //#when
@@ -200,8 +212,9 @@ describe("createBackgroundOutput block", () => {
   test("oversized output is truncated with the context-mode marker", async () => {
     //#given a completed result larger than the output budget
     const oversized = "x".repeat(MAX_BACKGROUND_OUTPUT_CHARS + 5000)
+    setOutput("task-big", oversized)
     const manager = {
-      getTask: mock(() => makeTask("task-big", "completed", { compactedResult: oversized })),
+      getTask: mock(() => makeTask("task-big", "completed")),
     } as unknown as BackgroundManager
     const tool = createBackgroundOutput(manager, mockClient)
     //#when
@@ -216,10 +229,9 @@ describe("createBackgroundOutput block", () => {
 
   test("small output is returned verbatim", async () => {
     //#given a completed result well within the budget
+    setOutput("task-small", "small done output")
     const manager = {
-      getTask: mock(() =>
-        makeTask("task-small", "completed", { compactedResult: "small done output" }),
-      ),
+      getTask: mock(() => makeTask("task-small", "completed")),
     } as unknown as BackgroundManager
     const tool = createBackgroundOutput(manager, mockClient)
     //#when

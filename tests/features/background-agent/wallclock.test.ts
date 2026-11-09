@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
   isWallclockEnabled,
-  remainingMs,
   WallclockSupervisor,
 } from "../../../src/features/background-agent/wallclock"
 
@@ -127,20 +126,6 @@ describe("WallclockSupervisor", () => {
     expect(supervisor.disarm("task-4")).toBe(true)
     expect(supervisor.getDeadlineAt("task-4")).toBeUndefined()
     expect(supervisor.disarm("task-4")).toBe(false)
-  })
-
-  test("remainingMs computes deadline minus now", () => {
-    //#given
-    const startedAt = 1_000
-    const timeout = 5_000
-
-    //#when
-    const remaining = remainingMs(startedAt, timeout, 3_000)
-    const expired = remainingMs(startedAt, timeout, 7_000)
-
-    //#then
-    expect(remaining).toBe(3_000)
-    expect(expired).toBe(-1_000)
   })
 
   test("isWallclockEnabled rejects zero and undefined only", () => {

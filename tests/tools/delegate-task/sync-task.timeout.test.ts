@@ -96,7 +96,7 @@ function createMockDeps(
 ): SyncTaskDeps {
   return {
     createSyncSession: mock(() =>
-      Promise.resolve({ ok: true as const, sessionID: SESSION_ID, parentDirectory: "/tmp" }),
+      Promise.resolve({ ok: true as const, sessionID: SESSION_ID }),
     ),
     sendSyncPrompt: mock(() => Promise.resolve(null)),
     pollSyncSession: mock(() => Promise.resolve(pollResult)),

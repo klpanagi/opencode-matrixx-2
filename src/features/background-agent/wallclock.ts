@@ -32,10 +32,6 @@ interface WallclockEntry {
   timer: ReturnType<typeof setTimeout> | undefined
 }
 
-export function remainingMs(startedAtMs: number, timeoutMs: number, nowMs: number = Date.now()): number {
-  return startedAtMs + timeoutMs - nowMs
-}
-
 export function remainingMono(deadlineMono: number, nowMono: number): number {
   return Math.max(deadlineMono - nowMono, 0)
 }

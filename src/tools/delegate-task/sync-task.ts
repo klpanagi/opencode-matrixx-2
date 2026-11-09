@@ -54,7 +54,6 @@ export async function executeSyncTask(
       agentToUse,
       description: args.description,
       category: args.category,
-      defaultDirectory: directory,
       ...(categoryModel !== undefined
         ? {
             model: {

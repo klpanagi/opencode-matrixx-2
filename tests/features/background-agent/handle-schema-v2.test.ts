@@ -133,32 +133,26 @@ describe("toHandle projection of v2 fields", () => {
   })
 
   test("projects only the serializable subset of progress", () => {
-    //#given a task whose progress carries ephemeral fields too
+    //#given a task whose progress carries the retained fields
     const task = makeTask({
       progress: {
         toolCalls: 4,
         lastTool: "bash",
         lastUpdate: new Date("2026-01-01T00:02:00.000Z"),
         lastMessage: "still working",
-        lastMessageAt: new Date("2026-01-01T00:02:30.000Z"),
-        toolCallWindow: { lastSignature: "sig", consecutiveCount: 2, threshold: 3 },
-        countedToolPartIDs: new Set(["part_1"]),
       },
     })
 
     //#when projecting to a handle
     const handle = toHandle(task)
 
-    //#then the persisted progress is JSON-serializable and drops ephemeral fields
+    //#then the persisted progress is JSON-serializable
     expect(handle.progress).toEqual({
       toolCalls: 4,
       lastTool: "bash",
       lastUpdate: Date.parse("2026-01-01T00:02:00.000Z"),
       lastMessage: "still working",
     })
-    expect(handle.progress).not.toHaveProperty("toolCallWindow")
-    expect(handle.progress).not.toHaveProperty("countedToolPartIDs")
-    expect(handle.progress).not.toHaveProperty("lastMessageAt")
   })
 
   test("projects origin onto the handle", () => {

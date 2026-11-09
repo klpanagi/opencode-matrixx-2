@@ -337,7 +337,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
           return postCategoryEnforcementError
         }
 
-        const isRunInBackgroundExplicitlyFalse = args.run_in_background === false || args.run_in_background === "false" as unknown as boolean
+        const isRunInBackgroundExplicitlyFalse = args.run_in_background === false
 
         log("[task] unstable agent detection", {
           category: args.category,

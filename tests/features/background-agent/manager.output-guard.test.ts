@@ -202,6 +202,7 @@ describe("output guard module contract", () => {
 
     //#then only the real text survives
     expect(stripped.trim()).toBe("hello")
+    expect(stripAnalysisBlocks("<analysis>x</analysis>")).toBe("")
   })
 
   test("analysis-only content is treated as output", () => {
