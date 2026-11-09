@@ -41,6 +41,11 @@ export const BackgroundTaskConfigSchema = z.object({
   wallClockTimeoutMs: z.union([z.literal(0), z.number().int().min(60000).max(2147483647)]).optional(),
   /** Grace period after wall-clock abort before terminal mark. Minimum 1000, maximum 60000. Default 5000. */
   wallClockAbortGraceMs: z.number().int().min(1000).max(60000).optional(),
+  /**
+   * Reuse an active pending/running task with the same parent session and
+   * delegation key instead of launching a duplicate. Default false (opt-in).
+   */
+  dedupeActiveDelegations: z.boolean().optional(),
 })
 
 export type BackgroundTaskConfig = z.infer<typeof BackgroundTaskConfigSchema>

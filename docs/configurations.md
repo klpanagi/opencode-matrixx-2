@@ -717,6 +717,7 @@ Configure concurrency limits for background agent tasks. This controls how many 
 | `jobBoard.maxRetainedSnapshots` | `20` | Max retained snapshots for the checkpoint-compatible strategy (1..100). |
 | `wallClockTimeoutMs`      | `0`   | Wall-clock execution timeout in milliseconds. Union type: `0` disables wall-clock enforcement (OFF/default). Values ≥60000 enforce a maximum runtime (range 60000–2147483647). Zero means legacy unbounded behavior; any non-zero value triggers terminal `stopped` with `terminalReason: "wallclock-timeout"` when the process runs past this limit. |
 | `wallClockAbortGraceMs`   | `5000` | Grace period in milliseconds between wall-clock timeout expiration and actual task abort signal. Gives long-running processes time to finish flush operations, release resources, or exit cleanly on SIGTERM/SIGKILL (range 1000–60000). |
+| `dedupeActiveDelegations` | `false` | Opt-in. When `true`, an identical delegation (same parent session, agent, prompt) reuses the active pending/running task instead of launching a duplicate. Default `false`: every delegation launches its own task. |
 **Priority Order**: `modelConcurrency` > `providerConcurrency` > `defaultConcurrency`
 
 **Use Cases**:

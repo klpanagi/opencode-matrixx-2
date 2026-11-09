@@ -150,14 +150,16 @@ export async function launchTask(rt: ManagerRuntime,
     }
 
     const concurrencyKey = `${input.parentSessionID}:${input.agent}:${(input.prompt ?? "").length}:${(input.prompt ?? "").slice(0, 120)}`
-    for (const existing of rt.store.tasks.values()) {
-      if (
-        existing.concurrencyKey === concurrencyKey &&
-        (existing.status === "pending" || existing.status === "running") &&
-        existing.parentSessionID === input.parentSessionID
-      ) {
-        log("[background-agent] Launch dedup: reusing active task", { taskId: existing.id })
-        return existing
+    if (rt.config?.dedupeActiveDelegations === true) {
+      for (const existing of rt.store.tasks.values()) {
+        if (
+          existing.concurrencyKey === concurrencyKey &&
+          (existing.status === "pending" || existing.status === "running") &&
+          existing.parentSessionID === input.parentSessionID
+        ) {
+          log("[background-agent] Launch dedup: reusing active task", { taskId: existing.id })
+          return existing
+        }
       }
     }
 
