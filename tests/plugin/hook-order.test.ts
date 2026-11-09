@@ -55,7 +55,6 @@ describe("hook registration order golden", () => {
     const expected = [
       "stop-continuation-guard",
       "compaction-context-injector",
-      "unstable-agent-babysitter",
       "nudge-loop-breaker",
       "background-notification",
       "niobe",

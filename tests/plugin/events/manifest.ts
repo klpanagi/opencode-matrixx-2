@@ -27,7 +27,6 @@ export const EVENT_CONSUMERS = [
   "session-status-normalizer",
   "stop-continuation-guard",
   "think-mode",
-  "unstable-agent-babysitter",
 ] as const
 
 export type EventConsumer = (typeof EVENT_CONSUMERS)[number]
@@ -53,7 +52,6 @@ export const HOOK_CONSUMER_MAP: Record<string, EventConsumer> = {
   sessionRecovery: "session-recovery",
   stopContinuationGuard: "stop-continuation-guard",
   thinkMode: "think-mode",
-  unstableAgentBabysitter: "unstable-agent-babysitter",
 }
 
 export const NON_DISPATCH_CONSUMERS: EventConsumer[] = [

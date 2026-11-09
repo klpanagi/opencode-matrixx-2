@@ -20,7 +20,6 @@ export function inertHooks(overrides: Record<string, unknown> = {}): DomainHooks
     autoUpdateChecker: inertEventHook(),
     backgroundNotificationHook: inertEventHook(),
     sessionNotification: (async () => {}) as EventFn,
-    unstableAgentBabysitter: inertEventHook(),
     nudgeLoopBreaker: inertEventHook(),
     contextWindowMonitor: inertEventHook(),
     directoryAgentsInjector: inertEventHook(),

@@ -4,10 +4,6 @@ import { resolveCategoryExecution } from "../../../src/tools/delegate-task/categ
 import type { DelegateTaskArgs, ExecutorContext } from "../../../src/tools/delegate-task/executor-types"
 import { __resetTimingConfig, __setTimingConfig } from "../../../src/tools/delegate-task/timing"
 import { executeUnstableAgentTask } from "../../../src/tools/delegate-task/unstable-agent-task"
-import {
-  _resetForTesting as resetSessionState,
-  registerSubagentSession,
-} from "../../../src/features/session-state/state"
 import * as connectedProvidersCache from "../../../src/shared/model/connected-providers-cache"
 import type { MatrixxConfig } from "../../../src/config"
 import type { BackgroundManager } from "../../../src/features/background-agent"
@@ -50,8 +46,9 @@ function makeExecutor(options: {
   sessionID: string
   status?: string
   error?: string
+  activeChildSessionIDs?: string[]
 }) {
-  const { sessionID, status = "running", error } = options
+  const { sessionID, status = "running", error, activeChildSessionIDs } = options
   const task = { id: "bg_guard", sessionID, status, description: "guarded task", prompt: "p", agent: "mouse", error }
   const client = {
     session: {
@@ -67,6 +64,7 @@ function makeExecutor(options: {
     },
     client,
     directory: "/tmp",
+    getActiveChildSessionIDs: () => activeChildSessionIDs ?? [],
   } as unknown as ExecutorContext
 }
 
@@ -83,16 +81,14 @@ describe("executeUnstableAgentTask poll guard", () => {
   })
 
   afterEach(() => {
-    resetSessionState()
     __resetTimingConfig()
   })
 
   test("does not report success while a delegated child session is still active", async () => {
     //#given - the monitored session has a live child delegation registered
     const sessionID = "ses_guard_active_child"
-    registerSubagentSession("ses_grandchild", sessionID)
     __setTimingConfig({ MAX_POLL_TIME_MS: 40 })
-    const executorCtx = makeExecutor({ sessionID })
+    const executorCtx = makeExecutor({ sessionID, activeChildSessionIDs: ["ses_grandchild"] })
 
     //#when
     const result = await executeUnstableAgentTask(

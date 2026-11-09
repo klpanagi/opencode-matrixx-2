@@ -34,7 +34,6 @@ function buildHandler(onIdle: (event: V2Event) => void | Promise<void>) {
       autoUpdateChecker: { event: onIdle },
       backgroundNotificationHook: { event: async () => {} },
       sessionNotification: async () => {},
-      unstableAgentBabysitter: { event: async () => {} },
       contextWindowMonitor: { event: async () => {} },
       directoryAgentsInjector: { event: async () => {} },
       rulesInjector: { event: async () => {} },
