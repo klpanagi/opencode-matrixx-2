@@ -394,7 +394,7 @@ describe("background_cancel", () => {
     expect(output).toContain("| `task-b` | pending task | pending | (not started) |")
   })
 
-  test("passes skipNotification: true to cancelTask to prevent deadlock", async () => {
+  test("does not skip parent notification when cancelling all tasks", async () => {
     // #given
     const task = createTask({ id: "task-1", status: "running" })
     const cancelOptions: Array<{ taskId: string; options: unknown }> = []
@@ -413,14 +413,12 @@ describe("background_cancel", () => {
     // #when - cancel all tasks
     await tool.execute({ all: true }, mockContext)
 
-    // #then - skipNotification should be true to prevent self-deadlock
+    // #then - the parent must be notified, so skipNotification is not passed
     expect(cancelOptions).toHaveLength(1)
-    expect(cancelOptions[0].options).toEqual(
-      expect.objectContaining({ skipNotification: true })
-    )
+    expect(cancelOptions[0].options).not.toHaveProperty("skipNotification")
   })
 
-  test("passes skipNotification: true when cancelling single task", async () => {
+  test("does not skip parent notification when cancelling a single task", async () => {
     // #given
     const task = createTask({ id: "task-1", status: "running" })
     const cancelOptions: Array<{ taskId: string; options: unknown }> = []
@@ -439,11 +437,9 @@ describe("background_cancel", () => {
     // #when - cancel single task
     await tool.execute({ taskId: task.id }, mockContext)
 
-    // #then - skipNotification should be true
+    // #then - the parent must be notified, so skipNotification is not passed
     expect(cancelOptions).toHaveLength(1)
-    expect(cancelOptions[0].options).toEqual(
-      expect.objectContaining({ skipNotification: true })
-    )
+    expect(cancelOptions[0].options).not.toHaveProperty("skipNotification")
   })
 
   test("interrupts native ses_* ids via session.interrupt", async () => {

@@ -184,7 +184,7 @@ describe("terminal path characterization (behaviour-neutral finalizer)", () => {
           .getByParentSession(task.parentSessionID)
           .find((entry) => entry.id === task.id)?.status,
       ).toBe("cancelled")
-      expect(cancelRecorder.calls.length).toBe(0)
+      expect(cancelRecorder.calls.length).toBe(goldenFor("cancel").notifications)
       const handle = readHandles(dir).find((candidate) => candidate.taskId === task.id)
       expect(handle?.status).toBe("cancelled")
       expect(handle?.error).toBeUndefined()

@@ -56,11 +56,11 @@ export const TERMINAL_GOLDENS: TerminalGolden[] = [
     path: "cancel",
     status: "cancelled",
     historyRecorded: true,
-    notifications: 0,
+    notifications: 1,
     bodyIncludesError: false,
     errorOnTask: false,
     errorOnHandle: false,
-    ownerTask: "finalize-characterization.test.ts (PR-1a); T-22 cancel-notify",
+    ownerTask: "T-22 cancel-notify",
   },
   {
     path: "session.error",
