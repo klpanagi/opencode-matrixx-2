@@ -1,4 +1,5 @@
 import { findNearestMessageWithFields } from "../../features/context-injection/hook-bridge"
+import { lookupSubagentParent } from "../../features/session-state/parent-registry"
 import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, getMessageDir, jsonSafeMetadata } from "../../shared"
@@ -21,6 +22,16 @@ export async function executeSyncContinuation(
   const { client } = executorCtx
   const toastManager = getActiveTaskToastManager()
   const continuationID = args.execute?.task_id ?? args.session_id
+
+  if (!continuationID?.startsWith("ses_")) {
+    return `Failed to continue session ${continuationID ?? "(none)"}: expected a ses_ session id.`
+  }
+
+  const registeredParent = (deps.getParentSessionID ?? lookupSubagentParent)(continuationID)
+  if (registeredParent !== undefined && registeredParent !== ctx.sessionID) {
+    return `Failed to continue session ${continuationID}: not owned by the calling session.`
+  }
+
   const taskId = `resume_sync_${continuationID?.slice(0, 8)}`
   const startTime = new Date()
 

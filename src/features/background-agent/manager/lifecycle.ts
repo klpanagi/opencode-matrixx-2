@@ -472,10 +472,20 @@ export async function trackTask(rt: ManagerRuntime,input: {
 export async function resumeTask(rt: ManagerRuntime,input: ResumeInput): Promise<BackgroundTask> {
     const existingTask = rt.store.findBySession(input.sessionId)
     if (!existingTask) {
+      if (input.sessionId.startsWith("ses_")) {
+        throw new Error(
+          `Task not found for session: ${input.sessionId}. To continue a background task, pass its background task id (bg_...) from background_output instead of a raw session id.`
+        )
+      }
       throw new Error(`Task not found for session: ${input.sessionId}`)
     }
     if (!existingTask.sessionID) {
       throw new Error(`Task has no sessionID: ${existingTask.id}`)
+    }
+    if (input.parentSessionID !== undefined && existingTask.parentSessionID !== input.parentSessionID) {
+      throw new Error(
+        `Task ${existingTask.id} does not belong to parent session ${input.parentSessionID}`
+      )
     }
     if (existingTask.status === "running") {
       log("[background-agent] Resume skipped - task already running:", {

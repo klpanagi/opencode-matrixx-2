@@ -1580,12 +1580,14 @@ describe("morpheus-task", () => {
     const mockTask = {
       id: "task-456",
       sessionID: "ses_bg_continue",
+      parentSessionID: "parent-session",
       description: "Background continued task",
       agent: "trinity",
       status: "running"
     }
     
     const mockManager = {
+      getTask: (id: string) => (id === "task-456" ? mockTask : undefined),
       resume: async () => mockTask
     }
     
@@ -1618,7 +1620,7 @@ describe("morpheus-task", () => {
        {
          description: "Continue bg test",
          prompt: "Continue in background",
-         session_id: "ses_bg_continue",
+         session_id: "task-456",
          run_in_background: true,
          load_skills: ["git-master"]
        },
