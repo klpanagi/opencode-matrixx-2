@@ -19,7 +19,6 @@ The legacy system wrapped OpenCode's ephemeral session-memory todos. The file-ba
 | `task-notepad` | Kept a notepad file in sync with the session-memory todo list on every todo mutation | `task-notepad-writer`, which writes a notepad file on `task_create` and stamps completion on `task_update` → `completed` |
 | `task-continuation-enforcer` | Idle-event countdown that re-prompted the agent while file-backed tasks remained open | Removed; completion wakes flow via `BackgroundManager.handleEvent` (`src/features/background-agent/manager/reconcile.ts`) |
 | `preemptive-compaction` | Proactive compaction pass before the context window filled | Removed (D6); the single compaction hook owns compaction |
-| `evolution-compressor` | Background summarizer for self-evolution context | Removed (D6, context-freed=0 parentless leak); the single compaction hook owns compaction |
 
 **Why `task-notepad` went and `task-notepad-writer` took over**: the original hook was removed in commit `f8de08cfb`. Its only data source was `session.todo()`, and that API is gone for good, so there was nothing left to key a notepad on. The replacement hangs off the file-backed task store instead of session memory: it fires on `task_create` to write the notepad, and on `task_update` when the status becomes `completed` to stamp the completion time into the file.
 
@@ -41,7 +40,7 @@ To clean up, delete the `tasks.enabled` line and drop the two older keys. Nothin
 
 ## Hook Names That Still Parse
 
-The seven names in the table above remain in `HookNameSchema` (`src/config/schema/hooks.ts`) as bare literals (65 live `HookNameEnum` entries + 1 `anthropic-context-window-limit-recovery` alias literal + 7 retained-deprecated literals = 73 parseable), and `HOOK_NAME_MAP` in `src/shared/migration/hook-names.ts` maps each of them to `null`. Two consequences:
+The six names in the table above remain in `HookNameSchema` (`src/config/schema/hooks.ts`) as bare literals (64 live `HookNameEnum` entries + 1 `anthropic-context-window-limit-recovery` alias literal + 6 retained-deprecated literals = 71 parseable), and `HOOK_NAME_MAP` in `src/shared/migration/hook-names.ts` maps each of them to `null`. Two consequences:
 
 - A `disabled_hooks` array that still lists one of them validates, and the entry is stripped from the effective list with a single warn. No `invalid_enum` error, no plugin load failure.
 - The names no longer autocomplete to anything that runs. Listing one is the same as listing nothing.

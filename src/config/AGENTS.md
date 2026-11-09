@@ -17,14 +17,13 @@ config/
 │   ├── background-task.ts     # BackgroundTaskConfigSchema
 │   ├── browser-automation.ts  # BrowserAutomationConfigSchema
 │   ├── categories.ts          # 8 categories: construct, source, rabbit-hole, glitch, bullet-time, blue-pill, the-one, transmission
-│   ├── commands.ts            # BuiltinCommandNameSchema (24 commands)
+│   ├── commands.ts            # BuiltinCommandNameSchema (23 commands)
 │   ├── comment-checker.ts     # CommentCheckerConfigSchema
 │   ├── context-mode.ts
 │   ├── dcp.ts
-│   ├── evolution.ts
 │   ├── experimental.ts        # ExperimentalConfigSchema
 │   ├── headroom.ts
-│   ├── hooks.ts               # HookNameSchema (66 enum + 7 retained literals = 73 accepted; 65 hook dirs + 9 loose .ts on disk)
+│   ├── hooks.ts               # HookNameSchema (64 enum + 6 retained literals + 1 alias = 71 accepted; 59 hook dirs + 9 loose .ts on disk)
 │   ├── internal/
 │   ├── knowledge.ts
 │   ├── matrix-loop.ts          # MatrixLoopConfigSchema
@@ -56,7 +55,7 @@ config/
 
 ## ROOT SCHEMA
 
-`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `subagent_block`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `evolution`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
+`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `subagent_block`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
 
 ## CONFIGURATION HIERARCHY
 

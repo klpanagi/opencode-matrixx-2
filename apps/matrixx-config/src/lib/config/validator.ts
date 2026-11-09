@@ -51,7 +51,6 @@ const OBJECT_PROPS = new Set([
   "context_mode",
   "categories",
   "skills",
-  "evolution",
   "assembly",
   "notification",
   "babysitting",

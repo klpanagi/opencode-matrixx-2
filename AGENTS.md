@@ -100,7 +100,7 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 13 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 66-enum hooks (+7 literals) and 31 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 24 built-in commands, 70 schema skills / 86 skill files, 21 features, 2 MCPs. ~1200 TS source files, ~615 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 13 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 64-enum hooks (+6 literals +1 alias) and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 schema skills / 86 skill files, 21 features, 2 MCPs. ~1200 TS source files, ~615 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). `2.6.18` is the legacy V1 API (`@opencode-ai/plugin` v1.3.15) release line and does not load in OpenCode V2.
 
@@ -121,8 +121,8 @@ matrixx/
 │   ├── plugin-config.ts            # Config load + Zod validation
 │   ├── plugin-state.ts             # Model context-limit cache
 │   ├── agents/   → 13 agents + AGENTS.md
-│   ├── hooks/    → 66-enum hooks (+7 literals) in 5 factories
-│   ├── tools/    → 31 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; gated via plugin/tool/tool-policy.ts)
+│   ├── hooks/    → 64-enum hooks (+6 literals +1 alias) in 5 factories
+│   ├── tools/    → 30 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; gated via plugin/tool/tool-policy.ts)
 │   ├── features/ → 21 dirs (background-agent, builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → scoped dirs (agent, config, io, model, outcome, policy, runtime, session, text, tmux, tool, ...) + AGENTS.md
 │   ├── skills/   → builtin/<category>/ (70 schema skills) + loader/ + <skill>/SKILL.md assets + AGENTS.md

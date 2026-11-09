@@ -31,7 +31,6 @@ export function createToolExecuteAfterHandler(args: {
 
     const remainingHooks = async () => {
       await hooks.webfetchRedirectGuard?.["tool.execute.after"]?.(input, output)
-      await hooks.evolutionWatcher?.["tool.execute.after"]?.(input, output)
       await hooks.contextWindowMonitor?.["tool.execute.after"]?.(input, output)
       await hooks.commentChecker?.["tool.execute.after"]?.(input, output)
       await hooks.directoryAgentsInjector?.["tool.execute.after"]?.(input, output)

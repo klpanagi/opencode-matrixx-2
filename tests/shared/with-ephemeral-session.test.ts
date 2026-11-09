@@ -1,6 +1,5 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
-import { createHostLlmCall } from "../../src/hooks/evolution-compressor/host-llm-call"
 import type { EphemeralSessionHandle } from "../../src/shared/session/with-ephemeral-session"
 import { withEphemeralSession } from "../../src/shared/session/with-ephemeral-session"
 
@@ -42,7 +41,7 @@ describe("withEphemeralSession", () => {
     //#when the body runs successfully
     const result = await withEphemeralSession({
       session,
-      title: "evolution-compressor",
+      title: "ephemeral-session-test",
       body: async (id) => `used-${id}`,
     })
 
@@ -61,7 +60,7 @@ describe("withEphemeralSession", () => {
     //#when the body throws
     const caught = await withEphemeralSession({
       session,
-      title: "evolution-compressor",
+      title: "ephemeral-session-test",
       body: async () => {
         throw boom
       },
@@ -90,7 +89,7 @@ describe("withEphemeralSession", () => {
     //#when both body and remove fail
     const caught = await withEphemeralSession({
       session,
-      title: "evolution-compressor",
+      title: "ephemeral-session-test",
       body: async () => {
         throw boom
       },
@@ -113,7 +112,7 @@ describe("withEphemeralSession", () => {
     let bodyRan = false
     const caught = await withEphemeralSession({
       session,
-      title: "evolution-compressor",
+      title: "ephemeral-session-test",
       body: async () => {
         bodyRan = true
         return "x"
@@ -137,7 +136,7 @@ describe("withEphemeralSession", () => {
     //#when running with a parentID
     await withEphemeralSession({
       session,
-      title: "evolution-compressor",
+      title: "ephemeral-session-test",
       parentID: "ses-parent",
       body: async () => "ok",
     })
@@ -148,59 +147,3 @@ describe("withEphemeralSession", () => {
   })
 })
 
-describe("createHostLlmCall session hygiene", () => {
-  test("removes the ephemeral session after prompt+messages", async () => {
-    //#given a host llm session mock
-    const tracker = makeIds()
-    const session = makeSession({
-      createResult: { id: "ses-host-1" },
-      contextImpl: async () => [
-        { type: "assistant", time: { created: 2 }, content: [{ type: "text", text: "hello" }] },
-      ],
-      tracker,
-    })
-
-    //#when the llm call runs
-    const call = createHostLlmCall({
-      ctx: {
-        directory: "/tmp",
-        session,
-      } as never,
-    })
-    const result = await call("summarize this")
-
-    //#then text is returned and the session was removed
-    expect(result.text).toBe("hello")
-    expect(tracker.removed.length).toBe(1)
-    expect(tracker.removed[0]).toContain("ses-host-1")
-  })
-
-  test("removes the ephemeral session when prompt throws", async () => {
-    //#given a prompt that throws
-    const tracker = makeIds()
-    const session = makeSession({
-      createResult: { id: "ses-host-2" },
-      promptImpl: async () => {
-        throw new Error("prompt down")
-      },
-      tracker,
-    })
-
-    //#when the llm call runs
-    const call = createHostLlmCall({
-      ctx: {
-        directory: "/tmp",
-        session,
-      } as never,
-    })
-    const caught = await call("summarize this").then(
-      () => null,
-      (err: unknown) => err,
-    )
-
-    //#then the error propagates and the session was removed
-    expect(caught).toBeInstanceOf(Error)
-    expect(tracker.removed.length).toBe(1)
-    expect(tracker.removed[0]).toContain("ses-host-2")
-  })
-})

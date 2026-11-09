@@ -7,26 +7,26 @@
 
 ## 0. TL;DR
 
-- `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **73** parseable names:
-  **65 live** (`HookNameEnum`) + **8 literals** — 1 alias
+- `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **71** parseable names:
+  **64 live** (`HookNameEnum`) + **7 literals** — 1 alias
   (`anthropic-context-window-limit-recovery` maps to
   `context-window-limit-recovery`), 5 retired legacy-todo literals
   (`todo-continuation-enforcer`, `compaction-todo-preserver`,
   `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`)
   that map to null via `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`)
-  so old `disabled_hooks` lists keep loading, plus 2 retained no-ops
-  (`preemptive-compaction`, `evolution-compressor`; both deleted, retained as no-op literals).
-  Total: 65 live + 7 deprecated no-ops + 1 alias = 73 parseable.
-- `src/hooks/` on disk holds **64 hook subdirectories** (no `shared/`
+  so old `disabled_hooks` lists keep loading, plus 1 retained no-op
+  (`preemptive-compaction`; deleted, retained as a no-op literal).
+  Total: 64 live + 6 deprecated no-ops + 1 alias = 71 parseable.
+- `src/hooks/` on disk holds **59 hook subdirectories** (no `shared/`
   directory) plus loose `.ts` files (`bash-file-read-guard.ts`,
   `context-window-monitor.ts`, `empty-task-response-detector.ts`,
   `tool-output-truncator.ts`, 5 `session-notification*`), plus `index.ts`,
-  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 64).
+  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 59).
   NOTE: older docs claimed 76 entries / 60 dirs — those figures are stale and
   superseded by the counts above; do not cite 76/60 without this note.
-- Every tool call passes through `tool.execute.before` (**23 invocations over
-  22 unique hooks** in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
-  `tool.execute.after` (**22 invocations over 22 unique hooks**,
+- Every tool call passes through `tool.execute.before` (**22 invocations over
+  21 unique hooks** in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
+  `tool.execute.after` (**21 invocations over 21 unique hooks**,
   `src/plugin/tool/tool-execute-after.ts`).
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
@@ -63,10 +63,9 @@ setupDomains()                      src/plugin/setup-domains.ts
   truncator, notepads).
 - Transform builds message-shape hooks (secret guard, keyword detector,
   validators, design intent).
-- Continuation builds **8 entries**: stop guard, compaction-context injector,
+- Continuation builds **7 entries**: stop guard, compaction-context injector,
   unstable-agent babysitter, nudge-loop breaker, background notification,
-  niobe, plan persister, and evolution HITL (only when `evolution.enabled`
-  is true). The old task-continuation enforcer is removed; background task
+  niobe, and plan persister. The old task-continuation enforcer is removed; background task
   completion now notifies the parent session through the background manager
   (`src/features/background-agent/manager/reconcile.ts`).
 - Skill builds 2 entries: `category-skill-reminder`, `auto-slash-command`.
@@ -97,7 +96,7 @@ handlers; each handler fans out to hook methods:
 | `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 23 invocations over 22 unique hooks, 3 waves (Section 1.3) |
 | `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `qualityGate` + 20 sequential (Section 1.4) |
 | `chat.message` | `createChatMessageHandler` (`src/plugin/tool/chat-message.ts`) | `inputSecretGuard`, `stopContinuationGuard`, `keywordDetector`, `autoSlashCommand`, `startWork` (conditional), `matrixLoop` template detection |
-| `experimental.chat.messages.transform` | messages-transform wiring (`src/plugin/message-hooks/`, `src/plugin/setup-domains/hooks.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator`, `evolutionHitl` |
+| `experimental.chat.messages.transform` | messages-transform wiring (`src/plugin/message-hooks/`, `src/plugin/setup-domains/hooks.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator` |
 | `chat.params` | `createChatParamsHandler` (`src/plugin/tool/chat-params.ts`) | `anthropicEffort` only, plus one-shot category temperature |
 | `event` | `createEventHandler` (`src/plugin/tool/event.ts`) | session, recovery, loop, guard, and injector hooks (Section 2.3) |
 | `experimental.session.compacting` | `src/plugin/setup-domains/{hooks,assemble}.ts` (`ctx.session.hook("compaction")`) | `compactionContextInjector()`, `planPersister.buildRehydrationContext` |
@@ -136,8 +135,8 @@ Source: `src/plugin/tool/tool-execute-after.ts`.
 toolOutputTruncator (always first)
 + Promise.all([
       qualityGate (Biome, parallel),
-      remainingHooks() sequential (20):
-        webfetchRedirectGuard -> evolutionWatcher -> contextWindowMonitor
+      remainingHooks() sequential (19):
+        webfetchRedirectGuard -> contextWindowMonitor
         -> commentChecker -> directoryAgentsInjector -> rulesInjector
         -> emptyTaskResponseDetector -> agentUsageReminder
         -> categorySkillReminder -> interactiveBashSession -> editErrorRecovery
@@ -234,7 +233,6 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `thinking-block-validator` | `experimental.chat.messages.transform` | Validates thinking-block shape. Exists to catch malformed reasoning blocks early. |
 | `tool-pair-validator` | `experimental.chat.messages.transform`-shaped | Validates tool-call pairing. Currently has no call site (Section 2.4). |
 | `design-intent-preserver` | `chat.message`-shaped | Preserves design intent across turns. Currently has no call site (Section 2.4). |
-| `evolution-hitl` | `experimental.chat.messages.transform` | Human-in-the-loop gate for evolution writes. Exists for governance over self-modification; only when `evolution.enabled`. |
 | `think-mode` | `event` (session cleanup) | Dynamic thinking budget; prompt switching lives in its module state. Exists to scale reasoning effort per session. |
 | `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/rp-loop` workflows. |
 | `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). |
@@ -251,8 +249,6 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `knowledge-hub-guard` | `tool.execute.before` | Denies writes inside hub roots (read-only KB). Exists to protect the external corpus; user-approved writes go through `knowledge_hub_confirm`. |
 | `knowledge-hub-injector` | `experimental.chat.messages.transform` | Injects the hub router index once per session. Exists for zero-read KB routing. |
 | `knowledge-hub-search-nudge` | `tool.execute.before` | Warns (never blocks) when agents reach for websearch with hubs configured. Exists as a backstop for web-first habits. |
-| `evolution-watcher` | `tool.execute.before` + `after`-shaped | Records tool traces for the evolution loop. Exists to feed session learning; only when `evolution.enabled`. Currently has no call site (Section 2.4). |
-| `evolution-compressor` (removed, deprecated no-op literal) | Hook deleted (context-freed=0 parentless leak); the name still parses so old configs keep loading, but no code runs. | Never fires. |
 | `runtime-fallback` | module hook | Retries failed model calls on fallbacks with cooldown. Exists for provider resilience. Currently has no call site (Section 2.4). |
 
 Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/setup-domains/hooks.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
@@ -264,14 +260,12 @@ see `orchestration.md`; for the task substrate see
 ### 2.4 Previously unwired — now wired, removed, or retained as no-ops
 
 Four hooks formerly listed here are wired into dispatchers (all honor
-`disabled_hooks`); two dead hooks were removed outright; two compaction/evolution
-names are retained only as deprecated no-op literals (parseable, never dispatched):
+`disabled_hooks`); two dead hooks were removed outright; one compaction
+name is retained only as a deprecated no-op literal (parseable, never dispatched):
 
 | Hook | Defined handler | Status |
 |---|---|---|
 | `webfetch-redirect-guard` | `tool.execute.before` + `after` | Wired (`src/plugin/tool/tool-execute-before.ts`, `src/plugin/tool/tool-execute-after.ts`) |
-| `evolution-watcher` | `tool.execute.before` + `after` | Wired (also gated by `evolution.enabled`) |
-| `evolution-compressor` | — | Removed (deleted hook). Name retained as a deprecated no-op literal so old `disabled_hooks` lists keep loading; never dispatched |
 | `runtime-fallback` | module hook + `event` + `chat.message` | Wired (`src/plugin/tool/event.ts`, `src/plugin/tool/chat-message.ts`) |
 | `design-intent-preserver` | `chat.message`-shaped | Wired in `src/plugin/tool/chat-message.ts` |
 | `tool-pair-validator` | `experimental.chat.messages.transform`-shaped | Wired in `src/plugin/setup-domains/hooks.ts` |
@@ -319,7 +313,6 @@ Schema: `disabled_hooks: z.array(HookNameSchema).optional()`
 | `experimental.preemptive_compaction` (retired) | `preemptive-compaction` was deleted; the key no longer constructs anything (name retained as no-op) | `src/config/schema/experimental.ts:6`, `src/shared/migration/hook-names.ts` |
 | `experimental.hashline_edit` | hashline enhancers pass through when false | `src/plugin/hooks/create-tool-guard-hooks.ts` |
 | `tasks.enabled` (retained-deprecated, always resolves true) | The enforcer is gone, so there is no selection between enforcers; the legacy todo enforcer it used to be selected against was removed earlier | `src/plugin/hooks/create-continuation-hooks.ts`, `src/shared/config/task-system-gating.ts` |
-| `evolution.enabled` | `evolution-watcher`, `evolution-hitl` constructed only when true (`evolution-compressor` is deleted and never constructed) | `src/plugin/hooks/create-continuation-hooks.ts`, `create-tool-guard-hooks.ts` |
 | `rtk.enabled` | `rtk-bash-rewriter` constructed only when true (still passes through without binary) | `src/plugin/hooks/create-session-hooks.ts`, `src/hooks/rtk-bash-rewriter/hook.ts` |
 | `comment_checker`, `matrix_loop`, `context_mode`, `notification.force_enable` | per-feature config consumed by the matching hook | `src/config/schema/matrixx-config.ts` |
 

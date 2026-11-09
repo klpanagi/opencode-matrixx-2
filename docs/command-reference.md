@@ -1,8 +1,8 @@
 # Command Reference
 
-> Version 1.2.1. All 24 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> Version 1.2.1. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
+Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 
 > **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
@@ -29,7 +29,6 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 | `/redpill` | Toggle redpill mode at runtime | ✅ | — |
 | `/task-list` | List active tasks (`task_list`) | — | — |
 | `/cleanup-tasks` | Clean completed tasks (`task_cleanup`) | — | — |
-| `/evolution` | Self-evolution proposals (approve/reject/list) | — | — |
 | `/bdd-pipeline` | Full BDD pipeline (contract→tests→frontend→backend) | — | — |
 | `/plan-review` | Post-execution plan completion review | — | — |
 | `/quality-audit` | Read-only deterministic quality audit | — | — |
@@ -415,30 +414,7 @@ Delete completed tasks. Thin wrapper over the `task_cleanup` tool. Never deletes
 
 ---
 
-## 18. `/evolution`
-
-Manage self-evolution proposals: list pending skill proposals, approve or reject them, audit the queue.
-
-```
-/evolution
-/evolution list
-/evolution approve my-proposal
-/evolution reject my-proposal
-/evolution audit
-```
-
-| Argument | Description |
-|----------|-------------|
-| `list` (default) | Show pending proposals |
-| `approve <slug>` | Approve and promote a proposal |
-| `reject <slug>` | Reject a proposal |
-| `audit` | Audit the proposal queue |
-
-Evolution hooks only run when `evolution.enabled: true` in config. See [Evolution](evolution.md) and [Configuration](configurations.md#evolution-self-evolution).
-
----
-
-## 19. `/bdd-pipeline`
+## 18. `/bdd-pipeline`
 
 Run the full BDD pipeline from a single `.feature` file: contract, tests, frontend, and backend. Template: `src/features/builtin-commands/templates/bdd-pipeline.ts`.
 
@@ -456,7 +432,7 @@ Runs the contract, tests, frontend, and backend stages in order. **Related:** [Q
 
 ---
 
-## 20. `/plan-review`
+## 19. `/plan-review`
 
 Post-execution completion review of a finished plan (explicit only). Template: `src/features/builtin-commands/templates/plan-review.ts`.
 
@@ -470,7 +446,7 @@ Post-execution completion review of a finished plan (explicit only). Template: `
 
 ---
 
-## 21. `/quality-audit`
+## 20. `/quality-audit`
 
 Run a read-only deterministic quality audit with graded report. Template: `src/features/builtin-commands/templates/quality-audit.ts`.
 
@@ -485,7 +461,7 @@ Run a read-only deterministic quality audit with graded report. Template: `src/f
 
 ---
 
-## 22. `/quality-assurance`
+## 21. `/quality-assurance`
 
 Drive quality to target grade via bounded oracle-smith-tdd loop. Template: `src/features/builtin-commands/templates/quality-assurance.ts`.
 
@@ -495,7 +471,7 @@ Drive quality to target grade via bounded oracle-smith-tdd loop. Template: `src/
 
 ---
 
-## 23. `/humanize`
+## 22. `/humanize`
 
 Guided quality-focused humanization pipeline for prose, comments, and code. Template: `src/features/builtin-commands/templates/humanize.ts`.
 
@@ -508,7 +484,7 @@ Guided quality-focused humanization pipeline for prose, comments, and code. Temp
 | `--mode` | — | `text`, `comments`, `code`, or `all` |
 | `--dry-run` | `false` | Preview without modifying |
 
-## 24. `/security-audit`
+## 23. `/security-audit`
 
 Read-only deterministic security audit (v1 advisory-only). It reports findings; it never gates CI on its own. Template: `src/features/builtin-commands/templates/security-audit.ts`.
 
@@ -527,7 +503,7 @@ Finding statuses: `confirmed`, `needs_validation`, `rejected`, `deferred`. Cover
 
 ---
 
-In addition to the 24 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+In addition to the 23 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|

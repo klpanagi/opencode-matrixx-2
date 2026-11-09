@@ -1,4 +1,3 @@
-import type { EvolutionHitlDeps } from "../../hooks/evolution-hitl/flat"
 import type { SessionMessage } from "../../shared/session/session-message"
 import type { MatrixxContext, V2Registration } from "../tool/context"
 import { type CompressWatchdogOptions, registerCompressWatchdog } from "./compress-watchdog"
@@ -6,7 +5,6 @@ import { type ContextInjectorDeps, registerContextInjectorMessagesTransform } fr
 import { registerDcpNudgeSanitizer } from "./dcp-nudge-sanitizer"
 import { registerDomainKeywordDetector } from "./domain-keyword-detector"
 import { registerEnvContextInjector } from "./env-context-injector"
-import { registerEvolutionHitl } from "./evolution-hitl"
 import { type KnowledgeHubInjectorDeps, registerKnowledgeHubInjector } from "./knowledge-hub-injector"
 import { registerThinkingBlockValidator } from "./thinking-block-validator"
 import { registerToolPairValidator } from "./tool-pair-validator"
@@ -15,8 +13,7 @@ import { registerToolPairValidator } from "./tool-pair-validator"
 export type NativeMessageHookKind = "context" | "compaction" | "generate"
 
 /**
- * The 8 transform hooks, keyed exactly as in `DomainHooks`
- * (`TransformHooks` for the first seven, `ContinuationHooks` for `evolutionHitl`).
+ * The 7 transform hooks, keyed exactly as in `DomainHooks`.
  */
 export type MessageHookName =
   | "domainKeywordDetector"
@@ -24,7 +21,6 @@ export type MessageHookName =
   | "contextInjectorMessagesTransform"
   | "envContextInjector"
   | "thinkingBlockValidator"
-  | "evolutionHitl"
   | "dcpNudgeSanitizer"
   | "toolPairValidator"
 
@@ -40,7 +36,7 @@ export interface MessageHookRow {
 }
 
 /**
- * The 8-row mapping table, in legacy fan-out call order.
+ * The 7-row mapping table, in legacy fan-out call order.
  * Task 26 ports one flat-`Message[]` body per row.
  */
 export const MESSAGE_HOOK_TABLE: readonly MessageHookRow[] = [
@@ -74,12 +70,6 @@ export const MESSAGE_HOOK_TABLE: readonly MessageHookRow[] = [
     v2Reads: "event.messages flat Message[] (assistant content blocks)",
     targetHooks: ["context", "generate"],
   },
-  {
-    hook: "evolutionHitl",
-    v1Reads: "output.messages[] (pending-review prompt injection)",
-    v2Reads: "event.messages flat Message[]",
-    targetHooks: ["context"],
-  },
     // Ordering: Matrixx runs before DCP (plugin index 0 vs 1), so this sanitizer
     // cleans prior-cycle sticky nudges and caps accumulation at ~1/cycle. It cannot
     // suppress the nudge DCP injects later in the same cycle.
@@ -104,8 +94,8 @@ export const MESSAGE_HOOK_TABLE: readonly MessageHookRow[] = [
  * - `toolPairValidator` includes `generate` (auxiliary requests bypass `context`).
  */
 export function validateMessageHookTable(table: readonly MessageHookRow[]): void {
-  if (table.length !== 8) {
-    throw new Error(`message-hooks: expected exactly 8 mapping rows, got ${table.length}`)
+  if (table.length !== 7) {
+    throw new Error(`message-hooks: expected exactly 7 mapping rows, got ${table.length}`)
   }
   for (const row of table) {
     if (row.targetHooks.length === 0) {
@@ -126,7 +116,6 @@ export function validateMessageHookTable(table: readonly MessageHookRow[]): void
 export interface MessageHookDeps {
   readonly knowledgeHub?: KnowledgeHubInjectorDeps
   readonly contextInjector?: ContextInjectorDeps
-  readonly evolutionHitl?: EvolutionHitlDeps & { readonly config?: unknown }
   readonly compressWatchdog?: CompressWatchdogOptions
 }
 
@@ -151,7 +140,6 @@ export async function registerMessageHooks(
   registrations.push(...(await registerContextInjectorMessagesTransform(ctx, deps.contextInjector ?? {})))
   registrations.push(...(await registerEnvContextInjector(ctx)))
   registrations.push(...(await registerThinkingBlockValidator(ctx)))
-  registrations.push(...(await registerEvolutionHitl(ctx, deps.evolutionHitl)))
   registrations.push(...(await registerDcpNudgeSanitizer(ctx)))
   if (deps.compressWatchdog) {
     registrations.push(...(await registerCompressWatchdog(ctx, deps.compressWatchdog)))

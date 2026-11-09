@@ -18,7 +18,6 @@ import {
   createBddValidateContractTool,
   createDashboardFluxValidatorTool,
   createDelegateTask,
-  createEvolutionTool,
   createGithubSearchTools,
   createGlobTools,
   createGrepTools,
@@ -59,7 +58,6 @@ import type { SkillContext } from "./skill-context"
 import {
   isConstructAgentEnabled,
   shouldEnableBddTools,
-  shouldEnableEvolutionTool,
   shouldEnableKnowledgeHubConfirm,
   shouldEnableLookAt,
   shouldEnablePdfFigures,
@@ -91,8 +89,6 @@ export function createToolCatalog(args: {
   const lookAtEnabled = shouldEnableLookAt(ctx.directory, isMultimodalLookerEnabled, toolGating?.look_at)
   const knowledgeHubConfirmEnabled = shouldEnableKnowledgeHubConfirm(pluginConfig.knowledge?.hubs)
   const presetToolsEnabled = shouldEnablePresetTools(toolGating?.preset_tools)
-  const evolutionEnabled = shouldEnableEvolutionTool(pluginConfig.evolution?.enabled)
-  const evolutionRecord = evolutionEnabled ? createEvolutionTool(ctx) : {}
   const lookAt = lookAtEnabled ? createLookAt(ctx) : null
   const bddToolsRecord: Record<string, MatrixxToolDefinition> = bddEnabled
     ? {
@@ -214,7 +210,6 @@ export function createToolCatalog(args: {
     ...notepadToolsRecord,
     ...(assemblyTool ? { assembly: assemblyTool } : {}),
     ...bddToolsRecord,
-    ...evolutionRecord,
   }
 
   const filteredTools = filterDisabledTools(allTools, pluginConfig.disabled_tools)

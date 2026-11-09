@@ -23,8 +23,6 @@ export const HOOK_NAME_MAP: Record<string, string | null> = {
   // Deleted (D6): preemptive-compaction removed in favor of the single
   // compaction hook. `null` = strip from effective disabled_hooks with one warn.
   "preemptive-compaction": null,
-  // Deleted (D6): evolution-compressor removed (context-freed=0 parentless leak).
-  "evolution-compressor": null,
 }
 
 export function migrateHookNames(

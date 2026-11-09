@@ -227,7 +227,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 
 ### P14. Approval Gates for Expensive Operations (humanlayer)
 
-> **Status:** Proposed. No cost-threshold approval gate exists in `src/tools/delegate-task/`. Related but different: evolution HITL (`requireApproval`, `/evolution approve`) governs skill promotion, not spend.
+> **Status:** Proposed. No cost-threshold approval gate exists in `src/tools/delegate-task/`. Related but different: human approval gates for skill promotion, not spend.
 
 - **What:** For operations exceeding cost threshold (e.g., >50K tokens, full refactor), pause and request human approval before continuing.
 - **Cost impact:** Prevents runaway spend on bad requests.

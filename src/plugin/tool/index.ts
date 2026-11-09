@@ -94,7 +94,6 @@ export {
   LOOK_AT_MEDIA_EXTENSIONS,
   PDF_FILE_EXTENSION,
   shouldEnableBddTools,
-  shouldEnableEvolutionTool,
   shouldEnableKnowledgeHubConfirm,
   shouldEnableLookAt,
   shouldEnablePdfFigures,

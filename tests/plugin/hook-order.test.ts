@@ -59,7 +59,6 @@ describe("hook registration order golden", () => {
       "background-notification",
       "niobe",
       "plan-persister",
-      "evolution-hitl",
     ]
 
     //#when
@@ -100,7 +99,6 @@ describe("hook registration order golden", () => {
       "docs-lookup-guard",
       "knowledge-hub-guard",
       "knowledge-hub-search-nudge",
-      "evolution-watcher",
     ]
 
     //#when

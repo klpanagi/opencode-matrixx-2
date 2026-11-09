@@ -1066,7 +1066,7 @@ Disable specific built-in hooks via `disabled_hooks` in `~/.config/opencode/matr
 }
 ```
 
-Available hooks (65 live + 7 retained-deprecated no-op literals + 1 alias = 73 parseable — see `HookNameEnum` + `HookNameSchema` in `src/config/schema/hooks.ts`). Seven names — `todo-continuation-enforcer`, `compaction-todo-preserver`, `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`, `preemptive-compaction`, and `evolution-compressor` — are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. `anthropic-context-window-limit-recovery` is an alias for `context-window-limit-recovery`. `unstable-agent-babysitter` is deprecated: its implementation was removed, but the name still parses as a no-op alias. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `docs-lookup-guard`, `document-reader-guard`, `domain-keyword-detector`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `evolution-hitl`, `evolution-watcher`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-memory`, `session-notification`, `session-recovery`, `silent-failure-guard`, `start-work`, `startup-toast`, `stop-continuation-guard`, `subagent-block`, `task-edit-guard`, `task-notepad-writer`, `task-resume-info`, `think-mode`, `thinking-block-validator`, `tool-output-truncator`, `tool-pair-validator`, `webfetch-redirect-guard`, `write-existing-file-guard`
+Available hooks (64 live + 6 retained-deprecated no-op literals + 1 alias = 71 parseable — see `HookNameEnum` + `HookNameSchema` in `src/config/schema/hooks.ts`). Six names — `todo-continuation-enforcer`, `compaction-todo-preserver`, `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`, and `preemptive-compaction` — are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. `anthropic-context-window-limit-recovery` is an alias for `context-window-limit-recovery`. `unstable-agent-babysitter` is deprecated: its implementation was removed, but the name still parses as a no-op alias. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `docs-lookup-guard`, `document-reader-guard`, `domain-keyword-detector`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-memory`, `session-notification`, `session-recovery`, `silent-failure-guard`, `start-work`, `startup-toast`, `stop-continuation-guard`, `subagent-block`, `task-edit-guard`, `task-notepad-writer`, `task-resume-info`, `think-mode`, `thinking-block-validator`, `tool-output-truncator`, `tool-pair-validator`, `webfetch-redirect-guard`, `write-existing-file-guard`
 **Note on `directory-agents-injector`**: This hook is **automatically disabled** when running on OpenCode 1.1.37+ because OpenCode now has native support for dynamically resolving AGENTS.md files from subdirectories (PR #10678). This prevents duplicate AGENTS.md injection. For older OpenCode versions, the hook remains active to provide the same functionality.
 
 **Note on `auto-update-checker` and `startup-toast`**: The `startup-toast` hook is a sub-feature of `auto-update-checker`. To disable only the startup toast notification while keeping update checking enabled, add `"startup-toast"` to `disabled_hooks`. To disable all update checking features (including the toast), add `"auto-update-checker"` to `disabled_hooks`.
@@ -1083,7 +1083,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 }
 ```
 
-Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `evolution`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
+Available commands (23 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
 ## Comment Checker
 
 Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.
@@ -1459,56 +1459,6 @@ Multi-model debate — 3-5 parallel voters from different providers, synthesis v
 
 > Schema: `src/config/schema/assembly.ts` (`AssemblyConfigSchema`). Tool: `src/tools/assembly/`.
 
-## Evolution
-
-Self-evolution loop: watches tool execution traces, compresses them into reusable knowledge skills, and governs promotion with human approval. Default **off** (`evolution.enabled: false` = zero overhead).
-
-```jsonc
-{
-  "evolution": {
-    "enabled": false,
-    "watcher": { "maxArgChars": 4000, "maxOutputChars": 8000, "skipTools": ["evolution-watcher", "evolution-compressor"] },
-    "compressor": { "provider": "llm", "minTraces": 5, "maxInputTokens": 32000, "trigger": "both" },
-    "writer": { "outputDir": ".matrixx/evolution/skills", "globalSkills": false, "allowToolGeneration": false, "allowAgentGeneration": false },
-    "governance": { "requireApproval": true, "autoPromote": false, "autoPromoteThreshold": 0.85, "minConfidence": 0.7 },
-    "retention": { "traceDays": 30, "maxPending": 50 },
-    "budget": { "maxCompressionsPerHour": 10, "maxCostCentsPerDay": 100 }
-  }
-}
-```
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `enabled` | `boolean` | `false` | Master switch. All hooks and tools are disabled when `false`. |
-| `watcher.maxArgChars` | `number` | `4000` | Max characters captured from tool arguments per trace. |
-| `watcher.maxOutputChars` | `number` | `8000` | Max characters captured from tool outputs per trace. |
-| `watcher.skipTools` | `string[]` | `["evolution-watcher","evolution-compressor"]` | Tools excluded from trace capture (recursion guard). |
-| `compressor.provider` | `"llm" \| "dspy-gepa"` | `"llm"` | Compression backend. `dspy-gepa` is a placeholder for future use. |
-| `compressor.model` | `string?` | main model | Override the LLM model used for compression. |
-| `compressor.minTraces` | `number` | `5` | Minimum traces required before compression triggers. |
-| `compressor.maxInputTokens` | `number` | `32000` | Truncation cap for the compressor prompt. |
-| `compressor.trigger` | `"compacting" \| "idle" \| "both"` | `"both"` | Which session events fire the compressor. |
-| `writer.outputDir` | `string` | `".matrixx/evolution/skills"` | Directory for staged skill artifacts. |
-| `writer.globalSkills` | `boolean` | `false` | Also write promoted skills to `~/.agents/skills/`. |
-| `writer.allowToolGeneration` | `boolean` | `false` | Allow generation of new tools (gated). |
-| `writer.allowAgentGeneration` | `boolean` | `false` | Allow generation of new agents (gated). |
-| `governance.requireApproval` | `boolean` | `true` | Require human approval before promoting a skill. |
-| `governance.autoPromote` | `boolean` | `false` | Silently promote high-confidence skills without approval. |
-| `governance.autoPromoteThreshold` | `number` | `0.85` | Minimum confidence for auto-promotion. |
-| `governance.minConfidence` | `number` | `0.7` | Minimum confidence to stage a skill for approval. |
-| `retention.traceDays` | `number` | `30` | Days to retain trace JSONL files. Cleanup runs on compressor idle. |
-| `retention.maxPending` | `number` | `50` | Maximum pending proposals. Pipeline returns `max-pending` when full. |
-| `budget.maxCompressionsPerHour` | `number` | `10` | Hourly compression throttle. |
-| `budget.maxCostCentsPerDay` | `number` | `100` | Daily cost cap in cents. When exceeded, the paid LLM path is blocked but the free offline heuristic still runs. Resets on UTC day rollover. |
-
-**Enforcement behavior:**
-
-- **Pending queue full** (`>= maxPending`): pipeline returns `{ reason: "max-pending" }`, compressor not invoked.
-- **Daily cost exceeded** (`>= maxCostCentsPerDay`): LLM compressor is replaced by free offline heuristic (no charge recorded).
-- **Hourly cap exceeded**: compression skipped via `shouldThrottle`.
-
-> Schema: `src/config/schema/evolution.ts`. Tool: `src/tools/evolution/` (actions: `list`, `get`, `approve`, `reject`, `status`, `search`, `get_context`). Full docs: [Evolution](evolution.md).
-
 ## Security
 
 Three-tier security: reactive hooks + policies + Sentinel agent. Hooks run first in pipeline (`position: pre`).
@@ -1576,38 +1526,6 @@ To opt out per hook:
 
 Redacted preview example: `openai-api-key: sk-proj…XXXX`, `aws-access-key: AKIA…XXXX`, `private-key-generic: -----BEGIN PRIVATE KEY----- …[REDACTED]`. Logs: `{sessionID, findingCount, redactedPreview, elapsedMs}` — no raw secret.
 
-
-## Evolution (Self-Evolution)
-
-Opt-in trace-driven skill evolution — watcher captures traces, compressor synthesizes, writer generates skills, governance approves, retention/budget gate.
-
-> **Gating**: evolution hooks (`evolution-watcher`, `evolution-hitl`) are only registered when `evolution.enabled: true` (`evolution-compressor` is a retained-deprecated no-op literal, not a registered hook) (default `false` — zero hook overhead when disabled). The quality gate `passesQualityGate()` is a pure function called inline by `pipeline.ts`, not a registered hook. **BREAKING**: `evolution-quality-gate` was never a functional hook name and was removed from the schema; remove it from `disabled_hooks` if present (it never had effect).
-
-```jsonc
-{
-  "evolution": {
-    "enabled": false,
-    "watcher": { "maxArgChars": 4000, "maxOutputChars": 8000 },
-    "compressor": { "provider": "llm" },
-    "writer": { "outputDir": ".matrixx/evolution/skills" },
-    "governance": { "requireApproval": true },
-    "retention": { "maxTraces": 1000 },
-    "budget": { "maxCostPerRun": 1.0 }
-  }
-}
-```
-
-| Sub-config | Key fields | Default | Description |
-|------------|------------|---------|-------------|
-| `enabled` | `boolean` | `false` | Master toggle for self-evolution loop. |
-| `watcher` | `maxArgChars`, `maxOutputChars`, `skipTools` | `4000`, `8000`, `["evolution-watcher","evolution-compressor"]` | Trace capture. |
-| `compressor` | `provider` (`llm`\|`dspy-gepa`), `minTraces`, `maxInputTokens` | `llm`, `5`, `32000` | Trace synthesis. |
-| `writer` | `outputDir`, `globalSkills`, `allowToolGeneration`, `allowAgentGeneration` | `.matrixx/evolution/skills`, `false`, `false`, `false` | Skill generation. |
-| `governance` | `requireApproval` | `true` | Human approval before promotion. |
-| `retention` | `maxTraces`, `maxPending` | `1000` | Trace/proposal retention. |
-| `budget` | `maxCostPerRun` | `1.0` | Compression cost throttle. |
-
-> Schema: `src/config/schema/evolution.ts` (6 sub-schemas). Full docs: [Evolution](./evolution.md). Commands: `/evolution` (approve/reject/list/audit).
 
 ## Matrix Loop
 
