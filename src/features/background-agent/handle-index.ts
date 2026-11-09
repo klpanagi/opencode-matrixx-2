@@ -269,9 +269,36 @@ export function deleteHandleFile(directory: string, taskId: string): boolean {
 }
 
 /**
- * Bounded TTL sweep: delete handle files whose most recent timestamp is older
- * than `ttlMs` (default 30 min). Corrupt/unreadable files are swept too so the
- * directory cannot grow without bound. Returns the number of files removed.
+ * Decide whether the TTL sweep may delete a handle.
+ *
+ * Live tasks (`running`/`pending`) are judged only by activity: a long-running
+ * task may legitimately outlive the TTL, and `startedAt`/`queuedAt` are
+ * creation stamps rather than freshness signals. A live handle with no
+ * timestamp at all is kept, because deleting it would discard work whose
+ * liveness is merely unknown.
+ *
+ * Terminal and unreadable handles keep the historical bounded-directory
+ * behaviour: a newest-timestamp older than the TTL is swept, and so is a
+ * timestamp-less file.
+ */
+function isSweepable(handle: BgHandle | null, now: number, ttlMs: number): boolean {
+  if (!handle) {
+    return true
+  }
+
+  if (handle.status === "running" || handle.status === "pending") {
+    const freshness = handle.lastActivityAt ?? handle.startedAt ?? handle.queuedAt
+    return freshness !== undefined && now - freshness > ttlMs
+  }
+
+  const freshness = handle.completedAt ?? handle.lastActivityAt ?? handle.startedAt ?? handle.queuedAt
+  return freshness === undefined || now - freshness > ttlMs
+}
+
+/**
+ * Bounded TTL sweep: delete handle files past their freshness window (default
+ * 30 min). Corrupt/unreadable files are swept too so the directory cannot grow
+ * without bound. Returns the number of files removed.
  */
 export function sweepStaleHandles(directory: string, ttlMs = TASK_TTL_MS, now = Date.now()): number {
   const dir = getBgHandleDir(directory)
@@ -287,9 +314,8 @@ export function sweepStaleHandles(directory: string, ttlMs = TASK_TTL_MS, now = 
 
     const filePath = join(dir, name)
     const handle = readHandleFile(filePath)
-    const timestamp = handle?.completedAt ?? handle?.startedAt ?? handle?.queuedAt
 
-    if (handle && timestamp !== undefined && now - timestamp <= ttlMs) {
+    if (!isSweepable(handle, now, ttlMs)) {
       continue
     }
 
@@ -315,7 +341,7 @@ export function sweepStaleHandles(directory: string, ttlMs = TASK_TTL_MS, now = 
  * Single-pass sweep + read: one `readdirSync` and one `readHandleFile` per
  * handle file. Semantics match `sweepStaleHandles` followed by `readHandles`:
  * corrupt/unparseable files are swept (never bump generation for them — there
- * is no taskId), stale or timestamp-less readable handles are swept with a
+ * is no taskId), handles past their freshness window are swept with a
  * generation bump, fresh handles are returned. Files swept here never appear
  * in `handles`. Missing directory yields an empty result without throwing.
  */
@@ -338,9 +364,8 @@ export function sweepAndReadHandles(
 
     const filePath = join(dir, name)
     const handle = readHandleFile(filePath)
-    const timestamp = handle?.completedAt ?? handle?.startedAt ?? handle?.queuedAt
 
-    if (handle && timestamp !== undefined && now - timestamp <= ttlMs) {
+    if (handle && !isSweepable(handle, now, ttlMs)) {
       handles.push(handle)
       continue
     }

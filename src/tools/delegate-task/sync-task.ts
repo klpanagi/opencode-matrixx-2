@@ -1,4 +1,5 @@
 import { type ForegroundEffortResult, recordEffortForForeground } from "../../features/agent-effort/foreground"
+import { validateSessionHasOutput } from "../../features/background-agent/manager/output-guard"
 import { registerSubagentSession, releaseSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
 import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
@@ -9,7 +10,7 @@ import { log } from "../../shared/runtime/logger"
 import { getDeliverableTag } from "./constants"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
-import { formatEmptySessionError, getEmptyRetryBackoffMs, isSessionEmpty } from "./sync-empty-retry"
+import { formatEmptySessionError, getEmptyRetryBackoffMs } from "./sync-empty-retry"
 import { type SyncTaskDeps, syncTaskDeps } from "./sync-task-deps"
 import { buildTaskTitle } from "./task-title"
 import { getTimingConfig } from "./timing"
@@ -189,15 +190,15 @@ export async function executeSyncTask(
       let promptError = await runSendPoll()
 
       // Retry-once-on-empty: the pipeline reported success (null promptError)
-      // but the session has ZERO messages — the model silently produced
-      // nothing. Retry the prompt exactly once after a short backoff; if the
-      // retry is also empty, surface a structured error (never null/empty).
-      if (!promptError && (await isSessionEmpty(client, sessionID))) {
+      // but the session produced no assistant or tool output — the model
+      // silently produced nothing. Retry the prompt exactly once after a short
+      // backoff; if the retry is also empty, surface a structured error.
+      if (!promptError && !(await validateSessionHasOutput(client, sessionID))) {
         log("[task] Empty sync response - retrying prompt once", { sessionID })
         await new Promise((resolve) => setTimeout(resolve, getEmptyRetryBackoffMs()))
         hardTimedOut = false
         promptError = await runSendPoll()
-        if (!promptError && (await isSessionEmpty(client, sessionID))) {
+        if (!promptError && !(await validateSessionHasOutput(client, sessionID))) {
           log("[task] Empty sync response after retry - surfacing structured error", { sessionID })
           return formatEmptySessionError(args, sessionID, agentToUse)
         }

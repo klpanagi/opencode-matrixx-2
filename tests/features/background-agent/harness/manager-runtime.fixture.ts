@@ -31,7 +31,7 @@ function createNoopNative(): NativeDomains {
   const ok = async () => ({})
   return {
     session: {
-      context: async () => ({ messages: [] }),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "harness output" }] }] }),
       get: ok,
       list: ok,
       create: async () => ({ id: "ses_harness" }),

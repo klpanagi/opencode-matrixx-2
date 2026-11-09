@@ -3413,6 +3413,9 @@
           "type": "integer",
           "minimum": 1000,
           "maximum": 60000
+        },
+        "dedupeActiveDelegations": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

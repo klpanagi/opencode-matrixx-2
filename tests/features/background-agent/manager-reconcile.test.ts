@@ -12,7 +12,7 @@ function createManager(directory: string): BackgroundManager {
     session: {
       prompt: async () => ({}),
       interrupt: async () => ({}),
-      context: async () => ({ messages: [] }),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
     },
     agent: { list: async () => [] },
     model: { list: async () => [] },
@@ -54,24 +54,24 @@ describe("BackgroundManager handleEvent normalization (D5: native events only)",
     rmSync(dir, { recursive: true, force: true })
   })
 
-  test("mismatched sessionID shape still hits after normalize", () => {
+  test("mismatched sessionID shape still hits after normalize", async () => {
     //#given
     const task = seedTask(manager, { id: "t-norm", sessionID: "ses_abc123", status: "running" })
 
     //#when
-    manager.handleEvent({ type: "session.idle", sessionID: "  ses_abc123?x=1  " } as unknown as Parameters<BackgroundManager["handleEvent"]>[0])
+    await manager.handleEvent({ type: "session.idle", sessionID: "  ses_abc123?x=1  " } as unknown as Parameters<BackgroundManager["handleEvent"]>[0])
 
     //#then
     expect(task.status).toBe("completed")
     expect(task.completedAt).toBeInstanceOf(Date)
   })
 
-  test("hash suffix is stripped before lookup", () => {
+  test("hash suffix is stripped before lookup", async () => {
     //#given
     const task = seedTask(manager, { id: "t-hash", sessionID: "ses_hash1", status: "running" })
 
     //#when
-    manager.handleEvent({ type: "session.idle", data: { sessionID: "ses_hash1#frag" } } as unknown as Parameters<BackgroundManager["handleEvent"]>[0])
+    await manager.handleEvent({ type: "session.idle", data: { sessionID: "ses_hash1#frag" } } as unknown as Parameters<BackgroundManager["handleEvent"]>[0])
 
     //#then
     expect(task.status).toBe("completed")

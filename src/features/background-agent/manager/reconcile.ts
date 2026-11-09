@@ -4,7 +4,7 @@ import type { V2Event } from "../../../plugin/tool/context"
 import { isNativeSessionId, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
 import { recordEffortForBackground } from "../../agent-effort/background"
-import { getParentSessionID, registerSubagentSession } from "../../session-state/state"
+import { getParentSessionID, registerSubagentSession, subagentSessions } from "../../session-state/state"
 import type { EventProperties } from "../constants"
 import { getSessionErrorMessage } from "../error-helpers"
 import { BG_HANDLE_FILE_PREFIX, getBgHandleDir, readHandles } from "../handle-index"
@@ -20,6 +20,7 @@ import type { BackgroundTask, ReviveInput } from "../types"
 import { finalizeTask, NOTIFY_PARENT, RECORD_HISTORY, REMOVE_TOAST, SKIP_HISTORY } from "./finalize"
 import { abortSessionQuietly, firePrompt } from "./lifecycle"
 import type { BackgroundManager } from "./manager"
+import { validateSessionHasOutput } from "./output-guard"
 import { ManagerStore } from "./store"
 import type { ManagerRuntime, ResolveAnyResult } from "./types"
 
@@ -330,6 +331,21 @@ function projectProgressFromToolPart(
   return true
 }
 
+function resolveEventTime(rt: ManagerRuntime, props: Record<string, unknown>): number {
+  const direct = props.time
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct
+  const nested = props.properties
+  if (nested !== null && typeof nested === "object") {
+    const nestedTime = (nested as Record<string, unknown>).time
+    if (typeof nestedTime === "number" && Number.isFinite(nestedTime)) return nestedTime
+  }
+  return rt.now?.() ?? Date.now()
+}
+
+function stampLastActivity(rt: ManagerRuntime, task: BackgroundTask, props: Record<string, unknown>): void {
+  task.lastActivityAt = new Date(resolveEventTime(rt, props))
+  rt.store.persistHandle(task)
+}
 
 export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Promise<void> {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
@@ -356,19 +372,6 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
     if (!task) {
       const owner = getParentSessionID(sessionID)
       if (owner !== undefined) {
-        const cancelledSibling = [...rt.store.tasks.values()].some(
-          (t) =>
-            t.status === "cancelled" &&
-            t.parentSessionID === owner &&
-            t.concurrencyKey?.startsWith(`${owner}:`),
-        )
-        if (cancelledSibling) {
-          log("[background-agent] Auto-track skipped: cancelled sibling with same concurrencyKey", {
-            sessionID,
-            parentSessionID: owner,
-          })
-          return
-        }
         const covered = [...rt.store.tasks.values()].find(
           (candidate) =>
             candidate.sessionID !== undefined &&
@@ -384,8 +387,23 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
           rt.store.reindexTask(covered)
           task = covered
         } else {
+          if (!subagentSessions.has(sessionID)) {
+            log("[background-agent] Auto-track skipped: no active delegation record", {
+              sessionID,
+              parentSessionID: owner,
+            })
+            return
+          }
+          const persisted = rt.store.findDiskTaskBySession(sessionID)
+          if (persisted?.origin !== "delegation") {
+            log("[background-agent] Auto-track skipped: no persisted delegation origin", {
+              sessionID,
+              parentSessionID: owner,
+            })
+            return
+          }
           const auto: BackgroundTask = {
-            id: `bg_${crypto.randomUUID().slice(0, 8)}`,
+            id: persisted.id,
             parentSessionID: owner,
             parentMessageID: "",
             description: `tracked native session ${sessionID}`,
@@ -394,6 +412,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
             status: "running",
             startedAt: new Date(),
             sessionID,
+            origin: "delegation",
           }
           rt.store.tasks.set(auto.id, auto)
           rt.store.knownSessions.add(sessionID)
@@ -411,6 +430,16 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
       return
     }
 
+    if (
+      event.type === "message.part.updated" ||
+      event.type === "session.idle" ||
+      event.type === "session.error" ||
+      event.type === "session.execution.succeeded" ||
+      event.type === "session.execution.failed"
+    ) {
+      stampLastActivity(rt, task, props)
+    }
+
     if (event.type === "message.part.updated") {
       if (projectProgressFromToolPart(rt, task, props)) {
         rt.store.persistHandle(task)
@@ -419,6 +448,20 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
     }
 
     if (event.type === "session.idle") {
+      if (!(await validateSessionHasOutput({ session: rt.native.session }, sessionID))) {
+        task.terminalReason = "no-output"
+        await finalizeTask(rt, task, {
+          status: "error",
+          source: "output-guard",
+          notify: NOTIFY_PARENT,
+          removeToast: REMOVE_TOAST,
+          recordHistory: SKIP_HISTORY,
+          incomingError: "Session produced no assistant or tool output",
+          logMessage: "[background-agent] Task errored (output guard):",
+          computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+        })
+        return
+      }
       await finalizeTask(rt, task, {
         status: "completed",
         source: "native session.idle",
@@ -444,6 +487,20 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
       return
     }
     if (event.type === "session.execution.succeeded") {
+      if (!(await validateSessionHasOutput({ session: rt.native.session }, sessionID))) {
+        task.terminalReason = "no-output"
+        await finalizeTask(rt, task, {
+          status: "error",
+          source: "output-guard",
+          notify: NOTIFY_PARENT,
+          removeToast: REMOVE_TOAST,
+          recordHistory: SKIP_HISTORY,
+          incomingError: "Session produced no assistant or tool output",
+          logMessage: "[background-agent] Task errored (output guard):",
+          computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+        })
+        return
+      }
       await finalizeTask(rt, task, {
         status: "completed",
         source: "native session.execution.succeeded",

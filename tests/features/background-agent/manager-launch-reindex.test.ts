@@ -22,7 +22,7 @@ function buildRuntime(
       create: hooks.createImpl ?? (async () => ({ id: "ses_fresh_1" })),
       prompt: async () => ({}),
       interrupt: async () => ({}),
-      context: async () => ({ messages: [] }),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
     },
     agent: { list: async () => [] },
     model: { list: async () => [] },

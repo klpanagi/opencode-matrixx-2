@@ -19,7 +19,7 @@ import type {
   ResumeInput,
   ReviveInput,
 } from "../types"
-import { finalizeTask } from "./finalize"
+import { finalizeTask, NOTIFY_NONE, NOTIFY_PARENT } from "./finalize"
 import {
   abortSessionQuietly,
   launchTask,
@@ -220,7 +220,7 @@ export class BackgroundManager implements ManagerRuntime {
     await finalizeTask(this, task, {
       status: "cancelled",
       source,
-      notify: false,
+      notify: options?.skipNotification === true ? NOTIFY_NONE : NOTIFY_PARENT,
       removeToast: true,
       recordHistory: true,
       ...(options?.reason !== undefined ? { incomingError: options.reason } : {}),

@@ -8,6 +8,7 @@ import { getTaskToastManager } from "../../task-toast-manager"
 import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
 import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
+import { isWallclockEnabled, MAX_WALLCLOCK_TIMEOUT_MS } from "../wallclock"
 import { finalizeTask } from "./finalize"
 import type { ManagerRuntime } from "./types"
 
@@ -24,11 +25,11 @@ export function isSettled(status: BackgroundTaskStatus): boolean {
   return status !== "pending" && status !== "running"
 }
 
-function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
-  const timeoutMs = rt.config?.wallClockTimeoutMs
-  const startedAtMs = task.startedAt?.getTime()
-  if (timeoutMs === undefined || startedAtMs === undefined) return
-  rt.store.wallclock.arm(task.id, startedAtMs, timeoutMs, () => {
+function createWallclockFireHandler(
+  rt: ManagerRuntime,
+  task: BackgroundTask,
+): () => void {
+  return () => {
     if (isSettled(task.status)) return
     task.terminalReason = "wall-clock-timeout"
     void finalizeTask(rt, task, {
@@ -44,7 +45,17 @@ function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
     if (task.sessionID !== undefined) {
       abortSessionQuietly(rt.native, task.sessionID, "wall-clock-timeout")
     }
-  })
+  }
+}
+
+function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
+  const timeoutMs = rt.config?.wallClockTimeoutMs
+  if (!isWallclockEnabled(timeoutMs)) return
+  const startedAtMs = task.startedAt?.getTime()
+  if (startedAtMs === undefined) return
+  task.deadlineAt = new Date(startedAtMs + Math.min(timeoutMs, MAX_WALLCLOCK_TIMEOUT_MS))
+  rt.store.persistHandle(task)
+  rt.store.wallclock.arm(task.id, startedAtMs, timeoutMs, createWallclockFireHandler(rt, task))
 }
 
 export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
@@ -92,10 +103,36 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
         model: handle.model,
         category: handle.category,
         concurrencyGroup: handle.concurrencyGroup,
+        origin: handle.origin,
+        lastActivityAt:
+          handle.lastActivityAt !== undefined
+            ? new Date(handle.lastActivityAt)
+            : undefined,
+        deadlineAt:
+          handle.deadlineAt !== undefined ? new Date(handle.deadlineAt) : undefined,
+        resultSummary: handle.resultSummary,
       }
       rt.store.tasks.set(handle.taskId, task)
       if (reacquire) rt.store.persistHandle(task)
       if (handle.sessionID !== undefined) rt.store.knownSessions.add(handle.sessionID)
+      const wallClockTimeoutMs = rt.config?.wallClockTimeoutMs
+      const restoredActive = task.status === "running" || task.status === "pending"
+      if (
+        restoredActive &&
+        handle.deadlineAt !== undefined &&
+        isWallclockEnabled(wallClockTimeoutMs)
+      ) {
+        const limitMs = Math.min(wallClockTimeoutMs, MAX_WALLCLOCK_TIMEOUT_MS)
+        const wallStart = handle.startedAt ?? handle.deadlineAt - limitMs
+        const deadlineMono =
+          Math.floor(performance.now()) +
+          Math.max(handle.deadlineAt - (rt.now?.() ?? Date.now()), 0)
+        rt.store.wallclock.resume(
+          handle.taskId,
+          { deadlineMono, wallStart, limitMs },
+          createWallclockFireHandler(rt, task),
+        )
+      }
       restored++
     }
 
@@ -150,14 +187,16 @@ export async function launchTask(rt: ManagerRuntime,
     }
 
     const concurrencyKey = `${input.parentSessionID}:${input.agent}:${(input.prompt ?? "").length}:${(input.prompt ?? "").slice(0, 120)}`
-    for (const existing of rt.store.tasks.values()) {
-      if (
-        existing.concurrencyKey === concurrencyKey &&
-        (existing.status === "pending" || existing.status === "running") &&
-        existing.parentSessionID === input.parentSessionID
-      ) {
-        log("[background-agent] Launch dedup: reusing active task", { taskId: existing.id })
-        return existing
+    if (rt.config?.dedupeActiveDelegations === true) {
+      for (const existing of rt.store.tasks.values()) {
+        if (
+          existing.concurrencyKey === concurrencyKey &&
+          (existing.status === "pending" || existing.status === "running") &&
+          existing.parentSessionID === input.parentSessionID
+        ) {
+          log("[background-agent] Launch dedup: reusing active task", { taskId: existing.id })
+          return existing
+        }
       }
     }
 
@@ -176,6 +215,7 @@ export async function launchTask(rt: ManagerRuntime,
       parentTools: input.parentTools,
       model: input.model,
       category: input.category,
+      origin: "delegation",
     }
 
     rt.store.tasks.set(task.id, task)
@@ -351,6 +391,7 @@ export async function trackTask(rt: ManagerRuntime,input: {
       startedAt: new Date(),
       progress: { toolCalls: 0, lastUpdate: new Date() },
       parentAgent: input.parentAgent,
+      origin: "delegation",
     }
 
     rt.store.tasks.set(task.id, task)

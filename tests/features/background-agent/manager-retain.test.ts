@@ -77,7 +77,7 @@ function makeMockClient(overrides?: {
           }
         : async () => ({}),
       interrupt: async () => ({}),
-      context: async () => ({ messages: [] }),
+      context: async () => ({ messages: [{ type: "assistant", content: [{ type: "text", text: "ok" }] }] }),
     },
     agent: { list: async () => [] },
     model: { list: async () => [] },
@@ -206,7 +206,7 @@ describe("Retention invariant", () => {
       // NOTE (D5): completion now arrives via the public native-event route
       // (wired by the background-notification hook) — no private tryCompleteTask.
       //#when native session.idle fires for the task's session
-      mgr.handleEvent({ type: "session.idle", data: { sessionID: task.sessionID } })
+      await mgr.handleEvent({ type: "session.idle", data: { sessionID: task.sessionID } })
 
       //#then
       const filePath = join(dir, `${task.id}.json`)
