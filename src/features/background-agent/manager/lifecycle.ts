@@ -1,7 +1,8 @@
-import { getAgentToolRestrictions, log } from "../../../shared"
+import { log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
 import type { NativeDomains } from "../../../shared/session/session-context-source"
 import { setSessionTemperature, setSessionTools } from "../../../shared/session/session-state"
+import { buildChildToolMap } from "../../../tools/delegate-task/nested-depth"
 import { recordEffortForBackground } from "../../agent-effort/background"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
@@ -580,12 +581,7 @@ export async function firePrompt(native: NativeDomains,
   ): Promise<void> {
     const sessionID = task.sessionID
     if (!sessionID) throw new Error(`Task has no sessionID: ${task.id}`)
-    const tools = {
-      task: true,
-      question: false,
-      ...getAgentToolRestrictions(task.agent),
-    }
-    setSessionTools(sessionID, tools)
+    setSessionTools(sessionID, buildChildToolMap(task.agent))
 
     // Native v2 session.prompt takes { sessionID, text } only: agent and model
     // are pinned at session.create above, tools flow through setSessionTools,

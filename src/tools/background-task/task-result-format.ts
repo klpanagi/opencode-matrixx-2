@@ -4,10 +4,7 @@ import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/s
 import { consumeNewMessages } from "../../shared/session/session-cursor"
 import type { SessionMessage } from "../../shared/session/session-message"
 import { contentOf, roleOf } from "../../shared/session/session-message"
-
-function getTimeString(value: unknown): string {
-  return typeof value === "string" ? value : ""
-}
+import { compareMessageTime } from "./time-format"
 
 export async function formatTaskResult(task: BackgroundTask, client: SessionContextCarrier): Promise<string> {
   if (task.compactedResult) {
@@ -61,13 +58,9 @@ Session ID: ${task.sessionID}
 (No assistant or tool response found)`
   }
 
-  const sortedMessages = [...relevantMessages].sort((a, b) => {
-    const timeA = getTimeString(a.time)
-    const timeB = getTimeString(b.time)
-    return timeA.localeCompare(timeB)
-  })
+  const sortedMessages = [...relevantMessages].sort(compareMessageTime)
 
-  const newMessages = consumeNewMessages(task.sessionID, sortedMessages)
+  const newMessages = consumeNewMessages(task.id, sortedMessages)
   if (newMessages.length === 0) {
     const duration = formatDuration(task.startedAt ?? new Date(), task.completedAt)
     return `Task Result

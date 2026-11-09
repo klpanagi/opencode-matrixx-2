@@ -3,7 +3,7 @@ import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/s
 import type { ContentPart, SessionMessage } from "../../shared/session/session-message"
 import { contentOf, roleOf } from "../../shared/session/session-message"
 import { formatTaskStatus } from "./task-status-format"
-import { formatMessageTime } from "./time-format"
+import { compareMessageTime, formatMessageTime } from "./time-format"
 import { truncateText } from "./truncate-text"
 
 const MAX_MESSAGE_LIMIT = 100
@@ -57,11 +57,7 @@ export async function formatFullSession(
     return `Error fetching messages: ${message}`
   }
 
-  const sortedMessages = [...rawMessages].sort((a, b) => {
-    const timeA = String(a.time ?? "")
-    const timeB = String(b.time ?? "")
-    return timeA.localeCompare(timeB)
-  })
+  const sortedMessages = [...rawMessages].sort(compareMessageTime)
 
   let filteredMessages = sortedMessages
   if (options.sinceMessageId) {

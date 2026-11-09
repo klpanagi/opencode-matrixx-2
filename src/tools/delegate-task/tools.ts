@@ -5,6 +5,7 @@ import type {
 } from "../../agents/shared/dynamic-agent-prompt-builder"
 import { resolveSoftwareDevEnforcement, type SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import { log } from "../../shared/runtime/logger"
+import { formatDetailedError } from "../../shared/text/error-formatting"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { mergeCategories } from "../../shared/tool/merge-categories"
 import { CATEGORY_DESCRIPTIONS, isCodeWritingCategory, SHORT_CATEGORY_HINTS } from "./constants"
@@ -19,7 +20,9 @@ import {
   resolveSkillContent,
   resolveSubagentExecution,
 } from "./executor"
+import type { ExecutorContext } from "./executor-types"
 import { MOUSE_AGENT } from "./mouse-agent"
+import { ALLOWED_CHILD_TOOLS, MAX_DELEGATION_DEPTH, resolveSessionDepth } from "./nested-depth"
 import { buildSystemContent } from "./prompt-builder"
 import { softwareDevDisabledSkillError } from "./software-dev-enforcement"
 import { resolveSoftwareDevEnforcementContent } from "./software-dev-payload"
@@ -159,6 +162,25 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
         )
       }
 
+      const depth = resolveSessionDepth(ctx.sessionID)
+      if (depth >= MAX_DELEGATION_DEPTH) {
+        return formatDetailedError(
+          new Error(
+            "nested-depth-exceeded: nested delegation beyond depth 1 is not permitted. " +
+              "A delegated child session cannot spawn another subagent; complete the work directly.",
+          ),
+          {
+            operation: "Delegate nested task",
+            args,
+            sessionID: ctx.sessionID,
+            agent: ctx.agent,
+            category: args.category,
+          },
+        )
+      }
+
+      const executorCtx: ExecutorContext = { ...options, depth, allowedChildTools: ALLOWED_CHILD_TOOLS }
+
       // Normalize description: the model may omit it, yielding `undefined" titles.
       // Resolve once here so every downstream path (metadata, launch, toast) is safe.
       args.description = resolveTaskDescription({
@@ -269,9 +291,9 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
 
       if (args.session_id) {
         if (runInBackground) {
-          return executeBackgroundContinuation(args, ctx, options, parentContext)
+          return executeBackgroundContinuation(args, ctx, executorCtx, parentContext)
         }
-        return executeSyncContinuation(args, ctx, options)
+        return executeSyncContinuation(args, ctx, executorCtx)
       }
 
       if (!args.category && !args.subagent_type) {
@@ -299,7 +321,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
       if (args.category) {
         // ctx.sessionID is the invoking (parent) session — its preset overlay
         // propagates to the delegated task's category resolution.
-        const resolution = await resolveCategoryExecution(args, { ...options, sessionID: ctx.sessionID }, inheritedModel, systemDefaultModel)
+        const resolution = await resolveCategoryExecution(args, { ...executorCtx, sessionID: ctx.sessionID }, inheritedModel, systemDefaultModel)
         if (resolution.error) {
           return resolution.error
         }
@@ -336,7 +358,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
             availableCategories,
             availableSkills,
           })
-          return executeUnstableAgentTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, actualModel)
+          return executeUnstableAgentTask(args, ctx, executorCtx, parentContext, agentToUse, categoryModel, systemContent, actualModel)
         }
       } else {
         const resolution = await resolveSubagentExecution(args, options, parentContext.agent, categoryExamples)
@@ -362,10 +384,10 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
       })
 
       if (runInBackground) {
-        return executeBackgroundTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent)
+        return executeBackgroundTask(args, ctx, executorCtx, parentContext, agentToUse, categoryModel, systemContent)
       }
 
-      return executeSyncTask(args, ctx, options, parentContext, agentToUse, categoryModel, systemContent, modelInfo)
+      return executeSyncTask(args, ctx, executorCtx, parentContext, agentToUse, categoryModel, systemContent, modelInfo)
     },
   })
 }

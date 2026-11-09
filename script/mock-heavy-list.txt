@@ -46,3 +46,4 @@ tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
 tests/hooks/background-notification/hook.test.ts
+tests/tools/delegate-task/sync-unregister-arity.test.ts

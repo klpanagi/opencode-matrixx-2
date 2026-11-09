@@ -34,6 +34,7 @@ const HookNameEnum = z.enum([
 	"mouse-notepad",
   "start-work",
   "niobe",
+  // @deprecated — implementation removed; alias retained (R17)
   "unstable-agent-babysitter",
   "task-resume-info",
   "stop-continuation-guard",

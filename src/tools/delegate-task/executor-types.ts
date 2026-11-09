@@ -6,6 +6,8 @@ import type { NativeClient } from "./types"
 export interface ExecutorContext {
   manager: BackgroundManager
   client: NativeClient
+  /** Override for the active-child delegation signal used by the unstable poll guard. */
+  getActiveChildSessionIDs?: (sessionID: string) => string[]
   directory: string
   userCategories?: CategoriesConfig
   mouseModel?: string
@@ -23,6 +25,10 @@ export interface ExecutorContext {
   onSyncSessionCreated?: (event: { sessionID: string; parentID: string; title: string }) => Promise<void>
   /** Per-session effort accounting config; undefined disables foreground effort recording. */
   effortConfig?: EffortConfig
+  /** Depth of the invoking session: 0 top-level, 1 delegated child. */
+  depth?: number
+  /** Tools a delegated child may use; single source for child tool maps. */
+  allowedChildTools?: readonly string[]
 }
 
 export interface ParentContext {

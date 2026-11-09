@@ -96,7 +96,6 @@ function buildStubHooks(spies: Record<FastFailHookName, ReturnType<typeof spyOn>
     "stopContinuationGuard",
     "compactionContextInjector",
     "todoContinuationEnforcer",
-    "unstableAgentBabysitter",
     "backgroundNotificationHook",
     "keywordDetector",
     "contextInjectorMessagesTransform",

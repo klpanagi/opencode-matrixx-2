@@ -13,12 +13,10 @@ import {
 import { bindSafeHook } from "../../shared/agent/safe-create-hook"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { stateRootFromPluginContext } from "../../shared/session/state-root"
-import { createUnstableAgentBabysitter } from "../tool/unstable-agent-babysitter"
 
 export type ContinuationHooks = {
   stopContinuationGuard: ReturnType<typeof createStopContinuationGuardHook> | null
   compactionContextInjector: ReturnType<typeof createCompactionContextInjector> | null
-  unstableAgentBabysitter: ReturnType<typeof createUnstableAgentBabysitter> | null
   nudgeLoopBreaker: ReturnType<typeof createNudgeLoopBreakerHook> | null
   backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
   niobeHook: ReturnType<typeof createNiobeHook> | null
@@ -59,11 +57,6 @@ export function createContinuationHooks(args: {
         createCompactionContextInjector(backgroundManager, { enabled: compactionMemoryEnabled }))
     : null
 
-  const unstableAgentBabysitter = isHookEnabled("unstable-agent-babysitter")
-    ? safeHook("unstable-agent-babysitter", () =>
-        createUnstableAgentBabysitter({ ctx, backgroundManager, pluginConfig }))
-    : null
-
   const nudgeLoopBreaker = isHookEnabled("nudge-loop-breaker")
     ? safeHook("nudge-loop-breaker", () => createNudgeLoopBreakerHook(ctx))
     : null
@@ -95,7 +88,6 @@ export function createContinuationHooks(args: {
   return {
     stopContinuationGuard,
     compactionContextInjector,
-    unstableAgentBabysitter,
     nudgeLoopBreaker,
     backgroundNotificationHook,
     niobeHook,

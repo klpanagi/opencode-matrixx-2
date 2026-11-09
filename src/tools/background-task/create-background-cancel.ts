@@ -105,20 +105,21 @@ ${resumeSection}${warning}`
 Only running or pending tasks can be cancelled.`
         }
 
+        const originalStatus = task.status
         const cancelled = await manager.cancelTask(task.id, {
           source: "background_cancel",
-          abortSession: task.status === "running",
+          abortSession: originalStatus === "running",
         })
         if (!cancelled) {
           return `[ERROR] Failed to cancel task: ${task.id}`
         }
 
-        if (task.status === "pending") {
+        if (originalStatus === "pending") {
           return `Pending task cancelled successfully
 
 Task ID: ${task.id}
 Description: ${task.description}
-Status: ${task.status}`
+Status: ${originalStatus}`
         }
 
         return `Task cancelled successfully
@@ -126,7 +127,7 @@ Status: ${task.status}`
 Task ID: ${task.id}
 Description: ${task.description}
 Session ID: ${task.sessionID}
-Status: ${task.status}`
+Status: ${originalStatus}`
       } catch (error) {
         return `[ERROR] Error cancelling task: ${error instanceof Error ? error.message : String(error)}`
       }

@@ -7,10 +7,15 @@ import { bumpGeneration, currentGeneration, readHandle, readHandles, writeHandle
 import { TaskMap } from "../task-map"
 import type { BackgroundTask } from "../types"
 import { WallclockSupervisor } from "../wallclock"
-import type { NativeDescendant } from "./types"
+import type { ManagerTimerHandle, ManagerTimers, NativeDescendant } from "./types"
 
 /** Short-TTL cache for native descendant listings (T3). In-memory only. */
 const NATIVE_CACHE_TTL_MS = 1000
+
+const DEFAULT_SETTLED_TIMERS: ManagerTimers = {
+  setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+  clearTimeout: (handle) => clearTimeout(handle),
+}
 
 /**
  * A `waitForAllDescendants` registration.
@@ -42,6 +47,12 @@ export class ManagerStore {
   readonly wallclock = new WallclockSupervisor()
   readonly pendingSpawns = new Set<string>()
   readonly waiters = new Set<Waiter>()
+  /**
+   * Waiter callbacks keyed by task id, notified once the task reaches a
+   * terminal status via `notifyTaskSettled`. Each waiter removes itself on
+   * settle, timeout, or abort.
+   */
+  readonly taskSettledWaiters = new Map<string, Set<() => void>>()
   directory: string
   config?: BackgroundTaskConfig
 
@@ -225,5 +236,56 @@ export class ManagerStore {
   bumpTaskGeneration(taskId: string): number {
     bumpGeneration(this.directory, taskId)
     return currentGeneration(this.directory, taskId)
+  }
+
+  /** Wake every waiter for `taskId` and drop the entry. */
+  notifyTaskSettled(taskId: string): void {
+    const waiters = this.taskSettledWaiters.get(taskId)
+    if (waiters === undefined) return
+    this.taskSettledWaiters.delete(taskId)
+    for (const wake of [...waiters]) {
+      try {
+        wake()
+      } catch (error) {
+        log("[background-agent] Task-settled waiter failed:", error)
+      }
+    }
+  }
+
+  /**
+   * Resolve when `taskId` settles, when `timeoutMs` elapses, or when
+   * `signal` aborts — whichever comes first. A non-positive timeout or an
+   * already-aborted signal resolves immediately. Never rejects.
+   */
+  waitForTaskSettled(
+    taskId: string,
+    timeoutMs: number,
+    signal?: AbortSignal,
+    timers?: ManagerTimers,
+  ): Promise<void> {
+    if (timeoutMs <= 0 || signal?.aborted) return Promise.resolve()
+    const clock = timers ?? DEFAULT_SETTLED_TIMERS
+    return new Promise<void>((resolve) => {
+      let settled = false
+      let handle: ManagerTimerHandle | undefined
+      const finish = (): void => {
+        if (settled) return
+        settled = true
+        if (handle !== undefined) clock.clearTimeout(handle)
+        signal?.removeEventListener("abort", finish)
+        const waiters = this.taskSettledWaiters.get(taskId)
+        if (waiters !== undefined) {
+          waiters.delete(finish)
+          if (waiters.size === 0) this.taskSettledWaiters.delete(taskId)
+        }
+        resolve()
+      }
+      const existing = this.taskSettledWaiters.get(taskId)
+      const waiters = existing ?? new Set<() => void>()
+      if (existing === undefined) this.taskSettledWaiters.set(taskId, waiters)
+      waiters.add(finish)
+      handle = clock.setTimeout(finish, timeoutMs)
+      signal?.addEventListener("abort", finish, { once: true })
+    })
   }
 }

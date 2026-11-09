@@ -104,4 +104,3 @@ export {
   TOOL_GATING_MAX_ENTRIES,
   TOOL_GATING_SKIP_DIRS,
 } from "./tool-policy"
-export { createUnstableAgentBabysitter } from "./unstable-agent-babysitter"
