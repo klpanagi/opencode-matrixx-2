@@ -415,7 +415,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
             origin: "delegation",
           }
           rt.store.tasks.set(auto.id, auto)
-          rt.store.knownSessions.add(sessionID)
+          rt.store.rememberKnownSession(sessionID)
           rt.store.persistHandle(auto)
           log("[background-agent] Auto-tracked native session:", { sessionID, taskId: auto.id })
           task = auto

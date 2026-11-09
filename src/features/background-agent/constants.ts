@@ -24,6 +24,9 @@ export const DEFAULT_JOB_BOARD_ENABLED = true
 export const DEFAULT_JOB_BOARD_STRATEGY = "latest" as const
 // Lower snapshot retention bounds job-board ledger growth (token conservation).
 export const DEFAULT_MAX_RETAINED_SNAPSHOTS = 10
+// Bound on the in-memory known-session set; the oldest entries are evicted
+// (Set insertion order) once this many live sessions are remembered.
+export const KNOWN_SESSIONS_MAX = 200
 export const RECONCILE_CONFIRMATION_GRACE_MS = 5000
 
 export type ProcessCleanupEvent = NodeJS.Signals | "beforeExit" | "exit"

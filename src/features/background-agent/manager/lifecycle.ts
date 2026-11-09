@@ -114,7 +114,7 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
       }
       rt.store.tasks.set(handle.taskId, task)
       if (reacquire) rt.store.persistHandle(task)
-      if (handle.sessionID !== undefined) rt.store.knownSessions.add(handle.sessionID)
+      if (handle.sessionID !== undefined) rt.store.rememberKnownSession(handle.sessionID)
       const wallClockTimeoutMs = rt.config?.wallClockTimeoutMs
       const restoredActive = task.status === "running" || task.status === "pending"
       if (
@@ -302,7 +302,7 @@ export async function launchTask(rt: ManagerRuntime,
 
     const sessionID = created.id
     registerSubagentSession(sessionID, input.parentSessionID)
-    rt.store.knownSessions.add(sessionID)
+    rt.store.rememberKnownSession(sessionID)
 
     task.status = "running"
     task.startedAt = new Date()
@@ -397,7 +397,7 @@ export async function trackTask(rt: ManagerRuntime,input: {
     rt.store.tasks.set(task.id, task)
     rt.store.persistHandle(task)
     registerSubagentSession(input.sessionID, input.parentSessionID)
-    rt.store.knownSessions.add(input.sessionID)
+    rt.store.rememberKnownSession(input.sessionID)
     rt.taskHistory.record(input.parentSessionID, {
       id: task.id,
       sessionID: input.sessionID,
