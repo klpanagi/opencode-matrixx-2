@@ -213,6 +213,15 @@ export class BackgroundManager implements ManagerRuntime {
     return this.store.getTask(id)
   }
 
+  /**
+   * Resolve when `taskId` settles, the timeout elapses, or the signal aborts.
+   * Delegates to the store so callers (e.g. `background_output`) never touch
+   * the store directly.
+   */
+  waitForTaskSettled(taskId: string, timeoutMs: number, signal?: AbortSignal): Promise<void> {
+    return this.store.waitForTaskSettled(taskId, timeoutMs, signal, this.timers)
+  }
+
   persistHandleFenced(task: BackgroundTask, expectedGeneration: number): void {
     this.store.persistHandleFenced(task, expectedGeneration)
   }

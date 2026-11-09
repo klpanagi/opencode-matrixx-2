@@ -3,7 +3,6 @@ import type { BackgroundManager, BackgroundTask } from "../../features/backgroun
 import { resolveAny } from "../../features/background-agent/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { getAgentDisplayName } from "../../shared/agent/agent-display-names"
-import { delay } from "../../shared/runtime/delay"
 import { log } from "../../shared/runtime/logger"
 import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session/session-context-source"
 import { isNativeSessionId } from "../../shared/session/session-id"
@@ -14,6 +13,7 @@ import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"
 import { formatTaskStatus } from "./task-status-format"
+import { applyContextModeBudget } from "./truncate-text"
 import type { BackgroundOutputArgs } from "./types"
 
 const MOUSE_AGENT = getAgentDisplayName("mouse")
@@ -77,6 +77,7 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
       thinking_max_chars: z.number().optional().describe("Max characters for thinking content (default: 2000)"),
     },
     async execute(args: BackgroundOutputArgs, toolContext) {
+      const emit = (value: string): string => applyContextModeBudget(value)
       try {
         log("[background-task] background_output entry:", {
           task_id: args.task_id,
@@ -90,11 +91,11 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
         const rawTaskId = (args.task_id ?? "").trim()
         const rawSessionId = (args.session_id ?? "").trim()
         if (rawTaskId !== "" && rawSessionId !== "" && rawTaskId !== rawSessionId) {
-          return `[ERROR] ambiguous_id: task_id ("${rawTaskId}") and session_id ("${rawSessionId}") disagree. Pass exactly one identifier; never guessing.`
+          return emit(`[ERROR] ambiguous_id: task_id ("${rawTaskId}") and session_id ("${rawSessionId}") disagree. Pass exactly one identifier; never guessing.`)
         }
         const id = rawTaskId !== "" ? rawTaskId : rawSessionId
         if (id === "") {
-          return `Task not found: (empty id). Inspect via session_read. Revive is bg_-only.`
+          return emit(`Task not found: (empty id). Inspect via session_read. Revive is bg_-only.`)
         }
         let resolved: Awaited<ReturnType<typeof resolveAny>>
         try {
@@ -103,14 +104,14 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
           const task = manager.getTask(id) ?? manager.findBySession(id)
           if (!task) {
             if (isNativeSessionId(id)) {
-              return `Task not found: ${id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`
+              return emit(`Task not found: ${id}. Native ses_ sessions without bg_ handles have no task output; inspect via session_read. Revive is bg_-only.`)
             }
-            return `Task not found: ${id}`
+            return emit(`Task not found: ${id}`)
           }
           resolved = { origin: "bg", task }
         }
         if ("error" in resolved) {
-          return `Task not found: ${resolved.id}. Inspect via session_read. Revive is bg_-only.`
+          return emit(`Task not found: ${resolved.id}. Inspect via session_read. Revive is bg_-only.`)
         }
         if (resolved.origin === "ses" || resolved.origin === "foreign") {
           const sessionId = resolved.sessionId
@@ -129,24 +130,24 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
               .filter((t) => t.length > 0)
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
-            return `Error fetching messages: ${message}`
+            return emit(`Error fetching messages: ${message}`)
           }
-          return formatForeignSessionOutput(sessionId, resolved.origin, texts)
+          return emit(formatForeignSessionOutput(sessionId, resolved.origin, texts))
         }
         if (resolved.origin !== "bg") {
-          return `Task not found: ${id}. Inspect via session_read. Revive is bg_-only.`
+          return emit(`Task not found: ${id}. Inspect via session_read. Revive is bg_-only.`)
         }
         const task = resolved.task
 
         if (!task.sessionID) {
-          return formatDetailedError(
+          return emit(formatDetailedError(
             new Error(`Task has no session ID yet. Task ID: ${task.id}, Status: ${task.status}`),
             {
               operation: "Get background task output",
               agent: task.agent,
               category: task.category,
             }
-          )
+          ))
         }
 
         const meta = {
@@ -176,24 +177,20 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
 
         if (shouldBlock && isTaskActiveStatus(task.status)) {
           const startTime = Date.now()
-          while (Date.now() - startTime < timeoutMs) {
-            try {
-              await delay(1000, abortSignal)
-            } catch {
-              break
-            }
+          while (isTaskActiveStatus(resolvedTask.status)) {
+            const remaining = timeoutMs - (Date.now() - startTime)
+            if (remaining <= 0) break
+            // Wait for a settle signal, the 1s floor, remaining budget, or abort.
+            const tickMs = Math.min(1000, remaining)
+            await manager.waitForTaskSettled(task.id, tickMs, abortSignal)
+            if (abortSignal?.aborted) break
 
             const currentTask = manager.getTask(task.id)
             if (!currentTask) {
-              return `Task was deleted: ${task.id}`
+              return emit(`Task was deleted: ${task.id}`)
             }
 
             resolvedTask = currentTask
-
-            if (!isTaskActiveStatus(currentTask.status)) {
-              break
-            }
-
           }
 
           if (isTaskActiveStatus(resolvedTask.status)) {
@@ -221,11 +218,11 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
             thinkingMaxChars: args.thinking_max_chars,
           })
 
-          return didTimeoutWhileActive ? appendTimeoutNote(output, timeoutMs) : output
+          return emit(didTimeoutWhileActive ? appendTimeoutNote(output, timeoutMs) : output)
         }
 
         if (resolvedTask.status === "completed") {
-          return await formatTaskResult(resolvedTask, client)
+          return emit(await formatTaskResult(resolvedTask, client))
         }
 
         if (
@@ -235,13 +232,13 @@ export function createBackgroundOutput(manager: BackgroundManager, client: Sessi
           resolvedTask.status === "stopped" ||
           resolvedTask.status === "statusUncertain"
         ) {
-          return formatTaskStatus(resolvedTask)
+          return emit(formatTaskStatus(resolvedTask))
         }
 
         const statusOutput = formatTaskStatus(resolvedTask)
-        return didTimeoutWhileActive ? appendTimeoutNote(statusOutput, timeoutMs) : statusOutput
+        return emit(didTimeoutWhileActive ? appendTimeoutNote(statusOutput, timeoutMs) : statusOutput)
       } catch (error) {
-        return `Error getting output: ${error instanceof Error ? error.message : String(error)}`
+        return emit(`Error getting output: ${error instanceof Error ? error.message : String(error)}`)
       }
     },
   })

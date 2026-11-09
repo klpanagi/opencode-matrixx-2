@@ -102,6 +102,7 @@ export async function finalizeTask(
   rt.store.wallclock.disarm(task.id)
   rt.store.nativeDescCache.clear()
   rt.store.persistHandle(task)
+  rt.store.notifyTaskSettled(task.id)
 
   if (options.recordHistory) {
     rt.taskHistory.record(task.parentSessionID, {
