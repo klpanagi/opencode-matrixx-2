@@ -1,6 +1,6 @@
 import { type ForegroundEffortResult, recordEffortForForeground } from "../../features/agent-effort/foreground"
 import { validateSessionHasOutput } from "../../features/background-agent/manager/output-guard"
-import { registerSubagentSession, releaseSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
+import { hasSubagentSession, registerSubagentSession, releaseSubagentSession, unregisterSubagentSession } from "../../features/session-state/state"
 import { getActiveTaskToastManager } from "../../features/task-toast-manager/manager"
 import type { ModelFallbackInfo } from "../../features/task-toast-manager/types"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
@@ -292,12 +292,12 @@ session_id: ${sessionID}
     })
   } finally {
     if (syncSessionID) {
-      // Always call the observable hook (suites stub/spy it). When it is a
-      // zero-arg mock stub (length 0) it cannot clean up, so run the real
-      // release as backstop. Real unregister declares 1 param: exactly one
-      // of the two touches the set, keeping spied delete counts at 1.
-      unregisterSubagentSession(syncSessionID)
-      if (unregisterSubagentSession.length === 0) {
+      // Call the observable hook (injectable, suites stub/spy it). Then use
+      // registry state rather than function arity to decide whether the hook
+      // cleaned up: a no-op stub leaves the id behind, so release it once.
+      const unregister = deps.unregister ?? unregisterSubagentSession
+      unregister(syncSessionID)
+      if (hasSubagentSession(syncSessionID)) {
         releaseSubagentSession(syncSessionID)
       }
       // Abort the sync session to prevent todo-continuation enforcer

@@ -20,6 +20,10 @@ export function unregisterSubagentSession(sessionID: string): void {
   deleteSubagentParent(sessionID)
 }
 
+export function hasSubagentSession(sessionID: string): boolean {
+  return subagentSessions.has(sessionID)
+}
+
 export function getParentSessionID(subagentSessionID: string): string | undefined {
   return lookupSubagentParent(subagentSessionID)
 }

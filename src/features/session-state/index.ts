@@ -8,6 +8,7 @@ export {
   getSessionAgent,
   getSessionModel,
   getSubagentSessionIDs,
+  hasSubagentSession,
   isMainSessionCandidate,
   registerSubagentSession,
   releaseSubagentSession,
