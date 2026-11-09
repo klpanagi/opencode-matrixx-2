@@ -69,7 +69,6 @@ export const BgHandleSchema = z
         lastUpdate: z.number(),
         lastMessage: z.string().optional(),
       })
-      .strict()
       .optional(),
     generation: z.number().int().nonnegative().default(0),
   })

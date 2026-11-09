@@ -19,20 +19,11 @@ export type BackgroundTerminalReason =
   | "nested-depth-exceeded"
   | "wall-clock-timeout"
 
-export interface ToolCallWindow {
-  lastSignature: string
-  consecutiveCount: number
-  threshold: number
-}
-
 interface TaskProgress {
   toolCalls: number
   lastTool?: string
-  toolCallWindow?: ToolCallWindow
   lastUpdate: Date
   lastMessage?: string
-  lastMessageAt?: Date
-  countedToolPartIDs?: Set<string>
 }
 
 export interface BackgroundTask {
@@ -73,15 +64,8 @@ export interface BackgroundTask {
   /** Category used for this task (e.g., 'bullet-time', 'construct') */
   category?: string
 
-  /** Last message count for stability detection */
-  lastMsgCount?: number
-  /** Number of consecutive polls with stable message count */
-  stablePolls?: number
   /** Why the task reached a terminal state (e.g. stopped/statusUncertain) */
   terminalReason?: BackgroundTerminalReason
-
-  /** Compressed result payload for handoff to parent session (set by tryCompleteTask) */
-  compactedResult?: string
   /** Monotonic epoch fencing token: bumped on revive/takeover, stale writers are rejected */
   generation?: number
 }

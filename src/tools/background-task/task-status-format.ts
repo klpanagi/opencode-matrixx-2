@@ -22,10 +22,9 @@ export function formatTaskStatus(task: BackgroundTask): string {
   let lastMessageSection = ""
   if (task.progress?.lastMessage) {
     const truncated = truncateText(task.progress.lastMessage, 500)
-    const messageTime = task.progress.lastMessageAt ? task.progress.lastMessageAt.toISOString() : "N/A"
     lastMessageSection = `
 
-## Last Message (${messageTime})
+## Last Message
 
 \`\`\`
 ${truncated}
