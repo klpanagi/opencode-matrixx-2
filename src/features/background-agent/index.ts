@@ -18,6 +18,5 @@ export {
   writeHandle,
 } from "./handle-index"
 export { BackgroundManager, type OnSubagentSessionCreated, type SubagentSessionCreatedEvent } from "./manager"
-export { TaskStateManager } from "./state"
 export { TaskHistory, type TaskHistoryEntry } from "./task-history"
 export * from "./types"
