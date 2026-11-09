@@ -16,7 +16,7 @@ export type BackgroundTerminalReason =
   | "uncertain"
   | "aborted"
   | "stale"
-  // compat-only: retained for handles persisted by older builds, no producer in current code
+  // producer: a delegation attempted from a session already at depth 1 (nested depth cap)
   | "nested-depth-exceeded"
   | "wall-clock-timeout"
   | "expired"
