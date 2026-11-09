@@ -12,6 +12,7 @@ export function createGrepTools(ctx: MatrixxContext): Record<string, MatrixxTool
       "Supports full regex syntax (eg. \"log.*Error\", \"function\\s+\\w+\", etc.). " +
       "Filter files by pattern with the include parameter (eg. \"*.js\", \"*.{ts,tsx}\"). " +
       "Returns file paths with matches sorted by modification time.",
+    options: { codemode: false },
     args: {
       pattern: z.string().describe("The regex pattern to search for in file contents"),
       include: z
