@@ -130,6 +130,43 @@ describe("toHandle projection", () => {
     expect(handle.sessionID).toBe("ses_child")
     expect(handle.terminalReason).toBe("no-output")
   })
+
+  test("projects a stable key set that includes concurrencyGroup and the v2 fields", () => {
+    //#given a task carrying a concurrency group
+    const task = makeTask({ concurrencyGroup: "explore:provider/model" })
+
+    //#when projecting to a handle
+    const handle = toHandle(task)
+
+    //#then the committed key set includes concurrencyGroup and every v2 key
+    expect(Object.keys(handle).sort()).toMatchInlineSnapshot(`
+      [
+        "agent",
+        "category",
+        "completedAt",
+        "concurrencyGroup",
+        "deadlineAt",
+        "description",
+        "error",
+        "generation",
+        "lastActivityAt",
+        "model",
+        "origin",
+        "parentMessageID",
+        "parentSessionID",
+        "progress",
+        "queuedAt",
+        "resultSummary",
+        "sessionID",
+        "startedAt",
+        "status",
+        "taskId",
+        "terminalReason",
+        "title",
+      ]
+    `)
+    expect(Object.keys(handle)).toContain("concurrencyGroup")
+  })
 })
 
 describe("handle round-trip", () => {

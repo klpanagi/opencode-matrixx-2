@@ -49,7 +49,15 @@ export interface BackgroundTask {
   queuedAt?: Date
   startedAt?: Date
   completedAt?: Date
+  /** How this task entered the handle index: launched by delegation or adopted as a native subagent */
+  origin?: "delegation" | "native"
+  /** Last observed activity, projected to epoch ms on the handle */
+  lastActivityAt?: Date
+  /** Wall-clock deadline, projected to epoch ms on the handle */
+  deadlineAt?: Date
   result?: string
+  /** Short result summary persisted on the handle */
+  resultSummary?: string
   error?: string
   progress?: TaskProgress
   parentModel?: { providerID: string; modelID: string }

@@ -101,24 +101,28 @@ describe("writeHandle", () => {
     expect(typeof handle.queuedAt).toBe("number")
   })
 
-  test("does not persist ephemeral task fields", () => {
-    //#given a task with prompt, progress and result payloads
+  test("persists only the serializable subset of task fields", () => {
+    //#given a task with prompt, result, error and progress payloads
     const task = makeTask({
       prompt: "do not persist",
       result: "do not persist",
-      error: "do not persist",
-      progress: { toolCalls: 3, lastUpdate: new Date() },
+      error: "boom",
+      progress: { toolCalls: 3, lastUpdate: new Date("2026-01-01T00:01:00.000Z"), lastMessage: "working" },
     })
 
     //#when persisting the handle
     writeHandle(dir, task)
     const [handle] = readHandles(dir)
 
-    //#then only the lightweight index fields are present
+    //#then prompt/result stay ephemeral while error and serializable progress are persisted
     expect(handle).not.toHaveProperty("prompt")
     expect(handle).not.toHaveProperty("result")
-    expect(handle).not.toHaveProperty("error")
-    expect(handle).not.toHaveProperty("progress")
+    expect(handle.error).toBe("boom")
+    expect(handle.progress).toEqual({
+      toolCalls: 3,
+      lastUpdate: Date.parse("2026-01-01T00:01:00.000Z"),
+      lastMessage: "working",
+    })
   })
 
   test("overwrites the same handle file on repeated writes", () => {
