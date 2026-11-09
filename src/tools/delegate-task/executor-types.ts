@@ -6,6 +6,8 @@ import type { NativeClient } from "./types"
 export interface ExecutorContext {
   manager: BackgroundManager
   client: NativeClient
+  /** Override for the active-child delegation signal used by the unstable poll guard. */
+  getActiveChildSessionIDs?: (sessionID: string) => string[]
   directory: string
   userCategories?: CategoriesConfig
   mouseModel?: string

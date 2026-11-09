@@ -1,3 +1,4 @@
+import { getSubagentSessionIDs } from "../../features/session-state/state"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import { formatDuration, jsonSafeMetadata } from "../../shared"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"
@@ -6,6 +7,7 @@ import { contentOf, isAssistant, timeOf } from "../../shared/session/session-mes
 import { getSessionTools } from "../../shared/session/session-state"
 import { formatDetailedError } from "./error-formatting"
 import type { ExecutorContext, ParentContext } from "./executor-types"
+import { pollSyncSession } from "./sync-session-poller"
 import { buildBackgroundTitle } from "./task-title"
 import { getTimingConfig } from "./timing"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
@@ -50,7 +52,7 @@ export async function executeUnstableAgentTask(
       sessionID = updated?.sessionID
     }
     if (!sessionID) {
-      return formatDetailedError(new Error(`Task failed to start within timeout (30s). Task ID: ${task.id}, Status: ${task.status}`), {
+      return formatDetailedError(new Error(`Task failed to start within timeout (${timing.WAIT_FOR_SESSION_TIMEOUT_MS}ms). Task ID: ${task.id}, Status: ${task.status}`), {
         operation: "Launch monitored background task",
         args,
         agent: agentToUse,
@@ -77,6 +79,10 @@ export async function executeUnstableAgentTask(
       storeToolMetadata(ctx.sessionID, resolvedCallID, bgTaskMeta)
     }
 
+    const monitoredSessionID = sessionID
+    const resolveChildSessionIDs = executorCtx.getActiveChildSessionIDs ?? getSubagentSessionIDs
+    const hasActiveChildDelegations = () => resolveChildSessionIDs(monitoredSessionID).length > 0
+
     const startTime = new Date()
     const timingCfg = getTimingConfig()
     const pollStart = Date.now()
@@ -99,6 +105,14 @@ export async function executeUnstableAgentTask(
       }
 
       if (Date.now() - pollStart < timingCfg.MIN_STABILITY_TIME_MS) continue
+
+      // Never conclude success while a delegated child of this session is live:
+      // reset the stability counters and keep polling instead.
+      if (hasActiveChildDelegations()) {
+        stablePolls = 0
+        lastMsgCount = 0
+        continue
+      }
 
       const msgs = await fetchSessionMessages(client, sessionID)
       lastPolledMsgs = msgs
@@ -129,6 +143,30 @@ The task session may contain partial results.
 <task_metadata>
 session_id: ${sessionID}
 </task_metadata>`
+    }
+
+    if (hasActiveChildDelegations()) {
+      const childGuardMessage = await pollSyncSession(ctx, client, {
+        sessionID: monitoredSessionID,
+        agentToUse,
+        toastManager: null,
+        taskId: task.id,
+        hasActiveChildBackgroundTasks: hasActiveChildDelegations,
+      })
+      if (childGuardMessage) return childGuardMessage
+      if (hasActiveChildDelegations()) {
+        return `SUPERVISED TASK STILL RUNNING
+The monitored session still has active child delegations.
+
+Session ID: ${sessionID}
+Agent: ${agentToUse}${args.category ? ` (category: ${args.category})` : ""}
+
+Resume: session ${sessionID} is still running; poll again or resume via session ${sessionID}.
+
+<task_metadata>
+session_id: ${sessionID}
+</task_metadata>`
+      }
     }
 
     const messages = lastPolledMsgs ?? (await fetchSessionMessages(client, sessionID))
