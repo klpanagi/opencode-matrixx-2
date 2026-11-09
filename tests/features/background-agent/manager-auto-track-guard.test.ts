@@ -162,6 +162,19 @@ describe("handleManagerEvent auto-track synchronous coverage guard", () => {
       sessionID: "ses_covered",
     }
     rt.store.tasks.set("bg_real", bgReal)
+    rt.store.persistHandle({
+      id: "bg_native_marker",
+      sessionID: "ses_native",
+      parentSessionID: "ses_parent",
+      parentMessageID: "msg_1",
+      description: "delegated marker",
+      prompt: "",
+      agent: "native",
+      status: "running",
+      startedAt: new Date(0),
+      origin: "delegation",
+    })
+
     registerSubagentSession("ses_native", "ses_parent")
 
     try {

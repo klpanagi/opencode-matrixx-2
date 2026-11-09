@@ -176,6 +176,7 @@ export async function launchTask(rt: ManagerRuntime,
       parentTools: input.parentTools,
       model: input.model,
       category: input.category,
+      origin: "delegation",
     }
 
     rt.store.tasks.set(task.id, task)
@@ -351,6 +352,7 @@ export async function trackTask(rt: ManagerRuntime,input: {
       startedAt: new Date(),
       progress: { toolCalls: 0, lastUpdate: new Date() },
       parentAgent: input.parentAgent,
+      origin: "delegation",
     }
 
     rt.store.tasks.set(task.id, task)

@@ -152,6 +152,7 @@ export class ManagerStore {
         model: handle.model,
         category: handle.category,
         concurrencyGroup: handle.concurrencyGroup,
+        origin: handle.origin,
       }
       this.tasks.set(task.id, task)
       return task

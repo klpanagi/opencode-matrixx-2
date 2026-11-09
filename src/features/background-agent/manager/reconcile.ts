@@ -4,7 +4,7 @@ import type { V2Event } from "../../../plugin/tool/context"
 import { isNativeSessionId, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
 import { recordEffortForBackground } from "../../agent-effort/background"
-import { getParentSessionID, registerSubagentSession } from "../../session-state/state"
+import { getParentSessionID, registerSubagentSession, subagentSessions } from "../../session-state/state"
 import type { EventProperties } from "../constants"
 import { getSessionErrorMessage } from "../error-helpers"
 import { BG_HANDLE_FILE_PREFIX, getBgHandleDir, readHandles } from "../handle-index"
@@ -356,19 +356,6 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
     if (!task) {
       const owner = getParentSessionID(sessionID)
       if (owner !== undefined) {
-        const cancelledSibling = [...rt.store.tasks.values()].some(
-          (t) =>
-            t.status === "cancelled" &&
-            t.parentSessionID === owner &&
-            t.concurrencyKey?.startsWith(`${owner}:`),
-        )
-        if (cancelledSibling) {
-          log("[background-agent] Auto-track skipped: cancelled sibling with same concurrencyKey", {
-            sessionID,
-            parentSessionID: owner,
-          })
-          return
-        }
         const covered = [...rt.store.tasks.values()].find(
           (candidate) =>
             candidate.sessionID !== undefined &&
@@ -384,8 +371,23 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
           rt.store.reindexTask(covered)
           task = covered
         } else {
+          if (!subagentSessions.has(sessionID)) {
+            log("[background-agent] Auto-track skipped: no active delegation record", {
+              sessionID,
+              parentSessionID: owner,
+            })
+            return
+          }
+          const persisted = rt.store.findDiskTaskBySession(sessionID)
+          if (persisted?.origin !== "delegation") {
+            log("[background-agent] Auto-track skipped: no persisted delegation origin", {
+              sessionID,
+              parentSessionID: owner,
+            })
+            return
+          }
           const auto: BackgroundTask = {
-            id: `bg_${crypto.randomUUID().slice(0, 8)}`,
+            id: persisted.id,
             parentSessionID: owner,
             parentMessageID: "",
             description: `tracked native session ${sessionID}`,
@@ -394,6 +396,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
             status: "running",
             startedAt: new Date(),
             sessionID,
+            origin: "delegation",
           }
           rt.store.tasks.set(auto.id, auto)
           rt.store.knownSessions.add(sessionID)
