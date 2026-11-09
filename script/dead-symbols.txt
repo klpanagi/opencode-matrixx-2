@@ -1,0 +1,86 @@
+# Proven dead-symbol inventory (T-02 / PR-0)
+#
+# Columns (pipe-delimited, exactly six):
+#   symbol | path | status | evidence | proof-scope | row-kind
+#
+# Proof rules
+# -----------
+# A consumer is exactly one of:
+#   (a) an import from src/** or tests/**,
+#   (b) a readSrc("<path>") pin where the SAME statement asserts via toMatch,
+#       toContain or toMatchInlineSnapshot, including the
+#       expect(readSrc("...")).toMatch(...) form (N4), or
+#   (c) a call / internal reference inside the declaring module.
+# Prose, comments and identically-named locals in other modules are NOT
+# consumers and are NOT evidence of death (R20).
+#
+# proof-scope is the declaring file. For object fields it is the file holding
+# the interface or type literal. KEEP and DEFER rows record the declaring file
+# where known and an em-dash otherwise.
+#
+# A DELETE row is proven only by declaration absence in proof-scope, import
+# absence across src/**/*.ts and tests/**/*.ts, and the residual typecheck
+# (script/check-dead-symbols.sh). A DELETE row without proof-scope fails.
+# A KEEP row must name a consumer in evidence. Row identity is (symbol, path).
+#
+# No TBD rows.
+#
+# --- KEEP rows -------------------------------------------------------------
+
+expired|src/features/background-agent/revive.ts:18,116,150-151; src/shared/outcome/revive-outcome.ts:13; src/tools/background-task/create-background-revive.ts:53; src/hooks/runtime-fallback/fallback-state.ts:17,31,67|KEEP|consumers: DeadTargetReason revive.ts:116, UNREVIVABLE_REASONS revive-outcome.ts:13, create-background-revive.ts:53, fallback-state.ts:67|src/features/background-agent/revive.ts|union-member
+expired|src/features/background-agent/handle-index.ts:42-43|KEEP|consumer: BgHandleSchema.terminalReason read by toHandle at handle-index.ts:42-43 and readHandles at handle-index.ts:54|src/features/background-agent/handle-index.ts|union-member
+concurrencyGroup|src/features/background-agent/types.ts:60; src/features/background-agent/handle-index.ts:54,103; src/features/background-agent/revive.ts:192; src/features/background-agent/manager/store.ts:154; src/features/background-agent/manager/lifecycle.ts:72|KEEP|consumers: rehydration sites store.ts:154 and lifecycle.ts:72, revive.ts:192, toHandle at handle-index.ts:103|src/features/background-agent/types.ts|field
+isUnstableAgent|src/tools/delegate-task/category-resolver.ts:263,271; src/tools/delegate-task/tools.ts:294-327|KEEP|consumer: launch path tools.ts:311,323,330 and task-message-analyzer.ts:73|src/tools/delegate-task/category-resolver.ts|field
+"unstable-agent-babysitter"|src/config/schema/hooks.ts:37|KEEP|consumers: HookNameSchema.parse at hooks.ts:37, create-continuation-hooks.ts:62, tests/plugin/hook-order.test.ts:58, tests/plugin/events/manifest.ts:30|src/config/schema/hooks.ts|literal
+queue-saturated|src/shared/outcome/saturated-outcome.ts:36|KEEP|consumer: isQueueSaturated read at src/tools/delegate-task/background-task.ts:57, formatSaturatedOutcome at saturated-outcome.ts:36|src/shared/outcome/saturated-outcome.ts|literal
+KNOWN_SESSIONS_MAX|src/features/background-agent/constants.ts|KEEP|consumer: imported by src/features/background-agent/manager/store.ts (evidence prose-validated at PR-0; import lands PR-1c)|—|const
+disarmAll|src/features/background-agent/wallclock.ts:116|KEEP|consumer: manager shutdown calls at src/features/background-agent/manager/manager.ts:410,428|src/features/background-agent/wallclock.ts|method
+_resetPruneThrottleForTesting|src/features/background-agent/manager/reconcile.ts:620|KEEP|consumers: re-export manager/index.ts:8, tests/test-setup.ts:4,21, tests/features/background-agent/manager-retain.test.ts:37,104,301|src/features/background-agent/manager/reconcile.ts|function
+remainingMono|src/features/background-agent/wallclock.ts:39|KEEP|consumer: internal calls wallclock.ts:63,79|src/features/background-agent/wallclock.ts|declaration
+isWallclockEnabled|src/features/background-agent/wallclock.ts:43|KEEP|consumer: internal call wallclock.ts:58|src/features/background-agent/wallclock.ts|declaration
+MAX_WALLCLOCK_TIMEOUT_MS|src/features/background-agent/wallclock.ts:1|KEEP|consumers: wallclock.ts:59,77|src/features/background-agent/wallclock.ts|declaration
+DEFAULT_WALL_CLOCK_TIMEOUT_MS|src/features/background-agent/constants.ts:15|KEEP|consumer: same-statement readSrc pin tests/hooks/todo-migration-fixes-pinned.test.ts:211-215|src/features/background-agent/constants.ts|const
+MIN_IDLE_TIME_MS|src/features/background-agent/constants.ts:11|KEEP|consumer: import tests/features/background-agent/manager.test.ts:11|src/features/background-agent/constants.ts|const
+lastMsgCount|src/tools/delegate-task/unstable-agent-task.ts:83-112; src/tools/delegate-task/sync-session-poller.ts:152-298|KEEP|live locals: unstable-agent-task.ts:107 and sync-session-poller.ts:183,214,285,298|—|local
+stablePolls|src/tools/delegate-task/unstable-agent-task.ts:83-112|KEEP|live locals: unstable-agent-task.ts:84,108,109,111|—|local
+
+# --- DELETE rows -----------------------------------------------------------
+
+loop-detector|src/features/background-agent/loop-detector.ts|DELETE|whole file: exports CircuitBreakerSettings, resolveCircuitBreakerSettings, recordToolCall, detectRepetitiveToolUse; zero src or tests importers at f119edd8f|src/features/background-agent/loop-detector.ts|file
+TaskStateManager|src/features/background-agent/state.ts|DELETE|class declaration; only src/features/background-agent/index.ts:21 and tests/features/background-agent/state-lookup-index.test.ts:4 reference it (removed in PR-3)|src/features/background-agent/state.ts|declaration
+session-output|src/features/background-agent/session-output.ts|DELETE|real 88-line impl, zero src importers at 08b6a19f7 (T-21 wires, then T-50 deletes)|src/features/background-agent/session-output.ts|file
+remainingMs|src/features/background-agent/wallclock.ts:35|DELETE|declaration only; consumers are removed with loop-detector and session-output in PR-3 (tests/features/background-agent/wallclock.test.ts exercises it today)|src/features/background-agent/wallclock.ts|declaration
+buildJobBoardSnapshot|src/features/background-agent/task-history.ts:116|DELETE|public method; no src callers at f119edd8f (tests/features/background-agent/task-history.test.ts exercises it today)|src/features/background-agent/task-history.ts|method
+getJobBoardEntries|src/features/background-agent/task-history.ts:106|DELETE|method; only internal call from buildJobBoardSnapshot at task-history.ts:117 (removed together)|src/features/background-agent/task-history.ts|method
+buildJobBoardNotification|src/features/background-agent/notification-builder.ts:149|DELETE|declaration; no src callers at f119edd8f (tests/features/background-agent/notification-builder.test.ts imports it today)|src/features/background-agent/notification-builder.ts|declaration
+compactedResult|src/features/background-agent/types.ts:78|DELETE|field declaration; only reader src/tools/background-task/task-result-format.ts:13,23 (removed in PR-3)|src/features/background-agent/types.ts|declaration
+lastMessageAt|src/features/background-agent/types.ts:36|DELETE|field; readers task-status-format.ts:25 and unstable-agent-babysitter-hook.ts:111-114 (removed in PR-3)|src/features/background-agent/types.ts|field
+toolCallWindow|src/features/background-agent/types.ts:33|DELETE|field; only reader loop-detector.ts which is deleted in this plan|src/features/background-agent/types.ts|field
+countedToolPartIDs|src/features/background-agent/types.ts:37|DELETE|field; zero readers at f119edd8f|src/features/background-agent/types.ts|field
+ToolCallWindow|src/features/background-agent/types.ts:24|DELETE|interface declaration; only loop-detector.ts imports it and types.ts uses it|src/features/background-agent/types.ts|declaration
+lastMsgCount|src/features/background-agent/types.ts:71|DELETE|field; no reader at f119edd8f (namesake locals are separate KEEP rows)|src/features/background-agent/types.ts|field
+stablePolls|src/features/background-agent/types.ts:73|DELETE|field; no reader at f119edd8f (namesake locals are separate KEEP rows)|src/features/background-agent/types.ts|field
+stale|src/features/background-agent/types.ts:18|DELETE|union member with no producer in current code|src/features/background-agent/types.ts|union-member
+expired|src/features/background-agent/types.ts:22|DELETE|union member with no producer in current code|src/features/background-agent/types.ts|union-member
+Todo|src/features/background-agent/constants.ts:43|DELETE|type declaration only; 9 prose namesakes are out of scope per R20|src/features/background-agent/constants.ts|declaration
+QueueItem|src/features/background-agent/constants.ts:50|DELETE|interface declaration; only src/features/background-agent/state.ts imports it (state.ts deleted in PR-3)|src/features/background-agent/constants.ts|declaration
+ProcessCleanupEvent|src/features/background-agent/constants.ts:29|DELETE|type alias declaration; zero src or tests importers at f119edd8f|src/features/background-agent/constants.ts|declaration
+MessagePartInfo|src/features/background-agent/constants.ts:31|DELETE|interface declaration; zero src or tests importers at f119edd8f|src/features/background-agent/constants.ts|declaration
+DEFAULT_STALE_TIMEOUT_MS|src/features/background-agent/constants.ts:5|DELETE|no importers; only prose comments at tests/hooks/stop-continuation-guard/repro.test.ts:129,137|src/features/background-agent/constants.ts|const
+DEFAULT_MESSAGE_STALENESS_TIMEOUT_MS|src/features/background-agent/constants.ts:6|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+MIN_RUNTIME_BEFORE_STALE_MS|src/features/background-agent/constants.ts:10|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+POLLING_INTERVAL_MS|src/features/background-agent/constants.ts:12|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+PRUNE_THROTTLE_MS|src/features/background-agent/constants.ts:13|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+TASK_CLEANUP_DELAY_MS|src/features/background-agent/constants.ts:14|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_WALL_CLOCK_ABORT_GRACE_MS|src/features/background-agent/constants.ts:16|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_WAKE_SCHEDULER_ENABLED|src/features/background-agent/constants.ts:20|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_WAKE_INTERVAL_MS|src/features/background-agent/constants.ts:21|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+MIN_WAKE_INTERVAL_MS|src/features/background-agent/constants.ts:22|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_JOB_BOARD_ENABLED|src/features/background-agent/constants.ts:23|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_JOB_BOARD_STRATEGY|src/features/background-agent/constants.ts:24|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+DEFAULT_MAX_RETAINED_SNAPSHOTS|src/features/background-agent/constants.ts:26|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+RECONCILE_CONFIRMATION_GRACE_MS|src/features/background-agent/constants.ts:27|DELETE|no importers at f119edd8f|src/features/background-agent/constants.ts|const
+hasPendingParentWake|src/tools/delegate-task/sync-session-poller.ts:143|DELETE|optional hook field read at sync-session-poller.ts:181; no caller sets it at f119edd8f|src/tools/delegate-task/sync-session-poller.ts|field
+parentDirectory|src/tools/delegate-task/sync-session-creator.ts:20,24,42|DELETE|returned field; no consumer reads parentDirectory at f119edd8f|src/tools/delegate-task/sync-session-creator.ts|declaration
+defaultDirectory|src/tools/delegate-task/sync-session-creator.ts:16|DELETE|input field read at sync-session-creator.ts:24 (removed together)|src/tools/delegate-task/sync-session-creator.ts|declaration
+'false'|src/tools/delegate-task/tools.ts:318|DELETE|unreachable branch: args.run_in_background is z.boolean() so the "false" string arm cannot occur|src/tools/delegate-task/tools.ts|branch
