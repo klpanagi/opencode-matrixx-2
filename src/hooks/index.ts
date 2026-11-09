@@ -20,9 +20,6 @@ export { createEditErrorRecoveryHook } from "./edit-error-recovery/hook";
 export { createEmptyTaskResponseDetectorHook } from "./empty-task-response-detector";
 export { createEnvContextInjectorHook } from "./env-context-injector";
 export { createEnvFileWriteGuardHook } from "./env-file-write-guard/hook"
-export { createEvolutionHitlHook } from "./evolution-hitl";
-export { passesQualityGate } from "./evolution-quality-gate";
-export { createEvolutionWatcherHook } from "./evolution-watcher";
 export { createHashlineReadEnhancerHook } from "./hashline-read-enhancer/hook";
 export { createInputSecretGuardHook } from "./input-secret-guard/hook";
 export { createInteractiveBashSessionHook } from "./interactive-bash-session/hook";

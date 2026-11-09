@@ -349,54 +349,6 @@ export interface MatrixxSelfConfig {
   proactive?: boolean;
 }
 
-export interface EvolutionWatcherConfig {
-  maxArgChars?: number;
-  maxOutputChars?: number;
-  skipTools?: string[];
-}
-
-export interface EvolutionCompressorConfig {
-  provider?: "llm" | "dspy-gepa";
-  model?: string;
-  minTraces?: number;
-  maxInputTokens?: number;
-  trigger?: "compacting" | "idle" | "both";
-}
-
-export interface EvolutionWriterConfig {
-  outputDir?: string;
-  globalSkills?: boolean;
-  allowToolGeneration?: boolean;
-  allowAgentGeneration?: boolean;
-}
-
-export interface EvolutionGovernanceConfig {
-  requireApproval?: boolean;
-  autoPromote?: boolean;
-  autoPromoteThreshold?: number;
-  minConfidence?: number;
-}
-
-export interface EvolutionRetentionConfig {
-  traceDays?: number;
-  maxPending?: number;
-}
-
-export interface EvolutionBudgetConfig {
-  maxCompressionsPerHour?: number;
-  maxCostCentsPerDay?: number;
-}
-
-export interface EvolutionConfig {
-  enabled?: boolean;
-  watcher?: EvolutionWatcherConfig;
-  compressor?: EvolutionCompressorConfig;
-  writer?: EvolutionWriterConfig;
-  governance?: EvolutionGovernanceConfig;
-  retention?: EvolutionRetentionConfig;
-  budget?: EvolutionBudgetConfig;
-}
-
 export interface MatrixxConfig {
   $schema?: string;
   global_model?: string;
@@ -438,7 +390,6 @@ export interface MatrixxConfig {
   matrixx_self_config?: MatrixxSelfConfig;
   matrix_loop?: MatrixLoopConfig;
   skills?: SkillsConfig | string[];
-  evolution?: EvolutionConfig;
   _migrations?: string[];
   modelRequirements?: ModelRequirements;
   complexityDowngrades?: Record<string, Record<string, string>>;

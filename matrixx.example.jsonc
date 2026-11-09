@@ -493,44 +493,6 @@
   //   "proactive": false                    // proactive suggestions (default: false)
   // },
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Evolution — self-evolution loop (trace → compress → propose skills)
-  // ─────────────────────────────────────────────────────────────────────────
-  // "evolution": {
-  //   "enabled": false,                     // opt-in (default: false)
-  //   "watcher": {
-  //     "maxArgChars": 4000,                // max chars from tool args (default: 4000)
-  //     "maxOutputChars": 8000,             // max chars from tool outputs (default: 8000)
-  //     "skipTools": ["evolution-watcher", "evolution-compressor"]
-  //   },
-  //   "compressor": {
-  //     "provider": "llm",                  // "llm" | "dspy-gepa" (default: "llm")
-  //     "model": "<provider>/<model>", // model override for compressor LLM — replace with live model
-  //     "minTraces": 5,                     // min traces before compression (default: 5)
-  //     "maxInputTokens": 32000,            // max input tokens for compressor prompt (default: 32000)
-  //     "trigger": "both"                   // "compacting" | "idle" | "both" (default: "both")
-  //   },
-  //   "writer": {
-  //     "outputDir": ".matrixx/evolution/skills", // output dir for generated skills (default: ".matrixx/evolution/skills")
-  //     "globalSkills": false,              // write skills globally (default: false)
-  //     "allowToolGeneration": false,       // allow generation of new tools (default: false)
-  //     "allowAgentGeneration": false       // allow generation of new agents (default: false)
-  //   },
-  //   "governance": {
-  //     "requireApproval": true,            // require human approval before promotion (default: true)
-  //     "autoPromote": false,               // auto-promote high-confidence skills (default: false)
-  //     "autoPromoteThreshold": 0.85,       // confidence threshold for auto-promotion (default: 0.85)
-  //     "minConfidence": 0.7                // min confidence to stage for approval (default: 0.7)
-  //   },
-  //   "retention": {
-  //     "traceDays": 30,                    // days to retain trace files (default: 30)
-  //     "maxPending": 50                    // max pending proposals retained (default: 50)
-  //   },
-  //   "budget": {
-  //     "maxCompressionsPerHour": 10,       // max compressions per hour (default: 10)
-  //     "maxCostCentsPerDay": 100           // max cost in cents per day (default: 100)
-  //   }
-  // },
 
   // ─────────────────────────────────────────────────────────────────────────
   // Migrations — auto-tracked history to prevent re-applying migrations.

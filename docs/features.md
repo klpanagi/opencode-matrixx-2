@@ -13,7 +13,6 @@ Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, 
 | Commands (full argument reference) | [Command Reference](command-reference.md) |
 | Tasks, mission state, continuation, `/task-list`, `/cleanup-tasks` | [Task System](task-system.md) |
 | BDD pipeline (`/bdd-pipeline` command + `bdd_*` tools; `bdd-*` skills) | [Quality, Part A](quality.md) |
-| Self-evolution proposals (`/evolution`) | [Evolution](evolution.md) |
 | TDD enforcement | [Quality, Part B](quality.md) |
 | Hooks (lifecycle automation, DCP, truncation, recovery) | [Hooks](hooks.md) |
 | Context management (DCP tiers, Headroom, `ctx_*` sandbox) | [Context Management](context-management.md) |
@@ -156,9 +155,9 @@ Use agent-browser to navigate to example.com and extract the main heading
 
 ## Commands (summary)
 
-Slash-triggered workflows (24 built-in commands). Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
+Slash-triggered workflows (23 built-in commands). Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
 
-Single-skill deep dives (`frontend-ui-ux`, `git-master`, `rp-research`, `remove-ai-slops`) live in [Category & Skill System Guide](category-skill-guide.md). Runtime toggles (`/redpill`, `/assembly`, `/end-redpill`, `/preset`, `/stop-continuation`, `/remove-deadcode`, `/task-list`, `/cleanup-tasks`, `/evolution`, `/handoff`, `/pickup`, `/research`, loops, BDD commands) are documented canonically in [Command Reference](command-reference.md) and [Task System](task-system.md).
+Single-skill deep dives (`frontend-ui-ux`, `git-master`, `rp-research`, `remove-ai-slops`) live in [Category & Skill System Guide](category-skill-guide.md). Runtime toggles (`/redpill`, `/assembly`, `/end-redpill`, `/preset`, `/stop-continuation`, `/remove-deadcode`, `/task-list`, `/cleanup-tasks`, `/handoff`, `/pickup`, `/research`, loops, BDD commands) are documented canonically in [Command Reference](command-reference.md) and [Task System](task-system.md).
 
 ## Hooks, Tools, MCPs, Context (summaries)
 
@@ -168,7 +167,7 @@ Single-skill deep dives (`frontend-ui-ux`, `git-master`, `rp-research`, `remove-
 - **Context injection** (AGENTS.md, conditional rules) and DCP tiers: [Context Management](context-management.md).
 - **Handoff** (`/handoff` → `/pickup`, `.matrixx/handoff.md`): [Command Reference](command-reference.md) and [Task System](task-system.md).
 - **BDD pipeline** (`/bdd-pipeline` command; `bdd_parse_gherkin`, `bdd_create_contract`, `bdd_validate_contract`, `bdd_pipeline_run` tools; `bdd-*` skills): [Quality, Part A](quality.md).
-- **TDD enforcement**: [Quality, Part B](quality.md). **Self-evolution** (`/evolution`): [Evolution](evolution.md).
+- **TDD enforcement**: [Quality, Part B](quality.md).
 - Custom skills load from `.opencode/skills/*/SKILL.md` (project) and `~/.config/opencode/skills/*/SKILL.md` (user); disable built-ins via `disabled_skills` in config.
 
 ## Removed: Claude Code Compatibility

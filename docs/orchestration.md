@@ -344,12 +344,12 @@ is reached. `/rp-loop` is the same loop with redpill mode active.
 
 Full reference with arguments and intercepts:
 [`docs/command-reference.md`](./command-reference.md)
-(24 built-ins covering orchestration, research, refactoring, handoffs,
+(23 built-ins covering orchestration, research, refactoring, handoffs,
 tasks, BDD, and toggles — see `src/features/builtin-commands/types.ts`
 `BuiltinCommandName`: init-deep, matrix-loop, rp-loop, cancel-loop, refactor,
 plan-review, start-work, stop-continuation, humanize, handoff, pickup,
 remove-deadcode, preset, end-redpill, research, assembly, redpill,
-bdd-pipeline, evolution, cleanup-tasks, task-list, quality-audit,
+bdd-pipeline, cleanup-tasks, task-list, quality-audit,
 quality-assurance, security-audit).
 
 ## Configuration

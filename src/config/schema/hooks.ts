@@ -55,8 +55,6 @@ const HookNameEnum = z.enum([
   "quality-gate",
   "design-intent-preserver",
   "rtk-bash-rewriter",
-  "evolution-watcher",
-  "evolution-hitl",
   "context-mode-enforcer",
   "task-edit-guard",
   "document-reader-guard",
@@ -95,8 +93,6 @@ export const HookNameSchema = z.union([
   z.literal("task-continuation-enforcer"),
   /** @deprecated no-op (D6) — preemptive-compaction deleted, single compaction hook owns compaction. Retained so existing configs keep loading. */
   z.literal("preemptive-compaction"),
-  /** @deprecated no-op (D6) — evolution-compressor deleted (context-freed=0 parentless leak), single compaction hook owns compaction. Retained so existing configs keep loading. */
-  z.literal("evolution-compressor"),
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

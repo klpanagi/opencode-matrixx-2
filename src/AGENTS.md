@@ -16,12 +16,12 @@ src/
 ├── cli/                              # CLI installer, doctor (27 files, no per-area AGENTS.md)
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Background agents, commands (21 dirs) — see features/AGENTS.md
-├── hooks/                            # Leaf hook domains (HookNameSchema 66 enum + 7 literals) — see hooks/AGENTS.md
+├── hooks/                            # Leaf hook domains (HookNameSchema 64 enum + 6 literals + 1 alias) — see hooks/AGENTS.md
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (~118 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
 ├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
-└── tools/                            # 31 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
+└── tools/                            # 30 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```
 
 ## PLUGIN INITIALIZATION (`setup-domains.ts`)
@@ -40,7 +40,7 @@ src/
 - **Session** (`create-session-hooks.ts`): context-window-monitor, session-recovery, think-mode, matrix-loop, anthropic-effort, ...
 - **Tool guard** (`create-tool-guard-hooks.ts`): comment-checker, tool-output-truncator, rules-injector, write-existing-file-guard, ...
 - **Transform** (`create-transform-hooks.ts`): keyword-detector, context-injector, thinking-block-validator, ...
-- **Continuation** (`create-continuation-hooks.ts`): stop-continuation-guard, compaction-context-injector, nudge-loop-breaker, background-notification (unified parent notification via `handleEvent`), niobe, plan-persister, evolution-hitl, ...
+- **Continuation** (`create-continuation-hooks.ts`): stop-continuation-guard, compaction-context-injector, nudge-loop-breaker, background-notification (unified parent notification via `handleEvent`), niobe, plan-persister, ...
 - **Skill** (`create-skill-hooks.ts`): category-skill-reminder, auto-slash-command
 
 Task-continuation enforcement now lives in `features/task-session-scope/` (`staleness.ts`, `todo.ts`), kept from the removed enforcer.

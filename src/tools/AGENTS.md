@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-31 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, delegate-task (`task`), background-task ×4 `output/cancel/revive/wait_all`, handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, evolution, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset/evolution only load when relevant (see `tool-policy.ts`).
+30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, delegate-task (`task`), background-task ×4 `output/cancel/revive/wait_all`, handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
 
 ## STRUCTURE
 ```
@@ -30,7 +30,6 @@ tools/
 ├── knowledge-hub-confirm/ # Knowledge-hub write confirm gate (gated: hubs configured)
 ├── pdf-extract-figures/ # PDF figure extraction (gated: *.pdf file or override)
 ├── preset/            # Model preset switch (opt-in only)
-├── evolution/         # Evolution governance: list/get/approve/reject/status + read-only retrieval (search/get_context, 4000-char cap) (gated: evolution.enabled)
 ├── dashboard-flux-validator/ # Grafana dashboard validation
 ├── market-symbol-validator/ # Market symbol validation
 ├── notepad/           # Persistent notepads (create/append/list/read)
@@ -71,7 +70,6 @@ tools/
 | `look_at` | System | Factory | Multimodal PDF/image analysis |
 | `skill` | Skill | Factory | Execute skill with MCP capabilities |
 | `slashcommand` | Command | Factory | Slash command dispatch |
-| `evolution` | Evolution | Factory | Govern pending proposals: list/get/approve/reject/status + read-only retrieval (search scoped text, get_context with 4000-char cap + truncation marker) |
 
 ## TASK TOOLS
 

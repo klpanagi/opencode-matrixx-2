@@ -10,7 +10,6 @@ import {
   createDocumentReaderGuardHook,
   createEmptyTaskResponseDetectorHook,
   createEnvFileWriteGuardHook,
-  createEvolutionWatcherHook,
   createHashlineReadEnhancerHook,
   createJsonErrorRecoveryHook,
   createKnowledgeHubGuardHook,
@@ -63,7 +62,6 @@ export type ToolGuardHooks = {
   docsLookupGuard: ReturnType<typeof createDocsLookupGuardHook> | null
   knowledgeHubGuard: ReturnType<typeof createKnowledgeHubGuardHook> | null
   knowledgeHubSearchNudge: ReturnType<typeof createKnowledgeHubSearchNudgeHook> | null
-  evolutionWatcher: ReturnType<typeof createEvolutionWatcherHook> | null
 }
 
 export function createToolGuardHooks(args: {
@@ -73,7 +71,6 @@ export function createToolGuardHooks(args: {
   safeHookEnabled: boolean
 }): ToolGuardHooks {
   const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
-  const evolutionEnabled = pluginConfig.evolution?.enabled === true
   const safeHook = bindSafeHook(safeHookEnabled)
 
   const backgroundTaskBlocker = isHookEnabled("background-task-blocker")
@@ -195,10 +192,6 @@ export function createToolGuardHooks(args: {
         }))
     : null
 
-  const evolutionWatcher = evolutionEnabled && isHookEnabled("evolution-watcher")
-    ? safeHook("evolution-watcher", () => createEvolutionWatcherHook(ctx, pluginConfig.evolution))
-    : null
-
   return {
     backgroundTaskBlocker,
     commentChecker,
@@ -225,6 +218,5 @@ export function createToolGuardHooks(args: {
     docsLookupGuard,
     knowledgeHubGuard,
     knowledgeHubSearchNudge,
-    evolutionWatcher,
   }
 }

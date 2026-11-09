@@ -4,7 +4,6 @@ import type { BackgroundManager } from "../../features/background-agent"
 import {
   createBackgroundNotificationHook,
   createCompactionContextInjector,
-  createEvolutionHitlHook,
   createNiobeHook,
   createNudgeLoopBreakerHook,
   createPlanPersister,
@@ -21,7 +20,6 @@ export type ContinuationHooks = {
   backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
   niobeHook: ReturnType<typeof createNiobeHook> | null
   planPersister: ReturnType<typeof createPlanPersister> | null
-  evolutionHitl: ReturnType<typeof createEvolutionHitlHook> | null
 }
 
 type SessionRecovery = {
@@ -41,8 +39,6 @@ export function createContinuationHooks(args: {
   void args.sessionRecovery
 
   const safeHook = bindSafeHook(safeHookEnabled)
-
-  const evolutionEnabled = pluginConfig.evolution?.enabled === true
 
   const stopContinuationGuard = isHookEnabled("stop-continuation-guard")
     ? safeHook("stop-continuation-guard", () =>
@@ -81,10 +77,6 @@ export function createContinuationHooks(args: {
         createPlanPersister(ctx, { directory: stateRootFromPluginContext(ctx) }))
     : null
 
-  const evolutionHitl = evolutionEnabled && isHookEnabled("evolution-hitl")
-    ? safeHook("evolution-hitl", () => createEvolutionHitlHook(ctx, pluginConfig.evolution))
-    : null
-
   return {
     stopContinuationGuard,
     compactionContextInjector,
@@ -92,6 +84,5 @@ export function createContinuationHooks(args: {
     backgroundNotificationHook,
     niobeHook,
     planPersister,
-    evolutionHitl,
   }
 }

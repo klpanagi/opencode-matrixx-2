@@ -2,21 +2,20 @@
 
 ## OVERVIEW
 
-21 feature modules (background-agent, builtin-commands, task-storage, bdd, assembly-state, evolution, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+21 feature modules (background-agent, builtin-commands, task-storage, bdd, assembly-state, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
 features/
 ├── background-agent/           # Task lifecycle, restart reconciliation (20 files; orchestration split in manager/) — see background-agent/AGENTS.md
 │   └── manager/                # manager.ts + lifecycle.ts + reconcile.ts + store.ts + types.ts
-├── builtin-commands/           # 24 commands, 22 templates
+├── builtin-commands/           # 23 commands, 21 templates
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 3 files + `task-toast-manager/` — see task-storage/AGENTS.md
 ├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)
 ├── assembly-state/             # Assembly voting state (enable/disable, reset)
 ├── bdd/                        # BDD contract schemas + pipeline support
 ├── command-loader/             # User/project command discovery + loading
 ├── completion-review/          # Post-completion review + evidence handling
-├── evolution/                  # Evolution layer (orchestration vs triggers vs actions)
 ├── handoff/                    # Multi-action handoff: create, read, list, archive
 ├── knowledge-hub/              # Knowledge-hub loading + path expansion
 ├── mission-state/              # Persistent state for multi-step ops (10 files)

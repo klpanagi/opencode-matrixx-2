@@ -13,7 +13,6 @@ import { CommentCheckerConfigSchema } from "./comment-checker"
 import { ContextModeConfigSchema } from "./context-mode"
 import { DcpConfigSchema } from "./dcp"
 import { EffortConfigSchema } from "./effort"
-import { EvolutionConfigSchema } from "./evolution"
 import { ExperimentalConfigSchema } from "./experimental"
 import { HeadroomConfigSchema } from "./headroom"
 import { HookNameSchema } from "./hooks"
@@ -114,9 +113,6 @@ export const MatrixxConfigSchema = z.object({
   memory: MemoryConfigSchema.optional(),
   /** RTK bash command rewriter configuration (default: disabled) */
   rtk: RtkConfigSchema.optional(),
-  /** Self-evolution loop configuration (default: disabled) */
-  /** Self-evolution loop configuration (default: disabled) */
-  evolution: EvolutionConfigSchema.optional(),
   /** Migration history to prevent re-applying migrations (e.g., model version upgrades) */
   _migrations: z.array(z.string()).optional(),
   /** Config-driven agent/category model requirements */

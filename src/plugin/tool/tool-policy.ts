@@ -129,11 +129,6 @@ export function shouldEnablePresetTools(override: boolean | undefined): boolean 
   return override ?? false
 }
 
-/** evolution tool: register iff evolution.enabled is true (default false). */
-export function shouldEnableEvolutionTool(enabled: boolean | undefined): boolean {
-  return enabled ?? false
-}
-
 /** session_cleanup: opt-in only, because the tool deletes sessions. */
 export function shouldEnableSessionCleanup(enabled: boolean | undefined): boolean {
   return enabled === true

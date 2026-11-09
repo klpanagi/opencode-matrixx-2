@@ -52,7 +52,7 @@ const INFLATION_PROMPT = [
 ].join(" ")
 
 const FOLLOWUP_PROMPTS = [
-  "Continue the analysis: read everything under src/hooks/context-window-monitor/ and src/features/evolution/, then add a section on how context monitoring interacts with profile switching. Use many tool calls and be thorough.",
+  "Continue the analysis: read everything under src/hooks/context-window-monitor/, then add a section on how context monitoring interacts with profile switching. Use many tool calls and be thorough.",
   "Keep going: read tests/shared/dcp-switch-profile.test.ts, tests/shared/dcp-guidance.test.ts and src/tools/preset/tools.ts in full, then extend the report with how the preset tool and the test suites relate to profile switching. Re-read any earlier file you need for precision.",
   "Continue: read src/plugin-config.ts and src/plugin/setup-domains.ts in full and describe the complete plugin startup sequence end to end, including where the DCP profile gets activated. Be exhaustive.",
   "Consolidate everything so far into one structured report with per-file summaries. For every file, re-read the sections you are least sure about before writing its summary. Do not wrap up early.",

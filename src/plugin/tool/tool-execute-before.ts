@@ -61,7 +61,6 @@ export function createToolExecuteBeforeHandler(args: {
   const niobeHookHook = hooks.niobeHook?.["tool.execute.before"]
 const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
   const webfetchRedirectGuardHook = hooks.webfetchRedirectGuard?.["tool.execute.before"]
-  const evolutionWatcherHook = hooks.evolutionWatcher?.["tool.execute.before"]
 
   return async (input, output): Promise<void> => {
     // webfetch-redirect-guard: MUTATOR + NETWORK (non-blocking, try/catch).
@@ -72,12 +71,12 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // ---------------------------------------------------------------------
     // Fast-fail hooks (Task T1.1: 3-wave parallelization)
     //
-    // The 15 hook calls below are grouped into 3 sequential waves based on
+    // The 14 hook calls below are grouped into 3 sequential waves based on
     // their mutation/throwing profile. See `hook-mutation-classification.md`
     // for the full analysis. Waves execute strictly in order (1 -> 2 -> 3);
     // within a wave, hooks run concurrently.
     //
-    // Wave 1 (5 hooks): pure READ_ONLY — no mutation, no I/O, no throws.
+    // Wave 1 (4 hooks): pure READ_ONLY — no mutation, no I/O, no throws.
     //   Safe to parallelize via Promise.all. Either no-op in tool.execute.before
     //   (directory*, rulesInjector) or only write to a private in-memory Map
     //   keyed by callID (qualityGate, commentChecker). No shared state with
@@ -87,7 +86,6 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
       commentCheckerHook?.(input, output),
       directoryAgentsInjectorHook?.(input, output),
       rulesInjectorHook?.(input, output),
-      evolutionWatcherHook?.(input, output),
     ])
 
     // Wave 2 (5 hooks): fail-fast BLOCKING — each guard throws on a

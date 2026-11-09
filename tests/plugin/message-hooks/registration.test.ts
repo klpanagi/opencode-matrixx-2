@@ -14,7 +14,6 @@ const EXPECTED_HOOK_ORDER = [
   "contextInjectorMessagesTransform",
   "envContextInjector",
   "thinkingBlockValidator",
-  "evolutionHitl",
   "dcpNudgeSanitizer",
   "toolPairValidator",
 ] as const;
@@ -37,8 +36,8 @@ function makeRecordingCtx(): {
 }
 
 describe("message-hooks mapping table (Task 25)", () => {
-  test("lists exactly 8 hooks in legacy fan-out call order", () => {
-    //#given the 8 transform hooks in legacy fan-out order
+  test("lists exactly 7 hooks in legacy fan-out call order", () => {
+    //#given the 7 transform hooks in legacy fan-out order
     //#when reading the mapping table
     const names = MESSAGE_HOOK_TABLE.map((row) => row.hook);
     //#then every hook is present exactly once, in order
@@ -89,14 +88,14 @@ describe("registerMessageHooks", () => {
     const { ctx, seen } = makeRecordingCtx();
     //#when registering the native message hooks
     const registrations = await registerMessageHooks(ctx);
-    //#then one registration per (row, kind) pair: 8x context, 2x compaction, 2x generate
+    //#then one registration per (row, kind) pair: 7x context, 2x compaction, 2x generate
     const kinds = seen.map((s) => s.kind).sort();
     expect(kinds).toEqual(
-      ["context", "context", "context", "context", "context", "context", "context", "context",
+      ["context", "context", "context", "context", "context", "context", "context",
         "compaction", "compaction",
         "generate", "generate"].sort(),
     );
-    expect(registrations).toHaveLength(12);
+    expect(registrations).toHaveLength(11);
     expect(registrations).toHaveLength(seen.length);
   });
 
@@ -133,11 +132,11 @@ describe("validateMessageHookTable negative controls", () => {
     expect(() => validateMessageHookTable(bad)).toThrow(/must include "generate"/);
   });
 
-  test("rejects a table that is not exactly 8 rows", () => {
+  test("rejects a table that is not exactly 7 rows", () => {
     //#given a table with a hook silently dropped
-    const bad = MESSAGE_HOOK_TABLE.slice(0, 7);
+    const bad = MESSAGE_HOOK_TABLE.slice(0, 6);
     //#when validating
     //#then the gate fails closed
-    expect(() => validateMessageHookTable(bad)).toThrow(/exactly 8/);
+    expect(() => validateMessageHookTable(bad)).toThrow(/exactly 7/);
   });
 });

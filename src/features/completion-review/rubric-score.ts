@@ -1,9 +1,8 @@
 /**
  * Task 5 — weighted mean plus the APB-style discrete grade.
  *
- * Mirrors the shape of `src/features/evolution/evaluator.ts` (`EvalResult`: a
- * 0..1 score, clamped, with a companion verdict) — the repo's only existing
- * numeric rubric. APB's contribution is the coarse companion: a single number
+ * Mirrors the APB numeric-rubric convention: a 0..1 score, clamped, with a
+ * companion verdict. APB's contribution is the coarse companion: a single number
  * from {0, .2, .4, .6, .8, 1}, which survives a reviewer misreading a 0.83.
  */
 import { RUBRIC_DIMENSIONS } from "./rubric-dimensions"

@@ -3,7 +3,6 @@ import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
 import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
 import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
 import { END_REDPILL_TEMPLATE } from "./templates/end-redpill"
-import { EVOLUTION_TEMPLATE } from "./templates/evolution"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import { HUMANIZE_TEMPLATE } from "./templates/humanize"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
@@ -218,17 +217,6 @@ ${BDD_PIPELINE_TEMPLATE}
 $ARGUMENTS
 </user-request>`,
     argumentHint: "<feature-path> [--force]",
-  },
-  evolution: {
-    description: "(builtin) Manage self-evolution proposals: approve, reject, list, audit pending skills",
-    template: `<command-instruction>
-${EVOLUTION_TEMPLATE}
-</command-instruction>
-
-<user-request>
-$ARGUMENTS
-</user-request>`,
-    argumentHint: "[list|approve <slug>|reject <slug>|audit]",
   },
   "cleanup-tasks": {
     description: "(builtin) Delete completed tasks",
