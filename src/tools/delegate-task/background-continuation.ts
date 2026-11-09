@@ -6,6 +6,14 @@ import type { ExecutorContext, ParentContext } from "./executor-types"
 import { buildContinuationTitle } from "./task-title"
 import type { DelegateTaskArgs, ToolContextWithMetadata } from "./types"
 
+function failContinuation(error: Error, args: DelegateTaskArgs, sessionID: string | undefined): string {
+  return formatDetailedError(error, {
+    operation: "Continue background task",
+    args,
+    sessionID,
+  })
+}
+
 export async function executeBackgroundContinuation(
   args: DelegateTaskArgs,
   ctx: ToolContextWithMetadata,
@@ -16,9 +24,46 @@ export async function executeBackgroundContinuation(
 
   const taskID = args.execute?.task_id ?? args.session_id
 
+  if (!taskID) {
+    return failContinuation(new Error("Missing background task id (bg_...)."), args, undefined)
+  }
+
+  if (taskID.startsWith("ses_")) {
+    return failContinuation(
+      new Error(
+        `Cannot continue a background task by raw session id: ${taskID}. Pass the background task id (bg_...) from background_output instead.`
+      ),
+      args,
+      taskID
+    )
+  }
+
+  const task = manager.getTask(taskID)
+  if (!task) {
+    return failContinuation(
+      new Error(
+        `Background task not found: ${taskID}. Pass the background task id (bg_...) from background_output instead.`
+      ),
+      args,
+      taskID
+    )
+  }
+
+  if (task.parentSessionID !== parentContext.sessionID) {
+    return failContinuation(
+      new Error(`Task ${task.id} does not belong to parent session ${parentContext.sessionID}`),
+      args,
+      taskID
+    )
+  }
+
+  if (!task.sessionID) {
+    return failContinuation(new Error(`Task has no sessionID: ${task.id}`), args, taskID)
+  }
+
   try {
-    const task = await manager.resume({
-      sessionId: taskID as string,
+    const resumed = await manager.resume({
+      sessionId: task.sessionID,
       prompt: args.prompt,
       parentSessionID: parentContext.sessionID,
       parentMessageID: parentContext.messageID,
@@ -31,13 +76,13 @@ export async function executeBackgroundContinuation(
       title: buildContinuationTitle(args.description),
       metadata: {
         prompt: args.prompt,
-        agent: task.agent,
-        ...(task.category !== undefined ? { category: task.category } : {}),
+        agent: resumed.agent,
+        ...(resumed.category !== undefined ? { category: resumed.category } : {}),
         load_skills: args.load_skills,
         description: args.description,
         run_in_background: args.run_in_background,
-        taskId: task.sessionID,
-        sessionId: task.sessionID,
+        taskId: resumed.sessionID,
+        sessionId: resumed.sessionID,
         command: args.command,
       },
     })
@@ -49,22 +94,22 @@ export async function executeBackgroundContinuation(
 
     return `Background task continued.
 
-Task ID: ${task.id}
-Description: ${task.description}
-Agent: ${task.agent}
-Status: ${task.status}
+Task ID: ${resumed.id}
+Description: ${resumed.description}
+Agent: ${resumed.agent}
+Status: ${resumed.status}
 
 Agent continues with full previous context preserved.
-Use \`background_output\` with task_id="${task.id}" to check progress.
+Use \`background_output\` with task_id="${resumed.id}" to check progress.
 
 <task_metadata>
-session_id: ${task.sessionID}
-${task.agent ? `subagent: ${task.agent}\n` : ""}</task_metadata>`
+session_id: ${resumed.sessionID}
+${resumed.agent ? `subagent: ${resumed.agent}\n` : ""}</task_metadata>`
   } catch (error) {
-    return formatDetailedError(error, {
-      operation: "Continue background task",
+    return failContinuation(
+      error instanceof Error ? error : new Error(String(error)),
       args,
-      sessionID: taskID,
-    })
+      taskID
+    )
   }
 }

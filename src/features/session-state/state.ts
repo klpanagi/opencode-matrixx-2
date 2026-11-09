@@ -1,19 +1,27 @@
-export const subagentSessions = new Set<string>()
+import {
+  clearSubagentParents,
+  deleteSubagentParent,
+  lookupSubagentParent,
+  setSubagentParent,
+} from "./parent-registry"
 
-const subagentParentMap = new Map<string, string>() // subagentID → parentID
+// Both this set and the parent-registry/agent/model maps are keyed by
+// `ses_` ids, which are globally unique across project directories, so they
+// cannot collide when several projects share the process.
+export const subagentSessions = new Set<string>()
 
 export function registerSubagentSession(sessionID: string, parentSessionID: string): void {
   subagentSessions.add(sessionID)
-  subagentParentMap.set(sessionID, parentSessionID)
+  setSubagentParent(sessionID, parentSessionID)
 }
 
 export function unregisterSubagentSession(sessionID: string): void {
   subagentSessions.delete(sessionID)
-  subagentParentMap.delete(sessionID)
+  deleteSubagentParent(sessionID)
 }
 
 export function getParentSessionID(subagentSessionID: string): string | undefined {
-  return subagentParentMap.get(subagentSessionID)
+  return lookupSubagentParent(subagentSessionID)
 }
 
 /**
@@ -24,7 +32,7 @@ export function getParentSessionID(subagentSessionID: string): string | undefine
 export function getSubagentSessionIDs(parentSessionID: string): string[] {
   const ids: string[] = []
   for (const subID of subagentSessions) {
-    if (subagentParentMap.get(subID) === parentSessionID) ids.push(subID)
+    if (lookupSubagentParent(subID) === parentSessionID) ids.push(subID)
   }
   return ids
 }
@@ -70,7 +78,7 @@ const sessionModelMap = new Map<string, string>()
 export function _resetForTesting(): void {
   _mainSessionID = undefined
   subagentSessions.clear()
-  subagentParentMap.clear()
+  clearSubagentParents()
   sessionAgentMap.clear()
   sessionModelMap.clear()
 }
@@ -116,5 +124,5 @@ export function releaseSubagentSession(sessionID: string): void {
   // stub: only runs when unregister is stubbed (see sync-task finally), so
   // the spied Set.delete fires exactly once per path.
   subagentSessions.delete(sessionID)
-  subagentParentMap.delete(sessionID)
+  deleteSubagentParent(sessionID)
 }

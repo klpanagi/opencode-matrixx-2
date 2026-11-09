@@ -80,6 +80,20 @@ export async function finalizeTask(
   task: BackgroundTask,
   options: FinalizeOptions,
 ): Promise<FinalizeResult> {
+  const persistedGeneration = rt.store.currentGeneration(task.id)
+  if (
+    task.generation !== undefined &&
+    persistedGeneration !== 0 &&
+    task.generation < persistedGeneration
+  ) {
+    log("[background-agent] Skipping stale finalize:", {
+      taskId: task.id,
+      taskGeneration: task.generation,
+      persistedGeneration,
+    })
+    return { effortLine: undefined }
+  }
+
   if (options.status !== undefined) task.status = options.status
   if (task.completedAt === undefined) task.completedAt = new Date()
   if (options.incomingError !== undefined) task.error = options.incomingError

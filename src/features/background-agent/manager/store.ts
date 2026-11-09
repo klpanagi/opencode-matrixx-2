@@ -2,7 +2,7 @@ import type { BackgroundTaskConfig } from "../../../config/schema"
 import { log } from "../../../shared"
 import { getParentSessionID, getSubagentSessionIDs } from "../../session-state/state"
 import { StaleGenerationError } from "../../task-storage/generation"
-import { TASK_TTL_MS } from "../constants"
+import { KNOWN_SESSIONS_MAX, TASK_TTL_MS } from "../constants"
 import { bumpGeneration, currentGeneration, readHandle, readHandles, writeHandle } from "../handle-index"
 import { TaskMap } from "../task-map"
 import type { BackgroundTask } from "../types"
@@ -11,6 +11,18 @@ import type { NativeDescendant } from "./types"
 
 /** Short-TTL cache for native descendant listings (T3). In-memory only. */
 const NATIVE_CACHE_TTL_MS = 1000
+
+/**
+ * A `waitForAllDescendants` registration.
+ *
+ * `wake` resolves the current tick early (sibling cancel); `reject` aborts
+ * the wait outright (shutdown).
+ */
+export interface Waiter {
+  sessionID: string
+  wake: () => void
+  reject: (err: unknown) => void
+}
 
 /**
  * In-memory task registry behind `BackgroundManager`.
@@ -23,11 +35,13 @@ const NATIVE_CACHE_TTL_MS = 1000
  */
 export class ManagerStore {
   readonly tasks = new TaskMap<BackgroundTask>((sessionID) => ManagerStore.normalizeSessionID(sessionID))
+  // Per-instance: each manager owns one store for one project directory, so
+  // these caches are already directory-scoped and need no extra key.
   readonly knownSessions = new Set<string>()
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   readonly wallclock = new WallclockSupervisor()
   readonly pendingSpawns = new Set<string>()
-  readonly waiters = new Set<{ sessionID: string; reject: (err: unknown) => void }>()
+  readonly waiters = new Set<Waiter>()
   directory: string
   config?: BackgroundTaskConfig
 
@@ -45,6 +59,21 @@ export class ManagerStore {
     return hashIndex >= 0 ? withoutQuery.slice(0, hashIndex) : withoutQuery
   }
 
+
+  /**
+   * Insert a known session, evicting the oldest entries (Set insertion
+   * order) while the set exceeds KNOWN_SESSIONS_MAX. Re-inserting an id
+   * refreshes its position via delete+add.
+   */
+  rememberKnownSession(sessionID: string): void {
+    this.knownSessions.delete(sessionID)
+    this.knownSessions.add(sessionID)
+    while (this.knownSessions.size > KNOWN_SESSIONS_MAX) {
+      const oldest = this.knownSessions.values().next().value
+      if (oldest === undefined) break
+      this.knownSessions.delete(oldest)
+    }
+  }
 
   getKnownSessionIds(): Set<string> {
     return this.knownSessions

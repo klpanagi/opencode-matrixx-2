@@ -17,6 +17,13 @@ export interface ManagerTimers {
 }
 
 /**
+ * Result of the launch-parent validation seam. `ok: false` carries the
+ * user-facing rejection message; the caller throws it after validation so
+ * `launch()` keeps returning `Promise<BackgroundTask>` for valid launches.
+ */
+export type LaunchResult = { ok: true } | { ok: false; error: string }
+
+/**
  * Shared runtime handed to the lifecycle/reconcile function modules.
  * `BackgroundManager` satisfies this structurally; the function modules
  * never reach back into the class itself (no import cycle at runtime).

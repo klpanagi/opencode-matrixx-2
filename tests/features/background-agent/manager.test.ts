@@ -552,7 +552,7 @@ describe("BackgroundManager.resume model persistence", () => {
     await manager.resume({
       sessionId: "session-1",
       prompt: "continue the work",
-      parentSessionID: "parent-session-2",
+      parentSessionID: "parent-session",
       parentMessageID: "msg-2",
     })
 
@@ -583,7 +583,7 @@ describe("BackgroundManager.resume model persistence", () => {
     await manager.resume({
       sessionId: "session-2",
       prompt: "continue the work",
-      parentSessionID: "parent-session-2",
+      parentSessionID: "parent-session",
       parentMessageID: "msg-2",
     })
 

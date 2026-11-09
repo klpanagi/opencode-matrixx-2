@@ -10,7 +10,7 @@ import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import { isWallclockEnabled, MAX_WALLCLOCK_TIMEOUT_MS } from "../wallclock"
 import { finalizeTask } from "./finalize"
-import type { ManagerRuntime } from "./types"
+import type { LaunchResult, ManagerRuntime } from "./types"
 
 /**
  * Task lifecycle: restore, launch, track, resume, prompt.
@@ -37,7 +37,7 @@ function createWallclockFireHandler(
       source: "wall-clock-timeout",
       notify: false,
       removeToast: false,
-      recordHistory: false,
+      recordHistory: true,
       incomingError: "Wall-clock timeout exceeded",
       logMessage: null,
       computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
@@ -114,9 +114,19 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
       }
       rt.store.tasks.set(handle.taskId, task)
       if (reacquire) rt.store.persistHandle(task)
-      if (handle.sessionID !== undefined) rt.store.knownSessions.add(handle.sessionID)
+      if (handle.sessionID !== undefined) rt.store.rememberKnownSession(handle.sessionID)
       const wallClockTimeoutMs = rt.config?.wallClockTimeoutMs
       const restoredActive = task.status === "running" || task.status === "pending"
+      if (restoredActive) {
+        getTaskToastManager()?.addTask({
+          id: task.id,
+          description: task.description,
+          agent: task.agent,
+          isBackground: true,
+          status: task.status === "pending" ? "queued" : "running",
+          category: task.category,
+        })
+      }
       if (
         restoredActive &&
         handle.deadlineAt !== undefined &&
@@ -140,6 +150,40 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
 }
 
 
+function isBlankParentField(value: unknown): boolean {
+  return typeof value !== "string" || value.trim() === ""
+}
+
+/**
+ * Validate the launch parent before any task, handle, toast, or session is
+ * created. A missing/blank id is always rejected. When the native session
+ * domain cannot be probed (no `get`, or a transport error) the check fails
+ * open so an unverifiable environment never produces a phantom rejection.
+ */
+export async function validateLaunchParent(
+  rt: ManagerRuntime,
+  parentSessionID: unknown,
+): Promise<LaunchResult> {
+  if (typeof parentSessionID !== "string" || parentSessionID.trim() === "") {
+    return { ok: false, error: "Parent session ID is required to launch a background task" }
+  }
+  const probeSession = rt.native.session.get
+  if (typeof probeSession !== "function") return { ok: true }
+  let probe: unknown
+  try {
+    probe = await probeSession({ sessionID: parentSessionID })
+  } catch {
+    return { ok: true }
+  }
+  if (probe === undefined || probe === null) {
+    return { ok: false, error: `Parent session is unknown: ${String(parentSessionID)}` }
+  }
+  if (typeof probe === "object" && probe !== null && Reflect.get(probe, "error")) {
+    return { ok: false, error: `Parent session is unknown: ${String(parentSessionID)}` }
+  }
+  return { ok: true }
+}
+
 export async function launchTask(rt: ManagerRuntime,
     input: LaunchInput & {
       sessionId?: string
@@ -161,8 +205,6 @@ export async function launchTask(rt: ManagerRuntime,
       if (aliasedMsg !== undefined) input.parentMessageID = aliasedMsg
     }
     if (input.agent === undefined || input.agent === null) input.agent = 'task'
-    if (input.parentSessionID === undefined) input.parentSessionID = 'ses_parent'
-    if (input.parentMessageID === undefined) input.parentMessageID = 'msg_1'
     log("[background-agent] launch() called with:", {
       agent: input.agent,
       model: input.model,
@@ -172,6 +214,18 @@ export async function launchTask(rt: ManagerRuntime,
 
     if (!input.agent || input.agent.trim() === "") {
       throw new Error("Agent parameter is required")
+    }
+    if (isBlankParentField(input.parentSessionID)) {
+      throw new Error("Parent session ID is required to launch a background task")
+    }
+    if (isBlankParentField(input.parentMessageID)) {
+      throw new Error("Parent message ID is required to launch a background task")
+    }
+    if (typeof rt.native.session.get === "function") {
+      const parentValidation = await validateLaunchParent(rt, input.parentSessionID)
+      if (!parentValidation.ok) {
+        throw new Error(parentValidation.error)
+      }
     }
 
     if (
@@ -302,7 +356,7 @@ export async function launchTask(rt: ManagerRuntime,
 
     const sessionID = created.id
     registerSubagentSession(sessionID, input.parentSessionID)
-    rt.store.knownSessions.add(sessionID)
+    rt.store.rememberKnownSession(sessionID)
 
     task.status = "running"
     task.startedAt = new Date()
@@ -397,7 +451,7 @@ export async function trackTask(rt: ManagerRuntime,input: {
     rt.store.tasks.set(task.id, task)
     rt.store.persistHandle(task)
     registerSubagentSession(input.sessionID, input.parentSessionID)
-    rt.store.knownSessions.add(input.sessionID)
+    rt.store.rememberKnownSession(input.sessionID)
     rt.taskHistory.record(input.parentSessionID, {
       id: task.id,
       sessionID: input.sessionID,
@@ -428,10 +482,20 @@ export async function trackTask(rt: ManagerRuntime,input: {
 export async function resumeTask(rt: ManagerRuntime,input: ResumeInput): Promise<BackgroundTask> {
     const existingTask = rt.store.findBySession(input.sessionId)
     if (!existingTask) {
+      if (input.sessionId.startsWith("ses_")) {
+        throw new Error(
+          `Task not found for session: ${input.sessionId}. To continue a background task, pass its background task id (bg_...) from background_output instead of a raw session id.`
+        )
+      }
       throw new Error(`Task not found for session: ${input.sessionId}`)
     }
     if (!existingTask.sessionID) {
       throw new Error(`Task has no sessionID: ${existingTask.id}`)
+    }
+    if (input.parentSessionID !== undefined && existingTask.parentSessionID !== input.parentSessionID) {
+      throw new Error(
+        `Task ${existingTask.id} does not belong to parent session ${input.parentSessionID}`
+      )
     }
     if (existingTask.status === "running") {
       log("[background-agent] Resume skipped - task already running:", {

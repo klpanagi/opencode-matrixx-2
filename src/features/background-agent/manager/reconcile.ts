@@ -34,8 +34,14 @@ import type { ManagerRuntime, ResolveAnyResult } from "./types"
  */
 
 
+// Session lists are project-scoped, so one cache per manager directory is
+// required: a single shared entry leaks session ids across projects.
 const SESSION_LIST_TTL_MS = 30000
-let sessionListCache: { at: number; ids: string[] } | null = null
+const sessionListCaches = new Map<string, { at: number; ids: string[] }>()
+
+export function _resetSessionListCacheForTesting(): void {
+  sessionListCaches.clear()
+}
 
 
 /**
@@ -415,7 +421,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
             origin: "delegation",
           }
           rt.store.tasks.set(auto.id, auto)
-          rt.store.knownSessions.add(sessionID)
+          rt.store.rememberKnownSession(sessionID)
           rt.store.persistHandle(auto)
           log("[background-agent] Auto-tracked native session:", { sessionID, taskId: auto.id })
           task = auto
@@ -479,7 +485,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
         source: "native session.error",
         notify: NOTIFY_PARENT,
         removeToast: REMOVE_TOAST,
-        recordHistory: SKIP_HISTORY,
+        recordHistory: RECORD_HISTORY,
         incomingError: getSessionErrorMessage(props as EventProperties) ?? "Session reported an error",
         logMessage: "[background-agent] Task errored (native session.error):",
         computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
@@ -518,7 +524,7 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
         source: "native session.execution.failed",
         notify: NOTIFY_PARENT,
         removeToast: REMOVE_TOAST,
-        recordHistory: SKIP_HISTORY,
+        recordHistory: RECORD_HISTORY,
         incomingError: getSessionErrorMessage(props as EventProperties) ?? "Session reported an error",
         logMessage: "[background-agent] Task errored (native session.execution.failed):",
         computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
@@ -544,7 +550,8 @@ export async function resolveAny(
   try {
     const onDisk = manager.findDiskTaskBySession?.(raw)
     if (onDisk !== undefined) return { origin: "bg", task: onDisk }
-  } catch {
+  } catch (error: unknown) {
+    log("[background-agent] resolveAny disk lookup failed:", error)
   }
   if (!raw.startsWith("ses_")) return { error: "not_found", id: raw }
   const native = (manager as unknown as { native?: { session?: unknown } }).native
@@ -565,11 +572,12 @@ export async function resolveAny(
       }
       if (messages !== undefined && messages !== null) {
         const known = manager.getKnownSessionIds()
-        const origin = known.has(raw) ? "ses" : "ses"
+        const origin = known.has(raw) ? "ses" : "foreign"
         return { origin, sessionId: raw, output: messages, messages }
       }
-    } catch {
+    } catch (error: unknown) {
       // Fall through to bounded list sweep below.
+      log("[background-agent] resolveAny native session lookup failed:", error)
     }
   }
   const swept = await backfillKnownSessions(manager)
@@ -579,9 +587,11 @@ export async function resolveAny(
 
 
 async function backfillKnownSessions(manager: BackgroundManager): Promise<string[]> {
+  const directory = manager.directory
   const now = Date.now()
-  if (sessionListCache !== null && now - sessionListCache.at < SESSION_LIST_TTL_MS) {
-    return sessionListCache.ids
+  const cached = sessionListCaches.get(directory)
+  if (cached !== undefined && now - cached.at < SESSION_LIST_TTL_MS) {
+    return cached.ids
   }
   const native = (manager as unknown as { native?: { session?: unknown } }).native
   const session = native?.session as
@@ -606,7 +616,7 @@ async function backfillKnownSessions(manager: BackgroundManager): Promise<string
       ids = []
     }
   }
-  sessionListCache = { at: now, ids }
+  sessionListCaches.set(directory, { at: now, ids })
   return ids
 }
 

@@ -2,7 +2,6 @@ import type { BackgroundTaskConfig, MatrixxConfig } from "../../../config/schema
 import type { EffortConfig } from "../../../config/schema/effort"
 import type { V2Event } from "../../../plugin/tool/context"
 import { log } from "../../../shared"
-import { delay } from "../../../shared/runtime/delay"
 import type {
   NativeDomains,
   NativePluginContext,
@@ -32,13 +31,49 @@ import {
   listRevivable,
   reviveTask,
 } from "./reconcile"
-import { ManagerStore } from "./store"
-import type { ManagerRuntime, NativeDescendant } from "./types"
+import { ManagerStore, type Waiter } from "./store"
+import type { ManagerRuntime, ManagerTimerHandle, ManagerTimers, NativeDescendant } from "./types"
 
 export type {
   EventProperties,
   OnSubagentSessionCreated,
   SubagentSessionCreatedEvent,
+}
+
+const DEFAULT_TIMERS: ManagerTimers = {
+  setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+  clearTimeout: (handle) => clearTimeout(handle),
+}
+
+async function waitForTick(
+  ms: number,
+  signal: AbortSignal | undefined,
+  wake: Promise<void>,
+  abort: Promise<never>,
+  timers: ManagerTimers,
+): Promise<void> {
+  if (signal?.aborted) throw signal.reason ?? new Error("Wait cancelled")
+  await new Promise<void>((resolve, reject) => {
+    let settled = false
+    let handle: ManagerTimerHandle | undefined
+    const onAbort = (): void => {
+      settle(() => reject(signal?.reason ?? new Error("Wait cancelled")))
+    }
+    const settle = (fn: () => void): void => {
+      if (settled) return
+      settled = true
+      if (handle !== undefined) timers.clearTimeout(handle)
+      signal?.removeEventListener("abort", onAbort)
+      fn()
+    }
+    handle = timers.setTimeout(() => settle(resolve), ms)
+    signal?.addEventListener("abort", onAbort, { once: true })
+    wake.then(() => settle(resolve), () => {})
+    abort.then(
+      () => {},
+      (err: unknown) => settle(() => reject(err)),
+    )
+  })
 }
 
 /**
@@ -76,6 +111,8 @@ export class BackgroundManager implements ManagerRuntime {
   readonly config?: BackgroundTaskConfig
   readonly effortConfig?: EffortConfig
   readonly taskHistory = new TaskHistory()
+  readonly now?: () => number
+  readonly timers?: ManagerTimers
 
   constructor(
     ctx: NativePluginContext,
@@ -231,10 +268,7 @@ export class BackgroundManager implements ManagerRuntime {
       abortSessionQuietly(this.native, task.sessionID, "cancel")
     }
 
-    this.rejectWaiters(
-      task.parentSessionID,
-      new Error(`Task cancelled: ${taskId}`),
-    )
+    this.notifyWaiters(task.parentSessionID)
     return true
   }
 
@@ -289,7 +323,9 @@ export class BackgroundManager implements ManagerRuntime {
       status: string
     }>
   }> {
-    const startTime = Date.now()
+    const timers = this.timers ?? DEFAULT_TIMERS
+    const now = (): number => this.now?.() ?? Date.now()
+    const startTime = now()
     const active = (): BackgroundTask[] =>
       this.store.getAllDescendantTasks(sessionID).filter(
         (t) => t.status === "running" || t.status === "pending",
@@ -311,31 +347,36 @@ export class BackgroundManager implements ManagerRuntime {
     const abortPromise = new Promise<never>((_, reject) => {
       rejectWait = reject
     })
-    const entry = {
+    let wakeCurrent: (() => void) | undefined
+    const entry: Waiter = {
       sessionID,
-      reject: (err: unknown) => rejectWait?.(err),
+      wake: () => {
+        wakeCurrent?.()
+      },
+      reject: (err: unknown) => {
+        rejectWait?.(err)
+      },
     }
     this.store.waiters.add(entry)
     try {
       const signal = options?.signal
       if (signal?.aborted) throw signal.reason ?? new Error("Wait cancelled")
-      const onSignalAbort = (): void => {
-        rejectWait?.(signal?.reason ?? new Error("Wait cancelled"))
-      }
-      signal?.addEventListener("abort", onSignalAbort, { once: true })
-      try {
-        let pending = active()
-        let natives = uncoveredNatives()
-        while (
-          (pending.length > 0 || natives.length > 0) &&
-          Date.now() - startTime < timeoutMs
-        ) {
-          await Promise.race([delay(pollIntervalMs), abortPromise])
-          pending = active()
-          natives = uncoveredNatives()
+      let pending = active()
+      let natives = uncoveredNatives()
+      while (
+        (pending.length > 0 || natives.length > 0) &&
+        now() - startTime < timeoutMs
+      ) {
+        const wakePromise = new Promise<void>((resolve) => {
+          wakeCurrent = resolve
+        })
+        try {
+          await waitForTick(pollIntervalMs, signal, wakePromise, abortPromise, timers)
+        } finally {
+          wakeCurrent = undefined
         }
-      } finally {
-        signal?.removeEventListener("abort", onSignalAbort)
+        pending = active()
+        natives = uncoveredNatives()
       }
     } finally {
       this.store.waiters.delete(entry)
@@ -382,6 +423,17 @@ export class BackgroundManager implements ManagerRuntime {
 
   waiterCount(): number {
     return this.store.waiters.size
+  }
+
+  notifyWaiters(sessionID: string | undefined): void {
+    for (const entry of [...this.store.waiters]) {
+      if (sessionID !== undefined && entry.sessionID !== sessionID) continue
+      try {
+        entry.wake()
+      } catch (error) {
+        log("[background-agent] Waiter wake failed:", error)
+      }
+    }
   }
 
   rejectWaiters(sessionID: string | undefined, err: unknown): void {

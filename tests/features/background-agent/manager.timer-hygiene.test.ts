@@ -6,6 +6,7 @@ import { join } from "node:path"
 import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import { BackgroundManager } from "../../../src/features/background-agent/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
+import { createFakeClock, type FakeClock } from "./harness/fake-clock"
 
 function createManager(
   directory: string,
@@ -42,6 +43,20 @@ function seedTask(manager: BackgroundManager, overrides: Partial<BackgroundTask>
 
 function wallclockSize(manager: BackgroundManager): number {
   return (manager as unknown as { store: { wallclock: { size(): number } } }).store.wallclock.size()
+}
+
+function attachClock(manager: BackgroundManager, clock: FakeClock): FakeClock {
+  const injectable = manager as unknown as {
+    now?: () => number
+    timers?: { setTimeout: FakeClock["setTimeout"]; clearTimeout: FakeClock["clearTimeout"] }
+  }
+  injectable.now = () => clock.now()
+  injectable.timers = { setTimeout: clock.setTimeout, clearTimeout: clock.clearTimeout }
+  return clock
+}
+
+async function flushMicrotasks(): Promise<void> {
+  for (let i = 0; i < 20; i += 1) await Promise.resolve()
 }
 
 function armWallclock(manager: BackgroundManager, taskId: string, ms = 30): void {
@@ -148,5 +163,73 @@ describe("timer hygiene: zero live timers on every exit path", () => {
 
     //#then
     expect(wallclockSize(manager)).toBe(0)
+  })
+
+  test("wait ending via wake leaves no pending timers", async () => {
+    //#given
+    const manager = createManager(dir)
+    const clock = attachClock(manager, createFakeClock())
+    const first = seedTask(manager, { id: "bg_hw1", sessionID: "ses_hw1" })
+    const second = seedTask(manager, { id: "bg_hw2", sessionID: "ses_hw2" })
+    const pending = manager.waitForAllDescendants("ses_parent", 60000, 10)
+    await flushMicrotasks()
+    expect(clock.pendingCount).toBe(1)
+
+    //#when
+    await manager.cancelTask(first.id)
+    await flushMicrotasks()
+    second.status = "completed"
+    clock.advance(10)
+    await flushMicrotasks()
+    const result = await pending
+
+    //#then
+    expect(result.timedOut).toEqual([])
+    expect(result.completed.map((row) => row.id).sort()).toEqual(["bg_hw1", "bg_hw2"])
+    expect(clock.pendingCount).toBe(0)
+    expect(manager.waiterCount()).toBe(0)
+  })
+
+  test("wait ending via abort leaves no pending timers", async () => {
+    //#given
+    const manager = createManager(dir)
+    const clock = attachClock(manager, createFakeClock())
+    seedTask(manager, { id: "bg_hab", sessionID: "ses_hab" })
+    const controller = new AbortController()
+    const pending = manager.waitForAllDescendants("ses_parent", 60000, 10, {
+      signal: controller.signal,
+    })
+    pending.catch(() => {})
+    await flushMicrotasks()
+    expect(clock.pendingCount).toBe(1)
+
+    //#when
+    controller.abort(new Error("stop"))
+    await flushMicrotasks()
+
+    //#then
+    await expect(pending).rejects.toThrow("stop")
+    expect(clock.pendingCount).toBe(0)
+    expect(manager.waiterCount()).toBe(0)
+  })
+
+  test("wait ending via timeout leaves no pending timers", async () => {
+    //#given
+    const manager = createManager(dir)
+    const clock = attachClock(manager, createFakeClock())
+    seedTask(manager, { id: "bg_hto", sessionID: "ses_hto" })
+    const pending = manager.waitForAllDescendants("ses_parent", 10, 100)
+    await flushMicrotasks()
+    expect(clock.pendingCount).toBe(1)
+
+    //#when
+    clock.advance(100)
+    await flushMicrotasks()
+    const result = await pending
+
+    //#then
+    expect(result.timedOut.map((row) => row.id)).toEqual(["bg_hto"])
+    expect(clock.pendingCount).toBe(0)
+    expect(manager.waiterCount()).toBe(0)
   })
 })

@@ -2,15 +2,18 @@ const { describe, test, expect, mock } = require("bun:test")
 
 describe("executeBackgroundContinuation - subagent metadata", () => {
   test("includes subagent in task_metadata when task has agent", async () => {
-    //#given - mock manager.resume returning task with agent info
+    //#given - mock manager resolving an owned task with agent info
+    const task = {
+      id: "bg_task_001",
+      description: "oracle consultation",
+      agent: "oracle",
+      status: "running",
+      sessionID: "ses_resumed_123",
+      parentSessionID: "parent-session",
+    }
     const mockManager = {
-      resume: async () => ({
-        id: "bg_task_001",
-        description: "oracle consultation",
-        agent: "oracle",
-        status: "running",
-        sessionID: "ses_resumed_123",
-      }),
+      getTask: mock(() => task),
+      resume: async () => task,
     }
 
     const mockCtx = {
@@ -30,7 +33,7 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
     }
 
     const args = {
-      session_id: "ses_resumed_123",
+      session_id: "bg_task_001",
       prompt: "continue working",
       description: "resume oracle",
       load_skills: [],
@@ -48,15 +51,18 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
   })
 
   test("omits subagent from task_metadata when task agent is undefined", async () => {
-    //#given - mock manager.resume returning task without agent
+    //#given - mock manager resolving an owned task without agent
+    const task = {
+      id: "bg_task_002",
+      description: "unknown task",
+      agent: undefined,
+      status: "running",
+      sessionID: "ses_resumed_456",
+      parentSessionID: "parent-session",
+    }
     const mockManager = {
-      resume: async () => ({
-        id: "bg_task_002",
-        description: "unknown task",
-        agent: undefined,
-        status: "running",
-        sessionID: "ses_resumed_456",
-      }),
+      getTask: mock(() => task),
+      resume: async () => task,
     }
 
     const mockCtx = {
@@ -76,7 +82,7 @@ describe("executeBackgroundContinuation - subagent metadata", () => {
     }
 
     const args = {
-      session_id: "ses_resumed_456",
+      session_id: "bg_task_002",
       prompt: "continue",
       description: "resume task",
       load_skills: [],
