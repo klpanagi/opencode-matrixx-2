@@ -24,14 +24,20 @@ function buildMessageKey(message: CursorMessage, index: number): string {
   return `i:${String(index)}`
 }
 
+/**
+ * Returns the messages that appeared after this cursor's previous read.
+ *
+ * `cursorKey` is a consumer scope, not necessarily a session id: any two
+ * consumers that must track their own read position need distinct keys.
+ */
 export function consumeNewMessages<T extends CursorMessage>(
-  sessionID: string | undefined,
+  cursorKey: string | undefined,
   messages: T[]
 ): T[] {
-  if (!sessionID) return messages
+  if (!cursorKey) return messages
 
   const keys = messages.map((message, index) => buildMessageKey(message, index))
-  const cursor = sessionCursors.get(sessionID)
+  const cursor = sessionCursors.get(cursorKey)
   let startIndex = 0
 
   if (cursor) {
@@ -49,9 +55,9 @@ export function consumeNewMessages<T extends CursorMessage>(
   }
 
   if (messages.length === 0) {
-    sessionCursors.delete(sessionID)
+    sessionCursors.delete(cursorKey)
   } else {
-    sessionCursors.set(sessionID, {
+    sessionCursors.set(cursorKey, {
       lastKey: keys[keys.length - 1],
       lastCount: messages.length,
     })
@@ -60,9 +66,9 @@ export function consumeNewMessages<T extends CursorMessage>(
   return messages.slice(startIndex)
 }
 
-export function resetMessageCursor(sessionID?: string): void {
-  if (sessionID) {
-    sessionCursors.delete(sessionID)
+export function resetMessageCursor(cursorKey?: string): void {
+  if (cursorKey) {
+    sessionCursors.delete(cursorKey)
     return
   }
   sessionCursors.clear()

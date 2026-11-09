@@ -60,7 +60,7 @@ Session ID: ${task.sessionID}
 
   const sortedMessages = [...relevantMessages].sort(compareMessageTime)
 
-  const newMessages = consumeNewMessages(task.sessionID, sortedMessages)
+  const newMessages = consumeNewMessages(task.id, sortedMessages)
   if (newMessages.length === 0) {
     const duration = formatDuration(task.startedAt ?? new Date(), task.completedAt)
     return `Task Result
