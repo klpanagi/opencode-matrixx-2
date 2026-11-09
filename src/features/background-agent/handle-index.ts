@@ -116,7 +116,7 @@ export function toHandle(task: BackgroundTask): BgHandle {
     model: task.model,
     category: task.category,
     concurrencyGroup: task.concurrencyGroup,
-    title: buildSubagentTitle(task.description, task.agent),
+    title: buildSubagentTitle(task.description, task.agent, task.category),
     queuedAt: task.queuedAt?.getTime(),
     startedAt: task.startedAt?.getTime(),
     completedAt: task.completedAt?.getTime(),

@@ -3,10 +3,11 @@ import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/mode
 import type { NativeDomains } from "../../../shared/session/session-context-source"
 import { setSessionTemperature, setSessionTools } from "../../../shared/session/session-state"
 import { buildChildToolMap } from "../../../tools/delegate-task/nested-depth"
+import { buildSessionTitle } from "../../../tools/delegate-task/task-title"
 import { recordEffortForBackground } from "../../agent-effort/background"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
-import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
+import { sweepAndReadHandles } from "../handle-index"
 import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import { isWallclockEnabled, MAX_WALLCLOCK_TIMEOUT_MS } from "../wallclock"
@@ -300,7 +301,7 @@ export async function launchTask(rt: ManagerRuntime,
     try {
       created = (await rt.native.session.create({
         parentID: input.parentSessionID,
-        title: buildSubagentTitle(input.description, input.agent, input.category),
+        title: buildSessionTitle(input.description),
         agent: input.agent,
         ...(input.model
           ? {

@@ -3906,7 +3906,7 @@ const tool = createDelegateTask({
   })
 
   describe("session title and metadata format (OpenCode compatibility)", () => {
-    test("sync session title uses agent label format: '{Agent}[{category}] — {description}'", async () => {
+    test("sync session title uses bare description (host prefixes agent) — issue #94", async () => {
       // given
       const { createDelegateTask } = require("../../../src/tools/delegate-task/tools")
       let createBody: { title?: string } = {}
@@ -3957,7 +3957,8 @@ const tool = createDelegateTask({
       )
 
       // then - title should follow OpenCode format
-      expect(createBody.title).toBe("Mouse[bullet-time] — Implement feature X")
+      // New contract (#94): session.create titles are BARE descriptions; labels live on our surfaces only.
+      expect(createBody.title).toBe("Implement feature X")
     }, { timeout: 10000 })
 
     test("sync task output includes <task_metadata> block with session_id", async () => {

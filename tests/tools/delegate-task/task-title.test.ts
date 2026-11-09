@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { buildSubagentTitle } from "../../../src/features/background-agent/handle-index";
-import { buildBackgroundTitle, buildContinuationTitle, buildTaskTitle, resolveTaskDescription } from "../../../src/tools/delegate-task/task-title";
+import { buildBackgroundTitle, buildContinuationTitle, buildSessionTitle, buildTaskTitle, resolveTaskDescription } from "../../../src/tools/delegate-task/task-title";
 
 describe("task-title fallback", () => {
   //#given missing description
@@ -40,5 +40,26 @@ describe("labeled titles", () => {
   });
   test("direct agent without category omits brackets", () => {
     expect(buildBackgroundTitle("Do research", "oracle")).toBe("[BG] Oracle — Do research");
+  });
+});
+
+describe("buildSessionTitle (bare session.create contract)", () => {
+  //#given bare-title contract: session.create titles carry no agent label
+  //#when building the session title
+  //#then only the description text renders
+  test("bare description without agent prefix", () => {
+    expect(buildSessionTitle("Implement feature X")).toBe("Implement feature X");
+  });
+  test("undefined falls back without undefined text", () => {
+    expect(buildSessionTitle(undefined)).toBe("Background task");
+  });
+  test("truncates long descriptions to 80 chars", () => {
+    const long = "x".repeat(200);
+    expect(buildSessionTitle(long)).toBe("x".repeat(80));
+  });
+  test("carries no label prefix", () => {
+    const title = buildSessionTitle("Implement feature X");
+    expect(title).not.toContain("Mouse");
+    expect(title).not.toContain("[");
   });
 });

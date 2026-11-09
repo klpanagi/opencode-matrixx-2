@@ -43,3 +43,12 @@ export function buildContinuationTitle(description: unknown): string {
   const desc = clean(description) !== "" ? clean(description) : FALLBACK_TASK_DESCRIPTION;
   return `Continue: ${desc}`;
 }
+
+/**
+ * Bare session.create title: description text only, no agent label prefix.
+ * Labeled titles (buildTaskTitle/buildBackgroundTitle/buildSubagentTitle) stay
+ * for OUR surfaces only (tool ctx.metadata, BgHandle.title, onSyncSessionCreated).
+ */
+export function buildSessionTitle(description: unknown): string {
+  return resolveTaskDescription({ description });
+}

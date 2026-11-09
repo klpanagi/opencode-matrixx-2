@@ -1,4 +1,4 @@
-import { buildTaskTitle } from "./task-title"
+import { buildSessionTitle } from "./task-title"
 import type { NativeClient } from "./types"
 
 export interface SyncSessionModel {
@@ -20,7 +20,7 @@ export async function createSyncSession(
   try {
     const created = (await client.session.create({
       parentID: input.parentSessionID,
-      title: buildTaskTitle(input.description, input.agentToUse, input.category),
+      title: buildSessionTitle(input.description),
       agent: input.agentToUse,
       ...(input.model
         ? {

@@ -26,7 +26,7 @@ import { ALLOWED_CHILD_TOOLS, MAX_DELEGATION_DEPTH, resolveSessionDepth } from "
 import { buildSystemContent } from "./prompt-builder"
 import { softwareDevDisabledSkillError } from "./software-dev-enforcement"
 import { resolveSoftwareDevEnforcementContent } from "./software-dev-payload"
-import { resolveTaskDescription } from "./task-title"
+import { buildTaskTitle, resolveTaskDescription } from "./task-title"
 import { TASK_TOOL_OPTIONS } from "./tool-options"
 import type { DelegateTaskArgs, DelegateTaskToolOptions, ToolContextWithMetadata } from "./types"
 
@@ -200,7 +200,7 @@ Do NOT confuse with task_create/task_update/task_list/task_get/task_cleanup (the
         args.subagent_type = MOUSE_AGENT
       }
       await ctx.metadata?.({
-        title: args.description,
+        title: buildTaskTitle(args.description, args.subagent_type, args.category),
       })
 
       // ── Four-option analysis (T4 reconciliation, behavioural conservation):

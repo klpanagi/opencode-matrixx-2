@@ -343,7 +343,8 @@ export function injectHookMessage(
   const messageID = generateMessageId()
   const partID = generatePartId()
 
-  const resolvedAgent = originalMessage.agent ?? fallback?.agent ?? "general"
+  const rawAgent = originalMessage.agent ?? fallback?.agent
+  const resolvedAgent = rawAgent && rawAgent.toLowerCase() !== "general" ? rawAgent : undefined
   const resolvedModel =
     originalMessage.model?.providerID && originalMessage.model?.modelID
       ? { 
@@ -367,7 +368,7 @@ export function injectHookMessage(
     time: {
       created: now,
     },
-    agent: resolvedAgent,
+    ...(resolvedAgent !== undefined ? { agent: resolvedAgent } : {}),
     model: resolvedModel,
     path:
       originalMessage.path?.cwd
