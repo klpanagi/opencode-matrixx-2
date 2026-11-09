@@ -5,11 +5,9 @@ import { isNativeSessionId, log } from "../../../shared"
 import { promptNativeWithModelSuggestionRetry } from "../../../shared/model/model-suggestion-retry"
 import { recordEffortForBackground } from "../../agent-effort/background"
 import { getParentSessionID, registerSubagentSession } from "../../session-state/state"
-import { getTaskToastManager } from "../../task-toast-manager"
 import type { EventProperties } from "../constants"
 import { getSessionErrorMessage } from "../error-helpers"
 import { BG_HANDLE_FILE_PREFIX, getBgHandleDir, readHandles } from "../handle-index"
-import { buildCompletionNotification } from "../notification-builder"
 import {
   classifyRevivable,
   findRevivableHandle,
@@ -19,6 +17,7 @@ import {
   toReviveTask,
 } from "../revive"
 import type { BackgroundTask, ReviveInput } from "../types"
+import { finalizeTask, NOTIFY_PARENT, RECORD_HISTORY, REMOVE_TOAST, SKIP_HISTORY } from "./finalize"
 import { abortSessionQuietly, firePrompt } from "./lifecycle"
 import type { BackgroundManager } from "./manager"
 import { ManagerStore } from "./store"
@@ -309,46 +308,6 @@ export function listRevivable(rt: ManagerRuntime,parentSessionID?: string): Arra
 }
 
 
-function formatParentNotificationDuration(task: BackgroundTask): string {
-  if (!task.startedAt) return "unknown"
-  const end = task.completedAt ?? new Date()
-  const seconds = Math.max(0, Math.round((end.getTime() - task.startedAt.getTime()) / 1000))
-  if (seconds < 60) return `${seconds}s`
-  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
-}
-
-function deliverParentNotification(
-  rt: ManagerRuntime,
-  task: BackgroundTask,
-  effortLine?: string | null,
-): void {
-  const parentSessionID = task.parentSessionID
-  if (!parentSessionID) return
-  try {
-    const siblings = rt.store.getTasksByParentSession(parentSessionID)
-    const remainingCount = siblings.filter(
-      (t) => t.id !== task.id && (t.status === "running" || t.status === "pending"),
-    ).length
-    const completedTasks = siblings.filter(
-      (t) => t.status !== "running" && t.status !== "pending",
-    )
-    const text = buildCompletionNotification(
-      task,
-      remainingCount === 0,
-      completedTasks,
-      remainingCount,
-      formatParentNotificationDuration(task),
-      `${task.error ? `\n**Error:** ${task.error}` : ""}${effortLine ? `\n\n${effortLine}` : ""}`,
-    )
-    rt.native.session.prompt({ sessionID: parentSessionID, text }).catch((error) => {
-      log("[background-agent] parent notification failed:", error)
-    })
-  } catch (error) {
-    log("[background-agent] parent notification failed:", error)
-  }
-}
-
-
 function projectProgressFromToolPart(
   rt: ManagerRuntime,
   task: BackgroundTask,
@@ -460,87 +419,55 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
     }
 
     if (event.type === "session.idle") {
-      task.status = "completed"
-      task.completedAt = new Date()
-      rt.store.wallclock.disarm(task.id)
-      rt.store.nativeDescCache.clear()
-      rt.store.persistHandle(task)
-      rt.taskHistory.record(task.parentSessionID, {
-        id: task.id,
-        sessionID: task.sessionID,
-        agent: task.agent,
-        description: task.description,
+      await finalizeTask(rt, task, {
         status: "completed",
-        category: task.category,
-        startedAt: task.startedAt,
-        completedAt: task.completedAt,
+        source: "native session.idle",
+        notify: NOTIFY_PARENT,
+        removeToast: REMOVE_TOAST,
+        recordHistory: RECORD_HISTORY,
+        logMessage: "[background-agent] Task completed (native session.idle):",
+        computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
       })
-      const toastManager = getTaskToastManager()
-      if (toastManager) toastManager.removeTask(task.id)
-      log("[background-agent] Task completed (native session.idle):", task.id)
-      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
-      deliverParentNotification(rt, task, effort?.line)
       return
     }
-
     if (event.type === "session.error") {
-      task.status = "error"
-      task.error =
-        getSessionErrorMessage(props as EventProperties) ??
-        "Session reported an error"
-      task.completedAt = new Date()
-      rt.store.wallclock.disarm(task.id)
-      rt.store.nativeDescCache.clear()
-      rt.store.persistHandle(task)
-      const toastManager = getTaskToastManager()
-      if (toastManager) toastManager.removeTask(task.id)
-      log("[background-agent] Task errored (native session.error):", task.id)
-      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
-      deliverParentNotification(rt, task, effort?.line)
-      return
-    }
-
-    if (event.type === "session.execution.succeeded") {
-      task.status = "completed"
-      task.completedAt = new Date()
-      rt.store.wallclock.disarm(task.id)
-      rt.store.nativeDescCache.clear()
-      rt.store.persistHandle(task)
-      rt.taskHistory.record(task.parentSessionID, {
-        id: task.id,
-        sessionID: task.sessionID,
-        agent: task.agent,
-        description: task.description,
-        status: "completed",
-        category: task.category,
-        startedAt: task.startedAt,
-        completedAt: task.completedAt,
+      await finalizeTask(rt, task, {
+        status: "error",
+        source: "native session.error",
+        notify: NOTIFY_PARENT,
+        removeToast: REMOVE_TOAST,
+        recordHistory: SKIP_HISTORY,
+        incomingError: getSessionErrorMessage(props as EventProperties) ?? "Session reported an error",
+        logMessage: "[background-agent] Task errored (native session.error):",
+        computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
       })
-      const toastManager = getTaskToastManager()
-      if (toastManager) toastManager.removeTask(task.id)
-      log("[background-agent] Task completed (native session.execution.succeeded):", task.id)
-      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
-      deliverParentNotification(rt, task, effort?.line)
       return
     }
-
+    if (event.type === "session.execution.succeeded") {
+      await finalizeTask(rt, task, {
+        status: "completed",
+        source: "native session.execution.succeeded",
+        notify: NOTIFY_PARENT,
+        removeToast: REMOVE_TOAST,
+        recordHistory: RECORD_HISTORY,
+        logMessage: "[background-agent] Task completed (native session.execution.succeeded):",
+        computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+      })
+      return
+    }
     if (event.type === "session.execution.failed") {
-      task.status = "error"
-      task.error =
-        getSessionErrorMessage(props as EventProperties) ??
-        "Session reported an error"
-      task.completedAt = new Date()
-      rt.store.wallclock.disarm(task.id)
-      rt.store.nativeDescCache.clear()
-      rt.store.persistHandle(task)
-      const toastManager = getTaskToastManager()
-      if (toastManager) toastManager.removeTask(task.id)
-      log("[background-agent] Task errored (native session.execution.failed):", task.id)
-      const effort = await recordEffortForBackground(rt, task, rt.effortConfig)
-      deliverParentNotification(rt, task, effort?.line)
+      await finalizeTask(rt, task, {
+        status: "error",
+        source: "native session.execution.failed",
+        notify: NOTIFY_PARENT,
+        removeToast: REMOVE_TOAST,
+        recordHistory: SKIP_HISTORY,
+        incomingError: getSessionErrorMessage(props as EventProperties) ?? "Session reported an error",
+        logMessage: "[background-agent] Task errored (native session.execution.failed):",
+        computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+      })
       return
     }
-
     log("[background-agent] handleEvent ignored non-idle event:", {
       type: event.type,
       taskId: task.id,
