@@ -117,6 +117,16 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
       if (handle.sessionID !== undefined) rt.store.rememberKnownSession(handle.sessionID)
       const wallClockTimeoutMs = rt.config?.wallClockTimeoutMs
       const restoredActive = task.status === "running" || task.status === "pending"
+      if (restoredActive) {
+        getTaskToastManager()?.addTask({
+          id: task.id,
+          description: task.description,
+          agent: task.agent,
+          isBackground: true,
+          status: task.status === "pending" ? "queued" : "running",
+          category: task.category,
+        })
+      }
       if (
         restoredActive &&
         handle.deadlineAt !== undefined &&
