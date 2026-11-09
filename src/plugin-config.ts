@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { type MatrixxConfig, MatrixxConfigSchema } from "./config";
 import { migrateMatrixxConfig } from "./config/migrations/model-migration";
 import { applyActivePreset } from "./config/preset-applier";
+import { warnDeprecatedBackgroundTaskKeys } from "./config/schema/background-task-deprecation";
 import {
   addConfigLoadError,
   ConfigError,
@@ -303,6 +304,8 @@ export async function loadPluginConfig(
   if (config.active_preset && config.model_presets?.[config.active_preset]) {
     log("Active model preset applied", { active_preset: config.active_preset });
   }
+
+  warnDeprecatedBackgroundTaskKeys(config.background_task)
 
   assertModelsResolvable(config)
 

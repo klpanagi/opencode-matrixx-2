@@ -3302,10 +3302,12 @@
       "type": "object",
       "properties": {
         "defaultConcurrency": {
+          "description": "deprecated: ignored; queue admission and concurrency semaphores were removed.",
           "type": "number",
           "minimum": 1
         },
         "providerConcurrency": {
+          "description": "deprecated: ignored; concurrency semaphores were removed.",
           "type": "object",
           "propertyNames": {
             "type": "string"
@@ -3316,6 +3318,7 @@
           }
         },
         "modelConcurrency": {
+          "description": "deprecated: ignored; concurrency semaphores were removed.",
           "type": "object",
           "propertyNames": {
             "type": "string"
@@ -3326,10 +3329,12 @@
           }
         },
         "staleTimeoutMs": {
+          "description": "deprecated: ignored; stale-timeout termination is no longer configurable.",
           "type": "number",
           "minimum": 60000
         },
         "messageStalenessTimeoutMs": {
+          "description": "deprecated: ignored; message-staleness termination is no longer configurable.",
           "type": "number",
           "minimum": 60000
         },
@@ -3339,22 +3344,27 @@
           "maximum": 2147483647
         },
         "maxToolCalls": {
+          "description": "deprecated: ignored; the background circuit breaker was removed.",
           "type": "integer",
           "minimum": 10,
           "maximum": 9007199254740991
         },
         "circuitBreaker": {
+          "description": "deprecated: ignored; the background circuit breaker was removed.",
           "type": "object",
           "properties": {
             "enabled": {
+              "description": "deprecated: ignored; the background circuit breaker was removed.",
               "type": "boolean"
             },
             "maxToolCalls": {
+              "description": "deprecated: ignored; the background circuit breaker was removed.",
               "type": "integer",
               "minimum": 10,
               "maximum": 9007199254740991
             },
             "consecutiveThreshold": {
+              "description": "deprecated: ignored; the background circuit breaker was removed.",
               "type": "integer",
               "minimum": 5,
               "maximum": 9007199254740991
@@ -3363,12 +3373,15 @@
           "additionalProperties": false
         },
         "wakeScheduler": {
+          "description": "deprecated: ignored since the wake scheduler was removed.",
           "type": "object",
           "properties": {
             "enabled": {
+              "description": "deprecated: ignored since the wake scheduler was removed.",
               "type": "boolean"
             },
             "intervalMs": {
+              "description": "deprecated: ignored since the wake scheduler was removed.",
               "type": "number",
               "minimum": 60000
             }
@@ -3376,12 +3389,15 @@
           "additionalProperties": false
         },
         "jobBoard": {
+          "description": "deprecated: ignored since the job board was removed.",
           "type": "object",
           "properties": {
             "enabled": {
+              "description": "deprecated: ignored since the job board was removed.",
               "type": "boolean"
             },
             "strategy": {
+              "description": "deprecated: ignored since the job board was removed.",
               "type": "string",
               "enum": [
                 "latest",
@@ -3389,6 +3405,7 @@
               ]
             },
             "maxRetainedSnapshots": {
+              "description": "deprecated: ignored since the job board was removed.",
               "type": "integer",
               "minimum": 1,
               "maximum": 100
@@ -3410,6 +3427,7 @@
           ]
         },
         "wallClockAbortGraceMs": {
+          "description": "deprecated: ignored; wall-clock timeout aborts immediately without a grace period.",
           "type": "integer",
           "minimum": 1000,
           "maximum": 60000
