@@ -207,7 +207,11 @@ describe("sweepStaleHandles", () => {
     //#given one stale handle and one fresh handle
     const now = Date.now()
     const stale = makeTask({ id: "bg_stale111", completedAt: new Date(now - 60 * 60 * 1000) })
-    const fresh = makeTask({ id: "bg_fresh222", completedAt: new Date(now - 1000) })
+    const fresh = makeTask({
+      id: "bg_fresh222",
+      completedAt: new Date(now - 1000),
+      lastActivityAt: new Date(now - 1000),
+    })
     writeHandle(dir, stale)
     writeHandle(dir, fresh)
 
@@ -222,7 +226,7 @@ describe("sweepStaleHandles", () => {
   test("is bounded: a fresh handle is never removed", () => {
     //#given a handle completed one millisecond ago
     const now = Date.now()
-    writeHandle(dir, makeTask({ completedAt: new Date(now - 1) }))
+    writeHandle(dir, makeTask({ completedAt: new Date(now - 1), lastActivityAt: new Date(now - 1) }))
 
     //#when sweeping
     const removed = sweepStaleHandles(dir, 30 * 60 * 1000, now)
