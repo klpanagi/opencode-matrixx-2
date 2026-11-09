@@ -300,7 +300,18 @@ describe("toHandle title", () => {
     const handle = toHandle(task)
 
     //#then the title matches the shared helper
-    expect(handle.title).toBe(buildSubagentTitle(task.description, task.agent))
+    expect(handle.title).toBe(buildSubagentTitle(task.description, task.agent, task.category))
+  })
+
+  test("carries category label when present", () => {
+    //#given a task with a category
+    const task = makeTask({ agent: "mouse", category: "source" })
+
+    //#when projecting to a handle
+    const handle = toHandle(task)
+
+    //#then the title includes the [source] label
+    expect(handle.title).toBe("[BG] Mouse[source] — Investigate the thing")
   })
 })
 
@@ -330,6 +341,6 @@ describe("handle title persistence", () => {
     const [handle] = readHandles(dir)
 
     //#then the title round-trips
-    expect(handle.title).toBe(buildSubagentTitle(task.description, task.agent))
+    expect(handle.title).toBe(buildSubagentTitle(task.description, task.agent, task.category))
   })
 })

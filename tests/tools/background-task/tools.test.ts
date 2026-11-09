@@ -49,7 +49,7 @@ function createTask(overrides: Partial<BackgroundTask> = {}): BackgroundTask {
 }
 
 describe("background_output full_session", () => {
-  test("resolves task_id into title metadata", async () => {
+  test("resolves task_id into labeled title metadata — issue #94", async () => {
     // #given
     clearPendingStore()
 
@@ -72,10 +72,10 @@ describe("background_output full_session", () => {
 
     // #then
     const restored = consumeToolMetadata("test-session", "call-1")
-    expect(restored?.title).toBe("trinity - Find how task output is rendered")
+    expect(restored?.title).toBe("Trinity \u2014 Find how task output is rendered")
   })
 
-  test("shows category instead of agent for mouse", async () => {
+  test("renders Mouse[category] labeled title for mouse — issue #94", async () => {
     // #given
     clearPendingStore()
 
@@ -99,7 +99,7 @@ describe("background_output full_session", () => {
 
     // #then
     const restored = consumeToolMetadata("test-session", "call-1")
-    expect(restored?.title).toBe("bullet-time - Fix flaky test")
+    expect(restored?.title).toBe("Mouse[bullet-time] \u2014 Fix flaky test")
   })
 
   test("includes thinking and tool results when enabled", async () => {

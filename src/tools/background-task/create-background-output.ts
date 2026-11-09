@@ -2,13 +2,15 @@ import { z } from "zod"
 import type { BackgroundManager, BackgroundTask } from "../../features/background-agent"
 import { resolveAny } from "../../features/background-agent/manager"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
-import { getAgentDisplayName } from "../../shared/agent/agent-display-names"
+import { getAgentConfigKey } from "../../shared/agent/agent-display-names"
+import { buildLabeledTitle } from "../../shared/agent/agent-label"
 import { log } from "../../shared/runtime/logger"
 import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session/session-context-source"
 import { isNativeSessionId } from "../../shared/session/session-id"
 import { contentOf, roleOf } from "../../shared/session/session-message"
 import { formatDetailedError } from "../../shared/text/error-formatting"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
+import { MOUSE_AGENT } from "../delegate-task/mouse-agent"
 import { BACKGROUND_OUTPUT_DESCRIPTION } from "./constants"
 import { formatFullSession } from "./full-session-format"
 import { formatTaskResult } from "./task-result-format"
@@ -16,7 +18,7 @@ import { formatTaskStatus } from "./task-status-format"
 import { applyContextModeBudget } from "./truncate-text"
 import type { BackgroundOutputArgs } from "./types"
 
-const MOUSE_AGENT = getAgentDisplayName("mouse")
+
 
 type ToolContextWithMetadata = {
   sessionID: string
@@ -27,9 +29,12 @@ type ToolContextWithMetadata = {
 }
 
 
-function formatResolvedTitle(task: BackgroundTask): string {
-  const label = task.agent === MOUSE_AGENT && task.category ? task.category : task.agent
-  return `${label} - ${task.description}`
+export function formatResolvedTitle(task: BackgroundTask): string {
+  const isMouse = getAgentConfigKey(task.agent).toLowerCase() === MOUSE_AGENT.toLowerCase()
+  if (isMouse) {
+    return buildLabeledTitle({ description: task.description, agent: task.agent, category: task.category, background: false })
+  }
+  return buildLabeledTitle({ description: task.description, agent: task.agent, background: false })
 }
 
 function isTaskActiveStatus(status: BackgroundTask["status"]): boolean {
