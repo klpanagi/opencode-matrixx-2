@@ -7,7 +7,6 @@ import type {
   NativeDomains,
   NativePluginContext,
 } from "../../../shared/session/session-context-source"
-import { getTaskToastManager } from "../../task-toast-manager"
 import type {
   EventProperties,
   OnSubagentSessionCreated,
@@ -20,6 +19,7 @@ import type {
   ResumeInput,
   ReviveInput,
 } from "../types"
+import { finalizeTask } from "./finalize"
 import {
   abortSessionQuietly,
   launchTask,
@@ -217,29 +217,20 @@ export class BackgroundManager implements ManagerRuntime {
     const source = options?.source ?? "cancel"
     const abortSession = options?.abortSession !== false
 
-    task.status = "cancelled"
-    task.completedAt = new Date()
-    if (options?.reason) task.error = options.reason
-    this.store.wallclock.disarm(taskId)
-    this.store.persistHandle(task)
-    this.taskHistory.record(task.parentSessionID, {
-      id: task.id,
-      sessionID: task.sessionID,
-      agent: task.agent,
-      description: task.description,
+    await finalizeTask(this, task, {
       status: "cancelled",
-      category: task.category,
-      startedAt: task.startedAt,
-      completedAt: task.completedAt,
+      source,
+      notify: false,
+      removeToast: true,
+      recordHistory: true,
+      ...(options?.reason !== undefined ? { incomingError: options.reason } : {}),
+      logMessage: `[background-agent] Task cancelled via ${source}:`,
     })
 
     if (abortSession && task.sessionID) {
       abortSessionQuietly(this.native, task.sessionID, "cancel")
     }
 
-    const toastManager = getTaskToastManager()
-    if (toastManager) toastManager.removeTask(task.id)
-    log(`[background-agent] Task cancelled via ${source}:`, task.id)
     this.rejectWaiters(
       task.parentSessionID,
       new Error(`Task cancelled: ${taskId}`),

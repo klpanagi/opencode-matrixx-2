@@ -6,7 +6,9 @@ import { recordEffortForBackground } from "../../agent-effort/background"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
 import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
+import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
+import { finalizeTask } from "./finalize"
 import type { ManagerRuntime } from "./types"
 
 /**
@@ -28,12 +30,17 @@ function armWallclock(rt: ManagerRuntime, task: BackgroundTask): void {
   if (timeoutMs === undefined || startedAtMs === undefined) return
   rt.store.wallclock.arm(task.id, startedAtMs, timeoutMs, () => {
     if (isSettled(task.status)) return
-    task.status = "error"
-    task.error = `Wall-clock timeout exceeded`
     task.terminalReason = "wall-clock-timeout"
-    task.completedAt = new Date()
-    rt.store.persistHandle(task)
-    void recordEffortForBackground(rt, task, rt.effortConfig)
+    void finalizeTask(rt, task, {
+      status: "error",
+      source: "wall-clock-timeout",
+      notify: false,
+      removeToast: false,
+      recordHistory: false,
+      incomingError: "Wall-clock timeout exceeded",
+      logMessage: null,
+      computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
+    })
     if (task.sessionID !== undefined) {
       abortSessionQuietly(rt.native, task.sessionID, "wall-clock-timeout")
     }
@@ -46,9 +53,24 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
     let restored = 0
     for (const handle of handles) {
       if (rt.store.tasks.has(handle.taskId)) continue
-      const uncertain =
+      const active =
         handle.status === "running" || handle.status === "pending"
-      rt.store.tasks.set(handle.taskId, {
+      // Opt-in re-acquisition: probe the live host only with the flag on, so
+      // flag-off restores stay byte-identical to the legacy mapping.
+      const reacquire =
+        active &&
+        rt.restoreReacquire === true &&
+        probeReviveTarget(
+          rt.directory,
+          {
+            taskId: handle.taskId,
+            sessionID: handle.sessionID,
+            generation: handle.generation,
+          },
+          { expectedGeneration: handle.generation },
+        ).alive
+      const uncertain = active && !reacquire
+      const task: BackgroundTask = {
         generation: handle.generation,
         id: handle.taskId,
         parentSessionID: handle.parentSessionID,
@@ -70,7 +92,9 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
         model: handle.model,
         category: handle.category,
         concurrencyGroup: handle.concurrencyGroup,
-      })
+      }
+      rt.store.tasks.set(handle.taskId, task)
+      if (reacquire) rt.store.persistHandle(task)
       if (handle.sessionID !== undefined) rt.store.knownSessions.add(handle.sessionID)
       restored++
     }
@@ -195,11 +219,17 @@ export async function launchTask(rt: ManagerRuntime,
     } catch (error) {
       rt.store.pendingSpawns.delete(task.id)
       const message = error instanceof Error ? error.message : String(error)
-      task.status = "error"
-      task.error = `Failed to create background session: ${message}`
-      task.completedAt = new Date()
-      rt.store.persistHandle(task)
-      throw new Error(task.error)
+      const errorMessage = `Failed to create background session: ${message}`
+      await finalizeTask(rt, task, {
+        status: "error",
+        source: "launch-create-failed",
+        notify: false,
+        removeToast: false,
+        recordHistory: false,
+        incomingError: errorMessage,
+        logMessage: null,
+      })
+      throw new Error(errorMessage)
     }
 
     rt.store.pendingSpawns.delete(task.id)
@@ -216,12 +246,18 @@ export async function launchTask(rt: ManagerRuntime,
     }
 
     if (!created.id) {
-      task.status = "error"
-      task.error =
+      const errorMessage =
         "Failed to create background session: API returned no session ID"
-      task.completedAt = new Date()
-      rt.store.persistHandle(task)
-      throw new Error(task.error)
+      await finalizeTask(rt, task, {
+        status: "error",
+        source: "launch-no-session-id",
+        notify: false,
+        removeToast: false,
+        recordHistory: false,
+        incomingError: errorMessage,
+        logMessage: null,
+      })
+      throw new Error(errorMessage)
     }
 
     const sessionID = created.id

@@ -12,8 +12,10 @@ import type { BackgroundTask } from "./types"
  *
  * Mirrors the `task-storage` pattern: one file per handle under a
  * project-scoped `.matrixx/bg-handles/` directory, written atomically via
- * `tmp + renameSync`. Only a lightweight index is persisted — prompts,
- * progress, results, errors and tool-call windows stay ephemeral.
+ * `tmp + renameSync`. The persisted index carries identity and lifecycle
+ * fields plus the adoption origin, liveness/deadline timestamps, the last
+ * error and result summary, and a serializable progress snapshot — prompts
+ * and tool-call windows stay ephemeral.
  *
  * This lets a freshly-created `BackgroundManager` recover previously-created
  * `bg_*` handles after a plugin/process restart.
@@ -55,6 +57,20 @@ export const BgHandleSchema = z
     queuedAt: z.number().optional(),
     startedAt: z.number().optional(),
     completedAt: z.number().optional(),
+    origin: z.enum(["delegation", "native"]).optional(),
+    lastActivityAt: z.number().optional(),
+    deadlineAt: z.number().optional(),
+    error: z.string().optional(),
+    resultSummary: z.string().optional(),
+    progress: z
+      .object({
+        toolCalls: z.number().int().nonnegative(),
+        lastTool: z.string().optional(),
+        lastUpdate: z.number(),
+        lastMessage: z.string().optional(),
+      })
+      .strict()
+      .optional(),
     generation: z.number().int().nonnegative().default(0),
   })
   .strict()
@@ -105,6 +121,19 @@ export function toHandle(task: BackgroundTask): BgHandle {
     queuedAt: task.queuedAt?.getTime(),
     startedAt: task.startedAt?.getTime(),
     completedAt: task.completedAt?.getTime(),
+    origin: task.origin,
+    lastActivityAt: task.lastActivityAt?.getTime(),
+    deadlineAt: task.deadlineAt?.getTime(),
+    error: task.error,
+    resultSummary: task.resultSummary,
+    progress: task.progress
+      ? {
+          toolCalls: task.progress.toolCalls,
+          lastTool: task.progress.lastTool,
+          lastUpdate: task.progress.lastUpdate.getTime(),
+          lastMessage: task.progress.lastMessage,
+        }
+      : undefined,
     generation: 0,
   }
 }
