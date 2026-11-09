@@ -37,7 +37,7 @@ function createWallclockFireHandler(
       source: "wall-clock-timeout",
       notify: false,
       removeToast: false,
-      recordHistory: false,
+      recordHistory: true,
       incomingError: "Wall-clock timeout exceeded",
       logMessage: null,
       computeEffort: async () => (await recordEffortForBackground(rt, task, rt.effortConfig))?.line ?? null,
