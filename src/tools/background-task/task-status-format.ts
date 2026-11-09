@@ -36,7 +36,7 @@ ${truncated}
    if (task.status === "pending") {
      statusNote = `
 
-> **Queued**: Task is waiting for a concurrency slot to become available.`
+> **Queued**: Task has been created and is waiting to start.`
    } else if (task.status === "running") {
      statusNote = `
 
