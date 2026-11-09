@@ -349,6 +349,29 @@ function deliverParentNotification(
 }
 
 
+function projectProgressFromToolPart(
+  rt: ManagerRuntime,
+  task: BackgroundTask,
+  props: Record<string, unknown>,
+): boolean {
+  const part = props.part as Record<string, unknown> | undefined
+  if (part?.type !== "tool") return false
+  const state = part.state as Record<string, unknown> | undefined
+  if (state?.status !== "running") return false
+  const eventTime =
+    typeof props.time === "number" && Number.isFinite(props.time)
+      ? props.time
+      : (rt.now?.() ?? Date.now())
+  task.progress = {
+    ...task.progress,
+    toolCalls: (task.progress?.toolCalls ?? 0) + 1,
+    lastTool: typeof part.tool === "string" ? part.tool : task.progress?.lastTool,
+    lastUpdate: new Date(eventTime),
+  }
+  return true
+}
+
+
 export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Promise<void> {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
     const topLevelSessionID = (event as unknown as { sessionID?: unknown })
@@ -426,6 +449,13 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
         type: event.type,
         sessionID,
       })
+      return
+    }
+
+    if (event.type === "message.part.updated") {
+      if (projectProgressFromToolPart(rt, task, props)) {
+        rt.store.persistHandle(task)
+      }
       return
     }
 

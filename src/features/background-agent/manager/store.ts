@@ -170,6 +170,7 @@ export class ManagerStore {
 
 
   persistHandle(task: BackgroundTask): void {
+    task.lastActivityAt ??= new Date()
     try {
       writeHandle(this.directory, task)
     } catch (error) {
@@ -188,6 +189,7 @@ export class ManagerStore {
       throw new StaleGenerationError(task.id, expectedGeneration, persisted)
     }
     task.generation = persisted
+    task.lastActivityAt ??= new Date()
     writeHandle(this.directory, task)
   }
   bumpTaskGeneration(taskId: string): number {
