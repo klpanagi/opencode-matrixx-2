@@ -13,6 +13,18 @@ import type { NativeDescendant } from "./types"
 const NATIVE_CACHE_TTL_MS = 1000
 
 /**
+ * A `waitForAllDescendants` registration.
+ *
+ * `wake` resolves the current tick early (sibling cancel); `reject` aborts
+ * the wait outright (shutdown).
+ */
+export interface Waiter {
+  sessionID: string
+  wake: () => void
+  reject: (err: unknown) => void
+}
+
+/**
  * In-memory task registry behind `BackgroundManager`.
  *
  * Owns the task map, the known-session set, and the native-descendant
@@ -27,7 +39,7 @@ export class ManagerStore {
   readonly nativeDescCache = new Map<string, { at: number; rows: NativeDescendant[] }>()
   readonly wallclock = new WallclockSupervisor()
   readonly pendingSpawns = new Set<string>()
-  readonly waiters = new Set<{ sessionID: string; reject: (err: unknown) => void }>()
+  readonly waiters = new Set<Waiter>()
   directory: string
   config?: BackgroundTaskConfig
 
