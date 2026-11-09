@@ -6,6 +6,7 @@ import { recordEffortForBackground } from "../../agent-effort/background"
 import { registerSubagentSession } from "../../session-state/state"
 import { getTaskToastManager } from "../../task-toast-manager"
 import { buildSubagentTitle, sweepAndReadHandles } from "../handle-index"
+import { probeReviveTarget } from "../revive"
 import type { BackgroundTask, BackgroundTaskStatus, LaunchInput, ResumeInput } from "../types"
 import { finalizeTask } from "./finalize"
 import type { ManagerRuntime } from "./types"
@@ -52,9 +53,24 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
     let restored = 0
     for (const handle of handles) {
       if (rt.store.tasks.has(handle.taskId)) continue
-      const uncertain =
+      const active =
         handle.status === "running" || handle.status === "pending"
-      rt.store.tasks.set(handle.taskId, {
+      // Opt-in re-acquisition: probe the live host only with the flag on, so
+      // flag-off restores stay byte-identical to the legacy mapping.
+      const reacquire =
+        active &&
+        rt.restoreReacquire === true &&
+        probeReviveTarget(
+          rt.directory,
+          {
+            taskId: handle.taskId,
+            sessionID: handle.sessionID,
+            generation: handle.generation,
+          },
+          { expectedGeneration: handle.generation },
+        ).alive
+      const uncertain = active && !reacquire
+      const task: BackgroundTask = {
         generation: handle.generation,
         id: handle.taskId,
         parentSessionID: handle.parentSessionID,
@@ -76,7 +92,9 @@ export async function restoreHandles(rt: ManagerRuntime): Promise<void> {
         model: handle.model,
         category: handle.category,
         concurrencyGroup: handle.concurrencyGroup,
-      })
+      }
+      rt.store.tasks.set(handle.taskId, task)
+      if (reacquire) rt.store.persistHandle(task)
       if (handle.sessionID !== undefined) rt.store.knownSessions.add(handle.sessionID)
       restored++
     }

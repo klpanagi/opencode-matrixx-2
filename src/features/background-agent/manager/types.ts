@@ -30,6 +30,7 @@ export interface ManagerRuntime {
   readonly taskHistory: TaskHistory
   readonly now?: () => number
   readonly timers?: ManagerTimers
+  readonly restoreReacquire?: boolean
   notify?: (payload: unknown) => void | Promise<void>
 }
 
