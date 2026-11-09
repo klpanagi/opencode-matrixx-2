@@ -331,6 +331,21 @@ function projectProgressFromToolPart(
   return true
 }
 
+function resolveEventTime(rt: ManagerRuntime, props: Record<string, unknown>): number {
+  const direct = props.time
+  if (typeof direct === "number" && Number.isFinite(direct)) return direct
+  const nested = props.properties
+  if (nested !== null && typeof nested === "object") {
+    const nestedTime = (nested as Record<string, unknown>).time
+    if (typeof nestedTime === "number" && Number.isFinite(nestedTime)) return nestedTime
+  }
+  return rt.now?.() ?? Date.now()
+}
+
+function stampLastActivity(rt: ManagerRuntime, task: BackgroundTask, props: Record<string, unknown>): void {
+  task.lastActivityAt = new Date(resolveEventTime(rt, props))
+  rt.store.persistHandle(task)
+}
 
 export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Promise<void> {
     const props = (event.data as Record<string, unknown> | undefined) ?? {}
@@ -413,6 +428,16 @@ export async function handleManagerEvent(rt: ManagerRuntime,event: V2Event): Pro
         sessionID,
       })
       return
+    }
+
+    if (
+      event.type === "message.part.updated" ||
+      event.type === "session.idle" ||
+      event.type === "session.error" ||
+      event.type === "session.execution.succeeded" ||
+      event.type === "session.execution.failed"
+    ) {
+      stampLastActivity(rt, task, props)
     }
 
     if (event.type === "message.part.updated") {
