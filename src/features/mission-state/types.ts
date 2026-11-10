@@ -52,6 +52,14 @@ export interface PlanMeta {
   todoCompleted: number
   /** Git HEAD at time of write (optional) */
   gitHead?: { sha: string; branch?: string }
+  /** Rolled-up actual effort across linked tasks */
+  effortActual?: { total: number; tokenUsd: number; taskCount: number; computedAt: string }
+  /** Actual effort attributed per TODO checkbox text */
+  perTodoActual?: Record<string, { total: number; tokenUsd: number; taskIds: string[] }>
+  /** Planning-time estimate for the plan */
+  estimate?: { perTodo?: Record<string, number>; total?: number; method?: string; updatedAt?: string }
+  /** Estimate-vs-actual variance */
+  variance?: { delta: number | null; pct: number | null; computedAt: string }
 }
 
 /** Events the plan-persister hook listens to */

@@ -1,3 +1,4 @@
+import { extractPlanEffort, formatEffortSummary } from "../../features/agent-effort/surface"
 import {
   appendSessionId,
   clearMissionState,
@@ -6,6 +7,7 @@ import {
   getPlanName,
   getPlanProgress,
   readMissionState,
+  readPlanFile,
   rotateMissionIfComplete,
   shouldReconcileOnStartWork,
   writeMissionState,
@@ -17,6 +19,17 @@ import { stateRootFromPluginContext } from "../../shared/session/state-root"
 import { classifyPlans, formatPlanListLine } from "./plan-filter"
 
 export const HOOK_NAME = "start-work" as const
+
+function effortLineForPlan(planPath: string): string {
+  try {
+    const content = readPlanFile(planPath)
+    if (content === null) return ""
+    const summary = formatEffortSummary(extractPlanEffort(content))
+    return summary === null ? "" : `\n${summary}`
+  } catch {
+    return ""
+  }
+}
 
 const KEYWORD_PATTERN = /\b(redpill|rp)\b/gi
 
@@ -115,7 +128,7 @@ All ${progress.total} tasks are done. Create a new plan with: /plan "your task"`
 
 **Plan**: ${getPlanName(matchedPlan)}
 **Path**: ${matchedPlan}
-**Progress**: ${progress.completed}/${progress.total} tasks
+**Progress**: ${progress.completed}/${progress.total} tasks${effortLineForPlan(matchedPlan)}
 **Session ID**: ${sessionId}
 **Started**: ${timestamp}
 
@@ -161,7 +174,7 @@ No incomplete plans available. Create a new plan with: /plan "your task"`
 **Status**: RESUMING existing work
 **Plan**: ${existingState.plan_name}
 **Path**: ${existingState.active_plan}
-**Progress**: ${progress.completed}/${progress.total} tasks completed
+**Progress**: ${progress.completed}/${progress.total} tasks completed${effortLineForPlan(existingState.active_plan)}
 **Sessions**: ${existingState.session_ids.length + 1} (current session appended)
 **Started**: ${existingState.started_at}
 
@@ -220,7 +233,7 @@ Review stale candidates for archival; triage-empty plans need checkboxes or manu
 
 **Plan**: ${getPlanName(planPath)}
 **Path**: ${planPath}
-**Progress**: ${progress.completed}/${progress.total} tasks
+**Progress**: ${progress.completed}/${progress.total} tasks${effortLineForPlan(planPath)}
 **Session ID**: ${sessionId}
 **Started**: ${timestamp}
 

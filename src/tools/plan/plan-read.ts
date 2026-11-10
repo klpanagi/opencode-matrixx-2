@@ -1,5 +1,6 @@
 import { existsSync, statSync } from "node:fs"
 import { z } from "zod"
+import { extractPlanEffort } from "../../features/agent-effort/surface"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { readPlanFile, readPlanFileSpan } from "../../features/mission-state/plan-storage"
 import type { MatrixxContext } from "../../plugin/tool/context"
@@ -107,6 +108,8 @@ export function createPlanReadTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_
             : readFailedPayload(resolved, readErrno ?? undefined)
         }
         const format: PlanReadFormat = args.format === "content" ? "content" : "hashline"
+        const effort = extractPlanEffort(content)
+        const effortField = effort === undefined ? {} : { effort }
         const lines = content.split("\n")
         if (selector !== "") {
           const sectionIndex = args.sectionIndex as number | undefined
@@ -143,8 +146,8 @@ export function createPlanReadTool(ctx?: MatrixxContext, cap: number = MAX_PLAN_
         const { selected, startIndex } = selection
         const render = (slice: string[]) =>
           format === "content"
-            ? { filePath: resolved, content: slice.join("\n") }
-            : { filePath: resolved, hashline: content === "" ? "" : renderHashline(slice, startIndex) }
+            ? { filePath: resolved, ...effortField, content: slice.join("\n") }
+            : { filePath: resolved, ...effortField, hashline: content === "" ? "" : renderHashline(slice, startIndex) }
         // The hard cap is now a CEILING for a span read, so this render budget is the
         // only thing between an over-cap plan and the context window.
         if (sizeOverCap !== null) {

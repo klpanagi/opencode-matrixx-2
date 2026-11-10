@@ -1,5 +1,6 @@
 import { existsSync, statSync } from "node:fs"
 import { z } from "zod"
+import { extractPlanEffort } from "../../features/agent-effort/surface"
 import { countPlanProgressFromContent, readPlanFile } from "../../features/mission-state"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import { readPlanFileSpan } from "../../features/mission-state/plan-storage"
@@ -81,11 +82,14 @@ export function createPlanTasksTool(ctx?: MatrixxContext, cap: number = MAX_PLAN
             ? undefined
             : (formatCompletionWarning(resolvePlanCompletion(content, frontMatter)) ?? undefined)
         const completionField = completionWarning === undefined ? {} : { completionWarning }
+        const effort = extractPlanEffort(content)
+        const effortField = effort === undefined ? {} : { effort }
         if (!overCap) {
           return JSON.stringify({
             filePath: resolved,
             progress: buildProgress(),
             ...completionField,
+            ...effortField,
             tasks: contract.tasks,
             dod: contract.dod,
           })
@@ -105,6 +109,7 @@ export function createPlanTasksTool(ctx?: MatrixxContext, cap: number = MAX_PLAN
             degraded,
             progress: buildProgress(),
             ...completionField,
+            ...effortField,
             tasks: view.tasks,
             dod: view.dod,
             ...(view.tasksTruncated
