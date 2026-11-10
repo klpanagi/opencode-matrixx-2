@@ -49,3 +49,11 @@ export type ModelPresets = z.infer<typeof ModelPresetsSchema>
 export const ActivePresetSchema = z.string().min(1)
 
 export type ActivePreset = z.infer<typeof ActivePresetSchema>
+
+/** Pointer to an external presets file (sibling matrixx.presets.jsonc by default).
+ * When set, presets are loaded from this file relative to the config file
+ * directory; `~` expands to the home directory. Inline `model_presets`
+ * entries override file entries per preset name. */
+export const ModelPresetsFileSchema = z.string().min(1)
+
+export type ModelPresetsFile = z.infer<typeof ModelPresetsFileSchema>

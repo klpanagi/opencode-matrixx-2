@@ -21,7 +21,7 @@ import { MatrixLoopConfigSchema } from "./matrix-loop"
 import { MatrixxSelfConfigSkillConfigSchema } from "./matrixx-self-config"
 import { MemoryConfigSchema } from "./memory"
 import { ComplexityDowngradesSchema, ModelRequirementsSchema } from "./model-config"
-import { ActivePresetSchema, ModelPresetsSchema } from "./model-presets"
+import { ActivePresetSchema, ModelPresetsFileSchema, ModelPresetsSchema } from "./model-presets"
 import { MorpheusConfigSchema } from "./morpheus"
 import { MorpheusAgentConfigSchema } from "./morpheus-agent"
 import { NotificationConfigSchema } from "./notification"
@@ -47,6 +47,10 @@ export const MatrixxConfigSchema = z.object({
   model_presets: ModelPresetsSchema.optional(),
   /** Name of the active preset in model_presets */
   active_preset: ActivePresetSchema.optional(),
+  /** Pointer to an external presets file (sibling matrixx.presets.jsonc by default).
+   * Presets load from this file relative to the config file directory; inline
+   * `model_presets` entries override file entries per preset name (deprecated-override). */
+  model_presets_file: ModelPresetsFileSchema.optional(),
   /** @deprecated no-op since v2.7 — the legacy todo system it toggled is removed.
    * Parses and is ignored; `tasks.enabled` is the only task-system switch.
    * Remove in v3.0. */
