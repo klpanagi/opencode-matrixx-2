@@ -49,6 +49,7 @@ async function setup(options: {
   models?: unknown
   config?: Parameters<typeof registerCompressWatchdog>[1]["config"]
   hookEnabled?: boolean
+  keywordTrigger?: Parameters<typeof registerCompressWatchdog>[1]["keywordTrigger"]
 }) {
   let handler: Handler | null = null
   const ctx = {
@@ -64,6 +65,7 @@ async function setup(options: {
   const registrations = await registerCompressWatchdog(ctx, {
     config: options.config ?? { enabled: true, abovePercent: 25, targetPercent: 10, cooldownTurns: 2 },
     ...(options.hookEnabled !== undefined ? { hookEnabled: options.hookEnabled } : {}),
+    ...(options.keywordTrigger !== undefined ? { keywordTrigger: options.keywordTrigger } : {}),
   })
   return {
     registrations,
@@ -187,6 +189,124 @@ describe("registerCompressWatchdog", () => {
 
     //#then
     expect(textOf(messages, 0)).toBe("please continue")
+  })
+})
+
+describe("registerCompressWatchdog keyword trigger", () => {
+  test("injects the directive when a keyword appears and usage is below the ceiling", async () => {
+    //#given 5% usage with a keyword in the user message
+    const { fire } = await setup({})
+    const messages = usageMessages(49_000)
+    ;(messages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when
+    await fire(makeEvent(messages))
+
+    //#then
+    const text = textOf(messages, 0)
+    expect(text.startsWith(COMPRESS_WATCHDOG_MARKER)).toBe(true)
+    expect(text).toContain("please dcp-compress now")
+  })
+
+  test("shares the cooldown with the usage path", async () => {
+    //#given a keyword injection on the first build
+    const { fire } = await setup({})
+    const first = usageMessages(49_000)
+    ;(first[0] as { text: string }).text = "please dcp-compress now"
+    await fire(makeEvent(first))
+
+    //#when a second build carries another keyword within the cooldown
+    const second = usageMessages(49_000)
+    ;(second[0] as { text: string }).text = "run dcp please"
+
+    //#then the second build stays silent
+    await fire(makeEvent(second))
+    expect(textOf(first, 0)).toContain(COMPRESS_WATCHDOG_MARKER)
+    expect(textOf(second, 0)).toBe("run dcp please")
+  })
+
+  test("skips when the message already carries the marker", async () => {
+    //#given a marked keyword message
+    const { fire } = await setup({})
+    const messages = usageMessages(49_000)
+    ;(messages[0] as { text: string }).text = `please dcp-compress ${COMPRESS_WATCHDOG_MARKER}`
+
+    //#when
+    await fire(makeEvent(messages))
+
+    //#then
+    expect(textOf(messages, 0)).toBe(`please dcp-compress ${COMPRESS_WATCHDOG_MARKER}`)
+  })
+
+  test("usage path wins when both fire and the keyword path does not double-inject", async () => {
+    //#given usage above the ceiling plus a keyword
+    const { fire } = await setup({})
+    const messages = usageMessages(299_000)
+    ;(messages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when
+    await fire(makeEvent(messages))
+
+    //#then exactly one directive is injected
+    const text = textOf(messages, 0)
+    expect(text.split(COMPRESS_WATCHDOG_MARKER).length - 1).toBe(2)
+    expect(text).toContain("please dcp-compress now")
+  })
+
+  test("never injects via keyword into a subagent session", async () => {
+    //#given a registered subagent session with keyword and low usage
+    registerSubagentSession("ses_main", "ses_parent")
+    const { fire } = await setup({})
+    const messages = usageMessages(49_000)
+    ;(messages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when
+    await fire(makeEvent(messages))
+
+    //#then
+    expect(textOf(messages, 0)).toBe("please dcp-compress now")
+  })
+
+  test("never injects via keyword when the compress tool is absent", async () => {
+    //#given low usage and a keyword but no compress tool
+    const { fire } = await setup({})
+    const messages = usageMessages(49_000)
+    ;(messages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when
+    await fire(makeEvent(messages, {}))
+
+    //#then
+    expect(textOf(messages, 0)).toBe("please dcp-compress now")
+  })
+
+  test("keywordTrigger disabled leaves the keyword silent but the usage path working", async () => {
+    //#given a disabled keyword trigger
+    const { fire } = await setup({ keywordTrigger: { enabled: false } })
+    const keywordMessages = usageMessages(49_000)
+    ;(keywordMessages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when a keyword arrives below the ceiling
+    await fire(makeEvent(keywordMessages))
+
+    //#then no keyword injection, but high usage still injects
+    expect(textOf(keywordMessages, 0)).toBe("please dcp-compress now")
+    const highUsage = usageMessages(299_000)
+    await fire(makeEvent(highUsage))
+    expect(textOf(highUsage, 0)).toContain(COMPRESS_WATCHDOG_MARKER)
+  })
+
+  test("skips the keyword path when usage is unreadable", async () => {
+    //#given a keyword but an unresolvable model window
+    const { fire } = await setup({ models: [{ providerID: "other", id: "x", limit: { context: 128_000 } }] })
+    const messages = usageMessages(299_000)
+    ;(messages[0] as { text: string }).text = "please dcp-compress now"
+
+    //#when
+    await fire(makeEvent(messages))
+
+    //#then
+    expect(textOf(messages, 0)).toBe("please dcp-compress now")
   })
 })
 

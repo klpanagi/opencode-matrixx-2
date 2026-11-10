@@ -3059,7 +3059,15 @@
             "enabled": true,
             "abovePercent": 25,
             "targetPercent": 10,
-            "cooldownTurns": 2
+            "cooldownTurns": 2,
+            "keywordTrigger": {
+              "enabled": true,
+              "keywords": [
+                "dcp-compress",
+                "compress context",
+                "run dcp"
+              ]
+            }
           },
           "type": "object",
           "properties": {
@@ -3084,13 +3092,47 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 9007199254740991
+            },
+            "keywordTrigger": {
+              "default": {
+                "enabled": true,
+                "keywords": [
+                  "dcp-compress",
+                  "compress context",
+                  "run dcp"
+                ]
+              },
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "type": "boolean"
+                },
+                "keywords": {
+                  "default": [
+                    "dcp-compress",
+                    "compress context",
+                    "run dcp"
+                  ],
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "enabled",
+                "keywords"
+              ],
+              "additionalProperties": false
             }
           },
           "required": [
             "enabled",
             "abovePercent",
             "targetPercent",
-            "cooldownTurns"
+            "cooldownTurns",
+            "keywordTrigger"
           ],
           "additionalProperties": false
         }
