@@ -228,7 +228,7 @@ describe("niobe hook", () => {
       // then - standalone verification reminder appended
       expect(output.output).toContain("Task completed successfully")
       expect(output.output).toContain("MANDATORY:")
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       
       cleanupMessageStorage(sessionID)
     })
@@ -267,7 +267,7 @@ describe("niobe hook", () => {
       expect(output.output).toContain("SUBAGENT WORK COMPLETED")
       expect(output.output).toContain("test-plan")
       expect(output.output).toContain("LIE")
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       
       cleanupMessageStorage(sessionID)
     })
@@ -449,7 +449,7 @@ describe("niobe hook", () => {
       )
 
       // then - should include session_id instructions and verification
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       expect(output.output).toContain("[x]")
       expect(output.output).toContain("MANDATORY:")
       
@@ -484,8 +484,8 @@ describe("niobe hook", () => {
 
         // then
         expect(output.output).toContain("ORCHESTRATOR, not an IMPLEMENTER")
-        expect(output.output).toContain("task")
-        expect(output.output).toContain("task")
+        expect(output.output).toContain("subagent")
+        expect(output.output).toContain("subagent")
       })
 
       test("should append delegation reminder when orchestrator edits outside .matrixx/", async () => {

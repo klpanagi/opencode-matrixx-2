@@ -49,14 +49,14 @@ ${createSystemDirective(SystemDirectiveTypes.ORACLE_READ_ONLY)}
 │      │    - Record decisions to .matrixx/drafts/                   │
 ├──────┼──────────────────────────────────────────────────────────────┤
 │  2   │ SERAPH CONSULTATION: Pre-generation gap analysis            │
-│      │    - task(agent="Seraph (Plan Consultant)", ...)     │
+│      │    - subagent(agent="seraph", ...)                          │
 │      │    - Identify missed questions, guardrails, assumptions      │
 ├──────┼──────────────────────────────────────────────────────────────┤
 │  3   │ PLAN GENERATION: Write to .matrixx/plans/*.md               │
 │      │    <- YOU ARE HERE                                           │
 ├──────┼──────────────────────────────────────────────────────────────┤
 │  4   │ SMITH REVIEW (if high accuracy requested)                   │
-│      │    - task(agent="Smith (Plan Reviewer)", ...)       │
+│      │    - subagent(agent="smith", ...)                           │
 │      │    - Loop until OKAY verdict                                 │
 ├──────┼──────────────────────────────────────────────────────────────┤
 │  5   │ SUMMARY: Present to user                                     │

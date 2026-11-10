@@ -1,0 +1,93 @@
+# Native Subagent Migration Notes
+
+Matrixx is migrating delegation from the legacy `task(...)` / `delegate_task`
+calling convention to the native `subagent(...)` tool. During the migration
+window both work; legacy delegation will be removed in a future release.
+
+## Syntax map (old → new)
+
+| Old (legacy) | New (native) |
+|---|---|
+| `task(category="source", ...)` | `subagent(agent="mouse-source", ...)` — same for `construct`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission` |
+| `task(subagent_type="oracle", ...)` | `subagent(agent="oracle", ...)` — same for `trinity`, `operator`, `sentinel`, `niobe` (see note) |
+| `run_in_background=true/false` | `background=true/false` |
+| `session_id` (subagent input key) | `sessionID` |
+| `.task_id` (result handle) | `.sessionID` |
+| `background_output(task_id="...")` | `session_read(session_id="...")` |
+| `background_wait_all(...)` | `subagent_control(action="wait", session_id="<child-session-id>")` |
+| `background_cancel(...)` | `subagent_control(action="cancel", session_id="<child-session-id>")` |
+
+`load_skills=[...]` and `complexity=N` stay as keys: the matrixx
+subagent-policy transformer consumes them (skill content is prepended,
+`complexity` may downgrade the model) and strips them before execution.
+Never inline skill content yourself.
+
+`subagent(agent="niobe")` is rejected by design — Niobe only runs via
+`/start-work`. Plan-file creation still routes to `oracle`.
+
+## Spawn semantics
+
+```typescript
+subagent(agent="mouse-source", description="Implement login", background=true, prompt="...")
+```
+
+- `agent` (required): which agent runs the work.
+- `description`: short 3–5 word title for progress display.
+- `prompt`: full instructions — subagents are stateless, include all context.
+- `background=true`: async fan-out. The parent session **auto-receives a
+  completion message** containing the child output — no polling tool.
+- `background=false` (default): sync inline, result returns directly.
+- `sessionID`: resume/continue an existing child (see below).
+- `model`: optional override (downgrade-only via `complexity`).
+
+## Output retrieval
+
+1. Read the auto-injected completion message (default path for
+   `background=true` children).
+2. `session_read(session_id="<child-session-id>")` — full child transcript.
+3. `session_search` / `session_info` — find or inspect child sessions.
+
+## Continue an existing child
+
+```typescript
+subagent(agent="<original-agent>", sessionID="<child-session-id>", prompt="<follow-up>")
+```
+
+Continuation requires all three: the same `agent`, the child `sessionID`,
+and the follow-up `prompt`.
+
+## Cancel / wait
+
+Via the `subagent_control` tool:
+
+```typescript
+subagent_control(action="cancel", session_id="<child-session-id>")
+subagent_control(action="wait", session_id="<child-session-id>", timeout=120)
+```
+
+`timeout` defaults to 60s, max 600s.
+
+## Depth limit
+
+Nested delegation is capped. Set in `opencode.jsonc`:
+
+```jsonc
+{
+  "experimental": {
+    "subagent_depth": 3
+  }
+}
+```
+
+- This is a **top-level `experimental` key, not a matrixx key**; restart
+  OpenCode after changing it.
+- Why 3: orchestrator → specialist → sub-specialist. Deeper nesting is
+  denied with an explanatory message.
+- Matrixx cannot set this programmatically (the V2 plugin API has no
+  config writer) — users must set it themselves.
+
+## Coexistence
+
+Legacy `task(...)` delegation still works during the migration window and
+will be removed in a future release. New prompts, skills, and templates
+use `subagent(...)` exclusively.

@@ -51,7 +51,7 @@ describe("category-skill-reminder hook", () => {
 
       // then - reminder should be injected
       expect(output.output).toContain("[Category+Skill Reminder]")
-      expect(output.output).toContain("task")
+      expect(output.output).toContain("subagent")
 
       clearSessionAgent(sessionID)
     })

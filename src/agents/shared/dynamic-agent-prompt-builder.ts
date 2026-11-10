@@ -260,7 +260,7 @@ ${builtinRows.join("\n")}`
 
   return `### Category + Skills Delegation System
 
-**task() combines categories and skills for optimal task execution.**
+**subagent() combines agents and skills for optimal task execution.**
 
 #### Available Categories (Domain-Optimized Models)
 
@@ -314,8 +314,8 @@ SKILL EVALUATION for "[skill-name]":
 ### Delegation Pattern
 
 \`\`\`typescript
-task(
-  category="[selected-category]",
+subagent(
+  agent="[selected-agent]",
   load_skills=["skill-1", "skill-2"],  // Include ALL relevant skills — ESPECIALLY user-installed ones
   prompt="..."
 )
@@ -323,7 +323,7 @@ task(
 
 **ANTI-PATTERN (will produce poor results):**
 \`\`\`typescript
-task(category="...", load_skills=[], run_in_background=false, prompt="...")  // Empty load_skills without justification
+subagent(agent="...", load_skills=[], background=false, prompt="...")  // Empty load_skills without justification
 \`\`\``
 }
 
@@ -350,7 +350,7 @@ ${useWhen.map((w) => `| ${w} | Oracle FIRST, then implement |`).join("\n")}
 ${avoidWhen.map((w) => `- ${w}`).join("\n")}
 
 ### HARD ROUTING RULE — Plan File Creation (NON-NEGOTIABLE):
-- ANY task that creates or edits \`.matrixx/plans/*.md\` MUST use \`task(subagent_type='oracle')\` — NEVER \`task(category='...')\` / Mouse
+- ANY task that creates or edits \`.matrixx/plans/*.md\` MUST use \`subagent(agent='oracle')\` — NEVER \`subagent(agent='...')\` / Mouse
 - ANY prompt containing \`Oracle plan\`, \`work plan\`, \`proposal\`, \`TL;DR\`, \`root cause\`, \`pure-host\`, \`fix options\` or similar planning language MUST route to \`oracle\`
 - Mouse is a leaf executor and CANNOT produce plans. Oracle owns all plan generation. Mouse → Oracle is a violation (extra hop, diluted context).
 - If you already created tasks for research + drafting, the drafting task MUST still be \`oracle\`, not \`mouse\`.
@@ -405,19 +405,19 @@ export function buildNiobeReferralSection(): string {
   return `<Niobe_Usage>
 ## Niobe — Session Orchestrator (/start-work-only)
 
-Niobe is a /start-work-only session agent — it orchestrates work via a session until ALL tasks in a todo list are done. Niobe is NOT callable via task().
+Niobe is a /start-work-only session agent — it orchestrates work via a session until ALL tasks in a todo list are done. Niobe is NOT callable via subagent().
 
 ### WHEN to Refer:
 
 | Trigger | Action |
 | User provides a todo list path (.matrixx/plans/{name}.md) | /start-work FIRST, then Niobe orchestrates |
-| Multiple tasks need to be completed in sequence or parallel | /start-work, NOT task() |
-| Work requires coordination across multiple specialized agents | /start-work, NOT task() |
+| Multiple tasks need to be completed in sequence or parallel | /start-work, NOT subagent() |
+| Work requires coordination across multiple specialized agents | /start-work, NOT subagent() |
 | Todo list path provided OR multiple tasks requiring multi-agent orchestration | /start-work |
 
 ### HARD ROUTING RULE — Niobe Referral (NON-NEGOTIABLE):
-- ANY task that executes \`.matrixx/plans/*.md\` MUST use \`/start-work\` — NEVER \`task(subagent_type="niobe")\`
-- Niobe is excluded from the task-delegation list by design. Do NOT attempt \`task(subagent_type="niobe")\` — it will be rejected. Use \`/start-work\` instead.
+- ANY task that executes \`.matrixx/plans/*.md\` MUST use \`/start-work\` — NEVER \`subagent(agent="niobe")\`
+- Niobe is excluded from the subagent-delegation list by design. Do NOT attempt \`subagent(agent="niobe")\` — it will be rejected. Use \`/start-work\` instead.
 
 ### Usage Pattern:
 Niobe owns todo-list execution end to end. Invoke /start-work with the plan path so Niobe can decompose and orchestrate the work across specialized agents.

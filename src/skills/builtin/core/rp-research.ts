@@ -62,9 +62,9 @@ For each round, spawn 4 parallel background agents. Each agent gets ONLY its dir
 ### Direction 1: Local Code (trinity agent)
 
 \`\`\`
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   description="Research code: <lead>",
   prompt="""
 Search the local codebase for implementations, patterns, and references related to: <CURRENT_LEAD>
@@ -83,15 +83,15 @@ Flag any claims that seem contested or unverifiable by reading alone.
 ### Direction 2: Documentation (operator agent)
 
 \`\`\`
-task(
-  subagent_type="operator",
-  run_in_background=true,
+subagent(
+  agent="operator",
+  background=true,
   description="Research docs: <lead>",
   prompt="""
 Research documentation and knowledge base files related to: <CURRENT_LEAD>
 
 Read AGENTS.md files, README.md, doc/ directories, and inline documentation.
-For library/framework docs delegate via task(operator) for context7 resolve→query (context7_resolve-library-id then context7_query-docs); do NOT call context7 or websearch directly.
+For library/framework docs delegate via subagent(agent="operator") for context7 resolve→query (context7_resolve-library-id then context7_query-docs); do NOT call context7 or websearch directly.
 
 OUTPUT: Structured findings from docs with source attribution.
 Flag any claims that contradict other sources.
@@ -101,9 +101,9 @@ Flag any claims that contradict other sources.
 ### Direction 3: Web (operator agent)
 
 \`\`\`
-task(
-  subagent_type="operator",
-  run_in_background=true,
+subagent(
+  agent="operator",
+  background=true,
   description="Research web: <lead>",
   prompt="""
 Research the web for information about: <CURRENT_LEAD>
@@ -122,9 +122,9 @@ Flag any contested claims or conflicting information.
 ### Direction 4: OSS Repos (operator agent)
 
 \`\`\`
-task(
-  subagent_type="operator",
-  run_in_background=true,
+subagent(
+  agent="operator",
+  background=true,
   description="Research OSS: <lead>",
   prompt="""
 Search open source repositories for implementations related to: <CURRENT_LEAD>
@@ -143,7 +143,7 @@ Flag any patterns that seem contested or deprecated.
 
 ### Collect Results
 
-After all 4 agents complete, collect via \`background_output(task_id="...")\`:
+After all 4 agents complete, collect via \`session_read(session_id="...")\`:
 1. Merge findings into \`round-<N>-findings.md\`
 2. Extract new EXPAND leads → append to \`leads.md\`
 3. Extract contested claims → append to \`contested-claims.md\`
@@ -174,9 +174,9 @@ Record convergence state in \`convergence-log.md\` with round number and novelty
 If \`contested-claims.md\` is non-empty after convergence, verify each claim:
 
 \`\`\`
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   description="Verify claim: <summary>",
   prompt="""
 Verify this contested claim by examining code:

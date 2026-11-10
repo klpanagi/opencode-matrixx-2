@@ -80,7 +80,7 @@ For multi-task plans, run a lightweight per-task gate BEFORE dependents start â€
 
 ## Phase 1: Launch 6 Agents
 
-Launch ALL 6 in a single turn. Every agent uses \`run_in_background=true\`. No sequential launches. No waiting between them.
+Launch ALL 6 in a single turn. Every agent uses \`background=true\`. No sequential launches. No waiting between them.
 
 **Oracle agents receive everything in the prompt** (they cannot read files or run commands). Include DIFF + FILE_CONTENTS + all context directly in the prompt text.
 
@@ -91,9 +91,9 @@ Launch ALL 6 in a single turn. Every agent uses \`run_in_background=true\`. No s
 ### Agent 1: Goal & Constraint Verification (Oracle) - MAIN
 
 \`\`\`
-task(
-  subagent_type="oracle",
-  run_in_background=true,
+subagent(
+  agent="oracle",
+  background=true,
   load_skills=[],
   description="Verify implementation against original goal and constraints",
   prompt="""
@@ -155,9 +155,9 @@ OUTPUT FORMAT:
 ### Agent 2: QA via App Execution (unspecified-high) - MAIN
 
 \`\`\`
-task(
-  category="unspecified-high",
-  run_in_background=true,
+subagent(
+  agent="unspecified-high",
+  background=true,
   load_skills=["playwright", "dev-browser"],
   description="QA by actually running and using the application",
   prompt="""
@@ -204,9 +204,9 @@ OUTPUT FORMAT:
 ### Agent 3: Code Quality Review (Oracle) - MAIN
 
 \`\`\`
-task(
-  subagent_type="oracle",
-  run_in_background=true,
+subagent(
+  agent="oracle",
+  background=true,
   load_skills=[],
   description="Review overall code quality, patterns, and architecture",
   prompt="""
@@ -258,9 +258,9 @@ OUTPUT FORMAT:
 ### Agent 4: Security Review (Oracle) - SUB
 
 \`\`\`
-task(
-  subagent_type="oracle",
-  run_in_background=true,
+subagent(
+  agent="oracle",
+  background=true,
   load_skills=[],
   description="Security-focused review of implementation changes",
   prompt="""
@@ -306,9 +306,9 @@ OUTPUT FORMAT:
 ### Agent 5: Context Mining (unspecified-high) - MAIN
 
 \`\`\`
-task(
-  category="unspecified-high",
-  run_in_background=true,
+subagent(
+  agent="unspecified-high",
+  background=true,
   load_skills=["git-master"],
   description="Mine all accessible contexts for missed requirements or background knowledge",
   prompt="""
@@ -374,9 +374,9 @@ OUTPUT FORMAT:
 ### Agent 6: AI Slop Detection (unspecified-high) - SUP
 
 \`\`\`
-task(
-  category="unspecified-high",
-  run_in_background=true,
+subagent(
+  agent="unspecified-high",
+  background=true,
   load_skills=["remove-ai-slops"],
   description="Detect AI-generated code smells in changes",
   prompt="""
@@ -420,7 +420,7 @@ OUTPUT FORMAT:
 
 After launching all 6 agents in one turn, **end your response**. Wait for system notifications as each agent completes.
 
-Collect via \`background_output(task_id="...")\` as each completes. Track verdicts:
+Collect via \`session_read(session_id="...")\` as each completes. Track verdicts:
 
 | Agent | Verdict | Notes |
 |-------|---------|-------|

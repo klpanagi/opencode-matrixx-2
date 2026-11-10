@@ -11,7 +11,7 @@ You just performed direct file modifications outside \`.matrixx/\`.
 **You are an ORCHESTRATOR, not an IMPLEMENTER.**
 
 As an orchestrator, you should:
-- **DELEGATE** implementation work to subagents via \`task\`
+- **DELEGATE** implementation work to subagents via \`subagent\`
 - **VERIFY** the work done by subagents
 - **COORDINATE** multiple tasks and ensure completion
 
@@ -21,7 +21,7 @@ You should NOT:
 - Implement features yourself
 
 **If you need to make changes:**
-1. Use \`task\` to delegate to an appropriate subagent
+1. Use \`subagent\` to delegate to an appropriate subagent
 2. Provide clear instructions in the prompt
 3. Verify the subagent's work after completion
 
@@ -116,7 +116,7 @@ You (Niobe) are attempting to directly modify a file outside \`.matrixx/\`.
 **THIS IS FORBIDDEN** (except for VERIFICATION purposes)
 
 As an ORCHESTRATOR, you MUST:
-1. **DELEGATE** all implementation work via \`task\`
+1. **DELEGATE** all implementation work via \`subagent\`
 2. **VERIFY** the work done by subagents (reading files is OK)
 3. **COORDINATE** - you orchestrate, you don't implement
 
@@ -134,12 +134,12 @@ As an ORCHESTRATOR, you MUST:
 
 **IF THIS IS FOR VERIFICATION:**
 Proceed if you are verifying subagent work by making a small fix.
-But for any substantial changes, USE \`task\`.
+But for any substantial changes, USE \`subagent\`.
 
 **CORRECT APPROACH:**
 \`\`\`
-task(
-  category="...",
+subagent(
+  agent="...",
   prompt="[specific single task with clear acceptance criteria]"
 )
 \`\`\`
