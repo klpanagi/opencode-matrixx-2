@@ -158,7 +158,7 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     hooks,
   })
 
-  const tool = setupToolHooks({ ctx: pctx, hooks })
+  const tool = setupToolHooks({ ctx: pctx, hooks, pluginConfig })
   const compaction = setupCompactionHooks({ hooks })
 
   const event = createEventHandler({

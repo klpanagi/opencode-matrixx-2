@@ -15,6 +15,8 @@ import type { SessionContextCarrier } from "../../shared/session/session-context
 import type { DomainHooks } from "../setup-domains"
 import type { MatrixxContext } from "./context"
 import { resolveSessionAgent } from "./session-agent-resolver"
+import type { SubagentPolicyDeps } from "./subagent-policy"
+import { applySubagentPolicy } from "./subagent-policy"
 
 // Module-level regex constants for the slashcommand branches. Precompiled
 // once at module load (Task T1.6) so the regex template `.compile()` cost
@@ -29,11 +31,12 @@ const COMPLETION_PROMISE_RE = /--completion-promise=["']?([^"'\s]+)["']?/i
 export function createToolExecuteBeforeHandler(args: {
   ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
+  subagentPolicy?: SubagentPolicyDeps
 }): (
   input: { tool: string; sessionID: string; callID: string },
   output: { args: Record<string, unknown>; message?: string },
 ) => Promise<void> {
-  const { ctx, hooks } = args
+  const { ctx, hooks, subagentPolicy } = args
 
   // Cache the 15 fast-fail hook function references once at handler
   // creation. Without this, every invocation of the returned handler
@@ -117,12 +120,12 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // Wave 3 (8 hooks): MUTATOR — must run sequentially to preserve
     //   mutation order. Specifically:
   //   - 4 hooks CONCAT to output.args.prompt (oracleMdOnly,
-    //     mouseNotepad, niobeHook, softwareDevEnforcement). Parallel writes would stomp
+    //     mouseNotepad, niobeHook, subagentPolicy, softwareDevEnforcement). Parallel writes would stomp
     //     each other (both read prompt from the same starting state).
     //   - nonInteractiveEnv REWRITES output.args.command (line 58) and
     //     REPLACES output.message; running it before other mutators is
     //     required so that downstream hooks see the rewritten command.
-    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook -> softwareDevEnforcement
+    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook -> subagentPolicy -> softwareDevEnforcement
     //     is critical: softwareDevEnforcement's prepended <system-reminder> must be
     //     the outermost (closest to the model), oracleMdOnly's
     //     prepended PLANNING_CONSULT_WARNING the innermost (closest to the
@@ -135,7 +138,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // This is the T1.4 optimization: removes the 5s-timeout network call
     // from the synchronous wait chain.
     let resolvePromise: Promise<string | undefined> | undefined
-    if (input.tool === "task") { // coexistence: native `subagent` passes through untouched; only plugin `task` gets category->mouse normalization
+    if (input.tool === "task") { // plugin `task` gets category->mouse normalization; native `subagent` is transformed by applySubagentPolicy below (Wave 3)
       const argsObject = output.args
       const category = typeof argsObject.category === "string" ? argsObject.category : undefined
       const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
@@ -159,6 +162,12 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     await oracleMdOnlyHook?.(input, output)
     await mouseNotepadHook?.(input, output)
     await niobeHookHook?.(input, output)
+    if (input.tool === "subagent") {
+      // Subagent policy (Wave-3 mutator): skill prepend -> complexity rewrite -> enforcement.
+      // Runs BEFORE softwareDevEnforcementHook so enforcement's prepended
+      // <system-reminder> stays outermost (last prepend wins outermost).
+      applySubagentPolicy(input, output, subagentPolicy)
+    }
     await softwareDevEnforcementHook?.(input, output) // software-dev-enforcement: native subagent guard (append-only, Wave-3 outermost)
 
     const wave3Message = typeof output.message === "string" ? output.message : undefined
