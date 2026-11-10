@@ -3,7 +3,7 @@ import {
   spawnNativeSubagent,
   waitNativeSubagent,
 } from "../../shared/session/native-subagent"
-import { resolveSkillContent } from "../delegate-task/skill-resolver"
+import { resolveSkillContent } from "../../shared/subagent/skill-resolver"
 import type {
   BddPipelineStageName,
   BddPipelineStageResult,

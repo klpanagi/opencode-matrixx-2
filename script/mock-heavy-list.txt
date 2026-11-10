@@ -36,9 +36,6 @@ tests/shared/dcp-switch-profile.test.ts
 tests/shared/opencode-message-dir.test.ts
 tests/config/model-migration.test.ts
 tests/tools/preset/tools.test.ts
-tests/tools/delegate-task/sync-task.timeout.test.ts
-tests/tools/delegate-task/sync-retry-once.test.ts
-tests/tools/delegate-task/timing.test.ts
 tests/shared/opencode-http-api.test.ts
 tests/hooks/runtime-fallback/index.test.ts
 tests/tools/task/task-create-batch.test.ts
@@ -46,4 +43,3 @@ tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
 tests/hooks/background-notification/hook.test.ts
-tests/tools/delegate-task/sync-unregister-arity.test.ts

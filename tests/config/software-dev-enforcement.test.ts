@@ -7,11 +7,10 @@ import {
   SOFTWARE_DEV_ENFORCEMENT_DEFAULT_EXECUTORS_SUBSET,
   SOFTWARE_DEV_ENFORCEMENT_DEFAULT_ORCHESTRATORS,
 } from "../../src/config/schema"
-import { requireTddEnforcerForCodeWriting } from "../../src/tools/delegate-task/tools"
 import {
   isSoftwareDevExecutorTarget,
   isSoftwareDevOrchestratorTarget,
-} from "../../src/tools/delegate-task/software-dev-enforcement"
+} from "../../src/shared/software-dev-enforcement/targets"
 
 describe("softwareDevEnforcement schema defaults", () => {
   test("defaults to full built-in behavior when input is empty", () => {
@@ -89,65 +88,6 @@ describe("softwareDevEnforcement schema defaults", () => {
 })
 
 describe("softwareDevEnforcement precedence", () => {
-  test("enabled=false exempts source (master kill-switch)", () => {
-    //#given
-    const category = "source"
-    const loadSkills: string[] = []
-
-    //#when
-    const error = requireTddEnforcerForCodeWriting(category, loadSkills, {
-      enforcement: { enabled: false },
-    })
-
-    //#then
-    expect(error).toBeNull()
-  })
-
-  test("explicit disabled_skills tdd-enforcer entry fails closed with actionable error", () => {
-    //#given
-    const category = "source"
-    const loadSkills = ["tdd-enforcer"]
-
-    //#when
-    const error = requireTddEnforcerForCodeWriting(category, loadSkills, {
-      disabledSkills: new Set(["tdd-enforcer"]),
-    })
-
-    //#then
-    expect(typeof error).toBe("string")
-    expect(String(error)).toContain("tdd-enforcer")
-    expect(String(error)).toContain("disabled_skills")
-  })
-
-  test("explicit disabled entry wins over enabled=false (highest precedence)", () => {
-    //#given
-    const category = "source"
-    const loadSkills: string[] = []
-
-    //#when
-    const error = requireTddEnforcerForCodeWriting(category, loadSkills, {
-      enforcement: { enabled: false },
-      disabledSkills: new Set(["tdd-enforcer"]),
-    })
-
-    //#then
-    expect(typeof error).toBe("string")
-    expect(String(error)).toContain("disabled_skills")
-  })
-
-  test("tdd_enforcer off does not flow into the new guard (invariant preserved)", () => {
-    //#given
-    const category = "source"
-    const loadSkills: string[] = []
-
-    //#when
-    const error = requireTddEnforcerForCodeWriting(category, loadSkills, {})
-
-    //#then
-    expect(typeof error).toBe("string")
-    expect(String(error)).toContain("tdd-enforcer")
-  })
-
   test("resolveSoftwareDevEnforcement applies field values over built-in defaults", () => {
     //#given
     const input = { orchestrators: ["oracle"], mode: "autoAppend" as const }

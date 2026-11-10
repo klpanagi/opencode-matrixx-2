@@ -1,5 +1,5 @@
 import type { CategoriesConfig, CategoryConfig } from "../../config/schema"
-import { DEFAULT_CATEGORIES } from "../../tools/delegate-task/constants"
+import { DEFAULT_CATEGORIES } from "../../shared/subagent/delegation-constants"
 
 /**
  * Merge default and user categories, filtering out disabled ones.

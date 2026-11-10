@@ -4,9 +4,9 @@ import {
   readConnectedProvidersCache,
   readProviderModelsCache,
 } from "../../shared"
+import { CATEGORY_DESCRIPTIONS } from "../../shared/subagent/delegation-constants"
 import { mergeCategories } from "../../shared/tool/merge-categories"
 import type { BuiltinSkill } from "../../skills"
-import { CATEGORY_DESCRIPTIONS } from "../../tools/delegate-task/constants"
 import { CIPHER_PROMPT_METADATA, createCipherAgent } from "../definitions/cipher"
 import { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "../definitions/construct"
 import { createKeymakerAgent } from "../definitions/keymaker"

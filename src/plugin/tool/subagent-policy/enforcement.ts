@@ -3,8 +3,8 @@ import {
   SOFTWARE_DEV_ENFORCEMENT_MARKER,
 } from "../../../hooks/software-dev-enforcement/constants"
 import { resolveSoftwareDevEnforcementContent } from "../../../shared/software-dev-enforcement/payload"
-// Phase 5: relocate to shared — src/tools/delegate-task/ is deleted in Phase 5.
-import { isCodeWritingCategory } from "../../../tools/delegate-task/constants"
+// Phase 5: shared modules relocated to src/shared/subagent/ (delegate-task/ deleted).
+import { isCodeWritingCategory } from "../../../shared/subagent/delegation-constants"
 import { mouseCategoryFor } from "./complexity-rewrite"
 
 export type EnforcementResolverFn = typeof resolveSoftwareDevEnforcementContent

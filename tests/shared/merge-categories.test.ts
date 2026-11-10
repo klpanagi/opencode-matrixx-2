@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { DEFAULT_CATEGORIES } from "../../src/tools/delegate-task/constants"
+import { DEFAULT_CATEGORIES } from "../../src/shared/subagent/delegation-constants"
 import { mergeCategories } from "../../src/shared/tool/merge-categories"
 
 describe("mergeCategories", () => {

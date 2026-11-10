@@ -1,8 +1,8 @@
 import { MOUSE_SUBAGENT_IDS } from "../../../agents/definitions/mouse-subagents"
-// Phase 5: relocate to shared — src/tools/delegate-task/ is deleted in Phase 5.
-import { resolveComplexityModel } from "../../../tools/delegate-task/complexity-constants"
-import { autoScoreComplexity } from "../../../tools/delegate-task/complexity-scorer"
-import type { ComplexityLevel } from "../../../tools/delegate-task/complexity-types"
+// Phase 5: shared modules relocated to src/shared/subagent/ (delegate-task/ deleted).
+import { resolveComplexityModel } from "../../../shared/subagent/complexity-constants"
+import { autoScoreComplexity } from "../../../shared/subagent/complexity-scorer"
+import type { ComplexityLevel } from "../../../shared/subagent/complexity-types"
 
 export const COMPLEXITY_KEY = "complexity"
 

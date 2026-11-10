@@ -1,5 +1,5 @@
-// Phase 5: relocate to shared — src/tools/delegate-task/ is deleted in Phase 5.
-import { resolveSkillContent } from "../../../tools/delegate-task/skill-resolver"
+// Phase 5: shared modules relocated to src/shared/subagent/ (delegate-task/ deleted).
+import { resolveSkillContent } from "../../../shared/subagent/skill-resolver"
 
 export const LOAD_SKILLS_KEY = "load_skills"
 

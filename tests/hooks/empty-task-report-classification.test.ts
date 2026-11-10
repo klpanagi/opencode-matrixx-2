@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test"
 import { createEmptyTaskResponseDetectorHook } from "../../src/hooks/empty-task-response-detector"
-import { DIAGNOSTIC_CAUSES } from "../../src/tools/delegate-task/diagnostic-shape"
 
 describe("empty report classification", () => {
   test("detector warning classifies three causes with fixes", async () => {
@@ -14,12 +13,5 @@ describe("empty report classification", () => {
     expect(output.output).toContain("Permission-denied")
     expect(output.output).toContain("Empty model output")
     expect(output.output).toContain("/tmp/matrixx.log")
-  })
-  test("diagnostic causes point at log and code-mode", () => {
-    //#given the shared diagnostic causes string
-    //#when inspected
-    //#then it classifies causes and points at the log
-    expect(DIAGNOSTIC_CAUSES).toContain("code-mode")
-    expect(DIAGNOSTIC_CAUSES).toContain("/tmp/matrixx.log")
   })
 })

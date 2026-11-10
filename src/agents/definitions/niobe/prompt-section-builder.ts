@@ -7,8 +7,8 @@
 
 import type { CategoryConfig } from "../../../config/schema"
 import { truncateDescription } from "../../../shared/compaction/truncate-description"
+import { CATEGORY_DESCRIPTIONS } from "../../../shared/subagent/delegation-constants"
 import { mergeCategories } from "../../../shared/tool/merge-categories"
-import { CATEGORY_DESCRIPTIONS } from "../../../tools/delegate-task/constants"
 import { type AvailableAgent, type AvailableSkill, formatCustomSkillsBlock } from "../../shared/dynamic-agent-prompt-builder"
 
 export const getCategoryDescription = (name: string, userCategories?: Record<string, CategoryConfig>) =>

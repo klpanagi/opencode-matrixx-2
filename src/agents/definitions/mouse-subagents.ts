@@ -1,4 +1,4 @@
-import { CATEGORY_DESCRIPTIONS, CATEGORY_PROMPT_APPENDS } from "../../tools/delegate-task/constants"
+import { CATEGORY_DESCRIPTIONS, CATEGORY_PROMPT_APPENDS } from "../../shared/subagent/delegation-constants"
 import type { AgentConfig } from "../shared/agent-config"
 import { parseModelRef } from "../shared/agent-config"
 import type { AgentFactory, AgentMode, AgentPromptMetadata } from "../shared/types"

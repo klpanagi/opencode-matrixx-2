@@ -7,10 +7,10 @@ import {
   spawnNativeSubagent,
   waitNativeSubagent,
 } from "../../shared/session/native-subagent"
+import { resolveSkillContent } from "../../shared/subagent/skill-resolver"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
 import { createBddParseGherkinTool } from "../bdd-parse-gherkin/tools"
-import { resolveSkillContent } from "../delegate-task/skill-resolver"
 import { buildAnalysisReport } from "./analysis-report"
 import { BDD_PIPELINE_DESCRIPTION, PIPELINE_REQUIRED_OUTPUTS } from "./constants"
 import { resolveFeaturePaths } from "./feature-resolver"

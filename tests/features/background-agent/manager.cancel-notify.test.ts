@@ -6,15 +6,7 @@ import { join } from "node:path"
 import { BackgroundManager } from "../../../src/features/background-agent/manager/manager"
 import type { BackgroundTask } from "../../../src/features/background-agent/types"
 import type { NativePluginContext } from "../../../src/shared/session/session-context-source"
-import { createBackgroundCancel } from "../../../src/tools/background-task/create-background-cancel"
 import { recordNotifications, type NotificationRecorder } from "./harness/manager-runtime.fixture"
-
-const TOOL_CONTEXT = {
-  sessionID: "ses_parent",
-  messageID: "msg_1",
-  agent: "task",
-  abort: new AbortController().signal,
-}
 
 function buildCtx(dir: string): NativePluginContext {
   const native = {
@@ -80,23 +72,6 @@ describe("cancel notification (T-22 bug 5)", () => {
     expect(task.status).toBe("cancelled")
     expect(recorder.calls.length).toBe(1)
     expect(notificationText(recorder.calls[0])).not.toContain("**Error:**")
-  })
-
-  test("background_cancel single-task path emits exactly one notification", async () => {
-    //#given
-    const task = seedTask(manager, "bg_cancel_tool", "ses_child_tool")
-    const client = {
-      session: { interrupt: async () => undefined },
-    } as unknown as Parameters<typeof createBackgroundCancel>[1]
-    const tool = createBackgroundCancel(manager, client)
-
-    //#when
-    const result = await tool.execute({ taskId: task.id }, TOOL_CONTEXT)
-
-    //#then
-    expect(String(result)).toContain("Task cancelled successfully")
-    expect(task.status).toBe("cancelled")
-    expect(recorder.calls.length).toBe(1)
   })
 
   test("cancelAllForSession keeps bulk stop silent", async () => {
