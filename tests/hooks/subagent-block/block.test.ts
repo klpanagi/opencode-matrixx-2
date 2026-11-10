@@ -5,20 +5,19 @@ import { createSubagentBlockHook } from "../../../src/hooks/subagent-block/hook"
 describe("subagent-block hook", () => {
   const mockCtx = {} as Parameters<typeof createSubagentBlockHook>[0]
 
-  test("blocks generic subagent tool call with task redirect", async () => {
+  test("passes through generic subagent tool call (coexistence cutover)", async () => {
     //#given
     const hook = createSubagentBlockHook(mockCtx)
     const output: { args: Record<string, unknown>; message?: string } = { args: {} }
 
     //#when
-    const act = () =>
-      hook["tool.execute.before"](
-        { tool: "subagent", sessionID: "test", callID: "1" },
-        output
-      )
+    await hook["tool.execute.before"](
+      { tool: "subagent", sessionID: "test", callID: "1" },
+      output,
+    )
 
     //#then
-    await expect(act()).rejects.toThrow(/task/)
+    expect(output.args).toEqual({})
   })
 
   test("allowlisted agent passes through without throw", async () => {

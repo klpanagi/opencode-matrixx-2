@@ -168,7 +168,9 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
           if (override.parameters !== undefined) tool.input = override.parameters
         })
       }
-      hideNativeSubagentTool(editor)
+      // Phase 2 coexistence cutover: native subagent stays visible so task(...) and
+      // subagent(...) work side by side. Call neutralized, helper retained for Phase 5 deletion.
+      // hideNativeSubagentTool(editor)
     }),
   )
 

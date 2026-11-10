@@ -20,4 +20,16 @@ describe("hideNativeSubagentTool", () => {
     //#then
     expect(true).toBe(true)
   })
+  test("assemble tool.transform no longer hides subagent (coexistence cutover)", async () => {
+    //#given
+    const source = await Bun.file("src/plugin/setup-domains/assemble.ts").text()
+    const activeCall = source
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//"))
+      .some((line) => line.includes("hideNativeSubagentTool(editor)"))
+    //#when
+    const hides = activeCall
+    //#then
+    expect(hides).toBe(false)
+  })
 })

@@ -1,7 +1,6 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
 import { createSubagentBlockHook } from "../../../src/hooks/subagent-block/hook"
-import { BLOCK_MESSAGE } from "../../../src/hooks/subagent-block/constants"
 
 describe("subagent-block allowlist bypass for named agent", () => {
   const mockCtx = {} as Parameters<typeof createSubagentBlockHook>[0]
@@ -42,7 +41,7 @@ describe("subagent-block allowlist bypass for named agent", () => {
     expect(output.args).toEqual({ subagent_type: "my-helper" })
   })
 
-  test("non-allowlisted agent still blocked with truthful message", async () => {
+  test("non-allowlisted agent passes through (coexistence cutover)", async () => {
     //#given
     const hook = createSubagentBlockHook(mockCtx, { allowlist: ["sentinel"] })
     const output: { args: Record<string, unknown>; message?: string } = {
@@ -50,13 +49,12 @@ describe("subagent-block allowlist bypass for named agent", () => {
     }
 
     //#when
-    const act = () =>
-      hook["tool.execute.before"](
-        { tool: "subagent", sessionID: "ses_other", callID: "3" },
-        output,
-      )
+    await hook["tool.execute.before"](
+      { tool: "subagent", sessionID: "ses_other", callID: "3" },
+      output,
+    )
 
     //#then
-    await expect(act()).rejects.toThrow(BLOCK_MESSAGE)
+    expect(output.args).toEqual({ agent: "other-agent" })
   })
 })

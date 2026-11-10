@@ -58,7 +58,22 @@ function identityCandidates(input: { sessionID?: string }, args: Record<string, 
   return found
 }
 
+// Phase 2 coexistence cutover: native subagent and task delegation work side by
+// side, so the block is retired. Always true until Phase 5 deletes this hook, its
+// tests, and the hideNativeSubagentTool helper in setup-domains/assemble.ts.
+// The deny(subagent) agent rulesets still gate spawn via core permission.assert.
+function isCoexistenceCutoverActive(): boolean {
+  return true
+}
+
 export function createSubagentBlockHook(ctx: SubagentBlockContext, options?: SubagentBlockHookOptions): Hooks {
+  if (isCoexistenceCutoverActive()) {
+    return {
+      "tool.execute.before": async (): Promise<void> => {
+        return
+      },
+    }
+  }
   const allowlist = collectAllowlist(ctx, options)
   return {
     "tool.execute.before": async (input, output): Promise<void> => {
