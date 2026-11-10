@@ -72,6 +72,10 @@
       "type": "string",
       "minLength": 1
     },
+    "model_presets_file": {
+      "type": "string",
+      "minLength": 1
+    },
     "new_task_system_enabled": {
       "type": "boolean"
     },
