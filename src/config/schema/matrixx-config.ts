@@ -3,6 +3,7 @@ import { AnyMcpNameSchema } from "../../mcps/types"
 import { AgentDefinitionsConfigSchema } from "./agent-definitions"
 import { BuiltinAgentNameSchema, BuiltinSkillNameSchema } from "./agent-names"
 import { AgentOverridesSchema } from "./agent-overrides"
+import { AgentsFilePointerSchema } from "./agents-file"
 import { AssemblyConfigSchema } from "./assembly"
 import { BabysittingConfigSchema } from "./babysitting"
 import { BackgroundTaskConfigSchema } from "./background-task"
@@ -51,6 +52,8 @@ export const MatrixxConfigSchema = z.object({
    * Presets load from this file relative to the config file directory; inline
    * `model_presets` entries override file entries per preset name (deprecated-override). */
   model_presets_file: ModelPresetsFileSchema.optional(),
+  /** Pointer to an external agents file (sibling matrixx.agents.jsonc by default). */
+  agents_file: AgentsFilePointerSchema.optional(),
   /** @deprecated no-op since v2.7 — the legacy todo system it toggled is removed.
    * Parses and is ignored; `tasks.enabled` is the only task-system switch.
    * Remove in v3.0. */
@@ -68,7 +71,9 @@ export const MatrixxConfigSchema = z.object({
    * act on. The key itself stays, and is honoured for tool names OpenCode
    * still registers. */
   disabled_tools: z.array(z.string()).optional(),
+  /** @deprecated Prefer matrixx.agents.jsonc (agents_file); inline entries override file entries per name (field-level deep merge). */
   agents: AgentOverridesSchema.optional(),
+  /** @deprecated Prefer matrixx.agents.jsonc (agents_file); inline entries override file entries per name (field-level deep merge). */
   categories: CategoriesConfigSchema.optional(),
   morpheus_agent: MorpheusAgentConfigSchema.optional(),
   comment_checker: CommentCheckerConfigSchema.optional(),

@@ -1,6 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { type MatrixxConfig, MatrixxConfigSchema } from "./config";
+import {
+  loadAgentsFile,
+  mergeFileAndInlineAgents,
+  resolveAgentsFilePath,
+} from "./config/agents-file-loader";
 import { migrateMatrixxConfig } from "./config/migrations/model-migration";
 import { applyActivePreset } from "./config/preset-applier";
 import {
@@ -99,6 +104,17 @@ export function parseConfigPartially(
 
   return partialConfig as MatrixxConfig;
 }
+export function attachFileAgents(config: MatrixxConfig, configPath: string): MatrixxConfig {
+  const agentsPath = resolveAgentsFilePath(configPath, config.agents_file);
+  const loaded = loadAgentsFile(agentsPath);
+  if (loaded.error) {
+    addConfigLoadError({ path: agentsPath, error: loaded.error });
+  }
+  const merged = mergeFileAndInlineAgents(loaded.file, config.agents, config.categories);
+  if (merged === undefined) return config;
+  return { ...config, agents: merged.agents, categories: merged.categories };
+}
+
 function attachFilePresets(config: MatrixxConfig, configPath: string): MatrixxConfig {
   const presetsPath = resolvePresetsFilePath(configPath, config.model_presets_file);
   const loaded = loadPresetsFile(presetsPath);
@@ -124,7 +140,7 @@ function loadConfigFromPath(
 
       if (result.success) {
         log(`Config loaded from ${configPath}`, { agents: result.data.agents });
-        return migrateMatrixxConfig(attachFilePresets(result.data, configPath));
+        return migrateMatrixxConfig(attachFileAgents(attachFilePresets(result.data, configPath), configPath));
       }
 
       const errorMsg = result.error.issues
@@ -139,7 +155,7 @@ function loadConfigFromPath(
       const partialResult = parseConfigPartially(rawConfig);
       if (partialResult) {
         log(`Partial config loaded from ${configPath}`, { agents: partialResult.agents });
-        return migrateMatrixxConfig(attachFilePresets(partialResult, configPath));
+        return migrateMatrixxConfig(attachFileAgents(attachFilePresets(partialResult, configPath), configPath));
       }
 
       return null;

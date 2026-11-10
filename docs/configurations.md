@@ -168,6 +168,35 @@ Override built-in agent settings:
 
 Each agent supports: `model`, `temperature`, `top_p`, `prompt`, `prompt_append`, `tools`, `disable`, `description`, `mode`, `color`, `permission`, `category`, `variant`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `providerOptions`.
 
+
+### External agents file (`matrixx.agents.jsonc`)
+
+Agent overrides can live in a sibling `matrixx.agents.jsonc` file instead of inline `agents`/`categories` keys. Each config scope (user `~/.config/opencode/` and project `.opencode/`) loads its own sibling file; the sibling is consulted even when no pointer is set (falls back to `matrixx.agents.json` when no `.jsonc` exists).
+
+```jsonc
+// matrixx.agents.jsonc (next to matrixx.jsonc)
+{
+  "agents": { "oracle": { "model": "opencode/kimi-k2.5-free" } },
+  "categories": { "source": { "model": "opencode/kimi-k2.5-free" } }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `agents_file` | `string` | Pointer to an external agents file, resolved relative to the config file directory (`~` expands to the home directory, absolute paths honored). Defaults to the sibling `matrixx.agents.jsonc` per scope. |
+| `agents` | `object` | **Deprecated**: prefer `matrixx.agents.jsonc`. Inline entries override file entries per name (field-level deep merge). Still fully supported. |
+| `categories` | `object` | **Deprecated**: prefer `matrixx.agents.jsonc`. Same override semantics as `agents`. Still fully supported. |
+
+**Precedence** (weakest to strongest — inline entries override file entries field-by-field; arrays are replaced, `undefined` never clobbers):
+
+```
+1. User-scope file (`~/.config/opencode/matrixx.agents.jsonc` or pointer target)
+2. User-scope inline `agents`/`categories` (`~/.config/opencode/matrixx.jsonc`)
+3. Project-scope file (`<project>/.opencode/matrixx.agents.jsonc` or pointer target)
+4. Project-scope inline `agents`/`categories` (`<project>/.opencode/matrixx.jsonc`)
+```
+
+There is no auto-migration on load: inline keys are never rewritten. Move them explicitly with the setup migration helper (`migrateAgentsToFile`), which writes the sibling file, sets `agents_file`, and deletes the inline keys.
 ### Additional Agent Options
 | Option              | Type    | Description                                                                                     |
 | ------------------- | ------- | ----------------------------------------------------------------------------------------------- |
@@ -842,6 +871,35 @@ Add your own categories or override built-in ones:
 
 Each category supports: `model`, `temperature`, `top_p`, `maxTokens`, `thinking`, `reasoningEffort`, `textVerbosity`, `tools`, `prompt_append`, `variant`, `description`, `is_unstable_agent`.
 
+
+### External agents file (`matrixx.agents.jsonc`)
+
+Agent overrides can live in a sibling `matrixx.agents.jsonc` file instead of inline `agents`/`categories` keys. Each config scope (user `~/.config/opencode/` and project `.opencode/`) loads its own sibling file; the sibling is consulted even when no pointer is set (falls back to `matrixx.agents.json` when no `.jsonc` exists).
+
+```jsonc
+// matrixx.agents.jsonc (next to matrixx.jsonc)
+{
+  "agents": { "oracle": { "model": "opencode/kimi-k2.5-free" } },
+  "categories": { "source": { "model": "opencode/kimi-k2.5-free" } }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `agents_file` | `string` | Pointer to an external agents file, resolved relative to the config file directory (`~` expands to the home directory, absolute paths honored). Defaults to the sibling `matrixx.agents.jsonc` per scope. |
+| `agents` | `object` | **Deprecated**: prefer `matrixx.agents.jsonc`. Inline entries override file entries per name (field-level deep merge). Still fully supported. |
+| `categories` | `object` | **Deprecated**: prefer `matrixx.agents.jsonc`. Same override semantics as `agents`. Still fully supported. |
+
+**Precedence** (weakest to strongest — inline entries override file entries field-by-field; arrays are replaced, `undefined` never clobbers):
+
+```
+1. User-scope file (`~/.config/opencode/matrixx.agents.jsonc` or pointer target)
+2. User-scope inline `agents`/`categories` (`~/.config/opencode/matrixx.jsonc`)
+3. Project-scope file (`<project>/.opencode/matrixx.agents.jsonc` or pointer target)
+4. Project-scope inline `agents`/`categories` (`<project>/.opencode/matrixx.jsonc`)
+```
+
+There is no auto-migration on load: inline keys are never rewritten. Move them explicitly with the setup migration helper (`migrateAgentsToFile`), which writes the sibling file, sets `agents_file`, and deletes the inline keys.
 #### Category Temperature
 
 Each category can define a `temperature` that overrides the agent's default temperature for tasks routed through that category. This allows fine-grained control: use low temperature (0.1) for deterministic code generation, higher temperature (0.7) for creative tasks like documentation or brainstorming.
