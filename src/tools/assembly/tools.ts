@@ -1,19 +1,17 @@
 import { z } from "zod"
 import type { AssemblyConfig } from "../../config/schema/assembly"
-import type { BackgroundManager } from "../../features/background-agent/manager"
+import type { NativeSubagentClient } from "../../shared/session/native-subagent"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { executeAssembly } from "./assembly-executor"
 import { TOOL_DESCRIPTION } from "./tool-description"
 import { AssemblyArgsSchema } from "./types"
 
 export interface AssemblyToolOptions {
-  manager: BackgroundManager
+  client: NativeSubagentClient
   pluginConfig?: { assembly?: AssemblyConfig }
 }
 
-export function createAssemblyTool(
-  options: AssemblyToolOptions,
-): MatrixxToolDefinition {
+export function createAssemblyTool(options: AssemblyToolOptions): MatrixxToolDefinition {
   return defineTool("assembly", {
     description: TOOL_DESCRIPTION,
     args: {
@@ -26,11 +24,11 @@ export function createAssemblyTool(
       const parsed = AssemblyArgsSchema.parse(args)
 
       const output = await executeAssembly({
-        manager: options.manager,
+        client: options.client,
         args: parsed,
         config: options.pluginConfig?.assembly,
         sessionID: toolContext.sessionID,
-        messageID: toolContext.messageID,
+        signal: toolContext.abort,
       })
 
       return output.finalConsensus

@@ -178,7 +178,7 @@ export function createToolCatalog(args: {
   const assemblyEnabled = pluginConfig.assembly?.enabled !== false
   const assemblyTool = assemblyEnabled
     ? createAssemblyTool({
-        manager: managers.backgroundManager,
+        client: ctx,
         pluginConfig,
       })
     : null

@@ -1,16 +1,30 @@
-import type { BackgroundManager } from "../../features/background-agent/manager"
-import { delay } from "../../shared/runtime/delay"
+import {
+  type NativeSubagentClient,
+  spawnNativeSubagent,
+  waitNativeSubagent,
+} from "../../shared/session/native-subagent"
 import { POLL_INTERVAL_MS } from "./constants"
 import type { SynthesisResult, VoterResult } from "./types"
 
+export interface SynthesizeOptions {
+  timeoutMs?: number
+  pollIntervalMs?: number
+  signal?: AbortSignal
+}
+
+const SYNTHESIS_TIMEOUT_MS = 120_000
+
 export async function synthesizeResults(
-  manager: BackgroundManager,
+  client: NativeSubagentClient,
   question: string,
   voterResults: VoterResult[],
   round: number,
   parentSessionID: string,
-  parentMessageID: string,
+  options?: SynthesizeOptions,
 ): Promise<SynthesisResult> {
+  const timeoutMs = options?.timeoutMs ?? SYNTHESIS_TIMEOUT_MS
+  const pollIntervalMs = options?.pollIntervalMs ?? POLL_INTERVAL_MS
+
   const voterContext = voterResults
     .map(
       (v, i) => `--- Voter ${i + 1} (${v.modelLabel}) ---
@@ -52,65 +66,58 @@ This is round #${round}.
 - [Point 2]
 `
 
-  const synthesisTask = await manager.launch({
-    description: `Assembly synthesis round ${round}`,
-    prompt: synthesisPrompt,
+  const spawn = await spawnNativeSubagent(client, {
     agent: "mouse",
-    parentSessionID,
-    parentMessageID,
     model: {
       providerID: "anthropic",
       modelID: "claude-sonnet-4-20250514",
       temperature: 0.1,
     },
+    prompt: synthesisPrompt,
+    parentSessionID,
+    title: `assembly-synthesizer-round-${round}`,
   })
 
-  const deadline = Date.now() + 120_000
-
-  while (Date.now() < deadline) {
-    const current = manager.getTask(synthesisTask.id)
-    if (!current) break
-
-    if (current.status === "completed") {
-      return parseSynthesis(current.result ?? "", round)
+  if (!spawn.ok) {
+    return {
+      round,
+      consensus: `Synthesis failed: ${spawn.error}`,
+      confidence: "low",
+      disagreements: voterResults.filter((v) => v.status === "completed").map((v) => v.modelLabel),
     }
+  }
 
-    if (
-      current.status === "error" ||
-      current.status === "cancelled" ||
-      current.status === "interrupt"
-    ) {
-      return {
-        round,
-        consensus: `Synthesis failed: ${current.error ?? "Unknown"}`,
-        confidence: "low",
-        disagreements: voterResults
-          .filter((v) => v.status === "completed")
-          .map((v) => v.modelLabel),
-      }
+  const waited = await waitNativeSubagent(client, {
+    sessionID: spawn.sessionID,
+    timeoutMs,
+    pollIntervalMs,
+    signal: options?.signal,
+  })
+
+  if (waited.status === "completed") {
+    return parseSynthesis(waited.output ?? "", round)
+  }
+
+  if (waited.status === "timeout") {
+    return {
+      round,
+      consensus: "Synthesis timed out",
+      confidence: "low",
+      disagreements: voterResults.filter((v) => v.status === "completed").map((v) => v.modelLabel),
     }
-
-    await delay(POLL_INTERVAL_MS)
   }
 
   return {
     round,
-    consensus: "Synthesis timed out",
+    consensus: `Synthesis failed: ${waited.error ?? "Unknown"}`,
     confidence: "low",
-    disagreements: voterResults
-      .filter((v) => v.status === "completed")
-      .map((v) => v.modelLabel),
+    disagreements: voterResults.filter((v) => v.status === "completed").map((v) => v.modelLabel),
   }
 }
 
-function parseSynthesis(
-  text: string,
-  round: number,
-): SynthesisResult {
+function parseSynthesis(text: string, round: number): SynthesisResult {
   const confidenceMatch = text.match(/## Confidence Level\s*\n([^\n]+)/)
-  const confidenceRaw = (
-    confidenceMatch?.[1] ?? "medium"
-  ).toLowerCase()
+  const confidenceRaw = (confidenceMatch?.[1] ?? "medium").toLowerCase()
   const confidence =
     confidenceRaw.includes("high")
       ? ("high" as const)
@@ -118,15 +125,11 @@ function parseSynthesis(
         ? ("low" as const)
         : ("medium" as const)
 
-  const consensusMatch = text.match(
-    /## Consensus\s*\n([\s\S]*?)(?=\n## Confidence Level|\n## Key Agreements|\n$)/,
-  )
+  const consensusMatch = text.match(/## Consensus\s*\n([\s\S]*?)(?=\n## Confidence Level|\n## Key Agreements|\n$)/)
   const consensus = consensusMatch?.[1]?.trim() ?? text
 
   const disagreements: string[] = []
-  const disagreementsMatch = text.match(
-    /## Key Disagreements\s*\n([\s\S]*?)(?=\n## |$)/,
-  )
+  const disagreementsMatch = text.match(/## Key Disagreements\s*\n([\s\S]*?)(?=\n## |$)/)
   if (disagreementsMatch) {
     const lines = disagreementsMatch[1].trim().split("\n")
     for (const line of lines) {
@@ -137,4 +140,3 @@ function parseSynthesis(
 
   return { round, consensus, confidence, disagreements }
 }
-

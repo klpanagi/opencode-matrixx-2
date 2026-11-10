@@ -1,5 +1,5 @@
 import type { AssemblyConfig } from "../../config/schema/assembly"
-import type { BackgroundManager } from "../../features/background-agent/manager"
+import type { NativeSubagentClient } from "../../shared/session/native-subagent"
 import { DEFAULT_ROUNDS, DEFAULT_VOTERS } from "./constants"
 import { selectProviders } from "./provider-selector"
 import { synthesizeResults } from "./synthesizer"
@@ -7,11 +7,12 @@ import type { AssemblyArgs, SynthesisResult, VoterResult } from "./types"
 import { spawnVoters } from "./voter-spawner"
 
 export interface AssemblyExecutorInput {
-  manager: BackgroundManager
+  client: NativeSubagentClient
   args: AssemblyArgs
   config: AssemblyConfig | undefined
   sessionID: string
-  messageID: string
+  signal?: AbortSignal
+  timeouts?: { timeoutMs?: number; pollIntervalMs?: number }
 }
 
 export interface AssemblyOutput {
@@ -21,10 +22,8 @@ export interface AssemblyOutput {
   finalConsensus: string
 }
 
-export async function executeAssembly(
-  input: AssemblyExecutorInput,
-): Promise<AssemblyOutput> {
-  const { manager, args, config, sessionID, messageID } = input
+export async function executeAssembly(input: AssemblyExecutorInput): Promise<AssemblyOutput> {
+  const { client, args, config, sessionID } = input
 
   const voterCount = args.voters ?? config?.default_voters ?? DEFAULT_VOTERS
   const roundCount = args.rounds ?? config?.default_rounds ?? DEFAULT_ROUNDS
@@ -36,23 +35,16 @@ export async function executeAssembly(
 
   for (let round = 0; round < roundCount; round++) {
     if (round === 0) {
-      currentVoterResults = await spawnVoters(
-        manager,
-        args.question,
-        providers,
-        sessionID,
-        messageID,
-      )
+      currentVoterResults = await spawnVoters(client, args.question, providers, sessionID, {
+        ...input.timeouts,
+        signal: input.signal,
+      })
     }
 
-    const synthesis = await synthesizeResults(
-      manager,
-      args.question,
-      currentVoterResults,
-      round + 1,
-      sessionID,
-      messageID,
-    )
+    const synthesis = await synthesizeResults(client, args.question, currentVoterResults, round + 1, sessionID, {
+      ...input.timeouts,
+      signal: input.signal,
+    })
 
     synthesisRounds.push(synthesis)
 
@@ -74,11 +66,7 @@ export async function executeAssembly(
     question: args.question,
     voters: currentVoterResults,
     rounds: synthesisRounds,
-    finalConsensus: formatFinalConsensus(
-      args.question,
-      finalSynthesis,
-      currentVoterResults,
-    ),
+    finalConsensus: formatFinalConsensus(args.question, finalSynthesis, currentVoterResults),
   }
 }
 
