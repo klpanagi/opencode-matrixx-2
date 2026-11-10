@@ -1,4 +1,9 @@
-import type { BackgroundManager } from "../../features/background-agent/manager"
+import {
+  type NativeSubagentClient,
+  spawnNativeSubagent,
+  waitNativeSubagent,
+} from "../../shared/session/native-subagent"
+import { resolveSkillContent } from "../delegate-task/skill-resolver"
 import type {
   BddPipelineStageName,
   BddPipelineStageResult,
@@ -14,17 +19,13 @@ const STAGE_AGENT: Record<BddPipelineStageName, string> = {
   backend: "bdd-backend",
 }
 
-const STAGE_CATEGORY: Record<BddPipelineStageName, string> = {
-  tests: "source",
-  frontend: "construct",
-  backend: "source",
-}
-
 const STAGE_SKILLS: Record<BddPipelineStageName, string[]> = {
   tests: ["bdd-tests"],
   frontend: ["bdd-frontend"],
   backend: ["bdd-backend"],
 }
+
+export type SkillResolver = typeof resolveSkillContent
 
 function terminalStatusToStageStatus(status: string): BddPipelineStageStatus {
   if (status === "timeout") return "timeout"
@@ -80,88 +81,93 @@ function buildEmptyStage(stage: BddPipelineStageName, error?: string): BddPipeli
 }
 
 export interface SpawnSubagentOptions {
-  manager: BackgroundManager
+  client: NativeSubagentClient
   stage: BddPipelineStageName
   prompt: string
   contractPath: string
   parentSessionID: string
-  parentMessageID: string
-  parentAgent?: string
   abort?: AbortSignal
   outDir: string
+  skillResolver?: SkillResolver
 }
 
 export async function spawnStageSubagent(opts: SpawnSubagentOptions): Promise<BddPipelineStageResult> {
-  const { manager, stage, prompt, contractPath } = opts
-  const fullPrompt =
+  const { client, stage, prompt, contractPath } = opts
+  const resolve = opts.skillResolver ?? resolveSkillContent
+  const { content: skillContent } = resolve(STAGE_SKILLS[stage], {})
+  const basePrompt =
     `Contract JSON path: ${contractPath}\n` +
     `Output directory: ${opts.outDir}\n\n` +
     `${prompt}\n\n` +
     `When finished, return a JSON object on the LAST line of your output with this exact shape:\n` +
     `{"stage":"${stage}","files_created":[...absolute paths...],"tests_run":N,"tests_passed":N,"tests_failed":N,"test_output":"<first 200 lines of failing test output, or empty>","error":"<message or empty>"}`
+  // Phase 5: relocate skill-prepend to shared. Runtime spawns bypass the
+  // Task 1.2 transformer, so load_skills content is resolved and prepended here.
+  const fullPrompt =
+    skillContent && skillContent.length > 0 ? `${skillContent}\n\n${basePrompt}` : basePrompt
 
-  const task = await manager.launch({
-    description: `[bdd-pipeline] ${stage}`,
-    prompt: fullPrompt,
+  if (opts.abort?.aborted) {
+    return buildEmptyStage(stage, "aborted")
+  }
+
+  const spawned = await spawnNativeSubagent(client, {
     agent: STAGE_AGENT[stage],
+    prompt: fullPrompt,
     parentSessionID: opts.parentSessionID,
-    parentMessageID: opts.parentMessageID,
-    parentAgent: opts.parentAgent,
-    parentTools: undefined,
-    category: STAGE_CATEGORY[stage],
-    skills: STAGE_SKILLS[stage],
+    title: `[bdd-pipeline] ${stage}`,
+  })
+  if (!spawned.ok) {
+    return buildEmptyStage(stage, spawned.error)
+  }
+
+  const waited = await waitNativeSubagent(client, {
+    sessionID: spawned.sessionID,
+    timeoutMs: POLL_TIMEOUT_MS,
+    pollIntervalMs: POLL_INTERVAL_MS,
+    signal: opts.abort,
   })
 
-  const deadline = Date.now() + POLL_TIMEOUT_MS
-  while (true) {
-    if (opts.abort?.aborted) {
-      return buildEmptyStage(stage, "aborted")
+  if (opts.abort?.aborted) {
+    await client.session.interrupt({ sessionID: spawned.sessionID }).catch(() => undefined)
+    return buildEmptyStage(stage, "aborted")
+  }
+  if (waited.status === "timeout") {
+    return buildEmptyStage(stage, "poll timeout")
+  }
+  if (waited.status !== "completed") {
+    return {
+      stage,
+      status: terminalStatusToStageStatus(waited.error ?? "failed"),
+      filesCreated: [],
+      testsRun: 0,
+      testsPassed: 0,
+      testsFailed: 0,
+      testOutput: "",
+      error: waited.error ?? "subagent failed",
     }
-    const current = manager.getTask(task.id)
-    if (!current) {
-      return buildEmptyStage(stage, "task missing from manager")
+  }
+  const output = waited.output ?? ""
+  const payload = extractJsonPayload(output)
+  if (payload) {
+    return {
+      stage,
+      status: "completed",
+      filesCreated: asStringArray(payload.files_created),
+      testsRun: asNumber(payload.tests_run),
+      testsPassed: asNumber(payload.tests_passed),
+      testsFailed: asNumber(payload.tests_failed),
+      testOutput: typeof payload.test_output === "string" ? payload.test_output : "",
+      error: typeof payload.error === "string" && payload.error ? payload.error : undefined,
     }
-    const status: string = current.status
-    if (status === "completed" || status === "error" || status === "cancelled" || status === "interrupt" || status === "timeout") {
-      if (status === "completed") {
-        const payload = extractJsonPayload(current.result ?? "")
-        if (payload) {
-          return {
-            stage,
-            status: "completed",
-            filesCreated: asStringArray(payload.files_created),
-            testsRun: asNumber(payload.tests_run),
-            testsPassed: asNumber(payload.tests_passed),
-            testsFailed: asNumber(payload.tests_failed),
-            testOutput: typeof payload.test_output === "string" ? payload.test_output : "",
-            error: typeof payload.error === "string" && payload.error ? payload.error : undefined,
-          }
-        }
-        return {
-          stage,
-          status: "failed",
-          filesCreated: [],
-          testsRun: 0,
-          testsPassed: 0,
-          testsFailed: 0,
-          testOutput: current.result ?? "",
-          error: "subagent returned no parseable JSON report",
-        }
-      }
-      return {
-        stage,
-        status: terminalStatusToStageStatus(status),
-        filesCreated: [],
-        testsRun: 0,
-        testsPassed: 0,
-        testsFailed: 0,
-        testOutput: current.result ?? "",
-        error: current.error ?? `subagent status: ${status}`,
-      }
-    }
-    if (Date.now() > deadline) {
-      return buildEmptyStage(stage, "poll timeout")
-    }
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
+  }
+  return {
+    stage,
+    status: "failed",
+    filesCreated: [],
+    testsRun: 0,
+    testsPassed: 0,
+    testsFailed: 0,
+    testOutput: output,
+    error: "subagent returned no parseable JSON report",
   }
 }

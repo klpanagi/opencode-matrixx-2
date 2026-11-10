@@ -95,7 +95,7 @@ export function createToolCatalog(args: {
     ? {
         bdd_create_contract: createBddCreateContractTool(),
         bdd_parse_gherkin: createBddParseGherkinTool(),
-        bdd_pipeline_run: createBddPipelineTool({ manager: managers.backgroundManager }),
+        bdd_pipeline_run: createBddPipelineTool({ client: ctx }),
         bdd_validate_contract: createBddValidateContractTool(),
       }
     : {}

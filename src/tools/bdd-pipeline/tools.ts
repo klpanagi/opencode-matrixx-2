@@ -1,16 +1,21 @@
 import * as fs from "node:fs"
 import { resolve as resolvePath } from "node:path"
 import { z } from "zod"
-import type { BackgroundManager } from "../../features/background-agent/manager"
 import { type Contract, ContractSchema } from "../../features/bdd/schema"
+import {
+  type NativeSubagentClient,
+  spawnNativeSubagent,
+  waitNativeSubagent,
+} from "../../shared/session/native-subagent"
 import { defineTool, type MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { createBddCreateContractTool } from "../bdd-create-contract/tools"
 import { createBddParseGherkinTool } from "../bdd-parse-gherkin/tools"
+import { resolveSkillContent } from "../delegate-task/skill-resolver"
 import { buildAnalysisReport } from "./analysis-report"
 import { BDD_PIPELINE_DESCRIPTION, PIPELINE_REQUIRED_OUTPUTS } from "./constants"
 import { resolveFeaturePaths } from "./feature-resolver"
 import { runBddPipeline } from "./pipeline-runner"
-import { spawnStageSubagent } from "./subagent-runner"
+import { type SkillResolver, spawnStageSubagent } from "./subagent-runner"
 import type {
   BddPipelineContext,
   BddPipelineDeps,
@@ -23,13 +28,14 @@ import type {
 } from "./types"
 
 const ENRICH_AGENT = "mouse"
+const ENRICH_SKILLS = ["bdd-contract"]
 const ENRICH_POLL_TIMEOUT_MS = 600_000
 const ENRICH_POLL_INTERVAL_MS = 250
 
 export function createBddPipelineTool(opts: {
-  manager: BackgroundManager
+  client: NativeSubagentClient
 }): MatrixxToolDefinition {
-  const { manager } = opts
+  const { client } = opts
   const parseTool = createBddParseGherkinTool()
   const createTool = createBddCreateContractTool()
 
@@ -67,7 +73,7 @@ export function createBddPipelineTool(opts: {
         const results: BddPipelineResult[] = []
         for (const featurePath of featurePaths) {
           const deps = makeDeps({
-            manager,
+            client,
             parseTool,
             createTool,
             parentSessionID: ctx.sessionID,
@@ -101,7 +107,7 @@ export function createBddPipelineTool(opts: {
 }
 
 function makeDeps(args: {
-  manager: BackgroundManager
+  client: NativeSubagentClient
   parseTool: MatrixxToolDefinition
   createTool: MatrixxToolDefinition
   parentSessionID: string
@@ -135,17 +141,15 @@ function makeDeps(args: {
       return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as CreateContractResult)
     },
     enrichContract: async (contractPath: string): Promise<EnrichContractResult> => {
-      return runEnrich(contractPath, args)
+      return runEnrich(args.client, contractPath, args)
     },
     spawnSubagent: async (stage: BddPipelineStageName, prompt: string, _contract: Contract, ctx: BddPipelineContext) => {
       return spawnStageSubagent({
-        manager: args.manager,
+        client: args.client,
         stage,
         prompt,
         contractPath: `${ctx.outDir}/contract.json`,
         parentSessionID: args.parentSessionID,
-        parentMessageID: args.parentMessageID,
-        parentAgent: args.parentAgent,
         abort: args.abort,
         outDir: ctx.outDir,
       })
@@ -185,42 +189,50 @@ function dummyCtx(args: { parentSessionID: string; parentMessageID: string; pare
   }
 }
 
-async function runEnrich(
+export async function runEnrich(
+  client: NativeSubagentClient,
   contractPath: string,
   args: {
-    manager: BackgroundManager
     parentSessionID: string
-    parentMessageID: string
-    parentAgent: string
     abort?: AbortSignal
+    skillResolver?: SkillResolver
   },
 ): Promise<EnrichContractResult> {
-  const prompt =
+  if (args.abort?.aborted) return { success: false, error: "aborted" }
+  const resolve = args.skillResolver ?? resolveSkillContent
+  const { content: skillContent } = resolve(ENRICH_SKILLS, {})
+  const basePrompt =
     `Enrich the contract at ${contractPath}.\n` +
     `Read it, infer the api/ui/state/assumptions annotations from the feature content, ` +
     `and write the enriched contract back to the same path.`
-  const task = await args.manager.launch({
-    description: "[bdd-pipeline] contract enrich",
-    prompt,
+  // Phase 5: relocate skill-prepend to shared. Runtime spawns bypass the
+  // Task 1.2 transformer, so load_skills content is resolved and prepended here.
+  const prompt =
+    skillContent && skillContent.length > 0 ? `${skillContent}\n\n${basePrompt}` : basePrompt
+  const spawned = await spawnNativeSubagent(client, {
     agent: ENRICH_AGENT,
+    prompt,
     parentSessionID: args.parentSessionID,
-    parentMessageID: args.parentMessageID,
-    parentAgent: args.parentAgent,
-    category: "source",
-    skills: ["bdd-contract"],
+    title: "[bdd-pipeline] contract enrich",
   })
-  const deadline = Date.now() + ENRICH_POLL_TIMEOUT_MS
-  while (true) {
-    if (args.abort?.aborted) return { success: false, error: "aborted" }
-    const current = args.manager.getTask(task.id)
-    if (!current) return { success: false, error: "task missing from manager" }
-    const status: string = current.status
-    if (status === "completed") break
-    if (status === "error" || status === "cancelled" || status === "interrupt" || status === "timeout") {
-      return { success: false, error: current.error ?? `enrich status: ${status}` }
-    }
-    if (Date.now() > deadline) return { success: false, error: "enrich poll timeout" }
-    await new Promise((r) => setTimeout(r, ENRICH_POLL_INTERVAL_MS))
+  if (!spawned.ok) {
+    return { success: false, error: spawned.error }
+  }
+  const waited = await waitNativeSubagent(client, {
+    sessionID: spawned.sessionID,
+    timeoutMs: ENRICH_POLL_TIMEOUT_MS,
+    pollIntervalMs: ENRICH_POLL_INTERVAL_MS,
+    signal: args.abort,
+  })
+  if (args.abort?.aborted) {
+    await client.session.interrupt({ sessionID: spawned.sessionID }).catch(() => undefined)
+    return { success: false, error: "aborted" }
+  }
+  if (waited.status === "timeout") {
+    return { success: false, error: "enrich poll timeout" }
+  }
+  if (waited.status !== "completed") {
+    return { success: false, error: waited.error ?? "enrich failed" }
   }
   if (!fs.existsSync(contractPath)) {
     return { success: false, error: "contract path missing after enrichment" }
