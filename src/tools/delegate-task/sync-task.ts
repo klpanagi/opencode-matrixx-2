@@ -225,7 +225,6 @@ export async function executeSyncTask(
           sessionID,
           config: executorCtx.effortConfig,
           startedAt: startTime,
-          parentID: args.parentID,
           parentSessionID: parentContext.sessionID,
         })
         if (effortMeta !== null) {

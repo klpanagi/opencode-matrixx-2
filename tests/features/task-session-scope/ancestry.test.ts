@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { hasIncompleteTasksForSession, readSessionTasks } from "../../../src/features/task-session-scope"
+import { walkSessionAncestry } from "../../../src/features/task-session-scope/ancestry"
 import { TaskObjectSchema } from "../../../src/tools/task/types"
 
 function id(n: number): string {
@@ -275,5 +276,82 @@ describe("staleAfterMs override", () => {
       //#then the expanded-but-stale grandchild does not hold the gate open
       expect(pending).toBe(false)
     })
+  })
+})
+
+describe("walkSessionAncestry", () => {
+  test("returns the session chain starting at the given session, oldest last", () => {
+    //#given a three-link session chain
+    const getParent = (id: string): string | undefined =>
+      ({ ses_child: "ses_mid", ses_mid: "ses_root" })[id]
+
+    //#when the walk starts at the child
+    const chain = walkSessionAncestry("ses_child", getParent)
+
+    //#then every link is returned in order
+    expect(chain).toEqual(["ses_child", "ses_mid", "ses_root"])
+  })
+
+  test("stops after the depth bound instead of walking the whole chain", () => {
+    //#given a five-link chain
+    const getParent = (id: string): string | undefined =>
+      ({ ses_0: "ses_1", ses_1: "ses_2", ses_2: "ses_3", ses_3: "ses_4" })[id]
+
+    //#when the walk runs with the default depth of 3
+    const chain = walkSessionAncestry("ses_0", getParent)
+
+    //#then only three sessions are returned
+    expect(chain).toEqual(["ses_0", "ses_1", "ses_2"])
+  })
+
+  test("a custom depth narrows the walk", () => {
+    //#given a three-link chain
+    const getParent = (id: string): string | undefined =>
+      ({ ses_child: "ses_mid", ses_mid: "ses_root" })[id]
+
+    //#when the caller caps the walk at one hop
+    const chain = walkSessionAncestry("ses_child", getParent, 1)
+
+    //#then only the start session is returned
+    expect(chain).toEqual(["ses_child"])
+  })
+
+  test("a session-parent cycle terminates instead of hanging", () => {
+    //#given a cyclic parent lookup
+    const getParent = (id: string): string | undefined =>
+      ({ ses_child: "ses_a", ses_a: "ses_b", ses_b: "ses_child" })[id]
+
+    //#when the walk runs (a non-terminating walk would hang here)
+    const chain = walkSessionAncestry("ses_child", getParent)
+
+    //#then it returned with each link visited once
+    expect(chain).toEqual(["ses_child", "ses_a", "ses_b"])
+  })
+
+  test("an empty start session resolves to no chain", () => {
+    //#given a lookup that is never consulted
+    const getParent = (_id: string): string | undefined => {
+      throw new Error("must not be called")
+    }
+
+    //#when the walk starts empty
+    const chain = walkSessionAncestry("", getParent)
+
+    //#then nothing is returned
+    expect(chain).toEqual([])
+  })
+
+  test("a throwing lookup fails soft to the chain collected so far", () => {
+    //#given a lookup that throws past the first hop
+    const getParent = (id: string): string | undefined => {
+      if (id === "ses_child") return "ses_mid"
+      throw new Error("registry unavailable")
+    }
+
+    //#when the walk runs
+    const chain = walkSessionAncestry("ses_child", getParent)
+
+    //#then it returned the chain collected so far instead of throwing
+    expect(chain).toEqual(["ses_child", "ses_mid"])
   })
 })

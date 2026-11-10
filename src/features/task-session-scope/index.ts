@@ -1,4 +1,9 @@
-export { type AncestryOptions, DEFAULT_ANCESTRY_DEPTH, expandByParentAncestry } from "./ancestry"
+export {
+  type AncestryOptions,
+  DEFAULT_ANCESTRY_DEPTH,
+  expandByParentAncestry,
+  walkSessionAncestry,
+} from "./ancestry"
 export {
   hasIncompleteTasksForSession,
   readSessionTasks,
