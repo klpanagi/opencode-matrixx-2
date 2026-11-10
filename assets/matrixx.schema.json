@@ -76,6 +76,10 @@
       "type": "string",
       "minLength": 1
     },
+    "agents_file": {
+      "type": "string",
+      "minLength": 1
+    },
     "new_task_system_enabled": {
       "type": "boolean"
     },
