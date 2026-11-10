@@ -205,10 +205,11 @@ export function createSentinelAgent(model: string): AgentConfig {
     model: parseModelRef(model),
     skills: SENTINEL_SECURITY_SKILLS,
     request: { body: { temperature: 0.1 } },
-    // Read-only invariant: edit deny is never lifted. task deny blocks delegation;
+    // Read-only invariant: edit deny is never lifted. task deny blocks legacy delegation calls
+    // (subagent spawn is allowed but this agent never delegates - it audits directly);
     // task_* tracking allow is derived via deriveTaskPermissions (task-permissions.ts:62-64).
-    // NEVER grant edit or subagent.
-    permissions: denyActions(["edit", "subagent", "task"]),
+    // NEVER grant edit.
+    permissions: denyActions(["edit", "task"]),
     system: SENTINEL_SYSTEM_PROMPT,
   }
 

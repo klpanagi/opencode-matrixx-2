@@ -189,7 +189,7 @@ export function createMerovingianAgent(model: string): AgentConfig {
     model: parseModelRef(model),
     skills: MEROVINGIAN_SKILLS,
     request: { body: { temperature: 0.1 } },
-    permissions: denyActions(["edit", "subagent", "task"]),
+    permissions: denyActions(["edit", "task"]),
     system: MEROVINGIAN_SYSTEM_PROMPT,
   }
 

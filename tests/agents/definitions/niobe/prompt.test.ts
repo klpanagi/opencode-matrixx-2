@@ -5,14 +5,13 @@ import { NIOBE_GPT_SYSTEM_PROMPT } from "../../../../src/agents/definitions/niob
 /**
  * RED pins for the Niobe orchestrator prompt wording fix.
  *
- * Root cause: the prompts say `Use task() with EITHER category OR agent
- * (mutually exclusive)` but the plugin task tool's real args are `category`
- * OR `subagent_type` (src/tools/delegate-task/tools.ts:102-129). The word
- * "agent" primes models to call the native OpenCode `subagent` tool whose
- * required key is literally `agent` -> core zod error "agent: Missing key".
+ * Native-subagent migration: the prompts say `Use subagent() with `agent`
+ * (a `mouse-<category>` worker or a named agent)`. The native OpenCode
+ * `subagent` tool's required key is literally `agent` (`mouse-<category>`
+ * workers replace the retired plugin task tool's `category` arg).
  *
- * GREEN (later task, src-only): reword the delegation line to name
- * `subagent_type` and add an explicit NEVER-native-subagent sentence.
+ * GREEN (this task, src+tests): reword the delegation line to name `agent`
+ * and add an explicit ALWAYS-native-subagent sentence.
  */
 
 const PROMPT_SOURCES: ReadonlyArray<{ readonly name: string; readonly prompt: string }> = [
@@ -22,29 +21,29 @@ const PROMPT_SOURCES: ReadonlyArray<{ readonly name: string; readonly prompt: st
 
 for (const source of PROMPT_SOURCES) {
   describe(`Niobe orchestrator prompt [${source.name}]`, () => {
-    test("names the real plugin task arg subagent_type", () => {
+    test("names the native subagent arg agent", () => {
       //#given
       const prompt: string = source.prompt
 
       //#when
-      const hasRealArg: boolean = prompt.includes("subagent_type")
+      const hasRealArg: boolean = prompt.includes('agent="mouse-') || prompt.includes('agent="[')
 
       //#then
       expect(hasRealArg).toBe(true)
     })
 
-    test("does NOT contain the leaky bare phrase OR agent", () => {
+    test("does NOT contain the retired plugin task tool call", () => {
       //#given
       const prompt: string = source.prompt
 
       //#when
-      const leaksBareAgentWord: boolean = prompt.includes("OR agent")
+      const leaksLegacyTaskCall: boolean = /\btask\s*\(/.test(prompt)
 
       //#then
-      expect(leaksBareAgentWord).toBe(false)
+      expect(leaksLegacyTaskCall).toBe(false)
     })
 
-    test("contains a NEVER-native-subagent sentence", () => {
+    test("contains an ALWAYS-native-subagent sentence", () => {
       //#given
       const prompt: string = source.prompt
 
@@ -53,7 +52,7 @@ for (const source of PROMPT_SOURCES) {
 
       //#then
       expect(lowerPrompt).toContain(
-        "never call the native subagent tool; always use the plugin task tool",
+        "always use the native subagent tool for delegation",
       )
     })
   })

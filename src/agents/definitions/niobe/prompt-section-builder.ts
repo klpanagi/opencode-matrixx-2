@@ -41,16 +41,16 @@ export function buildCategorySection(userCategories?: Record<string, CategoryCon
     return `| \`${name}\` | ${temp} | ${getCategoryDescription(name, userCategories)} |`
   })
 
-  return `##### Option A: Use CATEGORY (for domain-specific work)
+  return `##### Option A: Use MOUSE WORKER (for domain-specific work)
 
 Categories spawn \`Mouse-{category}\` with optimized settings:
 
-| Category | Temperature | Best For |
+| Worker | Temperature | Best For |
 |----------|-------------|----------|
 ${categoryRows.join("\n")}
 
 \`\`\`typescript
-task(category="[category-name]", load_skills=[...], run_in_background=false, prompt="...")
+subagent(agent="mouse-[category-name]", load_skills=[...], background=false, prompt="...")
 \`\`\``
 }
 
@@ -108,7 +108,7 @@ Read each skill's description and ask: "Does this skill's domain overlap with my
 
 **Usage:**
 \`\`\`typescript
-task(category="[category]", load_skills=["skill-1", "skill-2"], run_in_background=false, prompt="...")
+subagent(agent="mouse-[category]", load_skills=["skill-1", "skill-2"], background=false, prompt="...")
 \`\`\`
 
 **IMPORTANT:**
@@ -121,7 +121,7 @@ export function buildDecisionMatrix(agents: AvailableAgent[], userCategories?: R
   const allCategories = mergeCategories(userCategories)
 
   const categoryRows = Object.entries(allCategories).map(([name]) =>
-    `| ${getCategoryDescription(name, userCategories)} | \`category="${name}", load_skills=[...]\` |`
+    `| ${getCategoryDescription(name, userCategories)} | \`agent="mouse-${name}", load_skills=[...]\` |`
   )
 
    const agentRows = agents.map((a) => {
@@ -136,5 +136,5 @@ export function buildDecisionMatrix(agents: AvailableAgent[], userCategories?: R
 ${categoryRows.join("\n")}
 ${agentRows.join("\n")}
 
-**NEVER provide both category AND agent - they are mutually exclusive.**`
+**Provide exactly one agent — a mouse-<category> worker or a named agent.**`
 }

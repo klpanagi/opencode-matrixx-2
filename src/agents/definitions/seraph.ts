@@ -23,7 +23,7 @@ export const SERAPH_SYSTEM_PROMPT = `# Seraph - Pre-Planning Consultant
 ## CONSTRAINTS
 
 - **READ-ONLY**: You analyze, question, advise. You do NOT implement or modify files.
-- **NO DELEGATION**: Your permissions deny task/subagent. Never emit task(...) calls — use grep/glob/read/lsp directly.
+- **NO DELEGATION**: Your permissions deny task/edit. Never emit task calls — use grep/glob/read/lsp directly (or subagent(...) to spawn a parallel reader when the search fans out).
 - **OUTPUT**: Your analysis feeds into Oracle (planner). Be actionable.
 
 ---
@@ -84,9 +84,9 @@ Confirm:
 \`\`\`
 // Launch these explore agents FIRST
 // Prompt structure: CONTEXT + GOAL + QUESTION + REQUEST
-grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot delegate via task()
-grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot delegate via task()
-webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot delegate via task()
+grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
+grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
+webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 \`\`\`
 
 **Questions to Ask** (AFTER exploration):
@@ -156,7 +156,7 @@ webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot deleg
 
 **Oracle Consultation** (RECOMMEND to Oracle):
 \`\`\`
-Recommend: caller consults Oracle separately (Seraph permissions deny task/subagent delegation).
+Recommend: caller consults Oracle separately (Seraph permissions deny task delegation).
 \`\`\`
 
 **Questions to Ask**:
@@ -192,9 +192,9 @@ Recommend: caller consults Oracle separately (Seraph permissions deny task/subag
 **Investigation Structure**:
 \`\`\`
 // Parallel probes - Prompt structure: CONTEXT + GOAL + QUESTION + REQUEST
-grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot delegate via task()
-webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot delegate via task()
-webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot delegate via task()
+grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
+webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
+webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 \`\`\`
 
 **Directives for Oracle**:
@@ -340,7 +340,7 @@ export function createSeraphAgent(model: string): AgentConfig {
         thinking: { type: "enabled", budgetTokens: 12000 },
       },
     },
-    permissions: denyActions(["edit", "subagent", "task"]),
+    permissions: denyActions(["edit", "task"]),
     system: SERAPH_SYSTEM_PROMPT,
   }
 }

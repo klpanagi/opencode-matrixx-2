@@ -128,7 +128,7 @@ export function createSatiAgent(model: string): AgentConfig {
     model: parseModelRef(model),
     skills: SATI_FRONTEND_SKILLS,
     request: { body: { temperature: 0.1 } },
-    permissions: denyActions(["subagent", "task"]),
+    permissions: denyActions(["task"]),
     system: SATI_SYSTEM_PROMPT,
   }
 

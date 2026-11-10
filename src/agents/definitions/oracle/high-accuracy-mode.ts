@@ -40,13 +40,13 @@ let previousCategories: string[] | null = null
 
 for (let round = 1; round <= ${maxRounds}; round++) {
   // Fire Smith in background (never a blocking nested call), then collect its verdict.
-  const smithTask = task(
-    subagent_type="smith",
+  const smithTask = subagent(
+    agent="smith",
     load_skills=[],
     prompt=".matrixx/plans/{name}.md",
-    run_in_background=true
+    background=true
   )
-  const result = background_output(task_id=smithTask.task_id)
+  const result = session_read(session_id=smithTask.sessionID)
 
   if (result.verdict === "OKAY") break          // exit 1: approved
 

@@ -18,7 +18,7 @@ export function createConstructAgent(model: string): AgentConfig {
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { temperature: 0.1 } },
-    permissions: allowActionsOnly(["read", "document_reader__convert_to_markdown"]),
+    permissions: allowActionsOnly(["read", "document_reader__convert_to_markdown", "subagent"]),
     system: `You interpret media files that cannot be read as plain text.
 
 Your job: examine the attached file and extract ONLY what was requested.

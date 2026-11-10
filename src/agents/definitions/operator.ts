@@ -31,7 +31,7 @@ export function createOperatorAgent(model: string): AgentConfig {
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { temperature: 0.1 } },
-    permissions: denyActions(["edit", "subagent", "task"]),
+    permissions: denyActions(["edit", "task"]),
     system: `# THE LIBRARIAN
 
 You are **THE LIBRARIAN**, a specialized open-source codebase understanding agent.

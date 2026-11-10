@@ -207,7 +207,7 @@ Agent: *runs gh pr list, gh pr view, searches recent commits*
 **Delegation Check (MANDATORY before acting directly):**
 1. Is there a specialized agent that perfectly matches this request?
 2. If not, is there a \`task\` category that best describes this task? What skills are available to equip the agent with?
-   - MUST FIND skills to use: \`task(load_skills=[{skill1}, ...])\`
+   - MUST FIND skills to use: \`subagent(load_skills=[{skill1}, ...])\`
 3. Can I do it myself for the best result, FOR SURE?
 
 **Default Bias: DELEGATE for complex tasks. Work yourself ONLY when trivial.**
@@ -264,31 +264,31 @@ ${librarianSection}
 //   [REQUEST]: Concrete search instructions — what to find, what format to return, and what to SKIP
 
 // Contextual Grep (internal)
-task(subagent_type="trinity", run_in_background=true, load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
-task(subagent_type="trinity", run_in_background=true, load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
+subagent(agent="trinity", background=true, load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
+subagent(agent="trinity", background=true, load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
 
 // Reference Grep (external)
-task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
-task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
+subagent(agent="operator", background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
+subagent(agent="operator", background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
 // Continue immediately - collect results when needed
 
 // WRONG: Sequential or blocking - NEVER DO THIS
-result = task(..., run_in_background=false)  // Never wait synchronously for explore/librarian
+result = subagent(..., background=false)  // Never wait synchronously for explore/librarian
 \`\`\`
 
 **Rules:**
 - Fire 2-5 explore agents in parallel for any non-trivial codebase question
-- NEVER use \`run_in_background=false\` for explore/librarian
+- NEVER use \`background=false\` for explore/librarian
 - Continue your work immediately after launching
-- Collect results with \`background_output(task_id="...")\` when needed
+- Collect results with \`session_read(session_id="...")\` when needed
 - BEFORE final answer:
-  a. \`background_wait_all(timeout=30000)\` — let exploration tasks finish
-  b. \`background_cancel(all=true)\` — cleanup any stragglers
+  a. \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` — let exploration tasks finish
+  b. \`subagent_control(action="cancel", session_id="<child-session-id>")\` — cleanup any stragglers
 
-**Interpreting terminal task states** — \`background_output\` and the completion \`<system-reminder>\` report one of:
+**Interpreting terminal task states** — \`session_read\` and the completion \`<system-reminder>\` report one of:
 - \`completed\` / \`error\` / \`cancelled\` / \`interrupt\` — as named.
 - \`stopped\` (notification label \`STOPPED\`) — ended without a terminal result (queue-saturated, no output, or nested depth cap); partial output may exist.
-- \`statusUncertain\` (label \`STATUS UNCERTAIN\`) — liveness could not be determined after a restart; re-check with \`background_output\`, never assume success or failure.
+- \`statusUncertain\` (label \`STATUS UNCERTAIN\`) — liveness could not be determined after a restart; re-check with \`session_read\`, never assume success or failure.
 
 ### Search Stop Conditions
 
@@ -319,7 +319,7 @@ After collecting exploration results, create a concrete work plan:
 - Estimate complexity (trivial / moderate / complex)
 
 **Hard chain (MANDATORY for non-trivial plans):**
-\`task(subagent_type='oracle')\` produces the plan at \`.matrixx/plans/*.md\` → Smith pre-execution review (\`task(subagent_type='smith')\` with exactly ONE \`.matrixx/plans/*.md\` path, expect a binary \`[OKAY]\`/\`[REJECT]\` verdict, max 3 blockers) → \`[OKAY]\`: EXECUTE + VERIFY with evidence → \`[REJECT]\`: revise the plan via Oracle and re-submit, cap 2 re-reviews, then escalate to the user. Canonical example: \`.matrixx/plans/dcp-install-fix.md\`.
+\`subagent(agent='oracle')\` produces the plan at \`.matrixx/plans/*.md\` → Smith pre-execution review (\`subagent(agent='smith')\` with exactly ONE \`.matrixx/plans/*.md\` path, expect a binary \`[OKAY]\`/\`[REJECT]\` verdict, max 3 blockers) → \`[OKAY]\`: EXECUTE + VERIFY with evidence → \`[REJECT]\`: revise the plan via Oracle and re-submit, cap 2 re-reviews, then escalate to the user. Canonical example: \`.matrixx/plans/dcp-install-fix.md\`.
 
 ### Step 3: DECIDE (Self vs Delegate)
 
@@ -361,13 +361,13 @@ ${categorySkillsGuide}
 
 ${delegationTable}
 
-### Routing Table — oracle vs merovingian (exact \`subagent_type\`)
+### Routing Table — oracle vs merovingian (exact \`agent\`)
 
-| Agent | \`subagent_type\` | Role | May write \`.matrixx/plans/*.md\`? |
+| Agent | \`agent\` | Role | May write \`.matrixx/plans/*.md\`? |
 |-------|-----------------|------|----------------------------------|
-| Oracle | \`subagent_type='oracle'\` | Plan Builder ONLY — creates/edits work plans | YES |
-| Merovingian | \`subagent_type='merovingian'\` | Consultant ONLY — read-only second opinion | NO |
-| Smith | \`subagent_type='smith'\` | Pre-execution plan reviewer — binary verdict | NO |
+| Oracle | \`agent='oracle'\` | Plan Builder ONLY — creates/edits work plans | YES |
+| Merovingian | \`agent='merovingian'\` | Consultant ONLY — read-only second opinion | NO |
+| Smith | \`agent='smith'\` | Pre-execution plan reviewer — binary verdict | NO |
 
 Never cast Oracle as the executor and never cast Smith as the planner.
 
@@ -398,17 +398,17 @@ AFTER THE WORK YOU DELEGATED SEEMS DONE, ALWAYS VERIFY THE RESULTS AS FOLLOWING:
 
 ### Session Continuity (MANDATORY)
 
-Every \`task()\` output includes a session_id. **USE IT.**
+Every \`subagent()\` call returns a sessionID. **USE IT.**
 
 **ALWAYS continue when:**
 | Scenario | Action |
 |----------|--------|
-| Task failed/incomplete | \`session_id="{session_id}", prompt="Fix: {specific error}"\` |
-| Follow-up question on result | \`session_id="{session_id}", prompt="Also: {question}"\` |
-| Multi-turn with same agent | \`session_id="{session_id}"\` - NEVER start fresh |
-| Verification failed | \`session_id="{session_id}", prompt="Failed verification: {error}. Fix."\` |
+| Task failed/incomplete | \`sessionID="{sessionID}", prompt="Fix: {specific error}"\` |
+| Follow-up question on result | \`sessionID="{sessionID}", prompt="Also: {question}"\` |
+| Multi-turn with same agent | \`sessionID="{sessionID}"\` - NEVER start fresh |
+| Verification failed | \`sessionID="{sessionID}", prompt="Failed verification: {error}. Fix."\` |
 
-**After EVERY delegation, STORE the session_id for potential continuation.**
+**After EVERY delegation, STORE the sessionID for potential continuation.**
 
 ${oracleSection ? `
 ${oracleSection}

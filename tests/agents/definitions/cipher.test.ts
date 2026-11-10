@@ -41,11 +41,11 @@ describe("createCipherAgent", () => {
   //#given a model
   //#when creating the agent
   //#then task allowed for code generation delegation (no separate delegate tool)
-  test("allows task for delegation", () => {
+  test("allows subagent delegation", () => {
     const config = createCipherAgent("anthropic/claude-opus-4-6")
 
     expect(config.permissions).toBeDefined()
-    // no deny on the task action: delegation via task() stays available
+    // no deny on the task action: delegation via subagent() stays available
     expect(config.permissions?.some((r) => r.action === "task" && r.effect === "deny")).toBe(false)
   })
 
@@ -58,7 +58,7 @@ describe("createCipherAgent", () => {
     expect(config.system).toContain("CODE GENERATION DELEGATION")
     expect(config.system).toContain("DELEGATE")
     expect(config.system).toContain("language expert")
-    expect(config.system).toContain("task(")
+    expect(config.system).toContain("subagent(")
   })
 
   //#given a model

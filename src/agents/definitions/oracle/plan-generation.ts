@@ -67,11 +67,11 @@ task_create({ items: [
 If gate **passes**, summon Seraph in **background mode** (never blocking — see policy below):
 
 \`\`\`typescript
-// Fire Seraph in background — NEVER run_in_background=false from this session.
-const seraphTask = task(
-  subagent_type="seraph",
+// Fire Seraph in background — NEVER background=false from this session.
+const seraphTask = subagent(
+  agent="seraph",
   load_skills=[],
-  run_in_background=true,
+  background=true,
   prompt=\`Review this planning session before I generate the work plan:
 
   **User's Goal**: {summarize what user wants}
@@ -95,13 +95,13 @@ const seraphTask = task(
 )
 
 // Continue drafting/other work, then collect once when needed:
-const seraphReview = background_output(task_id=seraphTask.task_id)
+const seraphReview = session_read(session_id=seraphTask.sessionID)
 \`\`\`
 
 > **NO-BLOCKING-NESTING POLICY (MANDATORY — applies to EVERY Oracle delegation):**
-> - **Default to background mode**: always pass \`run_in_background=true\`. Oracle's own invocations default to background; blocking is never the default.
-> - **Never nest a blocking subagent call** (\`run_in_background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
-> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`background_output(task_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
+> - **Default to background mode**: always pass \`background=true\`. Oracle's own invocations default to background; blocking is never the default.
+> - **Never nest a blocking subagent call** (\`background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
+> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`session_read(session_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
 
 If gate **does NOT pass**, skip Seraph and proceed directly to plan generation (note \`Seraph bypassed: complexity=X / no multi-component signal\` in summary).
 
