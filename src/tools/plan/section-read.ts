@@ -27,6 +27,7 @@
  * `precedence: "section"` plus the effective absolute `startLine`/`endLine`, so
  * the conflict is never silent.
  */
+import { extractPlanEffort } from "../../features/agent-effort/surface"
 import { measurePlanBytes } from "../../features/mission-state/constants"
 import { classifyPlanLifecycle } from "../../features/plan-contract/lifecycle"
 import { resolveSectionSelector } from "../../features/plan-contract/section-registry"
@@ -180,8 +181,10 @@ export function readSection(request: SectionReadRequest): SectionOutcome {
   // source array. Nothing else is rendered for a section read.
   const span = request.lines.slice(entry.startLine - 1, entry.endLine - 1)
   const section = sectionMetadata(entry)
+  const effort = extractPlanEffort(request.content)
   const base = {
     filePath: request.filePath,
+    ...(effort === undefined ? {} : { effort }),
     section,
     startLine: entry.startLine,
     endLine: entry.endLine,

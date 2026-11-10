@@ -7,9 +7,10 @@
  * applyFilteredSync: syncCheckboxes (Task 3) -> recount via Task 2
  * constants -> atomicWrite + upsertMetadataComment. Every decision is logged.
  */
-import { existsSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
+import { collectPlanEffort } from "../../features/agent-effort/plan-rollup"
 import {
   atomicWrite,
   checkboxOverlap,
@@ -29,6 +30,7 @@ import { log } from "../../shared/runtime/logger"
 import { getGitHead } from "../../tools/handoff/git"
 import type { TaskObject } from "../../tools/task/types"
 import { TaskObjectSchema } from "../../tools/task/types"
+import { attributeTodoEffort, collectAttributableTasks, collectCheckboxTexts } from "./effort-attribution"
 import { collectLinkedTodos, isTaskLinkedToMission, isTerminalTaskStatus } from "./task-link"
 
 const HOOK_NAME = "plan-sync"
@@ -40,6 +42,7 @@ export interface FilteredSyncInput {
   todos: Array<{ content: string; status: string }>
   actorSessionId: string
   matchSubject?: string
+  config?: Partial<MatrixxConfig>
 }
 
 export interface MatchedBox {
@@ -77,8 +80,46 @@ function findFlippedBox(before: string, after: string, subject: string): Matched
   return best
 }
 
+function collectLinkedEffortInputs(
+  directory: string,
+  mission: MissionState,
+  config: Partial<MatrixxConfig>,
+): Array<{ taskId: string; effort?: { total?: unknown; tokenUsd?: unknown; computedAt?: unknown } | null; generation?: unknown }> {
+  const sessionScoped = resolveTasksConfig(config).session_scoped
+  const taskDir = getTaskDir(config, directory)
+  const resolveParent = (parentID: string): TaskObject | null =>
+    readJsonSafe(join(taskDir, `${parentID}.json`), TaskObjectSchema)
+  let files: string[] = []
+  try {
+    files = readdirSync(taskDir).filter((f) => f.startsWith("T-") && f.endsWith(".json"))
+  } catch {
+    return []
+  }
+  const inputs: Array<{ taskId: string; effort?: { total?: unknown; tokenUsd?: unknown; computedAt?: unknown } | null; generation?: unknown }> = []
+  for (const f of files) {
+    const parsed = readJsonSafe(join(taskDir, f), TaskObjectSchema)
+    if (parsed === null || !isTerminalTaskStatus(parsed.status)) continue
+    const decision = isTaskLinkedToMission(parsed, mission, {
+      directory,
+      sessionScoped,
+      resolveParent,
+    })
+    if (!decision.linked) continue
+    const effort = parsed.metadata?.effort
+    inputs.push({
+      taskId: parsed.id,
+      effort:
+        effort !== null && typeof effort === "object"
+          ? (effort as { total?: unknown; tokenUsd?: unknown; computedAt?: unknown })
+          : null,
+      generation: parsed.generation,
+    })
+  }
+  return inputs
+}
+
 export async function applyFilteredSync(input: FilteredSyncInput): Promise<FilteredSyncResult> {
-  const { directory, mission, planPath, todos, actorSessionId, matchSubject } = input
+  const { directory, mission, planPath, todos, actorSessionId, matchSubject, config = {} } = input
   if (!existsSync(planPath)) {
     log(`[${HOOK_NAME}] Sync skipped: plan file missing`, { plan: planPath })
     return emptyResult("missing-plan-file")
@@ -98,6 +139,38 @@ export async function applyFilteredSync(input: FilteredSyncInput): Promise<Filte
     todoTotal: progress.total,
     todoCompleted: progress.completed,
     gitHead: gitHead ?? undefined,
+  }
+  try {
+    const rollup = collectPlanEffort(collectLinkedEffortInputs(directory, mission, config))
+    if (rollup.taskCount > 0) {
+      meta.effortActual = rollup
+    }
+  } catch (error) {
+    log(`[${HOOK_NAME}] Effort attribution skipped (fail-open)`, {
+      plan: planPath,
+      reason: error instanceof Error ? error.message : String(error),
+    })
+  }
+  try {
+    const attributable = collectAttributableTasks(directory, mission, config)
+    const attribution = attributeTodoEffort({
+      checkboxTexts: collectCheckboxTexts(synced),
+      linkedTasks: attributable,
+    })
+    if (Object.keys(attribution.perTodoActual).length > 0) {
+      meta.perTodoActual = attribution.perTodoActual
+    }
+    if (attribution.unassigned.length > 0) {
+      log(`[${HOOK_NAME}] Effort unassigned to any TODO (fail-open)`, {
+        plan: planPath,
+        unassigned: attribution.unassigned.length,
+      })
+    }
+  } catch (error) {
+    log(`[${HOOK_NAME}] Effort rollup skipped (fail-open)`, {
+      plan: planPath,
+      reason: error instanceof Error ? error.message : String(error),
+    })
   }
   ensurePlanDir(directory)
   if (!atomicWrite(planPath, upsertMetadataComment(synced, meta))) {
