@@ -107,7 +107,7 @@ function runPresetCommand(input: {
 
   if (action === "list") {
     if (presetNames.length === 0) {
-      return "No model presets defined. Add a `model_presets` section to your matrixx config."
+      return "No model presets defined. Add presets to matrixx.presets.jsonc (set `model_presets_file`) or add a `model_presets` section to your matrixx config."
     }
     const lines = presetNames.map((p) => `- ${p}${p === effective ? " (active)" : ""}`)
     const activeLine = effective

@@ -3,6 +3,11 @@ import * as path from "node:path";
 import { type MatrixxConfig, MatrixxConfigSchema } from "./config";
 import { migrateMatrixxConfig } from "./config/migrations/model-migration";
 import { applyActivePreset } from "./config/preset-applier";
+import {
+  loadPresetsFile,
+  mergeFileAndInlinePresets,
+  resolvePresetsFilePath,
+} from "./config/preset-file-loader";
 import { warnDeprecatedBackgroundTaskKeys } from "./config/schema/background-task-deprecation";
 import {
   addConfigLoadError,
@@ -94,6 +99,16 @@ export function parseConfigPartially(
 
   return partialConfig as MatrixxConfig;
 }
+function attachFilePresets(config: MatrixxConfig, configPath: string): MatrixxConfig {
+  const presetsPath = resolvePresetsFilePath(configPath, config.model_presets_file);
+  const loaded = loadPresetsFile(presetsPath);
+  if (loaded.error) {
+    addConfigLoadError({ path: presetsPath, error: loaded.error });
+  }
+  const merged = mergeFileAndInlinePresets(loaded.presets, config.model_presets);
+  if (merged === undefined) return config;
+  return { ...config, model_presets: merged };
+}
 
 function loadConfigFromPath(
   configPath: string,
@@ -109,7 +124,7 @@ function loadConfigFromPath(
 
       if (result.success) {
         log(`Config loaded from ${configPath}`, { agents: result.data.agents });
-        return migrateMatrixxConfig(result.data);
+        return migrateMatrixxConfig(attachFilePresets(result.data, configPath));
       }
 
       const errorMsg = result.error.issues
@@ -124,7 +139,7 @@ function loadConfigFromPath(
       const partialResult = parseConfigPartially(rawConfig);
       if (partialResult) {
         log(`Partial config loaded from ${configPath}`, { agents: partialResult.agents });
-        return migrateMatrixxConfig(partialResult);
+        return migrateMatrixxConfig(attachFilePresets(partialResult, configPath));
       }
 
       return null;
@@ -210,11 +225,17 @@ export function mergeConfigs(
     ...(override.disabled_skills ?? []),
   ])
 
+  const mergedPresets =
+    base.model_presets || override.model_presets
+      ? { ...base.model_presets, ...override.model_presets }
+      : undefined
+
   const merged: MatrixxConfig = {
     ...base,
     ...override,
     agents: deepMerge(base.agents, override.agents),
     categories: deepMerge(base.categories, override.categories),
+    model_presets: mergedPresets,
     disabled_agents: [...disabledAgentsSet],
     disabled_mcps: [...disabledMcpsSet],
     disabled_hooks: [...disabledHooksSet],
