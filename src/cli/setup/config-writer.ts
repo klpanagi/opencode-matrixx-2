@@ -9,6 +9,7 @@ import { detectConfigFile, parseJsonc, parseJsoncSafe } from "../../shared/text/
 import type { SetupState } from "./types";
 
 export const PRESETS_FILENAME = "matrixx.presets.jsonc";
+export const AGENTS_FILENAME = "matrixx.agents.jsonc";
 
 export function resolveMatrixxConfigPath(): { format: "json" | "jsonc" | "none"; path: string } {
   const dir = getOpenCodeConfigDir({ binary: "opencode" });
@@ -75,6 +76,67 @@ export function writePresetsFile(
   return presetsPath;
 }
 
+export function writeAgentsFile(
+  configPath: string,
+  content: { agents?: Record<string, unknown>; categories?: Record<string, unknown> },
+  opts: { dryRun: boolean; backup: boolean },
+): string {
+  const agentsPath = join(dirname(configPath), AGENTS_FILENAME);
+  const merged: Record<string, unknown> = {};
+  if (existsSync(agentsPath)) {
+    const parsed = parseJsoncSafe<Record<string, unknown>>(readFileSync(agentsPath, 'utf-8'));
+    if (parsed.data) Object.assign(merged, parsed.data);
+  }
+  if (content.agents !== undefined) merged.agents = content.agents as unknown;
+  if (content.categories !== undefined) merged.categories = content.categories as unknown;
+  const nextContent = `${JSON.stringify(merged, null, 2)}\n`;
+  if (opts.dryRun) {
+    console.log('[dry-run] would write:', agentsPath);
+    console.log(nextContent);
+    return agentsPath;
+  }
+  if (!existsSync(dirname(agentsPath))) mkdirSync(dirname(agentsPath), { recursive: true });
+  if (existsSync(agentsPath) && opts.backup) {
+    const bak = `${agentsPath}.bak.${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    writeFileSync(bak, readFileSync(agentsPath, 'utf-8'));
+  }
+  writeFileSync(agentsPath, nextContent);
+  return agentsPath;
+}
+
+export function migrateAgentsToFile(
+  configPath: string,
+  opts: { dryRun: boolean; backup: boolean },
+): { migrated: boolean; agentsPath: string | null } {
+  const agentsPath = join(dirname(configPath), AGENTS_FILENAME);
+  if (!existsSync(configPath)) return { migrated: false, agentsPath: null };
+  const raw = parseJsonc<Record<string, unknown>>(readFileSync(configPath, 'utf-8'));
+  const inlineAgents = raw.agents as Record<string, unknown> | undefined;
+  const inlineCategories = raw.categories as Record<string, unknown> | undefined;
+  const hasAgents = inlineAgents !== undefined && Object.keys(inlineAgents).length > 0;
+  const hasCategories = inlineCategories !== undefined && Object.keys(inlineCategories).length > 0;
+  if (!hasAgents && !hasCategories) return { migrated: false, agentsPath };
+  if (opts.dryRun) {
+    log('[dry-run] would migrate inline agents to', agentsPath);
+    return { migrated: true, agentsPath };
+  }
+  writeAgentsFile(configPath, { agents: inlineAgents, categories: inlineCategories }, opts);
+  const next: Record<string, unknown> = {
+    ...raw,
+    agents_file: (raw.agents_file as string | undefined) ?? AGENTS_FILENAME,
+  };
+  delete next.agents;
+  delete next.categories;
+  const parsed = MatrixxConfigSchema.safeParse(next);
+  const nextContent = `${JSON.stringify(parsed.success ? parsed.data : next, null, 2)}\n`;
+  if (opts.backup) {
+    const bak = `${configPath}.bak.${new Date().toISOString().replace(/[:.]/g, '-')}`;
+    writeFileSync(bak, readFileSync(configPath, 'utf-8'));
+  }
+  writeFileSync(configPath, nextContent);
+  return { migrated: true, agentsPath };
+}
+
 export function migratePresetsToFile(
   configPath: string,
   opts: { dryRun: boolean; backup: boolean },
@@ -130,6 +192,19 @@ export async function writeMatrixxConfig(
 
   if (config.model_presets && Object.keys(config.model_presets).length > 0) {
     writePresetsFile(targetPath, config.model_presets, opts);
+  }
+  if (
+    (config.agents && Object.keys(config.agents).length > 0) ||
+    (config.categories && Object.keys(config.categories).length > 0)
+  ) {
+    writeAgentsFile(
+      targetPath,
+      {
+        agents: config.agents as unknown as Record<string, unknown> | undefined,
+        categories: config.categories as unknown as Record<string, unknown> | undefined,
+      },
+      opts,
+    );
   }
 
   const existingContent = existsSync(targetPath) ? readFileSync(targetPath, "utf-8") : null;
