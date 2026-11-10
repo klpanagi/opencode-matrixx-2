@@ -41,6 +41,7 @@ export { createSilentFailureScannerTool } from "./silent-failure-scanner"
 export { createSkillTool } from "./skill/tools"
 export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/tools"
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
+export { createSubagentControl } from "./subagent-control/tools"
 export { lspManager }
 
 import type { BackgroundManager } from "../features/background-agent"
