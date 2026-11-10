@@ -12,6 +12,7 @@ import { CONSTRUCT_PROMPT_METADATA, createConstructAgent } from "../definitions/
 import { createKeymakerAgent } from "../definitions/keymaker"
 import { createMerovingianAgent, MEROVINGIAN_PROMPT_METADATA, ORACLE_PROMPT_METADATA } from "../definitions/merovingian"
 import { createMorpheusAgent } from "../definitions/morpheus"
+import { MOUSE_SUBAGENT_PROMPT_METADATA, mouseSubagentFactories } from "../definitions/mouse-subagents"
 import { createNiobeAgent, niobePromptMetadata } from "../definitions/niobe"
 import { createOperatorAgent, OPERATOR_PROMPT_METADATA } from "../definitions/operator"
 import { createSatiAgent } from "../definitions/sati"
@@ -45,6 +46,7 @@ const agentSources: Partial<Record<BuiltinAgentName, AgentSource>> = {
   cipher: createCipherAgent,
   sentinel: createSentinelAgent,
   sati: createSatiAgent,
+  ...mouseSubagentFactories,
 }
 
 /**
@@ -62,6 +64,7 @@ const agentMetadata: Partial<Record<BuiltinAgentName, AgentPromptMetadata>> = {
   niobe: niobePromptMetadata,
   cipher: CIPHER_PROMPT_METADATA,
   sentinel: SENTINEL_PROMPT_METADATA,
+  ...MOUSE_SUBAGENT_PROMPT_METADATA,
 }
 
 export async function createBuiltinAgents(
