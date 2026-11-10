@@ -22,6 +22,11 @@ import {
   shouldInjectCompressDirective,
   usagePercent,
 } from "../../shared/policy/compress-watchdog"
+import {
+  type KeywordCompressTriggerConfigInput,
+  resolveKeywordCompressTriggerConfig,
+  shouldInjectForKeyword,
+} from "../../shared/policy/keyword-compress-trigger"
 import { log } from "../../shared/runtime/logger"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"
 import type { MatrixxContext, V2Registration, V2SessionContextEvent } from "../tool/context"
@@ -31,6 +36,7 @@ const MAX_TRACKED_SESSIONS = 500
 
 export interface CompressWatchdogOptions {
   config?: CompressWatchdogConfigInput | undefined
+  keywordTrigger?: KeywordCompressTriggerConfigInput | undefined
   hookEnabled?: boolean | undefined
   now?: (() => number) | undefined
 }
@@ -100,6 +106,7 @@ export async function registerCompressWatchdog(
   options: CompressWatchdogOptions = {},
 ): Promise<V2Registration[]> {
   const config = resolveCompressWatchdogConfig(options.config)
+  const keywordTrigger = resolveKeywordCompressTriggerConfig(options.keywordTrigger)
   if (!config.enabled || options.hookEnabled === false) return []
 
   const now = options.now ?? (() => Date.now())
@@ -159,27 +166,55 @@ export async function registerCompressWatchdog(
         turnsSinceLastInjection: turnsSinceLastInjection(state),
         lastUserText: lastUser?.text,
       })
-      if (!shouldInject || !lastUser) return
+      if (shouldInject && lastUser) {
+        const target = rawMessages[lastUser.index] as SessionMessage
+        if (typeof target.text !== "string") return
+        const directive = buildCompressDirective({
+          currentPercent,
+          tokens: usage.tokens,
+          limit,
+          config,
+        })
+        target.text = `${directive}\n\n---\n\n${target.text}`
+        state.lastInjectedTurn = state.turns
 
-      const target = rawMessages[lastUser.index] as SessionMessage
-      if (typeof target.text !== "string") return
-      const directive = buildCompressDirective({
-        currentPercent,
-        tokens: usage.tokens,
-        limit,
-        config,
-      })
-      target.text = `${directive}\n\n---\n\n${target.text}`
-      state.lastInjectedTurn = state.turns
+        log("[compress-watchdog] directive injected", {
+          sessionID: event.sessionID,
+          currentPercent: Number(currentPercent.toFixed(1)),
+          abovePercent: config.abovePercent,
+          targetPercent: config.targetPercent,
+          tokens: usage.tokens,
+          limit,
+        })
+      } else if (
+        lastUser &&
+        shouldInjectForKeyword({
+          config: keywordTrigger,
+          lastUserText: lastUser.text,
+          turnsSinceLastInjection: turnsSinceLastInjection(state),
+          cooldownTurns: config.cooldownTurns,
+        })
+      ) {
+        const target = rawMessages[lastUser.index] as SessionMessage
+        if (typeof target.text !== "string") return
+        const directive = buildCompressDirective({
+          currentPercent,
+          tokens: usage.tokens,
+          limit,
+          config,
+        })
+        target.text = `${directive}\n\n---\n\n${target.text}`
+        state.lastInjectedTurn = state.turns
 
-      log("[compress-watchdog] directive injected", {
-        sessionID: event.sessionID,
-        currentPercent: Number(currentPercent.toFixed(1)),
-        abovePercent: config.abovePercent,
-        targetPercent: config.targetPercent,
-        tokens: usage.tokens,
-        limit,
-      })
+        log("[compress-watchdog] keyword trigger injected", {
+          sessionID: event.sessionID,
+          currentPercent: Number(currentPercent.toFixed(1)),
+          abovePercent: config.abovePercent,
+          targetPercent: config.targetPercent,
+          tokens: usage.tokens,
+          limit,
+        })
+      }
     } catch (error) {
       log("[compress-watchdog] hook failed", {
         sessionID: event.sessionID,

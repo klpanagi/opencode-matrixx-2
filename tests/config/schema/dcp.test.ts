@@ -71,6 +71,10 @@ describe("DcpWatchdogSchema", () => {
       abovePercent: 25,
       targetPercent: 10,
       cooldownTurns: 2,
+      keywordTrigger: {
+        enabled: true,
+        keywords: ["dcp-compress", "compress context", "run dcp"],
+      },
     })
   })
 
@@ -80,7 +84,16 @@ describe("DcpWatchdogSchema", () => {
     const parsed = DcpWatchdogSchema.parse({ abovePercent: 15, targetPercent: 8, cooldownTurns: 1 })
 
     //#then
-    expect(parsed).toEqual({ enabled: true, abovePercent: 15, targetPercent: 8, cooldownTurns: 1 })
+    expect(parsed).toEqual({
+      enabled: true,
+      abovePercent: 15,
+      targetPercent: 8,
+      cooldownTurns: 1,
+      keywordTrigger: {
+        enabled: true,
+        keywords: ["dcp-compress", "compress context", "run dcp"],
+      },
+    })
   })
 
   test("rejects out-of-range percentages", () => {

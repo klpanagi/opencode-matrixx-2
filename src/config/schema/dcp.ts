@@ -72,6 +72,14 @@ export const DcpManualModeSchema = z.object({
 })
 export type DcpManualMode = z.infer<typeof DcpManualModeSchema>
 
+export const DcpKeywordTriggerSchema = z.object({
+  /** Enable keyword-triggered compress directive injection. Default: true */
+  enabled: z.boolean().default(true),
+  /** Keywords in the last user message that trigger the compress directive. */
+  keywords: z.array(z.string()).default(["dcp-compress", "compress context", "run dcp"]),
+})
+export type DcpKeywordTrigger = z.infer<typeof DcpKeywordTriggerSchema>
+
 export const DcpWatchdogSchema = z.object({
   /** Enable the compress watchdog directive. Default: true */
   enabled: z.boolean().default(true),
@@ -81,6 +89,11 @@ export const DcpWatchdogSchema = z.object({
   targetPercent: z.number().min(1).max(94).default(10),
   /** Context builds to wait between directives while still over the ceiling. Default: 2 */
   cooldownTurns: z.number().int().min(1).default(2),
+  /** Keyword trigger: inject the same directive when a keyword appears in the last user message. */
+  keywordTrigger: DcpKeywordTriggerSchema.default({
+    enabled: true,
+    keywords: ["dcp-compress", "compress context", "run dcp"],
+  }),
 })
 export type DcpWatchdog = z.infer<typeof DcpWatchdogSchema>
 
@@ -247,6 +260,10 @@ export const DcpConfigSchema = z.object({
     abovePercent: 25,
     targetPercent: 10,
     cooldownTurns: 2,
+    keywordTrigger: {
+      enabled: true,
+      keywords: ["dcp-compress", "compress context", "run dcp"],
+    },
   }),
 })
 

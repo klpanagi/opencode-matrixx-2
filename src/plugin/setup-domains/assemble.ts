@@ -260,6 +260,7 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
     registerMessageHooks(ctx, {
       compressWatchdog: {
         config: input.pluginConfig?.dcp?.watchdog,
+        keywordTrigger: input.pluginConfig?.dcp?.watchdog?.keywordTrigger,
         hookEnabled: !(input.pluginConfig?.disabled_hooks ?? []).includes("compress-watchdog"),
       },
     }),
