@@ -97,45 +97,45 @@ task_create({ items: [
 
 ## 1.1: Launch Parallel Explore Agents (BACKGROUND)
 
-Fire ALL of these simultaneously using \`task\`:
+Fire ALL of these simultaneously using \`subagent\`:
 
 \`\`\`
 // Agent 1: Find the refactoring target
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   prompt="Find all occurrences and definitions of [TARGET]. 
   Report: file paths, line numbers, usage patterns."
 )
 
 // Agent 2: Find related code
-task(
-  subagent_type="trinity", 
-  run_in_background=true,
+subagent(
+  agent="trinity", 
+  background=true,
   prompt="Find all code that imports, uses, or depends on [TARGET].
   Report: dependency chains, import graphs."
 )
 
 // Agent 3: Find similar patterns
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   prompt="Find similar code patterns to [TARGET] in the codebase.
   Report: analogous implementations, established conventions."
 )
 
 // Agent 4: Find tests
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   prompt="Find all test files related to [TARGET].
   Report: test file paths, test case names, coverage indicators."
 )
 
 // Agent 5: Architecture context
-task(
-  subagent_type="trinity",
-  run_in_background=true,
+subagent(
+  agent="trinity",
+  background=true,
   prompt="Find architectural patterns and module organization around [TARGET].
   Report: module boundaries, layer structure, design patterns in use."
 )
@@ -190,10 +190,12 @@ grep(pattern="[search_term]", path="src/", include="*.ts")
 ## 1.3: Collect Background Results
 
 \`\`\`
-background_output(task_id="[agent_1_id]")
-background_output(task_id="[agent_2_id]")
+session_read(session_id="[agent_1_session_id]")
+session_read(session_id="[agent_2_session_id]")
 ...
 \`\`\`
+
+With background=true the parent session receives a completion message with each child output automatically; read details via session_read(session_id="...") and coordinate via the subagent_control tool.
 
 **Mark phase-1 as completed after all results collected.**
 
@@ -274,9 +276,9 @@ ls -la *_test.go
 
 \`\`\`
 // Find all tests related to target
-task(
-  subagent_type="trinity",
-  run_in_background=false,  // Need this synchronously
+subagent(
+  agent="trinity",
+  background=false,  // Need this synchronously
   prompt="Analyze test coverage for [TARGET]:
   1. Which test files cover this code?
   2. What test cases exist?
@@ -345,8 +347,8 @@ After each refactoring step:
 ## 4.1: Invoke Plan Agent
 
 \`\`\`
-Task(
-  subagent_type="plan",
+subagent(
+  agent="plan",
   prompt="Create a detailed refactoring plan:
 
   ## Refactoring Goal
