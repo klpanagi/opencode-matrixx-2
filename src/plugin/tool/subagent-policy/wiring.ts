@@ -1,4 +1,4 @@
-import { applyModelResolution, getFirstFallbackModel } from "../../../agents/registry/model-resolution"
+import { applyModelResolution } from "../../../agents/registry/model-resolution"
 import type { MatrixxConfig } from "../../../config"
 import { getAgentModelRequirements } from "../../../shared/model/model-requirements"
 import type { SubagentPolicyDeps } from "./index"
@@ -16,7 +16,12 @@ function defaultModelForAgent(pluginConfig: MatrixxConfig, agentId: string): str
     availableModels: new Set<string>(),
     systemDefaultModel: undefined,
   })
-  return (resolution ?? getFirstFallbackModel(requirement))?.model
+  // No blind chain[0] fallback here: injecting an unconfirmed model as an EXPLICIT
+  // subagent input.model makes the native spawn hard-fail ("Model unavailable") in
+  // environments where the hardcoded chains are not servable. Omitting the model
+  // instead lets opencode fall back to the agent/session default (legacy spawn
+  // behavior — model was optional in createSyncSession).
+  return resolution?.model
 }
 
 export function buildSubagentPolicyDeps(pluginConfig: MatrixxConfig): SubagentPolicyDeps {

@@ -65,6 +65,27 @@ describe("wired subagent policy (production deps)", () => {
     expect(output.args.model).toBe("cheap/model")
   })
 
+  test("absent model stays absent when nothing is resolvable (no blind chain fallback)", () => {
+    //#given no user model override and no connected-provider resolution — injecting
+    // an unconfirmed chain[0] model made native spawns hard-fail in E2E
+    const deps = buildSubagentPolicyDeps(
+      configWith({ agents: {}, global_model: undefined }),
+    )
+    const output = {
+      args: {
+        agent: "mouse-bullet-time",
+        description: "fix typo",
+        prompt: "fix typo",
+      } as Record<string, unknown>,
+    }
+
+    //#when
+    applySubagentPolicy(subagentInput(), output, deps)
+
+    //#then the transformer must NOT inject an explicit model; opencode falls back
+    expect(output.args.model).toBeUndefined()
+  })
+
   test("complex prompt is never rewritten", () => {
     //#given
     const deps = buildSubagentPolicyDeps(configWith({}))
