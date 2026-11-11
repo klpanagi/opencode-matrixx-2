@@ -70,11 +70,16 @@ export function collectPendingBuiltinAgents(input: {
     }
 
     const isPrimaryAgent = isFactory(source) && source.mode === "primary"
-
+    // mouse-* workers inherit their category's configured model (e.g. an active
+    // preset's per-category entry) — legacy delegate-task resolved child models
+    // per category, and preset agent keys do not cover the mouse-* ids.
+    const categoryModel = agentName.startsWith("mouse-")
+      ? (mergedCategories as Record<string, { model?: string }>)[agentName.slice("mouse-".length)]?.model
+      : undefined
     const resolution = applyModelResolution({
       globalOverrideModel,
       uiSelectedModel: (isPrimaryAgent && !override?.model) ? uiSelectedModel : undefined,
-      userModel: override?.model,
+      userModel: override?.model ?? categoryModel,
       requirement,
       availableModels,
       systemDefaultModel,
