@@ -32,6 +32,14 @@ function agentOverrides(questionEffect: "allow" | "deny"): Record<string, Permis
     keymaker: [rule("question", questionEffect), ...fullTaskPermissions],
     oracle: [rule("question", questionEffect), ...fullTaskPermissions],
     mouse: [...fullTaskPermissions],
+    "mouse-construct": [...fullTaskPermissions],
+    "mouse-source": [...fullTaskPermissions],
+    "mouse-rabbit-hole": [...fullTaskPermissions],
+    "mouse-glitch": [...fullTaskPermissions],
+    "mouse-bullet-time": [...fullTaskPermissions],
+    "mouse-blue-pill": [...fullTaskPermissions],
+    "mouse-the-one": [...fullTaskPermissions],
+    "mouse-transmission": [...fullTaskPermissions],
   };
 }
 

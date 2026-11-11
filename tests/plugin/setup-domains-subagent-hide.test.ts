@@ -1,23 +1,23 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
-import { hideNativeSubagentTool } from "../../src/plugin/setup-domains"
 
-describe("hideNativeSubagentTool", () => {
-  test("removes native subagent tool", () => {
+describe("hideNativeSubagentTool removal (Phase 5.3)", () => {
+  // NOTE (Phase 5.3): the helper was deleted — native `subagent` is THE
+  // delegation path now. These pins assert it stays gone.
+  test("assemble module no longer defines hideNativeSubagentTool", async () => {
     //#given
-    const removed: string[] = []
-    const editor = { remove: (id: string) => { removed.push(id) } }
+    const source = await Bun.file("src/plugin/setup-domains/assemble.ts").text()
     //#when
-    hideNativeSubagentTool(editor as never)
+    const mentions = source.split("\n").filter((line) => line.includes("hideNativeSubagentTool"))
     //#then
-    expect(removed).toEqual(["subagent"])
+    expect(mentions).toEqual([])
   })
-  test("swallows missing-tool error", () => {
+  test("setup-domains barrel no longer re-exports hideNativeSubagentTool", async () => {
     //#given
-    const editor = { remove: (_id: string) => { throw new Error("not found") } }
+    const source = await Bun.file("src/plugin/setup-domains.ts").text()
     //#when
-    hideNativeSubagentTool(editor as never)
+    const mentions = source.split("\n").filter((line) => line.includes("hideNativeSubagentTool"))
     //#then
-    expect(true).toBe(true)
+    expect(mentions).toEqual([])
   })
 })

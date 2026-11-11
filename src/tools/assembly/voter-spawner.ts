@@ -1,19 +1,37 @@
-import type { BackgroundManager } from "../../features/background-agent/manager"
-import { delay } from "../../shared/runtime/delay"
+import {
+  type NativeSubagentClient,
+  spawnNativeSubagent,
+  waitNativeSubagent,
+} from "../../shared/session/native-subagent"
 import { POLL_INTERVAL_MS, VOTER_TIMEOUT_MS } from "./constants"
 import type { ProviderModel, VoterResult } from "./types"
 
+export interface SpawnVotersOptions {
+  timeoutMs?: number
+  pollIntervalMs?: number
+  signal?: AbortSignal
+}
+
 export async function spawnVoters(
-  manager: BackgroundManager,
+  client: NativeSubagentClient,
   question: string,
   providers: ProviderModel[],
   parentSessionID: string,
-  parentMessageID: string,
+  options?: SpawnVotersOptions,
 ): Promise<VoterResult[]> {
-  const tasks = providers.map((provider, index) =>
-    manager.launch({
-      description: `Assembly voter ${index + 1}`,
-      prompt: `You are voter #${index + 1} in a multi-model assembly process. Analyze the following question independently and provide your reasoning. Be thorough and consider multiple angles.
+  const timeoutMs = options?.timeoutMs ?? VOTER_TIMEOUT_MS
+  const pollIntervalMs = options?.pollIntervalMs ?? POLL_INTERVAL_MS
+
+  const spawns = await Promise.all(
+    providers.map((provider, index) =>
+      spawnNativeSubagent(client, {
+        agent: "mouse",
+        model: {
+          providerID: provider.providerID,
+          modelID: provider.modelID,
+          temperature: 0.3,
+        },
+        prompt: `You are voter #${index + 1} in a multi-model assembly process. Analyze the following question independently and provide your reasoning. Be thorough and consider multiple angles.
 
 Question: ${question}
 
@@ -26,73 +44,58 @@ Output your analysis in this format:
 
 ## Confidence
 [High/Medium/Low - with justification]`,
-      agent: "mouse",
-      parentSessionID,
-      parentMessageID,
-      model: {
-        providerID: provider.providerID,
-        modelID: provider.modelID,
-        temperature: 0.3,
-      },
-    }),
+        parentSessionID,
+        title: `assembly-voter-${provider.providerID}-${index + 1}`,
+      }),
+    ),
   )
 
-  const launchedTasks = await Promise.all(tasks)
-
-  const results = await Promise.all(
-    launchedTasks.map(async (task, index) => {
+  return Promise.all(
+    spawns.map(async (spawn, index) => {
       const provider = providers[index]
-      const deadline = Date.now() + VOTER_TIMEOUT_MS
-
-      while (Date.now() < deadline) {
-        const current = manager.getTask(task.id)
-        if (!current) break
-
-        if (current.status === "completed") {
-          return {
-            voterIndex: index,
-            modelLabel: `${provider.providerID}:${provider.modelID}`,
-            reasoning: current.result ?? "",
-            status: "completed" as const,
-          }
+      if (!spawn.ok) {
+        return {
+          voterIndex: index,
+          modelLabel: `${provider.providerID}:${provider.modelID}`,
+          reasoning: "",
+          status: "error" as const,
+          error: spawn.error,
         }
+      }
 
-        if (current.status === "error") {
-          return {
-            voterIndex: index,
-            modelLabel: `${provider.providerID}:${provider.modelID}`,
-            reasoning: "",
-            status: "error" as const,
-            error: current.error ?? "Unknown error",
-          }
+      const waited = await waitNativeSubagent(client, {
+        sessionID: spawn.sessionID,
+        timeoutMs,
+        pollIntervalMs,
+        signal: options?.signal,
+      })
+
+      if (waited.status === "completed") {
+        return {
+          voterIndex: index,
+          modelLabel: `${provider.providerID}:${provider.modelID}`,
+          reasoning: waited.output ?? "",
+          status: "completed" as const,
         }
+      }
 
-        if (
-          current.status === "cancelled" ||
-          current.status === "interrupt"
-        ) {
-          return {
-            voterIndex: index,
-            modelLabel: `${provider.providerID}:${provider.modelID}`,
-            reasoning: "",
-            status: "error" as const,
-            error: `Voter ${index + 1} was ${current.status}`,
-          }
+      if (waited.status === "timeout") {
+        return {
+          voterIndex: index,
+          modelLabel: `${provider.providerID}:${provider.modelID}`,
+          reasoning: "",
+          status: "timeout" as const,
+          error: `Voter ${index + 1} timed out after ${timeoutMs}ms`,
         }
-
-        await delay(POLL_INTERVAL_MS)
       }
 
       return {
         voterIndex: index,
         modelLabel: `${provider.providerID}:${provider.modelID}`,
         reasoning: "",
-        status: "timeout" as const,
-        error: `Voter ${index + 1} timed out after ${VOTER_TIMEOUT_MS}ms`,
+        status: "error" as const,
+        error: `Voter ${index + 1} was ${waited.error ?? "failed"}`,
       }
     }),
   )
-
-  return results
 }
-

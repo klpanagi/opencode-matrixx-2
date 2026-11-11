@@ -1,4 +1,3 @@
-import type { BackgroundManager } from "../../features/background-agent"
 import { promptNativeWithModelSuggestionRetry } from "../../shared/model/model-suggestion-retry"
 import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
@@ -14,7 +13,6 @@ export async function injectMissionContinuation(input: {
   remaining: number
   total: number
   agent?: string
-  backgroundManager?: BackgroundManager
   sessionState: SessionState
 }): Promise<void> {
   const {
@@ -24,18 +22,8 @@ export async function injectMissionContinuation(input: {
     remaining,
     total,
     agent,
-    backgroundManager,
     sessionState,
   } = input
-
-  const hasRunningBgTasks = backgroundManager
-    ? backgroundManager.getTasksByParentSession(sessionID).some((t: { status: string }) => t.status === "running")
-    : false
-
-  if (hasRunningBgTasks) {
-    log(`[${HOOK_NAME}] Skipped injection: background tasks running`, { sessionID })
-    return
-  }
 
   const prompt =
     MISSION_CONTINUATION_PROMPT.replace(/{PLAN_NAME}/g, planName) +

@@ -70,7 +70,6 @@ export type {
 } from "./legacy-hooks"
 export { createNativePluginContext } from "./native-context"
 export { pruneRecentSyntheticIdles } from "./recent-synthetic-idles"
-export { resolveSessionAgent } from "./session-agent-resolver"
 export { normalizeSessionStatusToIdle } from "./session-status-normalizer"
 export type { SkillContext } from "./skill-context"
 export { createSkillContext } from "./skill-context"

@@ -59,7 +59,7 @@ task_create({ items: [
 **BEFORE generating the plan**, score complexity and check ambiguity — Seraph is gated, NOT unconditional:
 
 **Gate — invoke Seraph IFF either condition holds:**
-1. **Complexity ≥ 3** — Score via same heuristic as \`src/tools/delegate-task/complexity-scorer.ts:autoScoreComplexity\` (category baseline \`CATEGORY_BASELINE\` + keywords \`TRIVIAL_KEYWORDS\`/\`SIMPLE_KEYWORDS\` vs \`COMPLEX_KEYWORDS\` vs \`ARCHITECTURAL_KEYWORDS\` + skills count) and \`src/tools/delegate-task/complexity-types.ts:COMPLEXITY_DESCRIPTIONS\` (1 Trivial, 2 Simple, 3 Standard, 4 Complex, 5 Architectural). **Threshold is \`≥ 3\` (Standard+) — NOT \`≥ 4\`.** Levels 3-5 proceed to Seraph; levels 1-2 skip.
+1. **Complexity ≥ 3** — Score via same heuristic as \`src/shared/subagent/complexity-scorer.ts:autoScoreComplexity\` (category baseline \`CATEGORY_BASELINE\` + keywords \`TRIVIAL_KEYWORDS\`/\`SIMPLE_KEYWORDS\` vs \`COMPLEX_KEYWORDS\` vs \`ARCHITECTURAL_KEYWORDS\` + skills count) and \`src/shared/subagent/complexity-types.ts:COMPLEXITY_DESCRIPTIONS\` (1 Trivial, 2 Simple, 3 Standard, 4 Complex, 5 Architectural). **Threshold is \`≥ 3\` (Standard+) — NOT \`≥ 4\`.** Levels 3-5 proceed to Seraph; levels 1-2 skip.
 2. **Ambiguous multi-component = true** — request matches any \`ARCHITECTURAL_KEYWORDS\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥ 2 bounded contexts/domains (same definition as Morpheus Phase 0 multi-component gate).
 
 > **Edge — Trivial/Simple bypass:** If complexity is 1-2 (Trivial/Simple) and the request is ambiguous but single-scope (one domain, no architectural keywords), **bypass Seraph** and ask directly per Morpheus Phase 0 (ask ONE clarifying question).
@@ -67,11 +67,11 @@ task_create({ items: [
 If gate **passes**, summon Seraph in **background mode** (never blocking — see policy below):
 
 \`\`\`typescript
-// Fire Seraph in background — NEVER run_in_background=false from this session.
-const seraphTask = task(
-  subagent_type="seraph",
+// Fire Seraph in background — NEVER background=false from this session.
+const seraphTask = subagent(
+  agent="seraph",
   load_skills=[],
-  run_in_background=true,
+  background=true,
   prompt=\`Review this planning session before I generate the work plan:
 
   **User's Goal**: {summarize what user wants}
@@ -95,13 +95,13 @@ const seraphTask = task(
 )
 
 // Continue drafting/other work, then collect once when needed:
-const seraphReview = background_output(task_id=seraphTask.task_id)
+const seraphReview = session_read(session_id=seraphTask.sessionID)
 \`\`\`
 
 > **NO-BLOCKING-NESTING POLICY (MANDATORY — applies to EVERY Oracle delegation):**
-> - **Default to background mode**: always pass \`run_in_background=true\`. Oracle's own invocations default to background; blocking is never the default.
-> - **Never nest a blocking subagent call** (\`run_in_background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
-> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`background_output(task_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
+> - **Default to background mode**: always pass \`background=true\`. Oracle's own invocations default to background; blocking is never the default.
+> - **Never nest a blocking subagent call** (\`background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
+> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`session_read(session_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
 
 If gate **does NOT pass**, skip Seraph and proceed directly to plan generation (note \`Seraph bypassed: complexity=X / no multi-component signal\` in summary).
 

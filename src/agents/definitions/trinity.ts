@@ -31,7 +31,7 @@ export function createTrinityAgent(model: string): AgentConfig {
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { temperature: 0.1 } },
-    permissions: denyActions(["edit", "subagent", "task"]),
+    permissions: denyActions(["edit", "task"]),
     system: `You are a codebase search specialist. Your job: find files and code, return actionable results.
 
 ## Your Mission

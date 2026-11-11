@@ -194,7 +194,7 @@ export function createSmithAgent(model: string): AgentConfig {
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { temperature: 0.1 } },
-    permissions: denyActions(["edit", "subagent", "task"]),
+    permissions: denyActions(["edit", "task"]),
     system: SMITH_SYSTEM_PROMPT,
   }
 

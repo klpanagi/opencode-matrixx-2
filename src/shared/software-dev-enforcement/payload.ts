@@ -1,7 +1,7 @@
 import type { BrowserAutomationProvider, SoftwareDevEnforcementConfigInput } from "../../config/schema"
 import { resolveSoftwareDevEnforcement } from "../../config/schema"
+import { isCodeWritingCategory } from "../../shared/subagent/delegation-constants"
 import { createBuiltinSkills } from "../../skills"
-import { isCodeWritingCategory } from "../../tools/delegate-task/constants"
 import {
   isSoftwareDevExecutorTarget,
   isSoftwareDevOrchestratorTarget,

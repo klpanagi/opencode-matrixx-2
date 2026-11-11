@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto"
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import type { BackgroundManager } from "../../../src/features/background-agent"
 import type { MissionState } from "../../../src/features/mission-state"
 import {
   clearMissionState,
@@ -228,7 +227,7 @@ describe("niobe hook", () => {
       // then - standalone verification reminder appended
       expect(output.output).toContain("Task completed successfully")
       expect(output.output).toContain("MANDATORY:")
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       
       cleanupMessageStorage(sessionID)
     })
@@ -267,7 +266,7 @@ describe("niobe hook", () => {
       expect(output.output).toContain("SUBAGENT WORK COMPLETED")
       expect(output.output).toContain("test-plan")
       expect(output.output).toContain("LIE")
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       
       cleanupMessageStorage(sessionID)
     })
@@ -449,7 +448,7 @@ describe("niobe hook", () => {
       )
 
       // then - should include session_id instructions and verification
-      expect(output.output).toContain("task(session_id=")
+      expect(output.output).toContain("subagent(agent=")
       expect(output.output).toContain("[x]")
       expect(output.output).toContain("MANDATORY:")
       
@@ -484,8 +483,8 @@ describe("niobe hook", () => {
 
         // then
         expect(output.output).toContain("ORCHESTRATOR, not an IMPLEMENTER")
-        expect(output.output).toContain("task")
-        expect(output.output).toContain("task")
+        expect(output.output).toContain("subagent")
+        expect(output.output).toContain("subagent")
       })
 
       test("should append delegation reminder when orchestrator edits outside .matrixx/", async () => {
@@ -857,104 +856,6 @@ describe("niobe hook", () => {
       expect(mockInput._promptMock).not.toHaveBeenCalled()
     })
 
-     test("should skip when background tasks are running", async () => {
-       // given - mission state with incomplete plan
-       const planPath = join(TEST_DIR, "test-plan.md")
-       writeFileSync(planPath, "# Plan\n- [ ] Task 1")
-
-       const state: MissionState = {
-         active_plan: planPath,
-         started_at: "2026-01-02T10:00:00Z",
-         session_ids: [MAIN_SESSION_ID],
-         plan_name: "test-plan",
-       }
-       writeMissionState(TEST_DIR, state)
-
-       const mockBackgroundManager = {
-         getTasksByParentSession: () => [{ status: "running" }],
-       }
-
-       const mockInput = createMockMatrixxContext()
-       const hook = createNiobeHook(mockInput, {
-         directory: TEST_DIR,
-         backgroundManager: mockBackgroundManager as unknown as BackgroundManager,
-       })
-
-       // when
-       await hook.handler({
-         type: "session.idle",
-         data: { sessionID: MAIN_SESSION_ID },
-       })
-
-       // then - should not call prompt
-       expect(mockInput._promptMock).not.toHaveBeenCalled()
-     })
-
-     test("should skip when continuation is stopped via isContinuationStopped", async () => {
-       // given - mission state with incomplete plan
-       const planPath = join(TEST_DIR, "test-plan.md")
-       writeFileSync(planPath, "# Plan\n- [ ] Task 1\n- [ ] Task 2")
-
-       const state: MissionState = {
-         active_plan: planPath,
-         started_at: "2026-01-02T10:00:00Z",
-         session_ids: [MAIN_SESSION_ID],
-         plan_name: "test-plan",
-       }
-       writeMissionState(TEST_DIR, state)
-
-       const mockInput = createMockMatrixxContext()
-       const hook = createNiobeHook(mockInput, {
-         directory: TEST_DIR,
-         isContinuationStopped: (sessionID: string) => sessionID === MAIN_SESSION_ID,
-       })
-
-       // when
-       await hook.handler({
-         type: "session.idle",
-         data: { sessionID: MAIN_SESSION_ID },
-       })
-
-       // then - should not call prompt because continuation is stopped
-       expect(mockInput._promptMock).not.toHaveBeenCalled()
-     })
-
-    test("should clear abort state on message.updated", async () => {
-      // given - mission with incomplete plan
-      const planPath = join(TEST_DIR, "test-plan.md")
-      writeFileSync(planPath, "# Plan\n- [ ] Task 1")
-
-      const state: MissionState = {
-        active_plan: planPath,
-        started_at: "2026-01-02T10:00:00Z",
-        session_ids: [MAIN_SESSION_ID],
-        plan_name: "test-plan",
-      }
-      writeMissionState(TEST_DIR, state)
-
-      const mockInput = createMockMatrixxContext()
-      const hook = createNiobeHook(mockInput)
-
-      // when - abort error, then message update, then idle
-      await hook.handler({
-        type: "session.error",
-        data: {
-          sessionID: MAIN_SESSION_ID,
-          error: { name: "AbortError" },
-        },
-      })
-      await hook.handler({
-        type: "message.updated",
-        data: { info: { sessionID: MAIN_SESSION_ID, role: "user" } },
-      })
-      await hook.handler({
-        type: "session.idle",
-        data: { sessionID: MAIN_SESSION_ID },
-      })
-
-      // then - should call prompt because abort state was cleared
-      expect(mockInput._promptMock).toHaveBeenCalled()
-    })
 
     test("should include plan progress in continuation prompt", async () => {
       // given - mission state with specific progress

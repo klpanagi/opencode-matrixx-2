@@ -133,6 +133,14 @@ export type BuiltinAgentName =
   | "cipher"
   | "sentinel"
   | "sati"
+  | "mouse-construct"
+  | "mouse-source"
+  | "mouse-rabbit-hole"
+  | "mouse-glitch"
+  | "mouse-bullet-time"
+  | "mouse-blue-pill"
+  | "mouse-the-one"
+  | "mouse-transmission"
 
 type OverridableAgentName =
   | "build"

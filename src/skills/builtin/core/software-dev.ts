@@ -30,10 +30,10 @@ This skill defines a 6-phase software development pipeline with specialized role
 
 | Role | Delegate To | Skills | Purpose |
 |------|-------------|--------|---------|
-| Architect | \`subagent_type="oracle"\` | — | Design, architecture decisions |
-| Developer | \`category="source"\` | git-master, tdd-enforcer | Implementation + tests |
-| Quality Evaluator | \`category="the-one"\` | quality-gate, review-work | Lint, typecheck, review |
-| Security Expert | \`subagent_type="sentinel"\` | security-core, security-sast, security-api, security-dependencies | Security audit |
+| Architect | \`agent="oracle"\` | — | Design, architecture decisions |
+| Developer | \`agent="mouse-source"\` | git-master, tdd-enforcer | Implementation + tests |
+| Quality Evaluator | \`agent="mouse-the-one"\` | quality-gate, review-work | Lint, typecheck, review |
+| Security Expert | \`agent="sentinel"\` | security-core, security-sast, security-api, security-dependencies | Security audit |
 
 ---
 
@@ -61,10 +61,10 @@ This skill defines a 6-phase software development pipeline with specialized role
 Fire architecture planning:
 
 \`\`\`
-task(
-  subagent_type="oracle",
+subagent(
+  agent="oracle",
   load_skills=[],
-  run_in_background=true,
+  background=true,
   description="Plan implementation approach",
   prompt="Plan implementation for: {REQUEST}\\n\\nContext: {CODEBASE_CONTEXT}\\n\\nDeliver: approach, file list, edge cases, dependency order.")
 \`\`\`
@@ -83,10 +83,10 @@ Worktree-first (native): create an isolated worktree via \`worktree_create({ nam
 For each file in dependency order:
 
 \`\`\`
-task(
-  category="source",
+subagent(
+  agent="mouse-source",
   load_skills=["git-master", "tdd-enforcer"],
-  run_in_background=true,
+  background=true,
   description="Implement {FEATURE}",
   prompt="Implement from plan:\\n{PLAN}\\n\\nFile: {PATH}\\n\\nFollow tdd-enforcer: write test FIRST (RED), then minimum code (GREEN), then refactor. Run bun test after each change.")
 \`\`\`
@@ -126,10 +126,10 @@ If ANY fails → fix → re-run ALL.
 Fire 6-agent parallel review:
 
 \`\`\`
-task(
-  category="the-one",
+subagent(
+  agent="mouse-the-one",
   load_skills=["quality-gate", "review-work"],
-  run_in_background=true,
+  background=true,
   description="Review implementation",
   prompt="Review completed implementation using review-work skill.\\n\\nGoal: {REQUEST}\\nFiles: {CHANGED_FILES}\\nDiff: {DIFF}")
 \`\`\`
@@ -145,10 +145,10 @@ task(
 Fire security audit:
 
 \`\`\`
-task(
-  subagent_type="sentinel",
+subagent(
+  agent="sentinel",
   load_skills=["security-core", "security-sast", "security-api", "security-dependencies"],
-  run_in_background=true,
+  background=true,
   description="Security audit",
   prompt="Security audit on:\\n{CHANGED_FILES}\\n\\nDiff:\\n{DIFF}\\n\\nCheck: input validation, auth, secrets, injection, dependencies.")
 \`\`\`
@@ -162,10 +162,10 @@ task(
 ## PHASE 6: SHIP
 
 \`\`\`
-task(
-  category="bullet-time",
+subagent(
+  agent="mouse-bullet-time",
   load_skills=["git-master"],
-  run_in_background=false,
+  background=false,
   description="Create commits and PR",
   prompt="Create atomic commits for implementation.\\n\\nFiles: {CHANGED_FILES}\\n\\nFollow git-master conventions. Target dev branch.")
 \`\`\`

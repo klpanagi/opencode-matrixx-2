@@ -19,7 +19,6 @@ shared/
 ├── migration/                    # Legacy config migration (legacy subdir; agent/hook/model names)
 ├── model/                        # Model resolution pipeline, requirements, retry (8 files)
 ├── opencode/                     # HTTP API, server auth, plugin detector (6 files)
-├── outcome/                      # Shared outcome types
 ├── policy/                       # Context-mode enforcement, DCP, RTK, injection (8 files)
 ├── runtime/                      # Logger, notify, abort-error + helpers (8 files)
 ├── session/                      # Session utils, cursor, ephemeral sessions (15 files)
@@ -32,7 +31,7 @@ shared/
 ```
 
  scope rule: new cross-cutting code goes in the matching scoped dir
- (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`, `outcome/`,
+ (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`,
  `policy/`, `runtime/`, `session/`, `text/`, `tool/`); the 5 legacy subdirs
  (`command-executor/`, `git-worktree/`, `migration/`, `software-dev-enforcement/`,
  `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability.

@@ -23,11 +23,11 @@ export const DOC_INTENT_TRIGGERS = [
 
 export const NUDGE_MESSAGE =
   "[docs-lookup-guard] Prefer delegating docs lookup to the operator agent for context isolation — " +
-  "use task(operator) instead of calling context7/websearch docs tools directly. " +
-  "Example: task(subagent_type=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
+  "use subagent(agent=\"operator\") instead of calling context7/websearch docs tools directly. " +
+  "Example: subagent(agent=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
   "Operator agents may call context7_resolve-library-id / context7_query-docs / context7_get-library-docs / websearch directly."
 
 export const FALLBACK_MESSAGE =
   "[docs-lookup-guard] Fallback: route this docs lookup to the operator agent (operator-direct) for context isolation — " +
-  "use task(subagent_type=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
+  "use subagent(agent=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
   "Direct context7/websearch docs calls from non-operator agents stay warn-first; the operator path is authoritative."

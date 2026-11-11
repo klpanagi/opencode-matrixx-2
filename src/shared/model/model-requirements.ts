@@ -98,6 +98,57 @@ export const DEFAULT_AGENT_MODEL_REQUIREMENTS: Record<string, ModelRequirement> 
       { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
     ],
   },
+  // Per-category worker subagents (native migration): each mirrors the chain of
+  // its delegate-task category from DEFAULT_CATEGORY_MODEL_REQUIREMENTS so the
+  // registry model-resolution gate does not drop them pre-factory.
+  "mouse-construct": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-source": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-rabbit-hole": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-glitch": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-bullet-time": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-blue-pill": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-the-one": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-opus-4-6", variant: "max" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+    ],
+  },
+  "mouse-transmission": {
+    fallbackChain: [
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-sonnet-4-6" }, // allow-hardcoded: first-run fallback
+      { providers: ["anthropic", "github-copilot", "opencode"], model: "claude-haiku-4-5" }, // allow-hardcoded: first-run fallback
+    ],
+  },
 }
 
 export const DEFAULT_CATEGORY_MODEL_REQUIREMENTS: Record<string, ModelRequirement> = {

@@ -32,9 +32,9 @@ Gather context before drafting any plan.
 
 1. Fire parallel background agents:
    \`\`\`
-   task(subagent_type="trinity", load_skills=[], prompt="Find existing patterns for [topic] in this codebase", run_in_background=true)
-   task(subagent_type="trinity", load_skills=[], prompt="Find test infrastructure and conventions", run_in_background=true)
-   task(subagent_type="operator", load_skills=[], prompt="Find official docs and best practices for [technology]", run_in_background=true)
+   subagent(agent="trinity", load_skills=[], prompt="Find existing patterns for [topic] in this codebase", background=true)
+   subagent(agent="trinity", load_skills=[], prompt="Find test infrastructure and conventions", background=true)
+   subagent(agent="operator", load_skills=[], prompt="Find official docs and best practices for [technology]", background=true)
    \`\`\`
 2. Wait for results before planning.
 3. Synthesize findings into requirements, assumptions, and unknowns.

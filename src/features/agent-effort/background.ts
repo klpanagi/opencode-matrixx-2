@@ -1,5 +1,6 @@
 import { log } from "../../shared/runtime/logger"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { getParentSessionID } from "../session-state/state"
 import { readSessionTasks } from "../task-session-scope/session-task-pending"
 import { computeEffort } from "./calculate"
 import { collectTelemetry } from "./collect"
@@ -65,7 +66,9 @@ export async function recordEffortForBackground(
 
     const resolvedTaskId = resolveEffortTaskId({
       directory: rt.directory,
+      sessionID: task.sessionID,
       parentSessionID: task.parentSessionID,
+      getParentSessionID,
     })
     if (resolvedTaskId !== undefined && resolvedTaskId !== task.id) {
       try {

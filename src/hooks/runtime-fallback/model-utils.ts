@@ -1,4 +1,4 @@
-import { parseModelString as parseBaseModelString } from "../../tools/delegate-task/model-string-parser"
+import { parseModelString as parseBaseModelString } from "../../shared/subagent/model-string-parser"
 
 export function parseModelString(model: string): { providerID: string; modelID: string; variant?: string } | undefined {
   const variantMatch = model.match(/^(.+)\(([^)]+)\)$/)

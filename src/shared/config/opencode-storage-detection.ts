@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import { FALSE_PENDING_RETRY, NOT_CACHED } from "../outcome/sentinels"
+import { FALSE_PENDING_RETRY, NOT_CACHED } from "./cache-sentinels"
 import { getDataDir } from "./data-path"
 import { isOpenCodeVersionAtLeast, OPENCODE_SQLITE_VERSION } from "./opencode-version"
 

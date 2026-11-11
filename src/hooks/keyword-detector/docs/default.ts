@@ -22,6 +22,6 @@ export const DOCS_PATTERN = new RegExp(
 
 export const DOCS_MESSAGE = `[docs-mode]
 DOCS LOOKUP. Delegate library/framework documentation queries to the operator agent for context isolation:
-- task(subagent_type="operator", prompt="Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs")
+- subagent(agent="operator", prompt="Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs")
 - Operator agents may call context7/websearch docs tools directly (operator-direct).
 Do NOT fan out parallel search agents for pure docs intents.`

@@ -1,7 +1,7 @@
 /**
  * Niobe - Master Orchestrator Agent
  *
- * Orchestrates work via task() to complete ALL tasks in a todo list until fully done.
+ * Orchestrates work via subagent() to complete ALL tasks in a todo list until fully done.
  * You are the captain of a crew of specialized agents.
  *
  * Routing:
@@ -92,15 +92,15 @@ function buildDynamicOrchestratorPrompt(ctx?: OrchestratorContext): string {
 }
 
 export function createNiobeAgent(ctx: OrchestratorContext): AgentConfig {
-  // Sole deny is native subagent: Niobe orchestrates via task(). Factory is single
+  // Sole deny is native subagent: Niobe orchestrates via subagent(). Factory is single
   // source of truth for outgoing-task allow (see #111 option b). Handler
   // (tool-config-handler.ts) is fill-only and must not override; incoming
-  // task(subagent_type="niobe") remains rejected at subagent-resolver.ts:57
+  // subagent(agent="niobe") remains rejected at subagent-resolver.ts:57
   // (different axis).
 
   const baseConfig: AgentConfig = {
     description:
-      "Orchestrates work via task() to complete ALL tasks in a todo list until fully done. (Niobe - Matrixx)",
+      "Orchestrates work via subagent() to complete ALL tasks in a todo list until fully done. (Niobe - Matrixx)",
     mode: MODE,
     ...(ctx.model ? { model: parseModelRef(ctx.model) } : {}),
     request: { body: { temperature: 0.1 } },

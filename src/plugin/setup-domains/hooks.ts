@@ -16,6 +16,7 @@ import { createChatMessageHandler } from "../tool/chat-message"
 import { createChatParamsHandler } from "../tool/chat-params"
 import type { MatrixxContext } from "../tool/context"
 import type { Hooks } from "../tool/legacy-hooks"
+import { buildSubagentPolicyDeps } from "../tool/subagent-policy"
 import { createToolDefinitionHandler } from "../tool/tool-definition"
 import { createToolExecuteAfterHandler } from "../tool/tool-execute-after"
 import { createToolExecuteBeforeHandler } from "../tool/tool-execute-before"
@@ -66,13 +67,16 @@ export function setupChatHooks(args: {
 export function setupToolHooks(args: {
   ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
+  pluginConfig: MatrixxConfig
 }): Pick<Hooks, "tool.execute.before" | "tool.execute.after" | "tool.definition"> {
-  const { ctx, hooks } = args
+  const { ctx, hooks, pluginConfig } = args
+  const subagentPolicy = buildSubagentPolicyDeps(pluginConfig)
 
   return {
     "tool.execute.before": createToolExecuteBeforeHandler({
       ctx,
       hooks,
+      subagentPolicy,
     }),
 
     "tool.execute.after": createToolExecuteAfterHandler({

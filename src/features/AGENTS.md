@@ -2,13 +2,11 @@
 
 ## OVERVIEW
 
-21 feature modules (background-agent, builtin-commands, task-storage, bdd, assembly-state, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+Feature modules (builtin-commands, task-storage, bdd, assembly-state, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
 features/
-├── background-agent/           # Task lifecycle, restart reconciliation (20 files; orchestration split in manager/) — see background-agent/AGENTS.md
-│   └── manager/                # manager.ts + lifecycle.ts + reconcile.ts + store.ts + types.ts
 ├── builtin-commands/           # 23 commands, 21 templates
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 3 files + `task-toast-manager/` — see task-storage/AGENTS.md
 ├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)
@@ -53,7 +51,7 @@ Task creation → Queue → Admission check → Concurrency check → Execute �
 **Session revive** (`revive.ts`, `background_revive` tool): A terminal task whose handle is still on disk can be resumed with a NEW instruction. Retention IS the existing handle files — there is no separate store — bounded by `TASK_TTL_MS` (30 min). Revivable: `cancelled | stopped | interrupt | error | completed` (each requires a `sessionID`); `statusUncertain` requires `force: true`; `pending | running` must use `background_output` instead; a handle that never produced a session (e.g. `queue-saturated`) is unrevivable. `manager.revive()` falls back to disk on an in-memory map miss, then re-admits through bounded/nested admission — and a nested revive bypasses the semaphore entirely so it can never await it unboundedly. `manager.resume()` remains the in-memory-only path.
 
 **Background task history + notifications** (`task-history.ts`, `notification-builder.ts`): helper modules, NOT hooks. Both are fed by the shared `finalizeTask` finalizer; the removed `wakeScheduler`/`jobBoard` config keys are deprecated, accepted for config compatibility, and ignored.
-- **Default conservation** (U9): `run_in_background` default stays `false`. `true` is async fan-out (returns `task_id`, retrieve via `background_output`); `false` is sync inline. Never call `task()` sequentially for independent work.
+- **Default conservation** (U9): `background` default stays `false`. `true` is async fan-out (the parent session auto-receives a completion message with the child output; or retrieve via `session_read`); `false` is sync inline. Never call `subagent()` sequentially for independent work.
 
 **Skill Management:** All skills are loaded from `src/skills/` via `createBuiltinSkills()`. No external skill directory loading. Skills are configured via `disabled_skills` in `matrixx.jsonc`.
 

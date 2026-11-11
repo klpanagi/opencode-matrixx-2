@@ -1,5 +1,6 @@
 export * from "./awaiting-user"
 export * from "./first-message-variant"
+export * from "./native-subagent"
 export * from "./session-context-source"
 export * from "./session-cursor"
 export * from "./session-directory-resolver"

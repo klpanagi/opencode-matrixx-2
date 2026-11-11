@@ -34,6 +34,8 @@ export { createPlanListTool } from "./plan/plan-list"
 export { createPlanReadTool } from "./plan/plan-read"
 export { createPlanUpdateTool } from "./plan/plan-update"
 export { createPresetTool } from "./preset/tools"
+export { REMOVED_TOOL_NAMES } from "./removed-tools/constants"
+export { createRemovedToolGuard } from "./removed-tools/tools"
 export { createSessionCleanupTool } from "./session-cleanup"
 export { sessionExists } from "./session-manager/storage"
 export { createSessionManagerTools } from "./session-manager/tools"
@@ -41,21 +43,12 @@ export { createSilentFailureScannerTool } from "./silent-failure-scanner"
 export { createSkillTool } from "./skill/tools"
 export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/tools"
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
+export { createSubagentControl } from "./subagent-control/tools"
 export { lspManager }
 
-import type { BackgroundManager } from "../features/background-agent"
-import type { SessionContextCarrier } from "../shared/session/session-context-source"
 import type { MatrixxToolDefinition } from "../shared/tool/define-tool"
-import {
-  createBackgroundCancel,
-  createBackgroundOutput,
-  createBackgroundRevive,
-  createBackgroundWaitAll,
-} from "./background-task"
-import type { BackgroundCancelClient } from "./background-task/clients"
 
 export { createAssemblyTool } from "./assembly/tools"
-export { createDelegateTask, resolveSystemDefaultModel } from "./delegate-task"
 export { createHashlineEditTool } from "./hashline-edit"
 export { createLookAt } from "./look-at/tools"
 export {
@@ -65,19 +58,6 @@ export {
   createTaskList,
   createTaskUpdateTool,
 } from "./task"
-
-export function createBackgroundTools(
-  manager: BackgroundManager,
-  client: SessionContextCarrier & BackgroundCancelClient,
-  directory: string,
-): Record<string, MatrixxToolDefinition> {
-  return {
-    background_output: createBackgroundOutput(manager, client),
-    background_cancel: createBackgroundCancel(manager, client),
-    background_revive: createBackgroundRevive(manager, directory),
-    background_wait_all: createBackgroundWaitAll(manager),
-  }
-}
 
 export const builtinTools: Record<string, MatrixxToolDefinition> = {
   lsp_goto_definition,

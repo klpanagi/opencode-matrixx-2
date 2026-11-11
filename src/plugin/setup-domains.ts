@@ -14,9 +14,8 @@
  * - the 6-phase config pipeline (`../plugin/handlers/config-handler`) that feeds the config draft
  * - the unified compaction hook (Task 8)
  *
- * Native background/session lifecycle landed in Task 7 (D5): the slim
- * `BackgroundManager` talks to `session.create`/`promptAsync` directly and
- * the tmux pane mirror is gone.
+ * Native session/background APIs own subagent lifecycle and display (D5):
+ * no custom manager, no tmux pane mirror.
  */
 
 import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
@@ -25,8 +24,8 @@ import { log } from "../shared"
 import { setContextModeForPrompts } from "../shared/policy/context-mode-enforcement"
 import { switchProfile } from "../shared/policy/dcp-switch-profile"
 import { createFirstMessageVariantGate } from "../shared/session/first-message-variant"
+import { resolveSystemDefaultModel } from "../shared/subagent/default-model"
 import { startTmuxCheck } from "../tools"
-import { resolveSystemDefaultModel } from "../tools/delegate-task/default-model"
 import { setAvailableToolNames } from "./handlers/agent-config-handler"
 import { createContinuationHooks } from "./hooks/create-continuation-hooks"
 import { createSessionHooks } from "./hooks/create-session-hooks"
@@ -92,13 +91,11 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     ctx: pctx,
     pluginConfig,
     tmuxConfig,
-    backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
   })
 
   const toolsResult = await setupToolsDomain({
     ctx: pctx,
     pluginConfig,
-    managers,
     systemDefaultModel: () => resolveSystemDefaultModel(ctx),
   })
 
@@ -131,7 +128,6 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
-    backgroundManager: managers.backgroundManager,
     sessionRecovery: session.sessionRecovery,
   })
 
@@ -158,7 +154,7 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     hooks,
   })
 
-  const tool = setupToolHooks({ ctx: pctx, hooks })
+  const tool = setupToolHooks({ ctx: pctx, hooks, pluginConfig })
   const compaction = setupCompactionHooks({ hooks })
 
   const event = createEventHandler({
@@ -194,7 +190,6 @@ export type {
   RegisterDomainsInput,
 } from "./setup-domains/assemble"
 export {
-  hideNativeSubagentTool,
   hookOutputText,
   registerDomains,
 } from "./setup-domains/assemble"

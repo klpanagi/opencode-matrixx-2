@@ -694,7 +694,7 @@ describe("categorizeTools extended", () => {
 })
 
 describe("buildNiobeReferralSection (issue #111 option b)", () => {
-  it("points Morpheus to /start-work and forbids task(subagent_type=niobe)", () => {
+  it("points Morpheus to /start-work and forbids subagent(agent=niobe)", () => {
     //#given
     //#when
     const result = buildNiobeReferralSection()
@@ -702,7 +702,7 @@ describe("buildNiobeReferralSection (issue #111 option b)", () => {
     //#then
     expect(result).toContain("/start-work")
     expect(result).toContain("Niobe")
-    expect(result).toContain('task(subagent_type="niobe")')
+    expect(result).toContain('subagent(agent="niobe")')
   })
 })
 

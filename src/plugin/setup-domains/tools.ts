@@ -6,13 +6,12 @@ import type { MatrixxConfig } from "../../config"
 import type { BrowserAutomationProvider } from "../../config/schema/browser-automation"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
+import { setPollTimeoutMs } from "../../shared/subagent/timing"
 import type { BuiltinSkill } from "../../skills"
-import { setPollTimeoutMs } from "../../tools/delegate-task/timing"
 import { createAvailableCategories } from "../tool/available-categories"
 import type { ToolsRecord } from "../tool/context"
 import { createSkillContext } from "../tool/skill-context"
 import { createToolCatalog } from "../tool/tool-catalog"
-import type { DomainManagers } from "./managers"
 
 export type SetupToolsDomainResult = {
   filteredTools: ToolsRecord
@@ -28,10 +27,9 @@ export type SetupToolsDomainResult = {
 export async function setupToolsDomain(args: {
   ctx: NativePluginContext
   pluginConfig: MatrixxConfig
-  managers: Pick<DomainManagers, "backgroundManager">
   systemDefaultModel?: () => Promise<string | undefined>
 }): Promise<SetupToolsDomainResult> {
-  const { ctx, pluginConfig, managers, systemDefaultModel } = args
+  const { ctx, pluginConfig, systemDefaultModel } = args
 
   const pollTimeout = resolveTasksConfig(pluginConfig).pollTimeoutMs
   if (pollTimeout !== undefined) {
@@ -48,7 +46,6 @@ export async function setupToolsDomain(args: {
   const { filteredTools, taskSystemEnabled } = createToolCatalog({
     ctx,
     pluginConfig,
-    managers,
     skillContext,
     availableCategories,
     systemDefaultModel,

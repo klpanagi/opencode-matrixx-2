@@ -143,8 +143,9 @@ describe("preset tool", () => {
     )) as string
 
     //#then confirmation states immediate delegate switch + next-session builtin
+    // NOTE (Phase 5.3): "delegate-task" renamed to "delegation" with the tool deletion.
     expect(out).toContain("flagship")
-    expect(out).toContain("delegate-task categories switch immediately")
+    expect(out).toContain("delegation categories switch immediately")
     expect(out).toContain("next session")
     // no file written without --save
     expect(capturedWriteData).toBeNull()

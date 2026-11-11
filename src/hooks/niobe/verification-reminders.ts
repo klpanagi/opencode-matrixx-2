@@ -7,7 +7,7 @@ function buildVerificationReminder(sessionId: string): string {
 
 **If ANY verification fails, use this immediately:**
 \`\`\`
-task(session_id="${sessionId}", prompt="fix: [describe the specific failure]")
+subagent(agent="<original-agent>", sessionID="${sessionId}", prompt="fix: [describe the specific failure]")
 \`\`\``
 }
 

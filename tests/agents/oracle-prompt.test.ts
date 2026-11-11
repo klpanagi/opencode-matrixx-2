@@ -93,7 +93,7 @@ describe("ORACLE_SYSTEM_PROMPT delegation policy", () => {
 
     //#then
     expect(lowerPrompt).toContain("default to background mode")
-    expect(prompt).toContain("run_in_background=true")
+    expect(prompt).toContain("background=true")
   })
 
   test("should forbid nesting a blocking subagent call inside a blocking session", () => {
@@ -117,7 +117,7 @@ describe("ORACLE_SYSTEM_PROMPT delegation policy", () => {
 
     //#then
     expect(lowerPrompt).toContain("sequential top-level calls")
-    expect(prompt).toContain("background_output(task_id=")
+    expect(prompt).toContain("session_read(session_id=")
   })
 
   test("should contain no blocking run_in_background=false invocation", () => {
@@ -127,7 +127,7 @@ describe("ORACLE_SYSTEM_PROMPT delegation policy", () => {
     //#when / #then
     // Matches an actual argument assignment (followed by comma, newline, or close paren),
     // so policy prose that merely names the forbidden value does not count as an invocation.
-    expect(prompt).not.toMatch(/run_in_background=false\s*[,\n)]/)
+    expect(prompt).not.toMatch(/background=false\s*[,\n)]/)
   })
 
   test("should summon Seraph in background mode, not blocking", () => {
@@ -135,8 +135,8 @@ describe("ORACLE_SYSTEM_PROMPT delegation policy", () => {
     const planGeneration = ORACLE_PLAN_GENERATION
 
     //#when / #then
-    expect(planGeneration).toContain('subagent_type="seraph"')
-    expect(planGeneration).toMatch(/subagent_type="seraph"[\s\S]*?run_in_background=true/)
-    expect(planGeneration).toContain("background_output(task_id=seraphTask.task_id)")
+    expect(planGeneration).toContain('agent="seraph"')
+    expect(planGeneration).toMatch(/agent="seraph"[\s\S]*?background=true/)
+    expect(planGeneration).toContain("session_read(session_id=seraphTask.sessionID)")
   })
 })

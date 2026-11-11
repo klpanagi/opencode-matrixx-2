@@ -14,6 +14,14 @@ export const BuiltinAgentNameSchema = z.enum([
   "cipher",
   "sentinel",
   "sati",
+  "mouse-construct",
+  "mouse-source",
+  "mouse-rabbit-hole",
+  "mouse-glitch",
+  "mouse-bullet-time",
+  "mouse-blue-pill",
+  "mouse-the-one",
+  "mouse-transmission",
 ])
 
 export const BuiltinSkillNameSchema = z.enum([

@@ -1,4 +1,4 @@
-import { parseModelString } from "../../tools/delegate-task/model-string-parser"
+import { parseModelString } from "../../shared/subagent/model-string-parser"
 import { log } from "../runtime/logger"
 import { isRecord } from "../runtime/record-type-guard"
 import type { SessionDomainLike } from "../session/session-facade"

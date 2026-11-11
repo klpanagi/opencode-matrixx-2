@@ -27,13 +27,13 @@ export const REMINDER_MESSAGE = `
 
 You called a search/fetch tool directly without leveraging specialized agents.
 
-RECOMMENDED: Use task with explore/librarian agents for better results:
+RECOMMENDED: Use subagent with explore/librarian agents for better results:
 
 \`\`\`
 // Parallel exploration - fire multiple agents simultaneously
-task(agent="trinity", prompt="Find all files matching pattern X")
-task(agent="trinity", prompt="Search for implementation of Y") 
-task(agent="operator", prompt="Lookup documentation for Z")
+subagent(agent="trinity", prompt="Find all files matching pattern X")
+subagent(agent="trinity", prompt="Search for implementation of Y") 
+subagent(agent="operator", prompt="Lookup documentation for Z")
 
 // Then continue your work while they run in background
 // System will notify you when each completes
@@ -45,5 +45,5 @@ WHY:
 - Specialized agents have domain expertise
 - Reduces context window usage in main session
 
-ALWAYS prefer: Multiple parallel task calls > Direct tool calls
+ALWAYS prefer: Multiple parallel subagent calls > Direct tool calls
 `;

@@ -2,12 +2,11 @@
 
 ## OVERVIEW
 
-30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, delegate-task (`task`), background-task ×4 `output/cancel/revive/wait_all`, handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
+30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, removed-tools (deleted-tool guard stubs), handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
 
 ## STRUCTURE
 ```
 tools/
-├── delegate-task/    # Category routing + complexity routing
 ├── task/             # 5 individual tools: create, list, get, update, cleanup (task-create.ts, task-list.ts, task-get.ts, task-update.ts, task-cleanup.ts)
 ├── plan/             # 5 plan tools: create, read, update, list, delete for `.matrixx/plans/*.md` (kebab-case, hashline IDs, atomicWrite, unconditional registry)
 ├── lsp/              # 6 LSP tools: goto_definition, find_references, symbols, diagnostics, prepare_rename, rename
@@ -171,7 +170,7 @@ task_update({
 
 **Dependency Management:** Use `addBlockedBy` to declare dependencies on other tasks. Properly managed dependencies enable maximum parallel execution.
 
-## DELEGATION SYSTEM (delegate-task)
+## DELEGATION SYSTEM (native subagent)
 
 8 built-in categories: `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`
 
@@ -179,9 +178,9 @@ Each category defines: model, variant, temperature, max tokens, thinking/reasoni
 
 ### Per-Task Complexity Routing (v2.0.0+)
 
-`delegate_task` accepts an optional `complexity: 1-5 | "auto"` field. When set, the resolver may downgrade the model to a cheaper tier per category (downgrade-only, never upgrade). `auto` scores the task from description/prompt/skills/category. 100% backwards compatible — omit the field and behavior is identical to pre-P3.
+The `subagent` policy accepts an optional `complexity: 1-5 | "auto"` field. When set, the resolver may downgrade the model to a cheaper tier per category (downgrade-only, never upgrade). `auto` scores the task from description/prompt/skills/category. 100% backwards compatible — omit the field and behavior is identical to pre-P3.
 
-Files: `src/tools/delegate-task/complexity-{types,constants,scorer}.ts` + `category-resolver.ts`. Tests: 18 cases across `complexity-scorer.test.ts`, `complexity-constants.test.ts`, `category-resolver.test.ts`.
+Files: `src/shared/subagent/complexity-{types,constants,scorer}.ts` + `skill-resolver.ts`. Tests: 18 cases across `complexity-scorer.test.ts`, `complexity-constants.test.ts`, `category-resolver.test.ts`.
 
 Each category defines: model, variant, temperature, max tokens, thinking/reasoning config, prompt append, stability flag.
 
@@ -218,4 +217,4 @@ The `<task_metadata>` line carries a JSON payload for programmatic parsing. A de
 
 - **Tool names**: snake_case (`lsp_goto_definition`)
 - **Functions**: camelCase (`createDelegateTask`)
-- **Directories**: kebab-case (`delegate-task/`)
+- **Directories**: kebab-case (`task-notepad-writer/`)

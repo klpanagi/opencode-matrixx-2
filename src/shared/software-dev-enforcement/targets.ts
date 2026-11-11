@@ -2,7 +2,7 @@ import {
   resolveSoftwareDevEnforcement,
   type SoftwareDevEnforcementConfigInput,
 } from "../../config/schema"
-import { MOUSE_AGENT } from "../../tools/delegate-task/mouse-agent"
+import { MOUSE_AGENT } from "../../shared/subagent/mouse-agent"
 
 /**
  * Precedence-aware helpers for software-dev enforcement (spec §8).

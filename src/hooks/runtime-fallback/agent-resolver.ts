@@ -13,6 +13,14 @@ const AGENT_NAMES = [
   "smith",
   "cipher",
   "mouse",
+  "mouse-construct",
+  "mouse-source",
+  "mouse-rabbit-hole",
+  "mouse-glitch",
+  "mouse-bullet-time",
+  "mouse-blue-pill",
+  "mouse-the-one",
+  "mouse-transmission",
   "sentinel",
 ]
 

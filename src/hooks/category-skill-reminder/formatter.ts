@@ -28,7 +28,7 @@ export function buildReminderMessage(availableSkills: AvailableSkill[]): string 
     "> User-installed skills OVERRIDE built-in defaults. ALWAYS prefer YOUR SKILLS when domain matches.",
     "",
     "```typescript",
-    `task(category="construct", load_skills=${loadSkills}, run_in_background=true)`,
+    `subagent(agent="mouse-construct", load_skills=${loadSkills}, background=true)`,
     "```",
     "",
   ]

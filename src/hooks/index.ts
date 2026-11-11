@@ -1,8 +1,6 @@
 export { createAgentUsageReminderHook } from "./agent-usage-reminder/hook";
 export { createAutoSlashCommandHook } from "./auto-slash-command";
 export { createAutoUpdateCheckerHook } from "./auto-update-checker";
-export { createBackgroundNotificationHook } from "./background-notification/hook"
-export { createBackgroundTaskBlockerHook } from "./background-task-blocker/hook"
 export { createBashFileReadGuardHook } from "./bash-file-read-guard"
 export { createCategorySkillReminderHook } from "./category-skill-reminder/hook";
 export { createCommentCheckerHooks } from "./comment-checker/hook";
@@ -11,7 +9,6 @@ export { createContextModeEnforcerHook } from "./context-mode-enforcer/hook";
 export { type ContextWindowLimitRecoveryOptions, type ContextWindowLimitRecoveryOptions as AnthropicContextWindowLimitRecoveryOptions, createContextWindowLimitRecoveryHook, createContextWindowLimitRecoveryHook as createAnthropicContextWindowLimitRecoveryHook } from "./context-window-limit-recovery";
 export { createContextWindowMonitorHook } from "./context-window-monitor";
 export { createDcpNudgeSanitizerHook } from "./dcp-nudge-sanitizer/hook";
-export { createDelegateTaskRetryHook } from "./delegate-task-retry/hook";
 export { createDesignIntentPreserverHook } from "./design-intent-preserver/hook"
 export { createDirectoryAgentsInjectorHook } from "./directory-agents-injector/hook";
 export { createDocsLookupGuardHook } from "./docs-lookup-guard/hook";
@@ -51,7 +48,6 @@ export { createSessionRecoveryHook, type SessionRecoveryHook, type SessionRecove
 export { createSoftwareDevEnforcementHook } from "./software-dev-enforcement/hook";
 export { createStartWorkHook } from "./start-work/start-work-hook";
 export { createStopContinuationGuardHook, type StopContinuationGuard } from "./stop-continuation-guard/hook";
-export { createSubagentBlockHook } from "./subagent-block/hook";
 export { createTaskEditGuardHook } from "./task-edit-guard/hook";
 export { createTaskNotepadWriterHook } from "./task-notepad-writer/hook";
 export { createTaskResumeInfoHook } from "./task-resume-info/hook";

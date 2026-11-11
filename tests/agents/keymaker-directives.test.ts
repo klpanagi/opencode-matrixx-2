@@ -76,12 +76,12 @@ describe("keymaker infra-failure track", () => {
 })
 
 describe("keymaker oracle vs merovingian routing", () => {
-  test("names both exact subagent_type values", () => {
+  test("names both exact agent values", () => {
     //#given a smith agent is available
     //#when the keymaker prompt is built
     const system = buildWithSmith()
     //#then both routing literals are present
-    expect(system).toContain("subagent_type='oracle'")
-    expect(system).toContain("subagent_type='merovingian'")
+    expect(system).toContain("agent='oracle'")
+    expect(system).toContain("agent='merovingian'")
   })
 })

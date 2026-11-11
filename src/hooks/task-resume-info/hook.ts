@@ -30,7 +30,7 @@ export function createTaskResumeInfoHook() {
 
     output.output =
       outputText.trimEnd() +
-      `\n\nto continue: task(session_id="${sessionId}", prompt="...")`
+      `\n\nto continue: subagent(agent="<original-agent>", sessionID="${sessionId}", prompt="...")`
   }
 
   return {

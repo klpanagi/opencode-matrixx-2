@@ -19,7 +19,6 @@ hooks/
 ├── compaction-context-injector/  # Injects context on compaction
 ├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/`
 ├── context-window-monitor.ts     # Reminds of headroom at 70%
-├── delegate-task-retry/          # Retries failed delegations
 ├── design-intent-preserver/      # Preserves design intent across edits
 ├── directory-agents-injector/    # Auto-injects AGENTS.md
 ├── edit-error-recovery/          # Recovers from edit failures

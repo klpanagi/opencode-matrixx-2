@@ -74,7 +74,12 @@ describe("locked decision #1 — Smith is byte-frozen", () => {
     // -> src/agents/definitions/smith.ts with import paths rewired
     // ("./agent-config" -> "../shared/agent-config", etc.); prompt body and
     // pre-execution reviewer role untouched.
-    const FROZEN_MD5 = "6aff8b2e1ef610b457579147cca8c1cb"
+    // NOTE (native-subagent-migration task 3.1): hash advanced from
+    // 6aff8b2e1ef610b457579147cca8c1cb. The only delta is the permission flip
+    // deny(subagent) removed so Smith is spawnable via the native subagent
+    // tool; task/edit denies intact. Smith remains the PRE-execution reviewer
+    // and the pre/post split is untouched.
+    const FROZEN_MD5 = "be4a152c7ec3820a66ce358e4e0e9cea"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/definitions/smith.ts")
@@ -131,7 +136,13 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // B12 (runWithSessionLock + tryClaimContinuationSlot per-session
     // serialization) + B13 (monotonic clock + revalidate-after-await gates)
     // fix; execution path (Niobe remains the plan EXECUTOR) unchanged.
-    const FROZEN_MD5 = "1acfba886008358784afce331e1904a0"
+    // NOTE (native-subagent-migration task 5.2): hash advanced from
+    // 1acfba886008358784afce331e1904a0. The only delta is the Phase 5
+    // background-agent deletion — the optional backgroundManager plumbing
+    // (running-task skip gates + forwarding to injectMissionContinuation)
+    // is gone; with no background tasks the gates were constant-false.
+    // Execution path unchanged; Niobe remains the plan EXECUTOR.
+    const FROZEN_MD5 = "9788d92aa80080c2963a2bea4c785b48"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")
@@ -156,7 +167,13 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // calls. Niobe remains the plan EXECUTOR — no reviewer role was added, so
     // the locked decision still holds.
     // NOTE (subagent-misfire fix): hash advanced from fdef0a46b7097166f48d6748ab022885. The only delta is the delegation wording fix: "category OR agent" → "category OR subagent_type" + NEVER-native-subagent sentence; Niobe remains the plan EXECUTOR — no reviewer role was added, so the locked decision still holds.
-    const FROZEN_MD5 = "fe3dc21a0f7f8160d2af3ab533e962ff"
+    // NOTE (native-subagent-migration task 3.1): hash advanced from
+    // fe3dc21a0f7f8160d2af3ab533e962ff. The only delta is the native-subagent
+    // syntax migration: task(category/subagent_type) + run_in_background /
+    // background_output mechanics rewritten to subagent(agent) + background /
+    // session_read / subagent_control. Niobe remains the plan EXECUTOR — no
+    // reviewer role was added, so the locked decision still holds.
+    const FROZEN_MD5 = "d71e2ba9413b8e46a453e3832d3c68b2"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/definitions/niobe/default.ts")

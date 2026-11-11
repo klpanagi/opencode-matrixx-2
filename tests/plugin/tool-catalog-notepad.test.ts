@@ -3,7 +3,6 @@ import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { MatrixxConfig } from "../../src/config"
-import type { BackgroundManager } from "../../src/features/background-agent"
 import type { SkillContext } from "../../src/plugin/tool/skill-context"
 import { createToolCatalog } from "../../src/plugin/tool/tool-catalog"
 import type { MatrixxContext } from "../../src/plugin/tool/context"
@@ -14,7 +13,6 @@ function makeArgs(pluginConfig: MatrixxConfig, directory: string) {
   return {
     ctx: { directory, client: {} } as unknown as MatrixxContext,
     pluginConfig,
-    managers: { backgroundManager: {} as unknown as BackgroundManager },
     skillContext: {
       builtinSkills: [],
       availableSkills: [],

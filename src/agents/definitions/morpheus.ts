@@ -43,7 +43,7 @@ function buildTaskManagementSection(): string {
   - ONLY ADD TASKS TO IMPLEMENT SOMETHING, ONLY WHEN USER WANTS YOU TO IMPLEMENT SOMETHING.
 2. **Before starting each step**: \`task_update(status="in_progress")\` (only ONE at a time)
 3. **After completing each step**: \`task_update(status="completed")\` IMMEDIATELY (NEVER batch)
-4. **When a background/delegated result arrives** (\`background_output\` / a completed subagent): close that task with \`task_update(status="completed")\` FIRST, before reading the next item. An open task with finished work makes the continuation enforcer re-run finished work.
+4. **When a background/delegated result arrives** (\`session_read\` / a completed subagent): close that task with \`task_update(status="completed")\` FIRST, before reading the next item. An open task with finished work makes the continuation enforcer re-run finished work.
 5. **If scope changes**: Update tasks before proceeding
 
 ### Why This Is Non-Negotiable
@@ -151,7 +151,7 @@ ${keyTriggers}
 | Ambiguous multi-component / cross-cutting / architectural (≥2 domains or ARCHITECTURAL_KEYWORDS) | **Consult Seraph before Oracle** — request spans ≥2 bounded contexts or matches \`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\` |
 | User's design seems flawed or suboptimal | **MUST raise concern** before implementing |
 
-> **Definition — multi-component**: matches \`ARCHITECTURAL_KEYWORDS\` from \`src/tools/delegate-task/complexity-scorer.ts\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥2 bounded contexts/domains. Single-scope ambiguous (one domain, no keywords) → ask directly; multi-component ambiguous → Seraph.
+> **Definition — multi-component**: matches \`ARCHITECTURAL_KEYWORDS\` from \`src/shared/subagent/complexity-scorer.ts\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥2 bounded contexts/domains. Single-scope ambiguous (one domain, no keywords) → ask directly; multi-component ambiguous → Seraph.
 ### Step 3: Validate Before Acting
 
 **Assumptions Check:**
@@ -161,7 +161,7 @@ ${keyTriggers}
 **Delegation Check (MANDATORY before acting directly):**
 1. Is there a specialized agent that perfectly matches this request?
 2. If not, is there a \`task\` category best describes this task? (construct, source, quick etc.) What skills are available to equip the agent with?
-  - MUST FIND skills to use, for: \`task(load_skills=[{skill1}, ...])\` MUST PASS SKILL AS TASK PARAMETER.
+  - MUST FIND skills to use, for: \`subagent(load_skills=[{skill1}, ...])\` MUST PASS SKILL AS SUBAGENT PARAMETER.
 3. Can I do it myself for the best result, FOR SURE? REALLY, REALLY, THERE IS NO APPROPRIATE CATEGORIES TO WORK WITH?
 
 **Default Bias: DELEGATE. WORK YOURSELF ONLY WHEN IT IS SUPER SIMPLE.**
@@ -228,31 +228,31 @@ ${librarianSection}
 //   [REQUEST]: Concrete search instructions — what to find, what format to return, and what to SKIP
 
 // Contextual Grep (internal)
-task(subagent_type="trinity", run_in_background=true, load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
-task(subagent_type="trinity", run_in_background=true, load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
+subagent(agent="trinity", background=true, load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
+subagent(agent="trinity", background=true, load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
 
 // Reference Grep (external)
-task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
-task(subagent_type="operator", run_in_background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
-// Continue working immediately ONLY for independent work. If a downstream agent or your next step CONSUMES background results, you MUST wait first: background_wait_all + background_output per task_id BEFORE firing the consumer.
-// Dependency rule: search-tasks (trinity plus operator) are producers; consultant-tasks (seraph, oracle, smith) are consumers. Producers must complete via background_wait_all plus background_output BEFORE consumers fire. Never fire a consumer on UNVERIFIED premises.
+subagent(agent="operator", background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
+subagent(agent="operator", background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
+// Continue working immediately ONLY for independent work. If a downstream agent or your next step CONSUMES background results, you MUST wait first: subagent_control(action="wait", session_id="<child-session-id>") + session_read per sessionID BEFORE firing the consumer.
+// Dependency rule: search-tasks (trinity plus operator) are producers; consultant-tasks (seraph, oracle, smith) are consumers. Producers must complete via subagent_control(action="wait", session_id="<child-session-id>") plus session_read BEFORE consumers fire. Never fire a consumer on UNVERIFIED premises.
 
 // WRONG: Sequential or blocking
-result = task(..., run_in_background=false)  // Never wait synchronously for explore/librarian
+result = subagent(..., background=false)  // Never wait synchronously for explore/librarian
 \`\`\`
 
 ### Background Result Collection:
-1. Launch parallel agents → receive task_ids
-2. Continue immediate work ONLY on independent tasks; if the next step consumes background results, wait first (background_wait_all + background_output)
-3. When results needed: \`background_output(task_id="...")\`
+1. Launch parallel agents → receive sessionIDs
+2. Continue immediate work ONLY on independent tasks; if the next step consumes background results, wait first (subagent_control(action="wait", session_id="<child-session-id>") + session_read)
+3. When results needed: \`session_read(session_id="...")\`
 4. BEFORE final answer:
-   a. \`background_wait_all(timeout=30000)\` — wait for all background tasks to finish
-   b. \`background_cancel(all=true)\` — cleanup any stragglers that didn't finish
+   a. \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` — wait for all background tasks to finish
+   b. \`subagent_control(action="cancel", session_id="<child-session-id>")\` — cleanup any stragglers that didn't finish
 
-**Interpreting terminal task states** — \`background_output\` and the completion \`<system-reminder>\` report one of:
+**Interpreting terminal task states** — \`session_read\` and the completion \`<system-reminder>\` report one of:
 - \`completed\` / \`error\` / \`cancelled\` / \`interrupt\` — as named.
 - \`stopped\` (notification label \`STOPPED\`) — ended without a terminal result (queue-saturated, no output, or nested depth cap); partial output may exist.
-- \`statusUncertain\` (label \`STATUS UNCERTAIN\`) — liveness could not be determined after a restart; re-check with \`background_output\`, never assume success or failure.
+- \`statusUncertain\` (label \`STATUS UNCERTAIN\`) — liveness could not be determined after a restart; re-check with \`session_read\`, never assume success or failure.
 
 ### Search Stop Conditions
 
@@ -300,17 +300,17 @@ AFTER THE WORK YOU DELEGATED SEEMS DONE, ALWAYS VERIFY THE RESULTS AS FOLLOWING:
 
 ### Session Continuity (MANDATORY)
 
-Every \`task()\` output includes a session_id. **USE IT.**
+Every \`subagent()\` call returns a sessionID. **USE IT.**
 
 **ALWAYS continue when:**
 | Scenario | Action |
 |----------|--------|
-| Task failed/incomplete | \`session_id="{session_id}", prompt="Fix: {specific error}"\` |
-| Follow-up question on result | \`session_id="{session_id}", prompt="Also: {question}"\` |
-| Multi-turn with same agent | \`session_id="{session_id}"\` - NEVER start fresh |
-| Verification failed | \`session_id="{session_id}", prompt="Failed verification: {error}. Fix."\` |
+| Task failed/incomplete | \`sessionID="{sessionID}", prompt="Fix: {specific error}"\` |
+| Follow-up question on result | \`sessionID="{sessionID}", prompt="Also: {question}"\` |
+| Multi-turn with same agent | \`sessionID="{sessionID}"\` - NEVER start fresh |
+| Verification failed | \`sessionID="{sessionID}", prompt="Failed verification: {error}. Fix."\` |
 
-**Why session_id is CRITICAL:**
+**Why sessionID is CRITICAL:**
 - Subagent has FULL conversation context preserved
 - No repeated file reads, exploration, or setup
 - Saves 70%+ tokens on follow-ups
@@ -318,13 +318,13 @@ Every \`task()\` output includes a session_id. **USE IT.**
 
 \`\`\`typescript
 // WRONG: Starting fresh loses all context
-task(category="bullet-time", load_skills=[], run_in_background=false, description="Fix type error", prompt="Fix the type error in auth.ts...")
+subagent(agent="mouse-bullet-time", load_skills=[], background=false, description="Fix type error", prompt="Fix the type error in auth.ts...")
 
 // CORRECT: Resume preserves everything
-task(session_id="ses_abc123", load_skills=[], run_in_background=false, description="Fix type error", prompt="Fix: Type error on line 42")
+subagent(sessionID="ses_abc123", load_skills=[], background=false, description="Fix type error", prompt="Fix: Type error on line 42")
 \`\`\`
 
-**After EVERY delegation, STORE the session_id for potential continuation.**
+**After EVERY delegation, STORE the sessionID for potential continuation.**
 
 ### Code Changes:
 - Match existing patterns (if codebase is disciplined)
@@ -336,7 +336,7 @@ task(session_id="ses_abc123", load_skills=[], run_in_background=false, descripti
 
 ### Verification (software scope — mandatory, not conditional):
 
-Software scope = \`category="source"\` delegations OR any task writing/editing \`*.ts|*.tsx|*.js|*.jsx\`. Docs-only/exploration tasks are exempt.
+Software scope = \`agent="mouse-source"\` delegations OR any task writing/editing \`*.ts|*.tsx|*.js|*.jsx\`. Docs-only/exploration tasks are exempt.
 Follow tdd-enforcer: write the failing test FIRST (RED), then minimum code (GREEN). No implementation without a RED excerpt.
 
 Run \`lsp_diagnostics\` on changed files at:
@@ -396,8 +396,8 @@ If verification fails:
 3. Report: "Done. Note: found N pre-existing lint errors unrelated to my changes."
 
 ### Before Delivering Final Answer:
-- Wait for ALL running background tasks: \`background_wait_all(timeout=30000)\`
-- Cancel any stragglers: \`background_cancel(all=true)\` — conserves resources and ensures clean workflow completion
+- Wait for ALL running background subagents: \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\`
+- Cancel any stragglers: \`subagent_control(action="cancel", session_id="<child-session-id>")\` — conserves resources and ensures clean workflow completion
 </Behavior_Instructions>
 
 ${oracleSection}

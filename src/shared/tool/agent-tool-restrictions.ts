@@ -40,6 +40,38 @@ const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
   mouse: {
     task: false,
   },
+
+  "mouse-construct": {
+    task: false,
+  },
+
+  "mouse-source": {
+    task: false,
+  },
+
+  "mouse-rabbit-hole": {
+    task: false,
+  },
+
+  "mouse-glitch": {
+    task: false,
+  },
+
+  "mouse-bullet-time": {
+    task: false,
+  },
+
+  "mouse-blue-pill": {
+    task: false,
+  },
+
+  "mouse-the-one": {
+    task: false,
+  },
+
+  "mouse-transmission": {
+    task: false,
+  },
 }
 
 export function getAgentToolRestrictions(agentName: string): Record<string, boolean> {

@@ -87,19 +87,16 @@ describe("the todo-read modules are gone", () => {
 })
 
 describe("each former call site is clean", () => {
-  test("4. the background-agent manager has neither the predicate nor the read", () => {
-    //#given the manager sources (Phase 5a: manager.ts split into manager/)
-    const source = sourceFilesUnder(path.join(SRC, "features/background-agent/manager"))
-      .map((file) => fs.readFileSync(file, "utf-8"))
-      .join("\n")
 
-    //#when the removed symbols are searched for
-    const hasPredicate = source.includes("checkSessionTodos")
-    const hasRead = source.includes("client.session.todo(")
+  test("4. the background-agent feature is gone entirely (Phase 5: manager deleted)", () => {
+    //#given the deleted feature directory
+    const featureDir = path.join(SRC, "features/background-agent")
 
-    //#then neither survives
-    expect(hasPredicate).toBe(false)
-    expect(hasRead).toBe(false)
+    //#when existence is checked
+    const exists = fs.existsSync(featureDir)
+
+    //#then the manager (and its predicate/read) cannot survive
+    expect(exists).toBe(false)
   })
 
   test("5. the background-agent reconciler is gone (D5: restart visibility only, no host probes)", () => {

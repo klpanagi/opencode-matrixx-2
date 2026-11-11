@@ -1,5 +1,6 @@
 import { log } from "../../shared/runtime/logger"
 import { fetchSessionMessages } from "../../shared/session/session-context-source"
+import { getParentSessionID } from "../session-state/state"
 import { computeEffort } from "./calculate"
 import { type CollectTiming, collectTelemetry } from "./collect"
 import { attachEffortToTask } from "./persist"
@@ -49,7 +50,9 @@ export async function recordEffortForForeground(
     const taskId = resolveEffortTaskId({
       directory: input.directory,
       explicitTaskId: input.parentID,
+      sessionID: input.sessionID,
       parentSessionID: input.parentSessionID,
+      getParentSessionID,
     })
     if (taskId !== undefined) {
       await attachEffortToTask(input.directory, taskId, record)

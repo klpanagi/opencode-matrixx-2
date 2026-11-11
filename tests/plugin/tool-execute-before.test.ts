@@ -29,20 +29,23 @@ describe("createToolExecuteBeforeHandler", () => {
     await expect(run).resolves.toBeUndefined()
   })
 
-  describe("task tool subagent_type normalization", () => {
+  describe("task tool args pass through unnormalized (Phase 5 removal)", () => {
+    // NOTE (Phase 5.3 inversion): the legacy task-normalization branch was
+    // deleted — the `task` tool is a removed-tools guard stub now, so
+    // tool.execute.before must not rewrite category/subagent_type/session_id.
     const emptyHooks = {}
 
-    function createCtxWithSessionMessages(messages: Array<{ type?: string; agent?: string; info?: { agent?: string; role?: string } }> = []) {
+    function createCtx() {
       return {
         session: {
-          context: async () => messages,
+          context: async () => [],
         },
       }
     }
 
-    test("sets subagent_type to mouse when category is provided without subagent_type", async () => {
+    test("does not set subagent_type when category is provided", async () => {
       //#given
-      const ctx = createCtxWithSessionMessages()
+      const ctx = createCtx()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { category: "bullet-time", description: "Test" } as Record<string, unknown> }
@@ -51,44 +54,13 @@ describe("createToolExecuteBeforeHandler", () => {
       await handler(input, output)
 
       //#then
-      expect(output.args.subagent_type).toBe("mouse")
+      expect(output.args.subagent_type).toBeUndefined()
+      expect(output.args).toEqual({ category: "bullet-time", description: "Test" })
     })
 
-    test("preserves existing subagent_type when explicitly provided", async () => {
+    test("does not resolve subagent_type from session_id", async () => {
       //#given
-      const ctx = createCtxWithSessionMessages()
-      const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
-      const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { subagent_type: "plan", description: "Plan test" } as Record<string, unknown> }
-
-      //#when
-      await handler(input, output)
-
-      //#then
-      expect(output.args.subagent_type).toBe("plan")
-    })
-
-    test("sets subagent_type to mouse when category provided with different subagent_type", async () => {
-      //#given
-      const ctx = createCtxWithSessionMessages()
-      const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
-      const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { category: "bullet-time", subagent_type: "oracle", description: "Test" } as Record<string, unknown> }
-
-      //#when
-      await handler(input, output)
-
-      //#then
-      expect(output.args.subagent_type).toBe("mouse")
-    })
-
-    test("resolves subagent_type from session first message when session_id provided without subagent_type", async () => {
-      //#given
-      const ctx = createCtxWithSessionMessages([
-        { type: "user" },
-        { type: "assistant", agent: "explore" },
-        { type: "assistant", agent: "oracle" },
-      ])
+      const ctx = createCtx()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { session_id: "ses_abc123", description: "Continue task", prompt: "fix it" } as Record<string, unknown> }
@@ -97,43 +69,26 @@ describe("createToolExecuteBeforeHandler", () => {
       await handler(input, output)
 
       //#then
-      expect(output.args.subagent_type).toBe("explore")
+      expect(output.args.subagent_type).toBeUndefined()
     })
 
-    test("falls back to 'continue' when session has no agent info", async () => {
+    test("leaves explicit subagent_type untouched", async () => {
       //#given
-      const ctx = createCtxWithSessionMessages([
-        { info: { role: "user" } },
-        { info: { role: "assistant" } },
-      ])
+      const ctx = createCtx()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { session_id: "ses_abc123", description: "Continue task", prompt: "fix it" } as Record<string, unknown> }
+      const output = { args: { subagent_type: "oracle", description: "Oracle task" } as Record<string, unknown> }
 
       //#when
       await handler(input, output)
 
       //#then
-      expect(output.args.subagent_type).toBe("continue")
+      expect(output.args.subagent_type).toBe("oracle")
     })
 
-    test("preserves subagent_type when session_id is provided with explicit subagent_type", async () => {
-      //#given
-      const ctx = createCtxWithSessionMessages()
-      const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
-      const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { session_id: "ses_abc123", subagent_type: "explore", description: "Continue explore" } as Record<string, unknown> }
-
-      //#when
-      await handler(input, output)
-
-      //#then
-      expect(output.args.subagent_type).toBe("explore")
-    })
-
-    test("passes native subagent through untouched (coexistence)", async () => {
-      //#given native subagent coexists alongside plugin task
-      const ctx = createCtxWithSessionMessages()
+    test("passes native subagent through untouched", async () => {
+      //#given native subagent is THE delegation path
+      const ctx = createCtx()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "subagent", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { category: "bullet-time", description: "Test delegation" } as Record<string, unknown> }
@@ -147,7 +102,7 @@ describe("createToolExecuteBeforeHandler", () => {
 
     test("does not modify args for non-task tools", async () => {
       //#given
-      const ctx = createCtxWithSessionMessages()
+      const ctx = createCtx()
       const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
       const input = { tool: "bash", sessionID: "ses_123", callID: "call_1" }
       const output = { args: { command: "ls" } as Record<string, unknown> }
@@ -158,21 +113,7 @@ describe("createToolExecuteBeforeHandler", () => {
       //#then
       expect(output.args.subagent_type).toBeUndefined()
     })
-
-    test("does not set subagent_type when neither category nor session_id is provided and subagent_type is present", async () => {
-      //#given
-      const ctx = createCtxWithSessionMessages()
-      const handler = createToolExecuteBeforeHandler({ ctx, hooks: emptyHooks })
-      const input = { tool: "task", sessionID: "ses_123", callID: "call_1" }
-      const output = { args: { subagent_type: "oracle", description: "Oracle task" } as Record<string, unknown> }
-
-      //#when
-      await handler(input, output)
-
-      //#then
-      expect(output.args.subagent_type).toBe("oracle")
-    })
   })
-})
 
+})
 export {}

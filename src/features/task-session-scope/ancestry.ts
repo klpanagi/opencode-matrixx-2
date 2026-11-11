@@ -102,3 +102,56 @@ export function expandByParentAncestry(
     return scoped
   }
 }
+
+/**
+ * Walk a session's parent chain, oldest last.
+ *
+ * Session-anchored twin of the task-anchored `reachesScope`/`expandByParentAncestry`
+ * walk above: where those follow `TaskObject.parentID` links between task files,
+ * this follows the *session* parent links recorded when a native subagent session
+ * is created (`session.create({ parentID })`) and mirrored in the in-memory
+ * `subagentSessions` registry. Effort attribution uses it to find the task that
+ * owns a child run after the task tool (and its `parentID` argument) is gone —
+ * the walk matches tasks by `threadID` at each ancestor session instead of
+ * relying on a caller-supplied task id.
+ *
+ * `chain[0]` is always `startSessionID` itself; callers that want only ancestors
+ * slice it off. Bounded by `depth` (default {@link DEFAULT_ANCESTRY_DEPTH}),
+ * cycle-safe via the `seen` set (same discipline as `reachesScope`), and
+ * fail-soft: a throwing lookup ends the walk at the chain collected so far, and
+ * an unexpected exception resolves to no chain. Never throws.
+ */
+export function walkSessionAncestry(
+  startSessionID: string,
+  getParent: (sessionID: string) => string | undefined,
+  depth: number = DEFAULT_ANCESTRY_DEPTH,
+): string[] {
+  try {
+    if (!startSessionID) return []
+    const chain: string[] = []
+    const seen = new Set<string>()
+    let current: string | undefined = startSessionID
+    let hop = 0
+    while (current !== undefined && hop < depth) {
+      if (seen.has(current)) return chain
+      seen.add(current)
+      chain.push(current)
+      hop += 1
+      try {
+        current = getParent(current)
+      } catch (error) {
+        log(`${LOG_SCOPE} Session ancestry lookup failed, keeping the walked chain`, {
+          error: String(error),
+          chain: chain.length,
+        })
+        return chain
+      }
+    }
+    return chain
+  } catch (error) {
+    log(`${LOG_SCOPE} Session ancestry walk failed, resolving to no chain`, {
+      error: String(error),
+    })
+    return []
+  }
+}

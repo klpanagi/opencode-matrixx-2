@@ -154,11 +154,12 @@ describe("createMouseAgentWithOverrides", () => {
     })
   })
 
-  describe("tool safety (subagent blocked, pure leaf)", () => {
-    // NOTE (V2): delegation gating is a permissions ruleset. Mouse is a pure
-    // leaf: the factory always denies subagent. task-store access is granted
+  describe("tool safety (native spawn allowed, tracked leaf)", () => {
+    // NOTE (native-subagent migration): delegation gating is a permissions ruleset.
+    // Mouse no longer denies subagent: workers may spawn child subagents for
+    // parallel exploration/sub-tasks. task-store access is granted
     // later by the tool-config handler (fullTaskPermissions), not here.
-    test("subagent stays denied even when the override asks for task tools", () => {
+    test("subagent stays allowed even when the override asks for task tools", () => {
       // given
       const override = {
         permissions: [
@@ -172,17 +173,17 @@ describe("createMouseAgentWithOverrides", () => {
 
       // then
       const rules = result.permissions ?? []
-      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(true)
+      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(false)
       expect(rules.some((r) => r.action === "task" && r.effect === "allow")).toBe(true)
     })
 
-    test("subagent stays denied with no override", () => {
+    test("subagent is not denied with no override", () => {
       // when
       const result = createMouseAgentWithOverrides({})
 
-      // then - pure leaf with no delegation of its own
+      // then - tracked leaf: no subagent deny of its own
       const rules = result.permissions ?? []
-      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(true)
+      expect(rules.some((r) => r.action === "subagent" && r.effect === "deny")).toBe(false)
     })
   })
 

@@ -14,7 +14,8 @@ import { log } from "../../shared"
 import type { SessionContextCarrier } from "../../shared/session/session-context-source"
 import type { DomainHooks } from "../setup-domains"
 import type { MatrixxContext } from "./context"
-import { resolveSessionAgent } from "./session-agent-resolver"
+import type { SubagentPolicyDeps } from "./subagent-policy"
+import { applySubagentPolicy } from "./subagent-policy"
 
 // Module-level regex constants for the slashcommand branches. Precompiled
 // once at module load (Task T1.6) so the regex template `.compile()` cost
@@ -29,11 +30,12 @@ const COMPLETION_PROMISE_RE = /--completion-promise=["']?([^"'\s]+)["']?/i
 export function createToolExecuteBeforeHandler(args: {
   ctx: MatrixxContext & SessionContextCarrier
   hooks: DomainHooks
+  subagentPolicy?: SubagentPolicyDeps
 }): (
   input: { tool: string; sessionID: string; callID: string },
   output: { args: Record<string, unknown>; message?: string },
 ) => Promise<void> {
-  const { ctx, hooks } = args
+  const { ctx, hooks, subagentPolicy } = args
 
   // Cache the 15 fast-fail hook function references once at handler
   // creation. Without this, every invocation of the returned handler
@@ -53,7 +55,6 @@ export function createToolExecuteBeforeHandler(args: {
   const knowledgeHubSearchNudgeHook = (hooks as Record<string, { "tool.execute.before"?: (input: unknown, output: unknown) => Promise<void> }>).knowledgeHubSearchNudge?.["tool.execute.before"]
   const docsLookupGuardHook = (hooks as Record<string, { "tool.execute.before"?: (input: unknown, output: unknown) => Promise<void> }>).docsLookupGuard?.["tool.execute.before"]
   const oracleMdOnlyHook = hooks.oracleMdOnly?.["tool.execute.before"]
-  const backgroundTaskBlockerHook = hooks.backgroundTaskBlocker?.["tool.execute.before"]
   const contextModeEnforcerHook = (hooks as Record<string, { "tool.execute.before"?: (input: unknown, output: unknown) => Promise<void> }>).contextModeEnforcer?.["tool.execute.before"]
   const nonInteractiveEnvHook = hooks.nonInteractiveEnv?.["tool.execute.before"]
   const bashFileReadGuardHook = hooks.bashFileReadGuard?.["tool.execute.before"]
@@ -111,43 +112,22 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
       docsLookupGuardHook?.(input as never, output as never),
       oracleMdOnlyHook?.(input, output),
       contextModeEnforcerHook?.(input as never, output as never),
-      backgroundTaskBlockerHook?.(input, output),
     ])
 
     // Wave 3 (8 hooks): MUTATOR — must run sequentially to preserve
     //   mutation order. Specifically:
   //   - 4 hooks CONCAT to output.args.prompt (oracleMdOnly,
-    //     mouseNotepad, niobeHook, softwareDevEnforcement). Parallel writes would stomp
+    //     mouseNotepad, niobeHook, subagentPolicy, softwareDevEnforcement). Parallel writes would stomp
     //     each other (both read prompt from the same starting state).
     //   - nonInteractiveEnv REWRITES output.args.command (line 58) and
     //     REPLACES output.message; running it before other mutators is
     //     required so that downstream hooks see the rewritten command.
-    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook -> softwareDevEnforcement
+    //   - The order oracleMdOnly -> mouseNotepad -> niobeHook -> subagentPolicy -> softwareDevEnforcement
     //     is critical: softwareDevEnforcement's prepended <system-reminder> must be
     //     the outermost (closest to the model), oracleMdOnly's
     //     prepended PLANNING_CONSULT_WARNING the innermost (closest to the
     //     user prompt). Reversing the order would change semantics.
     // ---------------------------------------------------------------------
-    // Task-tool agent resolution: start the network call NOW (before Wave 3)
-    // so it runs in parallel with the mutator chain. The result is awaited
-    // after Wave 3 completes, preserving the contract that the task tool
-    // still receives a resolved `subagent_type` before the handler returns.
-    // This is the T1.4 optimization: removes the 5s-timeout network call
-    // from the synchronous wait chain.
-    let resolvePromise: Promise<string | undefined> | undefined
-    if (input.tool === "task") { // coexistence: native `subagent` passes through untouched; only plugin `task` gets category->mouse normalization
-      const argsObject = output.args
-      const category = typeof argsObject.category === "string" ? argsObject.category : undefined
-      const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
-      const sessionId = typeof argsObject.session_id === "string" ? argsObject.session_id : undefined
-
-      if (category) {
-        argsObject.subagent_type = "mouse"
-      } else if (!subagentType && sessionId) {
-        resolvePromise = resolveSessionAgent(ctx, sessionId)
-      }
-    }
-
     // Task T5: Wave 2 mutators (e.g. contextModeEnforcer) set `output.message`,
     // but Wave 3 hooks (e.g. bashFileReadGuard) ASSIGN to it, clobbering the
     // earlier text. Capture it after Wave 2 so it can be merged back after Wave 3.
@@ -159,16 +139,17 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     await oracleMdOnlyHook?.(input, output)
     await mouseNotepadHook?.(input, output)
     await niobeHookHook?.(input, output)
+    if (input.tool === "subagent") {
+      // Subagent policy (Wave-3 mutator): skill prepend -> complexity rewrite -> enforcement.
+      // Runs BEFORE softwareDevEnforcementHook so enforcement's prepended
+      // <system-reminder> stays outermost (last prepend wins outermost).
+      applySubagentPolicy(input, output, subagentPolicy)
+    }
     await softwareDevEnforcementHook?.(input, output) // software-dev-enforcement: native subagent guard (append-only, Wave-3 outermost)
 
     const wave3Message = typeof output.message === "string" ? output.message : undefined
     if (preexistingMessage && preexistingMessage !== wave3Message && !wave3Message?.startsWith(preexistingMessage)) {
       output.message = [preexistingMessage, wave3Message].filter(Boolean).join("\n\n")
-    }
-
-    if (resolvePromise) {
-      const resolvedAgent = await resolvePromise
-      output.args.subagent_type = resolvedAgent ?? "continue"
     }
 
     if (input.tool === "slashcommand") {

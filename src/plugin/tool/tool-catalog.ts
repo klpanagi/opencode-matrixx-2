@@ -11,13 +11,11 @@ import {
   builtinTools,
   createAssemblyTool,
   createAstGrepTools,
-  createBackgroundTools,
   createBddCreateContractTool,
   createBddParseGherkinTool,
   createBddPipelineTool,
   createBddValidateContractTool,
   createDashboardFluxValidatorTool,
-  createDelegateTask,
   createGithubSearchTools,
   createGlobTools,
   createGrepTools,
@@ -37,12 +35,15 @@ import {
   createPlanReadTool,
   createPlanUpdateTool,
   createPresetTool,
+  createRemovedToolGuard,
   createSessionCleanupTool,
+
   createSessionManagerTools,
   createSilentFailureScannerTool,
   createSkillTool,
   createSlashcommandTool,
   createStalenessGapCheckerTool,
+  createSubagentControl,
   createTaskCleanupTool,
   createTaskCreateTool,
   createTaskGetTool,
@@ -50,9 +51,9 @@ import {
   createTaskUpdateTool,
   discoverCommandsSync,
   interactive_bash,
+  REMOVED_TOOL_NAMES,
 } from "../../tools"
 import { createPlanTasksTool } from "../../tools/plan"
-import type { DomainManagers } from "../setup-domains"
 import type { ToolsRecord } from "./context"
 import type { SkillContext } from "./skill-context"
 import {
@@ -73,14 +74,15 @@ export type ToolCatalogResult = {
 export function createToolCatalog(args: {
   ctx: NativePluginContext
   pluginConfig: MatrixxConfig
-  managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
   systemDefaultModel?: () => Promise<string | undefined>
 }): ToolCatalogResult {
-  const { ctx, pluginConfig, managers, skillContext, availableCategories, systemDefaultModel } = args
+  const { ctx, pluginConfig, skillContext } = args
 
-  const backgroundTools = createBackgroundTools(managers.backgroundManager, ctx, ctx.directory)
+  const removedToolGuards: Record<string, MatrixxToolDefinition> = Object.fromEntries(
+    REMOVED_TOOL_NAMES.map((name) => [name, createRemovedToolGuard(name)]),
+  )
 
   const isMultimodalLookerEnabled = isConstructAgentEnabled(pluginConfig.disabled_agents)
   const toolGating = pluginConfig.tool_gating
@@ -94,7 +96,7 @@ export function createToolCatalog(args: {
     ? {
         bdd_create_contract: createBddCreateContractTool(),
         bdd_parse_gherkin: createBddParseGherkinTool(),
-        bdd_pipeline_run: createBddPipelineTool({ manager: managers.backgroundManager }),
+        bdd_pipeline_run: createBddPipelineTool({ client: ctx }),
         bdd_validate_contract: createBddValidateContractTool(),
       }
     : {}
@@ -109,27 +111,6 @@ export function createToolCatalog(args: {
   )
     ? { session_cleanup: createSessionCleanupTool(ctx) }
     : {}
-
-  const delegateTask = createDelegateTask({
-    manager: managers.backgroundManager,
-    client: ctx,
-    directory: ctx.directory,
-    userCategories: pluginConfig.categories,
-    globalModel: pluginConfig.global_model,
-    mouseModel: pluginConfig.agents?.mouse?.model,
-    browserProvider: skillContext.browserProvider,
-    disabledSkills: skillContext.disabledSkills,
-    softwareDevEnforcement: pluginConfig.softwareDevEnforcement,
-    availableCategories,
-    availableSkills: skillContext.availableSkills,
-    modelRequirements: pluginConfig.modelRequirements,
-    complexityDowngrades: pluginConfig.complexityDowngrades,
-    modelPresets: pluginConfig.model_presets,
-    activePreset: pluginConfig.active_preset,
-    agentOverrides: pluginConfig.agents,
-    systemDefaultModel,
-    effortConfig: pluginConfig.effort,
-  })
 
   const skillTool = createSkillTool({
     skills: skillContext.builtinSkills,
@@ -177,7 +158,7 @@ export function createToolCatalog(args: {
   const assemblyEnabled = pluginConfig.assembly?.enabled !== false
   const assemblyTool = assemblyEnabled
     ? createAssemblyTool({
-        manager: managers.backgroundManager,
+        client: ctx,
         pluginConfig,
       })
     : null
@@ -198,9 +179,9 @@ export function createToolCatalog(args: {
     ...pdfFiguresRecord,
     ...presetRecord,
     ...sessionCleanupRecord,
-    ...backgroundTools,
+    ...removedToolGuards,
+    subagent_control: createSubagentControl(ctx),
     ...(lookAt ? { look_at: lookAt } : {}),
-    task: delegateTask,
     skill: skillTool,
     slashcommand: slashcommandTool,
     interactive_bash,

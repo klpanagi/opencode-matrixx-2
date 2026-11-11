@@ -6,7 +6,6 @@
 export const EVENT_CONSUMERS = [
   "agent-usage-reminder",
   "auto-update-checker",
-  "background-notification",
   "category-skill-reminder",
   "context-window-limit-recovery",
   "context-window-monitor",
@@ -34,7 +33,6 @@ export type EventConsumer = (typeof EVENT_CONSUMERS)[number]
 export const HOOK_CONSUMER_MAP: Record<string, EventConsumer> = {
   agentUsageReminder: "agent-usage-reminder",
   autoUpdateChecker: "auto-update-checker",
-  backgroundNotificationHook: "background-notification",
   categorySkillReminder: "category-skill-reminder",
   contextWindowLimitRecovery: "context-window-limit-recovery",
   contextWindowMonitor: "context-window-monitor",

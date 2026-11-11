@@ -1,4 +1,3 @@
-import type { BackgroundManager } from "../../features/background-agent"
 import {
   COMPACTING_SNIPPET_BUDGET,
   type CompactingSnippetInput,
@@ -39,23 +38,9 @@ export interface CompactionMemoryOptions {
   snippet?: CompactingSnippetInput
 }
 
-export function createCompactionContextInjector(
-  backgroundManager?: BackgroundManager,
-  memoryOptions?: CompactionMemoryOptions,
-) {
-  return (sessionID?: string, memoryOverride?: CompactionMemoryOptions): string => {
+export function createCompactionContextInjector(memoryOptions?: CompactionMemoryOptions) {
+  return (_sessionID?: string, memoryOverride?: CompactionMemoryOptions): string => {
     let prompt = COMPACTION_CONTEXT_PROMPT
-
-    if (backgroundManager && sessionID) {
-      const history = backgroundManager.taskHistory.formatForCompaction(sessionID)
-      if (history) {
-        const cappedHistory =
-          history.length > MAX_TASK_HISTORY_CHARS
-            ? `${history.slice(0, MAX_TASK_HISTORY_CHARS)}\n[... history truncated to 1500 chars]`
-            : history
-        prompt += `\n### Active/Recent Delegated Sessions\n${cappedHistory}\n`
-      }
-    }
 
     // Caller passes the resolved native-backend boolean
     // (resolveMemoryBackend(...) === "native" && native opt-in);

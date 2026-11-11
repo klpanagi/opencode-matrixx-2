@@ -68,14 +68,4 @@ describe("TypedReadError contract (Task 1 foundation)", () => {
     expect(["a", "b"]).toContain(parsed.id)
   })
 
-  test("handle-index tmp uses pid+uuid (no Date.now predictability)", async () => {
-    //#given
-    const src = readFileSync("src/features/background-agent/handle-index.ts", "utf-8")
-
-    //#when
-    const hasDateNowTmp = src.includes("Date.now()}") && src.includes(".tmp.")
-
-    //#then
-    expect(hasDateNowTmp).toBe(false)
-  })
 })

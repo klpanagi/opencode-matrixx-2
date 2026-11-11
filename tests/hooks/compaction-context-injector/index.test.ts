@@ -18,7 +18,6 @@ afterAll(() => {
   mock.restore()
 })
 
-import { TaskHistory } from "../../../src/features/background-agent/task-history"
 import { createCompactionContextInjector } from "../../../src/hooks/compaction-context-injector/hook"
 
 describe("createCompactionContextInjector", () => {
@@ -84,8 +83,8 @@ describe("createCompactionContextInjector", () => {
       const prompt = injector()
 
       //#then
-      // Static §8 boilerplate removed by Step-5 trim; delegated sessions
-      // arrive via dynamic `### Active/Recent Delegated Sessions` history append.
+      // Delegated-session history injection was removed with background-agent (Phase 5);
+      // the static prompt carries no delegated-sessions section.
       const sections = prompt.match(/^## \d\./gm) ?? []
       expect(sections).toHaveLength(4)
       expect(prompt).not.toContain("Delegated Agent Sessions")
@@ -93,26 +92,20 @@ describe("createCompactionContextInjector", () => {
       expect(prompt).toContain("Agent Verification State")
     })
 
-    it("injects actual task history when backgroundManager and sessionID provided", async () => {
+    it("never injects a delegated-sessions section (Phase 5: background history source removed)", async () => {
       //#given
-      const mockManager = { taskHistory: new TaskHistory() }
-      mockManager.taskHistory.record("ses_parent", { id: "t1", sessionID: "ses_child", agent: "explore", description: "Find patterns", status: "completed", category: "bullet-time" })
-      const injector = createCompactionContextInjector(mockManager)
+      const injector = createCompactionContextInjector()
 
       //#when
       const prompt = injector("ses_parent")
 
       //#then
-      expect(prompt).toContain("Active/Recent Delegated Sessions")
-      expect(prompt).toContain("**explore**")
-      expect(prompt).toContain("[bullet-time]")
-      expect(prompt).toContain("`ses_child`")
+      expect(prompt).not.toContain("Active/Recent Delegated Sessions")
     })
 
     it("does not inject task history section when no entries exist", async () => {
       //#given
-      const mockManager = { taskHistory: new TaskHistory() }
-      const injector = createCompactionContextInjector(mockManager)
+      const injector = createCompactionContextInjector()
 
       // when
       const prompt = injector("ses_empty")

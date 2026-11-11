@@ -13,7 +13,7 @@ import {
 } from "./constants"
 
 function resolveTarget(args: Record<string, unknown>): string | undefined {
-  const raw = args.agent ?? args.subagent_type
+  const raw = args.agent
   if (typeof raw !== "string") return undefined
   const normalized = raw.trim().toLowerCase()
   return normalized === "" ? undefined : normalized

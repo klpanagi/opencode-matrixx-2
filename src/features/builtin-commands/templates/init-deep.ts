@@ -45,12 +45,12 @@ Don't wait—these run async while main session works.
 
 \`\`\`
 // Fire all at once, collect results later
-task(subagent_type="trinity", load_skills=[], description="Explore project structure", run_in_background=true, prompt="Project structure: PREDICT standard patterns for detected language → REPORT deviations only")
-task(subagent_type="trinity", load_skills=[], description="Find entry points", run_in_background=true, prompt="Entry points: FIND main files → REPORT non-standard organization")
-task(subagent_type="trinity", load_skills=[], description="Find conventions", run_in_background=true, prompt="Conventions: FIND config files (.eslintrc, pyproject.toml, .editorconfig) → REPORT project-specific rules")
-task(subagent_type="trinity", load_skills=[], description="Find anti-patterns", run_in_background=true, prompt="Anti-patterns: FIND 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments → LIST forbidden patterns")
-task(subagent_type="trinity", load_skills=[], description="Explore build/CI", run_in_background=true, prompt="Build/CI: FIND .github/workflows, Makefile → REPORT non-standard patterns")
-task(subagent_type="trinity", load_skills=[], description="Find test patterns", run_in_background=true, prompt="Test patterns: FIND test configs, test structure → REPORT unique conventions")
+subagent(agent="trinity", load_skills=[], description="Explore project structure", background=true, prompt="Project structure: PREDICT standard patterns for detected language → REPORT deviations only")
+subagent(agent="trinity", load_skills=[], description="Find entry points", background=true, prompt="Entry points: FIND main files → REPORT non-standard organization")
+subagent(agent="trinity", load_skills=[], description="Find conventions", background=true, prompt="Conventions: FIND config files (.eslintrc, pyproject.toml, .editorconfig) → REPORT project-specific rules")
+subagent(agent="trinity", load_skills=[], description="Find anti-patterns", background=true, prompt="Anti-patterns: FIND 'DO NOT', 'NEVER', 'ALWAYS', 'DEPRECATED' comments → LIST forbidden patterns")
+subagent(agent="trinity", load_skills=[], description="Explore build/CI", background=true, prompt="Build/CI: FIND .github/workflows, Makefile → REPORT non-standard patterns")
+subagent(agent="trinity", load_skills=[], description="Find test patterns", background=true, prompt="Test patterns: FIND test configs, test structure → REPORT unique conventions")
 \`\`\`
 
 <dynamic-agents>
@@ -76,9 +76,9 @@ max_depth=$(find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' |
 Example spawning:
 \`\`\`
 // 500 files, 50k lines, depth 6, 15 large files → spawn 5+5+2+1 = 13 additional agents
-task(subagent_type="trinity", load_skills=[], description="Analyze large files", run_in_background=true, prompt="Large file analysis: FIND files >500 lines, REPORT complexity hotspots")
-task(subagent_type="trinity", load_skills=[], description="Explore deep modules", run_in_background=true, prompt="Deep modules at depth 4+: FIND hidden patterns, internal conventions")
-task(subagent_type="trinity", load_skills=[], description="Find shared utilities", run_in_background=true, prompt="Cross-cutting concerns: FIND shared utilities across directories")
+subagent(agent="trinity", load_skills=[], description="Analyze large files", background=true, prompt="Large file analysis: FIND files >500 lines, REPORT complexity hotspots")
+subagent(agent="trinity", load_skills=[], description="Explore deep modules", background=true, prompt="Deep modules at depth 4+: FIND hidden patterns, internal conventions")
+subagent(agent="trinity", load_skills=[], description="Find shared utilities", background=true, prompt="Cross-cutting concerns: FIND shared utilities across directories")
 // ... more based on calculation
 \`\`\`
 </dynamic-agents>
@@ -135,7 +135,7 @@ LspFindReferences(filePath="...", line=X, character=Y)
 
 \`\`\`
 // After main session analysis done, collect all task results
-for each task_id: background_output(task_id="...")
+for each sessionID: session_read(session_id="...")
 \`\`\`
 
 **Merge: bash + LSP + existing + explore findings. Mark "discovery" as completed.**
@@ -245,7 +245,7 @@ Launch writing tasks for each location:
 
 \`\`\`
 for loc in AGENTS_LOCATIONS (except root):
-  task(category="transmission", load_skills=[], run_in_background=false, description="Generate AGENTS.md", prompt=\\\`
+  subagent(agent="mouse-transmission", load_skills=[], background=false, description="Generate AGENTS.md", prompt=\\\`
     Generate AGENTS.md for: \${loc.path}
     - Reason: \${loc.reason}
     - 30-80 lines max

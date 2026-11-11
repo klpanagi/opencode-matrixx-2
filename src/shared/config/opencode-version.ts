@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process"
-import { NOT_CACHED } from "../outcome/sentinels"
+import { NOT_CACHED } from "./cache-sentinels"
 
 /**
  * Minimum OpenCode version required for this plugin.

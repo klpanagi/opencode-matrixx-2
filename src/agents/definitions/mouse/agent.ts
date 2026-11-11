@@ -31,8 +31,8 @@ import { buildQwenMousePrompt } from "./qwen"
 
 const MODE: AgentMode = "subagent"
 
-// Core actions that Mouse must NEVER have access to
-const BLOCKED_ACTIONS = ["subagent"]
+// Core actions that Mouse must NEVER have access to (native subagent spawn is now allowed)
+const BLOCKED_ACTIONS: string[] = []
 
 export const MOUSE_DEFAULTS = {
   model: "<provider>/<model>", // placeholder — resolved via active model preset or system default
