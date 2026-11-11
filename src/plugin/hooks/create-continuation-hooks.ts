@@ -1,8 +1,6 @@
 import type { HookName, MatrixxConfig } from "../../config"
 import { resolveMemoryBackend } from "../../config/schema/memory"
-import type { BackgroundManager } from "../../features/background-agent"
 import {
-  createBackgroundNotificationHook,
   createCompactionContextInjector,
   createNiobeHook,
   createNudgeLoopBreakerHook,
@@ -17,7 +15,6 @@ export type ContinuationHooks = {
   stopContinuationGuard: ReturnType<typeof createStopContinuationGuardHook> | null
   compactionContextInjector: ReturnType<typeof createCompactionContextInjector> | null
   nudgeLoopBreaker: ReturnType<typeof createNudgeLoopBreakerHook> | null
-  backgroundNotificationHook: ReturnType<typeof createBackgroundNotificationHook> | null
   niobeHook: ReturnType<typeof createNiobeHook> | null
   planPersister: ReturnType<typeof createPlanPersister> | null
 }
@@ -32,17 +29,16 @@ export function createContinuationHooks(args: {
   pluginConfig: MatrixxConfig
   isHookEnabled: (hookName: HookName) => boolean
   safeHookEnabled: boolean
-  backgroundManager: BackgroundManager
   sessionRecovery: SessionRecovery
 }): ContinuationHooks {
-  const { ctx, pluginConfig, isHookEnabled, safeHookEnabled, backgroundManager } = args
+  const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
   void args.sessionRecovery
 
   const safeHook = bindSafeHook(safeHookEnabled)
 
   const stopContinuationGuard = isHookEnabled("stop-continuation-guard")
     ? safeHook("stop-continuation-guard", () =>
-        createStopContinuationGuardHook(ctx, { backgroundManager }))
+        createStopContinuationGuardHook(ctx))
     : null
 
   const compactionMemoryEnabled =
@@ -50,22 +46,17 @@ export function createContinuationHooks(args: {
     (pluginConfig.memory?.native?.enabled === true || pluginConfig.memory?.enabled === true)
   const compactionContextInjector = isHookEnabled("compaction-context-injector")
     ? safeHook("compaction-context-injector", () =>
-        createCompactionContextInjector(backgroundManager, { enabled: compactionMemoryEnabled }))
+        createCompactionContextInjector({ enabled: compactionMemoryEnabled }))
     : null
 
   const nudgeLoopBreaker = isHookEnabled("nudge-loop-breaker")
     ? safeHook("nudge-loop-breaker", () => createNudgeLoopBreakerHook(ctx))
     : null
 
-  const backgroundNotificationHook = isHookEnabled("background-notification")
-    ? safeHook("background-notification", () => createBackgroundNotificationHook(backgroundManager))
-    : null
-
   const niobeHook = isHookEnabled("niobe")
     ? safeHook("niobe", () =>
         createNiobeHook(ctx, {
           directory: stateRootFromPluginContext(ctx),
-          backgroundManager,
           isContinuationStopped: (sessionID: string) =>
             stopContinuationGuard?.isStopped(sessionID) ?? false,
           agentOverrides: pluginConfig.agents,
@@ -81,7 +72,6 @@ export function createContinuationHooks(args: {
     stopContinuationGuard,
     compactionContextInjector,
     nudgeLoopBreaker,
-    backgroundNotificationHook,
     niobeHook,
     planPersister,
   }

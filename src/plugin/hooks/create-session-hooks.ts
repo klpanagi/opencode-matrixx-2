@@ -5,7 +5,6 @@ import {
   createAutoUpdateCheckerHook,
   createContextWindowLimitRecoveryHook,
   createContextWindowMonitorHook,
-  createDelegateTaskRetryHook,
   createEditErrorRecoveryHook,
   createInteractiveBashSessionHook,
   createMatrixLoopHook,
@@ -51,7 +50,6 @@ export type SessionHooks = {
   interactiveBashSession: ReturnType<typeof createInteractiveBashSessionHook> | null
   matrixLoop: ReturnType<typeof createMatrixLoopHook> | null
   editErrorRecovery: ReturnType<typeof createEditErrorRecoveryHook> | null
-  delegateTaskRetry: ReturnType<typeof createDelegateTaskRetryHook> | null
   startWork: ReturnType<typeof createStartWorkHook> | null
   oracleMdOnly: ReturnType<typeof createOracleMdOnlyHook> | null
   mouseNotepad: ReturnType<typeof createMouseNotepadHook> | null
@@ -135,10 +133,6 @@ export function createSessionHooks(args: {
     ? safeHook("edit-error-recovery", () => createEditErrorRecoveryHook(ctx))
     : null
 
-  const delegateTaskRetry = isHookEnabled("delegate-task-retry")
-    ? safeHook("delegate-task-retry", () => createDelegateTaskRetryHook(ctx))
-    : null
-
   const startWork = isHookEnabled("start-work")
     ? safeHook("start-work", () => createStartWorkHook(ctx))
     : null
@@ -219,7 +213,6 @@ export function createSessionHooks(args: {
     interactiveBashSession,
     matrixLoop,
     editErrorRecovery,
-    delegateTaskRetry,
     startWork,
     oracleMdOnly,
     mouseNotepad,

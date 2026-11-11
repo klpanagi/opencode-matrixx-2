@@ -54,7 +54,6 @@ import {
   REMOVED_TOOL_NAMES,
 } from "../../tools"
 import { createPlanTasksTool } from "../../tools/plan"
-import type { DomainManagers } from "../setup-domains"
 import type { ToolsRecord } from "./context"
 import type { SkillContext } from "./skill-context"
 import {
@@ -75,7 +74,6 @@ export type ToolCatalogResult = {
 export function createToolCatalog(args: {
   ctx: NativePluginContext
   pluginConfig: MatrixxConfig
-  managers: Pick<DomainManagers, "backgroundManager">
   skillContext: SkillContext
   availableCategories: AvailableCategory[]
   systemDefaultModel?: () => Promise<string | undefined>

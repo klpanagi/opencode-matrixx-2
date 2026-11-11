@@ -1,8 +1,6 @@
 import { beforeEach } from "bun:test"
 import { _resetForTesting } from "../src/features/session-state/state"
 import { _resetAssemblyStateForTesting } from "../src/features/assembly-state/manager"
-import { _resetPruneThrottleForTesting } from "../src/features/background-agent/manager"
-import { _resetMessageDirCacheForTesting } from "../src/features/background-agent/message-dir"
 import { _resetTaskToastManagerForTesting } from "../src/features/task-toast-manager/manager"
 import { _resetRedpillStateForTesting } from "../src/features/redpill-state/manager"
 import { _resetRuleCacheForTesting } from "../src/hooks/rules-injector/injector"
@@ -18,8 +16,6 @@ beforeEach(() => {
   _resetForTesting()
   _resetSdkMessageCache()
   _resetAssemblyStateForTesting()
-  _resetPruneThrottleForTesting()
-  _resetMessageDirCacheForTesting()
   _resetTaskToastManagerForTesting()
   _resetRedpillStateForTesting()
   _resetRuleCacheForTesting()

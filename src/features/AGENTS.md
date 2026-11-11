@@ -2,13 +2,11 @@
 
 ## OVERVIEW
 
-21 feature modules (background-agent, builtin-commands, task-storage, bdd, assembly-state, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
+Feature modules (builtin-commands, task-storage, bdd, assembly-state, handoff, context-injection, session-state...) — task-storage is now execution substrate (file-backed `.matrixx/tasks/`, replaces ephemeral todos).
 
 ## STRUCTURE
 ```
 features/
-├── background-agent/           # Task lifecycle, restart reconciliation (20 files; orchestration split in manager/) — see background-agent/AGENTS.md
-│   └── manager/                # manager.ts + lifecycle.ts + reconcile.ts + store.ts + types.ts
 ├── builtin-commands/           # 23 commands, 21 templates
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 3 files + `task-toast-manager/` — see task-storage/AGENTS.md
 ├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)

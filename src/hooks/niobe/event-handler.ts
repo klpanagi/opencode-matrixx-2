@@ -132,16 +132,6 @@ export function createNiobeEventHandler(input: {
         return
       }
 
-      const backgroundManager = options?.backgroundManager
-      const hasRunningBgTasks = backgroundManager
-        ? backgroundManager.getTasksByParentSession(sessionID).some((t: { status: string }) => t.status === "running")
-        : false
-
-      if (hasRunningBgTasks) {
-        log(`[${HOOK_NAME}] Skipped: background tasks running`, { sessionID })
-        return
-      }
-
       if (!missionState) {
         log(`[${HOOK_NAME}] No active mission`, { sessionID })
         return
@@ -187,9 +177,7 @@ export function createNiobeEventHandler(input: {
         }
         const freshMission = readMissionState(stateRoot)
         const freshProgress = freshMission ? getPlanProgress(freshMission.active_plan) : null
-        const freshBgRunning = backgroundManager
-          ? backgroundManager.getTasksByParentSession(sessionID).some((t: { status: string }) => t.status === "running")
-          : false
+        const freshBgRunning = false
         const valid = isContinuationValid({
           hasMission: freshMission !== null && freshMission !== undefined,
           missionComplete: freshProgress?.isComplete ?? true,
@@ -223,7 +211,6 @@ export function createNiobeEventHandler(input: {
           remaining,
           total: progress.total,
           agent: missionState.agent,
-          backgroundManager,
           sessionState: state,
         })
       } catch (err) {

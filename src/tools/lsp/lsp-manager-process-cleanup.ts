@@ -38,7 +38,7 @@ export function registerLspManagerProcessCleanup(options: ProcessCleanupOptions)
 
   process.on("exit", syncCleanup)
 
-  // Don't call process.exit() here; other handlers (background-agent manager) handle final exit.
+  // Don't call process.exit() here; the native session lifecycle owns final exit.
   process.on("SIGINT", () => void asyncCleanup().catch((err) => { log("[lsp] Signal handler cleanup failed:", err) }))
   process.on("SIGTERM", () => void asyncCleanup().catch((err) => { log("[lsp] Signal handler cleanup failed:", err) }))
   if (process.platform === "win32") {

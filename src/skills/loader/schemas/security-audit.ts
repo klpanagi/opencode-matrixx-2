@@ -24,7 +24,7 @@ import { z } from "zod"
  * severity (external-decisive-fact rule), ledger unit statuses.
  * Follows the flat `src/config/schema/*.ts` convention
  * (`export const XSchema` + `z.infer` type alias, cf. `BgHandleSchema`
- * in `src/features/background-agent/handle-index.ts`).
+ * in `the retired handle schema`).
  */
 
 /** Stable source-derived identifier (vendored fingerprint pattern). */

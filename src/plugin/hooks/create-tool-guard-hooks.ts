@@ -1,7 +1,6 @@
 import type { HookName, MatrixxConfig } from "../../config"
 import { loadKnowledgeHubs } from "../../features/knowledge-hub/loader"
 import {
-  createBackgroundTaskBlockerHook,
   createBashFileReadGuardHook,
   createCommentCheckerHooks,
   createContextModeEnforcerHook,
@@ -19,7 +18,6 @@ import {
   createRulesInjectorHook,
   createSecretLeakGuardHook,
   createSoftwareDevEnforcementHook,
-  createSubagentBlockHook,
   createTaskEditGuardHook,
   createTaskNotepadWriterHook,
   createToolOutputTruncatorHook,
@@ -37,7 +35,6 @@ import { bindSafeHook } from "../../shared/agent/safe-create-hook"
 import type { MatrixxContext } from "../tool/context"
 
 export type ToolGuardHooks = {
-  backgroundTaskBlocker: ReturnType<typeof createBackgroundTaskBlockerHook> | null
   commentChecker: ReturnType<typeof createCommentCheckerHooks> | null
   toolOutputTruncator: ReturnType<typeof createToolOutputTruncatorHook> | null
   directoryAgentsInjector: ReturnType<typeof createDirectoryAgentsInjectorHook> | null
@@ -55,7 +52,6 @@ export type ToolGuardHooks = {
   webfetchRedirectGuard: ReturnType<typeof createWebFetchRedirectGuardHook> | null
   qualityGate: ReturnType<typeof createQualityGateHook> | null
   taskEditGuard: ReturnType<typeof createTaskEditGuardHook> | null
-  subagentBlock: ReturnType<typeof createSubagentBlockHook> | null
   softwareDevEnforcement: ReturnType<typeof createSoftwareDevEnforcementHook> | null
   taskNotepadWriter: ReturnType<typeof createTaskNotepadWriterHook> | null
   documentReaderGuard: ReturnType<typeof createDocumentReaderGuardHook> | null
@@ -72,10 +68,6 @@ export function createToolGuardHooks(args: {
 }): ToolGuardHooks {
   const { ctx, pluginConfig, isHookEnabled, safeHookEnabled } = args
   const safeHook = bindSafeHook(safeHookEnabled)
-
-  const backgroundTaskBlocker = isHookEnabled("background-task-blocker")
-    ? safeHook("background-task-blocker", () => createBackgroundTaskBlockerHook())
-    : null
 
   const commentChecker = isHookEnabled("comment-checker")
     ? safeHook("comment-checker", () => createCommentCheckerHooks(pluginConfig.comment_checker))
@@ -158,10 +150,6 @@ export function createToolGuardHooks(args: {
     ? safeHook("task-edit-guard", () => createTaskEditGuardHook(ctx))
     : null
 
-  const subagentBlock = isHookEnabled("subagent-block")
-    ? safeHook("subagent-block", () => createSubagentBlockHook({ ...ctx, config: pluginConfig }))
-    : null
-
   const softwareDevEnforcement = safeHook("software-dev-enforcement", () =>
     createSoftwareDevEnforcementHook(pluginConfig),
   )
@@ -193,7 +181,6 @@ export function createToolGuardHooks(args: {
     : null
 
   return {
-    backgroundTaskBlocker,
     commentChecker,
     toolOutputTruncator,
     directoryAgentsInjector,
@@ -211,7 +198,6 @@ export function createToolGuardHooks(args: {
     webfetchRedirectGuard,
     qualityGate,
     taskEditGuard,
-    subagentBlock,
     softwareDevEnforcement,
     taskNotepadWriter,
     documentReaderGuard,

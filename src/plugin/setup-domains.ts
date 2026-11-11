@@ -14,9 +14,8 @@
  * - the 6-phase config pipeline (`../plugin/handlers/config-handler`) that feeds the config draft
  * - the unified compaction hook (Task 8)
  *
- * Native background/session lifecycle landed in Task 7 (D5): the slim
- * `BackgroundManager` talks to `session.create`/`promptAsync` directly and
- * the tmux pane mirror is gone.
+ * Native session/background APIs own subagent lifecycle and display (D5):
+ * no custom manager, no tmux pane mirror.
  */
 
 import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
@@ -92,13 +91,11 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     ctx: pctx,
     pluginConfig,
     tmuxConfig,
-    backgroundNotificationHookEnabled: isHookEnabled("background-notification"),
   })
 
   const toolsResult = await setupToolsDomain({
     ctx: pctx,
     pluginConfig,
-    managers,
     systemDefaultModel: () => resolveSystemDefaultModel(ctx),
   })
 
@@ -131,7 +128,6 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
     pluginConfig,
     isHookEnabled,
     safeHookEnabled,
-    backgroundManager: managers.backgroundManager,
     sessionRecovery: session.sessionRecovery,
   })
 

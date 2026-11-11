@@ -136,7 +136,13 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // B12 (runWithSessionLock + tryClaimContinuationSlot per-session
     // serialization) + B13 (monotonic clock + revalidate-after-await gates)
     // fix; execution path (Niobe remains the plan EXECUTOR) unchanged.
-    const FROZEN_MD5 = "1acfba886008358784afce331e1904a0"
+    // NOTE (native-subagent-migration task 5.2): hash advanced from
+    // 1acfba886008358784afce331e1904a0. The only delta is the Phase 5
+    // background-agent deletion — the optional backgroundManager plumbing
+    // (running-task skip gates + forwarding to injectMissionContinuation)
+    // is gone; with no background tasks the gates were constant-false.
+    // Execution path unchanged; Niobe remains the plan EXECUTOR.
+    const FROZEN_MD5 = "9788d92aa80080c2963a2bea4c785b48"
 
     //#when its bytes are hashed
     const actual = md5Of("src/hooks/niobe/event-handler.ts")

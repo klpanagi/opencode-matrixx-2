@@ -33,7 +33,6 @@ describe("hook registration order golden", () => {
       "interactive-bash-session",
       "matrix-loop",
       "edit-error-recovery",
-      "delegate-task-retry",
       "start-work",
       "oracle-md-only",
       "mouse-notepad",
@@ -56,7 +55,6 @@ describe("hook registration order golden", () => {
       "stop-continuation-guard",
       "compaction-context-injector",
       "nudge-loop-breaker",
-      "background-notification",
       "niobe",
       "plan-persister",
     ]
@@ -74,7 +72,6 @@ describe("hook registration order golden", () => {
   test("tool-guard hooks keep injection order", async () => {
     //#given
     const expected = [
-      "background-task-blocker",
       "comment-checker",
       "tool-output-truncator",
       "directory-agents-injector",
@@ -92,7 +89,6 @@ describe("hook registration order golden", () => {
       "webfetch-redirect-guard",
       "quality-gate",
       "task-edit-guard",
-      "subagent-block",
       "software-dev-enforcement",
       "task-notepad-writer",
       "document-reader-guard",

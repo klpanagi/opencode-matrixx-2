@@ -18,7 +18,7 @@
  */
 
 import { describe, expect, test } from "bun:test"
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { getBackgroundStaleAfterMs, getStaleAfterMs } from "../../src/features/task-session-scope/staleness"
@@ -28,7 +28,6 @@ import { TaskObjectSchema } from "../../src/tools/task/types"
 
 const SRC = join(import.meta.dir, "../../src")
 const HOUR_MS = 60 * 60 * 1000
-const MANAGER = "features/background-agent/manager"
 const LEGACY_HOOK_NAMES = [
   "todo-continuation-enforcer",
   "compaction-todo-presister",
@@ -38,12 +37,6 @@ const LEGACY_HOOK_NAMES = [
 
 function readSrc(rel: string): string {
   return readFileSync(join(SRC, rel), "utf-8")
-}
-
-function sourceFilesUnderDir(rel: string): string[] {
-  return readdirSync(join(SRC, rel), { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
-    .map((entry) => join(rel, entry.name))
 }
 
 /** The balanced `{ ... }` that opens at or after `anchor`. Throws if unbalanced. */
@@ -62,39 +55,16 @@ function lineOf(source: string, needle: string): number {
   return source.slice(0, source.indexOf(needle)).split("\n").length
 }
 
-describe("R1: D5 removed the completion gates — completion is native events only", () => {
-  // NOTE (D5 native migration): the reconcile / session.idle / polling
-  // completion gates (hasIncompleteTasksForSession + 2h window) were deleted
-  // with the polling loops and restart reconciliation. Completion is detected
-  // from native session.idle / session.error events via handleEvent().
-  // These pins guard against reintroducing the deleted orchestration.
-  // Phase 5a: MANAGER is the manager/ subdir — scan every module.
-  const source = sourceFilesUnderDir(MANAGER).map(readSrc).join("\n")
+describe("R1: the background-agent feature is gone (Phase 5: manager deleted)", () => {
+  test("10. no manager module survives to reintroduce the completion gates", () => {
+    //#given the deleted feature directory
+    const featureDir = join(SRC, "features/background-agent")
 
-  test("10. no completion-gate predicate survives in the manager", () => {
-    expect(source).not.toContain("hasIncompleteTasksForSession")
-    expect(source).not.toContain("getBackgroundStaleAfterMs")
-  })
+    //#when existence is checked
+    const exists = existsSync(featureDir)
 
-  test("11. no polling or reconcile probes survive in the manager", () => {
-    expect(source).not.toContain("pollRunningTasks")
-    expect(source).not.toContain("checkAndInterruptStaleTasks")
-    expect(source).not.toContain("pruneStaleTasksAndNotifications")
-    // "reconcile" appears in prose comments only — no reconcile identifiers
-    expect(source).not.toMatch(/reconcile[A-Z(]/)
-    expect(source).not.toContain("reconcileRestoredTask")
-  })
-
-  test("12. completion arrives via the native event route", () => {
-    expect(source).toContain("handleEvent")
-    expect(source).toContain("session.idle")
-    expect(source).toContain("session.error")
-  })
-
-  test("13. stale-handle expiry is the throttle-free TTL sweep", () => {
-    expect(source).toContain("sweepAndReadHandles")
-    // the reset-hook comment below names the removed throttle; no live code may use it
-    expect(source).not.toMatch(/this\.lastPruneAt|lastPruneAt:/)
+    //#then neither the gates nor their host module can come back
+    expect(exists).toBe(false)
   })
 })
 
@@ -206,14 +176,6 @@ describe("R2: the zero-vote path stamps instead of returning, and never unchecks
 })
 
 describe("D4 and the config-compat surface are pinned on purpose", () => {
-  test("23. background_task.wallClockTimeoutMs default stays 0", () => {
-    //#given the background-agent constants
-    //#when the wall-clock backstop default is read
-    //#then it is still disabled (D4 bounds the window with a new key, not this one)
-    expect(readSrc("features/background-agent/constants.ts")).toMatch(
-      /export const DEFAULT_WALL_CLOCK_TIMEOUT_MS = 0\b/,
-    )
-  })
 
   test("24. the enforcer's own stale default is still 24 (only the new key moved)", () => {
     //#given the enforcer staleness module
