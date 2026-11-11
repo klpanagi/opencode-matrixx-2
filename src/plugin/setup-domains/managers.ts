@@ -14,10 +14,9 @@ export function createDomainManagers(args: {
   pluginConfig: MatrixxConfig
   tmuxConfig: TmuxConfig
 }): DomainManagers {
-  // Phase 5: no custom task manager. Native session/background APIs own subagent
-  // lifecycle and display — no TmuxSessionManager, no pane mirror, no custom
-  // reconcile loops. `tmuxConfig` is accepted for signature compatibility
-  // only (interactive-bash + doctor read it separately).
+  // No custom task manager: native session/background APIs own subagent
+  // lifecycle and display. `tmuxConfig` is accepted for signature
+  // compatibility only (interactive-bash + doctor read it separately).
   const { ctx, pluginConfig } = args
   void args.tmuxConfig
 

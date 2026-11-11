@@ -135,7 +135,7 @@ function runPresetCommand(input: {
   setSessionPreset(sessionID, name)
   let message =
     `✓ Active preset set to "${name}" for this session.\n\n` +
-    `- delegate-task categories switch immediately\n` +
+    `- delegation categories switch immediately\n` +
     `- builtin agents apply on next session`
 
   if (save) {
@@ -150,7 +150,7 @@ export function createPresetTool(options?: PresetToolOptions): Record<string, Ma
   const preset: MatrixxToolDefinition = defineTool("preset", {
     description:
       "Manage model presets: list available presets, show a preset's model assignments, " +
-      "or set the active preset for the current session. `set <name>` switches delegate-task " +
+      "or set the active preset for the current session. `set <name>` switches delegation " +
       "categories immediately and applies to builtin agents on the next session; " +
       "`set <name> --save [--global|--project]` additionally persists `active_preset` to config.",
     args: {

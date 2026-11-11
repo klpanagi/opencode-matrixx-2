@@ -23,7 +23,7 @@ Parse the arguments passed to this command:
 
 ## Step 2: Call the built-in \`preset\` tool
 
-Use the \`preset\` tool with the resolved arguments. The tool validates the preset name, applies the session overlay (delegate-task categories switch immediately), and — with \`--save\` — persists \`active_preset\` to the project (\`.opencode/matrixx.jsonc\`) or global (\`~/.config/opencode/matrixx.jsonc\`) config.
+Use the \`preset\` tool with the resolved arguments. The tool validates the preset name, applies the session overlay (delegation categories switch immediately), and — with \`--save\` — persists \`active_preset\` to the project (\`.opencode/matrixx.jsonc\`) or global (\`~/.config/opencode/matrixx.jsonc\`) config.
 
 The tool handles all validation and file operations — do NOT edit config files directly.
 
@@ -32,7 +32,7 @@ The tool handles all validation and file operations — do NOT edit config files
 After a successful switch:
 
 1. Report the tool's output to the user.
-2. Note that delegate-task categories use the new preset immediately (session-scoped live switch).
+2. Note that delegation categories use the new preset immediately (session-scoped live switch).
 3. If \`--save\` was used, tell the user the persisted \`active_preset\` takes effect for builtin agents on the next session.
 
 ## Important constraints

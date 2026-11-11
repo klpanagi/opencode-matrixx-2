@@ -14,7 +14,6 @@ import { log } from "../../shared"
 import type { SessionContextCarrier } from "../../shared/session/session-context-source"
 import type { DomainHooks } from "../setup-domains"
 import type { MatrixxContext } from "./context"
-import { resolveSessionAgent } from "./session-agent-resolver"
 import type { SubagentPolicyDeps } from "./subagent-policy"
 import { applySubagentPolicy } from "./subagent-policy"
 
@@ -129,26 +128,6 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     //     prepended PLANNING_CONSULT_WARNING the innermost (closest to the
     //     user prompt). Reversing the order would change semantics.
     // ---------------------------------------------------------------------
-    // Task-tool agent resolution: start the network call NOW (before Wave 3)
-    // so it runs in parallel with the mutator chain. The result is awaited
-    // after Wave 3 completes, preserving the contract that the task tool
-    // still receives a resolved `subagent_type` before the handler returns.
-    // This is the T1.4 optimization: removes the 5s-timeout network call
-    // from the synchronous wait chain.
-    let resolvePromise: Promise<string | undefined> | undefined
-    if (input.tool === "task") { // plugin `task` gets category->mouse normalization; native `subagent` is transformed by applySubagentPolicy below (Wave 3)
-      const argsObject = output.args
-      const category = typeof argsObject.category === "string" ? argsObject.category : undefined
-      const subagentType = typeof argsObject.subagent_type === "string" ? argsObject.subagent_type : undefined
-      const sessionId = typeof argsObject.session_id === "string" ? argsObject.session_id : undefined
-
-      if (category) {
-        argsObject.subagent_type = "mouse"
-      } else if (!subagentType && sessionId) {
-        resolvePromise = resolveSessionAgent(ctx, sessionId)
-      }
-    }
-
     // Task T5: Wave 2 mutators (e.g. contextModeEnforcer) set `output.message`,
     // but Wave 3 hooks (e.g. bashFileReadGuard) ASSIGN to it, clobbering the
     // earlier text. Capture it after Wave 2 so it can be merged back after Wave 3.
@@ -171,11 +150,6 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     const wave3Message = typeof output.message === "string" ? output.message : undefined
     if (preexistingMessage && preexistingMessage !== wave3Message && !wave3Message?.startsWith(preexistingMessage)) {
       output.message = [preexistingMessage, wave3Message].filter(Boolean).join("\n\n")
-    }
-
-    if (resolvePromise) {
-      const resolvedAgent = await resolvePromise
-      output.args.subagent_type = resolvedAgent ?? "continue"
     }
 
     if (input.tool === "slashcommand") {

@@ -56,14 +56,16 @@ describe("niobe tool-execute-before shell alias (V2)", () => {
     await expect(result).rejects.toThrow("must delegate file mutations")
   })
 
-  test("orchestrator native subagent call is blocked (no directive injection)", async () => {
+  test("orchestrator native subagent call passes through (no block)", async () => {
+    // NOTE (Phase 5.3 inversion): native `subagent` is now THE delegation
+    // path — the orchestrator hard-block was removed, prompt passes through.
     //#given: an orchestrator caller invoking the native subagent tool
     //#when: the guard runs
     const handler = makeHandler()
     const output = { args: { prompt: "do the thing" } }
-    const result = handler({ tool: "subagent", sessionID: "ses_1", callID: "c1" }, output as never)
-    //#then: it throws the task redirect instead of injecting the directive
-    await expect(result).rejects.toThrow(/task.*categor|subagent_type/i)
+    await handler({ tool: "subagent", sessionID: "ses_1", callID: "c1" }, output as never)
+    //#then: no throw; prompt carries the single-task directive (isTaskTool match)
+    expect(output.args.prompt as string).toContain("<system-reminder>")
   })
 
   test("task input still gets the single-task directive (V1 compat)", async () => {
@@ -75,24 +77,20 @@ describe("niobe tool-execute-before shell alias (V2)", () => {
   })
 })
 
-describe("niobe tool-execute-before native subagent hard-block", () => {
-  test("orchestrator native subagent call is blocked with task redirect", async () => {
+describe("niobe tool-execute-before native subagent pass-through", () => {
+  // NOTE (Phase 5.3 inversion): hard-block removed — native subagent is THE path.
+  test("orchestrator native subagent call is not blocked", async () => {
     //#given: an orchestrator caller invoking the native subagent tool
     setOrchestrator(true)
     const handler = makeHandler()
     const output = { args: { prompt: "do the thing", subagent_type: "sati" } }
-    //#when: the guard runs and the thrown redirect is captured
-    const thrown = await handler(
+    //#when: the guard runs
+    await handler(
       { tool: "subagent", sessionID: "ses_1", callID: "c1" },
       output as never,
-    ).then(
-      () => new Error("expected hook to throw for native subagent"),
-      (error: unknown) => error,
     )
-    //#then: it throws a redirect naming the plugin task tool and its category/subagent_type arg pattern
-    const message = String((thrown as Error)?.message ?? thrown)
-    expect(message).toMatch(/task/i)
-    expect(message).toMatch(/categor|subagent_type/i)
+    //#then: it resolves without throwing (prompt may carry the directive)
+    expect(output.args.prompt as string).toContain("do the thing")
   })
 
   test("non-orchestrator native subagent call is not blocked", async () => {

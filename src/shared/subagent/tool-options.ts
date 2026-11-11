@@ -1,5 +1,5 @@
 /**
- * Registration options for the delegate-task tool.
+ * Registration options for the task tool.
  *
  * `task` spawns a nested agent, so the host cannot run it from inside a
  * code-mode `execute` block: the nested spawn has no top-level tool session

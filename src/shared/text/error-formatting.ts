@@ -5,7 +5,7 @@
 export interface ErrorContext {
   operation: string
   /**
-   * DelegateTaskArgs (structurally compatible — see src/tools/delegate-task/types.ts).
+   * TaskArgs (structurally compatible — see src/tools/removed-tools/tools.ts).
    * Only the fields read by formatDetailedError are required.
    */
   args?: {

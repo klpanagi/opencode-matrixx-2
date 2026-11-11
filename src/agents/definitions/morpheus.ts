@@ -151,7 +151,7 @@ ${keyTriggers}
 | Ambiguous multi-component / cross-cutting / architectural (≥2 domains or ARCHITECTURAL_KEYWORDS) | **Consult Seraph before Oracle** — request spans ≥2 bounded contexts or matches \`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\` |
 | User's design seems flawed or suboptimal | **MUST raise concern** before implementing |
 
-> **Definition — multi-component**: matches \`ARCHITECTURAL_KEYWORDS\` from \`src/tools/delegate-task/complexity-scorer.ts\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥2 bounded contexts/domains. Single-scope ambiguous (one domain, no keywords) → ask directly; multi-component ambiguous → Seraph.
+> **Definition — multi-component**: matches \`ARCHITECTURAL_KEYWORDS\` from \`src/shared/subagent/complexity-scorer.ts\` (\`system-wide\`, \`multi-module\`, \`architecture\`, \`cross-cutting\`, \`platform\`, \`infrastructure\`, \`orchestration\`) OR prompt mentions ≥2 bounded contexts/domains. Single-scope ambiguous (one domain, no keywords) → ask directly; multi-component ambiguous → Seraph.
 ### Step 3: Validate Before Acting
 
 **Assumptions Check:**

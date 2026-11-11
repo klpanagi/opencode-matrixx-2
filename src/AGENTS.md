@@ -21,7 +21,7 @@ src/
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (~118 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
 ├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
-└── tools/                            # 30 tool dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
+└── tools/                            # tool dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guard stubs, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```
 
 ## PLUGIN INITIALIZATION (`setup-domains.ts`)

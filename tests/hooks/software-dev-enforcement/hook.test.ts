@@ -58,13 +58,15 @@ describe("software-dev-enforcement subagent guard: orchestrator targets", () => 
     expect(String(injected.args.prompt)).toContain("TEAM ROLES")
   })
 
-  test("deprecated subagent_type alias resolves the target when agent is absent", async () => {
-    //#given a native subagent call using the deprecated alias field
+  test("deprecated subagent_type alias no longer resolves the target", async () => {
+    // NOTE (Phase 5.3 inversion): the task-tool alias field was removed —
+    // only `agent` selects the target now, so the prompt passes through.
+    //#given a native subagent call using the removed alias field
     //#when the guard runs
     const output = await run("subagent", { subagent_type: "oracle", prompt: "plan the work" })
 
-    //#then the orchestrator template is prepended
-    expect(String(output.args.prompt)).toContain("TEAM ROLES")
+    //#then no template is prepended
+    expect(String(output.args.prompt)).toBe("plan the work")
   })
 })
 

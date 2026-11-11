@@ -113,14 +113,6 @@ function asRecord(value: unknown): Record<string, unknown> {
 }
 
 
-export function hideNativeSubagentTool(editor: { remove(id: string): void }): void {
-  try {
-    editor.remove("subagent")
-  } catch {
-    log("[matrixx] native subagent tool not present, skipping hide")
-  }
-}
-
 async function registerDomainTools(input: RegisterDomainsInput & { bridge: DomainBridgeHandlers }): Promise<V2Registration[]> {
   const { ctx, bridge, directory, worktree } = input
   const tools = bridge.tool
@@ -168,9 +160,6 @@ async function registerDomainTools(input: RegisterDomainsInput & { bridge: Domai
           if (override.parameters !== undefined) tool.input = override.parameters
         })
       }
-      // Phase 2 coexistence cutover: native subagent stays visible so task(...) and
-      // subagent(...) work side by side. Call neutralized, helper retained for Phase 5 deletion.
-      // hideNativeSubagentTool(editor)
     }),
   )
 

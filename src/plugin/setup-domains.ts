@@ -190,7 +190,6 @@ export type {
   RegisterDomainsInput,
 } from "./setup-domains/assemble"
 export {
-  hideNativeSubagentTool,
   hookOutputText,
   registerDomains,
 } from "./setup-domains/assemble"
