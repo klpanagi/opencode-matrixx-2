@@ -5,8 +5,9 @@
 export interface ErrorContext {
   operation: string
   /**
-   * TaskArgs (structurally compatible — see src/tools/removed-tools/tools.ts).
-   * Only the fields read by formatDetailedError are required.
+   * Removed `task`-tool args shape (structurally compatible — see
+   * src/tools/removed-tools/tools.ts). Kept for debugging delegation-error
+   * paths. Only the fields read by formatDetailedError are required.
    */
   args?: {
     description: string

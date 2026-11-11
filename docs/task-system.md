@@ -43,7 +43,7 @@ matrixx.jsonc
             │     ├─ createContinuationHooks  → (removed) task-continuation-enforcer deleted; completion wakes flow via BackgroundManager.handleEvent (see §8.1)
             │     ├─ createToolGuardHooks     → taskEditGuard (tool.execute.before, Write/Edit/Read/bash guard)
             │     └─ createSessionHooks       → taskResumeInfo (tool.execute.after, resume hint)
-            │                                 → delegateTaskRetry, emptyTaskResponseDetector
+            │                                 → emptyTaskResponseDetector
             │
             ├─── Agent Prompts (dynamic-agent-prompt-builder, morpheus/keymaker/mouse factories)
             │     always task discipline (`task_create` / `task_update`)
@@ -103,7 +103,7 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
     "stale_after_hours": 24,        // stale-task threshold (formerly used by the removed enforcer)
     "background_stale_after_hours": 2, // background completion-gate staleness window
     "session_scoped": true,         // session filter for task reads (current session + live subagents)
-    "pollTimeoutMs": 600000         // blocking task() poll budget, minimum 60000
+    "pollTimeoutMs": 600000         // poll budget for blocking subagent waits, minimum 60000
   }
 }
 ```
@@ -115,9 +115,9 @@ There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabl
 | `task_list_id` | `string` | none | Explicit list ID. Alternative to the `REDPILL_TASK_LIST_ID` env var. Sanitized to `[a-zA-Z0-9_-]`. |
 | `scope` | `"project" \| "global"` | `"project"` | `project` → `.matrixx/tasks` in the project root. `global` → `~/.config/opencode/tasks/{listId}` via `getOpenCodeConfigDir()`. |
 | `stale_after_hours` | `number`, min `0.25` | `24` | Pending/in_progress tasks with no file activity for this many hours count as stale. Stale-only queues skip the continuation directive; mixed queues annotate stale entries. Fractional hours are accepted (floor 0.25 = 15 minutes), because the background gate's window is too coarse at a 1-hour floor. |
-| `background_stale_after_hours` | `number`, min `0.25` | `2` | Window used only by the background-agent completion gates. A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
+| `background_stale_after_hours` | `number`, min `0.25` | `2` | Window used only by the background completion gate (`src/features/task-session-scope/` staleness). A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
 | `session_scoped` | `boolean` | `true` | When true, task reads only consider tasks created by the current session (or its live subagent sessions). When false, all project tasks count regardless of origin. |
-| `pollTimeoutMs` | `number`, min 60000 | `600000` (10 min) | Poll timeout for blocking `task()` calls. Raise for agents that delegate to subagents with long wall times. |
+| `pollTimeoutMs` | `number`, min 60000 | `600000` (10 min) | Poll timeout (`MAX_POLL_TIME_MS`) for blocking subagent waits. Raise for agents that delegate to subagents with long wall times. |
 | `claude_code_compat` | `boolean` | `false` | Legacy `morpheus.tasks` flag, reserved path-compatibility marker. No behavior is keyed on it in the current tree. |
 
 Legacy mirror: `MorpheusTasksConfigSchema` in `src/config/schema/morpheus.ts` keeps `storage_path`, `task_list_id`, `scope`, `stale_after_hours`, `session_scoped` as fallbacks. Resolution order per key: `tasks.*` → `morpheus.tasks.*` → default. `task.pollTimeoutMs` falls back to `tasks.pollTimeoutMs` the same way. `background_stale_after_hours` has **no** legacy mirror: it is canonical-only and resolves to its default when the canonical key is absent.
@@ -183,7 +183,7 @@ The code half of that is `isTaskStorePrimary(agent) = agent.mode === "primary" |
 | Object | Contents | Meaning |
 |--------|----------|---------|
 | `taskStorePermissions` | `task_*` | Tracking only. Read and write own records, no delegation. |
-| `fullTaskPermissions` | `task_*` + `task` + `teammate` | Tracking plus outgoing delegation. |
+| `fullTaskPermissions` | `task_*` + `task` + `teammate` | Tracking plus outgoing delegation. Delegation itself is the native `subagent` tool; the `task` grant now only reaches the removed-tool guard stub, whose message redirects to `subagent`/`subagent_control`. |
 
 `deriveTaskPermissions` picks `taskStorePermissions` when the agent declares `permission.task === "deny"` for itself, and `fullTaskPermissions` otherwise. That is why a read-only agent such as Sentinel is safe without a special-case arm and without a name list: it restricts itself, and the self-declared denial is honoured automatically. Sentinel's read-only mandate covers *files*; the task store is not a source file, it is how a read-only auditor hands findings to an implementer without touching the code.
 
@@ -478,7 +478,7 @@ Tool errors return as `{ error, message? }` JSON; they are never thrown to the m
 
 - `blocks: string[]` lists IDs this task blocks (forward edge). Informational; `task_list` does not filter on it.
 - `blockedBy: string[]` lists IDs blocking this task (backward edge). **This is the scheduling edge**: `task_list` resolves it to unresolved entries only.
-- **Bidirectional sync:** `src/tools/delegate-task/sync-task-deps.ts` keeps the reverse edge consistent: after `task_create({blockedBy:[T-1]})`, the caller also updates `T-1` with `addBlocks:[newId]`. Storage does not enforce this; it is convention (see `docs/orchestration.md` for the delegation flow).
+- **Bidirectional sync:** after `task_create({blockedBy:[T-1]})`, the caller also updates `T-1` with `addBlocks:[newId]`. Storage does not enforce this; it is convention (the old `sync-task-deps.ts` helper was removed with the `delegate-task` tool).
 
 ### 7.2 Additive Merge
 
@@ -499,7 +499,7 @@ A missing blocker ID (deleted file) stays unresolved. Defend against stale IDs b
 
 ### 7.4 Wave Planning (Morpheus Discipline)
 
-Morpheus decomposes work into **waves** that maximize parallelism. Full flow, examples, and the delegate integration live in `docs/orchestration.md`; the storage-level rules are:
+Morpheus decomposes work into **waves** that maximize parallelism. Full flow, examples, and the delegation integration (native `subagent`; see `docs/native-subagent-migration.md`) live in `docs/orchestration.md`; the storage-level rules are:
 
 1. Create independent tasks first (`blockedBy: []`); they can run in parallel.
 2. Set `blockedBy` only when the task truly needs the blocker's output.
@@ -514,7 +514,7 @@ const t1 = task_create({ subject:"Build frontend" })   // T-001
 const t2 = task_create({ subject:"Build backend" })    // T-002
 // Wave 2: blocked
 const t3 = task_create({ subject:"Integration tests", blockedBy:[t1.task.id, t2.task.id] })
-// Execute wave 1 in parallel via delegate_task, then:
+// Execute wave 1 in parallel via native `subagent`, then:
 task_update({ id:t1.task.id, status:"completed" })
 task_update({ id:t2.task.id, status:"completed" })
 // task_list now shows T-003 with blockedBy:[] → runnable
@@ -522,6 +522,35 @@ task_update({ id:t3.task.id, status:"in_progress", owner:"morpheus" })
 // ... work ...
 task_update({ id:t3.task.id, status:"completed" })
 ```
+
+### 7.5 Delegation is native `subagent` (the `task` tool is removed)
+
+The `task_*` tools above are the **tracking layer only**: they record progress
+in `.matrixx/tasks/` and never spawn work. Delegation is a separate,
+native tool:
+
+```typescript
+subagent(agent="mouse-source", background=true, load_skills=["tdd-enforcer"], complexity="auto", description="Implement login", prompt="...")
+```
+
+- `agent` selects the worker (`mouse-*` for category-routed work, or a named
+  agent such as `trinity`/`operator`/`oracle`).
+- `background=true` fans out; the parent session receives an injected
+  completion message, and the full transcript is available via `session_read`
+  (`session_search` / `session_info` for discovery).
+- `load_skills` and `complexity` are matrixx extras consumed by the
+  `subagent_policy` transformer (skill content is prepended, `complexity` may
+  downgrade the model for `mouse-*` workers) and stripped before execution.
+- `subagent_control(action=cancel|wait, session_id=...)` manages running
+  children; continuation reuses the same `agent` with the child `sessionID`.
+- The `task`, `background_output`, `background_cancel`, `background_revive`,
+  and `background_wait_all` names now resolve to guard stubs whose message
+  redirects to the equivalents above (`src/tools/removed-tools/`).
+
+**Child restrictions.** The 8 `mouse-*` workers carry a `task: false` tool
+restriction: they track work with `task_*` but cannot reach the removed `task`
+tool, and they may spawn children natively via `subagent` up to the
+`subagent_depth` cap (see `docs/native-subagent-migration.md`).
 
 ---
 
@@ -533,7 +562,7 @@ One-paragraph summaries here. Full hook internals (state machines, prompts, coun
 
 The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts.
 
-**Wiring (past tense):** it was gated on `isTaskSystemEnabled(config)` plus `isHookEnabled("task-continuation-enforcer")` with trigger `event:idle`. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). See `src/features/background-agent/manager/reconcile.ts` (`handleManagerEvent`, `deliverParentNotification`).
+**Wiring (past tense):** it was gated on `isTaskSystemEnabled(config)` plus `isHookEnabled("task-continuation-enforcer")` with trigger `event:idle`. That idle re-prompt path is gone, and so is the `BackgroundManager` that briefly replaced it (`src/features/background-agent/` was removed). A `background=true` native `subagent` completion now arrives as an injected message in the parent session; read the full child transcript with `session_read`. See `docs/native-subagent-migration.md` for the retrieval map.
 
 **Past behavior (kept for history):** countdown constants (`COUNTDOWN_SECONDS = 2`, `CONTINUATION_COOLDOWN_MS = 30_000`, `MAX_CONSECUTIVE_FAILURES = 5`) drove the idle countdown and injection path described below in past tense.
 
@@ -559,15 +588,15 @@ Three blocks:
 
 | Hook | Trigger | Behavior |
 |------|---------|----------|
-| `task-resume-info` (`src/hooks/task-resume-info/`) | `tool.execute.after` for delegate targets | Extracts `session_id` via `SESSION_ID_PATTERNS`, appends `to continue: task(session_id="…")` unless present; ignores `Error:` outputs. Always registered (`create-session-hooks.ts`). |
-| `empty-task-response-detector` (`src/hooks/empty-task-response-detector.ts`) | response analysis | Detects an empty assistant message while tasks remain; triggers a re-prompt |
-| `delegate-task-retry` (`src/hooks/delegate-task-retry/`) | `delegate_task` failure | Retries transient LLM failures via pattern matching in `patterns.ts` |
+| `task-resume-info` (`src/hooks/task-resume-info/`) | `tool.execute.after` for removed-tool guard outputs (`task`, `Task`, `task_tool`) | Extracts `session_id` via `SESSION_ID_PATTERNS`, appends `to continue: subagent(agent="<original-agent>", sessionID="…")` unless present; ignores `Error:`/`Failed` outputs. Always registered (`create-session-hooks.ts`). |
+| `empty-task-response-detector` (`src/hooks/empty-task-response-detector.ts`) | `tool.execute.after` for `Task`/`task` outputs | Replaces an empty delegation result with `EMPTY_RESPONSE_WARNING` (likely causes plus re-issue guidance via native `subagent`); non-empty outputs pass through. |
+| `delegate-task-retry` (removed) | — | The `delegate_task`-failure retry hook was deleted with the migration; transient failures on native `subagent` calls surface directly with no retry wrapper. |
 
 ### 8.4 `task-toast-manager`: Background-Task Toasts
 
 **Files:** `src/features/task-toast-manager/` (`manager.ts`, `types.ts`, `index.ts`).
 
-`TaskToastManager` tracks **delegated background agent tasks** (the `delegate_task` background path), not file-backed `T-*.json` rows. Entries are `TrackedTask` records: `{ id, description, agent, status, startedAt, isBackground, category?, skills?, modelInfo? }` with status in `running | queued | completed | error` (`types.ts`). Lifecycle: `addTask()` on launch (shows a toast), `updateTask()` on status change, `removeTask()` when a task completes or errors, `getRunningTasks()` / `getQueuedTasks()` for TUI surfacing. Toast display options are `TaskToastOptions` (`title`, `message`, `variant`, `duration?`).
+`TaskToastManager` tracks **delegated background agent tasks** (historically fed by the removed `delegate_task` background launch path), not file-backed `T-*.json` rows. Entries are `TrackedTask` records: `{ id, description, agent, status, startedAt, isBackground, category?, skills?, modelInfo? }` with status in `running | queued | completed | error` (`types.ts`). Lifecycle: `addTask()` on launch (shows a toast), `updateTask()` on status change, `removeTask()` when a task completes or errors, `getRunningTasks()` / `getQueuedTasks()` for TUI surfacing. Toast display options are `TaskToastOptions` (`title`, `message`, `variant`, `duration?`).
 
 ### 8.5 `task-notepad-writer`: Automatic Notepads Per Task
 
@@ -666,8 +695,8 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 | `src/tools/plan/plan-read.ts`, `plan-update.ts` | `plan_read` (hashline output), `plan_update` (`LINE#ID` edits) |
 | `src/features/task-session-scope/` (`staleness.ts`, `todo.ts`) | Kept helpers from the removed enforcer: staleness plus session filter |
 | `src/hooks/task-edit-guard/` | Write/Edit/Read + bash guard for `.matrixx/plans` and `.matrixx/tasks` |
-| `src/hooks/task-resume-info/` | Resume hint `task(session_id="…")` |
-| `src/tools/delegate-task/sync-task-deps.ts` | Bidirectional dep sync |
+| `src/hooks/task-resume-info/` | Resume hint `subagent(agent="<original-agent>", sessionID="…")` |
+| _(removed)_ `src/tools/delegate-task/sync-task-deps.ts` | Bidirectional dep sync (convention only now; helper deleted with the `delegate-task` tool) |
 | `src/config/schema/tasks.ts` | Canonical `TasksConfigSchema` |
 | `src/config/schema/morpheus.ts` | Legacy `MorpheusTasksConfigSchema` fallback |
 | `src/config/schema/hooks.ts` | `HookNameSchema` (includes `task-edit-guard`, etc., plus retained-deprecated literals; `task-continuation-enforcer` was removed) |

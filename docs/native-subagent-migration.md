@@ -1,8 +1,8 @@
 # Native Subagent Migration Notes
 
-Matrixx is migrating delegation from the legacy `task(...)` / `delegate_task`
-calling convention to the native `subagent(...)` tool. During the migration
-window both work; legacy delegation will be removed in a future release.
+Matrixx delegates through the native `subagent(...)` tool. The legacy
+`task(...)` / `delegate_task` calling convention was removed; calling
+it now reaches a guard stub that redirects to `subagent` (see Final architecture).
 
 ## Syntax map (old → new)
 
@@ -81,13 +81,44 @@ Nested delegation is capped. Set in `opencode.jsonc`:
 
 - This is a **top-level `experimental` key, not a matrixx key**; restart
   OpenCode after changing it.
-- Why 3: orchestrator → specialist → sub-specialist. Deeper nesting is
-  denied with an explanatory message.
+- Why 3: the orchestrator spawns a worker, and matrixx workers (`mouse-*`) may
+  spawn their own children for parallel exploration or sub-tasks. Three
+  levels cover orchestrator, worker, and grandchild; deeper nesting is
+  denied with a depth-limit error.
 - Matrixx cannot set this programmatically (the V2 plugin API has no
   config writer) — users must set it themselves.
 
-## Coexistence
+## Final architecture (no dual path)
 
-Legacy `task(...)` delegation still works during the migration window and
-will be removed in a future release. New prompts, skills, and templates
-use `subagent(...)` exclusively.
+There is no coexistence path anymore. The final shape is:
+
+- **Native `subagent`** for all delegation: `subagent(agent=..., background=...,
+  sessionID? for continuation, load_skills?, complexity?)`.
+- **`subagent_policy` transformer** (`src/plugin/tool/subagent-policy/`): consumes
+  the extra `load_skills` and `complexity` args on native subagent calls,
+  prepends skill content, and rewrites the model downgrade-only for
+  `mouse-*` workers. It strips both keys before execution, so OpenCode
+  never sees them.
+- **`subagent_control`** for running children: `action=cancel|wait` with
+  `session_id` plus `timeout` (default 60s, max 600s).
+- **`session_read` / `session_search` / `session_info`** for output retrieval:
+  a `background=true` completion injects a synthetic message into the
+  parent session; read the full child transcript from there.
+- **Removed-tools guard stubs** (`src/tools/removed-tools/`): `task`,
+  `background_output`, `background_cancel`, `background_revive`, and
+  `background_wait_all` are deleted and replaced by guards whose message
+  points at the native equivalents above.
+- **`task_*` tracking is unchanged**: `task_create` / `task_update` /
+  `task_list` / `task_get` / `task_cleanup` remain the file-backed progress
+  record layer (see `docs/task-system.md`). Tracking and delegation are
+  separate tools: record with `task_*`, delegate with `subagent`.
+
+## Child restrictions
+
+The 8 `mouse-*` worker agents
+(`mouse-construct/source/rabbit-hole/glitch/bullet-time/blue-pill/the-one/transmission`)
+carry a `task: false` tool restriction (`src/shared/tool/agent-tool-restrictions.ts`):
+they track work through `task_*` but cannot reach the removed `task` tool.
+They MAY spawn children natively via `subagent` up to the `subagent_depth`
+cap; the solo-Mouse NEVER-delegate constraint is overridden for workers by
+the `<Nested_Delegation>` prompt block (`src/agents/definitions/mouse-subagents.ts`).

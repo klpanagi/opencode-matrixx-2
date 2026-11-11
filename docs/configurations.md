@@ -283,7 +283,7 @@ Available agents: `morpheus`, `oracle`, `merovingian`, `operator`, `trinity`, `c
 Matrixx includes built-in skills that provide additional capabilities:
 
 - **playwright** (default) / **agent-browser**: Browser automation for web scraping, testing, screenshots, and browser interactions. See [Browser Automation](#browser-automation) for switching between providers.
-- **git-master**: Git expert for atomic commits, rebase/squash, and history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with `task(category='bullet-time', load_skills=['git-master'], ...)` to save context.
+- **git-master**: Git expert for atomic commits, rebase/squash, and history search (blame, bisect, log -S). STRONGLY RECOMMENDED: Use with `subagent(agent="mouse-bullet-time", load_skills=["git-master"], ...)` to save context.
 
 Disable built-in skills via `disabled_skills` in `~/.config/opencode/matrixx.json` or `.opencode/matrixx.json`:
 
@@ -487,8 +487,8 @@ Run background subagents in separate tmux panes for **visual multi-agent executi
 ### How It Works
 
 When `tmux.enabled` is `true` and you're inside a tmux session:
-- Background agents (via `task(run_in_background=true)`) spawn in new tmux panes
-  **Note**: `run_in_background` defaults to `false`. Use `true` for any parallel independent work (exploration, fan-out, multi-agent waves). `true` is async (returns `task_id` immediately, no result); `false` is sync (awaits result inline). Never call `task()` sequentially when tasks are independent — use `run_in_background=true` + `background_output` instead (AGENTS.md:223).
+- Background agents (via `subagent(background=true)`) spawn in new tmux panes
+  **Note**: `background` defaults to `false`. Use `true` for any parallel independent work (exploration, fan-out, multi-agent waves). `true` is async (returns a `sessionID` immediately; the result arrives as an injected completion message); `false` is sync (returns the result inline). Never call `subagent()` sequentially when tasks are independent — fire them in one message and collect results with `session_read` instead.
 - Each pane shows the subagent's real-time output
 - Panes are automatically closed when the subagent completes
 - Layout is automatically adjusted based on your configuration
@@ -746,7 +746,7 @@ Configure background agent tasks. The historical concurrency, stale-timeout, loo
 | `jobBoard.maxRetainedSnapshots` | `20` | Deprecated: ignored; the `jobBoard` mechanism was removed. |
 | `wallClockTimeoutMs`      | `0`   | Wall-clock execution timeout in milliseconds. Union type: `0` disables wall-clock enforcement (OFF/default). Values ≥60000 enforce a maximum runtime (range 60000–2147483647). Zero means legacy unbounded behavior; any non-zero value triggers terminal `stopped` with `terminalReason: "wallclock-timeout"` when the process runs past this limit. |
 | `wallClockAbortGraceMs`   | `5000` | Deprecated: ignored; wall-clock aborts are immediate.                                                          |
-| `dedupeActiveDelegations` | `false` | Opt-in. When `true`, an identical delegation (same parent session, agent, prompt) reuses the active pending/running task instead of launching a duplicate. Default `false`: every delegation launches its own task. |
+| `dedupeActiveDelegations` | `false` | Opt-in. When `true`, an identical delegation (same parent session, agent, prompt) reuses the active pending/running background handle instead of launching a duplicate. Default `false`: every delegation launches its own handle. |
 **Priority Order**: `modelConcurrency` > `providerConcurrency` > `defaultConcurrency`
 
 **Use Cases**:
@@ -756,7 +756,7 @@ Configure background agent tasks. The historical concurrency, stale-timeout, loo
 
 ## Categories
 
-Categories enable domain-specific task delegation via the `task` tool. Each category applies runtime presets (model, temperature, prompt additions) when calling the `Mouse` agent.
+Categories enable domain-specific delegation via the native `subagent` tool. Each category applies runtime presets (model, temperature, prompt additions) when spawning the matching `mouse-*` worker agent. The legacy `task(category=...)` calling convention was removed; see [Native Subagent Migration](native-subagent-migration.md).
 
 ### Built-in Categories
 
@@ -841,12 +841,12 @@ All 8 categories come with optimal model defaults, but **you must configure them
 ### Usage
 
 ```javascript
-// Via task tool
-task(category="construct", prompt="Create a responsive dashboard component")
-task(category="source", prompt="Design the payment processing flow")
+// Via native subagent (category-routed workers)
+subagent(agent="mouse-construct", description="Build dashboard component", prompt="Create a responsive dashboard component")
+subagent(agent="mouse-source", description="Design payment flow", prompt="Design the payment processing flow")
 
 // Or target a specific agent directly (bypasses categories)
-task(agent="oracle", prompt="Review this architecture")
+subagent(agent="oracle", description="Review architecture", prompt="Review this architecture")
 ```
 
 ### Custom Categories
@@ -1105,7 +1105,7 @@ Switch presets at runtime without editing config:
 |---------|--------|
 | `/preset` or `/preset list` | List available presets and mark the active one |
 | `/preset show [<name>]` | Show a preset's agent/category model assignments (defaults to the active preset) |
-| `/preset set <name>` | Switch the active preset for the current session — **delegate-task categories switch immediately**; builtin agents apply on the **next session** |
+| `/preset set <name>` | Switch the active preset for the current session — **subagent categories switch immediately**; builtin agents apply on the **next session** |
 | `/preset set <name> --save [--global\|--project]` | Also persist `active_preset` to config (project `.opencode/matrixx.jsonc` by default, or global `~/.config/opencode/matrixx.jsonc`) |
 
 The `/preset` command is backed by the built-in `preset` tool (`src/tools/preset/tools.ts`), which validates the preset name, applies the session overlay, and — with `--save` — persists `active_preset`. It never edits config files directly.
@@ -1250,9 +1250,9 @@ system is unconditional: there is no master switch. Legacy `morpheus.tasks` and
 | `task_list_id`       | `string` | — (falls back to `basename(cwd)` sanitized) | Force task list ID (alternative to `REDPILL_TASK_LIST_ID` / `CLAUDE_CODE_TASK_LIST_ID` env). Sanitized to `[a-zA-Z0-9_-]`. |
 | `scope`              | `"global" \| "project"` | `"project"` | `project` → `.matrixx/tasks` per project (default). `global` → `~/.config/opencode/tasks/{listId}`. |
 | `stale_after_hours`  | `number`   | `24` (min `0.25`)  | Pending/in_progress tasks with no file activity for this many hours count as stale (the enforcer that used this is removed; kept helpers live in `src/features/task-session-scope/`). Fractional hours are accepted, so the floor is 15 minutes rather than 1 hour. |
-| `background_stale_after_hours` | `number` | `2` (min `0.25`) | Window used **only** by the background-agent completion gates (`session.idle`, polling, and the restart reconcile probe). A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
+| `background_stale_after_hours` | `number` | `2` (min `0.25`) | Window used **only** by the background completion gate (`src/features/task-session-scope/` staleness). A pending/in_progress task with no file activity for this long stops blocking completion of its background handle. |
 | `session_scoped`     | `boolean` | `true`            | Only current-session (and subagent) tasks are considered by session-scoped task reads. `false` → all project tasks considered. This option does not apply to the background completion gate, which is always session- and ancestry-scoped. |
-| `pollTimeoutMs`      | `number`   | `600000` (min `60000`) | Poll budget for blocking `task()` calls. Increase for agents that delegate to sub-agents. |
+| `pollTimeoutMs`      | `number`   | `600000` (min `60000`) | Poll budget (`MAX_POLL_TIME_MS`) for blocking subagent waits. Increase for agents that delegate to sub-agents with long wall times. |
 
 **Why there are two staleness windows.** They serve different consumers whose
 failure costs differ, so one knob would be wrong for one of them.
@@ -1397,6 +1397,29 @@ Opt-in experimental features that may change or be removed in future versions. U
 | `plugin_load_timeout_ms`    | `10000` | Timeout in ms for `loadAllPluginComponents` during config handler init (min: 1000).                                                             |
 | `safe_hook_creation`        | `true` (at call site) | Wrap hook creation in try/catch to prevent one failing hook from crashing the plugin.                                                  |
 | `hashline_edit`             | `true` (at call site) | Enable hashline-anchored `Edit` tool (line#hash IDs) for non-plan files — `.matrixx/plans/*.md` must use `plan_update`.                                     |
+
+### `subagent_depth` (lives in `opencode.jsonc`, not here)
+
+Nested delegation is capped by OpenCode's `experimental.subagent_depth` key,
+which is read per-spawn from **`opencode.jsonc`** — it is not a matrixx key,
+a plugin cannot set it programmatically, and OpenCode must be **restarted**
+after changing it:
+
+```jsonc
+// opencode.jsonc
+{
+  "experimental": {
+    "subagent_depth": 3
+  }
+}
+```
+
+Why 3: the orchestrator spawns a worker, and matrixx workers (`mouse-*`) may
+spawn their own children for parallel exploration or sub-tasks. Three levels
+cover orchestrator, worker, and grandchild. When the cap is hit, the spawn is
+refused with a depth-limit error. See [Native Subagent Migration](native-subagent-migration.md)
+for the full delegation map.
+
 ## Context Mode
 
 Enforce sandbox-based `ctx_*` tools (`ctx_batch_execute`, `ctx_search`, `ctx_execute`, `ctx_execute_file`, `ctx_fetch_and_index`, `ctx_index`) over raw `Read`/`Grep`/`Glob` for analysis. Discipline prompt is loaded at runtime from the installed `context-mode` package (`configs/opencode/AGENTS.md`, memoized `readFileSync` + fallback) when `ctx_*` tools are present. Dedicated `plan_*` tools (`plan_create/read/update/list/delete`) plus `plan_tasks` (compact manifest) cover `.matrixx/plans/*.md` — generic `Write`/`Edit` to plans is blocked. See [Context Management](./context-management.md) for the full 5-layer stack.

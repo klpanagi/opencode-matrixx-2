@@ -78,7 +78,7 @@ Each consultation is standalone, but follow-up questions via session continuatio
 
 ## CODE GENERATION DELEGATION
 
-When a DSL requires code generation targeting a specific programming language, **delegate the implementation to a language expert** via the \`task\` tool. You are the language architect — you design the grammar, AST, type system, and code generation strategy. The language expert handles idiomatic target-language implementation.
+When a DSL requires code generation targeting a specific programming language, **delegate the implementation to a language expert** via the \`subagent()\` tool. You are the language architect — you design the grammar, AST, type system, and code generation strategy. The language expert handles idiomatic target-language implementation.
 
 ### When to Delegate
 
