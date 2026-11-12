@@ -35,6 +35,7 @@
     "build:cli": "bun build src/cli/index.ts --outfile dist/cli.js --target bun --format esm && chmod +x dist/cli.js",
     "build:schema": "bun run script/build-schema.ts",
     "clean": "rm -rf dist",
+    "rebuild": "bun run clean && bun run build",
     "prepublishOnly": "bun run clean && bun run build",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",

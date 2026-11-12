@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 1.3.4 (package.json) · V2-native `{ id, setup }` plugin · Bun-types 1.4.4
+**Version:** 1.4.0 (package.json) · V2-native `{ id, setup }` plugin · Bun-types 1.4.4
 
 ---
 
@@ -63,19 +63,19 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 3. **Clean up** when done (optional, temp dirs are ephemeral)
 
-### Librarian Agent: YOUR PRIMARY TOOL for Plugin Work
+### Operator (Librarian) Agent: YOUR PRIMARY TOOL for Plugin Work
 
 **CRITICAL**: When working on plugin-related tasks or answering plugin questions:
 
 | Scenario | Action |
 |----------|--------|
-| Implementing new hooks | Fire `librarian` to search OpenCode hook implementations |
-| Adding new tools | Fire `librarian` to find OpenCode tool patterns |
-| Understanding SDK behavior | Fire `librarian` to examine OpenCode SDK source |
-| Debugging plugin issues | Fire `librarian` to find relevant OpenCode internals |
-| Answering "how does OpenCode do X?" | Fire `librarian` FIRST |
+| Implementing new hooks | Fire `operator` to search OpenCode hook implementations |
+| Adding new tools | Fire `operator` to find OpenCode tool patterns |
+| Understanding SDK behavior | Fire `operator` to examine OpenCode SDK source |
+| Debugging plugin issues | Fire `operator` to find relevant OpenCode internals |
+| Answering "how does OpenCode do X?" | Fire `operator` FIRST |
 
-**DO NOT guess or hallucinate about OpenCode internals.** Always verify by examining actual source code via `librarian` or direct clone.
+**DO NOT guess or hallucinate about OpenCode internals.** Always verify by examining actual source code via `operator` or direct clone.
 
 ---
 
@@ -100,13 +100,13 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 60 live hooks + 10 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 
 | Aspect | Value |
 |---|---|
-| Package | `opencode-matrixx-v2` (npm, v1.3.4) |
+| Package | `opencode-matrixx-v2` (npm, v1.4.0) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
 | Stack | Bun 1.4.4 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |
@@ -121,16 +121,16 @@ matrixx/
 │   ├── plugin-config.ts            # Config load + Zod validation
 │   ├── plugin-state.ts             # Model context-limit cache
 │   ├── agents/   → 13 core agents + 8 mouse-* workers + AGENTS.md
-│   ├── hooks/    → 60 live hooks (+10 deprecated no-ops +1 alias) in 5 factories
+│   ├── hooks/    → 59 hook names (+11 deprecated no-ops +1 alias) in 5 factories
 │   ├── tools/    → 30 dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guards, etc.; gated via plugin/tool/tool-policy.ts)
 │   ├── features/ → 19 dirs (builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → scoped dirs (agent, config, io, model, policy, runtime, session, subagent, text, tmux, tool, ...) + AGENTS.md
 │   ├── skills/   → builtin/<category>/ (70 skills) + loader/ + AGENTS.md
 │   ├── mcps/     → context7 + document-reader (+ native `github_search` tool in `src/tools/`)
-│   ├── cli/      → installer, doctor, config-manager
+│   ├── cli/      → install, doctor, setup
 │   ├── config/   → Zod schema
 │   └── plugin/   → composition root: index.ts barrel; setup-domains.ts + setup-domains/; handlers/ (6-phase config pipeline); tool/ (catalog + policy + chat/event handlers); hooks/ (5 factories); message-hooks/
-├── bin/                            # Platform-detecting CLI wrappers
+├── bin/                            # Platform-detecting CLI wrapper (`bin/matrixx.ts`)
 ├── script/                         # build-schema, run-ci.sh, mock-heavy-list.txt, e2e harnesses
 ├── docs/                           # Long-form docs (configurations.md ~92 KB)
 └── dist/                           # Build output (ESM + .d.ts + schema)
@@ -145,8 +145,8 @@ bun install
 bun run typecheck                   # tsc --noEmit
 bun run lint                        # biome check src/  (formatter disabled)
 bun run lint:fix                    # biome check --write src/
-bun test                            # all tests — but see isolation gotcha below
-bun run build                       # ESM + dts + schema (build:plugin + build:cli + tsc + build:schema)
+bun run test                        # all tests (isolated CI; see gotcha below)
+bun run build                       # ESM + dts + schema (build:plugin + build:tools + build:cli + tsc + build:schema)
 bun run build:schema                # regenerate dist/matrixx.schema.json + assets/matrixx.schema.json
 bun run rebuild                     # clean + build
 bash script/run-ci.sh               # full CI locally (typecheck + lint + isolated tests + build)
@@ -160,7 +160,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 **Bun pinned to 1.4.4** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
 
-**Mock-heavy isolation** — ~44 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
+**Mock-heavy isolation** — ~39 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
 
 **Dual test layout** — CI discovers tests via `find tests script -name '*.test.ts'`, so files under `tests/**` run in CI while co-located `src/**/*.test.ts` are CI-orphaned (never discovered by the `find` glob). NEVER write test files in `src/` — always put them under `tests/` mirroring the `src/` path (e.g. `src/tools/foo/bar.ts` → `tests/tools/foo/bar.test.ts`, importing via `../../../src/...`). The mock-heavy isolation list has a single source of truth: `script/mock-heavy-list.txt`. Both `.github/workflows/ci.yml` and `publish.yml` read it; `script/run-ci.sh` also reads it for the catch-all exclusion. Never duplicate the list inline in a workflow file.
 
@@ -174,7 +174,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 1. `createNativePluginContext` 2. `startTmuxCheck` 3. `loadPluginConfig` (Zod) + DCP `default_profile` switch 4. `createFirstMessageVariantGate` 5. `createDomainManagers` 6. `setupToolsDomain` (catalog + policy) 7. Hook tiers: session, tool-guard, transform, continuation, skill 8. Chat/compaction/tool setup 9. `registerDomains` onto the V2 context (+ dispose cleanup)
 
-**Never export functions from `src/index.ts`** — OpenCode treats every export as a plugin instance. Only re-export types (see file footer).
+**Never export functions from `src/index.ts`** — OpenCode loads only the default export; extra exports are ignored, so keep the entry to a single `{ id, setup }` definition and re-export types only (see file footer).
 
 ## WHERE TO ADD NEW X
 
@@ -190,7 +190,9 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 | User-facing skill | project `.opencode/skills/<name>/SKILL.md` | Loaded by the OpenCode session, not by this plugin |
 | New test | `tests/<mirrored-src-path>.test.ts` | NEVER in `src/` — mirror the `src/` path under `tests/` and import via relative `../src/...`; `src/**/*.test.ts` is CI-orphaned |
 
-## OPENCODE PLUGIN API (V1-era handler names behind the V2 `{ id, setup }` entry)
+## OPENCODE PLUGIN API (legacy V1 handler names — mapped onto V2 domains)
+
+> The names below are the V1 `Hooks` object keys. V2 registers them through `ctx.session.hook(...)`, `ctx.tool.hook(...)` and `ctx.event.subscribe(...)`; the flat V1 names are not dispatched by the V2 entrypoint.
 
 `Plugin = async (PluginInput) => Hooks` — V1 shape; V2 exposes the same events as domain hooks (`ctx.tool`, `ctx.session.hook`, `ctx.event`).
 
@@ -219,7 +221,7 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 - **Build** — `bun build` (ESM, target bun) + `tsc --emitDeclarationOnly` + `build:schema`.
 - **Exports** — barrel via `index.ts`, type-only re-exports preferred.
 - **Naming** — kebab-case dirs, `createXXXHook` / `createXXXTool` factories.
-- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/task-storage/` is split into one-concern modules, and `tests/` legitimately reaches ~4900 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
+- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/task-storage/` is split into one-concern modules, and `tests/` legitimately reaches ~1400 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
 - **Temperature** — 0.1 for code agents, max 0.3.
 - **Parallelism** — never sequential `subagent()` calls; use `background=true` and read completion messages or `session_read`.
 - **Git** — no `git add -i`, `rebase -i`, `--no-verify`, no force push without request.

@@ -1,7 +1,7 @@
 /// <reference types="bun-types" />
 import { describe, test, expect } from "bun:test"
 import { documentReaderSkill } from "../../../src/skills/builtin/core/document-reader"
-import { ulwResearchSkill } from "../../../src/skills/builtin/core/rp-research"
+import { rpResearchSkill } from "../../../src/skills/builtin/core/rp-research"
 import {
   FALLBACK_MESSAGE,
   GUARDED_TOOLS,
@@ -78,7 +78,7 @@ describe("naming consistency: context7 surfaces", () => {
 
   test("rp-research template uses canonical context7_* names", async () => {
     //#given the rp-research skill template
-    const template = ulwResearchSkill.template
+    const template = rpResearchSkill.template
 
     //#when inspecting the delegate-via-operator instruction
     //#then fully-qualified registered names are used, not bare short names
@@ -90,7 +90,7 @@ describe("naming consistency: context7 surfaces", () => {
     //#given the rp-research allowed tools
     //#when inspecting membership
     //#then verbatim registered names are listed
-    expect(ulwResearchSkill.allowedTools).toContain("context7_resolve-library-id")
-    expect(ulwResearchSkill.allowedTools).toContain("context7_query-docs")
+    expect(rpResearchSkill.allowedTools).toContain("context7_resolve-library-id")
+    expect(rpResearchSkill.allowedTools).toContain("context7_query-docs")
   })
 })

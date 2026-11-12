@@ -2,9 +2,9 @@
 
 ## OVERVIEW
 
-71 accepted hook names (60 enum + 10 retained no-op literals + 1 alias; 55 dirs + 10 loose `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
+71 accepted hook names (59 enum + 11 retained no-op literals + 1 alias; 55 dirs + 9 loose hook `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
 
-## STRUCTURE
+## STRUCTURE (abridged — authoritative list: `ls src/hooks/`)
 ```
 hooks/
 ├── agent-usage-reminder/         # Specialized agent hints
@@ -43,7 +43,7 @@ hooks/
 └── write-existing-file-guard/    # Guards against file overwrite
 ```
 
-`unstable-agent-babysitter` is a deprecated alias only — its implementation was removed, the name still parses so old configs keep loading, and it resolves to a no-op.
+`unstable-agent-babysitter` is a retained-deprecated no-op literal only — its implementation was removed, the name still parses so old configs keep loading, and it resolves to a no-op.
 
 ## EVENT TYPES
 
@@ -72,8 +72,8 @@ hooks/
 ## EXECUTION ORDER
 
 **UserPromptSubmit**: keywordDetector → autoSlashCommand → startWork
-**PreToolUse**: subagentBlock → nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → mouseNotepad → writeExistingFileGuard → niobeHook
-**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → delegateTaskRetry → niobeHook → taskResumeInfo
+**PreToolUse**: nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → mouseNotepad → writeExistingFileGuard → niobeHook
+**PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → niobeHook → taskResumeInfo
 
 ## HOW TO ADD
 

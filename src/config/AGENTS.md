@@ -23,7 +23,11 @@ config/
 │   ├── dcp.ts
 │   ├── experimental.ts        # ExperimentalConfigSchema
 │   ├── headroom.ts
-│   ├── hooks.ts               # HookNameSchema (60 enum + 10 retained no-op literals + 1 alias = 71 accepted; 55 hook dirs + 10 loose .ts on disk)
+│   ├── hooks.ts               # HookNameSchema (59 enum + 11 retained no-op literals + 1 alias = 71 accepted; 55 hook dirs + 9 loose hook .ts on disk)
+│   ├── agents-file.ts         # AGENTS.md injection config
+│   ├── background-task-deprecation.ts
+│   ├── effort.ts
+│   ├── matrixx-self-config.ts
 │   ├── internal/
 │   ├── knowledge.ts
 │   ├── matrix-loop.ts          # MatrixLoopConfigSchema

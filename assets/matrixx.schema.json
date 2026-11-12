@@ -235,7 +235,6 @@
               "mouse-notepad",
               "start-work",
               "niobe",
-              "unstable-agent-babysitter",
               "task-resume-info",
               "stop-continuation-guard",
               "write-existing-file-guard",
@@ -309,6 +308,10 @@
           {
             "type": "string",
             "const": "subagent-block"
+          },
+          {
+            "type": "string",
+            "const": "unstable-agent-babysitter"
           }
         ]
       }

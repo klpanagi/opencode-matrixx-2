@@ -1,14 +1,14 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 1.3.4, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
+> **Version:** 1.4.0, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
 > **Scope:** `src/hooks/`, `src/plugin/setup-domains.ts`, `src/plugin/hooks/`, `src/plugin/tool/tool-catalog.ts`, `src/plugin/tool/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 
 ## 0. TL;DR
 
 - `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **71** parseable names:
-  **60 live** (`HookNameEnum`) + **11 literals** — 1 alias
+  **59 enum names** (`HookNameEnum`) + **11 retained no-op literals** + 1 alias
   (`anthropic-context-window-limit-recovery` maps to
   `context-window-limit-recovery`) and 10 retained no-ops
   (`todo-continuation-enforcer`, `compaction-todo-preserver`,
@@ -17,12 +17,13 @@
   `delegate-task-retry`, `subagent-block`) that map to null via
   `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`) so old
   `disabled_hooks` lists keep loading.
-  Total: 60 live + 10 deprecated no-ops + 1 alias = 71 parseable.
+  Total: 59 hook names + 11 deprecated no-ops + 1 alias = 71 parseable.
 - `src/hooks/` on disk holds **55 hook subdirectories** (no `shared/`
-  directory) plus 10 loose `.ts` files (`bash-file-read-guard.ts`,
+  directory) plus 9 loose hook `.ts` files (`bash-file-read-guard.ts`,
   `context-window-monitor.ts`, `empty-task-response-detector.ts`,
-  `tool-output-truncator.ts`, 5 `session-notification*`), plus `index.ts`,
-  `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 59).
+  `tool-output-truncator.ts`, `session-notification.ts`, plus 4
+  `session-notification-*.ts` helpers), `index.ts`, and `AGENTS.md`.
+  Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 55 dirs).
   NOTE: older docs claimed 76 entries / 60 dirs — those figures are stale and
   superseded by the counts above; do not cite 76/60 without this note.
 - Every tool call passes through `tool.execute.before` (**22 invocations over

@@ -14,7 +14,7 @@ Hybrid layout selected by `morpheus.tasks.scope` (default `project`) and resolve
 | `global` | `~/.config/opencode/tasks/{listId}` fallback | `~/.config/opencode/tasks/matrixx/T-*.json` |
 
 - `storage_path` absolute → used as-is; relative → resolves against `directory` (project root) when provided, else `process.cwd()`.
-- `migrateLegacyTasksIfNeeded(config, directory)` lazy copies (not moves) legacy `T-*.json` to project dir on first `task_create`, logs `[task-storage] Migrated N legacy tasks from <legacy> to <project>`, retains legacy 30d. Delete manually or via prune.
+- `migrateLegacyTasksIfNeeded(config, directory)` lazy copies (not moves) legacy `T-*.json` to project dir on first `task_create`, logs `[task-storage] Migrated N legacy tasks from <legacy> to <project>`, keeps the legacy files until pruned manually.
 - Rollback: set `scope: "global"` in `matrixx.jsonc` to restore global layout.
 - `.matrixx/` gitignored per `.gitignore` — project tasks stay local per clone.
 - **Cross-session:** the task store is project-wide — `task_list` and the session-scope gates see the **union of all sessions' tasks** in `.matrixx/tasks/`. A directive may list tasks created by other sessions; mark foreign tasks `completed`/`deleted` to stop them from driving directives.
@@ -57,7 +57,7 @@ interface Task {
 |----------|---------|
 | `getTaskDir(config, directory?)` | Task storage dir — `directory` optional, `storage_path` relative resolves against `directory`, `scope: "project"` → `.matrixx/tasks`, `global` → `~/.config/opencode/tasks/{listId}` |
 | `getProjectTaskDir(directory)` | `join(directory, ".matrixx/tasks")` — project task dir |
-| `migrateLegacyTasksIfNeeded(config, directory)` | Lazy copy-not-move legacy `T-*.json` → project dir, logs `[task-storage] Migrated N ...`, retains legacy 30d |
+| `migrateLegacyTasksIfNeeded(config, directory)` | Lazy copy-not-move legacy `T-*.json` → project dir, logs `[task-storage] Migrated N ...`, keeps legacy files until pruned |
 | `resolveTaskListId(config)` | Task list ID (env → config → cwd) |
 | `readJsonSafe(path, schema)` | Parse + validate, null on failure |
 | `writeJsonAtomic(path, data)` | Atomic write via temp + rename |

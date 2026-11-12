@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×5 `create/read/update/list/delete` for `.matrixx/plans/*.md`, removed-tools (deleted-tool guard stubs), handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
+30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×6 `create/read/update/list/delete/tasks` for `.matrixx/plans/*.md`, removed-tools (deleted-tool guard stubs), handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
 
 ## STRUCTURE
 ```
@@ -34,6 +34,8 @@ tools/
 ├── session-cleanup/   # Session cleanup (gated: opt-in)
 ├── silent-failure-scanner/ # Silent-failure scan
 ├── staleness-gap-checker/ # Staleness gap check
+├── subagent-control/  # Subagent cancel/wait control
+├── removed-tools/     # Guard stubs for removed delegation tools (`task`, `background_*`)
 └── slashcommand/     # Slash command dispatch
 ```
 
@@ -178,11 +180,10 @@ The `subagent` policy accepts an optional `complexity: 1-5 | "auto"` field. When
 
 Files: `src/shared/subagent/complexity-{types,constants,scorer}.ts` + `skill-resolver.ts`. Tests: `tests/shared/subagent/complexity-scorer.test.ts` and `complexity-constants.test.ts`.
 
-Each category defines: model, variant, temperature, max tokens, thinking/reasoning config, prompt append, stability flag.
 
 ## HOW TO ADD
 
-1. Create `src/tools/[name]/` with index.ts, tools.ts, types.ts, constants.ts
+1. Create `src/tools/[name]/` with index.ts, tools.ts, types.ts, constants.ts (some dirs legitimately differ — e.g. `session-cleanup/` is index-only)
 2. Static tools → `builtinTools` export, Factory → separate export
 3. Register in `src/plugin/tool/tool-catalog.ts`
 

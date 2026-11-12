@@ -16,6 +16,8 @@ plugin/
 ├── handlers/                     # Config loading, plan inheritance (15 files)
 │   ├── config-handler.ts         # Main orchestrator — 6-phase loading
 │   ├── agent-config-handler.ts   # Agent loading pipeline
+│   ├── agent-tool-allowlist.ts   # Pilot tool allowlist (trinity, operator, oracle)
+│   ├── formatter-config-handler.ts # Formatter config
 │   ├── plan-model-inheritance.ts # Plan demotion logic
 │   ├── oracle-agent-config-builder.ts # Oracle config builder
 │   ├── plugin-components-loader.ts # Claude Code plugin discovery (10s timeout)
@@ -75,15 +77,15 @@ When `morpheus_agent.planner_enabled === true`:
 
 ## TOOL PERMISSIONS
 
-`handlers/task-permissions.ts` owns the task-store grant: an agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-step. `isTaskStorePrimary(agent)` reads the agent's declared `mode` — never a name list. `taskStorePermissions` grants `task_*` only (tracking, no delegation); `fullTaskPermissions` adds `task` and `teammate`. `deriveTaskPermissions` picks the tracking-only set when the agent declares `permission.task === "deny"` for itself, so a read-only agent such as Sentinel needs no name list. `grantTaskPermissions` merges fill-only via `??=`, never clobbering a factory value or a user override. The criterion is one-directional — `Mouse` (`mode: "subagent"`) is the documented carve-out. Full policy: `docs/task-system.md` §3.5.
+`handlers/task-permissions.ts` owns the task-store grant: an agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-step. `isTaskStorePrimary(agent)` reads the agent's declared `mode`; the only name list is the deliberate `mouse-*` carve-out applied in `tool-config-handler.ts`. `taskStorePermissions` grants `task_*` only (tracking, no delegation); `fullTaskPermissions` adds `task` and `teammate`. `deriveTaskPermissions` picks the tracking-only set when the agent declares `permission.task === "deny"` for itself, so a read-only agent such as Sentinel needs no name list. `grantTaskPermissions` merges fill-only via `??=`, never clobbering a factory value or a user override. The criterion is one-directional — `Mouse` (`mode: "subagent"`) is the documented carve-out. Full policy: `docs/task-system.md` §3.5.
 
 | Agent | Special Permissions |
 |-------|---------------------|
 | operator | github_search allowed |
 | trinity | github_search allowed |
-| niobe | task, task_*, teammate allowed |
-| morpheus | task, task_*, teammate, question allowed |
-| keymaker | task, task_*, teammate, question allowed |
+| niobe | task_*, teammate allowed |
+| morpheus | task_*, teammate, question allowed |
+| keymaker | task_*, teammate, question allowed |
 | construct | Denies task, look_at |
 | cipher | task_*, teammate allowed (derived, `mode: "all"`) |
 | sentinel | task_* allowed, task denied (self-declared read-only) |

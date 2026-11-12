@@ -14,6 +14,10 @@ mcps/
 ├── index.ts           # createBuiltinMcps() factory
 ├── context7.ts        # Library documentation
 ├── document-reader.ts # Microsoft MarkItDown (PDF, DOCX, XLSX, PPTX, images)
+├── mcp-startup-notice.ts # One-time MCP startup notice
+├── mcp-startup-state.ts  # Startup notice state
+├── mcp.transform.ts      # MCP entry assembly
+├── mcp-validator.ts      # MCP config validation
 └── types.ts           # McpNameSchema
 ```
 

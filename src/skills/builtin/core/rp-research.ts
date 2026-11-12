@@ -1,13 +1,13 @@
 import type { BuiltinSkill } from "../../loader/types"
 
-const ULW_RESEARCH_SKILL_NAME = "rp-research"
+const RP_RESEARCH_SKILL_NAME = "rp-research"
 
-const ULW_RESEARCH_SKILL_DESCRIPTION =
+const RP_RESEARCH_SKILL_DESCRIPTION =
   "Use when conducting deep research, investigating complex topics, or exploring codebases across multiple sources — spawns parallel search agents across code, docs, web, and OSS repos with recursive convergence. Related: dev-browser, document-reader."
 
-export const ulwResearchSkill: BuiltinSkill = {
-  name: ULW_RESEARCH_SKILL_NAME,
-  description: ULW_RESEARCH_SKILL_DESCRIPTION,
+export const rpResearchSkill: BuiltinSkill = {
+  name: RP_RESEARCH_SKILL_NAME,
+  description: RP_RESEARCH_SKILL_DESCRIPTION,
   agent: "oracle",
   allowedTools: [
     "read",

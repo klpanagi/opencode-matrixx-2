@@ -28,7 +28,7 @@ const SRC = join(ROOT, "src")
 // NOTE: line shifts whenever the surrounding tool-inventory prose changes;
 // the scan below fails loudly when the pinned line no longer matches.
 const CANONICAL_MD = "src/tools/AGENTS.md"
-const CANONICAL_LINE = 92
+const CANONICAL_LINE = 94
 
 type Extracted = {
   rel: string

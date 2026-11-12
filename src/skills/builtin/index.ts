@@ -5,7 +5,7 @@
 
 
 export { bddBackendSkill, bddContractSkill, bddFrontendSkill, bddTestsSkill } from "./bdd"
-export { agentBrowserSkill, devBrowserSkill, dockerMasterSkill, documentReaderSkill, gitMasterSkill, matrixxSelfConfigSkill, playwrightCliSkill, playwrightSkill, pythonAsyncioSkill, qualityGateSkill, removeAiSlopsSkill, resilienceErrorTaxonomySkill, resilienceFailureHuntingSkill, reviewWorkSkill, silentFailureDetectionSkill, softwareDevSkill, systematicDebuggingSkill, tddEnforcerSkill, telegramBotSkill, ulwResearchSkill } from "./core"
+export { agentBrowserSkill, devBrowserSkill, dockerMasterSkill, documentReaderSkill, gitMasterSkill, matrixxSelfConfigSkill, playwrightCliSkill, playwrightSkill, pythonAsyncioSkill, qualityGateSkill, removeAiSlopsSkill, resilienceErrorTaxonomySkill, resilienceFailureHuntingSkill, reviewWorkSkill, rpResearchSkill, silentFailureDetectionSkill, softwareDevSkill, systematicDebuggingSkill, tddEnforcerSkill, telegramBotSkill } from "./core"
 export { dslCodegenSkill, dslCompositionSkill, dslCoreSkill, dslGrammarSkill, dslMetamodelSkill, dslModelTransformationSkill, dslPyecoreAdvancedSkill, dslTestingSkill, dslTextxEcosystemSkill, dslToolingSkill, dslValidationSkill } from "./dsl"
 export { frontendA11ySkill, frontendBuildToolingSkill, frontendPerfSkill, frontendStateDataSkill, frontendTestingSkill, frontendUiUxSkill, reactNextjsPatternsSkill, svelteSveltekitPatternsSkill } from "./frontend"
 // Crypto / market-data domain skills

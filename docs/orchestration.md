@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 1.3.4 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Version:** 1.4.0 · **Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).
@@ -65,7 +65,7 @@ User describes work
 
 ### Oracle: the plan builder
 
-Oracle (`src/agents/oracle/`) is a **read-only planner**. It interviews you,
+Oracle (`src/agents/definitions/oracle/`) is a **read-only planner**. It interviews you,
 researches the codebase through `trinity` and `operator` agents, and writes a
 single structured plan to `.matrixx/plans/{name}.md`. It never writes
 production code.
@@ -138,7 +138,7 @@ agent burn on large plans.
 
 ## Layer 2: Execution (Niobe)
 
-Niobe (`src/agents/niobe/`, with multiple prompt variants) is
+Niobe (`src/agents/definitions/niobe/`, with multiple prompt variants) is
 the plan executor. Think niobe, not instrumentalist: it reads the plan,
 decomposes it into waves, delegates each task, verifies each result, and
 reports. It does not write implementation code itself.

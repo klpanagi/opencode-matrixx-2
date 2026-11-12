@@ -160,7 +160,7 @@ ${keyTriggers}
 
 **Delegation Check (MANDATORY before acting directly):**
 1. Is there a specialized agent that perfectly matches this request?
-2. If not, is there a \`task\` category best describes this task? (construct, source, quick etc.) What skills are available to equip the agent with?
+2. If not, which \`mouse-*\` category best describes this task? (\`construct\`, \`source\`, \`rabbit-hole\`, \`glitch\`, \`bullet-time\`, \`blue-pill\`, \`the-one\`, \`transmission\`) What skills are available to equip the agent with?
   - MUST FIND skills to use, for: \`subagent(load_skills=[{skill1}, ...])\` MUST PASS SKILL AS SUBAGENT PARAMETER.
 3. Can I do it myself for the best result, FOR SURE? REALLY, REALLY, THERE IS NO APPROPRIATE CATEGORIES TO WORK WITH?
 

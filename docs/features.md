@@ -1,6 +1,6 @@
 # Matrixx Features
 
-> Version 1.3.4. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
+> Version 1.4.0. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
 
 Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, category-routed delegation, lazily-loaded skills, slash-command workflows, lifecycle hooks, file-backed tasks, and a BDD pipeline — all configured through `matrixx.json`/`matrixx.jsonc`.
 
@@ -134,7 +134,7 @@ Single-skill deep dives (`frontend-ui-ux`, `git-master`, `rp-research`, `remove-
 
 ## Hooks, Tools, MCPs, Context (summaries)
 
-- **Hooks** (60 live + 10 retained no-ops + 1 alias = 71 parseable; quality gates, recovery, task guards): [Hooks](hooks.md).
+- **Hooks** (59 hook names + 11 retained no-ops + 1 alias = 71 parseable; quality gates, recovery, task guards): [Hooks](hooks.md).
 - **Tools** (LSP, AST-grep, delegation, task tools, assembly, session, handoff): the task tools are canonically documented in [Task System](task-system.md); delegation categories in [Category & Skill System Guide](category-skill-guide.md).
 - **MCPs** (`context7`, `document_reader`; plus the native `github_search` and `websearch` tools; skill-embedded MCPs): [Configuration](configurations.md).
 - **Context injection** (AGENTS.md, conditional rules) and DCP tiers: [Context Management](context-management.md).

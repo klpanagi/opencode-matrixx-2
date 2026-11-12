@@ -4,7 +4,7 @@ import type { BuiltinSkill } from "../../loader/types"
 export const matrixxSelfConfigSkill: BuiltinSkill = {
   name: "matrixx-self-config",
   description:
-    "Configure and improve matrixx for the current user. Use when users want to tune agents, models, prompts, custom agents, skills, MCPs, profiles, or plugin behavior. Reactive by default — only acts when user explicitly requests help. Proactive mode requires `matrixx_self_config.proactive: true` in matrixx.jsonc.",
+    "Use when configuring or improving matrixx for the current user — tune agents, models, prompts, custom agents, skills, MCPs, profiles, or plugin behavior. Reactive by default — only acts when the user explicitly requests help. Proactive mode requires `matrixx_self_config.proactive: true` in matrixx.jsonc.",
   agent: "morpheus",
   allowedTools: ["read", "write", "edit", "bash"],
   template: `# Matrixx Self-Config Skill

@@ -3,7 +3,7 @@ import type { BuiltinSkill } from "../../loader/types"
 export const SECURITY_REVIEW_SKILL_NAME = "security-review"
 
 const SECURITY_REVIEW_SKILL_DESCRIPTION =
-  "Deprecated — Use when conducting security reviews, applying STRIDE threat modeling, or producing audit reports — superseded by security-audit; load security-audit instead. Related: security-audit, security-core."
+  "Use when a legacy security-review flow is requested — deprecated in favor of security-audit; load security-audit instead. Related: security-audit, security-core."
 
 export const securityReviewSkill: BuiltinSkill = {
   name: SECURITY_REVIEW_SKILL_NAME,

@@ -31,8 +31,6 @@ const HookNameEnum = z.enum([
 	"mouse-notepad",
   "start-work",
   "niobe",
-  // @deprecated — implementation removed; alias retained (R17)
-  "unstable-agent-babysitter",
   "task-resume-info",
   "stop-continuation-guard",
   "write-existing-file-guard",
@@ -97,6 +95,8 @@ export const HookNameSchema = z.union([
   z.literal("delegate-task-retry"),
   /** @deprecated no-op — the subagent-block hook was never implemented; name retained so existing configs keep loading. */
   z.literal("subagent-block"),
+  /** @deprecated no-op — implementation removed (R17); name retained so existing configs keep loading. Remove in v3.0. */
+  z.literal("unstable-agent-babysitter"),
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

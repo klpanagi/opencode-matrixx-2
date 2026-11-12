@@ -2,11 +2,11 @@
 
 ## OVERVIEW
 
-70 specialized skills loaded by default (69 files + 1 dual-export) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
+70 specialized skills loaded by default (75 files; `playwright.ts` exports two) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
 
 | Scope | Count | Source |
 |------|-------|--------|
-| **Built-in (this dir)** | 70 (69 files) | `src/skills/builtin/<category>/*.ts` |
+| **Built-in (this dir)** | 70 (75 files) | `src/skills/builtin/<category>/*.ts` |
 | Opencode-project (`.opencode/skills/`) | varies | per-project |
 | Opencode-user (`~/.config/opencode/skills/`) | varies | per-user |
 | Claude Code compat (`.claude/skills/`) | varies | per-project |

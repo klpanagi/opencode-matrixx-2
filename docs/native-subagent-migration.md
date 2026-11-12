@@ -117,8 +117,8 @@ There is no coexistence path anymore. The final shape is:
 
 The 8 `mouse-*` worker agents
 (`mouse-construct/source/rabbit-hole/glitch/bullet-time/blue-pill/the-one/transmission`)
-carry a `task: false` tool restriction (`src/shared/tool/agent-tool-restrictions.ts`):
-they track work through `task_*` but cannot reach the removed `task` tool.
-They MAY spawn children natively via `subagent` up to the `subagent_depth`
-cap; the solo-Mouse NEVER-delegate constraint is overridden for workers by
-the `<Nested_Delegation>` prompt block (`src/agents/definitions/mouse-subagents.ts`).
+carry a `subagent: false` tool restriction (`src/shared/tool/agent-tool-restrictions.ts`):
+they track work through `task_*` and cannot spawn subagents. The
+`<Nested_Delegation>` prompt block (`src/agents/definitions/mouse-subagents.ts`)
+states the same rule to the worker: it is a depth-1 child and must complete
+the work itself. Only the orchestrator fans out.

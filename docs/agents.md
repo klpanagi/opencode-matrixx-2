@@ -1,4 +1,4 @@
-# Matrixx Agents (v1.3.4)
+# Matrixx Agents (v1.4.0)
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
@@ -45,13 +45,13 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | **Sati** | Frontend specialist (components, a11y, perf, testing) | `claude-sonnet-4-6` |
 | **Sentinel** | Security auditor | `claude-sonnet-4-6` |
 
-The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`). Twelve are registered statically in `agentSources` (`src/agents/builtin-agents.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. Mouse (below) is the dynamic category-spawned worker used when `task()` is called with a `category` — not in the schema (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model/model-requirements.ts`.
+The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-27`). Twelve are registered statically in `agentSources` (`src/agents/registry/index.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. The 8 `mouse-*` category workers are in the schema; the plain `mouse` override persona is created from user config and is not a schema name (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model/model-requirements.ts`.
 
 ### Built-in Capabilities
 
 - Full LSP / AST-Grep support
 - Lifecycle hooks — context injection, think mode, comment checking, background-task parent notification, error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
-- 31 Tool Directories (`src/tools/`) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
+- 30 Tool Directories (`src/tools/`) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
 - File-backed tasks — `.matrixx/tasks` keep the agent on mission (survives `/clear`; see [Task System](./task-system.md))
 
 - No Claude Code compatibility layer — the legacy `.claude/` loaders and `claude_code` config keys no longer exist in-tree; custom commands and skills load from OpenCode paths only (`.opencode/command/`, `.opencode/skills/`)
@@ -116,7 +116,7 @@ textX, ANTLR4, tree-sitter, Langium, Chevrotain, PyEcore — both external DSLs 
 
 ### Cipher's Skill Architecture
 
-Cipher's DSL knowledge is modular. Instead of a monolithic prompt, Cipher loads **11 composable skills** injected at agent build time (verified in `src/agents/cipher.ts` via `CIPHER_DSL_SKILLS`). Any agent in the system can load the same DSL knowledge — Cipher isn't special, he's just the one who loads all of them by default.
+Cipher's DSL knowledge is modular. Instead of a monolithic prompt, Cipher loads **11 composable skills** injected at agent build time (verified in `src/agents/definitions/cipher.ts` via `CIPHER_DSL_SKILLS`). Any agent in the system can load the same DSL knowledge — Cipher isn't special, he's just the one who loads all of them by default.
 
 | Skill | Domain | What It Contains |
 |-------|--------|------------------|
@@ -344,7 +344,7 @@ return a redirect message.
 
 ## Agent Roster by Layer
 
-The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model/model-requirements.ts`. Mouse is the category-spawned executor on top (not in the schema).
+The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions** in software development. Models below are first-chain defaults; fallback chains live in `src/shared/model/model-requirements.ts`. The 8 `mouse-*` category workers are in the schema; the plain `mouse` override persona is not.
 
 ### The Orchestration Layer (3 agents)
 
@@ -361,7 +361,7 @@ The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions**
 ### The Review Layer (2 agents)
 
 - **Smith** (plan reviewer, `claude-sonnet-4-6`): Approval-biased validator. Outputs [OKAY] or [REJECT] — no "looks good but..." cop-outs.
-- **Sentinel** (security auditor, `claude-sonnet-4-6`): Read-only, 9 security skills (`security-core`, `security-secrets`, `security-sast`, `security-dast`, `security-dependencies`, `security-api`, `security-crypto`, `security-infra`, `security-review`, verified in `src/agents/sentinel.ts`). Security needs dedicated attention, not an afterthought.
+- **Sentinel** (security auditor, `claude-sonnet-4-6`): Read-only, 10 security skills (`security-core`, `security-secrets`, `security-sast`, `security-dast`, `security-dependencies`, `security-api`, `security-crypto`, `security-infra`, `security-review`, `security-audit`, verified in `src/agents/definitions/sentinel.ts`). Security needs dedicated attention, not an afterthought.
 
 ### The Specialist Layer (3 agents)
 
@@ -487,10 +487,10 @@ sequenceDiagram
 
     Note over M: Phase 2A: Create task waves (file-backed, .matrixx/tasks)
 
-    M->>O: task(subagent_type="oracle")<br/>Create work plan
+    M->>O: subagent(agent="oracle")<br/>Create work plan
     O-->>M: Structured plan
 
-    M->>S: task(subagent_type="smith")<br/>Review plan
+    M->>S: subagent(agent="smith")<br/>Review plan
     S-->>M: Plan validated ✓
 
     Note over M: Phase 2B: Execute waves via task_create/blockedBy

@@ -48,6 +48,6 @@ export type {
 } from "./config"
 
 // NOTE: Do NOT export functions from the entrypoint!
-// OpenCode treats ALL exports as plugin instances and calls them.
+// OpenCode loads only the default export; extra exports are ignored.
 // Config error utilities are available via "./shared/config-errors" for internal use only.
 export type { ConfigLoadError } from "./shared/config/config-errors"

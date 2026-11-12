@@ -2,7 +2,7 @@
 
 > **Scope:** Persistent, file-backed task management for Matrixx agent orchestration.
 > **Audience:** Engineers evolving the task system: storage, tools, hooks, scheduling, and agent integration.
-> **Version:** 1.3.4, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
+> **Version:** 1.4.0, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
 
 Every normative claim below traces to the source path cited beside it. Where behavior belongs to another doc, this spec cross-links instead of duplicating: hook internals → `docs/hooks.md`, orchestration and wave planning flow → `docs/orchestration.md`, command reference → `docs/command-reference.md`.
 
@@ -547,10 +547,9 @@ subagent(agent="mouse-source", background=true, load_skills=["tdd-enforcer"], co
   and `background_wait_all` names now resolve to guard stubs whose message
   redirects to the equivalents above (`src/tools/removed-tools/`).
 
-**Child restrictions.** The 8 `mouse-*` workers carry a `task: false` tool
-restriction: they track work with `task_*` but cannot reach the removed `task`
-tool, and they may spawn children natively via `subagent` up to the
-`subagent_depth` cap (see `docs/native-subagent-migration.md`).
+**Child restrictions.** The 8 `mouse-*` workers carry a `subagent: false` tool
+restriction: they track work with `task_*` and cannot spawn subagents — they
+complete the delegated work themselves (see `docs/native-subagent-migration.md`).
 
 ---
 
