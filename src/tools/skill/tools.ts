@@ -63,7 +63,13 @@ export function createSkillTool(options: SkillLoadOptions = {}): MatrixxToolDefi
     },
     async execute(args: SkillArgs, ctx?: { agent?: string }) {
       const skills = getSkills()
-      const skill = skills.find(s => s.name === args.name)
+      let skill = skills.find(s => s.name === args.name)
+      // matrixx-self-config is excluded from listings by default (opt-in heavy skill).
+      // Allow explicit dynamic load when the user asks for it.
+      if (!skill && args.name === "matrixx-self-config") {
+        const { matrixxSelfConfigSkill } = await import("../../skills/builtin/core/matrixx-self-config")
+        skill = matrixxSelfConfigSkill
+      }
 
       if (!skill) {
         const available = skills.map(s => s.name).join(", ")
