@@ -23,6 +23,13 @@ export const HOOK_NAME_MAP: Record<string, string | null> = {
   // Deleted (D6): preemptive-compaction removed in favor of the single
   // compaction hook. `null` = strip from effective disabled_hooks with one warn.
   "preemptive-compaction": null,
+  // Removed with the background-agent subsystem.
+  "background-notification": null,
+  "background-task-blocker": null,
+  // Removed with the custom task delegation subsystem.
+  "delegate-task-retry": null,
+  // Never implemented; retained as a parseable no-op.
+  "subagent-block": null,
 }
 
 export function migrateHookNames(

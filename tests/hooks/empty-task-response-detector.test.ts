@@ -21,34 +21,34 @@ async function runAfter(tool: string, outputText: string): Promise<AfterOutput> 
 }
 
 describe("empty-task-response-detector actionable warning", () => {
-  test("empty task output names the load_skills requirement", async () => {
+  test("empty subagent output names the load_skills requirement", async () => {
     //#then: the replacement tells the orchestrator load_skills is REQUIRED
-    const out = await runAfter("task", "")
+    const out = await runAfter("subagent", "")
     expect(out.output).toContain("load_skills")
   })
 
-  test("empty task output names the native subagent contract", async () => {
+  test("empty subagent output names the native subagent contract", async () => {
     //#then: the replacement tells the orchestrator to pass agent/background/description
-    const out = await runAfter("task", "   ")
+    const out = await runAfter("subagent", "   ")
     expect(out.output).toContain("subagent()")
     expect(out.output).toContain("background")
   })
 
-  test("empty task output names the source tdd-enforcer rule", async () => {
+  test("empty subagent output names the source tdd-enforcer rule", async () => {
     //#then: the replacement names tdd-enforcer for category source
-    const out = await runAfter("Task", "")
+    const out = await runAfter("subagent", "")
     expect(out.output).toContain("tdd-enforcer")
   })
 
-  test("empty task output warns against nested execute calls", async () => {
+  test("empty subagent output warns against nested execute calls", async () => {
     //#then: the replacement advises top-level delegation instead of nested execute
-    const out = await runAfter("task", "")
+    const out = await runAfter("subagent", "")
     expect(out.output).toContain("top-level")
   })
 
-  test("non-empty task output passes through untouched", async () => {
+  test("non-empty subagent output passes through untouched", async () => {
     //#then: real results are never rewritten
-    const out = await runAfter("task", "Task completed in 3s.\n\nAgent: mouse")
+    const out = await runAfter("subagent", "Task completed in 3s.\n\nAgent: mouse")
     expect(out.output).toBe("Task completed in 3s.\n\nAgent: mouse")
   })
 

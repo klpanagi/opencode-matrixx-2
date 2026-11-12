@@ -217,8 +217,6 @@
               "think-mode",
               "context-window-limit-recovery",
               "rules-injector",
-              "background-notification",
-              "background-task-blocker",
               "auto-update-checker",
               "startup-toast",
               "keyword-detector",
@@ -232,7 +230,6 @@
               "compaction-context-injector",
               "auto-slash-command",
               "edit-error-recovery",
-              "delegate-task-retry",
               "oracle-md-only",
               "plan-persister",
               "mouse-notepad",
@@ -269,8 +266,7 @@
               "compress-watchdog",
               "nudge-loop-breaker",
               "task-notepad-writer",
-              "session-memory",
-              "subagent-block"
+              "session-memory"
             ]
           },
           {},
@@ -297,6 +293,22 @@
           {
             "type": "string",
             "const": "preemptive-compaction"
+          },
+          {
+            "type": "string",
+            "const": "background-notification"
+          },
+          {
+            "type": "string",
+            "const": "background-task-blocker"
+          },
+          {
+            "type": "string",
+            "const": "delegate-task-retry"
+          },
+          {
+            "type": "string",
+            "const": "subagent-block"
           }
         ]
       }
@@ -322,7 +334,13 @@
           "bdd-pipeline",
           "plan-review",
           "quality-audit",
-          "quality-assurance"
+          "quality-assurance",
+          "pickup",
+          "remove-deadcode",
+          "cleanup-tasks",
+          "task-list",
+          "humanize",
+          "security-audit"
         ]
       }
     },
