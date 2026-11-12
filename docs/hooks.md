@@ -1,24 +1,25 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 1.2.1, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
+> **Version:** 1.3.4, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
 > **Scope:** `src/hooks/`, `src/plugin/setup-domains.ts`, `src/plugin/hooks/`, `src/plugin/tool/tool-catalog.ts`, `src/plugin/tool/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 
 ## 0. TL;DR
 
 - `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **71** parseable names:
-  **64 live** (`HookNameEnum`) + **7 literals** — 1 alias
+  **60 live** (`HookNameEnum`) + **11 literals** — 1 alias
   (`anthropic-context-window-limit-recovery` maps to
-  `context-window-limit-recovery`), 5 retired legacy-todo literals
+  `context-window-limit-recovery`) and 10 retained no-ops
   (`todo-continuation-enforcer`, `compaction-todo-preserver`,
-  `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`)
-  that map to null via `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`)
-  so old `disabled_hooks` lists keep loading, plus 1 retained no-op
-  (`preemptive-compaction`; deleted, retained as a no-op literal).
-  Total: 64 live + 6 deprecated no-ops + 1 alias = 71 parseable.
-- `src/hooks/` on disk holds **59 hook subdirectories** (no `shared/`
-  directory) plus loose `.ts` files (`bash-file-read-guard.ts`,
+  `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`,
+  `preemptive-compaction`, `background-notification`, `background-task-blocker`,
+  `delegate-task-retry`, `subagent-block`) that map to null via
+  `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`) so old
+  `disabled_hooks` lists keep loading.
+  Total: 60 live + 10 deprecated no-ops + 1 alias = 71 parseable.
+- `src/hooks/` on disk holds **55 hook subdirectories** (no `shared/`
+  directory) plus 10 loose `.ts` files (`bash-file-read-guard.ts`,
   `context-window-monitor.ts`, `empty-task-response-detector.ts`,
   `tool-output-truncator.ts`, 5 `session-notification*`), plus `index.ts`,
   `AGENTS.md`. Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 59).
@@ -63,11 +64,10 @@ setupDomains()                      src/plugin/setup-domains.ts
   truncator, notepads).
 - Transform builds message-shape hooks (secret guard, keyword detector,
   validators, design intent).
-- Continuation builds **7 entries**: stop guard, compaction-context injector,
-  unstable-agent babysitter, nudge-loop breaker, background notification,
-  niobe, and plan persister. The old task-continuation enforcer is removed; background task
-  completion now notifies the parent session through the background manager
-  (`src/features/background-agent/manager/reconcile.ts`).
+- Continuation builds **6 entries**: stop guard, compaction-context injector,
+  nudge-loop breaker, niobe, plan persister, and task-notepad writer. The old
+  task-continuation enforcer is removed; a `background=true` subagent completion
+  now arrives as an injected message in the parent session.
 - Skill builds 2 entries: `category-skill-reminder`, `auto-slash-command`.
 
 Every factory follows the safe-creation pattern
@@ -175,7 +175,6 @@ narrows which tool calls are affected.
 | `env-file-write-guard` | Blocks writes to sensitive env files by regex. Exists so agents cannot overwrite `.env` and credential files. | Write/edit/bash targeting sensitive paths. Pure regex. | BLOCKING, low |
 | `write-existing-file-guard` | Fails `Write` when the file already exists, forcing `Edit`. Exists to prevent accidental whole-file overwrites. | `Write` tool on an existing path (one `existsSync`). | BLOCKING, low |
 | `task-edit-guard` | Blocks raw Write/Edit/Read of `.matrixx/plans/*.md` and task JSON. Exists to force `plan_*` / `task_*` tools so plan and task state stay consistent. | Tool calls touching plan/task paths. | BLOCKING, low |
-| `background-task-blocker` | Blocks the `background_task` tool. Exists to route all background work through `task(run_in_background=true)` and one manager. | `background_task` tool only. | BLOCKING, negligible |
 | `context-mode-enforcer` | Blocks raw `grep`/`glob`/`read`/`cat`-style access when `context_mode.enforce` is set. Exists to force `ctx_*` sandboxed analysis so raw bytes stay out of context. | Read-family tools while enforcement is on. | BLOCKING, low |
 | `oracle-md-only` | Blocks non-`.md` writes from planner sessions and rewrites when needed. Exists to keep the planning phase from editing code. | Planner-session writes; runs twice per call (Wave 2 + Wave 3), SDK HTTP or fs fallback. | BLOCKING+MUTATOR+NETWORK, med-high |
 | `non-interactive-env` | Prefixes bash commands with a non-interactive env setup. Exists because agents run without a TTY and need a predictable environment. | Every `bash` call. Pure regex. | MUTATOR, low |
@@ -188,7 +187,7 @@ narrows which tool calls are affected.
 | `directory-agents-injector` (before) | No-op (`void input; void output`). Exists as a placeholder — the real work runs in `after`. | Never (in `before`). | READ_ONLY, zero |
 | `rules-injector` (before) | No-op. Same split-phase design as above. | Never (in `before`). | READ_ONLY, zero |
 
-Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/background-task-blocker/hook.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
+Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
 
 ### 2.2 `tool.execute.after` (22 invocations)
 
@@ -209,7 +208,6 @@ effective condition (many hooks are idle unless their condition holds).
 | `category-skill-reminder` | Delegation reminders per category/skill. Exists to push orchestrators toward category-routed delegation. | After work-indicating tools. |
 | `interactive-bash-session` | Tmux session bookkeeping after bash. Exists to track interactive sessions. | After `bash`; otherwise idle. |
 | `edit-error-recovery` | Injects corrective guidance on known Edit mistakes. Exists for fast recovery from `oldString` errors. | When `Edit` fails with a known pattern; otherwise idle. |
-| `delegate-task-retry` | Injects retry guidance when delegation output matches error patterns. Exists to recover failed delegations without user intervention. | When delegation output matches; otherwise idle. |
 | `niobe` | Post-tool side of the orchestration hook. Exists for mission lifecycle bookkeeping. | After `task` calls. |
 | `task-resume-info` | Appends resume info for task/subagent sessions. Exists for continuity across sessions. | After task/subagent sessions; always constructed (no gate besides `disabled_hooks`). |
 | `hashline-read-enhancer` | Adds hash-anchor enrichment to reads. Exists to give edits stable `LINE#ID` anchors. | After reads, when `experimental.hashline_edit` is on. |
@@ -217,7 +215,7 @@ effective condition (many hooks are idle unless their condition holds).
 | `read-image-resizer` | Downscales images past token limits. Exists to keep image reads inside context budgets. | After image reads over the limit. |
 | `task-notepad-writer` | Writes a scaffolded markdown notepad per task, into `.matrixx/notepads/<planName>/` or `adhoc/`, and appends a `## Completion` stamp on completion. Exists so findings survive compaction and restarts. Keyed on a `**Task ID**` marker in the file, so it is idempotent with no in-memory state. | After a non-deduplicated `task_create`, and after a `task_update` whose `status` is `completed`; never blocks or rewrites output. |
 
-Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/delegate-task-retry/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
+Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
 
 ### 2.3 Prompt, message, and session triggers
 
@@ -235,11 +233,11 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `design-intent-preserver` | `chat.message`-shaped | Preserves design intent across turns. Currently has no call site (Section 2.4). |
 | `think-mode` | `event` (session cleanup) | Dynamic thinking budget; prompt switching lives in its module state. Exists to scale reasoning effort per session. |
 | `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/rp-loop` workflows. |
-| `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). |
+| `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. A `background=true` subagent completion arrives as an injected message in the parent session; read the transcript with `session_read`. |
 | `session-recovery` | `event` session.error branch (direct call) | Recovers and re-prompts after recoverable errors. Exists to survive transient session failures. |
 | `context-window-limit-recovery` | `event` (error/idle/updated) | Provider-agnostic context recovery; parses token-limit errors only (reactive). Exists as the last resort after monitor (70%) and preemptive compaction (78%). |
 | `auto-update-checker` | `event` session.created | Plugin update check and startup toasts. Exists to notify about new versions. |
-| `background-notification` | `event` | Routes events to BackgroundManager notifications. Exists for background-task visibility. |
+| `background-notification` (removed) | — | Deprecated no-op: removed with the background-agent subsystem; the name still parses. |
 | `session-notification` | `event` (called as function) | OS idle notifications with sound. Exists to alert on idle completion. |
 | `unstable-agent-babysitter` (deprecated) | — | Implementation removed; the name still parses for old configs and never fires. |
 | `niobe` | `event` via `.handler` | Orchestration lifecycle (error/idle/compact/delete). Exists to maintain mission state. |
@@ -251,7 +249,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `knowledge-hub-search-nudge` | `tool.execute.before` | Warns (never blocks) when agents reach for websearch with hubs configured. Exists as a backstop for web-first habits. |
 | `runtime-fallback` | module hook | Retries failed model calls on fallbacks with cooldown. Exists for provider resilience. Currently has no call site (Section 2.4). |
 
-Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/setup-domains/hooks.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/background-notification/hook.ts:19-24`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
+Evidence: `src/hooks/input-secret-guard/hook.ts` + `src/plugin/tool/chat-message.ts`, `src/hooks/keyword-detector/hook.ts:19`, `src/hooks/auto-slash-command/hook.ts:36`, `src/hooks/start-work/start-work-hook.ts:51`, `src/hooks/stop-continuation-guard/hook.ts` + `src/plugin/tool/event.ts`, `src/hooks/anthropic-effort/hook.ts:37` + `src/plugin/tool/chat-params.ts`, `src/plugin/setup-domains/hooks.ts`, `src/hooks/thinking-block-validator/hook.ts:105`, `src/hooks/think-mode/hook.ts:172-174` + `src/plugin/tool/event.ts`, `src/plugin/tool/event.ts` + `src/plugin/tool/tool-execute-before.ts:156-196`, `src/plugin/hooks/create-continuation-hooks.ts`, `src/plugin/tool/event.ts:148-155`, `src/hooks/context-window-limit-recovery/recovery-hook.ts:33-164`, `src/hooks/auto-update-checker/hook.ts:29-34`, `src/hooks/session-notification.ts` + `src/plugin/tool/event.ts:35`, `src/hooks/niobe/event-handler.ts:19-192`, `src/hooks/plan-persister/hook.ts` + `src/index.ts:92-96`, `src/index.ts:87-89`, `src/plugin/tool/event.ts:39-46`, `src/hooks/knowledge-hub-guard/hook.ts`, `src/hooks/knowledge-hub-injector/hook.ts`, `src/hooks/knowledge-hub-search-nudge/hook.ts`.
 
 For orchestration behavior (niobe, continuation enforcers, matrix loop)
 see `orchestration.md`; for the task substrate see

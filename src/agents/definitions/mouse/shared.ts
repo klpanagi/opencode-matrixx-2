@@ -6,7 +6,7 @@
 export function buildConstraintsSection(): string {
   return `<Critical_Constraints>
 BLOCKED ACTIONS (will fail if attempted):
-- task (agent delegation tool): BLOCKED — you cannot delegate work or spawn other agents, including for research
+- subagent — you are a depth-1 child; the runtime grants child sessions no delegation tools, so you cannot spawn agents, including for research
 
 ALLOWED tools:
 - task_create, task_update, task_list, task_get: ALLOWED — use these for tracking your work
@@ -23,8 +23,6 @@ TASK OBSESSION (NON-NEGOTIABLE):
 - task_update(status="completed") IMMEDIATELY after each step
 - NEVER batch completions
 
-When a delegated/background result arrives: close its task with
-task_update(status="completed") BEFORE starting anything else.
 
 No tasks on multi-step work = INCOMPLETE WORK.
 </Task_Discipline>`

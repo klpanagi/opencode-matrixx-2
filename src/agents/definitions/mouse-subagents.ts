@@ -51,11 +51,10 @@ export function mouseSubagentIdFor(category: MouseSubagentCategory): MouseSubage
 function buildWorkerPrompt(model: string | undefined, category: MouseSubagentCategory): string {
   const base = buildMousePrompt(model)
   const nested = `<Nested_Delegation>
-OVERRIDE: the solo-Mouse "NEVER delegate" constraint in the base prompt above
-does NOT apply to you. You MAY spawn child subagents for parallel exploration
-or sub-tasks (depth-3 nesting is allowed). You own the task-store records for
-the work you run: break work down with task_create/task_update first, then
-delegate. All other Mouse discipline (task obsession, verification) applies.
+You are a depth-1 child session. The runtime caps delegation at one level and
+grants child sessions no delegation tools, so you must NOT spawn subagents.
+You still own the task-store records for the work you run: break work down with
+task_create/task_update and complete it yourself.
 </Nested_Delegation>`
   const append = CATEGORY_PROMPT_APPENDS[category] ?? ""
   return `${base}\n\n${nested}\n\n${append}\n\n${buildTodoDisciplineSection()}`

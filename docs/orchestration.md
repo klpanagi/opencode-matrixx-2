@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 1.2.1 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Version:** 1.3.4 · **Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).
@@ -47,7 +47,7 @@ User describes work
   -> .matrixx/plans/{name}.md
        -> /start-work
             -> Niobe reads plan via plan_tasks + plan_read, builds waves
-                 -> task(category=...) -> Mouse and specialists
+                 -> subagent(agent=...) -> Mouse and specialists
                  -> verify each result independently
                  -> final report
 ```
@@ -254,26 +254,26 @@ work complete. It cannot delegate further and cannot touch plan files.
 
 Specialist roster (Trinity, Operator, Sati, Cipher, Sentinel, Merovingian, Construct, and others): see [`docs/agents.md`](./agents.md) — linked, not duplicated here.
 
-The full registry (13 built-ins: morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati) lives in
-`src/agents/builtin-agents.ts` with the schema in
-`src/config/schema/agent-names.ts` (`BuiltinAgentNameSchema`, 13 names).
-Mouse (`src/agents/mouse/`) is the delegated executor spawned by categories, not one of the 13 built-ins.
+The full registry (13 core agents: morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati, plus 8 `mouse-*` workers) lives in
+`src/agents/registry/index.ts` with the schema in
+`src/config/schema/agent-names.ts` (`BuiltinAgentNameSchema`, 21 names).
+`mouse-*` workers (`src/agents/definitions/mouse/`) are spawned per category and run at delegation depth 1.
 Models resolve from your configured providers with
 fallback chains; worker agents default to temperature 0.1 (Seraph uses 0.3).
 For the full roster and per-agent detail, see [`docs/agents.md`](./agents.md).
 
-## The task() Category + Skill System
+## The subagent(agent=…) Category + Skill System
 
 ### Categories describe intent, not models
 
 ```typescript
 // Category names the kind of work; the system picks model and prompt shape
-task(category="source", prompt="...")       // deep reasoning, complex implementation
-task(category="construct", prompt="...")    // visual and UI work
-task(category="bullet-time", prompt="...")  // trivial tasks, fast and minimal
+subagent(agent="mouse-source", description="Deep implementation", prompt="...")
+subagent(agent="mouse-construct", description="UI work", prompt="...")
+subagent(agent="mouse-bullet-time", description="Trivial fix", prompt="...")
 ```
 
-Built-in categories (`src/tools/delegate-task/constants.ts`): `source`,
+Built-in categories (`src/config/schema/categories.ts`): `source`,
 `construct`, `rabbit-hole` (deep analysis and debugging), `glitch`
 (creative problem solving), `blue-pill` (conservative, safe), `the-one`
 (bold, transformative), `transmission` (docs and prose), `bullet-time`
@@ -283,8 +283,8 @@ Built-in categories (`src/tools/delegate-task/constants.ts`): `source`,
 ### Skills add domain expertise
 
 ```typescript
-task(category="construct", load_skills=["frontend-ui-ux"], prompt="...")
-task(category="bullet-time", load_skills=["playwright"], prompt="...")
+subagent(agent="mouse-construct", load_skills=["frontend-ui-ux"], description="UI work", prompt="...")
+subagent(agent="mouse-bullet-time", load_skills=["playwright"], description="Browser check", prompt="...")
 ```
 
 Skills prepend domain instructions to the worker prompt. All 70 built-in
@@ -317,10 +317,10 @@ reasoning style and fully autonomous explore-first approach.
 
 ## Background Agents and Matrix Loop
 
-**Background agents** (`src/features/background-agent/`) run workers as
-tracked background tasks: queue, concurrency check per provider and model
-(`concurrency.ts`), execute, poll, notify, clean up. This is what lets Wave
-1 tasks run in parallel instead of one at a time.
+**Background delegation** uses the native `subagent` tool with
+`background=true`: the parent keeps working while children run, and each child's
+completion is injected as a message in the parent session (read the full
+transcript with `session_read`). There is no separate queue or poller.
 
 **Matrix loop** (hook tier at `src/hooks/matrix-loop/`, commands
 `/matrix-loop`, `/rp-loop`, `/cancel-loop` from
@@ -434,7 +434,7 @@ flowchart TB
     User -->|"/start-work"| Orchestrator
     Plan -->|"Read"| Orchestrator
 
-    Orchestrator -->|"task(category)"| Junior
+    Orchestrator -->|"subagent(agent=…)"| Junior
     Orchestrator -->|"task(agent)"| Merovingian
     Orchestrator -->|"task(agent)"| Trinity
     Orchestrator -->|"task(agent)"| Operator
@@ -523,7 +523,7 @@ sequenceDiagram
 
         Note over Orchestrator: Prompt Structure:<br/>1. TASK (exact checkbox)<br/>2. EXPECTED OUTCOME<br/>3. REQUIRED SKILLS<br/>4. REQUIRED TOOLS<br/>5. MUST DO<br/>6. MUST NOT DO<br/>7. CONTEXT + Wisdom
 
-        Orchestrator->>Junior: task(category, load_skills, prompt)
+        Orchestrator->>Junior: subagent(agent, load_skills, prompt)
 
         Junior->>Junior: Create todos, execute
         Junior->>Junior: Verify (lsp_diagnostics, tests)

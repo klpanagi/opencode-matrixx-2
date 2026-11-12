@@ -7,9 +7,9 @@
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
-**13 specialized agents. 64 lifecycle hooks. 30 tool dirs. 70 skills. 23 commands. One plugin.**
+**13 core agents + 8 category workers. 60 live hooks. 30 tool dirs. 70 skills. 23 commands. One plugin.**
 
-> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. Current release: `1.2.1`.
+> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. Current release: `1.3.4`.
 
 [Quick Start](#quick-start) · [Why Matrixx?](#why-matrixx) · [How It Works](#how-it-works) · [Features](#features) · [Comparison](#how-matrixx-compares) · [Docs](docs/README.md)
 
@@ -76,7 +76,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 
 | Area | What you get | Details |
 |------|--------------|---------|
-| **Agent Orchestration** | 13 agents, category routing (`source`, `rabbit-hole`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
+| **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
 | **Lifecycle Hooks (65-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
 | **Skills (70)** | DSL engineering (11), security (9), frontend (7), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
@@ -86,7 +86,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 | **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, Exa web search, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
 | **Configurability** | Every agent, model, temperature, and hook tunable via `matrixx.jsonc` with JSON schema + Config Studio UI | [Configuration](docs/configurations.md) |
 
-Counts are schema-official: **13 agents** (`BuiltinAgentNameSchema`), **70 skills** (`BuiltinSkillNameSchema`), **64 live hooks** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 6 retained-deprecated no-op literals and 1 alias are included), **23 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **30 tool directories**, and **21 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
+Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **70 skills** (`BuiltinSkillNameSchema`), **60 live hooks** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 10 retained-deprecated no-op literals and 1 alias are included), **23 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **30 tool directories**, and **20 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
 
 ### Session memory (new, EXPERIMENTAL)
 
@@ -154,7 +154,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 **Trade-offs to know**
 
 - **OpenCode-only.** Matrixx is a plugin, not a standalone agent or IDE. You adopt OpenCode to use it.
-- **Learning curve.** 13 agents, 8 categories, 70 skills, 23 commands — `redpill` hides this well, but mastery takes time.
+- **Learning curve.** 13 core agents plus 8 category workers, 8 categories, 70 skills, 23 commands — `redpill` hides this well, but mastery takes time.
 - **Multiple providers help.** It runs on one provider, but the multi-model value shows with two or more connected (or the OpenCode free tier).
 - **Orchestration overhead.** Delegation costs extra tokens on trivial one-line tasks — use direct mode for those.
 - **Pinned toolchain.** Bun 1.4.4 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.

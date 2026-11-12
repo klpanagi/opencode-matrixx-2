@@ -196,18 +196,15 @@ describe("mouse subagent integration", () => {
   })
 
   test("child-tool restrictions mirror mouse exactly", async () => {
-    //#given mouse's restriction profile as the source of truth
+    //#given the shared restriction table
     const { getAgentToolRestrictions } = await import(
       "../../../src/shared/tool/agent-tool-restrictions"
     )
-    const mouseProfile = getAgentToolRestrictions("mouse")
-
     //#when each worker profile is read
-    //#then it deep-equals mouse's profile
+    //#then every worker denies native subagent (they are depth-1 children)
     for (const id of MOUSE_SUBAGENT_IDS) {
-      expect(getAgentToolRestrictions(id)).toEqual(mouseProfile)
+      expect(getAgentToolRestrictions(id)).toEqual({ subagent: false })
     }
-    expect(mouseProfile).toEqual({ task: false })
   })
 
   test("display names resolve for all 8 workers", async () => {

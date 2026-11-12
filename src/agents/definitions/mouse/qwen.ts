@@ -65,7 +65,7 @@ No evidence = not complete.
 function buildQwenBlockedActions(): string {
   return `| Tool | Status | Notes |
 |------|--------|-------|
-| task | BLOCKED | Cannot delegate work or spawn other agents, including for research |
+| subagent | BLOCKED | You are a depth-1 child; the runtime grants child sessions no delegation tools |
 | task_create | ALLOWED | Track your work |
 | task_update | ALLOWED | Update status |
 | task_list / task_get | ALLOWED | View tasks |

@@ -14,7 +14,6 @@ tools/
 ├── grep/             # Custom grep (60s timeout, 10MB limit)
 ├── glob/             # File search (60s timeout, 100 file limit)
 ├── session-manager/  # 4 tools: list, read, search, info
-├── background-task/  # background_output, background_cancel, background_revive, background_wait_all
 ├── handoff/          # Multi-action handoff: create, read, list, archive
 ├── hashline-edit/    # Hash-based line-precise file editing
 ├── interactive-bash/ # Tmux session management
@@ -48,9 +47,6 @@ tools/
 | `task_update` | Task | Factory | Update task fields, supports addBlocks/addBlockedBy for dependencies |
 | `task_cleanup` | Task | Factory | Delete completed tasks from storage |
 | `handoff` | Session | Factory | Multi-action: create, read, list, archive |
-| `background_output` | Background | Factory | Retrieve background task result |
-| `background_cancel` | Background | Factory | Cancel running background tasks |
-| `background_revive` | Background | Factory | Revive retained terminal task with new instruction |
 | `lsp_goto_definition` | LSP | Direct | Jump to symbol definition |
 | `lsp_find_references` | LSP | Direct | Find all usages across workspace |
 | `lsp_symbols` | LSP | Direct | Document or workspace symbol search |
@@ -178,34 +174,11 @@ Each category defines: model, variant, temperature, max tokens, thinking/reasoni
 
 ### Per-Task Complexity Routing (v2.0.0+)
 
-The `subagent` policy accepts an optional `complexity: 1-5 | "auto"` field. When set, the resolver may downgrade the model to a cheaper tier per category (downgrade-only, never upgrade). `auto` scores the task from description/prompt/skills/category. 100% backwards compatible — omit the field and behavior is identical to pre-P3.
+The `subagent` policy accepts an optional `complexity: 1-5 | "auto"` field. When set, the resolver may downgrade the model to a cheaper tier per category (downgrade-only, never upgrade). `auto` scores the task from description/prompt/skills. Omitting the field disables downgrades.
 
-Files: `src/shared/subagent/complexity-{types,constants,scorer}.ts` + `skill-resolver.ts`. Tests: 18 cases across `complexity-scorer.test.ts`, `complexity-constants.test.ts`, `category-resolver.test.ts`.
+Files: `src/shared/subagent/complexity-{types,constants,scorer}.ts` + `skill-resolver.ts`. Tests: `tests/shared/subagent/complexity-scorer.test.ts` and `complexity-constants.test.ts`.
 
 Each category defines: model, variant, temperature, max tokens, thinking/reasoning config, prompt append, stability flag.
-
-### Background Task Terminal States
-
-`background_output` returns the full task object including the `status` field. `background_cancel` operates on `running` tasks only. The following statuses are **terminal and non-cancellable**: `completed`, `error`, `cancelled`, `interrupt`, `stopped`, `statusUncertain`.
-
-- `stopped` — the session ended without terminal output, or admission was refused. Not a failure.
-- `statusUncertain` — liveness could not be determined (e.g. host lookup failed after restart). Neither failure nor completion.
-
-### Queue-Saturated Launch Outcome
-
-When `delegate_task` launch is refused (removed PR-2: queue admission/semaphores deleted; `queue-saturated` retained as compat-only handle value), the tool returns a machine-readable block instead of throwing:
-
-```
-Background task NOT admitted (queue saturated).
-
-Task ID: <id>
-Status: stopped
-Reason: queue-saturated
-
-<task_metadata>{"task_id":"<id>","status":"stopped","reason":"queue-saturated"}</task_metadata>
-```
-
-The `<task_metadata>` line carries a JSON payload for programmatic parsing. A depth-cap overflow from nested-admission produces the same block shape with `Reason: nested-depth-exceeded`.
 
 ## HOW TO ADD
 

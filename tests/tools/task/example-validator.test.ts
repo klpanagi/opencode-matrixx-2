@@ -25,10 +25,10 @@ const ROOT = join(import.meta.dir, "../../..")
 const SRC = join(ROOT, "src")
 
 /** Canonical single-object example, pinned by the plan. */
-// NOTE (Phase 5.3): was line 97; the delegate-task structure line removal
-// shifted the example up one line.
+// NOTE: line shifts whenever the surrounding tool-inventory prose changes;
+// the scan below fails loudly when the pinned line no longer matches.
 const CANONICAL_MD = "src/tools/AGENTS.md"
-const CANONICAL_LINE = 96
+const CANONICAL_LINE = 92
 
 type Extracted = {
   rel: string

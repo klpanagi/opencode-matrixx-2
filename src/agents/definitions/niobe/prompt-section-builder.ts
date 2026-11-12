@@ -37,7 +37,7 @@ export function buildCategorySection(userCategories?: Record<string, CategoryCon
   const allCategories = mergeCategories(userCategories)
   const categoryRows = Object.entries(allCategories).map(([name, config]) => {
     const tempValue = config.request?.body?.temperature
-    const temp = typeof tempValue === "number" ? tempValue : 0.5
+    const temp = typeof tempValue === "number" ? tempValue : 0.1
     return `| \`${name}\` | ${temp} | ${getCategoryDescription(name, userCategories)} |`
   })
 
@@ -50,7 +50,7 @@ Categories spawn \`Mouse-{category}\` with optimized settings:
 ${categoryRows.join("\n")}
 
 \`\`\`typescript
-subagent(agent="mouse-[category-name]", load_skills=[...], background=false, prompt="...")
+subagent(agent="mouse-[category-name]", description="3-5 word title", load_skills=[...], background=false, prompt="...")
 \`\`\``
 }
 
@@ -108,7 +108,7 @@ Read each skill's description and ask: "Does this skill's domain overlap with my
 
 **Usage:**
 \`\`\`typescript
-subagent(agent="mouse-[category]", load_skills=["skill-1", "skill-2"], background=false, prompt="...")
+subagent(agent="mouse-[category]", description="3-5 word title", load_skills=["skill-1", "skill-2"], background=false, prompt="...")
 \`\`\`
 
 **IMPORTANT:**

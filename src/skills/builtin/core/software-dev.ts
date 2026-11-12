@@ -123,7 +123,7 @@ If ANY fails → fix → re-run ALL.
 
 ## PHASE 4: REVIEW
 
-Fire 6-agent parallel review:
+Fire the review roster (review-work spawns its 6 specialised reviewers):
 
 \`\`\`
 subagent(
@@ -201,9 +201,9 @@ If phase fails → STOP → fix → re-run that phase.
 
 ## TASK INTERFACES
 
-Every task declares its interface contract with two REQUIRED-task-subfield labels. Wave 1 is guidance only — no validator enforcement; enforcement lands in Wave 2.
+Every task declares its interface contract with two labels: Consumes and Produces.
 
-Labels are forward-compatible: Consumes / Produces will promote to grammar in Task 6 with these exact labels, aligned with REQUIRED_TASK_SUBFIELDS voice.
+Declare Consumes before Produces, in dependency order.
 
 - **Consumes**: upstream inputs this task needs (files, APIs, types, decisions, prior task outputs). List each input with its source task.
 - **Produces**: downstream outputs this task hands off (files, APIs, contracts, evidence). List each output with its consumer task.

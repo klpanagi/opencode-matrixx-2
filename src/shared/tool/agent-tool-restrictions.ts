@@ -7,7 +7,7 @@
 const EXPLORATION_AGENT_DENYLIST: Record<string, boolean> = {
   write: false,
   edit: false,
-  task: false,
+  subagent: false,
 }
 
 const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
@@ -18,59 +18,55 @@ const AGENT_RESTRICTIONS: Record<string, Record<string, boolean>> = {
   merovingian: {
     write: false,
     edit: false,
-    task: false,
+    subagent: false,
   },
 
   seraph: {
     write: false,
     edit: false,
-    task: false,
+    subagent: false,
   },
 
   smith: {
     write: false,
     edit: false,
-    task: false,
+    subagent: false,
   },
 
   construct: {
     read: true,
   },
 
-  mouse: {
-    task: false,
-  },
-
   "mouse-construct": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-source": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-rabbit-hole": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-glitch": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-bullet-time": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-blue-pill": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-the-one": {
-    task: false,
+    subagent: false,
   },
 
   "mouse-transmission": {
-    task: false,
+    subagent: false,
   },
 }
 

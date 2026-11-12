@@ -11,8 +11,6 @@ const HookNameEnum = z.enum([
   "think-mode",
   "context-window-limit-recovery",
   "rules-injector",
-  "background-notification",
-  "background-task-blocker",
   "auto-update-checker",
   "startup-toast",
   "keyword-detector",
@@ -28,7 +26,6 @@ const HookNameEnum = z.enum([
   "compaction-context-injector",
   "auto-slash-command",
   "edit-error-recovery",
-  "delegate-task-retry",
   "oracle-md-only",
   "plan-persister",
 	"mouse-notepad",
@@ -67,12 +64,11 @@ const HookNameEnum = z.enum([
   "nudge-loop-breaker",
   "task-notepad-writer",
   "session-memory",
-  "subagent-block",
 ])
 
 // Deprecated alias — remove in v2.7 (BREAKING: rename anthropic- → generic)
 //
-// The 4 literals below belong to the removed legacy todo system. Their hooks no
+// The literals below belong to removed subsystems. Their hooks no
 // longer exist, but the NAMES stay parseable so a config written before the
 // removal keeps loading without an `invalid_enum` error. They are deliberately
 // NOT mapped onto a live hook (no rename target) and NOT `.transform()`ed — see
@@ -93,6 +89,14 @@ export const HookNameSchema = z.union([
   z.literal("task-continuation-enforcer"),
   /** @deprecated no-op (D6) — preemptive-compaction deleted, single compaction hook owns compaction. Retained so existing configs keep loading. */
   z.literal("preemptive-compaction"),
+  /** @deprecated no-op — removed with the background-agent subsystem. Retained so existing configs keep loading. */
+  z.literal("background-notification"),
+  /** @deprecated no-op — removed with the background-agent subsystem. Retained so existing configs keep loading. */
+  z.literal("background-task-blocker"),
+  /** @deprecated no-op — removed with the custom task delegation subsystem. Retained so existing configs keep loading. */
+  z.literal("delegate-task-retry"),
+  /** @deprecated no-op — the subagent-block hook was never implemented; name retained so existing configs keep loading. */
+  z.literal("subagent-block"),
 ])
 
 export type HookName = z.infer<typeof HookNameSchema>

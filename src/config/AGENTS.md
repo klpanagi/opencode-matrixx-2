@@ -9,7 +9,7 @@ Zod schema definitions for plugin configuration. Schema component files composin
 config/
 ├── schema/                    # ~40 schema component files
 │   ├── matrixx-config.ts         # Root schema composition
-│   ├── agent-names.ts         # BuiltinAgentNameSchema (13 agents), BuiltinSkillNameSchema (70 skills)
+│   ├── agent-names.ts         # BuiltinAgentNameSchema (21 names: 13 core + 8 mouse-*), BuiltinSkillNameSchema (70 skills)
 │   ├── agent-overrides.ts     # AgentOverrideConfigSchema (model, variant, temp, thinking...)
 │   ├── agent-definitions.ts
 │   ├── assembly.ts
@@ -23,7 +23,7 @@ config/
 │   ├── dcp.ts
 │   ├── experimental.ts        # ExperimentalConfigSchema
 │   ├── headroom.ts
-│   ├── hooks.ts               # HookNameSchema (64 enum + 6 retained literals + 1 alias = 71 accepted; 59 hook dirs + 9 loose .ts on disk)
+│   ├── hooks.ts               # HookNameSchema (60 enum + 10 retained no-op literals + 1 alias = 71 accepted; 55 hook dirs + 10 loose .ts on disk)
 │   ├── internal/
 │   ├── knowledge.ts
 │   ├── matrix-loop.ts          # MatrixLoopConfigSchema
@@ -55,11 +55,11 @@ config/
 
 ## ROOT SCHEMA
 
-`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `subagent_block`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
+`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13 core + 8 mouse-*), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `subagent_block`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
 
 ## CONFIGURATION HIERARCHY
 
-Project (`.opencode/matrixx.jsonc`) → User (`~/.config/opencode/matrixx.jsonc`) → Defaults — both JSONC (`src/shared/text/jsonc-parser.ts`, comments + trailing commas). Old agent and hook names auto-migrate via `shared/migration/`; the 4 retired legacy todo hook names map to `null` there so existing `disabled_hooks` lists keep loading. `new_task_system_enabled` and `experimental.task_system` still parse but are ignored, with a one-time deprecation warning (see `docs/legacy-todo-migration.md`).
+Project (`.opencode/matrixx.jsonc`) → User (`~/.config/opencode/matrixx.jsonc`) → Defaults — both JSONC (`src/shared/text/jsonc-parser.ts`, comments + trailing commas). Old agent and hook names auto-migrate via `shared/migration/`; the 10 retired hook names map to `null` there so existing `disabled_hooks` lists keep loading. `new_task_system_enabled` and `experimental.task_system` still parse but are ignored, with a one-time deprecation warning (see `docs/legacy-todo-migration.md`).
 
 ## AGENT OVERRIDE FIELDS
 

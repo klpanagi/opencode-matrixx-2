@@ -10,16 +10,16 @@ function permissionsOf(ctx: OrchestratorContext): Rule[] {
   return result.permissions === undefined ? [] : result.permissions
 }
 
-describe("niobe native-subagent deny (T5)", () => {
-  test("baseConfig denies native subagent action", () => {
+describe("niobe native-subagent permissions (T5)", () => {
+  test("baseConfig does not deny the native subagent tool it orchestrates with", () => {
     //#given a fresh orchestrator context
     const ctx: OrchestratorContext = {}
 
     //#when the niobe agent config is created
     const permissions = permissionsOf(ctx)
 
-    //#then a scoped deny ruleset blocks the native subagent tool
-    expect(permissions).toContainEqual({
+    //#then no deny rule blocks subagent
+    expect(permissions).not.toContainEqual({
       action: "subagent",
       resource: "*",
       effect: "deny",

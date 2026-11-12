@@ -33,6 +33,8 @@ export const ORACLE_SYSTEM_PROMPT = createOracleSystemPrompt()
  * are CREATED once via plan_create. Both authoring tools are granted
  * explicitly: the DECISION TREE in identity-constraints.ts routes all three
  * branches through plan_create, so an implicit grant would break silently.
+ * Edit/write stay denied: Interview Mode drafts are maintained through the
+ * shell (see interview-mode.ts), so no generic file-write path exists.
  * Question permission allows agent to ask user questions via OpenCode's QuestionTool.
  */
 export const ORACLE_PERMISSION: PermissionRule[] = [

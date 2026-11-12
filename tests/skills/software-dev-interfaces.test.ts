@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { softwareDevSkill } from "../../src/skills/builtin/core/software-dev"
 
-describe("software-dev Consumes/Produces interface guidance (Wave 1 prose only)", () => {
+describe("software-dev Consumes/Produces interface guidance", () => {
   test("template contains Consumes and Produces interface contract labels", () => {
     //#given template
     const template = softwareDevSkill.template
@@ -12,13 +12,14 @@ describe("software-dev Consumes/Produces interface guidance (Wave 1 prose only)"
     expect(template).toContain("Produces")
   })
 
-  test("template phrases labels as REQUIRED-task-subfield guidance", () => {
+  test("template defines both labels as task interface fields", () => {
     //#given template
     const template = softwareDevSkill.template
 
-    //#when scanned for subfield voice
-    //#then REQUIRED-task-subfield voice present near interface labels
-    expect(template).toMatch(/REQUIRED-task-subfield/i)
+    //#when scanned for the interface contract definition
+    //#then both labels are described as upstream/downstream fields
+    expect(template).toMatch(/Consumes.*upstream inputs/i)
+    expect(template).toMatch(/Produces.*downstream outputs/i)
   })
 
   test("template provides code-fence example with exit criteria", () => {
@@ -32,24 +33,13 @@ describe("software-dev Consumes/Produces interface guidance (Wave 1 prose only)"
     expect(template).toMatch(/\*\*Exit criteria:\*\*/)
   })
 
-  test("template states enforcement lands in Wave 2 (guidance only)", () => {
+  test("template requires declaring Consumes before Produces in dependency order", () => {
     //#given template
     const template = softwareDevSkill.template
 
-    //#when scanned for non-enforcement disclaimer
-    //#then Wave 2 deferral explicitly stated
-    expect(template).toMatch(/Wave 2/)
-    expect(template).toMatch(/guidance only/i)
-  })
-
-  test("template states labels are forward-compatible with Task 6 grammar", () => {
-    //#given template
-    const template = softwareDevSkill.template
-
-    //#when scanned for forward-compat marker
-    //#then Task 6 grammar promotion noted
-    expect(template).toMatch(/Task 6/)
-    expect(template).toMatch(/forward-compatible/i)
+    //#when scanned for the ordering rule
+    //#then dependency order is stated explicitly
+    expect(template).toMatch(/Declare Consumes before Produces, in dependency order/i)
   })
 
   test("template documents Consumes before Produces in dependency order", () => {

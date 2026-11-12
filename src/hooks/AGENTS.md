@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-71 accepted hook names (64 enum + 6 retained literals + 1 alias; 59 dirs + 9 loose `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
+71 accepted hook names (60 enum + 10 retained no-op literals + 1 alias; 55 dirs + 10 loose `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
 
 ## STRUCTURE
 ```
@@ -13,7 +13,6 @@ hooks/
 ├── niobe/                        # Main orchestration hook
 ├── auto-slash-command/           # Detects /command patterns
 ├── auto-update-checker/          # Plugin update check
-├── background-notification/      # OS notifications
 ├── category-skill-reminder/      # Category+skill delegation reminders
 ├── comment-checker/              # Prevents AI slop comments
 ├── compaction-context-injector/  # Injects context on compaction
@@ -26,7 +25,6 @@ hooks/
 ├── interactive-bash-session/     # Tmux session management
 ├── keyword-detector/             # redpill/search/analyze modes
 ├── non-interactive-env/          # Non-TTY handling
-├── preemptive-compaction.ts      # Auto-compact at 78% usage
 ├── plan-persister/              # Persists plan state to disk on idle + compact
 ├── oracle-md-only/           # Planner read-only mode
 ├── quality-gate/                 # Post-task quality verification

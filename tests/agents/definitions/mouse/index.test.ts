@@ -227,7 +227,7 @@ describe("createMouseAgentWithOverrides", () => {
       expect(result.system).toContain("task_update")
       expect(result.system).toContain("task_list")
       expect(result.system).toContain("task_get")
-      expect(result.system).toContain("agent delegation tool")
+      expect(result.system).toContain("no delegation tools")
     })
 
     test("explicitly lists task management tools as ALLOWED for GPT", () => {
@@ -242,7 +242,7 @@ describe("createMouseAgentWithOverrides", () => {
       expect(result.system).toContain("task_update")
       expect(result.system).toContain("task_list")
       expect(result.system).toContain("task_get")
-      expect(result.system).toContain("Agent delegation tool")
+      expect(result.system).toContain("no delegation tools")
     })
 
       })

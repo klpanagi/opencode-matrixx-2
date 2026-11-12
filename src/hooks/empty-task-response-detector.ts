@@ -6,7 +6,7 @@ import type { MatrixxContext } from "../plugin/tool/context"
 const EMPTY_RESPONSE_WARNING = `[Task Empty Response Warning]
 
 The delegation call completed with empty output, so there is no result to report.
-Session ID: see tool metadata (session_id in task_metadata). Check /tmp/matrixx.log subagent entries for this session.
+Session ID: see tool metadata (session_id in subagent metadata). Check /tmp/matrixx.log subagent entries for this session.
 Classified likely causes:
 1. Code-mode delegation: subagent was invoked from inside code-mode/execute and ran without a top-level tool session. Fix: re-issue as a direct top-level subagent call, never inside execute.
 2. Permission-denied nested delegation: a read-only consultant (Seraph/Smith) tried subagent delegation its permissions deny, so the child never ran. Fix: use direct grep/glob/read/lsp_* in the consultant; reserve subagent() for the top-level orchestrator.
@@ -19,7 +19,7 @@ export function createEmptyTaskResponseDetectorHook(_ctx: MatrixxContext) {
       input: { tool: string; sessionID: string; callID: string },
       output: { title: string; output: string; metadata: unknown }
     ) => {
-      if (input.tool !== "Task" && input.tool !== "task") return
+      if (input.tool !== "subagent") return
 
       const responseText = output.output?.trim() ?? ""
 

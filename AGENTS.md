@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Version:** 1.2.1 (package.json) · OpenCode plugin SDK `@opencode-ai/plugin` v1.3.15 · Bun-types 1.4.4
+**Version:** 1.3.4 (package.json) · V2-native `{ id, setup }` plugin · Bun-types 1.4.4
 
 ---
 
@@ -100,13 +100,13 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 13 built-in agents (Morpheus, Sati, Sentinel, Cipher, etc.) via 64-enum hooks (+6 literals +1 alias) and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 schema skills / 86 skill files, 21 features, 2 MCPs. ~1200 TS source files, ~615 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 60 live hooks + 10 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 20 features, 2 MCPs. ~1130 TS source files, ~575 test files.
 
-> **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). `2.6.18` is the legacy V1 API (`@opencode-ai/plugin` v1.3.15) release line and does not load in OpenCode V2.
+> **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 
 | Aspect | Value |
 |---|---|
-| Package | `opencode-matrixx-v2` (npm, v1.2.1) |
+| Package | `opencode-matrixx-v2` (npm, v1.3.4) |
 | Entry | `src/index.ts` → `MatrixxPlugin` |
 | Stack | Bun 1.4.4 + TypeScript 5.7 + Zod v4 + Biome 2.5 (linter only) |
 | License | SUL-1.0 |
@@ -120,21 +120,19 @@ matrixx/
 │   ├── tool-entry.ts               # Side-effect-free entry for bench/sandbox use (not the plugin entry)
 │   ├── plugin-config.ts            # Config load + Zod validation
 │   ├── plugin-state.ts             # Model context-limit cache
-│   ├── agents/   → 13 agents + AGENTS.md
-│   ├── hooks/    → 64-enum hooks (+6 literals +1 alias) in 5 factories
-│   ├── tools/    → 30 dirs (LSP, AST-grep, delegate-task, bdd-*, handoff, etc.; gated via plugin/tool/tool-policy.ts)
-│   ├── features/ → 21 dirs (background-agent, builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
-│   ├── shared/   → scoped dirs (agent, config, io, model, outcome, policy, runtime, session, text, tmux, tool, ...) + AGENTS.md
-│   ├── skills/   → builtin/<category>/ (70 schema skills) + loader/ + <skill>/SKILL.md assets + AGENTS.md
+│   ├── agents/   → 13 core agents + 8 mouse-* workers + AGENTS.md
+│   ├── hooks/    → 60 live hooks (+10 deprecated no-ops +1 alias) in 5 factories
+│   ├── tools/    → 30 dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guards, etc.; gated via plugin/tool/tool-policy.ts)
+│   ├── features/ → 20 dirs (builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
+│   ├── shared/   → scoped dirs (agent, config, io, model, policy, runtime, session, subagent, text, tmux, tool, ...) + AGENTS.md
+│   ├── skills/   → builtin/<category>/ (70 skills) + loader/ + AGENTS.md
 │   ├── mcps/     → context7 + document-reader (+ native `github_search` tool in `src/tools/`)
 │   ├── cli/      → installer, doctor, config-manager
 │   ├── config/   → Zod schema
 │   └── plugin/   → composition root: index.ts barrel; setup-domains.ts + setup-domains/; handlers/ (6-phase config pipeline); tool/ (catalog + policy + chat/event handlers); hooks/ (5 factories); message-hooks/
 ├── bin/                            # Platform-detecting CLI wrappers
-├── script/                         # build-schema, build-binaries, publish, run-ci.sh
-├── packages/                       # 7 platform + 4 baseline binary packages
-├── .opencode/                      # Local OpenCode config (23 commands, skills)
-├── docs/                           # Long-form docs (configurations.md ~50k)
+├── script/                         # build-schema, run-ci.sh, mock-heavy-list.txt, e2e harnesses
+├── docs/                           # Long-form docs (configurations.md ~92 KB)
 └── dist/                           # Build output (ESM + .d.ts + schema)
 ```
 
@@ -182,19 +180,19 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 | Task | Location | Notes |
 |------|----------|-------|
-| New agent | `src/agents/<name>.ts` | Add to `agentSources` in `src/agents/builtin-agents.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
+| New agent | `src/agents/definitions/<name>.ts` | Add to `agentSources` in `src/agents/registry/index.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
 | New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{session,tool-guard,transform,continuation,skill}-hooks.ts` |
 | New tool | `src/tools/<name>/` | Register in `src/plugin/tool/tool-catalog.ts` (conditional policy in `tool-policy.ts`; needs `index, types, constants, tools` structure) |
 | New MCP | `src/mcps/` | Add to `createBuiltinMcps()` in `src/mcps/index.ts` |
 | New built-in skill | `src/skills/builtin/<category>/` | Add `<name>.ts`; re-exported via `builtin/index.ts` (type-level only — runtime loads lazily via `createBuiltinSkills()` in `src/skills/loader/factories.ts`); add name to `BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts` |
 | New command | `src/features/builtin-commands/` | Add template + register in `commands.ts` |
 | Schema field | `src/config/schema/` | Run `bun run build:schema` → regenerates `dist/` and `assets/matrixx.schema.json` |
-| User-facing skill | `.opencode/skills/<name>/SKILL.md` | Loaded by OpenCode session — not the plugin |
+| User-facing skill | project `.opencode/skills/<name>/SKILL.md` | Loaded by the OpenCode session, not by this plugin |
 | New test | `tests/<mirrored-src-path>.test.ts` | NEVER in `src/` — mirror the `src/` path under `tests/` and import via relative `../src/...`; `src/**/*.test.ts` is CI-orphaned |
 
-## OPENCODE PLUGIN API (`@opencode-ai/plugin` v1.3.15)
+## OPENCODE PLUGIN API (V1-era handler names behind the V2 `{ id, setup }` entry)
 
-`Plugin = async (PluginInput) => Hooks`
+`Plugin = async (PluginInput) => Hooks` — V1 shape; V2 exposes the same events as domain hooks (`ctx.tool`, `ctx.session.hook`, `ctx.event`).
 
 | Handler | Can Block | Purpose |
 |---|---|---|
@@ -221,9 +219,9 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 - **Build** — `bun build` (ESM, target bun) + `tsc --emitDeclarationOnly` + `build:schema`.
 - **Exports** — barrel via `index.ts`, type-only re-exports preferred.
 - **Naming** — kebab-case dirs, `createXXXHook` / `createXXXTool` factories.
-- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/background-agent/manager/` is split (manager, lifecycle, reconcile, store, types) and `tests/` legitimately reaches ~4900 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
+- **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/task-storage/` is split into one-concern modules, and `tests/` legitimately reaches ~4900 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
 - **Temperature** — 0.1 for code agents, max 0.3.
-- **Parallelism** — never sequential `task()` calls; use `run_in_background=true` and collect via `background_output`.
+- **Parallelism** — never sequential `subagent()` calls; use `background=true` and read completion messages or `session_read`.
 - **Git** — no `git add -i`, `rebase -i`, `--no-verify`, no force push without request.
 
 ## ANTI-PATTERNS
@@ -239,14 +237,14 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 | Bash | `sleep N` (use conditional waits); `cd dir && cmd` (use `workdir`) |
 | Publishing | `bun publish` directly — CI only, never bump version locally |
 
-## AGENTS (13 via `BuiltinAgentNameSchema`)
+## AGENTS (21 names via `BuiltinAgentNameSchema`)
 
-13 agents total via `BuiltinAgentNameSchema` (see `src/agents/AGENTS.md` for model/temperature/fallback chains).
+21 names: 13 core agents (morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati) plus 8 `mouse-*` category workers (see `src/agents/AGENTS.md` for model/temperature/fallback chains).
 
 ## DEPLOYMENT
 
 1. Feature branch → PR to `dev` (CI: typecheck + lint + isolated tests + build)
-2. Merge to `dev` → `draft-release` creates `next` draft
+2. Merge to `dev` → `publish.yml` maintains the `next` draft release
 3. Release: `gh workflow run publish -f bump=patch|minor|major` (`skip_platform=true` skips natives)
 4. `master` auto-updated by publish workflow; schema auto-committed to `assets/matrixx.schema.json`
 
@@ -265,16 +263,13 @@ Never `bun publish` or bump `package.json` version locally.
 
 ## HOTSPOTS
 
-`features/background-agent/manager/` (lifecycle, reconcile, store; restart reconciliation and unified parent notification via `handleEvent`) + `shared/outcome/saturated-outcome.ts` (queue-saturated launch outcome) + `features/task-storage/` + `features/task-session-scope/` (`staleness.ts`, `todo.ts`, kept from the removed enforcer) `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
+`features/task-storage/` + `features/task-session-scope/` (`staleness.ts`, `todo.ts`) + `src/shared/subagent/` (policy, depth cap) + `context-window-limit-recovery/` · `niobe/` · `matrix-loop/` · `keyword-detector/` · `rules-injector/` · `think-mode/` · `session-recovery/` · `task-edit-guard`
 
 ## NOTES
 
-- OpenCode SDK `>= 1.0.150`
 - Trusted deps: `@ast-grep/cli`, `@code-yeongyu/comment-checker`
-- Platform packages: 7 + 4 baseline (glibc x86_64)
 - Logger: `src/shared/runtime/logger.ts` → `/tmp/matrixx.log`
-- Local dev state: `.matrixx/` (handoff, notepads), `UNIQUE_BRANCH_MARKER.md` — gitignored
+- Local dev state: `.matrixx/` (handoff, notepads, tasks, plans) — gitignored
 - Flaky: `matrix-loop` (timeout), `session-state` (parallel pollution)
-- Project skills: `github-issue-triage`, `github-pr-triage`
 - Sati skills: `frontend-ui-ux`, `dev-browser`, `playwright`, `software-dev`, `quality-gate`
 - Knowledge hubs: `docs/knowledge-hub.md` — external KB routing (router index, pinned files, read-only guard)

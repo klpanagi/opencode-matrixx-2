@@ -319,16 +319,27 @@ subagent(agent="operator", load_skills=[], prompt="I'm implementing [feature] an
 ## Draft Management in Interview Mode
 
 **First Response**: Create draft file immediately after understanding topic.
-\`\`\`typescript
-// Create draft on first substantive exchange
-Write(".matrixx/drafts/{topic-slug}.md", initialDraftContent)
+\`\`\`bash
+# Create draft on first substantive exchange (shell is the only write path Oracle has)
+mkdir -p .matrixx/drafts
+cat > .matrixx/drafts/{topic-slug}.md <<'EOF'
+# {topic}
+...
+EOF
 \`\`\`
 
-**Every Subsequent Response**: Append/update draft with new information.
-\`\`\`typescript
-// After each meaningful user response or research result
-Edit(".matrixx/drafts/{topic-slug}.md", oldString="---\n## Previous Section", newString="---\n## Previous Section\n\n## New Section\n...")
+**Every Subsequent Response**: Append new information to the draft.
+\`\`\`bash
+# After each meaningful user response or research result
+cat >> .matrixx/drafts/{topic-slug}.md <<'EOF'
+
+## New Section
+...
+EOF
 \`\`\`
+
+Do not use generic Write/Edit: Oracle's permission set denies them, and plan files are
+managed exclusively through \`plan_create\` / \`plan_update\`.
 
 **Inform User**: Mention draft existence so they can review.
 \`\`\`

@@ -17,11 +17,11 @@ The 6 agents cover complementary concerns - together they form a comprehensive r
 | # | Agent | Type | Role | Focus Level |
 |---|-------|------|------|-------------|
 | 1 | Goal Verifier | Oracle | Did we build what was asked? | MAIN |
-| 2 | QA Executor | unspecified-high | Does it actually work? | MAIN |
+| 2 | QA Executor | mouse-the-one | Does it actually work? | MAIN |
 | 3 | Code Reviewer | Oracle | Is the code well-written? | MAIN |
 | 4 | Security Auditor | Oracle | Is it secure? | SUB |
-| 5 | Context Miner | unspecified-high | Did we miss any context? | MAIN |
-| 6 | AI Slop Detector | unspecified-high | Remove AI-generated code smells | SUP |
+| 5 | Context Miner | mouse-the-one | Did we miss any context? | MAIN |
+| 6 | AI Slop Detector | mouse-the-one | Remove AI-generated code smells | SUP |
 
 ---
 
@@ -84,7 +84,7 @@ Launch ALL 6 in a single turn. Every agent uses \`background=true\`. No sequenti
 
 **Oracle agents receive everything in the prompt** (they cannot read files or run commands). Include DIFF + FILE_CONTENTS + all context directly in the prompt text.
 
-**unspecified-high agents are autonomous** - they can read files, run commands, and use tools. Give them goals and pointers, not raw content dumps.
+**mouse-the-one agents are autonomous** - they can read files, run commands, and use tools. Give them goals and pointers, not raw content dumps.
 
 ---
 
@@ -152,11 +152,11 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 2: QA via App Execution (unspecified-high) - MAIN
+### Agent 2: QA via App Execution (mouse-the-one) - MAIN
 
 \`\`\`
 subagent(
-  agent="unspecified-high",
+  agent="mouse-the-one",
   background=true,
   load_skills=["playwright", "dev-browser"],
   description="QA by actually running and using the application",
@@ -303,11 +303,11 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 5: Context Mining (unspecified-high) - MAIN
+### Agent 5: Context Mining (mouse-the-one) - MAIN
 
 \`\`\`
 subagent(
-  agent="unspecified-high",
+  agent="mouse-the-one",
   background=true,
   load_skills=["git-master"],
   description="Mine all accessible contexts for missed requirements or background knowledge",
@@ -371,11 +371,11 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 6: AI Slop Detection (unspecified-high) - SUP
+### Agent 6: AI Slop Detection (mouse-the-one) - SUP
 
 \`\`\`
 subagent(
-  agent="unspecified-high",
+  agent="mouse-the-one",
   background=true,
   load_skills=["remove-ai-slops"],
   description="Detect AI-generated code smells in changes",
@@ -450,11 +450,11 @@ Final report format:
 | # | Review Area | Agent Type | Verdict | Confidence |
 |---|------------|------------|---------|------------|
 | 1 | Goal & Constraint Verification | Oracle | PASS/FAIL | HIGH/MED/LOW |
-| 2 | QA Execution | unspecified-high | PASS/FAIL | HIGH/MED/LOW |
+| 2 | QA Execution | mouse-the-one | PASS/FAIL | HIGH/MED/LOW |
 | 3 | Code Quality | Oracle | PASS/FAIL | HIGH/MED/LOW |
 | 4 | Security (supplementary) | Oracle | PASS/FAIL | Severity |
-| 5 | Context Mining | unspecified-high | PASS/FAIL | HIGH/MED/LOW |
-| 6 | AI Slop Detection (supplementary) | unspecified-high | PASS/FAIL | NONE/LOW/MED/HIGH |
+| 5 | Context Mining | mouse-the-one | PASS/FAIL | HIGH/MED/LOW |
+| 6 | AI Slop Detection (supplementary) | mouse-the-one | PASS/FAIL | NONE/LOW/MED/HIGH |
 
 ## Blocking Issues
 [Aggregated from all agents - deduplicated, prioritized]
