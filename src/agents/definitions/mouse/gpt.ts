@@ -90,7 +90,7 @@ function buildGptBlockedActionsSection(): string {
 BLOCKED (will fail if attempted):
 | Tool | Status | Description |
 |------|--------|-------------|
-| task | BLOCKED | Agent delegation tool — you cannot delegate work or spawn other agents, including for research |
+| subagent | BLOCKED | You are a depth-1 child; the runtime grants child sessions no delegation tools |
 
 ALLOWED:
 | Tool | Usage |

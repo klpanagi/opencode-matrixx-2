@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-13 AI agents with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
+21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` category workers) with factory functions, fallback chains, and model-specific prompt variants. Each agent has metadata (category, cost, triggers) and configurable tool restrictions.
 
 `Smith` is the **pre-execution** reviewer (binary `[OKAY]`/`[REJECT]`, max 3 blockers).
 

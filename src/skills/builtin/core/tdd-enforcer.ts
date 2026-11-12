@@ -60,8 +60,9 @@ Before marking task DONE:
 ## PROJECT TEST CONVENTIONS (Matrixx / Bun)
 
 ### File Placement
-- Source file: \`src/foo/bar.ts\` → Test file: \`src/foo/bar.test.ts\`
-- Tests live **alongside** source files, NEVER in a separate top-level \`test/\` directory
+- Source file: \`src/foo/bar.ts\` → Test file: \`tests/foo/bar.test.ts\`
+- Tests mirror the \`src/\` path under the top-level \`tests/\` directory and import via relative paths
+- NEVER write \`*.test.ts\` under \`src/\` — CI discovers tests with \`find tests script -name '*.test.ts'\`, so co-located tests are never run
 - One test file per source file (for unit tests)
 
 ### File Header (REQUIRED on every test file)
