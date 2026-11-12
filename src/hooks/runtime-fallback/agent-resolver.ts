@@ -22,6 +22,7 @@ const AGENT_NAMES = [
   "mouse-the-one",
   "mouse-transmission",
   "sentinel",
+  "sati",
 ]
 
 export const agentPattern = new RegExp(

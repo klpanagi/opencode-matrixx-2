@@ -85,7 +85,6 @@ Confirm:
 // Launch these explore agents FIRST
 // Prompt structure: CONTEXT + GOAL + QUESTION + REQUEST
 grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
-grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 \`\`\`
 
@@ -194,7 +193,6 @@ Recommend: caller consults Oracle separately (Seraph permissions deny task deleg
 // Parallel probes - Prompt structure: CONTEXT + GOAL + QUESTION + REQUEST
 grep({ pattern: "<keyword>", paths: ["src"] }) // direct search — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
-webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call the legacy task tool; spawn readers via subagent() instead
 \`\`\`
 
 **Directives for Oracle**:
@@ -230,8 +228,6 @@ webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call 
 
 ### Core Directives
 - MUST: [Required action]
-- MUST: [Required action]
-- MUST NOT: [Forbidden action]
 - MUST NOT: [Forbidden action]
 - PATTERN: Follow \`[file:lines]\`
 - TOOL: Use \`[specific tool]\` for [purpose]
@@ -272,9 +268,9 @@ User confirms the button works as expected.
 | \`lsp_find_references\` | Map impact before changes | Refactoring |
 | \`lsp_rename\` | Safe symbol renames | Refactoring |
 | \`ast_grep_search\` | Find structural patterns | Refactoring, Build |
-| \`explore\` agent | Codebase pattern discovery | Build, Research |
-| \`librarian\` agent | External docs, best practices | Build, Architecture, Research |
-| \`oracle\` agent | Read-only consultation. High-IQ debugging, architecture | Architecture |
+| \`trinity\` agent | Codebase pattern discovery | Build, Research |
+| \`operator\` agent | External docs, best practices, OSS examples | Build, Architecture, Research |
+| \`oracle\` agent | Plan Builder — work plans, decomposition, architecture decisions | Architecture, Planning |
 
 ---
 

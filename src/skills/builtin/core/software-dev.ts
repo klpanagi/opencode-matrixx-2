@@ -32,6 +32,7 @@ This skill defines a 6-phase software development pipeline with specialized role
 |------|-------------|--------|---------|
 | Architect | \`agent="oracle"\` | — | Design, architecture decisions |
 | Developer | \`agent="mouse-source"\` | git-master, tdd-enforcer | Implementation + tests |
+| Shipper | \`agent="mouse-bullet-time"\` | git-master | Commits + PR |
 | Quality Evaluator | \`agent="mouse-the-one"\` | quality-gate, review-work | Lint, typecheck, review |
 | Security Expert | \`agent="sentinel"\` | security-core, security-sast, security-api, security-dependencies | Security audit |
 
@@ -88,13 +89,13 @@ subagent(
   load_skills=["git-master", "tdd-enforcer"],
   background=true,
   description="Implement {FEATURE}",
-  prompt="Implement from plan:\\n{PLAN}\\n\\nFile: {PATH}\\n\\nFollow tdd-enforcer: write test FIRST (RED), then minimum code (GREEN), then refactor. Run bun test after each change.")
+  prompt="Implement from plan:\\n{PLAN}\\n\\nFile: {PATH}\\n\\nFollow tdd-enforcer: write test FIRST (RED), then minimum code (GREEN), then refactor. Run \`bun run test\` after each change.")
 \`\`\`
 
 **Exit criteria:**
 - [ ] All code written
 - [ ] Tests written BEFORE implementation
-- [ ] \`bun test\` — 0 failures
+- [ ] \`bun run test\` — 0 failures
 
 ---
 
@@ -103,14 +104,14 @@ subagent(
 Run verification suite:
 
 \`\`\`bash
-bun run lint && bun run typecheck && bun test && bun run build
+bun run lint && bun run typecheck && bun run test && bun run build
 \`\`\`
 
 Report evidence:
 \`\`\`
 ✅ bun run lint — 0 issues
 ✅ bun run typecheck — no errors
-✅ bun test — N passed, 0 failed
+✅ bun run test — N passed, 0 failed
 ✅ bun run build — success
 \`\`\`
 
@@ -123,16 +124,18 @@ If ANY fails → fix → re-run ALL.
 
 ## PHASE 4: REVIEW
 
-Fire the review roster (review-work spawns its 6 specialised reviewers):
+Launch all 6 reviewers in ONE turn with \`background=true\` (their prompts live in the \`review-work\` skill, Phase 1):
 
 \`\`\`
-subagent(
-  agent="mouse-the-one",
-  load_skills=["quality-gate", "review-work"],
-  background=true,
-  description="Review implementation",
-  prompt="Review completed implementation using review-work skill.\\n\\nGoal: {REQUEST}\\nFiles: {CHANGED_FILES}\\nDiff: {DIFF}")
+subagent(agent="oracle", ...)        # 1 Goal Verifier
+subagent(agent="oracle", ...)        # 3 Code Reviewer
+subagent(agent="oracle", ...)        # 4 Security Auditor
+subagent(agent="mouse-the-one", ...) # 2 QA Executor
+subagent(agent="mouse-the-one", ...) # 5 Context Miner
+subagent(agent="mouse-the-one", ...) # 6 AI Slop Detector
 \`\`\`
+
+\`mouse-the-one\` carries a \`subagent: false\` restriction — it cannot fan out, so the orchestrator launches all six itself.
 
 **Exit criteria:**
 - [ ] All 6 reviewers PASS

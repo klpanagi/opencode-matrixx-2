@@ -3,7 +3,7 @@ import type { BuiltinSkill } from "../../loader/types"
 const QUALITY_GATE_SKILL_NAME = "quality-gate"
 
 const QUALITY_GATE_SKILL_DESCRIPTION =
-  "Automated quality verification after code changes: lint (Biome), typecheck, test execution, build verification. Triggers: 'verify', 'quality', 'lint', 'check', 'validate', 'quality gate', 'run checks'."
+  "Use when verifying code quality after changes — lint (Biome), typecheck, test execution, and build verification with mandatory evidence. Related: tdd-enforcer, review-work, software-dev."
 
 export const qualityGateSkill: BuiltinSkill = {
   name: QUALITY_GATE_SKILL_NAME,

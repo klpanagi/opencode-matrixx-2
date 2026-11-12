@@ -12,7 +12,7 @@ describe("SDO compliance", () => {
 
     for (const skill of skills) {
       const first120 = skill.description.slice(0, 120)
-      const hasTrigger = /Use when|For .* tasks|Loads when|Triggers:?/i.test(first120)
+      const hasTrigger = /^Use when/i.test(first120)
       expect(
         hasTrigger,
         `${skill.name}: first 120 chars lack "Use when" trigger`,

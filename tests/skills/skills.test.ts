@@ -201,10 +201,10 @@ describe("createBuiltinSkills", () => {
 		const stub = skills.find((s) => s.name === "security-review")
 		void stub?.template // trigger lazy hydration (populates description)
 
-		// #then - export intact, factory entry kept, SDO starts with Deprecated
+		// #then - export intact, factory entry kept, SDO starts with "Use when" and marks the deprecation
 		expect(stub).toBeDefined()
-		expect(stub?.description.startsWith("Deprecated")).toBe(true)
-		expect(stub?.description).toContain("Use when")
+		expect(stub?.description.startsWith("Use when")).toBe(true)
+		expect(stub?.description.toLowerCase()).toContain("deprecated")
 		expect(stub?.description).toContain("security-audit")
 		expect(stub?.template).toContain("DEPRECATED")
 		expect(stub?.template).toContain("security-audit")

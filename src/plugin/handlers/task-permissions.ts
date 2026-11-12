@@ -41,7 +41,7 @@ type AgentLike = { mode?: string; permissions?: PermissionRule[] }
  * An agent that can be driven as a top-level session is expected to track its
  * own work in the task store. Derived from the declared mode, never from a
  * hardcoded name list — a name list is exactly what let the original drift go
- * unnoticed.
+ * unnoticed. The deliberate `mouse-*` carve-out lives in `tool-config-handler.ts`.
  */
 export function isTaskStorePrimary(agent: AgentLike): boolean {
   return agent.mode === "primary" || agent.mode === "all"
