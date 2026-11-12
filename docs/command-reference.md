@@ -1,6 +1,6 @@
 # Command Reference
 
-> Version 1.3.4. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> Version 1.4.0. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
 Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 

@@ -1,6 +1,6 @@
 # Session Memory — Phase 2 FTS Design Note (DESIGN ONLY, NO CODE)
 
-> **Version:** 1.3.4, verified against `src/features/session-memory/`. (Design note only, no code implied.)
+> **Version:** 1.4.0, verified against `src/features/session-memory/`. (Design note only, no code implied.)
 > EXPERIMENTAL: Phase 2 FTS index is deferred; v1 ships JSONL scan only. Backend selector and quotas live in `configurations.md` (§ Session Memory Backend).
 
 Status: **DEFERRED — v1 NO-GO for SQLite/FTS.** Phase 1 ships JSONL + verbatim

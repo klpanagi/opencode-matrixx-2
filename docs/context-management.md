@@ -1,7 +1,7 @@
 # Context Management in Matrixx
 
 > **Audience:** operators tuning context behavior and engineers working on the context stack.
-> **Version:** 1.3.4. Canonical page for all context topics; other docs summarize and link here.
+> **Version:** 1.4.0. Canonical page for all context topics; other docs summarize and link here.
 > **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys), `research/cost-performance.md` (background analysis).
 
 Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. For background and cost analysis see [cost-performance proposals](research/cost-performance.md) P6 (RTK), P7 (context-mode), and P16 (Headroom).
@@ -30,7 +30,7 @@ Every layer handles one concern and delegates the rest. The result is orthogonal
 |-------|-------|-----------|-----------|------------|-------------|
 | L0 Native | Matrixx | 70% warning, anthropic recovery, compaction injection, output truncators | Prevents OOM, keeps headroom | `experimental.*`, `disabled_hooks` | `context-window-monitor`, `compaction-context-injector`, `context-window-limit-recovery`, `tool-output-truncator` |
 | L1 RTK | `rtk-ai/rtk` | Bash output rewrite via filtering, grouping, deduplication | 60-90% on bash | `rtk` | `rtk-bash-rewriter` (`tool.execute.before`) |
-| L2 context-mode | `mksglu/context-mode` | FTS5 sandbox, `ctx_*` tools, Think-in-Code | Up to 98% tool output | `context_mode` (`enabled`/`enforce`/`blocked_tools`) + external `plugin: ["context-mode"]` | `ctx_batch_execute`, `ctx_execute`, `ctx_search`, `ctx_stats`, `compress` + `context-mode-enforcer` hook |
+| L2 context-mode | `mksglu/context-mode` | FTS5 sandbox, `ctx_*` tools, Think-in-Code | Up to 98% tool output | `context_mode` (`enabled`/`enforce`/`blocked_tools`) + external `plugin: ["context-mode"]` | `ctx_batch`, `ctx_execute`, `ctx_search`, `ctx_stats`, `compress` + `context-mode-enforcer` hook |
 | L3 DCP | `@tarquinen/opencode-dcp` | Profile-tiered pruning `economy` to `ultimate` | Tiered, see profiles | `dcp` | `dcp.default_profile` |
 | L4 Headroom | `headroomlabs-ai/headroom` | Proxy `CacheAligner` to `ContentRouter` to `CCR` | 60-95% JSON, 15-20% coding | `headroom` | `headroom wrap opencode`, `headroom_retrieve` |
 
@@ -141,7 +141,7 @@ L1 RTK owns bash only. It does not touch tool outputs handled by L2, history han
 
 It exposes 11 `ctx_*` tools:
 
-`ctx_batch_execute`, `ctx_execute`, `ctx_execute_file`, `ctx_fetch_and_index`, `ctx_index`, `ctx_search`, `ctx_stats`, `ctx_fetch`, `ctx_doctor`, `ctx_upgrade`, `compress`, plus helpers like `ctx_purge`.
+`ctx_batch`, `ctx_execute` (pass `file` for large files), `ctx_index`, `ctx_search`, `ctx_stats`, `ctx_doctor`, `ctx_upgrade`, `ctx_resume`, `ctx_purge`, `compress`.
 
 Typical use:
 
@@ -150,7 +150,7 @@ Typical use:
 # read file -> 5000 lines in context
 
 # With context-mode:
-ctx_execute_file(path="huge.log", code="console.log(FILE_CONTENT.split('\\n').filter(l=>l.includes('ERROR')).slice(0,20).join('\\n'))")
+ctx_execute(file="huge.log", code="console.log(FILE_CONTENT.split('\\n').filter(l=>l.includes('ERROR')).slice(0,20).join('\\n'))")
 # Only ~20 lines enter context; raw 5000 lines stay in sandbox
 ```
 
@@ -196,7 +196,7 @@ ctx stats
 
 > **MCP form (verified working):** context-mode is configured as a local MCP server in `opencode.jsonc` (`"mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } }`) and shows as `context-mode · Connected` under MCP in the OpenCode TUI. Upstream also documents a `"plugin": ["context-mode"]` in-process form — either delivery works with matrixx (enforcer + routing block match on the `ctx_*` tool names regardless of transport); do not enable both forms at once.
 >
-> `ctx_batch_execute` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-injection/routing/routing-block.ts`).
+> `ctx_batch` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-injection/routing/routing-block.ts`).
 >
 
 #### MCP registration & working directory (cwd)

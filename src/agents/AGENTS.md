@@ -28,6 +28,7 @@ agents/
 │   ├── trinity.ts              # Codebase search
 │   ├── operator.ts             # Library research
 │   ├── mouse/                  # Delegated task executor (agent + model variants + shared)
+│   ├── mouse-subagents.ts      # The 8 `mouse-*` category workers (Nested_Delegation block)
 │   ├── niobe/                  # Master orchestrator (agent + default/gpt prompts)
 │   ├── oracle/                 # Plan Builder / Planner (index + 7 prompt sections)
 │   └── index.ts                # Definitions barrel (re-exports all 13)
@@ -78,13 +79,13 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 
 | Agent | Mode | Denied | Allowed |
 |-------|------|--------|---------|
-| Merovingian | subagent | write, edit, task | Read-only consultation |
+| Merovingian | subagent | edit, task | Read-only consultation (prompt-level; `write` not denied) |
 | Operator | subagent | write, edit, task | Research tools only |
 | Trinity | subagent | write, edit, task | Search tools only |
-| Construct | subagent | ALL except `read` | Vision-only |
+| Construct | subagent | all except `read`, `document_reader__convert_to_markdown`, `subagent` | Vision-only |
 | Mouse | subagent | — (task permitted, see carve-out) | `task_*` — owns its delegated task records |
 | Niobe | primary | — (task permitted) | `task_*`, teammate — orchestration only |
-| Sentinel | all | write, edit, multiedit, `task` (delegation denied, `task_*` tracking allowed) | Read-only security auditing |
+| Sentinel | all | edit, task (delegation denied, `task_*` tracking allowed) | Read-only security auditing |
 | Cipher | all | — | `task_*`, teammate — delegates per target language |
 | Keymaker | primary | — | `task_*`, teammate |
 
@@ -92,12 +93,12 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 
 | Agent | Claude | GPT |
 |-------|--------|-----|
-| Morpheus | 32k budget tokens | reasoningEffort: "medium" |
+| Morpheus | 8000 budget tokens | reasoningEffort: "medium" |
 | Keymaker | — | reasoningEffort: "medium" |
-| Oracle | 32k budget tokens | reasoningEffort: "medium" |
-| Seraph | 32k budget tokens | — |
-| Smith | 32k budget tokens | reasoningEffort: "medium" |
-| Sentinel | 32k budget tokens | reasoningEffort: "medium" |
+| Oracle | — (no thinking config) | — |
+| Seraph | 12000 budget tokens | — |
+| Smith | 8000 budget tokens | reasoningEffort: "medium" |
+| Sentinel | 8000 budget tokens | reasoningEffort: "medium" |
 | Mouse | 32k budget tokens | reasoningEffort: "medium" |
 
 ## HOW TO ADD
@@ -107,7 +108,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 3. Re-export from `src/agents/index.ts`; add the name to `AgentName` in `src/agents/shared/types.ts`
 4. Add the name to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`
 5. Add the entry to `AgentOverridesSchema` in `src/config/schema/agent-overrides.ts`
-6. Add the name to the explore-agent set in `src/plugin/handlers/agent-config-handler.ts`
+6. If the agent needs the pilot tool allowlist, add it to `PILOT_TOOL_ALLOWLIST_AGENTS` in `src/plugin/handlers/agent-tool-allowlist.ts`
 7. Add the name to `src/hooks/runtime-fallback/agent-resolver.ts`
 8. Add tool restrictions in `src/shared/tool/agent-tool-restrictions.ts`
 9. Add model requirements in `src/shared/model/model-requirements.ts`

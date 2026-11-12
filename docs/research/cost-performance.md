@@ -65,7 +65,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 | Multi-strategy context recovery | `src/hooks/context-window-limit-recovery/ (~1100 LOC)
 | ~~Concurrency limits + circuit breakers~~ (REMOVED: admission semaphores and the loop detector are gone; related config keys are deprecated) | — | Not current behavior |
 | 8-category delegation routing | `src/tools/delegate-task/constants.ts` (591 LOC) | Has per-category models |
-| 70 built-in skills (schema `BuiltinSkillNameSchema`; 86 skill asset files under the loader) | `src/skills/builtin/` | **Lazy-loaded** — see P1 (`src/skills/loader/factories.ts`, `src/skills/loader/lazy-skill-helper.ts`) |
+| 70 built-in skills (schema `BuiltinSkillNameSchema`; 75 skill asset files under the loader) | `src/skills/builtin/` | **Lazy-loaded** — see P1 (`src/skills/loader/factories.ts`, `src/skills/loader/lazy-skill-helper.ts`) |
 | 2 built-in MCPs (`context7`, `document-reader`) | `src/mcps/index.ts` | Lazy hydration — see P1 |
 | `handoff` tool | `src/tools/handoff/` | Already supports file-based state |
 
@@ -78,7 +78,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 > **Status:** Implemented (v2.0.0). Evidence: `src/skills/loader/factories.ts` (lazy loaders), `src/skills/loader/lazy-skill-helper.ts`. See `docs/features.md` § "Lazy Skill Loading".
 
 
-- **What (proposal, historical wording):** Defer loading of skills + MCPs until first reference (written when the inventory was 45 skills + 3 MCPs; current inventory is 70 schema skills / 86 asset files + 2 MCPs). Register lightweight stubs at init, hydrate on demand.
+- **What (proposal, historical wording):** Defer loading of skills + MCPs until first reference (written when the inventory was 45 skills + 3 MCPs; current inventory is 70 schema skills / 75 asset files + 2 MCPs). Register lightweight stubs at init, hydrate on demand.
 - **Cost impact:** **~6.6K tokens saved per session startup** (barkain-validated). Multiplied across long sessions.
 - **Performance impact:** Faster plugin init, smaller first-message context.
 - **Complexity:** **Low.** Already have registry pattern; just split into "registered" vs "loaded".
@@ -115,7 +115,7 @@ Total: 15 proposals across 3 tiers, plus a recommended implementation sequence a
 - **Cost impact:** Prevents skill-misuse retries and re-explanations. **10–30% reduction in skill-related rework.**
 - **Performance impact:** More reliable, faster skill activation.
 - **Complexity:** **Low.** Documentation/audit task, no code change.
-- **Where:** `src/skills/builtin/*.ts` (proposal text said 45 files; current inventory is 70 schema skills / 86 asset files)
+- **Where:** `src/skills/builtin/*.ts` (proposal text said 45 files; current inventory is 70 schema skills / 75 asset files)
 - **Source:** obra/superpowers (Skill Discovery Optimization)
 
 ### P5. Plan-as-File (planning-with-files pattern)
