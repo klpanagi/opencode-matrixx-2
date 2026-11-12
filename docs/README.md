@@ -1,6 +1,6 @@
 # Matrixx Documentation
 
-> Version 1.2.1 -- OpenCode V2 plugin line only. All pages are English-only.
+> Version 1.3.4 -- OpenCode V2 plugin line only. All pages are English-only.
 > Start with the row that matches your goal; each page declares its audience
 > in its header. After upgrading, restart OpenCode so the new plugin version loads.
 
@@ -17,7 +17,7 @@
 | Page | Audience | What you get |
 |---|---|---|
 | `orchestration.md` | Users running multi-step work | The delegation workflow: planner to plan to mission to workers |
-| `agents.md` | Users choosing agents | The [13 agents](agents.md): what each does and when to use it |
+| `agents.md` | Users choosing agents | The [agent roster](agents.md) (13 core + 8 `mouse-*` workers): what each does and when to use it |
 | `category-skill-guide.md` | Users composing work | The 8 task categories and [70 skills](category-skill-guide.md), and how they combine |
 | `command-reference.md` | Users | All 23 slash commands: usage, options, examples |
 | `quality.md` | Users implementing features or enforcing tests | BDD pipeline (Part A) + TDD discipline (Part B): when to use which |

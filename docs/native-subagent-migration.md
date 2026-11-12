@@ -62,7 +62,7 @@ Via the `subagent_control` tool:
 
 ```typescript
 subagent_control(action="cancel", session_id="<child-session-id>")
-subagent_control(action="wait", session_id="<child-session-id>", timeout=120)
+subagent_control(action="wait", session_id="<child-session-id>", timeout=120000)
 ```
 
 `timeout` defaults to 60s, max 600s.

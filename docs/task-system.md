@@ -2,7 +2,7 @@
 
 > **Scope:** Persistent, file-backed task management for Matrixx agent orchestration.
 > **Audience:** Engineers evolving the task system: storage, tools, hooks, scheduling, and agent integration.
-> **Version:** 1.2.1, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
+> **Version:** 1.3.4, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
 
 Every normative claim below traces to the source path cited beside it. Where behavior belongs to another doc, this spec cross-links instead of duplicating: hook internals → `docs/hooks.md`, orchestration and wave planning flow → `docs/orchestration.md`, command reference → `docs/command-reference.md`.
 
@@ -40,7 +40,7 @@ matrixx.jsonc
             │       task_create · task_get · task_list · task_update · task_cleanup
             │
             ├─── Hook Wiring (summaries here, internals in docs/hooks.md)
-            │     ├─ createContinuationHooks  → (removed) task-continuation-enforcer deleted; completion wakes flow via BackgroundManager.handleEvent (see §8.1)
+            │     ├─ createContinuationHooks  → (removed) task-continuation-enforcer deleted; completion wakes arrive as injected child-completion messages in the parent session (see §8.1)
             │     ├─ createToolGuardHooks     → taskEditGuard (tool.execute.before, Write/Edit/Read/bash guard)
             │     └─ createSessionHooks       → taskResumeInfo (tool.execute.after, resume hint)
             │                                 → emptyTaskResponseDetector
@@ -127,9 +127,9 @@ Legacy mirror: `MorpheusTasksConfigSchema` in `src/config/schema/morpheus.ts` ke
 | Window | Default | Consumer | Why |
 |--------|---------|----------|-----|
 | `stale_after_hours` | 24 | Task reads (was: removed enforcer) | A long-running task is normal here, and a missed continuation nudge was cheap. The 24h default stays. |
-| `background_stale_after_hours` | 2 | Background-agent completion gates (`session.idle`, polling, reconcile probe) | A task that stays `pending`/`in_progress` with no file activity while its worker is gone is a wedged handle, not a slow one. Releasing it is what lets the session complete. |
+| `background_stale_after_hours` | 2 | Staleness window for in-flight task rows tied to a background child | A task that stays `pending`/`in_progress` with no file activity while its worker is gone is a wedged row, not a slow one. Releasing it is what lets the session complete. |
 
-Both read the same basis, the task file's mtime. The wall-clock backstop is a third, separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0` (off).
+Both read the same basis, the task file's mtime. The legacy `background_task.wallClockTimeoutMs` knob is deprecated and ignored: `background_task.*` keys only emit migration warnings.
 
 ### 3.3 Directory Resolution
 
@@ -570,7 +570,7 @@ The task-continuation-enforcer was removed. The automatic TODO re-prompt on pare
 
 **Cross-session scope and liveness (now in task-session-scope):** session filtering reads the project-wide store with the same rule. With `tasks.session_scoped: true` (default), tasks are admitted only when their `threadID` is the current session or a live subagent of it; orphaned tasks from dead sessions are excluded. Pre-migration tasks without `threadID` are always included. Stale handling keys on `tasks.stale_after_hours` (default 24); see `src/features/task-session-scope/staleness.ts` and `todo.ts`.
 
-**Durable ancestry scope (background completion gate).** Session scoping follows the durable `parentID` chain, not just live-session membership. `src/features/task-session-scope/ancestry.ts` walks `parentID` ancestors up to `DEFAULT_ANCESTRY_DEPTH = 3` hops, so a delegated subagent's or grandchild's task still counts toward the gate even when the intermediate session is already gone. The walk stops on a cycle, and only an in-scope ancestor admits a descendant, so an unrelated open task can never wedge a handle. The default applies at every call site; no config key selects the depth. Staleness composes with the expansion rather than bypassing it, so an expanded-but-stale grandchild still drops out — and it drops out on the gate's own window, `tasks.background_stale_after_hours` (default 2), not the old enforcer idle-path 24. The two differ because a missed continuation nudge is cheap while a handle held `running` past its worker is not. The wall-clock backstop (`background_task.wallClockTimeoutMs`, default `0`, off) is unchanged.
+**Durable ancestry scope (background completion gate).** Session scoping follows the durable `parentID` chain, not just live-session membership. `src/features/task-session-scope/ancestry.ts` walks `parentID` ancestors up to `DEFAULT_ANCESTRY_DEPTH = 3` hops, so a delegated subagent's or grandchild's task still counts toward the gate even when the intermediate session is already gone. The walk stops on a cycle, and only an in-scope ancestor admits a descendant, so an unrelated open task can never wedge a handle. The default applies at every call site; no config key selects the depth. Staleness composes with the expansion rather than bypassing it, so an expanded-but-stale grandchild still drops out — and it drops out on the gate's own window, `tasks.background_stale_after_hours` (default 2), not the old enforcer idle-path 24. The two differ because a missed continuation nudge is cheap while a handle held `running` past its worker is not. The legacy wall-clock backstop (`background_task.wallClockTimeoutMs`) is deprecated and ignored.
 
 **Subtask rollup:** a task with `parentID` is a subtask. Subtasks whose parent is `completed`/`deleted` count as resolved and leave the incomplete set (`dropSubtasksWithResolvedParent` in `todo.ts`, applied before session filtering on both paths). A parent with incomplete subtasks stays incomplete through its own status.
 
@@ -596,7 +596,7 @@ Three blocks:
 
 **Files:** `src/features/task-toast-manager/` (`manager.ts`, `types.ts`, `index.ts`).
 
-`TaskToastManager` tracks **delegated background agent tasks** (historically fed by the removed `delegate_task` background launch path), not file-backed `T-*.json` rows. Entries are `TrackedTask` records: `{ id, description, agent, status, startedAt, isBackground, category?, skills?, modelInfo? }` with status in `running | queued | completed | error` (`types.ts`). Lifecycle: `addTask()` on launch (shows a toast), `updateTask()` on status change, `removeTask()` when a task completes or errors, `getRunningTasks()` / `getQueuedTasks()` for TUI surfacing. Toast display options are `TaskToastOptions` (`title`, `message`, `variant`, `duration?`).
+`TaskToastManager` is retained code with **no live caller**: it was fed by the removed `delegate_task` background launch path, and nothing calls `addTask()` after the native-subagent migration. It tracks `TrackedTask` records (`{ id, description, agent, status, startedAt, isBackground, category?, skills?, modelInfo? }`, status `running | queued | completed | error`) for potential TUI surfacing, but today it stays empty.
 
 ### 8.5 `task-notepad-writer`: Automatic Notepads Per Task
 

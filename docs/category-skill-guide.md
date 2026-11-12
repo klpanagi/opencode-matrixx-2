@@ -1,7 +1,7 @@
 # Category & Skill System Guide
 
-> Version 1.2.1. **Audience:** users composing delegated work and engineers adding skills.
-> 8 categories (`src/tools/delegate-task/`), 70 skills (`src/skills/builtin/`).
+> Version 1.3.4. **Audience:** users composing delegated work and engineers adding skills.
+> 8 categories (`src/config/schema/categories.ts`), 70 skills (`src/skills/builtin/`).
 
 This document provides a comprehensive guide to the **Category** and **Skill** systems, which form the extensibility core of Matrixx. For delegation flows, see [Orchestration](orchestration.md). For the agent roster, see [Agents](agents.md).
 
@@ -22,7 +22,7 @@ A Category is an agent configuration preset optimized for specific domains.
 
 ### Available Built-in Categories
 
-8 categories verified against `BuiltinCategoryNameSchema` (`src/config/schema/categories.ts`): `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`. Resolution logic lives in `src/tools/delegate-task/` (`category-resolver.ts`, `categories.ts`).
+8 categories verified against `BuiltinCategoryNameSchema` (`src/config/schema/categories.ts`): `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`. Category config is merged in `src/shared/tool/merge-categories.ts` and consumed by `src/plugin/tool/available-categories.ts`; `subagent(agent="mouse-<category>")` selects the worker.
 
 | Category | Default Model | Use Cases |
 |----------|---------------|-----------|

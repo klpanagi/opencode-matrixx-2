@@ -1,8 +1,8 @@
-# Matrixx Agents (v1.2.1)
+# Matrixx Agents (v1.3.4)
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
-13 built-in agents in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-21`): morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati — 12 static in `agentSources` plus Oracle built dynamically by `buildOracleAgentConfig()` (see `src/agents/builtin-agents.ts`). Mouse is the dynamic category-spawned worker executor, not in the schema. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
+21 names in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts`): 13 core agents — morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati — plus 8 category workers (`mouse-construct`, `mouse-source`, `mouse-rabbit-hole`, `mouse-glitch`, `mouse-bullet-time`, `mouse-blue-pill`, `mouse-the-one`, `mouse-transmission`). Definitions live in `src/agents/definitions/<name>.ts` (or `<name>/`); registry wiring is `src/agents/registry/index.ts`. Oracle is built dynamically via `buildOracleAgentConfig()`. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
 
 ---
 
@@ -141,12 +141,12 @@ Cipher = dsl-core + dsl-grammar + dsl-codegen + dsl-metamodel + dsl-tooling
        + dsl-testing + dsl-validation + dsl-composition
 
 # Other agents can load specific skills for focused tasks
-task(category="source", load_skills=["dsl-core", "dsl-grammar"])                    # just grammar work
-task(category="source", load_skills=["dsl-core", "dsl-codegen"])                     # just transpiler work
-task(category="source", load_skills=["dsl-metamodel", "dsl-textx-ecosystem"])        # textX full stack
-task(category="source", load_skills=["dsl-pyecore-advanced", "dsl-model-transformation"])  # PyEcore + M2M
-task(category="source", load_skills=["dsl-testing", "dsl-validation"])               # testing + validation
-task(category="source", load_skills=["dsl-composition"])                             # language composition
+subagent(agent="mouse-source", load_skills=["dsl-core", "dsl-grammar"])                    # just grammar work
+subagent(agent="mouse-source", load_skills=["dsl-core", "dsl-codegen"])                     # just transpiler work
+subagent(agent="mouse-source", load_skills=["dsl-metamodel", "dsl-textx-ecosystem"])        # textX full stack
+subagent(agent="mouse-source", load_skills=["dsl-pyecore-advanced", "dsl-model-transformation"])  # PyEcore + M2M
+subagent(agent="mouse-source", load_skills=["dsl-testing", "dsl-validation"])               # testing + validation
+subagent(agent="mouse-source", load_skills=["dsl-composition"])                             # language composition
 ```
 
 ### Internal DSL Engineering Workflow
@@ -179,7 +179,7 @@ When Cipher tackles a DSL project, this is the internal workflow:
 │     └─ Strategy selection (template/visitor/IR)          │
 │                                                          │
 │  6. DELEGATE target-language code gen                     │
-│     └─ task(category="source") ──────────────────────┐   │
+│     └─ subagent(agent="mouse-source") ────────────────┐   │
 │                                                      │   │
 └──────────────────────────────────────────────────────┼───┘
                                                        │
@@ -202,7 +202,7 @@ When Cipher tackles a DSL project, this is the internal workflow:
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Key design principle**: Cipher is the *language architect* — he designs the grammar, AST, type system, and code generation strategy. But he **delegates** the actual target-language implementation to language experts via `task(category="source")`. For multi-target generation (e.g., same DSL -> Python + TypeScript + Rust), Cipher fires delegations **in parallel**.
+**Key design principle**: Cipher is the *language architect* — he designs the grammar, AST, type system, and code generation strategy. But he **delegates** the actual target-language implementation to language experts via `subagent(agent="mouse-source", ...)`. For multi-target generation (e.g., same DSL -> Python + TypeScript + Rust), Cipher fires delegations **in parallel**.
 
 ### Three Ways to Use Cipher
 
@@ -254,7 +254,7 @@ Sati is the dedicated frontend specialist. Self-contained execution — Sati han
 
 *Small, fast, and disposable — the hands that do the work.*
 
-Mouse is the **category-spawned delegated executor** — the worker layer in Matrixx's 3-tier orchestration architecture. When Morpheus or Niobe calls `task(category="source", ...)`, the category resolver automatically sets `subagent_type="mouse"`. Mouse executes the implementation directly, without spawning further sub-agents.
+Mouse is the **category-spawned delegated executor** — the worker layer in Matrixx's 3-tier orchestration architecture. When Morpheus or Niobe calls `subagent(agent="mouse-source", ...)`, the matching `mouse-*` worker runs the implementation. Workers are depth-1 children and cannot spawn further sub-agents.
 
 ### Why Mouse Exists
 
@@ -316,29 +316,28 @@ This ensures the Niobe accumulates wisdom from each Mouse execution.
 Mouse is **never invoked directly**. It is spawned automatically when you use a category:
 
 ```typescript
-// Correct: Mouse is auto-selected
-task(category="source", load_skills=[...])
+// Correct: pick the worker for the category
+subagent(agent="mouse-source", load_skills=[...], description="Implement login", prompt="...")
 
-// INCORRECT: Direct invocation is blocked
-// task(subagent_type="mouse")  →  Error: "Mouse is spawned automatically when you specify a category"
+// INCORRECT: there is no bare "mouse" agent
+subagent(agent="mouse")  // → unknown agent
 ```
 
 ### Native Subagent Tool Policy
 
-The native `subagent` tool is blocked by the `subagent-block` hook. Always use
-`task()` (category or `subagent_type` + `load_skills`) to spawn agents so execution
-stays tracked and visible to `background_output` / `background_wait_all`.
+The native `subagent` tool is **the** delegation path. The legacy `task()` /
+`delegate_task` convention is gone: those names now resolve to guard stubs that
+return a redirect message.
 
-- `bg_*` task ids resolve through the background-agent registry; `ses_*` session ids
-  resolve read-through against the live native session (no registry write).
-- Unknown ids return a typed `not_found` error. `ses_*` sessions stay manageable:
-  cancellable via `background_cancel` (`session.interrupt`) and revivable by the
-  owning parent via `background_revive` (`session.prompt`); foreign or unregistered
-  `ses_*` ids are still refused.
-- Allowlist escape hatch: IDs listed in `subagent_block.allowlist`
-  (`matrixx.jsonc`: `{ "subagent_block": { "enabled": true, "allowlist": ["my-agent"] } }`)
-  bypass the block. Default stays `enabled:true`; or disable the hook via
-  `disabled_hooks: ["subagent-block"]`.
+- `subagent(agent=..., background=..., description=..., prompt=...)` spawns work.
+- `background=true` children deliver a completion message to the parent session;
+  `session_read` / `session_search` / `session_info` read the child transcript.
+- `subagent_control(action="cancel"|"wait", session_id=..., timeout=<ms>)` manages
+  a running child (`timeout` default 60000, max 600000).
+- `load_skills=[...]` and `complexity=N` are Matrixx extras consumed by the
+  `subagent_policy` transformer and stripped before execution.
+- §`subagent_block` is not implemented: the config key parses for backwards
+  compatibility and has no effect.
 
 ---
 
@@ -428,16 +427,16 @@ graph TB
     UI -.->|"@sati"| SAT
     UI -.->|"@sentinel"| SEN
 
-    MOR ==>|"task(subagent_type)"| ORA
-    MOR ==>|"task(subagent_type)"| MER
-    MOR ==>|"task(subagent_type)"| SER
-    MOR ==>|"task(subagent_type)"| SMI
-    MOR ==>|"task(subagent_type)"| SAT
-    MOR ==>|"task(subagent_type)"| SEN
-    MOR ==>|"task(subagent_type)"| TRI
-    MOR ==>|"task(subagent_type)"| OPR
-    MOR ==>|"task(subagent_type)"| CON
-    MOR ==>|"task(category)"| MOU
+    MOR ==>|"subagent(agent=...)"| ORA
+    MOR ==>|"subagent(agent=...)"| MER
+    MOR ==>|"subagent(agent=...)"| SER
+    MOR ==>|"subagent(agent=...)"| SMI
+    MOR ==>|"subagent(agent=...)"| SAT
+    MOR ==>|"subagent(agent=...)"| SEN
+    MOR ==>|"subagent(agent=...)"| TRI
+    MOR ==>|"subagent(agent=...)"| OPR
+    MOR ==>|"subagent(agent=...)"| CON
+    MOR ==>|"subagent(agent=...)"| MOU
 
     style MOR fill:#e74c3c,color:#fff
     style KEY fill:#f39c12,color:#fff
@@ -480,7 +479,7 @@ sequenceDiagram
 
     Note over M: Continue working while agents explore
 
-    M->>BG: background_output(task_id)
+    M->>BG: session_read(session_id)
     BG-->>M: Search results
 
     Note over M: Phase 1: Codebase Assessment<br/>→ Disciplined codebase, follow patterns
@@ -500,7 +499,7 @@ sequenceDiagram
         alt Simple change
             M->>M: Direct implementation + task_update(completed)
         else Category work (parallel wave)
-            M->>MO: task(category="source", blockedBy=[]) — Wave 1 parallel<br/>or task(category="source", blockedBy=[T-001]) — blocked
+            M->>MO: subagent(agent="mouse-source") — parallel<br/>or blocked by T-001 dependency
             MO-->>M: Implementation + task_update(completed)
         end
     end
@@ -519,7 +518,7 @@ flowchart LR
         direction TB
         CAT["category=<br/>'source'"]
         SUB["subagent_type=<br/>'trinity'"]
-        BG["run_in_background=<br/>true/false"]
+        BG["background=<br/>true/false"]
         SID["session_id=<br/>'ses_...'"]
         SK["load_skills=<br/>['git-master']"]
     end
@@ -667,7 +666,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     TASK["task() call"]
-    TASK --> MODE{"run_in_background?"}
+    TASK --> MODE{"background?"}
 
     MODE -->|"false (default)"| SYNC["Sync Execution"]
     MODE -->|"true"| ASYNC["Async Execution"]
@@ -683,10 +682,10 @@ flowchart TD
 
     ASYNC --> A1["Create session"]
     A1 --> A2["Send prompt"]
-    A2 --> A3["Return task_id<br/>immediately"]
-    A3 --> A4["Monitor in<br/>BackgroundManager"]
-    A4 --> A5["Notify on<br/>completion"]
-    A5 --> A6["background_output(task_id)<br/>to retrieve result"]
+    A2 --> A3["Return sessionID<br/>immediately"]
+    A3 --> A4["Parent keeps working"]
+    A4 --> A5["Completion message<br/>injected on finish"]
+    A5 --> A6["session_read(session_id)<br/>to retrieve result"]
 
     S7 --> CONT{"Need follow-up?"}
     A6 --> CONT

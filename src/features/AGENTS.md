@@ -7,8 +7,9 @@ Feature modules (builtin-commands, task-storage, bdd, assembly-state, handoff, c
 ## STRUCTURE
 ```
 features/
+├── agent-effort/               # Per-agent effort overrides
 ├── builtin-commands/           # 23 commands, 21 templates
-├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 3 files + `task-toast-manager/` — see task-storage/AGENTS.md
+├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 5 files — see task-storage/AGENTS.md
 ├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)
 ├── assembly-state/             # Assembly voting state (enable/disable, reset)
 ├── bdd/                        # BDD contract schemas + pipeline support
@@ -21,7 +22,7 @@ features/
 ├── preset-state/               # Model preset state
 ├── rtk-routing/                # RTK shell-discipline routing block
 ├── session-memory/             # Session memory + compaction snippets
-├── session-state/              # Subagent session state tracking (2 files)
+├── session-state/              # Subagent session state tracking (3 files)
 ├── task-session-scope/         # Task session scoping + ancestry
 ├── task-toast-manager/         # Task progress notifications (3 files)
 ├── tool-metadata-store/        # Tool execution metadata caching (3 files)
@@ -32,26 +33,10 @@ Tmux integration lives in `src/shared/tmux/` (no feature dir).
 
 ## KEY PATTERNS
 
-**Background Agent Lifecycle:**
-Task creation → Queue → Admission check → Concurrency check → Execute → Monitor/Poll → Notification → Cleanup
+**Native Subagent Delegation:**
+Delegation goes through the native `subagent` tool (sync `background=false`, async `background=true` with an injected completion message in the parent session; retrieve the transcript with `session_read`). There is no background-agent manager, handle store, admission queue, polling loop, or revive path — those were removed with the legacy `delegate_task` system. The legacy names (`task`, `background_output`, `background_cancel`, `background_revive`, `background_wait_all`) resolve to guard stubs in `src/tools/removed-tools/`.
 
-**Terminal statuses** (`BackgroundTaskStatus`): `pending | running | completed | error | cancelled | interrupt | stopped | statusUncertain`. New Tier-1 additions:
-- `stopped` — the session ended without terminal output (or admission was refused). Does NOT imply failure or success.
-- `statusUncertain` — liveness could not be determined (e.g. host lookup failed after restart). Does NOT imply failure or completion.
-- `interrupt` is retained for genuine mid-flight aborts (promptAsync rejection / abort).
-
-**`BackgroundTerminalReason`** (optional, persisted on handle): `queue-saturated | no-output | uncertain | aborted | stale | nested-depth-exceeded`. Written to `BgHandleSchema.terminalReason` in `<project>/.matrixx/bg-handles/<taskId>.json`. Old handle files without these fields still load.
-
-**Restart reconciliation** (`manager/reconcile.ts`): On plugin start, `restoreHandles()` probes the live host for each persisted `running|pending` handle and classifies it as `completed | error | running | stopped | statusUncertain` instead of blindly flattening to `interrupt`. A still-running child is re-registered and polling restarts; concurrency is deliberately NOT re-acquired. Lookup failure degrades to `statusUncertain` (never assumes completion).
-
-**Bounded admission** (removed PR-2: queue admission/semaphores deleted, keys gone; `queue-saturated` retained as compat-only handle value).
-
-**Nested-admission exemption** (removed PR-2: queue admission/semaphores deleted, keys gone; `nested-depth-exceeded` retained as compat-only handle value).
-
-**Session revive** (`revive.ts`, `background_revive` tool): A terminal task whose handle is still on disk can be resumed with a NEW instruction. Retention IS the existing handle files — there is no separate store — bounded by `TASK_TTL_MS` (30 min). Revivable: `cancelled | stopped | interrupt | error | completed` (each requires a `sessionID`); `statusUncertain` requires `force: true`; `pending | running` must use `background_output` instead; a handle that never produced a session (e.g. `queue-saturated`) is unrevivable. `manager.revive()` falls back to disk on an in-memory map miss, then re-admits through bounded/nested admission — and a nested revive bypasses the semaphore entirely so it can never await it unboundedly. `manager.resume()` remains the in-memory-only path.
-
-**Background task history + notifications** (`task-history.ts`, `notification-builder.ts`): helper modules, NOT hooks. Both are fed by the shared `finalizeTask` finalizer; the removed `wakeScheduler`/`jobBoard` config keys are deprecated, accepted for config compatibility, and ignored.
-- **Default conservation** (U9): `background` default stays `false`. `true` is async fan-out (the parent session auto-receives a completion message with the child output; or retrieve via `session_read`); `false` is sync inline. Never call `subagent()` sequentially for independent work.
+**Default conservation:** `background` defaults to `false`. Use `background=true` for independent fan-out and read results from the completion message or `session_read`; never call `subagent()` sequentially for independent work.
 
 **Skill Management:** All skills are loaded from `src/skills/` via `createBuiltinSkills()`. No external skill directory loading. Skills are configured via `disabled_skills` in `matrixx.jsonc`.
 

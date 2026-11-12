@@ -40,7 +40,7 @@ To clean up, delete the `tasks.enabled` line and drop the two older keys. Nothin
 
 ## Hook Names That Still Parse
 
-The six names in the table above remain in `HookNameSchema` (`src/config/schema/hooks.ts`) as bare literals (64 live `HookNameEnum` entries + 1 `anthropic-context-window-limit-recovery` alias literal + 6 retained-deprecated literals = 71 parseable), and `HOOK_NAME_MAP` in `src/shared/migration/hook-names.ts` maps each of them to `null`. Two consequences:
+The six names in the table above remain in `HookNameSchema` (`src/config/schema/hooks.ts`) as bare literals (60 live `HookNameEnum` entries + 1 `anthropic-context-window-limit-recovery` alias literal + 10 retained-deprecated literals = 71 parseable), and `HOOK_NAME_MAP` in `src/shared/migration/hook-names.ts` maps each of them to `null`. Two consequences:
 
 - A `disabled_hooks` array that still lists one of them validates, and the entry is stripped from the effective list with a single warn. No `invalid_enum` error, no plugin load failure.
 - The names no longer autocomplete to anything that runs. Listing one is the same as listing nothing.

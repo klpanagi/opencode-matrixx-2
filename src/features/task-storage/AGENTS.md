@@ -17,12 +17,14 @@ Hybrid layout selected by `morpheus.tasks.scope` (default `project`) and resolve
 - `migrateLegacyTasksIfNeeded(config, directory)` lazy copies (not moves) legacy `T-*.json` to project dir on first `task_create`, logs `[task-storage] Migrated N legacy tasks from <legacy> to <project>`, retains legacy 30d. Delete manually or via prune.
 - Rollback: set `scope: "global"` in `matrixx.jsonc` to restore global layout.
 - `.matrixx/` gitignored per `.gitignore` — project tasks stay local per clone.
-- **Cross-session:** the task store is project-wide — `task-continuation-enforcer` and `task_list` see the **union of all sessions' tasks** in `.matrixx/tasks/`. A directive may list tasks created by other sessions; mark foreign tasks `completed`/`deleted` to stop them from driving directives.
+- **Cross-session:** the task store is project-wide — `task_list` and the session-scope gates see the **union of all sessions' tasks** in `.matrixx/tasks/`. A directive may list tasks created by other sessions; mark foreign tasks `completed`/`deleted` to stop them from driving directives.
 ## STRUCTURE
 ```
 task-storage/
 ├── types.ts               # Task schema (Zod)
 ├── storage.ts             # File operations (atomic write, locking)
+├── generation.ts          # Task ID + timestamp generation
+├── read-errors.ts         # Structured read-failure reporting
 └── index.ts               # Barrel exports
 ```
 
@@ -61,19 +63,6 @@ interface Task {
 | `writeJsonAtomic(path, data)` | Atomic write via temp + rename |
 | `acquireLock(dirPath)` | File lock with 30s stale threshold |
 | `generateTaskId()` | `T-{uuid}` format |
-
-## TODO SYNC
-
-Automatic bidirectional sync between tasks and OpenCode's todo system.
-
-| Task Status | Todo Status |
-|-------------|-------------|
-| `pending` | `pending` |
-| `in_progress` | `in_progress` |
-| `completed` | `completed` |
-| `deleted` | `null` (removed) |
-
-Sync triggers: `task_create`, `task_update`.
 
 ## PLAN PROGRESS CONTRACT (COUNTABLE CHECKBOXES)
 

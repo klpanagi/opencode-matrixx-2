@@ -1,7 +1,7 @@
 # Quality: BDD Pipeline & TDD Discipline
 
 > **Audience:** users implementing features or enforcing test discipline.
-> **Version:** 1.2.1.
+> **Version:** 1.3.4.
 > **See also:** `command-reference.md` (the `/bdd-pipeline` command), `orchestration.md` (how plans execute), `hooks.md` §2.1 (`oracle-md-only`, `quality-gate`).
 
 Two complementary workflows produce tested code. **BDD** starts from a `.feature` file and generates the implementation through a contract; **TDD** governs how any implementation is written (test first, then code, then refactor).
@@ -18,7 +18,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 # Part A — BDD Pipeline
 
 > **Status**: Shipped and verified
-> **Package**: `opencode-matrixx-v2` (v1.2.1)
+> **Package**: `opencode-matrixx-v2` (v1.3.4)
 > **Context**: Native matrixx feature — no Python, no external bundling
 
 ---
@@ -465,7 +465,7 @@ Run per-demo tests with the `run-tests.sh` inside each demo dir.
 
 #### Prerequisites
 
-- matrixx (opencode-matrixx-v2 v1.2.1)
+- matrixx (opencode-matrixx-v2 v1.3.4)
 - `@cucumber/gherkin` v34 (bundled dependency — auto-installed with matrixx)
 - `@cucumber/cucumber` and `@playwright/test` (user-installed per project)
 
@@ -766,10 +766,10 @@ TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/bu
 #### Developer Agent Dispatch
 
 ```typescript
-task(
-  category="source",
+subagent(
+  agent="mouse-source",
   load_skills=["git-master", "tdd-enforcer"],
-  run_in_background=true,
+  background=true,
   description="Implement {FEATURE}",
   prompt=`Implement from plan:
 {PLAN}
@@ -815,8 +815,8 @@ See `matrixx.example.jsonc` (`tdd_enforcer` block, active `enabled: true`) for t
 |------|-------|
 | `src/plugin/tool/skill-context.ts` | Adds `tdd-enforcer` to `disabledSkills` only on explicit `enabled: false` |
 | `src/plugin/handlers/agent-config-handler.ts` | Same gate for agent config: strips only on explicit opt-out |
-| `src/tools/delegate-task/tools.ts` | Hard requirement: `category="source"` fails without `tdd-enforcer` in `load_skills`, even when globally opted out |
-| `src/tools/delegate-task/constants.ts` (`TDD_TEST_FIRST_APPEND`) | Test-first banner (`NO IMPLEMENTATION WITHOUT A FAILING TEST FIRST`) injected into `source` prompts, visible even if the skill is omitted |
+| `src/plugin/tool/subagent-policy/enforcement.ts` | Prepends the software-dev enforcement payload (which carries the test-first rule) to code-writing `mouse-*` prompts when `softwareDevEnforcement` is enabled |
+| `src/shared/subagent/delegation-constants.ts` (`TDD_TEST_FIRST_APPEND`) | Canonical test-first banner text (`NO IMPLEMENTATION WITHOUT A FAILING TEST FIRST`) shared by the enforcement payload and the `tdd-enforcer` skill |
 
 #### What Happens When Opted Out (`enabled: false`)
 

@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-~120 cross-cutting utilities across 12 scoped domains + 5 legacy subdirs. Import via scope barrel (e.g. `import { log } from "../../shared/runtime"`) or the root barrel.
+~128 cross-cutting utilities across 12 scoped domains + 5 legacy subdirs. Import via scope barrel (e.g. `import { log } from "../../shared/runtime"`) or the root barrel.
 
 ## STRUCTURE
 
@@ -22,6 +22,7 @@ shared/
 ├── policy/                       # Context-mode enforcement, DCP, RTK, injection (8 files)
 ├── runtime/                      # Logger, notify, abort-error + helpers (8 files)
 ├── session/                      # Session utils, cursor, ephemeral sessions (15 files)
+├── subagent/                     # Delegation policy: complexity, depth cap, skill resolver, task titles (12 files)
 ├── text/                         # jsonc-parser, system-directive, formatting (8 files)
 ├── tool/                         # define-tool, merge-categories + helpers (7 files)
 ├── command-executor/             # Shell execution (legacy subdir, 3 files)
@@ -32,7 +33,7 @@ shared/
 
  scope rule: new cross-cutting code goes in the matching scoped dir
  (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`,
- `policy/`, `runtime/`, `session/`, `text/`, `tool/`); the 5 legacy subdirs
+ `policy/`, `runtime/`, `session/`, `subagent/`, `text/`, `tool/`); the 5 legacy subdirs
  (`command-executor/`, `git-worktree/`, `migration/`, `software-dev-enforcement/`,
  `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability.
 

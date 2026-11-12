@@ -1,6 +1,6 @@
 # Command Reference
 
-> Version 1.2.1. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> Version 1.3.4. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
 Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 
@@ -371,7 +371,7 @@ List, inspect, or switch model presets at runtime. Backed by the `preset` tool (
 |----------|-------------|
 | `list` (default) | List available presets, marking the active one |
 | `show [<name>]` | Show a preset's agent/category model assignments |
-| `set <name>` | Switch the active preset for the current session (delegate-task categories switch immediately; builtin agents apply on the next session) |
+| `set <name>` | Switch the active preset for the current session (category worker models switch immediately; builtin agents apply on the next session) |
 | `--save [--global\|--project]` | Also persist `active_preset` to config (project `.opencode/matrixx.jsonc` by default) |
 
 **Related:** [Model Presets](configurations.md#model-presets).
