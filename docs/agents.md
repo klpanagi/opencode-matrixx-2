@@ -336,8 +336,9 @@ return a redirect message.
   a running child (`timeout` default 60000, max 600000).
 - `load_skills=[...]` and `complexity=N` are Matrixx extras consumed by the
   `subagent_policy` transformer and stripped before execution.
-- §`subagent_block` is not implemented: the config key parses for backwards
-  compatibility and has no effect.
+- The `subagent_block` config key has been removed (breaking change): no hook
+  ever consumed it. The `subagent-block` hook name is still accepted in
+  `disabled_hooks`, so existing configs keep loading.
 
 ---
 

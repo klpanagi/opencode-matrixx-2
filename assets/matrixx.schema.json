@@ -4879,27 +4879,6 @@
       ],
       "additionalProperties": false
     },
-    "subagent_block": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "default": true,
-          "type": "boolean"
-        },
-        "allowlist": {
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "enabled",
-        "allowlist"
-      ],
-      "additionalProperties": false
-    },
     "browser_automation_engine": {
       "type": "object",
       "properties": {
