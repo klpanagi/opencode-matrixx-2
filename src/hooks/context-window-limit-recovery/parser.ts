@@ -22,8 +22,6 @@ export interface GenericErrorData {
   request_id?: string
 }
 
-/** @deprecated use GenericErrorData */
-export type AnthropicErrorData = GenericErrorData
 
 export function parseTokenLimitError(err: unknown): ParsedTokenLimitError | null {
   try {

@@ -77,6 +77,10 @@ export async function applyAgentConfig(params: {
     params.pluginConfig.browser_automation_engine?.provider ?? "playwright";
   const currentModel = params.config.model as string | undefined;
   const disabledSkills = new Set<string>(params.pluginConfig.disabled_skills ?? []);
+  // matrixx-self-config is heavy and opt-in: exclude from all agents by default.
+  if (params.pluginConfig.matrixx_self_config?.enabled !== true) {
+    disabledSkills.add("matrixx-self-config");
+  }
   if (!params.pluginConfig.tdd_enforcer?.enabled) {
     disabledSkills.add("tdd-enforcer");
   }

@@ -20,6 +20,11 @@ export async function createSkillContext(args: {
     pluginConfig.browser_automation_engine?.provider ?? "playwright"
 
   const disabledSkills = new Set<string>(pluginConfig.disabled_skills ?? [])
+  // matrixx-self-config is opt-in and heavy: exclude from every agent by default.
+  // Only include when explicitly enabled; dynamic load via skill tool still works.
+  if (pluginConfig.matrixx_self_config?.enabled !== true) {
+    disabledSkills.add("matrixx-self-config")
+  }
   if (!pluginConfig.tdd_enforcer?.enabled) {
     disabledSkills.add("tdd-enforcer")
   }
