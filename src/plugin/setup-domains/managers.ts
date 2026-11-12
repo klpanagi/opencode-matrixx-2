@@ -1,5 +1,4 @@
 import type { MatrixxConfig, TmuxConfig } from "../../config"
-import { initTaskToastManager } from "../../features/task-toast-manager"
 import { createModelCacheState } from "../../plugin-state"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { createConfigHandler } from "../handlers"
@@ -19,8 +18,6 @@ export function createDomainManagers(args: {
   // compatibility only (interactive-bash + doctor read it separately).
   const { ctx, pluginConfig } = args
   void args.tmuxConfig
-
-  initTaskToastManager()
 
   const configHandler = createConfigHandler({
     ctx: { directory: ctx.directory },

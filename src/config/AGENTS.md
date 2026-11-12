@@ -39,7 +39,6 @@ config/
 │   ├── security.ts
 │   ├── skills.ts              # SkillsConfigSchema
 │   ├── software-dev-enforcement.ts
-│   ├── subagent-block.ts
 │   ├── tasks.ts
 │   ├── task.ts
 │   ├── tdd-enforcer.ts
@@ -55,7 +54,7 @@ config/
 
 ## ROOT SCHEMA
 
-`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13 core + 8 mouse-*), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `subagent_block`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
+`MatrixxConfigSchema` composes: `$schema`, `global_model`, `model_presets`, `tasks` (unconditional; `enabled` is retained-deprecated and ignored), `default_run_agent`, `auto_update`, `disabled_{mcps,agents,skills,hooks,commands,tools}`, `agents` (13 core + 8 mouse-*), `categories` (8), `skills`, `knowledge`, `tdd_enforcer`, `softwareDevEnforcement`, `assembly`, `security`, `tool_gating`, `matrixx_self_config`, `memory`, `headroom`, `context_mode`, `rtk`, `morpheus`, `morpheus_agent`, `matrix_loop`, `background_task`, `babysitting`, `notification`, `plans`, `browser_automation_engine`, `tmux`, `dcp`, `modelRequirements`, `complexityDowngrades`, `_migrations`
 
 ## CONFIGURATION HIERARCHY
 

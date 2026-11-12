@@ -24,7 +24,6 @@ features/
 ├── session-memory/             # Session memory + compaction snippets
 ├── session-state/              # Subagent session state tracking (3 files)
 ├── task-session-scope/         # Task session scoping + ancestry
-├── task-toast-manager/         # Task progress notifications (3 files)
 ├── tool-metadata-store/        # Tool execution metadata caching (3 files)
 └── redpill-state/            # Redpill loop state
 ```

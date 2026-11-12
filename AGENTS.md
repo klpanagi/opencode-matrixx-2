@@ -100,7 +100,7 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 60 live hooks + 10 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 20 features, 2 MCPs. ~1130 TS source files, ~575 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 60 live hooks + 10 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 
@@ -123,7 +123,7 @@ matrixx/
 │   ├── agents/   → 13 core agents + 8 mouse-* workers + AGENTS.md
 │   ├── hooks/    → 60 live hooks (+10 deprecated no-ops +1 alias) in 5 factories
 │   ├── tools/    → 30 dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guards, etc.; gated via plugin/tool/tool-policy.ts)
-│   ├── features/ → 20 dirs (builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
+│   ├── features/ → 19 dirs (builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → scoped dirs (agent, config, io, model, policy, runtime, session, subagent, text, tmux, tool, ...) + AGENTS.md
 │   ├── skills/   → builtin/<category>/ (70 skills) + loader/ + AGENTS.md
 │   ├── mcps/     → context7 + document-reader (+ native `github_search` tool in `src/tools/`)

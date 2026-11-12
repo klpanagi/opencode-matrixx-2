@@ -1707,7 +1707,6 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
     "agents": { "oracle": { "fallbackChain": [{ "providers": ["zai-coding-plan"], "model": "glm-4.7" }] } }
   },
   "complexityDowngrades": { "bullet-time": { "hard": "opencode/ling-3.0-flash-free" } },  // per-category downgrade targets (<provider>/<model>)
-  "subagent_block": { "enabled": true, "allowlist": [] },  // subagent-block hook: block nested subagents except allowlisted agents
   "tool_gating": { "bdd_tools": true },  // startup-token tool auto-gating (bdd_tools, pdf_figures, look_at, preset_tools, session_cleanup; unset = auto-detect)
   "plans": { "max_plan_file_bytes": 143360 },  // plan file size cap (10KB-512KB) + smith_max_review_rounds (2-20, default 8)
   "morpheus": { "tasks": { "scope": "project" } },  // LEGACY (deprecated: use tasks.*) — same-named keys act as fallback
@@ -1726,7 +1725,6 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`). |
 | `modelRequirements` | `ModelRequirementsSchema` (`src/config/schema/model-config.ts`) | — | `agents`/`categories` maps with `fallbackChain` (`providers[]` + `model`), `requiresModel`, `requiresAnyModel`, `requiresProvider`, `variant`. |
 | `complexityDowngrades` | `ComplexityDowngradesSchema` (`src/config/schema/model-config.ts`) | — | Nested maps to `<provider>/<model>` values. |
-| `subagent_block` | `SubagentBlockConfigSchema` (`src/config/schema/subagent-block.ts`) | `enabled: true, allowlist: []` | Enables the `subagent-block` hook; `allowlist` exempts named agents. |
 | `tool_gating` | `ToolGatingConfigSchema` (`src/config/schema/tool-policy.ts`) | auto-detect | Defers rarely-needed LLM tools until auto-detect or opt-in (`bdd_tools`, `pdf_figures`, `look_at`, `preset_tools` default `false`, `session_cleanup` opt-in). |
 | `plans` | `PlansConfigSchema` (`src/config/schema/plans.ts`) | `max_plan_file_bytes: 140KB, smith_max_review_rounds: 8` | Plan file size cap (min 10KB, max 512KB); Smith review-round ceiling for Oracle high-accuracy mode (2-20). |
 | `morpheus` | `MorpheusConfigSchema` (`src/config/schema/morpheus.ts`) | — | Legacy; only `tasks` (`storage_path`, `task_list_id`, `scope`, `stale_after_hours`, `session_scoped`). Use `tasks.*`. |

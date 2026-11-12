@@ -15,7 +15,7 @@ src/
 ├── agents/                           # 13 core agents + 8 mouse-* workers (53 files) — see agents/AGENTS.md
 ├── cli/                              # CLI installer, doctor (27 files, no per-area AGENTS.md)
 ├── config/                           # Zod schema — see config/AGENTS.md
-├── features/                         # Commands, task storage, mission/plan state (20 dirs) — see features/AGENTS.md
+├── features/                         # Commands, task storage, mission/plan state (19 dirs) — see features/AGENTS.md
 ├── hooks/                            # Leaf hook domains (HookNameSchema 60 enum + 10 no-op literals + 1 alias) — see hooks/AGENTS.md
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md

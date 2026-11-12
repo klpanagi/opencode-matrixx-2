@@ -5,7 +5,7 @@ type ToastOpts = { body: { title: string; message: string; variant: "info" | "su
 type TuiLike = { showToast: (opts: ToastOpts) => Promise<unknown> }
 type HeadlessClient = { tui?: TuiLike }
 
-// Precedent: src/features/task-toast-manager/manager.ts:157-158 (guarded early-return)
+// Precedent: guard `client.tui?.showToast` before use so headless clients fail open
 async function guardedToast(client: HeadlessClient, opts: ToastOpts, sent: ToastOpts[]): Promise<void> {
   const tuiClient = client as unknown as { tui?: TuiLike }
   if (!tuiClient.tui?.showToast) return
@@ -48,7 +48,7 @@ describe("spike: injection-headless", () => {
   })
 
   test("(a) guarded resilient pattern resolves with zero toasts when tui undefined", async () => {
-    //#when headless client hits the task-toast-manager guard
+    //#when headless client hits the guarded toast helper
     const sent: ToastOpts[] = []
     await expect(
       guardedToast({}, { body: { title: "Notice", message: "x".repeat(10), variant: "info", duration: 3000 } }, sent)

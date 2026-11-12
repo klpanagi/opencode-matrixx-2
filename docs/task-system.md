@@ -592,13 +592,7 @@ Three blocks:
 | `empty-task-response-detector` (`src/hooks/empty-task-response-detector.ts`) | `tool.execute.after` for `Task`/`task` outputs | Replaces an empty delegation result with `EMPTY_RESPONSE_WARNING` (likely causes plus re-issue guidance via native `subagent`); non-empty outputs pass through. |
 | `delegate-task-retry` (removed) | — | The `delegate_task`-failure retry hook was deleted with the migration; transient failures on native `subagent` calls surface directly with no retry wrapper. |
 
-### 8.4 `task-toast-manager`: Background-Task Toasts
-
-**Files:** `src/features/task-toast-manager/` (`manager.ts`, `types.ts`, `index.ts`).
-
-`TaskToastManager` is retained code with **no live caller**: it was fed by the removed `delegate_task` background launch path, and nothing calls `addTask()` after the native-subagent migration. It tracks `TrackedTask` records (`{ id, description, agent, status, startedAt, isBackground, category?, skills?, modelInfo? }`, status `running | queued | completed | error`) for potential TUI surfacing, but today it stays empty.
-
-### 8.5 `task-notepad-writer`: Automatic Notepads Per Task
+### 8.4 `task-notepad-writer`: Automatic Notepads Per Task
 
 **Files:** `src/hooks/task-notepad-writer/` (`hook.ts`, `notepad-path.ts`, `constants.ts`).
 
@@ -690,8 +684,6 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 | `src/features/task-storage/storage.ts` | `getTaskDir`, `resolveTaskListId`, `sanitizePathSegment`, `readJsonSafe`, `writeJsonAtomic`, `acquireLock`, `acquireLockWithRetry`, `generateTaskId`, `listTaskFiles`, `migrateLegacyTasksIfNeeded`; `STALE_LOCK_THRESHOLD_MS = 30000` |
 | `src/features/task-storage/types.ts` | Storage `TaskSchema` / `Task` type |
 | `src/features/task-session-scope/todo.ts` | Session-scoped read helpers |
-| `src/features/task-toast-manager/manager.ts` | Background-task toast lifecycle |
-| `src/features/task-toast-manager/types.ts` | `TrackedTask`, `TaskStatus` (`running\|queued\|completed\|error`), `TaskToastOptions` |
 | `src/tools/plan/plan-read.ts`, `plan-update.ts` | `plan_read` (hashline output), `plan_update` (`LINE#ID` edits) |
 | `src/features/task-session-scope/` (`staleness.ts`, `todo.ts`) | Kept helpers from the removed enforcer: staleness plus session filter |
 | `src/hooks/task-edit-guard/` | Write/Edit/Read + bash guard for `.matrixx/plans` and `.matrixx/tasks` |
