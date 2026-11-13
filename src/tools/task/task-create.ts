@@ -51,7 +51,7 @@ Calculate dependencies carefully to maximize parallel execution:
 - Only block a task if it truly depends on another's output
 - Minimize dependency chains to reduce sequential bottlenecks
 
-Do NOT confuse with delegation: task_create only records a checklist item — it does NOT spawn an agent and no work gets done. To have another agent do work, use the native subagent tool (with agent/background/load_skills). The legacy task delegation tool was removed; see docs/native-subagent-migration.md.`,
+Do NOT confuse with delegation: task_create only records a checklist item — it does NOT spawn an agent and no work gets done. To have another agent do work, use the native subagent tool (with agent/description/prompt/load_skills). The legacy task delegation tool was removed; see docs/native-subagent-migration.md.`,
     args: {
       subject: z.string().optional().describe("Task subject (required outside batch form)"),
       description: z.string().optional().describe("Task description"),

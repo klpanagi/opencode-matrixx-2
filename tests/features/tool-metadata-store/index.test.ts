@@ -36,6 +36,8 @@ describe("tool-metadata-store", () => {
       const callID = "call_001"
       const data = {
         title: "My Task",
+        // Resolved tool metadata recorded for display: `run_in_background` here is stored
+        // metadata, not a subagent argument (that argument no longer exists).
         metadata: { sessionId: "ses_sub", run_in_background: true },
       }
       storeToolMetadata(sessionID, callID, data)

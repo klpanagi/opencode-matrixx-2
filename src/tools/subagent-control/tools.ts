@@ -66,7 +66,7 @@ export function createSubagentControl(client: SubagentControlClient): MatrixxToo
       const timeoutMs = clampTimeout(args.timeout)
       const outcome = await Promise.race([client.session.wait({ sessionID }), sleep(timeoutMs)])
       if (outcome === "timeout") {
-        return `Subagent session ${sessionID} is still running after ${timeoutMs}ms. Call wait again with a longer timeout, or cancel it; do not refire the subagent. ${readPointer(sessionID)}`
+        return `Subagent session ${sessionID} is still running after ${timeoutMs}ms. This wait is a bounded gate: do not poll — read the transcript with \`session_read(session_id=...)\` if you need it, or cancel it; do not refire the subagent. ${readPointer(sessionID)}`
       }
       return `Subagent session ${sessionID} finished. ${readPointer(sessionID)}`
     },
