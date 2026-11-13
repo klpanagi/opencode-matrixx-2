@@ -104,15 +104,20 @@ subagent(
 Run verification suite:
 
 \`\`\`bash
-bun run test   # = script/run-ci.sh: install + lint + typecheck + isolated tests + build
+bun run test   # full CI: lint + typecheck + isolated tests + build
 \`\`\`
 
-Report evidence (these are the checks \`bun run test\` already runs):
+\`bun run test\` (or the project's full CI script) runs all four checks. Report evidence for each:
+
+- Lint (Biome) — 0 issues
+- Typecheck (\`tsc --noEmit\`) — 0 errors
+- Isolated tests — N passed, 0 failed
+- Build (ESM + declarations) — success
 
 If ANY fails → fix → re-run ALL.
 
 **Exit criteria:**
-- [ ] All 4 checks pass
+- [ ] All four checks pass
 
 ---
 

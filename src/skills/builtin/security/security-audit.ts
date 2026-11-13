@@ -52,7 +52,8 @@ security-core (severity + false-positive reduction).
 Write machine-readable evidence to \`.matrixx/audits/<run-N>/\`:
 \`findings.json\` (one entry per verified finding: severity, CWE, location,
 description, remediation) plus a coverage ledger of waves run and files
-covered. Reference the T5 report-schema module for field shapes; do not
+covered. Reference the report-schema module at
+\`src/skills/loader/schemas/security-audit.ts\` for field shapes; do not
 duplicate report-schema.json verbatim here.
 
 ### Phase 5 — Independent verification

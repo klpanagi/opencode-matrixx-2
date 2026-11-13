@@ -175,28 +175,27 @@ test("returns null (not undefined) when key is missing", () => {
 | "Emits event on completion" | → | test that listener receives event |
 
 ### Hook or Tool (Matrixx-specific)
+
+A hook is a plain object mapping event names to async handlers. Build it, call the handler by its event key, and assert on the mutated \`output\`.
+
 \`\`\`typescript
-// Hook tests use mock plugin contexts
-import type { MatrixxContext } from "../../plugin/tool/context"
+import { createMyHook } from "../../../src/hooks/my-hook/factory"
 
-function buildMockContext(overrides?: Partial<MatrixxContext>): MatrixxContext {
-  return {
-    directory: "/tmp/test-project",
-    // ... minimal required fields
-    ...overrides,
-  } as MatrixxContext
-}
-
-test("hook injects env var when git command detected", async () => {
+test("hook injects PAGER when a git command is detected", async () => {
   //#given
-  const hook = createMyHook(buildMockContext())
-  const args = { command: "git status" }
+  const hook = createMyHook(/* ctx or config deps */)
+  const output: { args: Record<string, unknown>; message?: string } = {
+    args: { command: "git status" },
+  }
 
   //#when
-  const result = await hook.toolExecuteBefore("bash", args)
+  await hook["tool.execute.before"](
+    { tool: "bash", sessionID: "test", callID: "1" },
+    output,
+  )
 
   //#then
-  expect(result.args.env).toHaveProperty("GIT_PAGER", "cat")
+  expect(output.args.command).toContain("PAGER=cat")
 })
 \`\`\`
 

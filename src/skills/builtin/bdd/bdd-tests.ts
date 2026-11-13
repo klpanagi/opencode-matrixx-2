@@ -50,7 +50,6 @@ npx cucumber-js <feature-dir> --require <feature-dir>/tests/**/*.ts --require <f
 If a scenario fails, read the failure output, fix the step definition (or the page object, or the preview server mock), and re-run. Up to **3 retry attempts**. If still failing after 3 attempts, report the failure with the cucumber output and the list of files that need attention. Do not declare success until all scenarios pass.
 
 ## Cucumber Configuration
-## Cucumber Configuration
 - **File name**: Use \`cucumber.cjs\` (not \`cucumber.js\`) when the project's \`package.json\` has \`"type": "module"\` -- otherwise Node will treat the CommonJS file as ESM and fail with \`module is not defined\`.
 - **Step definition loading**: \`require: ['tests/**/*.ts', 'tests/**/*.steps.ts']\` to load page objects, world, hooks, and step files together. Use \`tests/**/*.{ts,steps.ts}\` or two globs -- do NOT use \`*.steps.ts\` alone (it misses the supporting files).
 - **TypeScript loader**: Add \`{ module: ['tsx/esm'] }\` to \`requireModule\` so \`tsx\` transpiles \`.ts\` files on import.
@@ -72,7 +71,7 @@ Spawns the feature's \`components/preview-server.ts\` in the background, waits f
 
 ### Dockerfile (containerised)
 Per-feature \`Dockerfile\` with the repo root as build context. Implementation requirements:
-- Base: \`oven/bun:1.3.6\` (matches matrixx devDeps).
+- Base: \`oven/bun:1.4.4\` (matches the repo's pinned Bun version in \`.bun-version\`).
 - \`apt-get install\` the Playwright chromium runtime libs (libnss3, libgbm1, libgtk-3-0, etc.) -- see https://playwright.dev/docs/docker for the canonical list. \`rm -rf /var/lib/apt/lists/*\` at the end.
 - \`COPY package.json bun.lock* ./\` then \`bun install --frozen-lockfile\` (idempotent, fast).
 - \`bunx playwright install chromium\` (downloads the browser binary at build time).
@@ -82,7 +81,12 @@ Per-feature \`Dockerfile\` with the repo root as build context. Implementation r
 - \`WORKDIR /app/demos/bdd/<feature>\` and \`CMD ["bash", "run-tests.sh"]\`.
 
 ### .dockerignore (repo root)
-The build context is the repo root, so the \`.dockerignore\` lives at the repo root and applies to every per-feature \`docker build\`. Must exclude: \`.git\`, \`node_modules\`, \`dist\`, \`coverage\`, \`reports\`, \`*.log\`, \`bun.lockb\`, \`.matrixx/\`, \`docs/\`, \`*.md\` (except the per-feature \`Dockerfile\`, \`run-tests.sh\`, and \`demos/bdd/README.md\`).
+The build context is the repo root, so the \`.dockerignore\` lives at the repo root and applies to every per-feature \`docker build\`. Exclude \`.git\`, \`.github\`, \`node_modules\`, \`dist\`, \`coverage\`, \`reports\`, \`*.log\`, \`bun.lockb\`, \`.matrixx/\`, and \`docs/\`, then ignore Markdown while keeping the BDD readme. Negation only works top-down, so write the Markdown rules in this exact order:
+\`\`\`gitignore
+*.md
+!demos/bdd/README.md
+\`\`\`
+\`Dockerfile\` and \`run-tests.sh\` never match \`*.md\`, so they need no exception entries.
 
 ### Batch Mode (REQUIRED when input is a directory of multiple features)
 When the bdd-tests input is a directory or a glob of multiple contracts (not a single file), AFTER the per-feature generation above, ALSO emit two parent-shared files at the **input directory root** so the entire suite can be run with one command. These are NOT optional:

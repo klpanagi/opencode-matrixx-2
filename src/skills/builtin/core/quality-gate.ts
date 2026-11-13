@@ -18,84 +18,32 @@ Every code change (write, edit, refactor) MUST be verified before marking comple
 
 ---
 
-## VERIFICATION CHECKLIST (EVERY CODE CHANGE)
+## GATE FUNCTION: IDENTIFY → RUN → READ → VERIFY
 
-Run these in order. ALL must pass before marking task done.
+Run this single procedure for every code change. The quality-gate hook is advisory: it performs no checks and blocks nothing — YOU run the gate.
 
-### 1. Lint (automatic + manual)
-\`\`\`bash
-bun run lint          # Full codebase lint
-bun run lint:fix      # Auto-fix what Biome can
-\`\`\`
-OpenCode's native formatter pipeline handles per-file formatting. Fix lint warnings as they appear.
+### Step 1: IDENTIFY — scope what changed
 
-### 2. Type Check
-\`\`\`bash
-bun run typecheck     # tsc --noEmit
-\`\`\`
-Must exit 0 with no errors. Never suppress with \`as any\` or \`@ts-ignore\`.
-
-### 3. Tests
-\`\`\`bash
-bun run test          # All tests must pass
-\`\`\`
-If you changed behavior, write/update tests FIRST (see tdd-enforcer skill).
-
-### 4. Build
-\`\`\`bash
-bun run build         # ESM + declarations
-\`\`\`
-Must exit 0. Verify dist/index.js exists.
-
----
-
-## EVIDENCE FORMAT
-
-Report verification results as:
-\`\`\`
-✅ bun run lint — 0 issues
-✅ bun run typecheck — no errors
-✅ bun run test — 42 passed, 0 failed (3.2s)
-✅ bun run build — success
-\`\`\`
-
-If ANY step fails:
-1. STOP. Do not report done.
-2. Fix the failure.
-3. Re-run ALL verification steps.
-4. Report done only when ALL pass.
-
----
-
-## HOOK BEHAVIOR
-
-The quality-gate hook is advisory only:
-- It runs no checks and never halts tool execution
-- Formatting is owned by OpenCode's native formatter pipeline — no double-format
-- Verification is performed by YOU, using the checklist above
-
-Run \`bun run lint:fix\` to auto-fix, or address issues manually.
-Fix these inline when possible. For bulk fixes, run \`bun run lint:fix\`.
-
----
-
-## GATE FUNCTION (IDENTIFY-RUN-READ-VERIFY)
-
-Run the verification checklist above as a 4-step gate. Every code change passes through all four steps in order.
-
-### Step 1: IDENTIFY - scope what changed
-
-List every file you touched via git diff --name-only and git status --short.
+List every file you touched via \`git diff --name-only\` and \`git status --short\`.
 Verification scope = exactly those files plus their dependents.
 Never verify a subset and claim the whole change is green.
 
-### Step 2: RUN - execute the full check suite
+### Step 2: RUN — execute the full CI command
 
-Run the full CI suite in one pass:
-bun run test   # = script/run-ci.sh: install + lint + typecheck + isolated tests + build
-Do not stop at the first green - run everything before judging.
+Run the full CI suite as the single gate:
+\`\`\`bash
+bun run test   # full CI: lint + typecheck + isolated tests + build
+\`\`\`
+This one command runs, in order:
 
-### Step 3: READ - read the output, do not skim it
+1. Lint (Biome) — \`bun run lint\`
+2. Typecheck (\`tsc --noEmit\`) — \`bun run typecheck\`
+3. Isolated tests — the test runner
+4. Build (ESM + declarations) — \`bun run build\`
+
+While fixing you may rerun a single check (\`bun run lint\`, \`bun run lint:fix\`, \`bun run typecheck\`, \`bun run test\`, \`bun run build\`), but the gate itself is the full command. Formatting is handled by OpenCode's native formatter pipeline; fix lint warnings as they appear. Do not stop at the first green — run everything before judging.
+
+### Step 3: READ — read the output, do not skim it
 
 Open the full output of each check. Confirm counts yourself:
 - Lint: read every warning line, not just the summary count
@@ -105,18 +53,34 @@ Open the full output of each check. Confirm counts yourself:
 
 A gate you did not read is a gate you did not run.
 
-### Step 4: VERIFY - confirm all green with evidence
+### Step 4: VERIFY — confirm all green with evidence
 
-Report evidence using the exact phrases from the EVIDENCE FORMAT section
-(matching the software-dev VERIFY phase wording):
-
+Report evidence for each check:
+\`\`\`
 ✅ bun run lint — 0 issues
 ✅ bun run typecheck — no errors
 ✅ bun run test — N passed, 0 failed
 ✅ bun run build — success
+\`\`\`
 
-If ANY step fails: STOP. Do not report done. Fix the failure, then re-run
-ALL four checks from Step 2 (RUN).
+If ANY check fails: STOP. Do not report done. Fix the failure, then re-run the whole gate from Step 2 (RUN).
+
+**Exit criteria (all required):**
+- [ ] All four checks pass in the full CI command
+- [ ] Output read for every check
+- [ ] No open Red Flag (see below)
+- [ ] Diff reviewed before reporting done
+
+---
+
+## HOOK BEHAVIOR
+
+The quality-gate hook is advisory only:
+- It runs no checks and never halts tool execution
+- Formatting is owned by OpenCode's native formatter pipeline — no double-format
+- Verification is performed by YOU, using the gate above
+
+Run \`bun run lint:fix\` to auto-fix, or address issues manually.
 
 ---
 

@@ -79,6 +79,7 @@ git commit --fixup=<target-hash>
 # Single autosquash rebase at the end
 MERGE_BASE=$(git merge-base HEAD main 2>/dev/null || git merge-base HEAD master)
 GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash $MERGE_BASE
+# Non-interactive form: GIT_SEQUENCE_EDITOR=: suppresses the todo editor, so no input is needed.
 \`\`\`
 
 ### 5.3 New Commits (After Fixups)

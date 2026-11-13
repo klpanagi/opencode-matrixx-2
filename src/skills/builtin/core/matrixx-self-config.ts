@@ -45,7 +45,7 @@ These are the most commonly edited configuration keys in \`matrixx.jsonc\`:
 | Key | Purpose | Example |
 |-----|---------|---------|
 | \`active_preset\` | Select a named model preset for all agents | \`"balanced"\` |
-| \`agents.{name}.model\` | Override a specific agent's model | \`"claude-opus-4-6"\` |
+| \`agents.{name}.model\` | Override a specific agent's model (\`@deprecated\` — use \`category\`) | \`"claude-opus-4-6"\` |
 | \`agents.{name}.request.body.temperature\` | Adjust agent creativity | \`0.1\` |
 | \`agents.{name}.system_append\` | Add persistent instructions | \`"Always write tests"\` |
 | \`agents.{name}.skills\` | Assign skills to an agent | \`["git-master"]\` |
@@ -241,26 +241,31 @@ Before completing any configuration edit, verify:
 7. Run \`bunx matrixx doctor\`
 8. Tell user to restart OpenCode
 
-### Example 2: Create Custom Agent
+### Example 2: Tune an Existing Agent
 
-**User:** "Add a custom agent called 'reviewer' that uses Gemini 2.5 Pro"
+**User:** "Make the oracle agent use my review category and run at low temperature"
 
 **Steps:**
-1. Read current config to see existing agents
-2. Propose adding:
+1. Read current config to see existing agents and categories
+2. Propose the override — \`agents\` only accepts built-in agent names, \`category\` points at a key under \`categories\`, and temperature lives under \`request.body\`:
    \`\`\`jsonc
    {
+     "categories": {
+       "review": { "model": "anthropic/claude-sonnet-4-6" }
+     },
      "agents": {
-       "reviewer": {
-         "model": "gemini-2.5-pro",
-         "temperature": 0.1
+       "oracle": {
+         "category": "review",
+         "variant": "high",
+         "request": { "body": { "temperature": 0.1 } }
        }
      }
    }
    \`\`\`
+   New agent identities cannot be defined here — \`agents\` is a closed set of built-in names (unknown keys are silently stripped). To add a new agent, use the OpenCode agent config or \`agent_definitions\`.
 3. Wait for user confirmation
 4. Create backup
-5. Edit config to add the new agent section
+5. Edit config to change the existing agent section
 6. Run \`bunx matrixx doctor\`
 7. Tell user to restart OpenCode
 
@@ -270,8 +275,8 @@ Before completing any configuration edit, verify:
 
 **Steps:**
 1. Read current config
-2. Find \`agents.comment_checker\` or \`comment_checker\` section
-3. Propose adjusting system_append or relevant setting
+2. Find the top-level \`comment_checker\` section (it is not an agent override)
+3. Propose adjusting the relevant \`comment_checker\` setting
 4. Wait for user confirmation
 5. Create backup
 6. Edit the specific key

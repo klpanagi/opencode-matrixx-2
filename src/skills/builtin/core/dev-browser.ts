@@ -8,15 +8,28 @@ export const devBrowserSkill: BuiltinSkill = {
 
 Browser automation that maintains page state across script executions. Write small, focused scripts to accomplish tasks incrementally. Once you've proven out part of a workflow and there is repeated work to be done, you can write a script to do the repeated work in a single execution.
 
+## Runtime Is NOT Bundled
+
+Matrixx ships this skill as documentation only. The dev-browser runtime (server + client) is not part of Matrixx, and no \`skills/dev-browser/\` directory exists in this repo. Every command below works only **if the runtime is installed at \`./dev-browser-server\`** — a checkout of the upstream project at https://github.com/SawyerHood/dev-browser. If it is not installed, stop and ask the user to install it; do not invent server commands.
+
+## Install (one-time)
+
+\`\`\`bash
+git clone https://github.com/SawyerHood/dev-browser ./dev-browser-server
+cd ./dev-browser-server && npm install   # or: bun install
+\`\`\`
+
+Follow the upstream README for browser and extension setup.
+
 ## Choosing Your Approach
 
 - **Local/source-available sites**: Read the source code first to write selectors directly
 - **Unknown page layouts**: Use \`getAISnapshot()\` to discover elements and \`selectSnapshotRef()\` to interact with them
 - **Visual feedback**: Take screenshots to see what the user sees
 
-## Setup
+## Setup — Start the Server
 
-**IMPORTANT**: Before using this skill, ensure the server is running (use the Standalone Mode commands below; ask the user which mode if unclear).
+> Requires the runtime installed at \`./dev-browser-server\`.
 
 Two modes available. Ask the user if unclear which to use.
 
@@ -24,37 +37,25 @@ Two modes available. Ask the user if unclear which to use.
 
 Launches a new Chromium browser for fresh automation sessions.
 
-**macOS/Linux:**
 \`\`\`bash
-./skills/dev-browser/server.sh &
+cd ./dev-browser-server && ./server.sh &   # add --headless if the user requests it
 \`\`\`
 
-**Windows (PowerShell):**
-\`\`\`powershell
-Start-Process -NoNewWindow -FilePath "node" -ArgumentList "skills/dev-browser/server.js"
-\`\`\`
-
-Add \`--headless\` flag if user requests it. **Wait for the \`Ready\` message before running scripts.**
+**Wait for the \`Ready\` message before running scripts.**
 
 ### Extension Mode
 
-Connects to user's existing Chrome browser. Use this when:
+Connects to the user's existing Chrome browser. Use this when:
 
 - The user is already logged into sites and wants you to do things behind an authed experience that isn't local dev.
 - The user asks you to use the extension
 
 **Important**: The core flow is still the same. You create named pages inside of their browser.
 
-**Start the relay server:**
+Start the relay server:
 
-**macOS/Linux:**
 \`\`\`bash
-cd skills/dev-browser && npm i && npm run start-extension &
-\`\`\`
-
-**Windows (PowerShell):**
-\`\`\`powershell
-cd skills/dev-browser; npm i; Start-Process -NoNewWindow -FilePath "npm" -ArgumentList "run", "start-extension"
+cd ./dev-browser-server && npm install && npm run start-extension &
 \`\`\`
 
 Wait for \`Waiting for extension to connect...\` followed by \`Extension connected\` in the console.
@@ -63,14 +64,13 @@ If the extension hasn't connected yet, tell the user to launch and activate it. 
 
 ## Writing Scripts
 
-> **Run all scripts from \`skills/dev-browser/\` directory.** The \`@/\` import alias requires this directory's config.
+> Requires the runtime installed at \`./dev-browser-server\`. Run scripts from that directory so the runtime's own module resolution applies, and import the client from the entry point the upstream README defines.
 
 Execute scripts inline using heredocs:
 
-**macOS/Linux:**
 \`\`\`bash
-cd skills/dev-browser && npx tsx <<'EOF'
-import { connect, waitForPageLoad } from "@/client.js";
+cd ./dev-browser-server && npx tsx <<'EOF'
+import { connect, waitForPageLoad } from "./client" // confirm the entry path in the upstream README
 
 const client = await connect();
 const page = await client.page("example", { viewport: { width: 1920, height: 1080 } });
@@ -81,23 +81,6 @@ await waitForPageLoad(page);
 console.log({ title: await page.title(), url: page.url() });
 await client.disconnect();
 EOF
-\`\`\`
-
-**Windows (PowerShell):**
-\`\`\`powershell
-cd skills/dev-browser
-@"
-import { connect, waitForPageLoad } from "@/client.js";
-
-const client = await connect();
-const page = await client.page("example", { viewport: { width: 1920, height: 1080 } });
-
-await page.goto("https://example.com");
-await waitForPageLoad(page);
-
-console.log({ title: await page.title(), url: page.url() });
-await client.disconnect();
-"@ | npx tsx --input-type=module
 \`\`\`
 
 ### Key Principles
@@ -158,8 +141,6 @@ const element = await client.selectSnapshotRef("name", "e5"); // Get element by 
 ## Waiting
 
 \`\`\`typescript
-import { waitForPageLoad } from "@/client.js";
-
 await waitForPageLoad(page); // After navigation
 await page.waitForSelector(".results"); // For specific elements
 await page.waitForURL("**/success"); // For specific URL
@@ -199,11 +180,13 @@ await element.click();
 
 ## Error Recovery
 
+> Requires the runtime installed at \`./dev-browser-server\`.
+
 Page state persists after failures. Debug with:
 
 \`\`\`bash
-cd skills/dev-browser && npx tsx <<'EOF'
-import { connect } from "@/client.js";
+cd ./dev-browser-server && npx tsx <<'EOF'
+import { connect } from "./client"
 
 const client = await connect();
 const page = await client.page("hackernews");

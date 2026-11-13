@@ -14,14 +14,14 @@ Launch 6 specialized sub-agents in parallel to review completed implementation w
 
 The 6 agents cover complementary concerns - together they form a comprehensive review that no single reviewer could match:
 
-| # | Agent | Type | Role | Focus Level |
-|---|-------|------|------|-------------|
-| 1 | Goal Verifier | Oracle | Did we build what was asked? | MAIN |
-| 2 | QA Executor | mouse-the-one | Does it actually work? | MAIN |
-| 3 | Code Reviewer | Oracle | Is the code well-written? | MAIN |
-| 4 | Security Auditor | Sentinel | Is it secure? | SUB |
-| 5 | Context Miner | mouse-the-one | Did we miss any context? | MAIN |
-| 6 | AI Slop Detector | mouse-the-one | Remove AI-generated code smells | SUP |
+| # | Agent | Type | Role |
+|---|-------|------|------|
+| 1 | Goal Verifier | Oracle | Did we build what was asked? |
+| 2 | QA Executor | mouse-the-one | Does it actually work? |
+| 3 | Code Reviewer | Oracle | Is the code well-written? |
+| 4 | Security Auditor | Sentinel | Is it secure? |
+| 5 | Context Miner | mouse-the-one | Did we miss any context? |
+| 6 | AI Slop Detector | mouse-the-one | Remove AI-generated code smells |
 
 ---
 
@@ -88,7 +88,7 @@ Launch ALL 6 in a single turn. No sequential launches. No waiting between them. 
 
 ---
 
-### Agent 1: Goal & Constraint Verification (Oracle) - MAIN
+### Agent 1: Goal & Constraint Verification (Oracle)
 
 \`\`\`
 subagent(
@@ -151,7 +151,7 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 2: QA via App Execution (mouse-the-one) - MAIN
+### Agent 2: QA via App Execution (mouse-the-one)
 
 \`\`\`
 subagent(
@@ -199,7 +199,7 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 3: Code Quality Review (Oracle) - MAIN
+### Agent 3: Code Quality Review (Oracle)
 
 \`\`\`
 subagent(
@@ -252,7 +252,7 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 4: Security Review (Sentinel) - SUB
+### Agent 4: Security Review (Sentinel)
 
 \`\`\`
 subagent(
@@ -299,7 +299,7 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 5: Context Mining (mouse-the-one) - MAIN
+### Agent 5: Context Mining (mouse-the-one)
 
 \`\`\`
 subagent(
@@ -366,7 +366,7 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 6: AI Slop Detection (mouse-the-one) - SUP
+### Agent 6: AI Slop Detection (mouse-the-one)
 
 \`\`\`
 subagent(
@@ -446,7 +446,7 @@ Final report format:
 | 1 | Goal & Constraint Verification | Oracle | PASS/FAIL | HIGH/MED/LOW |
 | 2 | QA Execution | mouse-the-one | PASS/FAIL | HIGH/MED/LOW |
 | 3 | Code Quality | Oracle | PASS/FAIL | HIGH/MED/LOW |
-| 4 | Security (supplementary) | Oracle | PASS/FAIL | Severity |
+| 4 | Security (supplementary) | Sentinel | PASS/FAIL | Severity |
 | 5 | Context Mining | mouse-the-one | PASS/FAIL | HIGH/MED/LOW |
 | 6 | AI Slop Detection (supplementary) | mouse-the-one | PASS/FAIL | NONE/LOW/MED/HIGH |
 
