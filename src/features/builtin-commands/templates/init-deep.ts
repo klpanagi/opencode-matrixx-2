@@ -15,7 +15,7 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 ## Workflow (High-Level)
 
 1. **Discovery + Analysis** (concurrent)
-   - Fire background explore agents immediately
+   - Fire trinity subagents immediately (one turn, then absorb their completion messages)
    - Main session: bash structure + LSP codemap + read existing AGENTS.md
 2. **Score & Decide** - Determine AGENTS.md locations from merged findings
 3. **Generate** - Root first, then subdirs in parallel
@@ -25,7 +25,7 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 **task_create ALL phases. Mark in_progress → completed in real-time.**
 \`\`\`
 task_create({ items: [
-  { subject: "discovery", priority: "high", description: "Fire explore agents + LSP codemap + read existing" },
+  { subject: "discovery", priority: "high", description: "Fire trinity subagents + LSP codemap + read existing" },
   { subject: "scoring", priority: "high", description: "Score directories, determine locations" },
   { subject: "generate", priority: "high", description: "Generate AGENTS.md files (root + subdirs)" },
   { subject: "review", priority: "medium", description: "Deduplicate, validate, trim" }
@@ -39,7 +39,7 @@ task_create({ items: [
 
 **Mark "discovery" as in_progress.**
 
-### Fire Background Explore Agents IMMEDIATELY
+### Fire Trinity Subagents IMMEDIATELY
 
 Don't wait—these run async while main session works.
 
@@ -54,7 +54,7 @@ subagent(agent="trinity", load_skills=[], description="Find test patterns", prom
 \`\`\`
 
 <dynamic-agents>
-**DYNAMIC AGENT SPAWNING**: After bash analysis, spawn ADDITIONAL explore agents based on project scale:
+**DYNAMIC AGENT SPAWNING**: After bash analysis, spawn ADDITIONAL trinity subagents based on project scale:
 
 | Factor | Threshold | Additional Agents |
 |--------|-----------|-------------------|
@@ -85,7 +85,7 @@ subagent(agent="trinity", load_skills=[], description="Find shared utilities", p
 
 ### Main Session: Concurrent Analysis
 
-**While background agents run**, main session does:
+**While the child subagents run**, main session does:
 
 #### 1. Bash Structural Analysis
 \`\`\`bash
@@ -129,9 +129,9 @@ LspWorkspaceSymbols(filePath=".", query="function")
 LspFindReferences(filePath="...", line=X, character=Y)
 \`\`\`
 
-**LSP Fallback**: If unavailable, rely on explore agents + AST-grep.
+**LSP Fallback**: If unavailable, rely on trinity subagents + AST-grep.
 
-### Collect Background Results
+### Collect Child Results
 
 \`\`\`
 // After main session analysis done, collect all task results

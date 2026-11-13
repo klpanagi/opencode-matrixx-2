@@ -76,14 +76,15 @@ export const QUALITY_AUDIT_TEMPLATE = `You are running a read-only deterministic
    - Dimensions evaluated: typecheck, lint, tests, silent-failures,
      flux (conditional), market-symbols (conditional), staleness (conditional),
      diagnostics (corroborating).
-   - Sentinel, tank, and neo prose goes to an advisory appendix and MUST NOT
-     change the grade. The grade derives from tool exit codes only.
+   - Sentinel, merovingian, and trinity prose goes to an advisory appendix and
+     MUST NOT change the grade. The grade derives from tool exit codes only.
 
-4. **Delegate the ADVISORY dimensions to sentinel, tank, and neo.** These agents
-   supply prose only (architecture notes from sentinel, adversarial notes from
-   tank, exploratory notes from neo) for the advisory appendix. Their output is
-   never a grade input and MUST NOT change the grade. They must never write the
-   report and never touch source.
+4. **Delegate the ADVISORY dimensions to sentinel, merovingian, and trinity.**
+   These agents supply prose only (security notes from sentinel, adversarial
+   read-only review notes from merovingian, exploratory codebase notes from
+   trinity) for the advisory appendix. Their output is never a grade input and
+   MUST NOT change the grade. They must never write the report and never touch
+   source.
 
 5. **Render and write the report.** Run \`mkdir -p .matrixx/quality\` in bash
    first, then write \`.matrixx/quality/<scope>-<timestamp>.md\` and the
