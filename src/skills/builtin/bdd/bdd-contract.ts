@@ -11,7 +11,7 @@ export const bddContractSkill: BuiltinSkill = {
   template: `# BDD Contract Creation
 
 ## Overview
-Transform Gherkin .feature files into structured Contract JSON with LLM-inferred annotations. The .feature file must be 100% pure Gherkin — NO '# @annotation' comments. The bdd-contract agent infers all api/ui/state/assumptions annotations from feature content via LLM reasoning, and the output MUST conform to the strict ContractSchema.
+Transform Gherkin .feature files into structured Contract JSON with LLM-inferred annotations. The .feature file must be 100% pure Gherkin — NO '# @annotation' comments. The LLM enrichment phase infers all api/ui/state/assumptions annotations from feature content via LLM reasoning, and the output MUST conform to the strict ContractSchema.
 
 ## Workflow
 1. Parse Gherkin file → \`bdd_parse_gherkin\` tool (deterministic AST)

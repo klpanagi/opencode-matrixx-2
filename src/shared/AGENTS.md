@@ -14,28 +14,27 @@ shared/
 ├── command-executor.ts           # Loose legacy entry (see command-executor/ scope)
 ├── agent/                        # Agent variant, display names, labels (6 files)
 ├── compaction/                   # Compaction log, model resolver, context limits (8 files)
-├── config/                       # Data paths, deep-merge, opencode dirs, version (9 files)
+├── config/                       # Data paths, deep-merge, opencode dirs, version (10 files)
 ├── io/                           # File utils, frontmatter, shell-env, zip, ports (9 files)
-├── migration/                    # Legacy config migration (legacy subdir; agent/hook/model names)
+├── migration/                    # Hook-name migration — single file hook-names.ts (legacy agent/hook/model names → current or null); NOT a legacy subdir
 ├── model/                        # Model resolution pipeline, requirements, retry (8 files)
 ├── opencode/                     # HTTP API, server auth, plugin detector (6 files)
-├── policy/                       # Context-mode enforcement, DCP, RTK, injection (8 files)
+├── policy/                       # Context-mode enforcement, DCP, RTK, injection (10 files)
 ├── runtime/                      # Logger, notify, abort-error + helpers (8 files)
-├── session/                      # Session utils, cursor, ephemeral sessions (15 files)
+├── session/                      # Session utils, cursor, ephemeral sessions (16 files)
 ├── subagent/                     # Delegation policy: complexity, depth cap, skill resolver, task titles (12 files)
 ├── text/                         # jsonc-parser, system-directive, formatting (8 files)
 ├── tool/                         # define-tool, merge-categories + helpers (7 files)
 ├── command-executor/             # Shell execution (legacy subdir, 3 files)
 ├── git-worktree/                 # Git status/diff parsing (legacy subdir, 5 files)
 ├── software-dev-enforcement/     # Software-dev gating helpers (legacy subdir, 3 files)
-└── tmux/                         # Tmux TUI integration (legacy subdir, 3 files)
+└── tmux/                         # Tmux TUI integration (legacy subdir, 6 files incl. tmux-utils/)
 ```
 
  scope rule: new cross-cutting code goes in the matching scoped dir
  (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`,
- `policy/`, `runtime/`, `session/`, `subagent/`, `text/`, `tool/`); the 5 legacy subdirs
- (`command-executor/`, `git-worktree/`, `migration/`, `software-dev-enforcement/`,
- `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability.
+ `policy/`, `runtime/`, `session/`, `subagent/`, `text/`, `tool/`); the 4 legacy subdirs
+ (`command-executor/`, `git-worktree/`, `software-dev-enforcement/`, `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability. `migration/` is a normal single-file dir (`hook-names.ts`).
 
 ## MOST IMPORTED
 

@@ -72,11 +72,13 @@ If a secret is exposed, follow these steps IMMEDIATELY:
 4. **Update .gitignore**: Ensure sensitive files (e.g., \`.env\`, \`*.pem\`) are ignored.
 5. **Purge Git History**: Use \`git filter-branch\` or BFG Repo-Cleaner to remove the secret from all historical commits. (Do NOT just add a new commit deleting the secret).
 
-## ENVSITTER INTEGRATION
+## ENVSITTER INTEGRATION (OPTIONAL)
 
-When working with \`.env\` files, NEVER read or print them directly. Use the EnvSitter tools to safely interact with secrets:
+When working with \`.env\` files, NEVER read or print them directly. EnvSitter is a host-provided plugin, not registered by Matrixx, so do not assume its tools exist. If \`envsitter_*\` tools are available in your session, use them to interact with secrets:
 - \`envsitter_keys\`: List keys without exposing values.
 - \`envsitter_scan\`: Detect shapes (jwt, url, base64) without printing values.
 - \`envsitter_match\`: Check if a key exists or matches a pattern safely.
+
+Without EnvSitter, fall back to value-free checks: list key names with \`grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' .env\` and run a secret scanner such as \`gitleaks detect --no-git --verbose\` or \`trufflehog filesystem .\` -- never \`cat\` or print the file.
 `,
 }

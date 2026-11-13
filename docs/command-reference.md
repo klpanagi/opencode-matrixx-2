@@ -58,7 +58,7 @@ Generate or refresh a hierarchical AGENTS.md knowledge base for the project.
 | `--create-new` | `false` | Create fresh AGENTS.md files even if they exist |
 | `--max-depth=N` | `3` | Maximum directory recursion depth |
 
-**Phases:** Discovery (parallel explore agents) → Scoring (relevance/cohesion) → Generate → Review
+**Phases:** Discovery (parallel trinity subagents) → Scoring (relevance/cohesion) → Generate → Review
 
 ---
 
@@ -78,7 +78,7 @@ Start a self-referential development loop. The agent continuously works on a tas
 | `--max-iterations=N` | Maximum loop iterations (default: varies) |
 | `--completion-promise=TEXT` | Condition that signals loop completion |
 
-This command has an **imperative intercept** — it calls the matrix-loop manager to start tracking the loop via `hooks.matrixLoop?.startControllerSession()`.
+This command has an **imperative intercept** — it calls the matrix-loop manager to start tracking the loop via `hooks.matrixLoop?.startLoop(sessionID, prompt, ...)` (`src/hooks/matrix-loop/matrix-loop-hook.ts:10-16`).
 
 **Related:** `/cancel-loop` to stop, `/rp-loop` for redpill variant.
 
@@ -104,7 +104,7 @@ Cancel an active Matrix Loop or rp Loop.
 /cancel-loop
 ```
 
-Alias (no standalone template file — uses `CANCEL_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). No arguments. Calls `hooks.matrixLoop?.cancelAll()` to stop all running loops.
+Alias (no standalone template file — uses `CANCEL_LOOP_TEMPLATE` from `src/features/builtin-commands/templates/matrix-loop.ts`, verified in `commands.ts`). No arguments. Calls `hooks.matrixLoop?.cancelLoop(sessionID)` to cancel this session's loop (`src/hooks/matrix-loop/matrix-loop-hook.ts:15-16`).
 
 This command has an **imperative intercept**.
 
@@ -507,11 +507,10 @@ In addition to the 23 built-in commands above, Matrixx loads custom commands fro
 
 | Priority | Location |
 |:---:|----------|
-| 1 | `.opencode/commands/` (project) |
-| 2 | `.config/opencode/commands/` (user global) |
-| 3 | `commands` entries in `.mcp.json` |
+| 1 | `.opencode/command/` (project) |
+| 2 | `<config dir>/command/` (user global; e.g. `~/.config/opencode/command/`) |
 
-Custom commands can define a `name`, `description`, `template`, optional `agent` override, and `argumentHint`. They are loaded by the OpenCode command loader (`src/features/command-loader/`) and merged into Matrixx's command list.
+Custom commands are markdown files with frontmatter (`description`, `argument-hint`, `agent`, `model`, `subtask`); the file name minus `.md` is the command name. They are discovered by `src/tools/slashcommand/command-discovery.ts` (`discoverCommandsSync`) and merged into Matrixx's command list.
 
 ---
 
@@ -532,7 +531,7 @@ Commands with imperative behavior (state mutation, background task cancellation)
 Commands with intercepts:
 - `/matrix-loop` — starts matrix loop tracking
 - `/rp-loop` — starts matrix loop + redpill
-- `/cancel-loop` — cancels all loops
+- `/cancel-loop` — cancels this session's loop
 - `/stop-continuation` — sets stop state + cancels background tasks
 - `/assembly` — toggles assembly state
 - `/redpill` — toggles redpill state

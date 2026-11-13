@@ -3,7 +3,7 @@
 > **Audience:** operators tuning context behavior and engineers working on the context stack.
 > **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys).
 
-Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. The layers are L1 RTK, L2 context-mode, and L4 Headroom.
+Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. The layers are L0 Native, L1 RTK, L2 context-mode, L3 DCP, and L4 Headroom.
 
 ## Table of Contents
 
@@ -43,7 +43,7 @@ Notes: bridge overhead stays below 10ms, layers are orthogonal (RTK is bash, L2 
 
 #### What is RTK?
 
-RTK is a Rust CLI from [rtk-ai/rtk](https://github.com/rtk-ai/rtk) (69.8k stars) that rewrites bash commands before they run. It recognizes 70 plus patterns across git, npm, cargo, test runners, linters, and build tools, then applies filtering, grouping, and deduplication so the LLM sees a compact summary instead of raw verbose output.
+RTK is a Rust CLI from [rtk-ai/rtk](https://github.com/rtk-ai/rtk) that rewrites bash commands before they run. It recognizes 70 plus patterns across git, npm, cargo, test runners, linters, and build tools, then applies filtering, grouping, and deduplication so the LLM sees a compact summary instead of raw verbose output.
 
 ```bash
 # Without RTK: ~2000 tokens
@@ -99,7 +99,7 @@ RTK is disabled by default (opt in). Configure in `matrixx.jsonc`:
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/dist/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
   "rtk": {
     "enabled": true,                          // default: false
     "binary_path": "/usr/local/bin/rtk",      // optional, defaults to "rtk" on PATH
@@ -136,9 +136,9 @@ L1 RTK owns bash only. It does not touch tool outputs handled by L2, history han
 
 #### What is context-mode?
 
-[context-mode](https://github.com/mksglu/context-mode) (18.7k stars) is an external OpenCode plugin that keeps raw tool output out of the LLM context. Instead of pasting large outputs directly, it sandboxes them in an FTS5 index and returns only the derived answer. The pattern is called Think-in-Code.
+[context-mode](https://github.com/mksglu/context-mode) is an external OpenCode plugin that keeps raw tool output out of the LLM context. Instead of pasting large outputs directly, it sandboxes them in an FTS5 index and returns only the derived answer. The pattern is called Think-in-Code.
 
-It exposes 11 `ctx_*` tools:
+It exposes 10 tools:
 
 `ctx_batch`, `ctx_execute` (pass `file` for large files), `ctx_index`, `ctx_search`, `ctx_stats`, `ctx_doctor`, `ctx_upgrade`, `ctx_resume`, `ctx_purge`, `compress`.
 
@@ -309,7 +309,7 @@ Configure in `matrixx.jsonc` (Matrixx bridge). Full defaults live in `src/config
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/dist/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
   "dcp": {
     "enabled": true,                    // default: true
     "default_profile": "balanced",       // optional, default "balanced"
@@ -380,7 +380,7 @@ L3 owns history pruning. It complements L0 compaction and recovery, L1 bash comp
 
 #### What is Headroom?
 
-Headroom from [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) (68.3k stars) is a proxy plus MCP provider that compresses history before it reaches the LLM. It intercepts the OpenAI-compatible provider `headroom` via `@ai-sdk/openai-compatible` and serves retrieval via `headroom_retrieve`.
+Headroom from [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) is a proxy plus MCP provider that compresses history before it reaches the LLM. It intercepts the OpenAI-compatible provider `headroom` via `@ai-sdk/openai-compatible` and serves retrieval via `headroom_retrieve`.
 
 ```bash
 # Without headroom: 50k tokens history
@@ -408,7 +408,7 @@ Headroom is disabled by default (opt in). Enable it in `matrixx.jsonc`:
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/dist/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
   "headroom": {
     "enabled": true,                        // default: false
     "proxyUrl": "http://127.0.0.1:8787",     // optional, defaults to http://127.0.0.1:8787
@@ -448,7 +448,7 @@ headroom wrap opencode
 headroom dashboard
 ```
 
-Package versions: `npm: headroom-ai@0.37.0`, `PyPI: headroom-ai[all]`. Docs at `headroom-docs.vercel.app`.
+Package names: `headroom-ai` (npm and PyPI, `[all]` extra). Docs at `headroom-docs.vercel.app` (upstream site; verify current versions against the package registry rather than this page).
 
 #### Performance Impact
 
@@ -574,7 +574,7 @@ Unified `matrixx.jsonc` showing every context management key. All keys are optio
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/refs/heads/dev/dist/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
 
   // L1 RTK — bash output compression
   "rtk": {
@@ -661,7 +661,7 @@ Notes:
 | RTK | `rtk --version` | Version string (for example `rtk 0.3.x`) | Check PATH and `binary_path`, reinstall |
 | RTK rewrite | Enable `rtk.enabled: true`, run `git status` via bash tool | Output arrives as compressed summary | Confirm `rtk --version`, check `timeout_ms` |
 | context-mode | `ctx stats` (in OpenCode) | Tools listed, chunks and index stats appear | Check `plugin: ["context-mode"]`, restart |
-| context-mode tools | `ctx stats` shows `ctx_*` | At least 11 tools present | Remove legacy `mcp.context-mode` duplication |
+| context-mode tools | `ctx stats` shows `ctx_*` | At least 10 tools present | Remove legacy `mcp.context-mode` duplication |
 | DCP install | `ls ~/.config/opencode/node_modules/@tarquinen/opencode-dcp` | Directory exists | Run `npm install --prefix ~/.config/opencode @tarquinen/opencode-dcp` |
 | DCP profile | `cat ~/.config/opencode/dcp.jsonc \| grep compress` | Compress block for active tier | Set `dcp.default_profile` in `matrixx.jsonc`, restart |
 | DCP switch | Set `"dcp": { "default_profile": "economy" }`, restart | `dcp.jsonc` rewritten with economy tier | Check write permissions on `~/.config/opencode/` |

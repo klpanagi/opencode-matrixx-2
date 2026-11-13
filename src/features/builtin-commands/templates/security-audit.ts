@@ -28,7 +28,7 @@ export const SECURITY_AUDIT_TEMPLATE = `You are running a read-only deterministi
   (expected file|module|project)\`, exit 2, no report written. Example:
   --scope=bogus → error, exit 2.
 - Finding lifecycle statuses (per FindingStatusSchema in
-  src/skills/schemas/security-audit.ts): confirmed | needs_validation |
+  src/skills/loader/schemas/security-audit.ts): confirmed | needs_validation |
   rejected | deferred. needs_validation findings MUST NOT carry a severity.
 - Coverage ledger unit statuses (per LedgerUnitStatusSchema): planned |
   not_applicable | out_of_scope | in_progress | covered | candidate | blocked |

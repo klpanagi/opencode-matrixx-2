@@ -67,7 +67,9 @@ Wrap the bundled code in an HTML page with:
 Write \`preview-server.ts\` in the same output directory as the components.
 
 ## Unit Tests (REQUIRED output)
-Every generated React component MUST ship with a co-located \`*.test.tsx\` that exercises its real behaviour, not just a snapshot. The test file uses \`bun:test\` as the runner plus \`@testing-library/react\` for rendering and \`@testing-library/jest-dom\` for DOM matchers. \`happy-dom\` provides the DOM implementation -- register it in each test file with \`// @vitest-environment happy-dom\` or load it via \`bunfig.toml\`'s \`[test]\` \`preload\` entry.
+Every generated React component MUST ship with a co-located \`*.test.tsx\` that exercises its real behaviour, not just a snapshot. The test file uses \`bun:test\` as the runner plus \`@testing-library/react\` for rendering and \`@testing-library/jest-dom\` for DOM matchers. \`happy-dom\` provides the DOM implementation: register it via \`bunfig.toml\`'s \`[test]\` \`preload\` entry, pointing at a setup file that calls \`GlobalRegistrator.register()\` from \`@happy-dom/global-registrator\` -- \`bun:test\` ignores Vitest's \`// @vitest-environment\` pragma, so a per-file directive does not enable the DOM.
+
+> **Scope note**: the co-located \`*.test.tsx\` convention applies ONLY to generated demo projects. When contributing to the Matrixx repo itself, tests live under \`tests/\` mirroring the \`src/\` path -- \`src/**/*.test.ts(x)\` is never discovered by CI.
 
 Scope per component:
 - **Renders** without crashing given the documented default props

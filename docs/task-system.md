@@ -171,7 +171,7 @@ The task store (`.matrixx/tasks/`) is a write channel separate from the codebase
 
 > An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-step.
 
-The code half of that is `isTaskStorePrimary(agent) = agent.mode === "primary" || agent.mode === "all"`. It is derived from the agent's declared `mode` (`AgentMode` in `src/agents/types.ts`), never from a hardcoded list of names. A name list is precisely what let the original drift go unnoticed: keymaker's prompt called the task store "your execution backbone" while its permission arm held no `task_*` at all, and cipher's prompt told users to delegate "via the task() tool" while `task` was denied everywhere. Documentation and implementation agreed with each other, and both were wrong.
+The code half of that is `isTaskStorePrimary(agent) = agent.mode === "primary" || agent.mode === "all"`. It is derived from the agent's declared `mode` (`AgentMode` in `src/agents/shared/agent-config.ts`), never from a hardcoded list of names. A name list is precisely what let the original drift go unnoticed: keymaker's prompt called the task store "your execution backbone" while its permission arm held no `task_*` at all, and cipher's prompt told users to delegate "via the task() tool" while `task` was denied everywhere. Documentation and implementation agreed with each other, and both were wrong.
 
 **The criterion is ONE-DIRECTIONAL.** "iff" is being used loosely and readers should know it: the code tests only the *sufficient* direction (`mode ∈ {primary, all}` ⇒ grant). There is no biconditional test, nothing scans prompts to decide whether an agent's work "is multi-step", and no test may assert the converse.
 
@@ -613,7 +613,7 @@ Idempotency comes from markers in the file, not from cached state: the scaffold 
 `**Task ID**` line and the stamp on the existing `**Status**: completed` heading, so retries and restarts
 neither duplicate a file nor a stamp.
 
-This hook replaces `task-notepad`, which was removed in commit `f8de08cfb` because `session.todo()` is
+This hook replaces `task-notepad`, which was removed because `session.todo()` is
 permanently unavailable. The old name survives only as a retained legacy schema literal and must not be
 reused. See [task-notepad-writer.md](./task-notepad-writer.md) for the full layout rules, the exact scaffold and
 stamp literals, and worked examples captured from the running hook.
@@ -734,7 +734,7 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 
 - **Mock-heavy isolation:** tests with `mock.module()` run isolated. Add new such files to both `.github/workflows/ci.yml` and `publish.yml` mock-heavy lists and the `grep -v -F` exclusion in `script/run-ci.sh`. Source of truth: `script/run-ci.sh`.
 - **Preload:** `tests/test-setup.ts` calls `_resetForTesting()` before each test.
-- **Existing suites:** `tests/tools/task/*.test.ts`, `tests/features/task-storage/*.test.ts`, `tests/features/task-session-scope/*.test.ts` (`staleness`, `todo`), `tests/shared/task-system-gating.test.ts`, `tests/e2e-smoke-task-system.test.ts`.
+- **Existing suites:** `tests/tools/task/*.test.ts`, `tests/features/task-storage/*.test.ts`, `tests/features/task-session-scope/*.test.ts` (`staleness`, `todo`), `tests/shared/task-system-gating.test.ts`.
 
 ---
 
@@ -753,7 +753,7 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 | `62e7061` wire enforcer to event bus and correct injection | `handleSessionIdle` via `onAbort`/`onRecoveryComplete` callbacks | Abort-aware, background-task-aware continuation |
 | `5459ef9` merge the no-todo-tools branch | Remove stale specs, repair compaction | n/a |
 | `75fedac` default `task_system=true` + canonical gating | `isTaskSystemEnabled` + `_migrations` marker | Zero-config for fresh clones |
-| `8509b84` to `82f9f38` `/task-list` and `/cleanup-tasks` search-mode fixes | Ignore global `search-mode` | Commands must not leak into global search |
+| `/task-list` and `/cleanup-tasks` search-mode fixes | Ignore global `search-mode` | Commands must not leak into global search |
 | task config consolidation (2.6.x) | Canonical `tasks.*` section; `morpheus.tasks.*` and `task.pollTimeoutMs` become fallbacks via `resolveTasksConfig()` | One home for task config; keeps old files parsing |
 | legacy todo system removed (v2.7) | The 4 legacy todo hooks, the dual `useTaskSystem` prompt fork, and the master gate are gone; `tasks.*` is unconditional | One substrate, no split-brain todos. |
 

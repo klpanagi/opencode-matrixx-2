@@ -72,7 +72,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // ---------------------------------------------------------------------
     // Fast-fail hooks (Task T1.1: 3-wave parallelization)
     //
-    // The 14 hook calls below are grouped into 3 sequential waves based on
+    // The hook invocations below are grouped into 3 sequential waves based on
     // their mutation/throwing profile. See `hook-mutation-classification.md`
     // for the full analysis. Waves execute strictly in order (1 -> 2 -> 3);
     // within a wave, hooks run concurrently.
@@ -89,7 +89,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
       rulesInjectorHook?.(input, output),
     ])
 
-    // Wave 2 (5 hooks): fail-fast BLOCKING — each guard throws on a
+    // Wave 2 (9 hooks): fail-fast BLOCKING — each guard throws on a
     //   DIFFERENT condition for a DIFFERENT tool; no two guards fire on
     //   the same input. Use Promise.all (NOT allSettled): the first
     //   rejection short-circuits and propagates immediately. This is
@@ -116,7 +116,7 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
 
     // Wave 3 (8 hooks): MUTATOR — must run sequentially to preserve
     //   mutation order. Specifically:
-  //   - 4 hooks CONCAT to output.args.prompt (oracleMdOnly,
+  //   - 5 hooks CONCAT to output.args.prompt (oracleMdOnly,
     //     mouseNotepad, niobeHook, subagentPolicy, softwareDevEnforcement). Parallel writes would stomp
     //     each other (both read prompt from the same starting state).
     //   - nonInteractiveEnv REWRITES output.args.command (line 58) and

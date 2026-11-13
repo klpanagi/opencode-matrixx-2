@@ -22,6 +22,5 @@ CONTEXT GATHERING (parallel):
 
 IF COMPLEX - DO NOT STRUGGLE ALONE. Consult specialists:
 - **Oracle**: Conventional problems (architecture, debugging, complex logic)
-- **Matrix-bend**: Non-conventional problems (different approach needed)
 
 SYNTHESIZE findings before proceeding.`

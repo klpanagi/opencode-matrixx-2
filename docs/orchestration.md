@@ -20,7 +20,7 @@ Execution state lives in file-backed tasks. See
 |------------|----------|-------------|
 | **Simple** | Just prompt | Quick fixes, single-file changes |
 | **Complex + Lazy** | Type `rp` or `redpill` | Explaining full context is tedious, let the agent figure it out |
-| **Complex + Precise** | `@plan` then `/start-work` | Multi-step work needing verifiable execution; Oracle plans, Niobe executes |
+| **Complex + Precise** | Plan with Oracle, then `/start-work` | Multi-step work needing verifiable execution; Oracle plans, Niobe executes |
 
 **Decision flow:**
 
@@ -30,7 +30,7 @@ Is it a quick fix or simple task?
   |- NO  -> Is explaining the full context tedious?
              |- YES -> Type "rp" and let the agent figure it out
              |- NO  -> Do you need precise, verifiable execution?
-                        |- YES -> Use @plan for Oracle planning, then /start-work
+                        |- YES -> Ask Oracle (or Morpheus) for a plan, then /start-work
                         |- NO  -> Just use "rp"
 ```
 
@@ -79,10 +79,10 @@ production code.
 3. Answer interview questions
 4. Oracle writes .matrixx/plans/{name}.md
 
-# Method 2: @plan from Morpheus (fastest from current context)
+# Method 2: ask Morpheus to plan (fastest from current context)
 1. Stay in Morpheus (default agent)
-2. Type: @plan "I want to refactor the auth system"
-3. The @plan keyword routes the request to Oracle automatically
+2. Describe the work and ask for a plan: "I want to refactor the auth system"
+3. There is no @plan keyword routing: switch to Oracle yourself, or let Morpheus hand the planning to Oracle
 4. Answer interview questions, Oracle writes the plan
 ```
 
@@ -232,12 +232,6 @@ H2 is exempt from section-ordering and unknown-section checks.
 grandfathered. Front-matter is injected on the next `plan_update` call
 (`apply-on-next-edit` only). No `plan_migrate` tool is shipped.
 
-**Runbook: oversized + kebab-invalid plans**: Two plans
-(`p2.2-generic-recovery-refactor.md`, `p2.3-evolution-gating.md`) exceed the
-size cap and also have dotted (non-kebab) filenames. They must be renamed to
-kebab-case and split into smaller files. This is a data operation, not a code
-change, and should be handled as a follow-up.
-
 ## Layer 3: Workers (Mouse + Specialists)
 
 ### Mouse: the task executor
@@ -297,7 +291,7 @@ omission.
 |--------|-----------|-------------------------------|
 | **What** | Dedicated agent for autonomous deep work | Keyword that activates redpill mode in any session |
 | **Doctrine** | Autonomous reasoning, self-directed | The Matrixx Manifesto: reproducible evidence over assertion, working code over plausible code |
-| **Model** | `opencode/minimax-m3-free` | Your configured default model |
+| **Model** | `claude-opus-4-6` (max) → `claude-sonnet-4-6` (providers: anthropic, github-copilot, opencode) | Your configured default model |
 | **Planning** | Self-plans during execution | Uses Oracle plans when available, explores autonomously otherwise |
 | **Best for** | Deep architectural reasoning, hard debugging, cross-domain synthesis | General complex tasks, "just do it" scenarios |
 
@@ -331,7 +325,7 @@ is reached. `/rp-loop` is the same loop with redpill mode active.
 
 | Command | Purpose |
 |---------|---------|
-| `@plan [request]` | Route to Oracle, start a planning session from Morpheus |
+| planning (no command) | Ask Oracle (or Morpheus) for a plan in conversation; there is no `@plan` routing keyword |
 | `/start-work` | Execute the plan (find or resume via `mission.json`, switch to Niobe) |
 | `/matrix-loop`, `/rp-loop`, `/cancel-loop` | Start or stop a self-referential dev loop |
 | `/redpill`, `/end-redpill` | Toggle redpill mode at runtime |
@@ -383,9 +377,9 @@ and retry.
 Type `exit` or start a new session. Niobe is entered through
 `/start-work`; manual switching is rarely needed.
 
-**"@plan vs switching to Oracle, which one?"**
-No functional difference. `@plan` is the shortcut, switching agents is
-explicit control.
+**"Asking Morpheus to plan vs switching to Oracle, which one?"**
+Same result. There is no `@plan` routing keyword; ask Oracle directly or
+let Morpheus hand the planning to Oracle.
 
 **"Keymaker or rp?"**
 `rp` for most tasks. Keymaker for deep architectural work that benefits
@@ -598,7 +592,7 @@ prompt shape while the worker performs to the task.
 {
   "categories": {
     "unity-game-dev": {
-      "model": "opencode/kimi-k2.5-free",
+      "model": "anthropic/claude-sonnet-4-6",
       "temperature": 0.3,
       "prompt_append": "You are a Unity game development expert..."
     }
@@ -610,8 +604,8 @@ prompt shape while the worker performs to the task.
 
 | Before | After |
 |--------|-------|
-| Hardcoded: `frontend-ui-ux-engineer` (one model, one domain) | `category="construct" + load_skills=["frontend-ui-ux"]` |
-| One-size-fits-all engineer | `category="construct" + load_skills=["unity-master"]` |
+| Hardcoded: `frontend-ui-ux-engineer` (one model, one domain) | `subagent(agent="mouse-construct", load_skills=["frontend-ui-ux"])` |
+| One-size-fits-all engineer | `subagent(agent="mouse-construct", load_skills=["unity-master"])` |
 | Model bias | Category-based: model abstraction eliminates bias |
 
 ### Why a mid-tier worker is sufficient
@@ -620,22 +614,6 @@ Mouse does not need to be the smartest model; it needs to be reliable.
 Detailed 50–200 line prompts, accumulated wisdom passed forward, clear MUST
 DO / MUST NOT DO constraints, and mandatory verification mean the
 intelligence lives in the system, not in any single agent.
-
-### Task-continuation pressure
-
-The hook system keeps workers from stopping halfway by re-injecting
-incomplete todos as a system reminder until every box is checked:
-
-```
-[SYSTEM REMINDER - TODO CONTINUATION]
-
-You have incomplete todos! Complete ALL before responding:
-- [ ] Implement user service ← IN PROGRESS
-- [ ] Add validation
-- [ ] Write tests
-
-DO NOT respond until all todos are marked completed.
-```
 
 ## Further Reading
 

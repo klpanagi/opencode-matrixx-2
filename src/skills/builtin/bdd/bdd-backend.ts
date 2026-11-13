@@ -33,6 +33,8 @@ Generate typed API services from BDD Contract JSON annotations.
 ## Unit Tests (REQUIRED output)
 Every generated service module MUST ship with a co-located \`*.test.ts\` that exercises its real behaviour. The test file uses \`bun:test\` as the runner -- no other test framework needed. Mock the HTTP transport (\`globalThis.fetch\` with \`bun:test\`'s \`mock()\`) so the tests run in milliseconds without network.
 
+> **Scope note**: the co-located \`*.test.ts\` convention applies ONLY to generated demo projects. When contributing to the Matrixx repo itself, tests live under \`tests/\` mirroring the \`src/\` path -- \`src/**/*.test.ts\` is never discovered by CI.
+
 Scope per service:
 - **Zod schema validation**: for each request and response schema, assert that a valid payload parses successfully and that each invalid variant (missing field, wrong type, out-of-range value) returns a \`ZodError\` with a helpful \`issues\` array.
 - **Service function call**: invoke each service function with a representative request and assert that \`fetch\` was called exactly once with the right \`method\` (from the contract's \`api.endpoints[].method\`, exactly matching the enum), the right \`url\` (from \`api.endpoints[].path\`, including any path interpolation), the right \`headers\` (Content-Type: application/json), and the right \`body\` (JSON-stringified request).

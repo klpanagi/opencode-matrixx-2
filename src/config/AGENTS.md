@@ -62,7 +62,7 @@ config/
 
 ## CONFIGURATION HIERARCHY
 
-Project (`.opencode/matrixx.jsonc`) → User (`~/.config/opencode/matrixx.jsonc`) → Defaults — both JSONC (`src/shared/text/jsonc-parser.ts`, comments + trailing commas). Old agent and hook names auto-migrate via `shared/migration/`; the 10 retired hook names map to `null` there so existing `disabled_hooks` lists keep loading. `new_task_system_enabled` and `experimental.task_system` still parse but are ignored, with a one-time deprecation warning.
+Project (`.opencode/matrixx.json` or `.opencode/matrixx.jsonc`) → User (`~/.config/opencode/matrixx.json` or `matrixx.jsonc`; `resolveConfigPath` in `plugin-config.ts` detects both extensions, the CLI setup wizard writes `matrixx.jsonc`) → Defaults — both JSONC (`src/shared/text/jsonc-parser.ts`, comments + trailing commas). Old agent and hook names auto-migrate via `shared/migration/`; the 13 retired hook names map to `null` there (`HOOK_NAME_MAP` in `src/shared/migration/hook-names.ts`) so existing `disabled_hooks` lists keep loading. `new_task_system_enabled` and `experimental.task_system` still parse but are ignored, with a one-time deprecation warning.
 
 ## AGENT OVERRIDE FIELDS
 

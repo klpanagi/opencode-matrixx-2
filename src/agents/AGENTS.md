@@ -79,7 +79,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 
 | Agent | Mode | Denied | Allowed |
 |-------|------|--------|---------|
-| Merovingian | subagent | edit, task | Read-only consultation (prompt-level; `write` not denied) |
+| Merovingian | subagent | write, edit, subagent | Read-only consultation (denied at tool level in `agent-tool-restrictions.ts`) |
 | Operator | subagent | write, edit, task | Research tools only |
 | Trinity | subagent | write, edit, task | Search tools only |
 | Construct | subagent | all except `read`, `document_reader_convert_to_markdown`, `subagent` | Vision-only |

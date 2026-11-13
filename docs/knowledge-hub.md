@@ -47,8 +47,8 @@ only; the canonical path remains `<your-knowledge-dir>/_index.md`.
 - Router-only discipline: always check `_index.md` first; open only the rows
   whose `When to consult` column matches the task.
 - Frontmatter is optional; no metadata changes required.
-- Secrets: `_index.md` references `api_access/.publisync_env` and
-  `api_access/.alz_mongo_env` by filename only — never print or commit their contents.
+- Secrets: `_index.md` may reference secret-bearing files (for example `api_access/.env_service_one` and
+  `api_access/.env_service_two`) by filename only — never print or commit their contents.
 
 ### Verification
 
@@ -136,7 +136,7 @@ denying. Never bypass the guard without asking the user first.
 ### Verification
 
 ```bash
-bun test src/hooks/knowledge-hub-guard/ src/hooks/knowledge-hub-injector/
+bun test tests/hooks/knowledge-hub-guard/ tests/hooks/knowledge-hub-injector/
 rg knowledge-hub-injector src/plugin/message-hooks/
 ```
 

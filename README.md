@@ -144,7 +144,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 **Where Matrixx shines**
 
 - Right model for the right job — provider-resolved fallback chains work with free-tier OpenCode models out of the box, and mix freely with paid providers.
-- True parallelism — background agents explore, review, and audit while implementation proceeds.
+- True parallelism — child subagents explore, review, and audit while implementation proceeds.
 - Work survives interruptions — tasks persist across `/clear`, compaction, and restarts.
 - Engineering-grade edits — LSP + AST-Grep instead of regex guesswork.
 - Security and quality are built in, not bolted on — guards block secret leaks; Sentinel never writes code, only reports.

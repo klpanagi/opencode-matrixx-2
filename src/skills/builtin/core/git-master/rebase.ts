@@ -76,6 +76,8 @@ git commit -m "Combined: <summarize all changes>"
 MERGE_BASE=$(git merge-base HEAD main 2>/dev/null || git merge-base HEAD master)
 GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash $MERGE_BASE
 
+# Non-interactive form: GIT_SEQUENCE_EDITOR=: suppresses the todo editor, so no input is needed.
+
 # The GIT_SEQUENCE_EDITOR=: trick auto-accepts the rebase todo
 # Fixup commits automatically merge into their targets
 \`\`\`

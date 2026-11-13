@@ -29,7 +29,7 @@ Performs intelligent, deterministic refactoring with full codebase awareness. Un
 1. **Understands your intent** - Analyzes what you actually want to achieve
 2. **Maps the codebase** - Builds a definitive codemap before touching anything
 3. **Assesses risk** - Evaluates test coverage and determines verification strategy
-4. **Plans meticulously** - Creates a detailed plan with Plan agent
+4. **Plans meticulously** - Creates a detailed plan with the Oracle agent
 5. **Executes precisely** - Step-by-step refactoring with LSP and AST-grep
 6. **Verifies constantly** - Runs tests after each change to ensure zero regression
 
@@ -80,10 +80,10 @@ Should I proceed with [recommendation], or would you prefer differently?
 
 \`\`\`
 task_create({ items: [
-  {"subject": "PHASE 1: Codebase Analysis - launch parallel explore agents", "priority": "high"},
+  {"subject": "PHASE 1: Codebase Analysis - launch parallel trinity subagents", "priority": "high"},
   {"subject": "PHASE 2: Build Codemap - map dependencies and impact zones", "priority": "high"},
   {"subject": "PHASE 3: Test Assessment - analyze test coverage and verification strategy", "priority": "high"},
-  {"subject": "PHASE 4: Plan Generation - invoke Plan agent for detailed refactoring plan", "priority": "high"},
+  {"subject": "PHASE 4: Plan Generation - invoke Oracle agent for detailed refactoring plan", "priority": "high"},
   {"subject": "PHASE 5: Execute Refactoring - step-by-step with continuous verification", "priority": "high"},
   {"subject": "PHASE 6: Final Verification - full test suite and regression check", "priority": "high"}
 ]})
@@ -95,7 +95,7 @@ task_create({ items: [
 
 **Mark phase-1 as in_progress.**
 
-## 1.1: Launch Parallel Explore Agents (BACKGROUND)
+## 1.1: Launch Parallel Trinity Subagents
 
 Fire ALL of these simultaneously using \`subagent\`:
 
@@ -103,13 +103,15 @@ Fire ALL of these simultaneously using \`subagent\`:
 // Agent 1: Find the refactoring target
 subagent(
   agent="trinity",
+  description="Find target occurrences",
   prompt="Find all occurrences and definitions of [TARGET]. 
   Report: file paths, line numbers, usage patterns."
 )
 
 // Agent 2: Find related code
 subagent(
-  agent="trinity", 
+  agent="trinity",
+  description="Find dependent code",
   prompt="Find all code that imports, uses, or depends on [TARGET].
   Report: dependency chains, import graphs."
 )
@@ -117,6 +119,7 @@ subagent(
 // Agent 3: Find similar patterns
 subagent(
   agent="trinity",
+  description="Find similar patterns",
   prompt="Find similar code patterns to [TARGET] in the codebase.
   Report: analogous implementations, established conventions."
 )
@@ -124,6 +127,7 @@ subagent(
 // Agent 4: Find tests
 subagent(
   agent="trinity",
+  description="Find related tests",
   prompt="Find all test files related to [TARGET].
   Report: test file paths, test case names, coverage indicators."
 )
@@ -131,6 +135,7 @@ subagent(
 // Agent 5: Architecture context
 subagent(
   agent="trinity",
+  description="Find architecture context",
   prompt="Find architectural patterns and module organization around [TARGET].
   Report: module boundaries, layer structure, design patterns in use."
 )
@@ -138,7 +143,7 @@ subagent(
 
 ## 1.2: Direct Tool Exploration (WHILE AGENTS RUN)
 
-While background agents are running, use direct tools:
+While the child subagents are running, use direct tools:
 
 ### LSP Tools for Precise Analysis:
 
@@ -273,6 +278,7 @@ ls -la *_test.go
 // Find all tests related to target
 subagent(
   agent="trinity",
+  description="Analyze test coverage",
   // fire the coverage child, absorb its completion message, then analyse
   prompt="Analyze test coverage for [TARGET]:
   1. Which test files cover this code?
@@ -335,15 +341,16 @@ After each refactoring step:
 
 ---
 
-# PHASE 4: PLAN GENERATION (PLAN AGENT)
+# PHASE 4: PLAN GENERATION (ORACLE AGENT)
 
 **Mark phase-4 as in_progress.**
 
-## 4.1: Invoke Plan Agent
+## 4.1: Invoke Oracle Agent
 
 \`\`\`
 subagent(
-  agent="plan",
+  agent="oracle",
+  description="Generate refactoring plan",
   prompt="Create a detailed refactoring plan:
 
   ## Refactoring Goal
@@ -372,7 +379,7 @@ subagent(
 
 ## 4.2: Review and Validate Plan
 
-After receiving plan from Plan agent:
+After receiving the plan from the Oracle agent:
 
 1. **Verify completeness**: All identified files addressed?
 2. **Verify safety**: Each step reversible?
@@ -381,7 +388,7 @@ After receiving plan from Plan agent:
 
 ## 4.3: Register Detailed Todos
 
-Convert Plan agent output into granular todos:
+Convert the Oracle agent's output into granular todos:
 
 \`\`\`
 task_create({ items: [
@@ -595,16 +602,15 @@ Use \`ast_grep_search\` and \`ast_grep_replace\` for structural transformations.
 **Critical**: Always \`dryRun=true\` first, review, then execute.
 
 ## Agents
-- \`explore\`: Parallel codebase pattern discovery
-- \`plan\`: Detailed refactoring plan generation
-- \`oracle\`: Read-only consultation for complex architectural decisions and debugging
-- \`librarian\`: **Use proactively** when encountering deprecated methods or library migration tasks. Query official docs and OSS examples for modern replacements.
+- \`trinity\`: Parallel codebase pattern discovery
+- \`oracle\`: Detailed refactoring plan generation and read-only consultation for complex architectural decisions and debugging
+- \`operator\`: **Use proactively** when encountering deprecated methods or library migration tasks. Query official docs and OSS examples for modern replacements.
 
 ## Deprecated Code & Library Migration
 When you encounter deprecated methods/APIs during refactoring:
-1. Fire \`librarian\` to find the recommended modern alternative
+1. Fire \`operator\` to find the recommended modern alternative
 2. **DO NOT auto-upgrade to latest version** unless user explicitly requests migration
-3. If user requests library migration, use \`librarian\` to fetch latest API docs before making changes
+3. If user requests library migration, use \`operator\` to fetch latest API docs before making changes
 
 ---
 

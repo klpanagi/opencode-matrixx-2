@@ -92,7 +92,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
 |----------|-----------|
 | **No Python** | Pure TypeScript/Node.js — consistent with matrixx stack |
 | **No `stories_2_tdd` bundling** | Agents do the work natively; no legacy code import |
-| **5 separate slash commands** | No subcommand routing infrastructure needed |
+| **One slash command** (`/bdd-pipeline`) plus four deterministic tools | No subcommand routing infrastructure needed |
 | **Deterministic tools first, agents second** | Tools (bdd_parse_gherkin, bdd_create_contract) do the parsing work; agents enrich on top |
 || **Skills, not specialist agents** | The `bdd-contract` skill enriches the Contract — Morpheus (the matrixx orchestrator) handles tests/frontend/backend via skills |
 
@@ -121,7 +121,7 @@ Both run under the same execution discipline: Oracle plans, workers implement, `
                   ┌─────────────────────┐
                   │  bdd_create_contract │  ← Deterministic tool
                   │                     │
-                  │  Parses annotations │
+                   │  Empty annotations │
                   │  Validates schema   │
                   │  Writes JSON file   │
                   └──────────┬──────────┘
@@ -176,9 +176,9 @@ bdd_create_contract({ featurePath: "demos/bdd/login/1001_username_password.featu
 **What happens**:
 1. Reads the `.feature` file
 2. Parses it with `@cucumber/gherkin` (deterministic AST)
-3. Extracts Gherkin comments as structured annotations (`@api:*`, `@ui:*`, `@state:*`, `@assumption:`)
-4. Produces `.contract.json` next to the source file
-5. The `bdd-contract` skill enriches the contract with semantic insights
+3. Produces `.contract.json` next to the source file with annotations left empty (the `.feature` file stays 100% pure Gherkin; annotation comments are not used)
+4. The `bdd-contract` skill enriches the contract: it infers `api`/`ui`/`state`/`assumptions` annotations from feature content via LLM reasoning
+5. Validate the enriched contract with `bdd_validate_contract` after every edit
 
 **Output**: `<feature-path>.contract.json`
 
@@ -443,7 +443,7 @@ Annotations are NOT placed in `.feature` files. The `.feature` file must be 100%
 | ❌ No new hooks | ✓ None |
 | ❌ No auto-installation of test runners | ✓ User runs `bun install` themselves for cucumber |
 | ❌ No new specialist agents for tests/frontend/backend | ✓ These run via Morpheus + bdd-* skills (single-source-of-truth consolidation) |
-| ❌ No subcommand routing | ✓ 5 separate commands |
+| ❌ No subcommand routing | ✓ One `/bdd-pipeline` command + four `bdd_*` tools |
 
 #### Fixtures
 
@@ -486,17 +486,16 @@ bdd_create_contract({ featurePath: "src/features/my-feature.feature", force: tru
 
 #### Writing Good Feature Files
 
-The better your annotations, the better the generated code:
+The better your feature content, the better the generated code. Annotations are never written as comments in the `.feature` file (it stays 100% pure Gherkin); the `bdd-contract` skill infers `api`/`ui`/`state`/`assumptions` from descriptive names, descriptions, and step text:
 
 ```gherkin
-# @api:endpoint GET /api/users
-# @api:response 200 { users: User[] }
-# @ui:route /users -> UserListPage
-# @ui:testid container=user-list-container
-# @state:variable users User[] empty
-# @assumption: Users are sorted by creation date descending
 Feature: User Management
-  ...
+  Users are managed through a REST API and surfaced in an admin UI.
+
+  Scenario: List users sorted by creation date descending
+    Given the admin is on the users page
+    When the users list loads from GET /api/users
+    Then a paginated user list shows each user's creation date
 ```
 
 #### Verification
@@ -607,7 +606,7 @@ Developer (executes) → loads tdd-enforcer skill to follow those instructions
 │                              │                                      │
 │                              ▼                                      │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  DEVELOPER AGENT (category="source")                        │   │
+│  │  DEVELOPER AGENT (agent="mouse-source")                        │   │
 │  │                                                              │   │
 │  │  load_skills=["git-master", "tdd-enforcer"]                 │   │
 │  │                                                              │   │
@@ -665,9 +664,9 @@ Each task's acceptance criteria includes TDD-specific verification:
 
 ```markdown
 **If TDD (tests enabled):**
-- [ ] Test file created: src/auth/login.test.ts
+- [ ] Test file created: tests/auth/login.test.ts
 - [ ] Test covers: successful login returns JWT token
-- [ ] bun test src/auth/login.test.ts → PASS (3 tests, 0 failures)
+- [ ] bun test tests/auth/login.test.ts → PASS (3 tests, 0 failures)
 ```
 
 #### Agent-Executed QA Scenarios
@@ -736,7 +735,7 @@ Before marking task DONE:
 
 | Convention | Rule |
 |------------|------|
-| **File placement** | `src/foo/bar.ts` → `src/foo/bar.test.ts` (alongside source) |
+| **File placement** | `src/foo/bar.ts` → `tests/foo/bar.test.ts` (CI test discovery runs `find tests script -name '*.test.ts'`; a `src/**/*.test.ts` file is never discovered and violates the repo test-layout rule) |
 | **BDD markers** | `//#given` / `//#when` / `//#then` in every test case |
 | **Imports** | `import { describe, test, expect } from "bun:test"` |
 | **Evidence** | `bun test` + `bun run typecheck` must pass before marking done |
@@ -820,7 +819,7 @@ See `matrixx.example.jsonc` (`tdd_enforcer` block, active `enabled: true`) for t
 
 - Oracle still includes TDD instructions in plans (template is static)
 - Developer agent does NOT load the `tdd-enforcer` skill for non-code categories
-- `category="source"` still errors without `tdd-enforcer` in `load_skills`: opt-out does not exempt code-writing delegations
+- `agent="mouse-source"` still errors without `tdd-enforcer` in `load_skills`: opt-out does not exempt code-writing delegations
 - RED-GREEN-REFACTOR enforcement stays active via the prompt banner and the Morpheus completion gate
 - Tests-after is never acceptable for software-scope tasks
 
@@ -828,7 +827,7 @@ See `matrixx.example.jsonc` (`tdd_enforcer` block, active `enabled: true`) for t
 
 ### Evidence Requirements
 
-Task is NOT complete without (software-scope: any task writing or editing `*.ts|*.tsx|*.js|*.jsx`, or `category="source"`; docs-only and exploration exempt):
+Task is NOT complete without (software-scope: any task writing or editing `*.ts|*.tsx|*.js|*.jsx`, or `agent="mouse-source"`; docs-only and exploration exempt):
 
 ```bash
 bun test              # Must show: X tests passed, 0 failed

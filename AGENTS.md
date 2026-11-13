@@ -11,9 +11,9 @@
 ### Git Workflow
 
 ```
-master (deployed/published)
+v* tags / npm publish (releases)
    ↑
-  dev (integration branch)
+  dev (default branch — integration)
    ↑
 feature branches (your work)
 ```
@@ -23,18 +23,18 @@ feature branches (your work)
 | Rule | Description |
 |------|-------------|
 | **ALL PRs → `dev`** | Every pull request MUST target the `dev` branch |
-| **NEVER PR → `master`** | PRs to `master` are **automatically rejected** by CI |
+| **NEVER PR → `master`** | `master` does not exist on the remote (retired; releases are dev + tags). There is no production branch to target |
 | **"Create a PR" = target `dev`** | When asked to create a new PR, it ALWAYS means targeting `dev` |
-| **Merge commit ONLY** | Squash merge is **disabled** in this repo. Always use merge commit when merging PRs. |
+| **Merge commit ONLY** | Squash merge is forbidden by project policy for this repo (GitHub allows it — merge commits are the rule). Always use merge commit when merging PRs. |
 
 ### Why This Matters
 
-- `master` = production/published npm package
-- `dev` = integration branch where features are merged and tested
-- Feature branches → `dev` → (after testing) → `master`
-- Squash merge is disabled at the repository level — attempting it will fail
+- `master` no longer exists on the remote (`git ls-remote --heads origin master` is empty); `dev` is the default branch and the integration branch
+- Releases are cut from `dev` as `v*` tags via `publish.yml` and published to npm
+- Squash merge is permitted by GitHub but forbidden by this repo's policy — always merge with a merge commit
+- The `block-master-pr` CI job remains as a harmless legacy guard
 
-**If you create a PR targeting `master`, it WILL be rejected. No exceptions.**
+**There is no `master` branch. Every PR targets `dev` and merges with a merge commit — squash merges violate project policy.**
 
 ---
 
@@ -132,7 +132,7 @@ matrixx/
 │   └── plugin/   → composition root: index.ts barrel; setup-domains.ts + setup-domains/; handlers/ (6-phase config pipeline); tool/ (catalog + policy + chat/event handlers); hooks/ (5 factories); message-hooks/
 ├── bin/                            # Platform-detecting CLI wrapper (`bin/matrixx.ts`)
 ├── script/                         # build-schema, run-ci.sh, mock-heavy-list.txt, e2e harnesses
-├── docs/                           # Long-form docs (configurations.md ~92 KB)
+├── docs/                           # Long-form docs (configurations.md, ~91 KB / 91,330 bytes)
 └── dist/                           # Build output (ESM + .d.ts + schema)
 ```
 
@@ -158,9 +158,9 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 **Trusted dependencies** — `@ast-grep/cli` postinstall is allowlisted via `trustedDependencies` in `package.json`. No extra env var needed.
 
-**Bun pinned to 1.4.4** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
+**Bun pinned to 1.4.4** — in `.bun-version` and all `bun-version:` entries in `.github/workflows/ci.yml`, `publish.yml`, `morpheus-agent.yml`, `config-app.yml`, `install-smoke.yml`. Never use `latest`. To upgrade: bump `.bun-version` + all workflow entries, test locally.
 
-**Mock-heavy isolation** — 42 files use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add it to **both** `.github/workflows/ci.yml` and `publish.yml` in the mock-heavy list **and** the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Source of truth: `script/run-ci.sh` — never duplicate the exclusion list elsewhere. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
+**Mock-heavy isolation** — 42 CI-isolated entries (36 files + 6 directories) in `script/mock-heavy-list.txt` use `mock.module()` and pollute Bun's module cache. CI runs them isolated (one `bun test` per file/dir). When adding a new `mock.module()` test, add one entry to `script/mock-heavy-list.txt` only — never inline the list in a workflow. Both `.github/workflows/ci.yml` and `publish.yml` read that file, and `script/run-ci.sh` uses it for the `grep -v -F` exclusion in the `find | xargs bun test` catch-all. Verify via `bash script/run-ci.sh` or `act pull_request -j test`.
 
 **Dual test layout** — CI discovers tests via `find tests script -name '*.test.ts'`, so files under `tests/**` run in CI while co-located `src/**/*.test.ts` are CI-orphaned (never discovered by the `find` glob). NEVER write test files in `src/` — always put them under `tests/` mirroring the `src/` path (e.g. `src/tools/foo/bar.ts` → `tests/tools/foo/bar.test.ts`, importing via `../../../src/...`). The mock-heavy isolation list has a single source of truth: `script/mock-heavy-list.txt`. Both `.github/workflows/ci.yml` and `publish.yml` read it; `script/run-ci.sh` also reads it for the catch-all exclusion. Never duplicate the list inline in a workflow file.
 
@@ -247,14 +247,14 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 
 1. Feature branch → PR to `dev` (CI: typecheck + lint + isolated tests + build)
 2. Merge to `dev` → `publish.yml` maintains the `next` draft release
-3. Release: `gh workflow run publish -f bump=patch|minor|major` (`skip_platform=true` skips natives)
-4. `master` auto-updated by publish workflow; schema auto-committed to `assets/matrixx.schema.json`
+3. Release: `gh workflow run publish -f bump=patch|minor|major` (optional `-f version=x.y.z` overrides the computed version and takes precedence over `bump`)
+4. Publish workflow pushes the `v*` tag and auto-commits the schema to `assets/matrixx.schema.json`; the old `master` update step is disabled (if:false) — releases are `dev` + tags only
 
 Never `bun publish` or bump `package.json` version locally.
 
 ## CONFIG
 
-- Zod schema in `src/config/schema/` → project `matrixx.json`/`.jsonc` → user `~/.config/opencode/matrixx.json` → defaults
+- Zod schema in `src/config/schema/` → project `matrixx.json`/`matrixx.jsonc` → user `~/.config/opencode/matrixx.json` (both `matrixx.json` and `matrixx.jsonc` are accepted; the CLI setup wizard writes `matrixx.jsonc`) → defaults
 - JSONC via `jsonc-parser` — use `src/shared/text/jsonc-parser.ts`, not `JSON.parse`
 - Legacy auto-migrated by `src/shared/migration/`
 
@@ -273,5 +273,5 @@ Never `bun publish` or bump `package.json` version locally.
 - Logger: `src/shared/runtime/logger.ts` → `/tmp/matrixx.log`
 - Local dev state: `.matrixx/` (handoff, notepads, tasks, plans) — gitignored
 - Flaky: `matrix-loop` (timeout), `session-state` (parallel pollution)
-- Sati skills: `frontend-ui-ux`, `dev-browser`, `playwright`, `software-dev`, `quality-gate`
+- Sati skills: `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright` (8 skills, per `src/agents/definitions/sati.ts`)
 - Knowledge hubs: `docs/knowledge-hub.md` — external KB routing (router index, pinned files, read-only guard)

@@ -20,7 +20,7 @@ It asks about your providers (Claude, OpenAI, Gemini, etc.) and generates optima
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
   
   // Override specific agent models
   "agents": {
@@ -29,7 +29,7 @@ It asks about your providers (Claude, OpenAI, Gemini, etc.) and generates optima
     "trinity": { "model": "opencode/deepseek-v4-flash-free" }       // Cheap & fast for grep
   },
   
-  // Override category models (used by task)
+  // Override category models (used by mouse-* category workers)
   "categories": {
     "bullet-time": { "model": "opencode/ling-3.0-flash-free" } // Fast/cheap for trivial tasks
   }
@@ -53,7 +53,7 @@ Schema autocomplete supported:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json"
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json"
 }
 ```
 
@@ -70,7 +70,7 @@ When both `matrixx.jsonc` and `matrixx.json` files exist, `.jsonc` takes priorit
 
 ```jsonc
 {
-  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx/master/assets/matrixx.schema.json",
+  "$schema": "https://raw.githubusercontent.com/klpanagi/opencode-matrixx-2/dev/assets/matrixx.schema.json",
 
   /* Agent overrides - customize models for specific tasks */
   "agents": {
@@ -107,7 +107,7 @@ When both `matrixx.jsonc` and `matrixx.json` files exist, `.jsonc` takes priorit
 
 ### Why `stream: false` is Required
 
-Ollama returns NDJSON (newline-delimited JSON) when streaming is enabled, but Claude Code SDK expects a single JSON object. This causes `JSON Parse error: Unexpected EOF` when agents attempt tool calls.
+Ollama returns NDJSON (newline-delimited JSON) when streaming is enabled, while the OpenCode provider layer consumes a single JSON object per response. This causes `JSON Parse error: Unexpected EOF` when agents attempt tool calls.
 
 **Example of the problem**:
 ```json
@@ -115,13 +115,13 @@ Ollama returns NDJSON (newline-delimited JSON) when streaming is enabled, but Cl
 {"message":{"tool_calls":[...]}, "done":false}
 {"message":{"content":""}, "done":true}
 
-// Claude Code SDK expects (single JSON object)
+// The provider layer expects (single JSON object)
 {"message":{"tool_calls":[...], "content":""}, "done":true}
 ```
 
 ### Supported Models
 
-Common Ollama models that work with matrixx:
+Example Ollama models (subject to availability in your Ollama instance; verify with `ollama list`):
 
 | Model | Best For | Configuration |
 |-------|----------|---------------|
@@ -140,13 +140,11 @@ If you encounter `JSON Parse error: Unexpected EOF`:
    curl -s http://localhost:11434/api/chat \
      -d '{"model": "qwen3-coder", "messages": [{"role": "user", "content": "Hello"}], "stream": false}'
    ```
-4. **Known-issue tracking**: https://github.com/klpanagi/opencode-matrixx/issues/1124
+4. **Known-issue tracking**: https://github.com/klpanagi/opencode-matrixx-2/issues
 
-### Future SDK Fix
+### Status
 
-The proper long-term fix requires Claude Code SDK to parse NDJSON responses correctly. Until then, use `stream: false` as a workaround.
-
-**Tracking**: https://github.com/klpanagi/opencode-matrixx/issues/1124
+`stream: false` remains required for Ollama agents: the provider layer does not accept NDJSON streaming responses. Tracking: https://github.com/klpanagi/opencode-matrixx-2/issues
 
 ## Agents
 
@@ -442,174 +440,27 @@ agent-browser screenshot result.png
 agent-browser close
 ```
 
-## Tmux Integration
+## Tmux and Server Mode
 
-Run background subagents in separate tmux panes for **visual multi-agent execution**. See your agents working in parallel, each in their own terminal pane.
+Matrixx does **not** mirror subagents into tmux panes. Native OpenCode session APIs own subagent display: every child session streams in the client, and Matrixx creates no panes and attaches nothing.
 
-**Enable tmux integration** via `tmux` in `matrixx.json`:
+The `tmux` config block still parses for backwards compatibility, but every key is ignored:
 
-```json
-{
-  "tmux": {
-    "enabled": true,
-    "layout": "main-vertical",
-    "main_pane_size": 60,
-    "main_pane_min_width": 120,
-    "agent_pane_min_width": 40
-  }
-}
-```
+| Option | Default | Status |
+|--------|---------|--------|
+| `enabled` | `false` | Ignored — no tmux subagent panes are created |
+| `layout` | `main-vertical` | Ignored — the layout is never applied |
+| `main_pane_size` | `60` | Ignored |
+| `main_pane_min_width` | `120` | Ignored |
+| `agent_pane_min_width` | `40` | Ignored |
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `enabled` | `false` | Enable tmux subagent pane spawning. Only works when running inside an existing tmux session. |
-| `layout` | `main-vertical` | Tmux layout for agent panes. See [Layout Options](#layout-options) below. |
-| `main_pane_size` | `60` | Main pane size as percentage (20-80). |
-| `main_pane_min_width` | `120` | Minimum width for main pane in columns. |
-| `agent_pane_min_width` | `40` | Minimum width for each agent pane in columns. |
-
-### Layout Options
-
-| Layout | Description |
-|--------|-------------|
-| `main-vertical` | Main pane left, agent panes stacked on right (default) |
-| `main-horizontal` | Main pane top, agent panes stacked bottom |
-| `tiled` | All panes in equal-sized grid |
-| `even-horizontal` | All panes in horizontal row |
-| `even-vertical` | All panes in vertical stack |
-
-### Requirements
-
-1. **Must run inside tmux**: The feature only activates when OpenCode is already running inside a tmux session
-2. **Tmux installed**: Requires tmux to be available in PATH
-3. **Server mode**: OpenCode must run with `--port` flag to enable subagent pane spawning
-
-### How It Works
-
-When `tmux.enabled` is `true` and you're inside a tmux session:
-- Background agents (via `subagent`) spawn in new tmux panes
-  **Note**: There is no `background` argument (stripped by `applySubagentPolicy`); every child is async and the parent absorbs its completion message. Fire independent children in one turn instead of calling `subagent()` sequentially.
-- Each pane shows the subagent's real-time output
-- Panes are automatically closed when the subagent completes
-- Layout is automatically adjusted based on your configuration
-
-### Running OpenCode with Tmux Subagent Support
-
-To enable tmux subagent panes, OpenCode must run in **server mode** with the `--port` flag. This starts an HTTP server that subagent panes connect to via `opencode attach`.
-
-**Basic setup**:
-```bash
-# Start tmux session
-tmux new -s dev
-
-# Run OpenCode with server mode (port 4096)
-opencode --port 4096
-
-# Now background agents will appear in separate panes
-```
-
-**Recommended: Shell Function**
-
-For convenience, create a shell function that automatically handles tmux sessions and port allocation. Here's an example for Fish shell:
-
-```fish
-# ~/.config/fish/config.fish
-function oc
-    set base_name (basename (pwd))
-    set path_hash (echo (pwd) | md5 | cut -c1-4)
-    set session_name "$base_name-$path_hash"
-    
-    # Find available port starting from 4096
-    function __oc_find_port
-        set port 4096
-        while test $port -lt 5096
-            if not lsof -i :$port >/dev/null 2>&1
-                echo $port
-                return 0
-            end
-            set port (math $port + 1)
-        end
-        echo 4096
-    end
-    
-    set oc_port (__oc_find_port)
-    set -x OPENCODE_PORT $oc_port
-    
-    if set -q TMUX
-        # Already inside tmux - just run with port
-        opencode --port $oc_port $argv
-    else
-        # Create tmux session and run opencode
-        set oc_cmd "OPENCODE_PORT=$oc_port opencode --port $oc_port $argv; exec fish"
-        if tmux has-session -t "$session_name" 2>/dev/null
-            tmux new-window -t "$session_name" -c (pwd) "$oc_cmd"
-            tmux attach-session -t "$session_name"
-        else
-            tmux new-session -s "$session_name" -c (pwd) "$oc_cmd"
-        end
-    end
-    
-    functions -e __oc_find_port
-end
-```
-
-**Bash/Zsh equivalent**:
-
-```bash
-# ~/.bashrc or ~/.zshrc
-oc() {
-    local base_name=$(basename "$PWD")
-    local path_hash=$(echo "$PWD" | md5sum | cut -c1-4)
-    local session_name="${base_name}-${path_hash}"
-    
-    # Find available port
-    local port=4096
-    while [ $port -lt 5096 ]; do
-        if ! lsof -i :$port >/dev/null 2>&1; then
-            break
-        fi
-        port=$((port + 1))
-    done
-    
-    export OPENCODE_PORT=$port
-    
-    if [ -n "$TMUX" ]; then
-        opencode --port $port "$@"
-    else
-        local oc_cmd="OPENCODE_PORT=$port opencode --port $port $*; exec $SHELL"
-        if tmux has-session -t "$session_name" 2>/dev/null; then
-            tmux new-window -t "$session_name" -c "$PWD" "$oc_cmd"
-            tmux attach-session -t "$session_name"
-        else
-            tmux new-session -s "$session_name" -c "$PWD" "$oc_cmd"
-        fi
-    fi
-}
-```
-
-**How subagent panes work**:
-
-1. Main OpenCode starts HTTP server on specified port (e.g., `http://localhost:4096`)
-2. When a background agent spawns, Matrixx creates a new tmux pane
-3. The pane runs: `opencode attach http://localhost:4096 --session <session-id>`
-4. Each subagent pane shows real-time streaming output
-5. Panes are automatically closed when the subagent completes
-
-**Environment variables**:
-
-| Variable | Description |
-|----------|-------------|
-| `OPENCODE_PORT` | Default port for the HTTP server (used if `--port` not specified) |
-
-### Server Mode Reference
-
-OpenCode's server mode exposes an HTTP API for programmatic interaction:
+Server mode is an OpenCode feature, still useful if you want to `opencode attach` from another terminal:
 
 ```bash
 # Standalone server (no TUI)
 opencode serve --port 4096
 
-# TUI with server (recommended for tmux integration)
+# TUI plus server
 opencode --port 4096
 ```
 
@@ -618,7 +469,7 @@ opencode --port 4096
 | `--port` | `4096` | Port for HTTP server |
 | `--hostname` | `127.0.0.1` | Hostname to listen on |
 
-For more details, see the [OpenCode Server documentation](https://opencode.ai/docs/server/).
+For details, see the [OpenCode Server documentation](https://opencode.ai/docs/server/).
 
 ## Git Master
 
@@ -697,36 +548,10 @@ You can also customize Morpheus agents like other agents:
 | `planner_enabled`         | `true`  | When `true`, enables Oracle (Planner) agent with work-planner methodology. Enabled by default.                                     |
 | `replace_plan`            | `true`  | When `true`, demotes default plan agent to subagent mode. Set to `false` to keep both Oracle (Planner) and default plan available. |
 
-## Background Tasks
+## Background Tasks (legacy)
 
-Configure background agent tasks. The historical concurrency, stale-timeout, loop-breaker, and scheduling keys below are **deprecated: accepted but ignored**. They are never removed so old configs keep loading, and the plugin emits at most one warning per process when any of them is present. Only `wallClockTimeoutMs` and `dedupeActiveDelegations` affect current behavior.
+These legacy delegated-task settings are no longer needed: child subagents are native sessions and there is no background-agent manager. The historical concurrency, stale-timeout, loop-breaker, and scheduling keys below are **deprecated: accepted but ignored**. They are never removed so old configs keep loading, and the plugin emits at most one warning per process when any of them is present. Only `wallClockTimeoutMs` and `dedupeActiveDelegations` affect current behavior.
 
-```json
-{
-  "background_task": {
-    "defaultConcurrency": 5,
-    "staleTimeoutMs": 180000,
-    "providerConcurrency": {
-      "anthropic": 3,
-      "openai": 5,
-      "google": 10
-    },
-    "modelConcurrency": {
-      "opencode/kimi-k2.5-free": 2,
-      "opencode/ling-3.0-flash-free": 10
-    },
-    "wakeScheduler": {
-      "enabled": true,
-      "intervalMs": 300000
-    },
-    "jobBoard": {
-      "enabled": true,
-      "strategy": "latest",
-      "maxRetainedSnapshots": 20
-    }
-  }
-}
-```
 
 | Option                | Default | Description                                                                                                             |
 | --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -747,12 +572,6 @@ Configure background agent tasks. The historical concurrency, stale-timeout, loo
 | `wallClockTimeoutMs`      | `0`   | Wall-clock execution timeout in milliseconds. Union type: `0` disables wall-clock enforcement (OFF/default). Values ≥60000 enforce a maximum runtime (range 60000–2147483647). Zero means legacy unbounded behavior; any non-zero value triggers terminal `stopped` with `terminalReason: "wallclock-timeout"` when the process runs past this limit. |
 | `wallClockAbortGraceMs`   | `5000` | Deprecated: ignored; wall-clock aborts are immediate.                                                          |
 | `dedupeActiveDelegations` | `false` | Opt-in. When `true`, an identical delegation (same parent session, agent, prompt) reuses the active pending/running background handle instead of launching a duplicate. Default `false`: every delegation launches its own handle. |
-**Priority Order**: `modelConcurrency` > `providerConcurrency` > `defaultConcurrency`
-
-**Use Cases**:
-- Limit expensive models to prevent cost spikes
-- Allow more concurrent tasks for fast/cheap models
-- Respect provider rate limits by setting provider-level caps
 
 ## Categories
 
@@ -760,27 +579,27 @@ Categories enable domain-specific delegation via the native `subagent` tool. Eac
 
 ### Built-in Categories
 
-All 8 categories come with optimal model defaults, but **you must configure them to use those defaults**:
+All 8 categories ship with built-in Claude model chains (see `DEFAULT_CATEGORY_MODEL_REQUIREMENTS` in `src/shared/model/model-requirements.ts:154-201`); explicit config overrides them:
 
 | Category             | Built-in Default Model             | Description                                                          |
 | -------------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| `construct`          | `opencode/qwen3.6-plus-free`       | Frontend, UI/UX, design, styling, animation                          |
-| `source`             | `opencode/kimi-k2.5-free`          | Deep logical reasoning, complex architecture decisions               |
-| `rabbit-hole`          | `opencode/kimi-k2.5-free`          | Goal-oriented autonomous problem-solving, thorough research          |
-| `glitch`        | `opencode/qwen3.6-plus-free`       | Complex problem-solving with creative approaches                     |
-| `bullet-time`        | `opencode/ling-3.0-flash-free`     | Trivial tasks - single file changes, typo fixes, simple modifications|
-| `blue-pill`          | `opencode/qwen3.6-plus-free`       | Tasks that don't fit other categories, low effort required           |
-| `the-one`           | `opencode/kimi-k2.5-free` (max)    | Tasks that don't fit other categories, high effort required          |
-| `transmission`          | `opencode/nemotron-3-super-free`   | Documentation, prose, technical writing                              |
+| `construct`          | `claude-sonnet-4-6`                | Frontend, UI/UX, design, styling, animation                          |
+| `source`             | `claude-opus-4-6` (variant `max`)  | Deep logical reasoning, complex architecture decisions               |
+| `rabbit-hole`        | `claude-opus-4-6` (variant `max`)  | Goal-oriented autonomous problem-solving, thorough research          |
+| `glitch`             | `claude-sonnet-4-6`                | Complex problem-solving with creative approaches                     |
+| `bullet-time`        | `claude-haiku-4-5`                 | Trivial tasks - single file changes, typo fixes, simple modifications|
+| `blue-pill`          | `claude-sonnet-4-6`                | Tasks that don't fit other categories, low effort required           |
+| `the-one`            | `claude-opus-4-6` (variant `max`)  | Tasks that don't fit other categories, high effort required          |
+| `transmission`       | `claude-sonnet-4-6`                | Documentation, prose, technical writing                              |
 
 ### ⚠️ Critical: Model Resolution Priority
 
-**Categories DO NOT use their built-in defaults unless configured.** Model resolution follows this priority:
+**Categories fall back to their built-in defaults only when no higher-priority override applies.** Model resolution follows this priority:
 
 ```
 1. User-configured model (explicit `model` in matrixx.json)
 2. Active preset entry (from `model_presets` + `active_preset` — per-agent/category assignment, then `default_model`)
-3. Category's built-in default (if you add category to config)
+3. Category's built-in default (from `DEFAULT_CATEGORY_MODEL_REQUIREMENTS`, resolved through the provider fallback chain)
 4. System default model (from opencode.json)
 ```
 
@@ -921,7 +740,7 @@ Each category can define a `temperature` that overrides the agent's default temp
 
 | Option             | Type    | Default | Description                                                                                         |
 | ------------------ | ------- | ------- | --------------------------------------------------------------------------------------------------- |
-| `description`       | string  | -       | Human-readable description of the category's purpose. Shown in task prompt.                     |
+| `description`       | string  | -       | Human-readable description of the category's purpose. Shown in the subagent prompt.                     |
 | `is_unstable_agent`| boolean | `false`  | Mark agent as unstable - forces background mode for monitoring. Auto-enabled for known-flaky model families. |
 | `fallback_models`   | string\|string[] | - | Fallback model(s) for this category. Overrides provider chain.                            |
 | `complexity_downgrades` | object | -   | Map complexity level to model downgrade: `{ "2": "opencode/ling-3.0-flash-free" }`                              |
@@ -986,17 +805,17 @@ Each agent and category declares an ordered fallback chain of `<provider>/<model
 
 | Agent | Model (no prefix) | Fallback chain |
 |-------|-------------------|-------------------------|
-| **Morpheus** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
-| **Keymaker** | `minimax-m3-free` | opencode (minimax-m3-free) → zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) |
-| **Merovingian** | `glm-5-free` | zai-coding-plan (glm-4.7) → opencode (glm-5-free) → opencode (qwen3.6-plus-free) |
-| **Operator** | `deepseek-v4-flash-free` | opencode (deepseek-v4-flash-free) → opencode (ling-3.0-flash-free) |
-| **Trinity** | `deepseek-v4-flash-free` | opencode (deepseek-v4-flash-free) → opencode (ling-3.0-flash-free) |
-| **Construct** | `qwen3.6-plus-free` | zai-coding-plan (glm-4.7) → opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) |
-| **Oracle (Planner)** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
-| **Seraph (Plan Consultant)** | `kimi-k2.5-free` | opencode (kimi-k2.5-free) → zai-coding-plan (glm-4.7) → opencode (glm-5-free) |
-| **Smith (Plan Reviewer)** | `glm-5-free` | opencode (glm-5-free) → zai-coding-plan (glm-4.7) → opencode (qwen3.6-plus-free) |
-| **Niobe** | `kimi-k2.5-free` | zai-coding-plan (glm-4.7) → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
-| **Cipher** | `qwen3.6-plus-free` | opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) → zai-coding-plan (glm-4.7) |
+| **Morpheus** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Keymaker** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Merovingian** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-opus-4-6, max) → github-copilot → opencode |
+| **Operator** | `claude-haiku-4-5` | anthropic (claude-haiku-4-5) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Trinity** | `claude-haiku-4-5` | anthropic (claude-haiku-4-5) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Construct** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-opus-4-6, max) → github-copilot → opencode |
+| **Oracle (Planner)** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Seraph (Plan Consultant)** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **Smith (Plan Reviewer)** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-opus-4-6, max) → github-copilot → opencode |
+| **Niobe** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-haiku-4-5) → github-copilot → opencode |
+| **Cipher** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
 
 ### Category Provider Chains
 
@@ -1004,14 +823,16 @@ Categories follow the same resolution logic:
 
 | Category | Model (no prefix) | Fallback chain |
 |----------|-------------------|-------------------------|
-| **construct** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (kimi-k2.5-free) |
-| **source** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (deepseek-v4-flash-free) |
-| **rabbit-hole** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (qwen3.6-plus-free) |
-| **glitch** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (glm-5-free) |
-| **bullet-time** | `ling-3.0-flash-free` | zai-coding-plan → opencode (ling-3.0-flash-free) → opencode (deepseek-v4-flash-free) |
-| **blue-pill** | `qwen3.6-plus-free` | zai-coding-plan → opencode (qwen3.6-plus-free) → opencode (deepseek-v4-flash-free) |
-| **the-one** | `kimi-k2.5-free` | zai-coding-plan → opencode (kimi-k2.5-free) → opencode (glm-5-free) |
-| **transmission** | `nemotron-3-super-free` | zai-coding-plan → opencode (nemotron-3-super-free) → opencode (kimi-k2.5-free) |
+| **construct** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-opus-4-6, max) → github-copilot → opencode |
+| **source** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **rabbit-hole** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **glitch** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-opus-4-6, max) → github-copilot → opencode |
+| **bullet-time** | `claude-haiku-4-5` | anthropic (claude-haiku-4-5) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **blue-pill** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-haiku-4-5) → github-copilot → opencode |
+| **the-one** | `claude-opus-4-6` (max) | anthropic (claude-opus-4-6, max) → github-copilot → opencode → anthropic (claude-sonnet-4-6) → github-copilot → opencode |
+| **transmission** | `claude-sonnet-4-6` | anthropic (claude-sonnet-4-6) → github-copilot → opencode → anthropic (claude-haiku-4-5) → github-copilot → opencode |
+
+Source: `DEFAULT_CATEGORY_MODEL_REQUIREMENTS` (`src/shared/model/model-requirements.ts:154-201`). Every entry expands across the same three providers (`anthropic`, `github-copilot`, `opencode`); the abbreviated chain above shows the provider fan-out per model. No free-tier models ship in category chains.
 
 ### Checking Your Configuration
 

@@ -12,7 +12,7 @@ Instead of delegating everything to a single AI agent, it's far more efficient t
 - **Category**: "What kind of work is this?" (determines model, temperature, prompt mindset)
 - **Skill**: "What tools and knowledge are needed?" (injects specialized knowledge, MCP tools, workflows)
 
-By combining these two concepts, you can generate optimal agents through `task`.
+By combining these two concepts, you can generate optimal agents through native `subagent` delegation: pick a category by naming its `mouse-<category>` worker agent.
 
 ---
 
@@ -24,30 +24,28 @@ A Category is an agent configuration preset optimized for specific domains.
 
 8 categories verified against `BuiltinCategoryNameSchema` (`src/config/schema/categories.ts`): `construct`, `source`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission`. Category config is merged in `src/shared/tool/merge-categories.ts` and consumed by `src/plugin/tool/available-categories.ts`; `subagent(agent="mouse-<category>")` selects the worker.
 
-| Category | Default Model | Use Cases |
-|----------|---------------|-----------|
-| `construct` | `opencode/qwen3.6-plus-free` | Frontend, UI/UX, design, styling, animation |
-| `source` | `opencode/kimi-k2.5-free` | Hard logic, backend, core implementation |
-| `rabbit-hole` | `opencode/kimi-k2.5-free` | Goal-oriented autonomous problem-solving. Thorough research before action. |
-| `glitch` | `opencode/minimax-m3-free` | Creative tasks, novel ideas |
-| `bullet-time` | `opencode/ling-3.0-flash-free` | Quick fixes, trivial tasks — single file changes, typo fixes |
-| `blue-pill` | `opencode/glm-5-free` | General tasks, moderate effort |
-| `the-one` | `opencode/kimi-k2.5-free` | Complex tasks, high effort |
-| `transmission` | `opencode/nemotron-3-super-free` | Documentation, prose, technical writing |
+| Category | First choice | Fallback | Use Cases |
+|----------|--------------|----------|-----------|
+| `construct` | `claude-sonnet-4-6` | `claude-opus-4-6` (variant `max`) | Frontend, UI/UX, design, styling, animation |
+| `source` | `claude-opus-4-6` (variant `max`) | `claude-sonnet-4-6` | Hard logic, backend, core implementation |
+| `rabbit-hole` | `claude-opus-4-6` (variant `max`) | `claude-sonnet-4-6` | Goal-oriented autonomous problem-solving. Thorough research before action. |
+| `glitch` | `claude-sonnet-4-6` | `claude-opus-4-6` (variant `max`) | Creative tasks, novel ideas |
+| `bullet-time` | `claude-haiku-4-5` | `claude-sonnet-4-6` | Quick fixes, trivial tasks, single file changes, typo fixes |
+| `blue-pill` | `claude-sonnet-4-6` | `claude-haiku-4-5` | General tasks, moderate effort |
+| `the-one` | `claude-opus-4-6` (variant `max`) | `claude-sonnet-4-6` | Complex tasks, high effort |
+| `transmission` | `claude-sonnet-4-6` | `claude-haiku-4-5` | Documentation, prose, technical writing |
 
-Each category declares a fallback chain of `<provider>/<model>` candidates; Matrixx
-selects the first whose provider is connected. Shipped defaults are illustrative —
-override via `modelRequirements` or `model_presets` (see
-`src/shared/model/model-requirements.ts`). The IDs in this table are OpenCode's free tier —
-copy-paste as-is, or substitute any `<provider>/<model>` from your own provider.
+
+Each row is the head of a fallback chain of `<provider>/<model>` candidates; Matrixx selects the first whose provider is connected. Source of truth: `DEFAULT_CATEGORY_MODEL_REQUIREMENTS` (`src/shared/model/model-requirements.ts:154-201`). Every category resolves to a Claude chain (`claude-sonnet-4-6`, `claude-opus-4-6` with variant `max`, or `claude-haiku-4-5`) across the same three providers: `anthropic | github-copilot | opencode`. No free-tier model ships in a category chain. Override via `modelRequirements` or `model_presets`; free-tier IDs such as `opencode/qwen3.6-plus-free` are an example user override, not a shipped default.
 
 ### Usage
 
-Specify the `category` parameter when invoking the `task` tool.
+Select a category by passing the matching worker agent name to the native `subagent` tool.
 
 ```typescript
-task(
-  category="source",
+subagent(
+  agent="mouse-source",
+  description="Add chart component",
   prompt="Add a responsive chart component to the dashboard page"
 )
 ```
@@ -82,7 +80,7 @@ A Skill is a mechanism that injects **specialized knowledge (Context)** and **to
 - **`agent-browser`** — Agent-controlled browser automation.
 - **`frontend-ui-ux`** — Designer mindset. Color, typography, motion guidelines.
 
-Skill counts, honest version: **70** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **86** skill asset files under the skill loader. The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `react-nextjs-patterns`, `svelte-sveltekit-patterns`, `document-reader`).
+Skill counts, honest version: **70** names in `BuiltinSkillNameSchema` (`src/config/schema/agent-names.ts`); **85** skill asset files on disk (`src/skills/builtin/`: 75 skill modules + 10 `index.ts` files). The grouped list above shows a subset; the schema additionally covers trading/market-data (`ccxt-rest`, `ccxt-pro-websockets`, `market-data-bus`, `market-data-architecture`, `crypto-market-structure`, `time-series-fundamentals`, `influxdb-timeseries`, `grafana-dashboards`, `telegram-bot`), resilience/quality (`resilience-error-taxonomy`, `silent-failure-detection`, `data-quality-observability`), ZeroMQ (`zeromq-*`), and extra frontend skills (`frontend-a11y`, `frontend-build-tooling`, `frontend-perf`, `frontend-state-data`, `frontend-testing`, `playwright-cli`, `react-nextjs-patterns`, `svelte-sveltekit-patterns`, `document-reader`).
 
 **DSL Engineering (11):**
 - **`dsl-core`**, **`dsl-grammar`**, **`dsl-codegen`**, **`dsl-metamodel`**, **`dsl-tooling`**
@@ -107,9 +105,10 @@ Skill counts, honest version: **70** names in `BuiltinSkillNameSchema` (`src/con
 Add desired skill names to the `load_skills` array.
 
 ```typescript
-task(
-  category="bullet-time",
+subagent(
+  agent="mouse-bullet-time",
   load_skills=["git-master"],
+  description="Commit current changes",
   prompt="Commit current changes. Follow commit message style."
 )
 ```
@@ -159,7 +158,7 @@ You can create powerful specialized agents by combining Categories and Skills.
 
 ---
 
-## 5. task Prompt Guide
+## 5. Subagent Prompt Guide
 
 When delegating, **clear and specific** prompts are essential. Include these 7 elements:
 
@@ -191,8 +190,8 @@ You can fine-tune categories in `matrixx.json`.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `description` | string | Human-readable description of the category's purpose. Shown in task prompt. |
-| `model` | string | AI model ID to use (e.g., `opencode/kimi-k2.5-free`) |
+| `description` | string | Human-readable description of the category's purpose. Shown in the subagent prompt. |
+| `model` | string | AI model ID to use (e.g., `anthropic/claude-sonnet-4-6`) |
 | `variant` | string | Model variant (e.g., `max`, `xhigh`) |
 | `temperature` | number | Creativity level (0.0 ~ 2.0). Lower is more deterministic. |
 | `top_p` | number | Nucleus sampling parameter (0.0 ~ 1.0) |

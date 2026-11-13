@@ -30,7 +30,7 @@ The runtime prompt is composed as:
 MATRIXX_ACTIVATION
 + MATRIXX_MANIFESTO_BODY          (universal, docs/redpill-manifesto.md)
 + SOFTWARE_DOMAIN_PACK            (this document)
-+ MODEL_CALIBRATION               (default / deepseek / gemini / gpt5.2 / glm / mimo)
+ MODEL_CALIBRATION               (default / deepseek / gemini / gpt5.2 / glm / mimo / planner)
 ```
 
 The planner variant uses the universal Architect's Oath plus any planning-specific software rules.

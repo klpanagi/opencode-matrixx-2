@@ -153,7 +153,7 @@ export default tseslint.config(...tseslint.configs.strictTypeChecked,
 | **Next.js** | \`process.env.NEXT_PUBLIC_*\` | \`NEXT_PUBLIC_\` prefix for client-safe |
 | **Node** | \`process.env.*\` | Any name |
 
-**Safe env management**: Use \`envsitter\` tools (fingerprint, match, keys — never expose values). Manage \`.env\` files through envsitter, not direct file writes.
+**Safe env management**: If \`envsitter_*\` tools are available in your session (they are host-provided plugins, not shipped by Matrixx), use them to fingerprint, match, and list keys without exposing values. Otherwise fall back to value-free checks: list key names with \`grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' .env\` and validate with a secret scanner such as \`gitleaks\` — never \`cat\` or print \`.env\` contents.
 
 ---
 

@@ -31,9 +31,7 @@ Run subagents in parallel and continue working; with `tmux.enabled`, subagents c
 
 Skills inject specialized knowledge and MCP tools into agents. Full catalog: [Category & Skill System Guide](category-skill-guide.md).
 
-## Skills Unique to This Page
-
-70 built-in skills. Full catalog: [Category & Skill System Guide](category-skill-guide.md).
+## Built-in Skills in Depth
 
 All built-in skills follow **SDO (Skill Discovery Optimization)** — descriptions use trigger-first patterns with cross-references for high-precision agent delegation.
 

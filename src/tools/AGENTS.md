@@ -8,7 +8,7 @@
 ```
 tools/
 ├── task/             # 5 individual tools: create, list, get, update, cleanup (task-create.ts, task-list.ts, task-get.ts, task-update.ts, task-cleanup.ts)
-├── plan/             # 5 plan tools: create, read, update, list, delete for `.matrixx/plans/*.md` (kebab-case, hashline IDs, atomicWrite, unconditional registry)
+├── plan/             # 6 plan tools: create, read, update, list, delete, tasks for `.matrixx/plans/*.md` (kebab-case, hashline IDs, atomicWrite, unconditional registry; plan_tasks reads T-*.json tasks)
 ├── lsp/              # 6 LSP tools: goto_definition, find_references, symbols, diagnostics, prepare_rename, rename
 ├── ast-grep/         # 2 tools: search, replace (25 languages)
 ├── grep/             # Custom grep (60s timeout, 10MB limit)
