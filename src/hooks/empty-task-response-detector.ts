@@ -11,7 +11,7 @@ Classified likely causes:
 1. Code-mode delegation: subagent was invoked from inside code-mode/execute and ran without a top-level tool session. Fix: re-issue as a direct top-level subagent call, never inside execute.
 2. Permission-denied nested delegation: a read-only consultant (Seraph/Smith) tried subagent delegation its permissions deny, so the child never ran. Fix: use direct grep/glob/read/lsp_* in the consultant; reserve subagent() for the top-level orchestrator.
 3. Empty model output: the child session completed without producing text (timeout, model fallback miss, or prompt that produced no assistant message). Fix: retry with a narrower prompt, verify model availability, read subagent log lines for observed message shape.
-Next: re-issue the delegation as a direct subagent() call with load_skills set (pass [] when none; "tdd-enforcer" for code-writing categories); pass agent (a mouse-* worker or named agent), background, description, and prompt. If still empty, attach the observed roles/shape from the log when reporting.`;
+Next: re-issue the delegation as a direct subagent() call with load_skills set (pass [] when none; "tdd-enforcer" for code-writing categories); pass agent (a mouse-* worker or named agent), description, and prompt. If still empty, attach the observed roles/shape from the log when reporting.`;
 
 export function createEmptyTaskResponseDetectorHook(_ctx: MatrixxContext) {
   return {

@@ -28,10 +28,10 @@ describe("empty-task-response-detector actionable warning", () => {
   })
 
   test("empty subagent output names the native subagent contract", async () => {
-    //#then: the replacement tells the orchestrator to pass agent/background/description
+    //#then: the replacement tells the orchestrator to pass agent/description/prompt
     const out = await runAfter("subagent", "   ")
     expect(out.output).toContain("subagent()")
-    expect(out.output).toContain("background")
+    expect(out.output).toContain("description")
   })
 
   test("empty subagent output names the source tdd-enforcer rule", async () => {
