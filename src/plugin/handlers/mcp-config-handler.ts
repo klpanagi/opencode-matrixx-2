@@ -1,7 +1,8 @@
 import type { MatrixxConfig } from "../../config";
 import { buildBuiltinMcpEntries } from "../../mcps";
+import { buildContext7HealthNotice } from "../../mcps/context7-health";
 import { buildMcpStartupNotice } from "../../mcps/mcp-startup-notice";
-import { setMcpStartupFailures } from "../../mcps/mcp-startup-state";
+import { setMcpStartupFailures, setMcpStartupWarnings } from "../../mcps/mcp-startup-state";
 import { isCommandAvailable } from "../../mcps/mcp-validator";
 import { log } from "../../shared";
 import type { PluginComponents } from "./plugin-components-loader";
@@ -62,15 +63,24 @@ export async function applyMcpConfig(params: {
     delete merged[name];
   }
 
+  const context7HealthNotice = buildContext7HealthNotice({
+    disabledMcps,
+    context7ApiKey,
+  });
+  const warnings = context7HealthNotice ? [context7HealthNotice] : [];
+
+  setMcpStartupFailures(failures);
+  setMcpStartupWarnings(warnings);
+
   if (failures.length > 0) {
     const summary = failures
       .map((f) => `${f.name}: ${f.error}`)
       .join("; ");
     log(`[mcp-config] MCP startup issues detected: ${summary}`, failures);
-    setMcpStartupFailures(failures);
-    const notice = buildMcpStartupNotice(failures);
-    if (notice) log(notice);
   }
+
+  const notice = buildMcpStartupNotice(failures, warnings);
+  if (notice) log(notice);
 
   params.config.mcp = merged;
 }

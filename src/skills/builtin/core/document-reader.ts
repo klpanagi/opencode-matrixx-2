@@ -3,7 +3,7 @@ import type { BuiltinSkill } from "../../loader/types"
 const DOCUMENT_READER_SKILL_NAME = "document-reader"
 
 const DOCUMENT_READER_SKILL_DESCRIPTION =
-  "Use when reading PDFs, extracting content from documents, or analyzing office files (DOCX, XLSX, PPTX) — document conversion via document_reader MCP document_reader__convert_to_markdown supporting file: and https: URIs for local and remote files. Related: rp-research, dev-browser."
+  "Use when reading PDFs, extracting content from documents, or analyzing office files (DOCX, XLSX, PPTX) — document conversion via document_reader MCP document_reader_convert_to_markdown supporting file: and https: URIs for local and remote files. Related: rp-research, dev-browser."
 
 export const documentReaderSkill: BuiltinSkill = {
   name: DOCUMENT_READER_SKILL_NAME,
@@ -27,7 +27,7 @@ Read and extract content from documents using the \`document_reader\` MCP (Micro
 
 ## Tool Usage
 
-**Tool**: \`document_reader__convert_to_markdown\`
+**Tool**: \`document_reader_convert_to_markdown\`
 **Input**: \`uri\` — must be a \`file:\`, \`https:\`, \`http:\`, or \`data:\` URI
 
 ### Local files
@@ -51,7 +51,7 @@ uri: "https://example.com/data.xlsx"
 
 ## MUST NOT DO
 
-- Do NOT guess file contents — always call \`document_reader__convert_to_markdown\` first
+- Do NOT guess file contents — always call \`document_reader_convert_to_markdown\` first
 - Do NOT use the Read tool for PDFs or Office files — it cannot parse binary formats
 - Do NOT pass a relative path like \`file://./report.pdf\` — always use absolute paths
 `,

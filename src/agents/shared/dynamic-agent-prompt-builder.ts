@@ -19,7 +19,7 @@ export interface AvailableAgent {
 
 export interface AvailableTool {
   name: string
-  category: "lsp" | "ast" | "search" | "session" | "command" | "sandbox" | "other"
+  category: "lsp" | "ast" | "search" | "session" | "command" | "sandbox" | "mcp" | "other"
 }
 
 export interface AvailableSkill {
@@ -43,6 +43,8 @@ export function categorizeTools(toolNames: string[]): AvailableTool[] {
       category = "ast"
     } else if (name.startsWith("ctx_") || name.startsWith("headroom_") || name === "n" || name === "n_file") {
       category = "sandbox"
+    } else if (name.startsWith("context7_") || name.startsWith("document_reader_")) {
+      category = "mcp"
     } else if (name === "grep" || name === "glob") {
       category = "search"
     } else if (name.startsWith("session_")) {
@@ -59,11 +61,16 @@ function formatToolsForPrompt(tools: AvailableTool[]): string {
   const astTools = tools.filter((t) => t.category === "ast")
   const searchTools = tools.filter((t) => t.category === "search")
   const sandboxTools = tools.filter((t) => t.category === "sandbox")
+  const mcpTools = tools.filter((t) => t.category === "mcp")
 
   const parts: string[] = []
 
   if (sandboxTools.length > 0) {
     parts.push(...sandboxTools.map((t) => `\`${t.name}\``))
+  }
+
+  if (mcpTools.length > 0) {
+    parts.push(...mcpTools.map((t) => `\`${t.name}\``))
   }
 
   if (searchTools.length > 0) {

@@ -1,19 +1,18 @@
+import {
+  CONTEXT7_QUERY_DOCS,
+  CONTEXT7_RESOLVE_LIBRARY_ID,
+} from "../../mcps/tool-names"
+
 export const HOOK_NAME = "docs-lookup-guard"
 
-// Agent allowed to call docs-lookup tools directly without a nudge.
 export const OPERATOR_AGENT = "operator"
 
-// Tools guarded by docs-lookup-guard (all lowercase for O(1) case-insensitive match).
 export const GUARDED_TOOLS = new Set([
-  "context7_resolve-library-id",
-  "context7_query-docs",
-  "context7_get-library-docs",
+  CONTEXT7_RESOLVE_LIBRARY_ID,
+  CONTEXT7_QUERY_DOCS,
   "websearch",
 ])
 
-// Doc-intent triggers: direct library/framework doc lookups belong to the
-// operator agent. Non-operator callers should delegate instead of calling
-// context7/websearch docs tools directly (context isolation).
 export const DOC_INTENT_TRIGGERS = [
   "library docs lookup",
   "framework API reference",
@@ -21,13 +20,16 @@ export const DOC_INTENT_TRIGGERS = [
   "versioned docs search",
 ] as const
 
+const OPERATOR_LOOKUP_INSTRUCTION =
+  `Look up docs for <library> <topic> via ${CONTEXT7_RESOLVE_LIBRARY_ID} then ${CONTEXT7_QUERY_DOCS}`
+
 export const NUDGE_MESSAGE =
   "[docs-lookup-guard] Prefer delegating docs lookup to the operator agent for context isolation — " +
-  "use subagent(agent=\"operator\") instead of calling context7/websearch docs tools directly. " +
-  "Example: subagent(agent=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
-  "Operator agents may call context7_resolve-library-id / context7_query-docs / context7_get-library-docs / websearch directly."
+  `use subagent(agent="operator") instead of calling context7/websearch docs tools directly. ` +
+  `Example: subagent(agent="operator", prompt="${OPERATOR_LOOKUP_INSTRUCTION}"). ` +
+  `Operator agents may call ${CONTEXT7_RESOLVE_LIBRARY_ID} / ${CONTEXT7_QUERY_DOCS} / websearch directly.`
 
 export const FALLBACK_MESSAGE =
   "[docs-lookup-guard] Fallback: route this docs lookup to the operator agent (operator-direct) for context isolation — " +
-  "use subagent(agent=\"operator\", prompt=\"Look up docs for <library> <topic> via context7_resolve-library-id then context7_query-docs\"). " +
+  `use subagent(agent="operator", prompt="${OPERATOR_LOOKUP_INSTRUCTION}"). ` +
   "Direct context7/websearch docs calls from non-operator agents stay warn-first; the operator path is authoritative."

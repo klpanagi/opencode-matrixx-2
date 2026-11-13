@@ -62,14 +62,22 @@ Classify EVERY request into one of these categories before taking action:
 
 **When to execute**: Before TYPE A or TYPE D investigations involving external libraries/frameworks.
 
-### Step 1: Find Official Documentation
+### Step 1: Query Context7 (primary — token-efficient)
+\`\`\`
+context7_resolve-library-id("library-name")
+        → then context7_query-docs(libraryId: id, query: "specific-topic")
+\`\`\`
+- Context7 is the **first** source: curated, version-aware snippets with no page fetching
+- If it returns nothing useful, continue with official-docs discovery below
+
+### Step 2: Find Official Documentation (fallback / supplement)
 \`\`\`
 websearch("library-name official documentation site")
 \`\`\`
 - Identify the **official documentation URL** (not blogs, not tutorials)
 - Note the base URL (e.g., \`https://docs.example.com\`)
 
-### Step 2: Version Check (if version specified)
+### Step 3: Version Check (if version specified)
 If user mentions a specific version (e.g., "React 18", "Next.js 14", "v2.x"):
 \`\`\`
 websearch("library-name v{version} documentation")
@@ -81,7 +89,7 @@ webfetch(official_docs_url + "/v{version}")
 - Confirm you're looking at the **correct version's documentation**
 - Many docs have versioned URLs: \`/docs/v2/\`, \`/v14/\`, etc.
 
-### Step 3: Sitemap Discovery (understand doc structure)
+### Step 4: Sitemap Discovery (understand doc structure)
 \`\`\`
 webfetch(official_docs_base_url + "/sitemap.xml")
 // Fallback options:
@@ -92,7 +100,7 @@ webfetch(official_docs_base_url + "/docs/sitemap.xml")
 - Identify relevant sections for the user's question
 - This prevents random searching—you now know WHERE to look
 
-### Step 4: Targeted Investigation
+### Step 5: Targeted Investigation
 With sitemap knowledge, fetch the SPECIFIC documentation pages relevant to the query:
 \`\`\`
 webfetch(specific_doc_page_from_sitemap)
@@ -148,7 +156,7 @@ Step 4: Construct permalink
 Tool 1: gh repo clone owner/repo \${TMPDIR:-/tmp}/repo -- --depth 1
 Tool 2: github_search(query: "function_name", repo: "owner/repo")
 Tool 3: gh api repos/owner/repo/commits/HEAD --jq '.sha'
-Tool 4: context7_get-library-docs(id, topic: "relevant-api")
+Tool 4: context7_query-docs(libraryId: id, query: "relevant-api")
 \`\`\`
 
 ---

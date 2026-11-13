@@ -13,3 +13,17 @@ export function getMcpStartupFailures(): McpCreationFailure[] {
 export function _resetMcpStartupFailuresForTesting(): void {
   startupFailures = []
 }
+
+let startupWarnings: string[] = []
+
+export function setMcpStartupWarnings(warnings: string[]): void {
+  startupWarnings = warnings
+}
+
+export function getMcpStartupWarnings(): string[] {
+  return startupWarnings
+}
+
+export function _resetMcpStartupWarningsForTesting(): void {
+  startupWarnings = []
+}

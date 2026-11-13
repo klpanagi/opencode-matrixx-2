@@ -82,7 +82,7 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 | Merovingian | subagent | edit, task | Read-only consultation (prompt-level; `write` not denied) |
 | Operator | subagent | write, edit, task | Research tools only |
 | Trinity | subagent | write, edit, task | Search tools only |
-| Construct | subagent | all except `read`, `document_reader__convert_to_markdown`, `subagent` | Vision-only |
+| Construct | subagent | all except `read`, `document_reader_convert_to_markdown`, `subagent` | Vision-only |
 | Mouse | subagent | — (task permitted, see carve-out) | `task_*` — owns its delegated task records |
 | Niobe | primary | — (task permitted) | `task_*`, teammate — orchestration only |
 | Sentinel | all | edit, task (delegation denied, `task_*` tracking allowed) | Read-only security auditing |

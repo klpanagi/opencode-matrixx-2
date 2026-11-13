@@ -19,6 +19,7 @@
  */
 
 import type { HookName, MatrixxConfig, TmuxConfig } from "../config"
+import { getBuiltinMcpToolNames, isCommandAvailable } from "../mcps"
 import { loadPluginConfig } from "../plugin-config"
 import { log } from "../shared"
 import { setContextModeForPrompts } from "../shared/policy/context-mode-enforcement"
@@ -100,7 +101,13 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
   })
 
   // Store tool names for use when building agent prompts
-  setAvailableToolNames(Object.keys(toolsResult.filteredTools))
+  setAvailableToolNames([
+    ...Object.keys(toolsResult.filteredTools),
+    ...getBuiltinMcpToolNames({
+      disabledMcps: pluginConfig.disabled_mcps ?? [],
+      uvxAvailable: isCommandAvailable("uvx"),
+    }),
+  ])
 
   const session = createSessionHooks({
     ctx: pctx,

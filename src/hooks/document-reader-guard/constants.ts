@@ -32,10 +32,10 @@ export const BLOCKED_PATTERNS: RegExp[] = [
 ]
 
 export const READ_BLOCK_MESSAGE =
-  "[document-reader-guard] BLOCKED: Use document_reader__convert_to_markdown (document_reader MCP, Microsoft MarkItDown) for binary documents — generic Read cannot parse them. " +
-  "Call document_reader__convert_to_markdown with an absolute URI like file:///absolute/path/to/report.pdf, then summarize — do not dump raw output. " +
+  "[document-reader-guard] BLOCKED: Use document_reader_convert_to_markdown (document_reader MCP, Microsoft MarkItDown) for binary documents — generic Read cannot parse them. " +
+  "Call document_reader_convert_to_markdown with an absolute URI like file:///absolute/path/to/report.pdf, then summarize — do not dump raw output. " +
   "For context isolation delegate to the construct subagent so the main context stays clean."
 
 export const BASH_BLOCK_MESSAGE =
   "[document-reader-guard] BLOCKED: Do not read documents via bash CLIs (pdftotext, pdfinfo, pandoc, libreoffice, cat/head/tail, python fitz/pypdf/pdfminer/pdfplumber/docx/openpyxl, markitdown CLI). " +
-  "Use document_reader__convert_to_markdown with file:///absolute/path instead — delegate to construct for summarization."
+  "Use document_reader_convert_to_markdown with file:///absolute/path instead — delegate to construct for summarization."

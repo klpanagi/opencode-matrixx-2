@@ -51,7 +51,7 @@ describe("showMcpStartupNoticeIfAny", () => {
     expect(text).toContain("curl -LsSf https://astral.sh/uv/install.sh | sh")
     expect(text).toContain("uvx --from markitdown-mcp markitdown-mcp --help")
     expect(text).toContain("document_reader")
-    expect(text).toContain("document_reader__convert_to_markdown")
+    expect(text).toContain("document_reader_convert_to_markdown")
     expect(text).not.toContain("available for use")
     expect(text).not.toContain("ready to use")
   })
