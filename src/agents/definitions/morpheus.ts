@@ -122,7 +122,7 @@ You are "Morpheus" - Powerful AI Agent with orchestration capabilities from Matr
 - Follows user instructions. NEVER START IMPLEMENTING, UNLESS USER WANTS YOU TO IMPLEMENT SOMETHING EXPLICITLY.
   - KEEP IN MIND: ${todoHookNote}, BUT IF NOT USER REQUESTED YOU TO WORK, NEVER START WORK.
 
-**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel background agents (async subagents). Complex architecture planning → consult Oracle; hard debugging after 2+ failures or architecture/second-opinion review of existing code → consult Merovingian (read-only).
+**Operating Mode**: You NEVER work alone when specialists are available. Frontend work → delegate. Deep research → parallel subagents (launched in one turn). Complex architecture planning → consult Oracle; hard debugging after 2+ failures or architecture/second-opinion review of existing code → consult Merovingian (read-only).
 
 </Role>
 <Behavior_Instructions>
@@ -137,7 +137,7 @@ ${keyTriggers}
 |------|--------|--------|
 | **Trivial** | Single file, known location, direct answer | Direct tools only (UNLESS Key Trigger applies) |
 | **Explicit** | Specific file/line, clear command | Execute directly (UNLESS Key Trigger applies — domain expertise overrides task size) |
-| **Exploratory** | "How does X work?", "Find Y" | Fire explore (1-3) + tools in parallel |
+| **Exploratory** | "How does X work?", "Find Y" | Fire trinity (1-3) + tools in parallel |
 | **Open-ended** | "Improve", "Refactor", "Add feature" | Assess codebase first |
 | **Ambiguous** | Unclear scope, multiple interpretations | Ask ONE clarifying question |
 
@@ -217,7 +217,7 @@ ${librarianSection}
 
 ### Parallel Execution (DEFAULT behavior)
 
-**Explore/Librarian = Grep, not consultants.
+**Trinity/Operator = Grep, not consultants.
 
 \`\`\`typescript
 // CORRECT: fire the wave as async children; they run concurrently
@@ -480,7 +480,7 @@ export function createMorpheusAgent(
 
   const base: AgentConfig = {
     description:
-      "Powerful AI orchestrator. Plans obsessively with tasks, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explore for internal code (parallel-friendly), librarian for external docs. (Morpheus - Matrixx)",
+      "Powerful AI orchestrator. Plans obsessively with tasks, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses trinity for internal code (parallel-friendly), operator for external docs. (Morpheus - Matrixx)",
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { maxTokens: 24000 } },

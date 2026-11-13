@@ -6,9 +6,9 @@ const MODE: AgentMode = "subagent"
 
 export const TRINITY_PROMPT_METADATA: AgentPromptMetadata = {
   category: "exploration",
-  cost: "FREE",
+  cost: "CHEAP",
   promptAlias: "Explore",
-  keyTrigger: "2+ modules involved → fire `explore` background",
+  keyTrigger: "2+ modules involved → fire `trinity`",
   triggers: [
     { domain: "Explore", trigger: "Find existing codebase structure, patterns and styles" },
   ],

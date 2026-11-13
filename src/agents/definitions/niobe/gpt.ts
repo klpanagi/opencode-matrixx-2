@@ -221,7 +221,7 @@ After EVERY delegation, complete ALL steps — no shortcuts:
 | Imports | Correct, complete, no unused? |
 
 3. Cross-check: subagent's claims vs actual code — do they match?
-4. If mismatch found → resume session with \`sessionID\` and fix
+4. If mismatch found → continue with \`subagent(sessionID="<child-session-id>")\` and fix
 
 **If you cannot explain what the changed code does, you have not reviewed it.**
 

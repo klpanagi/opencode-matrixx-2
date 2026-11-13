@@ -48,7 +48,7 @@ describe("injectContextDiscipline pure", () => {
     }
   })
 
-  it("should inject explore into explore agents when ctx_* present", () => {
+  it("should inject explore guidance into exploration agents when ctx_* present", () => {
     //#given: ctx tools plus grep/glob
     const agents = makeAgents(["trinity", "operator", "seraph", "smith", "merovingian", "construct", "oracle"])
     //#when

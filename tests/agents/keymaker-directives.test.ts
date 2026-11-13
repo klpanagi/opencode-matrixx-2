@@ -85,3 +85,19 @@ describe("keymaker oracle vs merovingian routing", () => {
     expect(system).toContain("agent='merovingian'")
   })
 })
+
+const GPT_MODEL = "openai/gpt-5.2"
+
+describe("keymaker model-gated reasoning directives", () => {
+  test("emits GPT reasoning directives only for GPT models", () => {
+    //#given a GPT model and a Claude model
+    //#when the keymaker prompt is built for each
+    const gptSystem = createKeymakerAgent(GPT_MODEL, [], []).system as string
+    const claudeSystem = createKeymakerAgent(MODEL, [], []).system as string
+    //#then GPT-only sections appear only for the GPT model
+    expect(gptSystem).toContain("Reasoning Configuration")
+    expect(gptSystem).toContain("Constraint-First")
+    expect(claudeSystem).not.toContain("Reasoning Configuration")
+    expect(claudeSystem).not.toContain("GPT 5.2")
+  })
+})

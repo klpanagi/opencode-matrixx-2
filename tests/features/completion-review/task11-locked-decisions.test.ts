@@ -183,7 +183,14 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // fired only after the prior completion is absorbed. De-duplication only —
     // Niobe remains the plan EXECUTOR, no reviewer role was added, so the locked
     // decision still holds.
-    const FROZEN_MD5 = "073ee7250a6e414e4062046b123c057a"
+    // NOTE (audit-consistency fix): hash advanced from 073ee7250a6e414e4062046b123c057a.
+    // The only deltas are stale-reference repairs: the retired display alias
+    // "explore"/"librarian" replaced with the registered agents trinity/operator, the
+    // fabricated `resume` tool replaced with subagent(sessionID=...), and the Niobe
+    // identity metaphor no longer names the retired Atlas agent. Delegation mechanics
+    // and the plan EXECUTOR role are unchanged — no reviewer role was added, so the
+    // locked decision still holds.
+    const FROZEN_MD5 = "eda1a2f0c99957e3fdbad67f288a9a3f"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/definitions/niobe/default.ts")

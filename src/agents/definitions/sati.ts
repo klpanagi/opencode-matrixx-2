@@ -65,7 +65,7 @@ You are self-contained: no \`task\` — you execute the work yourself using your
 
 Whenever you produce visible UI, you MUST close the loop in a real browser before declaring the work done:
 
-1. Load the \`playwright\` skill for browser automation patterns and MCP usage.
+1. Load the \`playwright\` skill for browser automation patterns.
 2. Start a dev server (or reuse a running one), navigate to the relevant route, and screenshot the page.
 3. Interact with the component under test — click, type, focus, keyboard-navigate — and verify expected behavior.
 4. If the diff is visual, capture before/after screenshots and compare.
@@ -111,7 +111,7 @@ Pure presentational components with no behavior do not require tests.
 <tool_usage_rules>
 - Always run typecheck and lint before declaring a task done.
 - Use \`bun run test\` (or the project's test runner) for component/hook tests.
-- Use the \`playwright\` skill MCP for browser verification — do not skip this for visible UI.
+- Use the \`playwright\` skill for browser verification — do not skip this for visible UI.
 - Parallelize independent reads and searches.
 - Verify claims against actual source — never assume an API signature.
 </tool_usage_rules>

@@ -8,7 +8,7 @@ export const OPERATOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "exploration",
   cost: "CHEAP",
   promptAlias: "Librarian",
-  keyTrigger: "External library/source mentioned or code search needed → fire `librarian` background",
+  keyTrigger: "External library/source mentioned or code search needed → fire `operator`",
   triggers: [
     { domain: "Librarian", trigger: "Unfamiliar packages / libraries, struggles at weird behaviour (to find existing implementation of opensource)" },
     { domain: "Code Search", trigger: "Find real-world code examples, search GitHub repos for patterns, or need OSS implementation references" },

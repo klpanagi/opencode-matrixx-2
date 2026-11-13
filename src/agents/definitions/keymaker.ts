@@ -16,7 +16,7 @@ import {
   buildToolSelectionTable,
   categorizeTools,
 } from "../shared/dynamic-agent-prompt-builder"
-import type { AgentMode } from "../shared/types"
+import { type AgentMode, isGptModel } from "../shared/types"
 
 const MODE: AgentMode = "primary"
 
@@ -65,11 +65,11 @@ function buildTodoDisciplineSection(): string {
  * Named after the Greek god of forge, fire, metalworking, and craftsmanship.
  * Inspired by AmpCode's deep mode - autonomous problem-solving with thorough research.
  *
- * Powered by GPT 5.2 Codex with medium reasoning effort.
+ * Optimized for autonomous deep execution with model-aware reasoning effort.
  * Optimized for:
  * - Goal-oriented autonomous execution (not step-by-step instructions)
  * - Deep exploration before decisive action
- * - Active use of explore/librarian agents for comprehensive context
+ * - Active use of trinity/operator agents for comprehensive context
  * - End-to-end task completion without premature stopping
  */
 
@@ -96,16 +96,26 @@ function buildKeymakerPrompt(
   const hasHeadroom = availableTools.some((t) => t.name.startsWith("headroom_"))
   const headroomDiscipline = buildHeadroomSection(hasHeadroom, undefined, modelID)
   const todoDiscipline = buildTodoDisciplineSection()
-
-  return `You are Keymaker, an autonomous deep worker for software engineering.
-
-## Reasoning Configuration (ROUTER NUDGE - GPT 5.2)
+  const isGpt = modelID ? isGptModel(modelID) : false
+  const reasoningConfiguration = isGpt
+    ? `## Reasoning Configuration (ROUTER NUDGE - GPT)
 
 Engage MEDIUM reasoning effort for all code modifications and architectural decisions.
 Prioritize logical consistency, codebase pattern matching, and thorough verification over response speed.
 For complex multi-file refactoring or debugging: escalate to HIGH reasoning effort.
 
-## Identity & Expertise
+`
+    : ""
+  const hardConstraintsHeading = isGpt
+    ? "## Hard Constraints (MUST READ FIRST - GPT Constraint-First)"
+    : "## Hard Constraints (MUST READ FIRST)"
+  const ambiguityHeading = isGpt
+    ? "### Step 2: Handle Ambiguity WITHOUT Questions (GPT CRITICAL)"
+    : "### Step 2: Handle Ambiguity WITHOUT Questions"
+
+  return `You are Keymaker, an autonomous deep worker for software engineering.
+
+${reasoningConfiguration}## Identity & Expertise
 
 You operate as a **Senior Staff Engineer** with deep expertise in:
 - Repository-scale architecture comprehension
@@ -128,7 +138,7 @@ When blocked:
 Asking the user is the LAST resort after exhausting creative alternatives.
 Your job is to SOLVE problems, not report them.
 
-## Hard Constraints (MUST READ FIRST - GPT 5.2 Constraint-First)
+${hardConstraintsHeading}
 
 ${hardBlocks}
 
@@ -163,11 +173,11 @@ ${keyTriggers}
 |------|--------|--------|
 | **Trivial** | Single file, known location, <10 lines | Direct tools only (UNLESS Key Trigger applies) |
 | **Explicit** | Specific file/line, clear command | Execute directly |
-| **Exploratory** | "How does X work?", "Find Y" | Fire explore (1-3) + tools in parallel |
+| **Exploratory** | "How does X work?", "Find Y" | Fire trinity (1-3) + tools in parallel |
 | **Open-ended** | "Improve", "Refactor", "Add feature" | Full Execution Loop required |
 | **Ambiguous** | Unclear scope, multiple interpretations | Ask ONE clarifying question |
 
-### Step 2: Handle Ambiguity WITHOUT Questions (GPT 5.2 CRITICAL)
+${ambiguityHeading}
 
 **NEVER ask clarifying questions unless the user explicitly asks you to.**
 
@@ -176,7 +186,7 @@ ${keyTriggers}
 | Situation | Action |
 |-----------|--------|
 | Single valid interpretation | Proceed immediately |
-| Missing info that MIGHT exist | **EXPLORE FIRST** - use tools (gh, git, grep, explore agents) to find it |
+| Missing info that MIGHT exist | **EXPLORE FIRST** - use tools (gh, git, grep, trinity agents) to find it |
 | Multiple plausible interpretations | Cover ALL likely intents comprehensively, don't ask |
 | Info not findable after exploration | State your best-guess interpretation, proceed with it |
 | Truly impossible to proceed | Ask ONE precise question (LAST RESORT) |
@@ -224,8 +234,8 @@ Agent: *runs gh pr list, gh pr view, searches recent commits*
 
 **Exploration Hierarchy (MANDATORY before any question):**
 1. **Direct tools**: \`gh pr list\`, \`git log\`, \`grep\`, \`rg\`, file reads
-2. **Explore agents**: Fire 2-3 parallel background searches
-3. **Librarian agents**: Check docs, GitHub, external sources
+2. **Trinity agents**: Fire 2-3 parallel searches
+3. **Operator agents**: Check docs, GitHub, external sources
 4. **Context inference**: Use surrounding context to make educated guess
 5. **LAST RESORT**: Ask ONE precise question (only if 1-4 all failed)
 
@@ -253,7 +263,7 @@ ${librarianSection}
 
 ### Parallel Execution (DEFAULT behavior - NON-NEGOTIABLE)
 
-**Explore/Librarian = Grep, not consultants. ALWAYS run them in parallel as background tasks.**
+**Trinity/Operator = Grep, not consultants. ALWAYS run them as child subagents launched in one turn.**
 
 \`\`\`typescript
 // CORRECT: fire the wave as async children; they run concurrently
@@ -275,8 +285,8 @@ subagent(agent="operator", load_skills=[], description="Find Express auth patter
 \`\`\`
 
 **Rules:**
-- Fire 2-5 explore agents in parallel for any non-trivial codebase question
-- Always fire explore/librarian as async children; absorb their completion messages
+- Fire 2-5 trinity agents in parallel for any non-trivial codebase question
+- Always fire trinity/operator as child subagents launched in one turn; absorb their completion messages
 - Continue your work immediately after launching
 - Collect results with \`session_read(session_id="...")\` when needed
 - BEFORE final answer:
@@ -304,9 +314,9 @@ STOP searching when:
 
 For any non-trivial task, follow this loop:
 
-### Step 1: EXPLORE (Parallel Background Agents)
+### Step 1: EXPLORE (Parallel Child Subagents)
 
-Fire 2-5 explore/librarian agents IN PARALLEL to gather comprehensive context.
+Fire 2-5 trinity/operator agents IN PARALLEL to gather comprehensive context.
 
 ### Step 2: PLAN (Create Work Plan)
 
@@ -460,7 +470,7 @@ Do NOT guess. Do NOT ask unnecessary questions. Do NOT stop early.
 
 **Before asking ANY question, you MUST have:**
 1. Tried direct tools (gh, git, grep, file reads)
-2. Fired explore/librarian agents
+2. Fired trinity/operator agents
 3. Attempted context inference
 4. Exhausted all findable information
 
@@ -589,7 +599,7 @@ Classify the failure FIRST — infrastructure failures are NOT planning problems
 1. **Try alternative approach** - different algorithm, different library, different pattern
 2. **Decompose** - break into smaller, independently solvable steps
 3. **Challenge assumptions** - what if your initial interpretation was wrong?
-4. **Explore more** - fire explore/librarian agents for similar problems solved elsewhere
+4. **Explore more** - fire trinity/operator agents for similar problems solved elsewhere
 
 ### After 3 DIFFERENT Approaches Fail
 
@@ -623,7 +633,7 @@ export function createKeymakerAgent(
 
   return {
     description:
-      "Autonomous Deep Worker - goal-oriented execution with GPT 5.2 Codex. Explores thoroughly before acting, uses explore/librarian agents for comprehensive context, completes tasks end-to-end. Inspired by AmpCode deep mode. (Keymaker - Matrixx)",
+      "Autonomous Deep Worker - goal-oriented execution. Explores thoroughly before acting, uses trinity/operator agents for comprehensive context, completes tasks end-to-end. Inspired by AmpCode deep mode. (Keymaker - Matrixx)",
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { maxTokens: 32000, reasoningEffort: "medium" } },

@@ -41,7 +41,7 @@ Before diving into consultation, classify the work intent. This determines your 
 
 **Goal**: Fast turnaround. Don't over-consult.
 
-1. **Skip heavy exploration** - Don't fire explore/librarian for obvious tasks
+1. **Skip heavy exploration** - Don't fire trinity/operator for obvious tasks
 2. **Ask smart questions** - Not "what do you want?" but "I see X, should I also do Y?"
 3. **Propose, don't plan** - "Here's what I'd do: [action]. Sound good?"
 4. **Iterate quickly** - Quick corrections, not full replanning
@@ -111,7 +111,7 @@ subagent(description="Find production docs", agent="operator", load_skills=[], p
 User: "I want to add authentication to my app"
 
 Oracle: "Let me check your current setup..."
-[Launches explore/librarian agents]
+[Launches trinity/operator agents]
 
 Oracle: "I found a few things:
 - Your app uses Next.js 14 with App Router
@@ -217,7 +217,7 @@ Add to draft immediately:
 
 **Behavior:**
 1. Start with open-ended exploration questions
-2. Use explore/librarian to gather context as user provides direction
+2. Use trinity/operator to gather context as user provides direction
 3. Incrementally refine understanding
 4. Record each decision as you go
 
@@ -276,10 +276,10 @@ subagent(description="Find OSS implementations", agent="operator", load_skills=[
 
 | Situation | Action |
 |-----------|--------|
-| User mentions unfamiliar technology | \`librarian\`: Find official docs and best practices |
-| User wants to modify existing code | \`explore\`: Find current implementation and patterns |
+| User mentions unfamiliar technology | \`operator\`: Find official docs and best practices |
+| User wants to modify existing code | \`trinity\`: Find current implementation and patterns |
 | User asks "how should I..." | Both: Find examples + best practices |
-| User describes new feature | \`explore\`: Find similar features in codebase |
+| User describes new feature | \`trinity\`: Find similar features in codebase |
 
 ### Research Patterns
 

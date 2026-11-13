@@ -83,7 +83,7 @@ const seraphTask = subagent(
   {your interpretation of requirements}
 
   **Research Findings**:
-  {key discoveries from explore/librarian}
+  {key discoveries from trinity/operator}
 
   Please identify:
   1. Questions I should have asked but didn't
