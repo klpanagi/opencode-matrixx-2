@@ -65,10 +65,11 @@ Fire architecture planning:
 subagent(
   agent="oracle",
   load_skills=[],
-  background=true,
   description="Plan implementation approach",
   prompt="Plan implementation for: {REQUEST}\\n\\nContext: {CODEBASE_CONTEXT}\\n\\nDeliver: approach, file list, edge cases, dependency order.")
 \`\`\`
+
+Absorb the completion message before BUILD.
 
 **Exit criteria:**
 - [ ] Implementation approach defined
@@ -87,7 +88,6 @@ For each file in dependency order:
 subagent(
   agent="mouse-source",
   load_skills=["git-master", "tdd-enforcer"],
-  background=true,
   description="Implement {FEATURE}",
   prompt="Implement from plan:\\n{PLAN}\\n\\nFile: {PATH}\\n\\nFollow tdd-enforcer: write test FIRST (RED), then minimum code (GREEN), then refactor. Run \`bun run test\` after each change.")
 \`\`\`
@@ -124,7 +124,7 @@ If ANY fails → fix → re-run ALL.
 
 ## PHASE 4: REVIEW
 
-Launch all 6 reviewers in ONE turn with \`background=true\` (their prompts live in the \`review-work\` skill, Phase 1):
+Launch all 6 reviewers in ONE turn (their prompts live in the \`review-work\` skill, Phase 1). Then absorb all six — each resolves via its completion message; \`session_read(session_id=...)\` each into the ledger. Barrier = 6 launched == 6 absorbed; only then write the verdict.
 
 \`\`\`
 subagent(agent="oracle", ...)        # 1 Goal Verifier
@@ -151,10 +151,11 @@ Fire security audit:
 subagent(
   agent="sentinel",
   load_skills=["security-core", "security-sast", "security-api", "security-dependencies"],
-  background=true,
   description="Security audit",
   prompt="Security audit on:\\n{CHANGED_FILES}\\n\\nDiff:\\n{DIFF}\\n\\nCheck: input validation, auth, secrets, injection, dependencies.")
 \`\`\`
+
+Absorb the completion message before SHIP.
 
 **Exit criteria:**
 - [ ] No CRITICAL findings
@@ -164,11 +165,12 @@ subagent(
 
 ## PHASE 6: SHIP
 
+Fire the shipper and absorb its completion before the PR step:
+
 \`\`\`
 subagent(
   agent="mouse-bullet-time",
   load_skills=["git-master"],
-  background=false,
   description="Create commits and PR",
   prompt="Create atomic commits for implementation.\\n\\nFiles: {CHANGED_FILES}\\n\\nFollow git-master conventions. Target dev branch.")
 \`\`\`

@@ -80,7 +80,7 @@ For multi-task plans, run a lightweight per-task gate BEFORE dependents start â€
 
 ## Phase 1: Launch 6 Agents
 
-Launch ALL 6 in a single turn. Every agent uses \`background=true\`. No sequential launches. No waiting between them.
+Launch ALL 6 in a single turn. No sequential launches. No waiting between them. Then absorb all six â€” each resolves via its completion message; \`session_read(session_id=...)\` each into the ledger. Barrier = 6 launched == 6 absorbed; only then write the verdict.
 
 **Oracle agents receive everything in the prompt** (they cannot read files or run commands). Include DIFF + FILE_CONTENTS + all context directly in the prompt text.
 
@@ -93,7 +93,6 @@ Launch ALL 6 in a single turn. Every agent uses \`background=true\`. No sequenti
 \`\`\`
 subagent(
   agent="oracle",
-  background=true,
   load_skills=[],
   description="Verify implementation against original goal and constraints",
   prompt="""
@@ -157,7 +156,6 @@ OUTPUT FORMAT:
 \`\`\`
 subagent(
   agent="mouse-the-one",
-  background=true,
   load_skills=["playwright", "dev-browser"],
   description="QA by actually running and using the application",
   prompt="""
@@ -206,7 +204,6 @@ OUTPUT FORMAT:
 \`\`\`
 subagent(
   agent="oracle",
-  background=true,
   load_skills=[],
   description="Review overall code quality, patterns, and architecture",
   prompt="""
@@ -260,7 +257,6 @@ OUTPUT FORMAT:
 \`\`\`
 subagent(
   agent="oracle",
-  background=true,
   load_skills=[],
   description="Security-focused review of implementation changes",
   prompt="""
@@ -308,7 +304,6 @@ OUTPUT FORMAT:
 \`\`\`
 subagent(
   agent="mouse-the-one",
-  background=true,
   load_skills=["git-master"],
   description="Mine all accessible contexts for missed requirements or background knowledge",
   prompt="""
@@ -376,7 +371,6 @@ OUTPUT FORMAT:
 \`\`\`
 subagent(
   agent="mouse-the-one",
-  background=true,
   load_skills=["remove-ai-slops"],
   description="Detect AI-generated code smells in changes",
   prompt="""
