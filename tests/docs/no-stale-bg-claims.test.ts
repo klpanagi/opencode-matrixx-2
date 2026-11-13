@@ -36,6 +36,18 @@ export function findStaleClaims(relPath: string, text: string): string[] {
 		if (/unstable-agent-babysitter/i.test(line) && !/\bdeprecated\b/i.test(line)) {
 			violations.push(`${where}: "unstable-agent-babysitter" named without a same-line "deprecated" marker`)
 		}
+		if (/background\s*=\s*(<br\/?>)?(true|false)/.test(line)) {
+			violations.push(`${where}: live "background=<bool>" argument claim`)
+		}
+		if (/run_in_background/.test(line)) {
+			violations.push(`${where}: live "run_in_background" argument`)
+		}
+		if (/\bsync inline\b/i.test(line)) {
+			violations.push(`${where}: live "sync inline" delegation claim`)
+		}
+		if (/defaults?\s+to\s+false/i.test(line) && /background/i.test(line)) {
+			violations.push(`${where}: background argument "defaults to false" claim`)
+		}
 	}
 
 	if (relPath === BACKGROUND_AGENTS && /session-output/.test(text)) {
@@ -162,5 +174,70 @@ describe("background-agent docs drift guard", () => {
 
 		//#then
 		expect(stillPresent).toBe(false)
+	})
+
+	test("flags a background=<boolean> argument mention", () => {
+		//#given
+		const text = [
+			"Pass `background = true` to detach the child.",
+			"Set `background=false` to wait for the result.",
+			"Row: `background=<br/>true` detaches.",
+		].join("\n")
+
+		//#when
+		const violations = findStaleClaims("docs/fixture.md", text)
+
+		//#then
+		expect(violations).toHaveLength(3)
+	})
+
+	test("flags a run_in_background argument mention", () => {
+		//#given
+		const text = "Call the tool with `run_in_background: true`."
+
+		//#when
+		const violations = findStaleClaims("docs/fixture.md", text)
+
+		//#then
+		expect(violations).toHaveLength(1)
+	})
+
+	test("flags a sync inline claim regardless of case", () => {
+		//#given
+		const text = "Delegation runs SYNC INLINE and blocks the parent."
+
+		//#when
+		const violations = findStaleClaims("docs/fixture.md", text)
+
+		//#then
+		expect(violations).toHaveLength(1)
+	})
+
+	test("flags defaults-to-false only when the same line mentions background", () => {
+		//#given
+		const backgroundText = "The `background` flag defaults to false."
+		const otherKeyText = "The `session_scoped` key defaults to false."
+
+		//#when
+		const backgroundViolations = findStaleClaims("docs/fixture.md", backgroundText)
+		const otherKeyViolations = findStaleClaims("docs/fixture.md", otherKeyText)
+
+		//#then
+		expect(backgroundViolations).toHaveLength(1)
+		expect(otherKeyViolations).toEqual([])
+	})
+
+	test("allows a bare defaults-to-false sentence and a Gherkin background row", () => {
+		//#given
+		const bare = "This option defaults to false."
+		const gherkinRow = "| `background` | `Background?` | Shared background steps (Gherkin `Background:`) |"
+
+		//#when
+		const bareViolations = findStaleClaims("docs/fixture.md", bare)
+		const gherkinViolations = findStaleClaims("docs/fixture.md", gherkinRow)
+
+		//#then
+		expect(bareViolations).toEqual([])
+		expect(gherkinViolations).toEqual([])
 	})
 })
