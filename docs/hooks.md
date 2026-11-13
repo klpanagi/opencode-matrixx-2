@@ -1,7 +1,6 @@
 # Hooks Reference
 
 > **Audience:** users configuring Matrixx (which hooks to keep, disable, or tune) and engineers adding or debugging hooks.
-> **Version:** 1.4.0, verified against `src/config/schema/hooks.ts` and `src/hooks/` disk listing.
 > **Scope:** `src/hooks/`, `src/plugin/setup-domains.ts`, `src/plugin/hooks/`, `src/plugin/tool/tool-catalog.ts`, `src/plugin/tool/tool-execute-{before,after}.ts`, `src/config/schema/hooks.ts`, `src/index.ts`.
 > **How to read this:** Section 1 explains when hooks run. Section 2 lists every hook with **what** it does, **why** it exists, and **when** it fires. Section 3 shows how to disable or tune hooks. Sections 4–5 cover cost.
 
@@ -136,19 +135,19 @@ Source: `src/plugin/tool/tool-execute-after.ts`.
 toolOutputTruncator (always first)
 + Promise.all([
       qualityGate (Biome, parallel),
-      remainingHooks() sequential (19):
+      remainingHooks() sequential (18):
         webfetchRedirectGuard -> contextWindowMonitor
         -> commentChecker -> directoryAgentsInjector -> rulesInjector
         -> emptyTaskResponseDetector -> agentUsageReminder
         -> categorySkillReminder -> interactiveBashSession -> editErrorRecovery
-        -> delegateTaskRetry -> niobeHook -> taskResumeInfo
+        -> niobeHook -> taskResumeInfo
         -> taskNotepadWriter -> hashlineReadEnhancer
         -> jsonErrorRecovery -> readImageResizer -> silentFailureGuard
         -> sessionMemory
     ])
 ```
 
-Total: 22 invocations over 22 unique hooks (`preemptive-compaction` is deleted). `qualityGate`/`commentChecker` are cheap in `before`
+Each hook above appears once (`preemptive-compaction` is deleted). `qualityGate`/`commentChecker` are cheap in `before`
 (Map register) and expensive in `after` (Biome/CLI).
 `directoryAgentsInjector`/`rulesInjector` are no-ops in `before` and do real
 work in `after`.
@@ -437,4 +436,4 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
 - `src/shared/agent/safe-create-hook.ts`, `src/plugin-config.ts:155-176`
 - `src/hooks/AGENTS.md`, `src/hooks/index.ts`
 - Related docs: `orchestration.md`, `task-system.md`,
-  `configurations.md`, `research/cost-performance.md`
+  `configurations.md`

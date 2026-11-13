@@ -1,4 +1,4 @@
-# Matrixx Agents (v1.4.0)
+# Matrixx Agents
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
@@ -50,14 +50,14 @@ The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNam
 ### Built-in Capabilities
 
 - Full LSP / AST-Grep support
-- Lifecycle hooks — context injection, think mode, comment checking, background-task parent notification, error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
+- Lifecycle hooks — context injection, think mode, comment checking, subagent completion delivery, error recovery, quality gate, `task-edit-guard` (see [Hooks](hooks.md))
 - 30 Tool Directories (`src/tools/`) — LSP, AST-Grep, search, delegation, skills, task system (`task_create`/`task_update`/`task_list`/`task_get`/`task_cleanup` via `.matrixx/tasks`), and more
 - File-backed tasks — `.matrixx/tasks` keep the agent on mission (survives `/clear`; see [Task System](./task-system.md))
 
 - No Claude Code compatibility layer — the legacy `.claude/` loaders and `claude_code` config keys no longer exist in-tree; custom commands and skills load from OpenCode paths only (`.opencode/command/`, `.opencode/skills/`)
 - Curated MCPs: Context7 (official docs), Document Reader + native `websearch` tool and native `github_search` tool (local gh/git/rg, no third-party services)
 - Interactive terminal via Tmux integration
-- Async background agents
+- Async parallel subagents
 
 ---
 
@@ -228,8 +228,8 @@ Sati is the dedicated frontend specialist. Self-contained execution — Sati han
 
 - **Role**: Frontend specialist
 - **Model**: `claude-sonnet-4-6` (provider-resolved fallback chain — see `src/shared/model/model-requirements.ts`)
-- **Tool Restrictions**: Cannot use `task` or `delegate_agent` (self-contained execution)
-- **Skills**: 8 frontend and browser skills (`frontend-react-nextjs`, `frontend-svelte-sveltekit`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright`, verified in `src/agents/sati.ts` via `SATI_FRONTEND_SKILLS`)
+- **Tool Restrictions**: Cannot use `task` or delegate further (self-contained execution)
+- **Skills**: 8 frontend and browser skills (`react-nextjs-patterns`, `svelte-sveltekit-patterns`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright`, verified in `src/agents/definitions/sati.ts` via `SATI_FRONTEND_SKILLS`)
 - **Mode**: `subagent` — explicitly invokable only
 
 ### Example Prompts

@@ -26,7 +26,7 @@ skills/
 │   └── index.ts                  # Loader barrel (explicit named re-exports)
 ├── builtin/                      # 70 skills across 7 category dirs (export Skill objects)
 │   ├── bdd/                      # 4 skills (bdd-backend, bdd-contract, bdd-frontend, bdd-tests)
-│   ├── core/                     # 20 skills, 19 files (playwright.ts exports 2: playwright + agent-browser)
+│   ├── core/                     # 20 skills, 28 files (playwright.ts exports 2: playwright + agent-browser)
 │   │                             # git-master, docker-master, dev-browser, tdd-enforcer, quality-gate,
 │   │                             # software-dev, review-work, matrixx-self-config, rp-research, ...
 │   ├── dsl/                      # 11 skills (dsl-core, dsl-grammar, dsl-codegen, dsl-metamodel, ...)
@@ -117,7 +117,7 @@ docs were removed as well: nothing loads `.md` at runtime (loader uses `builtin/
 `.ts` only) and the template already inlines the essential setup/scraping
 guidance. Do not re-add top-level `SKILL.md` copies or `references/` dirs.
 
-## LAZY LOADING (P1 OPTIMIZATION)
+## LAZY LOADING
 
 Since v2.0.0, all **non-browser** skills use lazy template resolution (see LOADER SEMANTICS §2 above).
 
@@ -167,7 +167,7 @@ All skills are loaded from `src/skills/builtin/<category>/` via `createBuiltinSk
 2. **Re-export the category index and the root barrel:** add `export { mySkill, MY_SKILL_NAME } from "./my-name"` to `src/skills/builtin/<category>/index.ts`, and add the matching re-export line to the root `src/skills/builtin/index.ts` (type-level access).
 3. **Add the import + factory entry in `src/skills/loader/factories.ts`:** add a static import (`import { mySkill } from "./builtin/<category>/my-name"`) plus a `skillFactories` entry (`"my-name": () => mySkill`). Content dirs are data only — no `require()` seam. Registration onto the domain goes through `registerSkillTransform` in `./skills.transform.ts`.
 4. **Add the skill name to the schema:** add `"my-name"` to `BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts` so `disabled_skills` accepts it (and rebuild the schema if the build embeds it).
-5. **Verify:** run typecheck (`bun run typecheck`) and the skills tests (`bun test` coverage for `skills.test.ts` / `lazy-skill-helper.test.ts`). The factory pattern plus the lazy wrapper handles hydration — no other change is needed.
+5. **Verify:** run typecheck (`bun run typecheck`) and the full suite (`bun run test`). The factory pattern plus the lazy wrapper handles hydration — no other change is needed.
 
 ## HOW TO REMOVE A BUILT-IN SKILL
 

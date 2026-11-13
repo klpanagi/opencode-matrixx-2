@@ -73,5 +73,5 @@ export const mcp_name = {
 
 ## NOTES ON REMOVED WEBSEARCH MCP
 
-The custom `websearch` MCP (Exa AI / Tavily) was removed; web search is now provided by the native `websearch` tool. Both remaining MCPs (context7, document_reader) are static configs assigned eagerly. See `docs/websearch-migration.md` for the provider mapping and migration notes.
+The custom `websearch` MCP (Exa AI / Tavily) was removed; web search is now provided by the native `websearch` tool. Both remaining MCPs (context7, document_reader) are static configs assigned eagerly. The provider mapping is applied automatically during config load.
 

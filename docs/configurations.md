@@ -1,6 +1,6 @@
 # Matrixx Configuration
 
-> Version 1.4.0. Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
+> Every key below is validated by the Zod schemas in `src/config/schema/` (top-level keys: `src/config/schema/matrixx-config.ts`). Do not invent keys; unknown keys fail validation.
 
 > **Full reference:** [`matrixx.example.jsonc`](../matrixx.example.jsonc) — exhaustive, commented example covering every `matrixx.jsonc` key (headroom, context-mode, DCP, RTK, all top-level and nested options) with defaults and descriptions. Use it as a starting point: copy sections you need.
 
@@ -699,7 +699,7 @@ You can also customize Morpheus agents like other agents:
 
 ## Background Tasks
 
-Configure background agent tasks. The historical concurrency, stale-timeout, loop-breaker, and scheduling keys below are **deprecated: accepted but ignored**. They are never removed so old configs keep loading, and the plugin emits at most one warning per process when any of them is present (T-54). Only `wallClockTimeoutMs` and `dedupeActiveDelegations` affect current behavior.
+Configure background agent tasks. The historical concurrency, stale-timeout, loop-breaker, and scheduling keys below are **deprecated: accepted but ignored**. They are never removed so old configs keep loading, and the plugin emits at most one warning per process when any of them is present. Only `wallClockTimeoutMs` and `dedupeActiveDelegations` affect current behavior.
 
 ```json
 {
@@ -1124,7 +1124,7 @@ Disable specific built-in hooks via `disabled_hooks` in `~/.config/opencode/matr
 }
 ```
 
-Available hooks (59 hook names + 11 retained-deprecated no-op literals + 1 alias = 71 parseable — see `HookNameEnum` + `HookNameSchema` in `src/config/schema/hooks.ts`). Eleven names — `todo-continuation-enforcer`, `compaction-todo-preserver`, `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`, `preemptive-compaction`, `background-notification`, `background-task-blocker`, `delegate-task-retry`, `subagent-block`, and `unstable-agent-babysitter` — are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. `anthropic-context-window-limit-recovery` is an alias for `context-window-limit-recovery`. See `docs/legacy-todo-migration.md`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `docs-lookup-guard`, `document-reader-guard`, `domain-keyword-detector`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-memory`, `session-notification`, `session-recovery`, `silent-failure-guard`, `start-work`, `startup-toast`, `stop-continuation-guard`, `subagent-block`, `task-edit-guard`, `task-notepad-writer`, `task-resume-info`, `think-mode`, `thinking-block-validator`, `tool-output-truncator`, `tool-pair-validator`, `webfetch-redirect-guard`, `write-existing-file-guard`
+Available hooks (59 hook names + 11 retained-deprecated no-op literals + 1 alias = 71 parseable — see `HookNameEnum` + `HookNameSchema` in `src/config/schema/hooks.ts`). Eleven names — `todo-continuation-enforcer`, `compaction-todo-preserver`, `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`, `preemptive-compaction`, `background-notification`, `background-task-blocker`, `delegate-task-retry`, `subagent-block`, and `unstable-agent-babysitter` — are **retained-deprecated**: the hooks behind them were removed, the names still parse so old configs keep loading, and they resolve to no-ops. `anthropic-context-window-limit-recovery` is an alias for `context-window-limit-recovery`.: `agent-usage-reminder`, `context-window-limit-recovery`, `anthropic-context-window-limit-recovery`, `anthropic-effort`, `niobe`, `auto-slash-command`, `auto-update-checker`, `background-notification`, `background-task-blocker`, `bash-file-read-guard`, `category-skill-reminder`, `comment-checker`, `compaction-context-injector`, `compaction-todo-preserver`, `context-mode-enforcer`, `context-window-monitor`, `dcp-nudge-sanitizer`, `delegate-task-retry`, `design-intent-preserver`, `directory-agents-injector`, `docs-lookup-guard`, `document-reader-guard`, `domain-keyword-detector`, `edit-error-recovery`, `empty-task-response-detector`, `env-context-injector`, `env-file-write-guard`, `input-secret-guard`, `hashline-read-enhancer`, `interactive-bash-session`, `json-error-recovery`, `keyword-detector`, `knowledge-hub-guard`, `knowledge-hub-injector`, `knowledge-hub-search-nudge`, `matrix-loop`, `mouse-notepad`, `non-interactive-env`, `nudge-loop-breaker`, `oracle-md-only`, `plan-persister`, `quality-gate`, `read-image-resizer`, `rtk-bash-rewriter`, `rules-injector`, `runtime-fallback`, `secret-leak-guard`, `session-memory`, `session-notification`, `session-recovery`, `silent-failure-guard`, `start-work`, `startup-toast`, `stop-continuation-guard`, `subagent-block`, `task-edit-guard`, `task-notepad-writer`, `task-resume-info`, `think-mode`, `thinking-block-validator`, `tool-output-truncator`, `tool-pair-validator`, `webfetch-redirect-guard`, `write-existing-file-guard`
 **Note on `directory-agents-injector`**: This hook is **automatically disabled** when running on OpenCode 1.1.37+ because OpenCode now has native support for dynamically resolving AGENTS.md files from subdirectories (PR #10678). This prevents duplicate AGENTS.md injection. For older OpenCode versions, the hook remains active to provide the same functionality.
 
 **Note on `auto-update-checker` and `startup-toast`**: The `startup-toast` hook is a sub-feature of `auto-update-checker`. To disable only the startup toast notification while keeping update checking enabled, add `"startup-toast"` to `disabled_hooks`. To disable all update checking features (including the toast), add `"auto-update-checker"` to `disabled_hooks`.
@@ -1223,8 +1223,7 @@ below, and the feature is on by default.
 Canonical task-system configuration (storage, enforcer, poll timeout). The task
 system is unconditional: there is no master switch. Legacy `morpheus.tasks` and
 `task.pollTimeoutMs` still parse and act as fallbacks for storage keys — explicit
-`tasks.*` always wins. `tasks.enabled` is retained but ignored; see
-`docs/legacy-todo-migration.md`.
+`tasks.*` always wins. `tasks.enabled` is retained but ignored.
 
 ```json
 {
@@ -1245,7 +1244,7 @@ system is unconditional: there is no master switch. Legacy `morpheus.tasks` and
 
 | Option               | Type     | Default            | Description                                                               |
 | -------------------- | -------- | ------------------ | ------------------------------------------------------------------------- |
-| `enabled`            | `boolean` | `true`            | **Retained-deprecated.** Parsed but ignored: the task system is unconditional. `false` logs a one-time deprecation warning. See `docs/legacy-todo-migration.md`. |
+| `enabled`            | `boolean` | `true`            | **Retained-deprecated.** Parsed but ignored: the task system is unconditional. `false` logs a one-time deprecation warning. |
 | `storage_path`       | `string` | — (runtime default: `.matrixx/tasks` when `scope=project`) | Absolute or relative path override. When set, bypasses `scope`/`listId` resolution. |
 | `task_list_id`       | `string` | — (falls back to `basename(cwd)` sanitized) | Force task list ID (alternative to `REDPILL_TASK_LIST_ID` / `CLAUDE_CODE_TASK_LIST_ID` env). Sanitized to `[a-zA-Z0-9_-]`. |
 | `scope`              | `"global" \| "project"` | `"project"` | `project` → `.matrixx/tasks` per project (default). `global` → `~/.config/opencode/tasks/{listId}`. |
@@ -1268,7 +1267,7 @@ separate knob and is unchanged: `background_task.wallClockTimeoutMs`, default `0
 
 ## MCPs
 
-Two built-in MCP servers (`src/mcps/`; names in `McpNameSchema`, `src/mcps/types.ts`): `context7`, `document_reader`. All enabled by default. Web search is provided by the native `websearch` tool (see [Websearch Migration](websearch-migration.md)).
+Two built-in MCP servers (`src/mcps/`; names in `McpNameSchema`, `src/mcps/types.ts`): `context7`, `document_reader`. All enabled by default. Web search is provided by the native `websearch` tool.
 
 - **context7**: Fetches up-to-date official documentation for libraries
 - **document_reader**: Document extraction for PDFs and other files (used by the `document-reader` skill and the Construct agent)
@@ -1285,7 +1284,7 @@ Don't want them? Disable via `disabled_mcps` in `~/.config/opencode/matrixx.json
 
 ## Websearch
 
-Web search is provided by the native `websearch` tool. The legacy `websearch` config key (`src/config/schema/websearch.ts`, removed) is stripped with a one-time deprecation warning — see [Websearch Migration](websearch-migration.md) for the provider mapping.
+Web search is provided by the native `websearch` tool. The legacy `websearch` config key (`src/config/schema/websearch.ts`, removed) is stripped with a one-time deprecation warning; the provider mapping is applied automatically during config load.
 
 ## Global Model and Auto-Update
 
@@ -1717,7 +1716,7 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | Key | Schema | Default | Notes |
 |-----|--------|---------|-------|
 | `default_run_agent` | `string` | — | `src/config/schema/matrixx-config.ts:50`. |
-| `new_task_system_enabled` | `boolean` | — | **Retained-deprecated.** Oldest alias of the removed task-system switch. Parsed, ignored, warns once. Remove it; see `docs/legacy-todo-migration.md`. |
+| `new_task_system_enabled` | `boolean` | — | **Retained-deprecated.** Oldest alias of the removed task-system switch. Parsed, ignored, warns once. Remove it. |
 | `disabled_tools` | `string[]` | — | Top-level tool hiding (also referenced by `context_mode` docs). |
 | `task` | `TaskConfigSchema` (`src/config/schema/task.ts`) | — | Legacy; only `pollTimeoutMs` (min `60000`). Use `tasks.pollTimeoutMs`. |
 | `agent_definitions` | `string[]` | — | `AgentDefinitionsConfigSchema` (`src/config/schema/agent-definitions.ts`). |

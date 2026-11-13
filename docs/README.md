@@ -1,6 +1,6 @@
 # Matrixx Documentation
 
-> Version 1.4.0 -- OpenCode V2 plugin line only. All pages are English-only.
+> OpenCode V2 plugin line only. All pages are English-only.
 > Start with the row that matches your goal; each page declares its audience
 > in its header. After upgrading, restart OpenCode so the new plugin version loads.
 
@@ -48,18 +48,6 @@
 | `redpill-manifesto.md` | Users + contributors | Domain-neutral Matrixx manifesto (layer 1 of the two-layer doctrine) |
 | `redpill-sources.md` | Reviewers + contributors | Graded evidence map: every principle to sources, grade, and caveat (layer 2) |
 | `redpill-domain-software.md` | Engineers | Software domain pack: TDD, verification gates, delegation roster (layer 3) |
-
-## Research & historical
-
-Archived pages: preserved as-is, do not rely on their counts or versions.
-
-| Page | Audience | What you get |
-|---|---|---|
-| `research/cost-performance.md` | Researchers | Point-in-time cost/performance proposals (not a usage reference) |
-| `legacy-todo-migration.md` | Historians | How the legacy todo system was removed and migrated |
-| `websearch-migration.md` | Historians | How websearch moved from a custom MCP to a native tool |
-| `plan-qa-scenarios.md` | Historians | Agent-executed verification scenarios for plans |
-| `matrixx-crypto-market-extension-design.md` | Historians | Design doc for a crypto-market extension |
 
 ## Suggested paths
 

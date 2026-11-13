@@ -1,6 +1,6 @@
 # Matrixx CLI Guide
 
-> Version 1.4.0. The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
+> The CLI entry is `src/cli/index.ts`. Real commands: `doctor`, `install`, `setup`, `version`, `help`.
 
 This document provides a comprehensive guide to using the Matrixx CLI tools.
 

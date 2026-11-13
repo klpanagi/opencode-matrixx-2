@@ -1,6 +1,6 @@
 # Matrixx Features
 
-> Version 1.4.0. This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
+> This page is an index-hub: what Matrixx is, what is unique to this page, and where each subsystem is documented canonically. Roster tables live in the canonical docs — they are linked, not duplicated, here.
 
 Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, category-routed delegation, lazily-loaded skills, slash-command workflows, lifecycle hooks, file-backed tasks, and a BDD pipeline — all configured through `matrixx.json`/`matrixx.jsonc`.
 
@@ -23,9 +23,9 @@ Matrixx is a multi-agent orchestration plugin for OpenCode: specialized agents, 
 
 Matrixx provides 13 core agents plus 8 `mouse-*` workers (21 names in `BuiltinAgentNameSchema`). Full roster with models, fallbacks, tool restrictions, and background/tmux usage: [Agents](agents.md). Planning/execution model: [Orchestration](orchestration.md).
 
-### Background Agents (summary)
+### Parallel Subagents (summary)
 
-Run agents in the background and continue working; with `tmux.enabled`, background agents spawn in visible panes. Details: [Agents](agents.md); config: [Configuration](configurations.md#agents).
+Run subagents in parallel and continue working; with `tmux.enabled`, subagents can spawn in visible panes. Details: [Agents](agents.md); config: [Configuration](configurations.md#agents).
 
 ## Skills (summary)
 

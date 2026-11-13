@@ -1,10 +1,10 @@
 # Command Reference
 
-> Version 1.4.0. All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
 Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 23 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (21 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
