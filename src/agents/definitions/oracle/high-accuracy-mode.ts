@@ -39,12 +39,13 @@ export function createOracleHighAccuracyMode(
 let previousCategories: string[] | null = null
 
 for (let round = 1; round <= ${maxRounds}; round++) {
-  // Fire Smith in background (never a blocking nested call), then collect its verdict.
+  // Fire Smith — the call returns {sessionID, status:"running"} immediately. Absorb the
+  // injected completion message; then read the full verdict transcript:
   const smithTask = subagent(
     agent="smith",
+    description="Review plan",
     load_skills=[],
-    prompt=".matrixx/plans/{name}.md",
-    background=true
+    prompt=".matrixx/plans/{name}.md"
   )
   const result = session_read(session_id=smithTask.sessionID)
 

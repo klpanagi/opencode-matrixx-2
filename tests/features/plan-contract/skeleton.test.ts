@@ -218,14 +218,14 @@ describe("skeleton ↔ section-registry consistency guard", () => {
 
   test("renderPlanSkeleton output is byte-identical to its post-slimming snapshot", () => {
     //#given the slimmed skeleton bytes (QA guidance externalized to docs/plan-qa-scenarios.md)
-    const expectedSha = "7a244809fde4cb5e9d1f33c087026673a6171656cab3736b212d7e02baa1c6c5"
+    const expectedSha = "1ebc4928c2d65033fe3a660a7a62f9d47efbcccbfe0b91e9b395192c49a80a7f"
 
     //#when the skeleton is rendered now
     const skeleton = renderPlanSkeleton()
 
-    //#then the digest reflects the native-subagent dispatch row (task 3.3)
+    //#then the digest reflects the native-subagent dispatch row (no background argument)
     expect(createHash("sha256").update(skeleton).digest("hex")).toBe(expectedSha)
-    expect(skeleton).toHaveLength(12449)
+    expect(skeleton).toHaveLength(12432)
   })
 
   test("the guard is load-bearing: a near-miss heading does not resolve to the registry", () => {

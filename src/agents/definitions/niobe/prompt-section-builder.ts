@@ -50,7 +50,7 @@ Categories spawn \`Mouse-{category}\` with optimized settings:
 ${categoryRows.join("\n")}
 
 \`\`\`typescript
-subagent(agent="mouse-[category-name]", description="3-5 word title", load_skills=[...], background=false, prompt="...")
+subagent(agent="mouse-[category-name]", description="3-5 word title", load_skills=[...], prompt="...")
 \`\`\``
 }
 
@@ -108,7 +108,7 @@ Read each skill's description and ask: "Does this skill's domain overlap with my
 
 **Usage:**
 \`\`\`typescript
-subagent(agent="mouse-[category]", description="3-5 word title", load_skills=["skill-1", "skill-2"], background=false, prompt="...")
+subagent(agent="mouse-[category]", description="3-5 word title", load_skills=["skill-1", "skill-2"], prompt="...")
 \`\`\`
 
 **IMPORTANT:**

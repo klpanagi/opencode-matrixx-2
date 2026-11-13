@@ -4,7 +4,7 @@ import { REMOVED_TOOL_NAMES, type RemovedToolName } from "./constants"
 export function buildRemovedToolMessage(name: RemovedToolName): string {
   return [
     `[ERROR] Tool \`${name}\` was removed.`,
-    "Use the native `subagent` tool instead (agent=<name>, background=<true|false>, load_skills=[...]).",
+    "Use the native `subagent` tool instead (agent=<name>, description=<title>, prompt=<instructions>, load_skills=[...]).",
     "Cancel or wait on a running child via `subagent_control` (action=cancel|wait, session_id=<child sessionID>).",
     "Read child output via `session_read` / `session_search` / `session_info`.",
   ].join(" ")

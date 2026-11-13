@@ -279,9 +279,9 @@ const PLAN_AGENT_SYSTEM_PREPEND_STATIC_BEFORE_SKILLS = `<system>
 BEFORE you begin planning, you MUST first understand the user's request deeply.
 
 MANDATORY CONTEXT GATHERING PROTOCOL:
-1. Launch background agents to gather context:
-   - task(subagent_type="trinity", run_in_background=true, prompt="<search for relevant patterns, files, and implementations in the codebase related to user's request>")
-   - task(subagent_type="operator", run_in_background=true, prompt="<search for external documentation, examples, and best practices related to user's request>")
+1. Fire context-gathering agents immediately — both return sessionIDs at once; absorb the two completion messages:
+   - subagent(agent="trinity", load_skills=[], description="Codebase patterns", prompt="<search for relevant patterns, files, and implementations in the codebase related to user's request>")
+   - subagent(agent="operator", load_skills=[], description="External docs", prompt="<search for external documentation, examples, and best practices related to user's request>")
 
 2. After gathering context, ALWAYS present:
    - **User Request Summary**: Concise restatement of what the user is asking for
@@ -496,13 +496,13 @@ YOU MUST END YOUR RESPONSE WITH THIS SECTION.
 
 1. **Wave 1**: Fire these tasks IN PARALLEL (no dependencies)
    \`\`\`
-   task(category="...", load_skills=[...], run_in_background=false, prompt="Task 1: ...")
-   task(category="...", load_skills=[...], run_in_background=false, prompt="Task N: ...")
+   subagent(agent="mouse-source", load_skills=[...], description="Task 1", prompt="Task 1: ...")
+   subagent(agent="mouse-source", load_skills=[...], description="Task N", prompt="Task N: ...")
    \`\`\`
 
-2. **Wave 2**: After Wave 1 completes, fire next wave IN PARALLEL
+2. **Wave 2**: Wave 2 fires after every Wave 1 completion is absorbed.
    \`\`\`
-   task(category="...", load_skills=[...], run_in_background=false, prompt="Task 2: ...")
+   subagent(agent="mouse-source", load_skills=[...], description="Task 2", prompt="Task 2: ...")
    \`\`\`
 
 3. Continue until all waves complete

@@ -329,8 +329,9 @@ The native `subagent` tool is **the** delegation path. The legacy `task()` /
 `delegate_task` convention is gone: those names now resolve to guard stubs that
 return a redirect message.
 
-- `subagent(agent=..., background=..., description=..., prompt=...)` spawns work.
-- `background=true` children deliver a completion message to the parent session;
+- `subagent(agent=..., description=..., prompt=...)` spawns work; there is no
+  `background` argument (stripped by `applySubagentPolicy`).
+- Children deliver a completion message to the parent session;
   `session_read` / `session_search` / `session_info` read the child transcript.
 - `subagent_control(action="cancel"|"wait", session_id=..., timeout=<ms>)` manages
   a running child (`timeout` default 60000, max 600000).
@@ -461,7 +462,7 @@ graph TB
 sequenceDiagram
     participant U as User
     participant M as Morpheus
-    participant BG as BackgroundManager
+    participant CHILD as Child Subagents
     participant T as Trinity/Operator
     participant O as Oracle
     participant MO as Mouse
@@ -472,16 +473,16 @@ sequenceDiagram
     Note over M: Phase 0: Intent Classification<br/>→ Open-ended task, 2+ modules
 
     par Parallel Exploration (Background)
-        M->>BG: task(subagent="trinity", background=true)
-        BG->>T: Find auth patterns in codebase
-        M->>BG: task(subagent="operator", background=true)
-        BG->>T: Find JWT best practices
+        M->>CHILD: subagent(agent="trinity")
+        CHILD->>T: Find auth patterns in codebase
+        M->>CHILD: subagent(agent="operator")
+        CHILD->>T: Find JWT best practices
     end
 
     Note over M: Continue working while agents explore
 
-    M->>BG: session_read(session_id)
-    BG-->>M: Search results
+    M->>CHILD: session_read(session_id)
+    CHILD-->>M: Search results
 
     Note over M: Phase 1: Codebase Assessment<br/>→ Disciplined codebase, follow patterns
 
@@ -504,7 +505,7 @@ sequenceDiagram
             MO-->>M: Implementation + task_update(completed)
         end
     end
-    Note over M: background parent notification wakes the session when tasks complete
+    Note over M: completion message wakes the session when tasks complete
 
 
     Note over M: Phase 3: Verify & Report
@@ -515,12 +516,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    subgraph TASK_TOOL["task() Tool"]
+    subgraph SUBAGENT_TOOL["subagent() Tool"]
         direction TB
-        CAT["category=<br/>'source'"]
-        SUB["subagent_type=<br/>'trinity'"]
-        BG["background=<br/>true/false"]
-        SID["session_id=<br/>'ses_...'"]
+        CAT["agent=<br/>'mouse-source'"]
+        SUB["agent=<br/>'trinity'"]
+        SID["sessionID=<br/>'ses_...'"]
         SK["load_skills=<br/>['git-master']"]
     end
 
@@ -544,17 +544,13 @@ flowchart LR
         RES4["Apply restrictions<br/>(denied tools)"]
     end
 
-    subgraph EXECUTION["Execution Mode"]
-        SYNC["Sync Session<br/>Poller waits<br/>for completion"]
-        ASYNC["Background Task<br/>Returns task_id<br/>immediately"]
+    subgraph EXECUTION["Execution"]
+        ASYNC["Async child<br/>returns sessionID<br/>immediately"]
     end
 
     CAT --> ROUTING
     SUB --> RESOLUTION
     ROUTING --> RESOLUTION
-    BG -->|false| SYNC
-    BG -->|true| ASYNC
-    RESOLUTION --> SYNC
     RESOLUTION --> ASYNC
 ```
 
@@ -618,18 +614,18 @@ graph LR
         VO1["Construct"]
     end
 
-    subgraph NO_DELEGATION["No Delegation (no task)"]
+    subgraph NO_DELEGATION["No Delegation (no task_*)"]
         ND1["Cipher"]
         ND2["Mouse"]
         ND3["Sati"]
     end
 
-    TOOLS["26+ Tools<br/>LSP, AST-Grep, Grep,<br/>Glob, Read, Edit, Write,<br/>Bash, task(), background,<br/>session, look_at, skill,<br/>task_create/list/get/update/cleanup"]
+    TOOLS["26+ Tools<br/>LSP, AST-Grep, Grep,<br/>Glob, Read, Edit, Write,<br/>Bash,<br/>session, look_at, skill,<br/>task_create/list/get/update/cleanup"]
 
     TOOLS --> FULL_ACCESS
     TOOLS -.->|"filtered"| READ_ONLY
     TOOLS -.->|"minimal"| VISION_ONLY
-    TOOLS -.->|"no task()"| NO_DELEGATION
+    TOOLS -.->|"no task_*"| NO_DELEGATION
 ```
 
 ## Agent Lifecycle & Model Resolution
@@ -662,37 +658,9 @@ flowchart TD
     OTHER --> AGENT
 ```
 
-## Execution Modes
+## Execution Model
 
-```mermaid
-flowchart TD
-    TASK["task() call"]
-    TASK --> MODE{"background?"}
-
-    MODE -->|"false (default)"| SYNC["Sync Execution"]
-    MODE -->|"true"| ASYNC["Async Execution"]
-
-    SYNC --> S1["Create session"]
-    S1 --> S2["Send prompt"]
-    S2 --> S3["Poll for completion"]
-    S3 --> S4{"Complete?"}
-    S4 -->|"No"| S5{"Stall detected?"}
-    S5 -->|"No"| S3
-    S5 -->|"Yes<br/>(stability-based<br/>or timeout)"| S6["Force complete"]
-    S4 -->|"Yes"| S7["Return result<br/>+ session_id"]
-
-    ASYNC --> A1["Create session"]
-    A1 --> A2["Send prompt"]
-    A2 --> A3["Return sessionID<br/>immediately"]
-    A3 --> A4["Parent keeps working"]
-    A4 --> A5["Completion message<br/>injected on finish"]
-    A5 --> A6["session_read(session_id)<br/>to retrieve result"]
-
-    S7 --> CONT{"Need follow-up?"}
-    A6 --> CONT
-    CONT -->|"Yes"| RESUME["task(session_id='ses_...')<br/>Full context preserved"]
-    CONT -->|"No"| DONE["Done"]
-```
+Every `subagent()` call returns a `sessionID` immediately; the parent keeps working and absorbs the child's completion message; use `session_read(session_id=…)` once for the transcript. There is no sync mode and no polling path.
 
 ## Agent Collaboration Patterns
 
@@ -715,14 +683,14 @@ flowchart TD
 2. **Parallel by default** — Exploration agents always run in background; execution waves via `blockedBy` DAG maximize parallel Mouse workers
 3. **Task system is the execution substrate** — `.matrixx/tasks/T-*.json` (scope:project default, file-backed, survives `/clear`; see [Task System](./task-system.md))
 4. **Skills are composable** — Any agent can load any skill via `load_skills`
-5. **Session continuity** — Every delegation returns a `session_id` for efficient follow-up (`task(session_id="…")`)
+5. **Session continuity** — Every delegation returns a `sessionID` for efficient follow-up (`subagent(sessionID="…")`)
 6. **Model fallback chains** — Every agent has a fallback chain for provider flexibility (see `src/shared/model/model-requirements.ts`)
 7. **Tool restrictions enforce roles** — Read-only agents can't write; executors can't delegate; `task-edit-guard` blocks raw bash on `.matrixx/tasks`
-8. **Two-phase execution** — Sync (blocking) for critical path, async (background) for exploration; task waves add a third (DAG-scheduled)
+8. **Two-phase execution** — every child is async; dependency order is a wave barrier (next wave after prior completions are absorbed), not a sync/async switch.
 
 ## Further Reading
 
-- [Orchestration](orchestration.md) — planning/execution layers, `task()` categories, continuation
+- [Orchestration](orchestration.md) — planning/execution layers, `agent` categories, continuation
 - [Hooks](hooks.md) — lifecycle hook reference
 - [Quality](quality.md) — BDD pipeline and TDD discipline, Oracle plan templates, RED-GREEN-REFACTOR enforcement
 - [Task System](task-system.md) — `.matrixx/tasks` storage, waves, continuation

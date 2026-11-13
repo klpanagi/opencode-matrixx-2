@@ -256,7 +256,7 @@ ${librarianSection}
 **Explore/Librarian = Grep, not consultants. ALWAYS run them in parallel as background tasks.**
 
 \`\`\`typescript
-// CORRECT: Always background, always parallel
+// CORRECT: fire the wave as async children; they run concurrently
 // Prompt structure (each field should be substantive, not a single sentence):
 //   [CONTEXT]: What task I'm working on, which files/modules are involved, and what approach I'm taking
 //   [GOAL]: The specific outcome I need — what decision or action the results will unblock
@@ -264,25 +264,23 @@ ${librarianSection}
 //   [REQUEST]: Concrete search instructions — what to find, what format to return, and what to SKIP
 
 // Contextual Grep (internal)
-subagent(agent="trinity", background=true, load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
-subagent(agent="trinity", background=true, load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
+subagent(agent="trinity", load_skills=[], description="Find auth implementations", prompt="I'm implementing JWT auth for the REST API in src/api/routes/. I need to match existing auth conventions so my code fits seamlessly. I'll use this to decide middleware structure and token flow. Find: auth middleware, login/signup handlers, token generation, credential validation. Focus on src/ — skip tests. Return file paths with pattern descriptions.")
+subagent(agent="trinity", load_skills=[], description="Find error handling patterns", prompt="I'm adding error handling to the auth flow and need to follow existing error conventions exactly. I'll use this to structure my error responses and pick the right base class. Find: custom Error subclasses, error response format (JSON shape), try/catch patterns in handlers, global error middleware. Skip test files. Return the error class hierarchy and response format.")
 
 // Reference Grep (external)
-subagent(agent="operator", background=true, load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
-subagent(agent="operator", background=true, load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
-// Continue immediately - collect results when needed
+subagent(agent="operator", load_skills=[], description="Find JWT security docs", prompt="I'm implementing JWT auth and need current security best practices to choose token storage (httpOnly cookies vs localStorage) and set expiration policy. Find: OWASP auth guidelines, recommended token lifetimes, refresh token rotation strategies, common JWT vulnerabilities. Skip 'what is JWT' tutorials — production security guidance only.")
+subagent(agent="operator", load_skills=[], description="Find Express auth patterns", prompt="I'm building Express auth middleware and need production-quality patterns to structure my middleware chain. Find how established Express apps (1000+ stars) handle: middleware ordering, token refresh, role-based access control, auth error propagation. Skip basic tutorials — I need battle-tested patterns with proper error handling.")
 
-// WRONG: Sequential or blocking - NEVER DO THIS
-result = subagent(..., background=false)  // Never wait synchronously for explore/librarian
+// Fire the wave with subagent(agent=..., description=..., prompt=...); children run concurrently; absorb each completion message; session_read(session_id=...) once per child; subagent_control(action="wait", session_id=<one>, timeout=<n>) only when the next step consumes that child.
 \`\`\`
 
 **Rules:**
 - Fire 2-5 explore agents in parallel for any non-trivial codebase question
-- NEVER use \`background=false\` for explore/librarian
+- Always fire explore/librarian as async children; absorb their completion messages
 - Continue your work immediately after launching
 - Collect results with \`session_read(session_id="...")\` when needed
 - BEFORE final answer:
-  a. \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` — let exploration tasks finish
+  a. \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` — gate on the single child whose output the next step consumes: one session_id, explicit timeout, then at most one session_read
   b. \`subagent_control(action="cancel", session_id="<child-session-id>")\` — cleanup any stragglers
 
 **Interpreting terminal task states** — \`session_read\` and the completion \`<system-reminder>\` report one of:

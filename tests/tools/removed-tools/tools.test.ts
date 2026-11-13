@@ -74,5 +74,7 @@ describe("removed-tool guard", () => {
     //#then
     expect(message).toContain(name)
     expect(message).toContain("subagent")
+    expect(message).toContain("load_skills")
+    expect(message).not.toContain("background=")
   })
 })

@@ -158,7 +158,7 @@ Parallel Speedup: ~40% faster than sequential
 
 | Wave | Tasks | Recommended Agents |
 |------|-------|-------------------|
-| 1 | 1, 5 | subagent(agent="...", load_skills=[...], background=true) |
+| 1 | 1, 5 | subagent(agent="...", load_skills=[...]) |
 | 2 | 2, 3, 6 | dispatch parallel after Wave 1 completes |
 | 3 | 4 | final integration task |`
 

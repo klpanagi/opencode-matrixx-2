@@ -64,14 +64,14 @@ task_create({ items: [
 
 > **Edge — Trivial/Simple bypass:** If complexity is 1-2 (Trivial/Simple) and the request is ambiguous but single-scope (one domain, no architectural keywords), **bypass Seraph** and ask directly per Morpheus Phase 0 (ask ONE clarifying question).
 
-If gate **passes**, summon Seraph in **background mode** (never blocking — see policy below):
+If gate **passes**, fire a Seraph delegation (see policy below — the call returns {sessionID, status:"running"} immediately):
 
 \`\`\`typescript
-// Fire Seraph in background — NEVER background=false from this session.
+// Fire Seraph — the call returns {sessionID, status:"running"} immediately.
 const seraphTask = subagent(
   agent="seraph",
+  description="Review planning session",
   load_skills=[],
-  background=true,
   prompt=\`Review this planning session before I generate the work plan:
 
   **User's Goal**: {summarize what user wants}
@@ -94,14 +94,17 @@ const seraphTask = subagent(
   6. Edge cases not addressed\`
 )
 
-// Continue drafting/other work, then collect once when needed:
+// Keep working and absorb the host-injected completion message.
+// When you need the full Seraph transcript, read it once:
 const seraphReview = session_read(session_id=seraphTask.sessionID)
 \`\`\`
 
-> **NO-BLOCKING-NESTING POLICY (MANDATORY — applies to EVERY Oracle delegation):**
-> - **Default to background mode**: always pass \`background=true\`. Oracle's own invocations default to background; blocking is never the default.
-> - **Never nest a blocking subagent call** (\`background=false\`) inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
-> - **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`session_read(session_id=...)\`. If a result is required before proceeding, collect it once and continue — never block on a nested subagent.
+> **ASYNC DELEGATION POLICY (MANDATORY — applies to EVERY Oracle delegation):**
+> - **Default to async delegation**: every Oracle delegation returns a \`sessionID\` immediately. There is no \`background\` argument; every call returns at once and the result arrives later as a host-injected completion message.
+> - **Never nest a blocking subagent call** inside your own session. Oracle may itself be running inside a fixed poll budget (default 600s); a blocking nested call consumes that same budget and stalls at the timeout.
+> - **Keep working, then absorb**: after firing, return to your work and absorb the completion message when it arrives. When you need the full result, read the transcript once with \`session_read(session_id=...)\`.
+> - **Use sequential top-level calls instead of nested blocking calls**: fire from the top level, keep working, then absorb the completion message — never nest a blocking call.
+> - **Bounded waiting only**: \`subagent_control(action="wait", ...)\` — this is a **bounded gate**: one \`session_id\`, an explicit \`timeout\`, then at most one \`session_read\`; never a poll loop.
 
 If gate **does NOT pass**, skip Seraph and proceed directly to plan generation (note \`Seraph bypassed: complexity=X / no multi-component signal\` in summary).
 

@@ -10,11 +10,10 @@ it now reaches a guard stub that redirects to `subagent` (see Final architecture
 |---|---|
 | `task(category="source", ...)` | `subagent(agent="mouse-source", ...)` — same for `construct`, `rabbit-hole`, `glitch`, `bullet-time`, `blue-pill`, `the-one`, `transmission` |
 | `task(subagent_type="oracle", ...)` | `subagent(agent="oracle", ...)` — same for `trinity`, `operator`, `sentinel`, `niobe` (see note) |
-| `run_in_background=true/false` | `background=true/false` |
 | `session_id` (subagent input key) | `sessionID` |
 | `.task_id` (result handle) | `.sessionID` |
 | `background_output(task_id="...")` | `session_read(session_id="...")` |
-| `background_wait_all(...)` | `subagent_control(action="wait", session_id="<child-session-id>")` |
+| `background_wait_all(...)` | Not a fan-in replacement: absorb each child's completion message. `subagent_control(action="wait", session_id="<child-session-id>")` only gates one child |
 | `background_cancel(...)` | `subagent_control(action="cancel", session_id="<child-session-id>")` |
 
 `load_skills=[...]` and `complexity=N` stay as keys: the matrixx
@@ -28,22 +27,35 @@ Never inline skill content yourself.
 ## Spawn semantics
 
 ```typescript
-subagent(agent="mouse-source", description="Implement login", background=true, prompt="...")
+subagent(agent="mouse-source", description="Implement login", prompt="...")
 ```
 
 - `agent` (required): which agent runs the work.
 - `description`: short 3–5 word title for progress display.
 - `prompt`: full instructions — subagents are stateless, include all context.
-- `background=true`: async fan-out. The parent session **auto-receives a
-  completion message** containing the child output — no polling tool.
-- `background=false` (default): sync inline, result returns directly.
+- Every child is async. The rendezvous sequence is **Fire → Absorb →
+  Fetch → Gate**:
+  1. **Fire.** `subagent(...)` returns a `sessionID` immediately.
+  2. **Absorb.** The host injects the child's completion message into this
+     session when the child goes idle; that message is the default rendezvous.
+  3. **Fetch.** `session_read(session_id=...)` only when the completion body
+     is truncated/empty or the full transcript is needed — at most once per
+     child, never in a loop.
+  4. **Gate.** `subagent_control(action="wait", session_id=..., timeout=...)`
+     only when the next action consumes that child's output (the
+     bounded shape is specified under Final architecture below).
 - `sessionID`: resume/continue an existing child (see below).
 - `model`: optional override (downgrade-only via `complexity`).
 
+## Removed affordances
+
+- The `background` argument and its legacy alias no longer exist;
+  `applySubagentPolicy` strips both if supplied.
+
 ## Output retrieval
 
-1. Read the auto-injected completion message (default path for
-   `background=true` children).
+1. Read the auto-injected completion message (the default rendezvous for
+   every child).
 2. `session_read(session_id="<child-session-id>")` — full child transcript.
 3. `session_search` / `session_info` — find or inspect child sessions.
 
@@ -92,7 +104,7 @@ Nested delegation is capped. Set in `opencode.jsonc`:
 
 There is no coexistence path anymore. The final shape is:
 
-- **Native `subagent`** for all delegation: `subagent(agent=..., background=...,
+- **Native `subagent`** for all delegation: `subagent(agent=...,
   sessionID? for continuation, load_skills?, complexity?)`.
 - **`subagent_policy` transformer** (`src/plugin/tool/subagent-policy/`): consumes
   the extra `load_skills` and `complexity` args on native subagent calls,
@@ -100,9 +112,11 @@ There is no coexistence path anymore. The final shape is:
   `mouse-*` workers. It strips both keys before execution, so OpenCode
   never sees them.
 - **`subagent_control`** for running children: `action=cancel|wait` with
-  `session_id` plus `timeout` (default 60s, max 600s).
+  `session_id` plus `timeout` (default 60s, max 600s). `action="wait"` is a
+  bounded gate (one `session_id`, explicit `timeout`), not a collection
+  mechanism; follow it with at most one `session_read`.
 - **`session_read` / `session_search` / `session_info`** for output retrieval:
-  a `background=true` completion injects a synthetic message into the
+  each completion injects a synthetic message into the
   parent session; read the full child transcript from there.
 - **Removed-tools guard stubs** (`src/tools/removed-tools/`): `task`,
   `background_output`, `background_cancel`, `background_revive`, and

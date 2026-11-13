@@ -530,12 +530,12 @@ in `.matrixx/tasks/` and never spawn work. Delegation is a separate,
 native tool:
 
 ```typescript
-subagent(agent="mouse-source", background=true, load_skills=["tdd-enforcer"], complexity="auto", description="Implement login", prompt="...")
+subagent(agent="mouse-source", load_skills=["tdd-enforcer"], complexity="auto", description="Implement login", prompt="...")
 ```
 
 - `agent` selects the worker (`mouse-*` for category-routed work, or a named
   agent such as `trinity`/`operator`/`oracle`).
-- `background=true` fans out; the parent session receives an injected
+- Every child is async; the parent session receives an injected
   completion message, and the full transcript is available via `session_read`
   (`session_search` / `session_info` for discovery).
 - `load_skills` and `complexity` are matrixx extras consumed by the
@@ -561,7 +561,7 @@ One-paragraph summaries here. Full hook internals (state machines, prompts, coun
 
 The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts.
 
-**Wiring (past tense):** it was gated on `isTaskSystemEnabled(config)` plus `isHookEnabled("task-continuation-enforcer")` with trigger `event:idle`. That idle re-prompt path is gone, and so is the `BackgroundManager` that briefly replaced it (`src/features/background-agent/` was removed). A `background=true` native `subagent` completion now arrives as an injected message in the parent session; read the full child transcript with `session_read`. See `docs/native-subagent-migration.md` for the retrieval map.
+**Wiring (past tense):** it was gated on `isTaskSystemEnabled(config)` plus `isHookEnabled("task-continuation-enforcer")` with trigger `event:idle`. That idle re-prompt path is gone, and so is the `BackgroundManager` that briefly replaced it (`src/features/background-agent/` was removed): an async `subagent` completion now arrives as an injected message in the parent session; read the full child transcript with `session_read`. See `docs/native-subagent-migration.md` for the retrieval map.
 
 **Past behavior (kept for history):** countdown constants (`COUNTDOWN_SECONDS = 2`, `CONTINUATION_COOLDOWN_MS = 30_000`, `MAX_CONSECUTIVE_FAILURES = 5`) drove the idle countdown and injection path described below in past tense.
 

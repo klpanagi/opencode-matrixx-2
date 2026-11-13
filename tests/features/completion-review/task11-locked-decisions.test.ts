@@ -173,7 +173,17 @@ describe("locked decision #2 — the niobe event handler is byte-frozen", () => 
     // background_output mechanics rewritten to subagent(agent) + background /
     // session_read / subagent_control. Niobe remains the plan EXECUTOR — no
     // reviewer role was added, so the locked decision still holds.
-    const FROZEN_MD5 = "d71e2ba9413b8e46a453e3832d3c68b2"
+    // NOTE (background-subagents-v2 task 2): hash advanced from d71e2ba9413b8e46a453e3832d3c68b2. The only delta is the async rendezvous wording refresh: the removed background argument — every background=false / background=true sample line deleted and dependent chains rewritten to one child per wave whose next wave fires only after the prior child's host-injected completion message is absorbed. Niobe remains the plan EXECUTOR — no reviewer role was added, so the locked decision still holds.
+    // NOTE (background-subagents-v2 quality follow-up): hash advanced from
+    // 0a179762979e3621264f121cdc418883. The only delta is prose hygiene: the
+    // duplicated "session_read ... once only if truncated" clause removed from
+    // the parallel_execution dependent-chains line (Step 3.1 and the Rendezvous
+    // rules still carry it) and modal drift fixed: independent reads MUST share
+    // one wave; dependent chains restated as one child per wave, the next wave
+    // fired only after the prior completion is absorbed. De-duplication only —
+    // Niobe remains the plan EXECUTOR, no reviewer role was added, so the locked
+    // decision still holds.
+    const FROZEN_MD5 = "073ee7250a6e414e4062046b123c057a"
 
     //#when its bytes are hashed
     const actual = md5Of("src/agents/definitions/niobe/default.ts")

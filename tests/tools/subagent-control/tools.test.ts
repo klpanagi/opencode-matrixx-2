@@ -115,6 +115,8 @@ describe("subagent_control wait", () => {
     //#then
     expect(String(result)).toContain("still running")
     expect(String(result)).toContain("ses_child")
+    expect(String(result)).toContain("bounded gate")
+    expect(String(result)).not.toContain("Call wait again")
     expect(String(result)).not.toContain("[ERROR]")
   })
 

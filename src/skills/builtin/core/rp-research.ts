@@ -57,14 +57,13 @@ All artifacts are written via the \`write\` tool. The next session can resume fr
 
 ## Phase 1: Parallel Swarm (per round)
 
-For each round, spawn 4 parallel background agents. Each agent gets ONLY its direction-specific query (not the full research state).
+For each round, fire 4 agents in one turn, then absorb all 4 before the next round. Barrier: 4 launched == 4 absorbed. Each agent gets ONLY its direction-specific query (not the full research state).
 
 ### Direction 1: Local Code (trinity agent)
 
 \`\`\`
 subagent(
   agent="trinity",
-  background=true,
   description="Research code: <lead>",
   prompt="""
 Search the local codebase for implementations, patterns, and references related to: <CURRENT_LEAD>
@@ -85,7 +84,6 @@ Flag any claims that seem contested or unverifiable by reading alone.
 \`\`\`
 subagent(
   agent="operator",
-  background=true,
   description="Research docs: <lead>",
   prompt="""
 Research documentation and knowledge base files related to: <CURRENT_LEAD>
@@ -103,7 +101,6 @@ Flag any claims that contradict other sources.
 \`\`\`
 subagent(
   agent="operator",
-  background=true,
   description="Research web: <lead>",
   prompt="""
 Research the web for information about: <CURRENT_LEAD>
@@ -124,7 +121,6 @@ Flag any contested claims or conflicting information.
 \`\`\`
 subagent(
   agent="operator",
-  background=true,
   description="Research OSS: <lead>",
   prompt="""
 Search open source repositories for implementations related to: <CURRENT_LEAD>
@@ -143,7 +139,7 @@ Flag any patterns that seem contested or deprecated.
 
 ### Collect Results
 
-After all 4 agents complete, collect via \`session_read(session_id="...")\`:
+Absorb the 4 completion messages, then collect via \`session_read(session_id="...")\`:
 1. Merge findings into \`round-<N>-findings.md\`
 2. Extract new EXPAND leads → append to \`leads.md\`
 3. Extract contested claims → append to \`contested-claims.md\`
@@ -176,7 +172,6 @@ If \`contested-claims.md\` is non-empty after convergence, verify each claim:
 \`\`\`
 subagent(
   agent="trinity",
-  background=true,
   description="Verify claim: <summary>",
   prompt="""
 Verify this contested claim by examining code:
@@ -242,7 +237,7 @@ Produce \`final-synthesis.md\`:
 - NEVER fabricate citations — every claim must reference a real source found during research
 - ALWAYS write intermediate artifacts — preserves partial results if interrupted
 - MAX 5 rounds regardless of novelty
-- Each background agent gets a FOCUSED prompt — never dump the entire research state
+- Each agent gets a FOCUSED prompt — never dump the entire research state
 - Contested claims MUST be verified by code execution when possible
 - The final synthesis must be self-contained without intermediate artifacts
 - If a round produces zero findings, STOP immediately`,

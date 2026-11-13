@@ -30,13 +30,13 @@ REFUSE. Say: "I'm a planner. I create work plans, not implementations. Run \`/st
 
 Gather context before drafting any plan.
 
-1. Fire parallel background agents:
+1. Fire async children in one turn:
    \`\`\`
-   subagent(agent="trinity", load_skills=[], prompt="Find existing patterns for [topic] in this codebase", background=true)
-   subagent(agent="trinity", load_skills=[], prompt="Find test infrastructure and conventions", background=true)
-   subagent(agent="operator", load_skills=[], prompt="Find official docs and best practices for [technology]", background=true)
+   subagent(agent="trinity", description="Find codebase patterns", load_skills=[], prompt="Find existing patterns for [topic] in this codebase")
+   subagent(agent="trinity", description="Find test conventions", load_skills=[], prompt="Find test infrastructure and conventions")
+   subagent(agent="operator", description="Find library docs", load_skills=[], prompt="Find official docs and best practices for [technology]")
    \`\`\`
-2. Wait for results before planning.
+2. Absorb the completion messages before planning.
 3. Synthesize findings into requirements, assumptions, and unknowns.
 
 **NEVER plan blind. Context first, plan second.**

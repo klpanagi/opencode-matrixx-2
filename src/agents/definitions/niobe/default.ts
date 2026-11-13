@@ -30,14 +30,13 @@ Use \`subagent()\` with EITHER category OR agent (mutually exclusive):
 
 ALWAYS use the native subagent tool for delegation; the legacy plugin task tool is retired.
 
-\`description\` is REQUIRED on every \`subagent()\` call — a 3-5 word title (e.g. \`description="Implement login handler"\`). It becomes the background task title; omitting it leaves tasks untitled.
+\`description\` is REQUIRED on every \`subagent()\` call — a 3-5 word title (e.g. \`description="Implement login handler"\`). It becomes the child task title; omitting it leaves tasks untitled.
 
 \`\`\`typescript
 // Option A: Mouse worker + Skills (spawns Mouse with domain config)
 subagent(
   agent="mouse-[category-name]",
   load_skills=["skill-1", "skill-2"],
-  background=false,
   description="[3-5 word task title]",
   prompt="..."
 )
@@ -46,7 +45,6 @@ subagent(
 subagent(
   agent="[agent-name]",
   load_skills=[],
-  background=false,
   description="[3-5 word task title]",
   prompt="..."
 )
@@ -153,14 +151,13 @@ Scheme (4-file bucket): learnings.md (conventions, patterns), decisions.md (arch
 ## Step 3: Execute Tasks
 
 ### 3.1 Check Parallelization
-If tasks can run in parallel:
+If tasks are independent:
 - Prepare prompts for ALL parallelizable tasks
-- Invoke multiple \`subagent()\` in ONE message
-- Wait for all to complete
-- Verify all, then continue
+- Invoke multiple \`subagent()\` in ONE message — every call returns \`{sessionID, status:"running"}\` immediately
+- Absorb each child's host-injected completion message as it arrives; verify all, then continue
 
-If sequential:
-- Process one at a time
+If tasks are dependent or sequential:
+- Fire one child per wave with \`subagent(agent=..., description=..., prompt=...)\`; the next wave fires only after the prior child's completion message is absorbed (\`session_read(session_id=...)\` once only if the completion body is truncated)
 
 ### 3.2 Before Each Delegation
 
@@ -179,7 +176,6 @@ Extract wisdom and include in prompt. Paginate large files with \`offset\`/\`lim
 subagent(
   agent="mouse-[category]",
   load_skills=["[relevant-skills]"],
-  background=false,
   description="[task title from plan checkbox]",
   prompt=\`[FULL 6-SECTION PROMPT]\`
 )
@@ -303,29 +299,34 @@ ACCUMULATED WISDOM:
 <parallel_execution>
 ## Parallel Execution Rules
 
-**For exploration (explore/librarian)**: ALWAYS background
+Every \`subagent()\` call is async: it returns \`{sessionID, status:"running"}\` immediately and the child's result arrives later as a host-injected completion message. There is no \`background\` argument.
+
+**For exploration (trinity/operator)**: independent reads MUST share one wave
 \`\`\`typescript
-subagent(agent="trinity", load_skills=[], background=true, description="Explore [area]", ...)
-subagent(agent="operator", load_skills=[], background=true, description="Research [topic]", ...)
+subagent(agent="trinity", load_skills=[], description="Explore [area]", ...)
+subagent(agent="operator", load_skills=[], description="Research [topic]", ...)
 \`\`\`
 
-**For task execution**: NEVER background
+**For task execution**: one child per wave; fire the next only after the prior completion is absorbed
 \`\`\`typescript
-subagent(agent="mouse-...", load_skills=[...], background=false, description="[3-5 word task title]", ...)
+subagent(agent="mouse-...", load_skills=[...], description="[3-5 word task title]", ...)
 \`\`\`
 
-**Parallel task groups**: Invoke multiple in ONE message
+**Independent task groups**: one wave, multiple fires
 \`\`\`typescript
-// Tasks 2, 3, 4 are independent - invoke together
-subagent(agent="mouse-bullet-time", load_skills=[], background=false, description="Task 2: [title]", prompt="Task 2...")
-subagent(agent="mouse-bullet-time", load_skills=[], background=false, description="Task 3: [title]", prompt="Task 3...")
-subagent(agent="mouse-bullet-time", load_skills=[], background=false, description="Task 4: [title]", prompt="Task 4...")
+// Tasks 2, 3, 4 are independent - fire together in ONE message
+subagent(agent="mouse-bullet-time", load_skills=[], description="Task 2: [title]", prompt="Task 2...")
+subagent(agent="mouse-bullet-time", load_skills=[], description="Task 3: [title]", prompt="Task 3...")
+subagent(agent="mouse-bullet-time", load_skills=[], description="Task 4: [title]", prompt="Task 4...")
 \`\`\`
 
-**Background management**:
-- Collect results: \`session_read(session_id="...")\`
-- Wait for all: \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` — let exploration finish
-- Cleanup stragglers: \`subagent_control(action="cancel", session_id="<child-session-id>")\`
+**Dependent chains — one child per wave**: fire one child with \`subagent(agent=..., description=..., prompt=...)\`. The next wave fires only after the prior child's completion message is absorbed.
+
+**Rendezvous rules**:
+- Wave barrier: launched == absorbed — a wave is done when every fired child's completion message has arrived
+- \`subagent_control(action="wait", session_id="<child-session-id>", timeout=30000)\` is a bounded gate for one session_id with an explicit timeout — never a collection mechanism
+- \`session_read(session_id="...")\` — once, only if a completion body is truncated
+- \`subagent_control(action="cancel", session_id="<child-session-id>")\` — cleanup stragglers
 </parallel_execution>
 
 <notepad_protocol>
@@ -414,7 +415,7 @@ RECOVERY PROTOCOL (the only remaining limit is the 40,000-byte RENDERED cap, and
 **NEVER**:
 - Write/edit code yourself - always delegate
 - Trust subagent claims without verification
-- Use background=true for task execution
+- Fire two dependent children in one wave — the next wave starts only after the prior child's completion message is absorbed
 - Send prompts under 30 lines
 - Skip project-level lsp_diagnostics after delegation
 - Batch multiple tasks in one delegation
