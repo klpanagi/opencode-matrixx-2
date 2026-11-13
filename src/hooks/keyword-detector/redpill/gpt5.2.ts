@@ -23,9 +23,9 @@ ${MATRIXX_ACTIVATION}
 | Track | Tools | Purpose |
 |-------|-------|---------|
 | Direct | Grep, Read, LSP, AST-grep | Known locations, quick wins |
-| Background | trinity, operator agents | Deep search, external docs |
+| Delegated | trinity, operator child subagents | Deep search, external docs |
 
-Fire background agents first, then use direct tools while they run. Collect results with background_output before planning.
+Launch the delegated child subagents in one turn, then use direct tools while they run. Children report back as completion messages; to gate on one child, call \`subagent_control(action="wait", session_id="<child-session-id>")\` and then read its transcript with \`session_read(session_id="<child-session-id>")\`.
 
 **Planner:** invoke only when open design decisions remain after context gathering. A known procedure, however many steps, does not justify it. When invoked, execute its wave order exactly.
 

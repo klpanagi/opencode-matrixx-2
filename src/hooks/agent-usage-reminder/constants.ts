@@ -27,7 +27,7 @@ export const REMINDER_MESSAGE = `
 
 You called a search/fetch tool directly without leveraging specialized agents.
 
-RECOMMENDED: Use subagent with explore/librarian agents for better results:
+RECOMMENDED: Use subagent with trinity/operator agents for better results:
 
 \`\`\`
 // Parallel exploration - fire multiple agents simultaneously

@@ -271,7 +271,7 @@ export const SHORT_CATEGORY_HINTS: Record<string, string> = {
 
 /**
  * System prompt prepended to plan agent invocations.
- * Instructs the plan agent to first gather context via explore/librarian agents,
+ * Instructs the plan agent to first gather context via trinity/operator agents,
  * then summarize user requirements and clarify uncertainties before proceeding.
  * Also MANDATES dependency graphs, parallel execution analysis, and category+skill recommendations.
  */
