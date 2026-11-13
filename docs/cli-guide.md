@@ -235,11 +235,11 @@ bunx opencode-matrixx-v2 doctor --category authentication
 
 ## 10. Non-Interactive Mode
 
-Use the `--no-tui` option for CI/CD environments.
+Use `--json` for CI/CD environments. (`--no-tui` is a global flag, but `doctor` never renders a TUI, so it is not needed here.)
 
 ```bash
 # Run doctor in CI environment
-bunx opencode-matrixx-v2 doctor --no-tui --json
+bunx opencode-matrixx-v2 doctor --json
 
 # Save results to file
 bunx opencode-matrixx-v2 doctor --json > doctor-report.json

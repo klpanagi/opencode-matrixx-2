@@ -2,7 +2,7 @@
 
 Matrixx orchestrates a team of specialized AI agents, each with distinct expertise, optimized models, and tool permissions. This is the canonical agent reference: user narrative up top (Morpheus, Keymaker, and teammates), architecture diagrams and delegation mechanics below.
 
-21 names in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts`): 13 core agents — morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati — plus 8 category workers (`mouse-construct`, `mouse-source`, `mouse-rabbit-hole`, `mouse-glitch`, `mouse-bullet-time`, `mouse-blue-pill`, `mouse-the-one`, `mouse-transmission`). Definitions live in `src/agents/definitions/<name>.ts` (or `<name>/`); registry wiring is `src/agents/registry/index.ts`. Oracle is built dynamically via `buildOracleAgentConfig()`. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see [Features](features.md).
+21 names in `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts`): 13 core agents — morpheus, keymaker, oracle, merovingian, operator, trinity, construct, seraph, smith, niobe, cipher, sentinel, sati — plus 8 category workers (`mouse-construct`, `mouse-source`, `mouse-rabbit-hole`, `mouse-glitch`, `mouse-bullet-time`, `mouse-blue-pill`, `mouse-the-one`, `mouse-transmission`). Definitions live in `src/agents/definitions/<name>.ts` (or `<name>/`); registry wiring is `src/agents/registry/index.ts`. Oracle is built dynamically via `buildOracleAgentConfig()`. For delegation flows, see [Orchestration](orchestration.md). For hook details, see [Hooks](hooks.md). For the complete agent table with models and fallback chains, see `src/agents/AGENTS.md`.
 
 ---
 
@@ -45,7 +45,7 @@ Meet the main agent: **Morpheus** (`claude-opus-4-6`). Everything below is custo
 | **Sati** | Frontend specialist (components, a11y, perf, testing) | `claude-sonnet-4-6` |
 | **Sentinel** | Security auditor | `claude-sonnet-4-6` |
 
-The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-27`). Twelve are registered statically in `agentSources` (`src/agents/registry/index.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. The 8 `mouse-*` category workers are in the schema; the plain `mouse` override persona is created from user config and is not a schema name (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model/model-requirements.ts`.
+The 13 names in scope (12 table rows above plus Morpheus) match `BuiltinAgentNameSchema` (`src/config/schema/agent-names.ts:3-25`). Twelve are registered statically in `agentSources` (`src/agents/registry/index.ts`); Oracle is built dynamically by `buildOracleAgentConfig()`. The 8 `mouse-*` category workers are in the schema; the plain `mouse` override persona is created from user config and is not a schema name (see below and [Orchestration](orchestration.md)). Default models and fallback chains live in `src/shared/model/model-requirements.ts`.
 
 ### Built-in Capabilities
 
@@ -100,7 +100,6 @@ Cipher is the agent you call when you need to design, build, or extend domain-sp
 | **Thinking** | Extended thinking enabled (32k budget) |
 | **Max Tokens** | 64,000 — DSL tasks produce large outputs (grammars + parsers + code generators) |
 | **Temperature** | 0.1 — precision-critical language engineering |
-| **Denied Tools** | `delegate_agent` — Cipher uses direct tools (grep, LSP, AST-grep) for exploration |
 
 ### Five Sub-Specializations
 
@@ -277,7 +276,7 @@ Workers must be **stateless and disposable**. The Niobe remains in context and a
 | **Thinking** | Extended thinking enabled (32k budget) — for extended-thinking model families |
 | **Reasoning** | `medium` — for reasoning-effort model families |
 | **Color** | `#20B2AA` (Light Sea Green) |
-| **Delegation** | `task` tool BLOCKED — cannot spawn sub-agents |
+| **Delegation** | `task` tool removed (guard stub); native `subagent` denied (`subagent: false`) — cannot spawn sub-agents |
 
 ### Prompt Variants
 
@@ -297,8 +296,8 @@ Routing is driven by model-family detection in `getMousePromptSource()`: each va
 
 | Tool | Status | Reason |
 |------|--------|--------|
-| `task` | BLOCKED | Mouse never delegates — executes implementation directly |
-| `delegate_agent` | ALLOWED | Research only — can spawn explore/librarian agents |
+| `task` | REMOVED | Removed plugin-wide (guard stub) — Mouse never delegates |
+| `subagent` | DENIED | `subagent: false` in `src/shared/tool/agent-tool-restrictions.ts` — Mouse executes implementation directly |
 
 ### Mouse-Notepad Hook
 
@@ -350,7 +349,7 @@ The 13-agent roster (3 + 3 + 2 + 3 + 2) maps to **distinct cognitive functions**
 ### The Orchestration Layer (3 agents)
 
 - **Morpheus** (user-facing orchestrator, `claude-opus-4-6`): The "face" — translates user intent into delegation decisions. Orchestration requires the strongest model for understanding nuance.
-- **Niobe** (subagent orchestrator, `claude-sonnet-4-6`): Pure orchestrator — denied `task`/`delegate_agent` to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
+- **Niobe** (subagent orchestrator, `claude-sonnet-4-6`): Pure orchestrator — hands work to implementers instead of doing it (`task` is removed plugin-wide) to prevent the "orchestrator doing implementation" anti-pattern. Exists to enforce the separation of concerns.
 - **Keymaker** (autonomous deep worker, `claude-opus-4-6`): Goal-oriented end-to-end execution — explores via parallel Trinity/Operator agents before acting.
 
 ### The Intelligence Layer (3 agents)
@@ -409,7 +408,7 @@ graph TB
         MER["🏛️ Merovingian<br/>claude-sonnet-4-6<br/><i>Architecture & Debugging</i>"]
         SER["👁️ Seraph<br/>claude-opus-4-6<br/><i>Pre-Planning Analysis</i>"]
         SMI["⚔️ Smith<br/>claude-sonnet-4-6<br/><i>Plan Validation</i>"]
-        SEN["🛡️ Sentinel<br/>claude-sonnet-4-6<br/><i>Security Auditor</i><br/>9 skills"]
+        SEN["🛡️ Sentinel<br/>claude-sonnet-4-6<br/><i>Security Auditor</i><br/>10 skills"]
     end
 
     subgraph EXPLORERS["Exploration Agents (mode: subagent)"]
@@ -419,7 +418,7 @@ graph TB
     end
 
     subgraph EXECUTOR["Dynamic Executor"]
-        MOU["🐭 Mouse<br/>category-resolved<br/><i>Spawned Worker (not in schema)</i>"]
+        MOU["🐭 Mouse<br/>category-resolved<br/><i>Spawned Worker (in schema)</i>"]
     end
 
     UI --> MOR
@@ -694,4 +693,4 @@ Every `subagent()` call returns a `sessionID` immediately; the parent keeps work
 - [Hooks](hooks.md) — lifecycle hook reference
 - [Quality](quality.md) — BDD pipeline and TDD discipline, Oracle plan templates, RED-GREEN-REFACTOR enforcement
 - [Task System](task-system.md) — `.matrixx/tasks` storage, waves, continuation
-- [Features](features.md) — full agent table with fallback chains
+- `src/agents/AGENTS.md` — full agent table with models and fallback chains

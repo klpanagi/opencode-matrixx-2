@@ -9,11 +9,11 @@
 - `HookNameSchema` (`src/config/schema/hooks.ts`) accepts **71** parseable names:
   **59 enum names** (`HookNameEnum`) + **11 retained no-op literals** + 1 alias
   (`anthropic-context-window-limit-recovery` maps to
-  `context-window-limit-recovery`) and 10 retained no-ops
+  `context-window-limit-recovery`) and 11 retained no-ops
   (`todo-continuation-enforcer`, `compaction-todo-preserver`,
   `tasks-todowrite-disabler`, `task-notepad`, `task-continuation-enforcer`,
   `preemptive-compaction`, `background-notification`, `background-task-blocker`,
-  `delegate-task-retry`, `subagent-block`) that map to null via
+  `delegate-task-retry`, `subagent-block`, `unstable-agent-babysitter` (all deprecated)) that map to null via
   `HOOK_NAME_MAP` (`src/shared/migration/hook-names.ts`) so old
   `disabled_hooks` lists keep loading.
   Total: 59 hook names + 11 deprecated no-ops + 1 alias = 71 parseable.
@@ -25,17 +25,18 @@
   Counting method: `ls -1p src/hooks/ | grep / | wc -l` (= 55 dirs).
   NOTE: older docs claimed 76 entries / 60 dirs — those figures are stale and
   superseded by the counts above; do not cite 76/60 without this note.
-- Every tool call passes through `tool.execute.before` (**22 invocations over
-  21 unique hooks** in 3 waves, `src/plugin/tool/tool-execute-before.ts`) **and**
-  `tool.execute.after` (**21 invocations over 21 unique hooks**,
+- Every tool call passes through `tool.execute.before` (**26 hook dispatches over
+  22 unique hooks** in 3 waves; hot path 21 dispatch sites over 20 unique hooks plus
+  5 slash-command sites over 2 unique hooks, `src/plugin/tool/tool-execute-before.ts`) **and**
+  `tool.execute.after` (**20 dispatch sites over 20 unique hooks**,
   `src/plugin/tool/tool-execute-after.ts`).
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
   (`oracle-md-only`, `mouse-notepad`, `niobe`), plus sequential `after`
   work (`quality-gate` Biome, `comment-checker` CLI).
-- 8 registered hooks have factories but no call site in any current
-  dispatcher (Section 2.4). They are constructed, appear in config, and cost
-  nothing at runtime. `startup-toast` is a flag, not a factory.
+- 1 registered hook has a factory but no call site in any current
+  dispatcher (`document-reader-guard`, Section 2.4). It is constructed, appears in
+  config, and costs nothing at runtime. `startup-toast` is a flag, not a factory.
 - No per-hook wall-clock instrumentation exists today; Section 5 explains how
   to measure.
 - Fastest fix for slow writes: the minimal-write profile (Section 3.3).
@@ -93,8 +94,8 @@ handlers; each handler fans out to hook methods:
 
 | OpenCode event | Matrixx handler | Hooks attached |
 |---|---|---|
-| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 23 invocations over 22 unique hooks, 3 waves (Section 1.3) |
-| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `qualityGate` + 20 sequential (Section 1.4) |
+| `tool.execute.before` | `createToolExecuteBeforeHandler` (`src/plugin/tool/tool-execute-before.ts`) | 26 dispatches over 22 unique hooks, 3 waves (Section 1.3) |
+| `tool.execute.after` | `createToolExecuteAfterHandler` (`src/plugin/tool/tool-execute-after.ts`) | `toolOutputTruncator` + parallel `qualityGate` + 18 sequential (Section 1.4) |
 | `chat.message` | `createChatMessageHandler` (`src/plugin/tool/chat-message.ts`) | `inputSecretGuard`, `stopContinuationGuard`, `keywordDetector`, `autoSlashCommand`, `startWork` (conditional), `matrixLoop` template detection |
 | `experimental.chat.messages.transform` | messages-transform wiring (`src/plugin/message-hooks/`, `src/plugin/setup-domains/hooks.ts`) | context-injector (always on, no disable key), `envContextInjector`, `thinkingBlockValidator` |
 | `chat.params` | `createChatParamsHandler` (`src/plugin/tool/chat-params.ts`) | `anthropicEffort` only, plus one-shot category temperature |
@@ -111,21 +112,25 @@ order; hooks inside Wave 1 and Wave 2 run concurrently.
 - Wave 1, READ_ONLY, `Promise.all` (4): `qualityGate`, `commentChecker`,
   `directoryAgentsInjector` (no-op in `before`), `rulesInjector` (no-op in
   `before`). Only private in-memory `Map` writes keyed by `callID`.
-- Wave 2, BLOCKING, `Promise.all` fail-fast (7): `secretLeakGuard`,
+- Wave 2, BLOCKING, `Promise.all` fail-fast (9): `secretLeakGuard`,
   `envFileWriteGuard`, `writeExistingFileGuard`, `taskEditGuard`,
-  `oracleMdOnly` (blocking half),
-  `contextModeEnforcer`, `backgroundTaskBlocker`. First rejection aborts the
+  `knowledgeHubGuard`, `knowledgeHubSearchNudge`, `docsLookupGuard`,
+  `oracleMdOnly` (blocking half), `contextModeEnforcer`. First rejection aborts the
   tool call. Each guard throws on a different condition for a different tool.
-- Wave 3, MUTATOR, sequential (6): `rtkBashRewriter` (only when `rtk.enabled`)
+- Wave 3, MUTATOR, sequential (7): `rtkBashRewriter` (only when `rtk.enabled`)
   then `nonInteractiveEnv`, `bashFileReadGuard`, `oracleMdOnly` (mutator
-  half), `mouseNotepad`, `niobeHook`. Order matters: `nonInteractiveEnv`
-  rewrites `output.args.command` first, and `niobeHook` prepends outermost
-  so its reminder sits closest to the model.
+  half), `mouseNotepad`, `niobeHook`, `softwareDevEnforcement`. Order
+  matters: `nonInteractiveEnv` rewrites `output.args.command` first, and
+  `softwareDevEnforcement` runs last so its reminder prepends outermost
+  (closest to the model).
 
-`oracleMdOnly` runs twice (once per Wave 2/3): 16 unique hooks,
-23 invocations over 22 unique hooks per tool call. The same handler also resolves `task`-tool
-agent routing in parallel with Wave 3 and serves `/matrix-loop`,
-`/stop-continuation`, `/assembly`, `/redpill` slash commands.
+`oracleMdOnly` runs twice (Wave 2 blocking + Wave 3 mutator): the hot path is
+21 dispatch sites over 20 unique hooks. Counting the slash-command branch
+(`/matrix-loop`, `/rp-loop`, `/cancel-loop`, `/stop-continuation`, `/assembly`,
+`/redpill`, `/end-redpill`), the handler makes 26 hook dispatches over 22 unique
+hooks per `tool.execute.before` run. Between Wave 3 and the slash-command
+branch the handler also runs the subagent policy for `subagent` tool calls
+(skill prepend, complexity rewrite, enforcement).
 
 ### 1.4 `tool.execute.after`: mostly sequential chain
 
@@ -164,7 +169,7 @@ NETWORK (subprocess, SDK HTTP, or filesystem scan).
 Each entry states **what** the hook does, **why** it exists (the failure it
 prevents), and **when** it fires.
 
-### 2.1 `tool.execute.before` hot path (22 unique hooks, 23 invocations)
+### 2.1 `tool.execute.before` hot path (20 unique hooks, 21 dispatch sites)
 
 Trigger for all rows: every tool call, before execution. The `When` column
 narrows which tool calls are affected.
@@ -179,8 +184,8 @@ narrows which tool calls are affected.
 | `oracle-md-only` | Blocks non-`.md` writes from planner sessions and rewrites when needed. Exists to keep the planning phase from editing code. | Planner-session writes; runs twice per call (Wave 2 + Wave 3), SDK HTTP or fs fallback. | BLOCKING+MUTATOR+NETWORK, med-high |
 | `non-interactive-env` | Prefixes bash commands with a non-interactive env setup. Exists because agents run without a TTY and need a predictable environment. | Every `bash` call. Pure regex. | MUTATOR, low |
 | `bash-file-read-guard` | Rewrites bash file reads (`cat`/`head`/redirects) into a nudge toward the `Read` tool. Exists because `Read` yields hashline anchors and guard coverage that bash reads bypass. | `bash` containing read-like patterns. Rewrites `output.message`. | MUTATOR, low |
-| `mouse-notepad` | Prepends the notepad directive to worker `task` prompts issued by the orchestrator. Exists so workers persist findings in notepads. | `task` calls from the orchestrator (SDK caller check). | MUTATOR+NETWORK, medium |
-| `niobe` | Prepends the niobe reminder outermost on delegated tasks. Exists to keep workers inside mission scope. | `task` calls (before side). | MUTATOR+NETWORK, medium |
+| `mouse-notepad` | Prepends the notepad directive to worker prompts issued by the orchestrator. Exists so workers persist findings in notepads. | Only literal `task`-tool calls (`src/hooks/mouse-notepad/hook.ts:14`); the `task` tool is removed, so this before-side never fires today. | MUTATOR+NETWORK, medium |
+| `niobe` | Prepends the niobe reminder outermost on delegated tasks. Exists to keep workers inside mission scope. | `subagent` calls from the orchestrator (`isTaskTool` accepts `task` and `subagent`, `src/shared/io/shell-tool-name.ts:19-22`). | MUTATOR+NETWORK, medium |
 | `rtk-bash-rewriter` | Rewrites bash into RTK-compressed equivalents. Exists to cut token spend on bash output. | `bash` when `rtk.enabled` and the binary is present; otherwise silent passthrough. | MUTATOR, low/off |
 | `quality-gate` (before) | Registers the pending call in a `Map`. Exists to pair before/after so lint runs only on changed files. | Writes/edits to lintable files. | READ_ONLY, negligible |
 | `comment-checker` (before) | Registers the pending call. Exists for the same before/after pairing for the comment CLI. | Changed files. | READ_ONLY, negligible |
@@ -189,7 +194,9 @@ narrows which tool calls are affected.
 
 Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
 
-### 2.2 `tool.execute.after` (22 invocations)
+The table covers 15 of the 20 hot-path hooks. The remaining five are dispatched in the same handler but documented elsewhere: `knowledge-hub-guard` and `knowledge-hub-search-nudge` (Section 2.3), `webfetch-redirect-guard` (Section 2.4), and `docs-lookup-guard` plus `software-dev-enforcement` (factories in `src/plugin/hooks/create-tool-guard-hooks.ts:153-176`; no dedicated row yet).
+
+### 2.2 `tool.execute.after` (20 dispatch sites over 20 unique hooks)
 
 Trigger for all rows: after every tool call. The `When` column narrows the
 effective condition (many hooks are idle unless their condition holds).
@@ -203,7 +210,7 @@ effective condition (many hooks are idle unless their condition holds).
 | `context-window-monitor` | Token accounting with a headroom reminder. Exists as the ~70% early warning before preemptive compaction. | After tool calls; read-only. |
 | `directory-agents-injector` | Injects `AGENTS.md` context. Exists so agents follow repo conventions. | After reads; auto-disabled on OpenCode versions with native AGENTS injection. |
 | `rules-injector` | Injects `.morpheus/rules` conditionally. Exists to put project rules in context. | After calls, when rule files match. |
-| `empty-task-response-detector` | Warns when a `task` call returns empty output. Exists to surface silent worker failure. | After `task` calls with empty output. |
+| `empty-task-response-detector` | Warns when a `subagent` call returns empty output. Exists to surface silent worker failure. | After `subagent` calls with empty output (`src/hooks/empty-task-response-detector.ts:22`). |
 | `agent-usage-reminder` | Agent-specific usage hints with persisted state. Exists to correct per-agent tool misuse. | After tool calls. |
 | `category-skill-reminder` | Delegation reminders per category/skill. Exists to push orchestrators toward category-routed delegation. | After work-indicating tools. |
 | `interactive-bash-session` | Tmux session bookkeeping after bash. Exists to track interactive sessions. | After `bash`; otherwise idle. |
@@ -216,6 +223,8 @@ effective condition (many hooks are idle unless their condition holds).
 | `task-notepad-writer` | Writes a scaffolded markdown notepad per task, into `.matrixx/notepads/<planName>/` or `adhoc/`, and appends a `## Completion` stamp on completion. Exists so findings survive compaction and restarts. Keyed on a `**Task ID**` marker in the file, so it is idempotent with no in-memory state. | After a non-deduplicated `task_create`, and after a `task_update` whose `status` is `completed`; never blocks or rewrites output. |
 
 Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`, `src/hooks/comment-checker/hook.ts`, `src/hooks/context-window-monitor.ts:87-125`, `src/plugin/hooks/create-tool-guard-hooks.ts`, `src/hooks/rules-injector/hook.ts:63-85`, `src/hooks/empty-task-response-detector.ts`, `src/hooks/agent-usage-reminder/hook.ts`, `src/hooks/category-skill-reminder/hook.ts:119-140`, `src/hooks/interactive-bash-session/hook.ts:129`, `src/hooks/edit-error-recovery/hook.ts`, `src/hooks/niobe/niobe-hook.ts:23`, `src/hooks/task-resume-info/hook.ts`, `src/hooks/hashline-read-enhancer/hook.ts:167`, `src/hooks/json-error-recovery/hook.ts`, `src/hooks/read-image-resizer/hook.ts:124`.
+
+The table covers 17 of the 20 dispatched hooks. `webfetch-redirect-guard` (Section 2.4) plus `silent-failure-guard` and `session-memory` (factories in `src/plugin/hooks/create-tool-guard-hooks.ts` and `src/plugin/hooks/create-session-hooks.ts`; no dedicated row yet) also run in this chain.
 
 ### 2.3 Prompt, message, and session triggers
 
@@ -348,7 +357,7 @@ treat the shape below as a benchmark):
 OpenCode dispatch
 + before: max(Wave1) + max(Wave2 incl. gitleaks spawn + existsSync + oracle NETWORK) + sum(Wave3 sequential mutators)
 + tool execution itself (Write)
-+ after: toolOutputTruncator + max(qualityGate Biome, 20 sequential afters)
+ after: toolOutputTruncator + max(qualityGate Biome, 18 sequential afters)
 ```
 
 Key points:
@@ -359,7 +368,7 @@ Key points:
 2. `oracleMdOnly`/`mouseNotepad`/`niobeHook` do SDK HTTP
    (`getAgentFromSession` / `isCallerOrchestrator`) with filesystem fallback
    scans on the critical path, and `oracleMdOnly` runs twice.
-3. `after` is the longer tail: 16 sequential awaits plus Biome plus the
+3. `after` is the longer tail: 18 sequential awaits plus Biome plus the
    comment-checker CLI. `qualityGate` runs parallel for
    this reason.
 4. Even no-op hooks (`directoryAgentsInjector`, `rulesInjector` in `before`)
@@ -374,13 +383,14 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
 - `src/plugin/hook-mutation-classification.md` audits each `before` hook for
   mutates/throws/I/O with file:line evidence and enabled the 3-wave
   parallelization. It describes an older 13-hook shape and predates
-  `taskEditGuard`, `contextModeEnforcer`, `backgroundTaskBlocker`, and
+  `taskEditGuard`, `contextModeEnforcer`, and
   `rtkBashRewriter`. Treat its table as evidence for the hooks it covers, not
   as a current inventory. Section 2 above is the current inventory.
 - `src/plugin/tool/tool-execute-before.bench.ts` (run with
   `bun test src/plugin/tool/tool-execute-before.bench.ts`, skipped by CI test
   sweeps by name) encodes an older wave shape. Production
-  dispatches the Section 1.3 shape (22 unique hooks, 23 invocations per tool call).
+  dispatches the Section 1.3 shape (26 dispatches over 22 unique hooks per run;
+  hot path 21 sites over 20 unique hooks, slash-command branch 5 sites over 2).
   Update the bench waves to the Section 1.3 shape before
   trusting its numbers.
 - To get real per-hook timings: wrap each dispatch call in
@@ -400,15 +410,19 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
 ## 6. Guidance for contributors
 
 1. Keep the 3-wave `before` structure. Do not parallelize Wave 3 (mutation
-   order). Update the bench waves to the Section 1.3 shape (16 unique hooks,
-   23 invocations) before trusting its numbers again.
+   order). Production shape is 26 dispatches over 22 unique hooks per
+   `tool.execute.before` run (Section 1.3); the bench note in Section 5
+   covers the refresh.
 2. Biggest wins, in order: skip `gitleaks` for read-only tools or debounce
    it; memoize `getAgentFromSession`/`isCallerOrchestrator` per session;
    avoid the double `oracleMdOnly` invocation; parallelize or defer `after`
    Biome/CLI work.
-3. Resolve Section 2.4: either wire the 8 unwired hooks into dispatchers or
-   remove their factories and schema entries so `disabled_hooks` stops
-   implying control that does nothing.
+3. Resolve Section 2.4: wire the one remaining unwired hook
+   (`document-reader-guard`, built in `src/plugin/hooks/create-tool-guard-hooks.ts:161-162`
+   with no call site) into a dispatcher, or remove its factory and schema
+   entries so `disabled_hooks` stops implying control that does nothing. The
+   think-mode `chat.params` handler (`src/hooks/think-mode/hook.ts:83`) is the
+   other undispatched surface.
 4. Add per-hook timing (Section 5) before further optimization. Measure first.
 5. Document every new hook with trigger event, class, throws, I/O, and
    evidence file:line. Update Sections 2.x and `HookNameSchema` together.

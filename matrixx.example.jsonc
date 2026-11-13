@@ -87,7 +87,7 @@
   // },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Categories — domain-specific task delegation via `task(category="...")`
+  // Categories — domain-specific task delegation via `subagent(agent="mouse-<category>", ...)`
   // Each category supports: model, variant, description, temperature,
   // top_p, maxTokens, thinking, reasoningEffort, textVerbosity, tools,
   // prompt_append, is_unstable_agent, disable, fallback_models,

@@ -53,20 +53,19 @@ any plan directory.
 Inside a bucket, notepad files sit directly in the directory. There is no `tasks/` subdirectory, and there
 cannot be one.
 
-Three consumers read notepads with a non-recursive glob over `{plan-name}/*.md`:
+Two consumers read notepads with a non-recursive glob over `{plan-name}/*.md`:
 
 | Consumer | Line | Pattern |
 |---|---|---|
 | `src/hooks/niobe/verification-reminders.ts` | 33 | `Glob(".matrixx/notepads/${planName}/*.md")` |
-| `src/agents/niobe/default.ts` | 160 | `glob(".matrixx/notepads/{plan-name}/*.md")` |
-| `src/agents/niobe/gpt.ts` | 124 | `READ: .matrixx/notepads/{plan-name}/*.md` |
+| `src/features/completion-review/gather-notepads.ts` | 74 | `readdirSync(notepadDir).filter((file) => file.endsWith(".md"))` |
 
 A non-recursive glob stops at the first directory level. If the writer nested its output as
-`.matrixx/notepads/<planName>/tasks/<n>-<slug>.md`, all three consumers would silently read zero notepads
+`.matrixx/notepads/<planName>/tasks/<n>-<slug>.md`, both consumers would silently read zero notepads
 and the niobe would verify against nothing. Flatness is a contract with those readers, not a style
 preference.
 
-The live precedent is the repo's own `.matrixx/notepads/fix-111-niobe/` bucket:
+For example, a plan bucket may contain:
 
 ```
 0-recon.md  1-gate1.md  2-gate2.md  3-gate3.md
@@ -169,7 +168,7 @@ writes nothing. A missing notepad is a far smaller problem than a misfiled one.
 
 ## Relationship to the retired hook
 
-This hook replaces `task-notepad`, which was removed in commit `f8de08cfb`. The old hook was built on
+This hook replaces `task-notepad`, which was removed from the plugin (the removal commit hash was unresolvable in the current history and has been dropped here). The old hook was built on
 `session.todo()`, and that data source is permanently unavailable, so there was nothing left to key on.
 
 `task-notepad` is still accepted as a literal in the hook-name schema, retained purely so existing
@@ -196,8 +195,7 @@ Both paths end at the same `safeCreateHook` wrapper, so a disabled hook is never
 
 Everything below is real captured output. It was produced by driving the actual
 `createTaskNotepadWriterHook` factory from `src/hooks/task-notepad-writer/index.ts` inside a `mkdtemp` fixture
-root, so no real project directory was touched. The full capture is at
-`.matrixx/evidence/task-11-examples.txt`.
+root, so no real project directory was touched.
 
 ### Example A: the plan-bucket happy path
 

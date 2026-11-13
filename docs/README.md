@@ -40,6 +40,7 @@
 | Page | Audience | What you get |
 |---|---|---|
 | `session-memory-fts.md` | Engineers | Session memory Phase 2 FTS design note (design only, no code) |
+| `native-subagent-migration.md` | Engineers | Migration from the removed `task`/`delegate_task` convention to native `subagent(...)`: syntax map, guard stub, final architecture |
 
 ## Doctrine
 
