@@ -33,9 +33,9 @@ Tmux integration lives in `src/shared/tmux/` (no feature dir).
 ## KEY PATTERNS
 
 **Native Subagent Delegation:**
-Delegation goes through the native `subagent` tool (sync `background=false`, async `background=true` with an injected completion message in the parent session; retrieve the transcript with `session_read`). There is no background-agent manager, handle store, admission queue, polling loop, or revive path — those were removed with the legacy `delegate_task` system. The legacy names (`task`, `background_output`, `background_cancel`, `background_revive`, `background_wait_all`) resolve to guard stubs in `src/tools/removed-tools/`.
+Delegation goes through the native `subagent` tool (an injected completion message arrives in the parent session; retrieve the transcript with `session_read`). There is no background-agent manager, handle store, admission queue, polling loop, or revive path — those were removed with the legacy `delegate_task` system. The legacy names (`task`, `background_output`, `background_cancel`, `background_revive`, `background_wait_all`) resolve to guard stubs in `src/tools/removed-tools/`.
 
-**Default conservation:** `background` defaults to `false`. Use `background=true` for independent fan-out and read results from the completion message or `session_read`; never call `subagent()` sequentially for independent work.
+**Fan-out:** There is no `background` argument (stripped by `applySubagentPolicy`); every child is async and the parent absorbs its completion message. Fire independent children in one turn and retrieve transcripts with `session_read` when needed; never call `subagent()` sequentially for independent work.
 
 **Skill Management:** All skills are loaded from `src/skills/` via `createBuiltinSkills()`. No external skill directory loading. Skills are configured via `disabled_skills` in `matrixx.jsonc`.
 

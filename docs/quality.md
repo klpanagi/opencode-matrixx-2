@@ -769,7 +769,6 @@ TDD enforcement is integrated into the **software-dev pipeline** (`src/skills/bu
 subagent(
   agent="mouse-source",
   load_skills=["git-master", "tdd-enforcer"],
-  background=true,
   description="Implement {FEATURE}",
   prompt=`Implement from plan:
 {PLAN}
@@ -784,8 +783,8 @@ then refactor. Run bun test after each change.`
 #### Tester Agent Dispatch
 
 ```typescript
-task(
-  category="source",
+subagent(
+  agent="mouse-source",
   load_skills=["tdd-enforcer", "quality-gate"],
   description="Write tests for {FEATURE}",
   prompt="..."

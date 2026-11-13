@@ -67,7 +67,7 @@ setupDomains()                      src/plugin/setup-domains.ts
   validators, design intent).
 - Continuation builds **6 entries**: stop guard, compaction-context injector,
   nudge-loop breaker, niobe, plan persister, and task-notepad writer. The old
-  task-continuation enforcer is removed; a `background=true` subagent completion
+  task-continuation enforcer is removed; an async subagent completion
   now arrives as an injected message in the parent session.
 - Skill builds 2 entries: `category-skill-reminder`, `auto-slash-command`.
 
@@ -234,7 +234,7 @@ Evidence: `src/hooks/tool-output-truncator.ts`, `src/hooks/quality-gate/hook.ts`
 | `design-intent-preserver` | `chat.message`-shaped | Preserves design intent across turns. Currently has no call site (Section 2.4). |
 | `think-mode` | `event` (session cleanup) | Dynamic thinking budget; prompt switching lives in its module state. Exists to scale reasoning effort per session. |
 | `matrix-loop` | `event` + direct calls from `before`/`chat.message` slash handling | Self-referential dev loop start/cancel. Exists for `/matrix-loop` and `/rp-loop` workflows. |
-| `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. A `background=true` subagent completion arrives as an injected message in the parent session; read the transcript with `session_read`. |
+| `task-continuation-enforcer` (removed) | — | The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. An async subagent completion arrives as an injected message in the parent session; read the transcript with `session_read`. |
 | `session-recovery` | `event` session.error branch (direct call) | Recovers and re-prompts after recoverable errors. Exists to survive transient session failures. |
 | `context-window-limit-recovery` | `event` (error/idle/updated) | Provider-agnostic context recovery; parses token-limit errors only (reactive). Exists as the last resort after monitor (70%) and preemptive compaction (78%). |
 | `auto-update-checker` | `event` session.created | Plugin update check and startup toasts. Exists to notify about new versions. |

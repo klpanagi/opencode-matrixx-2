@@ -223,7 +223,7 @@ Mandatory when `tdd_enforcer.enabled=true` (now enabled in `~/.config/opencode/m
 - **Naming** — kebab-case dirs, `createXXXHook` / `createXXXTool` factories.
 - **File size** — keep `src/` modules small: split a file rather than growing it past a few hundred lines. Not a hard limit, and not CI-enforced — `src/features/task-storage/` is split into one-concern modules, and `tests/` legitimately reaches ~1400 LOC in a file. Prefer kebab-case one-concern modules (`index.ts` / `types.ts` / `constants.ts` / `tools.ts`); treat 200 LOC as a prompt to split, not a ceiling.
 - **Temperature** — 0.1 for code agents, max 0.3.
-- **Parallelism** — never sequential `subagent()` calls; use `background=true` and read completion messages or `session_read`.
+- **Parallelism** — never sequential `subagent()` calls; fire independent children in one turn and absorb their completion messages.
 - **Git** — no `git add -i`, `rebase -i`, `--no-verify`, no force push without request.
 
 ## ANTI-PATTERNS

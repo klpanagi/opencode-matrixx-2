@@ -125,5 +125,5 @@ An agent receives `task_*` iff `MODE ∈ {primary, all}` and its work is multi-s
 
 - **Trust agent self-reports**: NEVER — always verify outputs
 - **High temperature**: Don't use >0.3 for code agents
-- **Sequential calls**: Use `subagent` with `background` for exploration
+- **Sequential calls**: fire independent children in one turn — every child is async and the parent absorbs its completion message (there is no `background` argument; `applySubagentPolicy` strips it).
 - **Oracle writing code**: Planner only — never implements

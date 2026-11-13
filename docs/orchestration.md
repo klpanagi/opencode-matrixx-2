@@ -315,10 +315,10 @@ patterns to follow, or honest laziness about writing requirements.
 Reach for Keymaker when a problem specifically benefits from its
 reasoning style and fully autonomous explore-first approach.
 
-## Background Agents and Matrix Loop
+## Async Delegation and Matrix Loop
 
-**Background delegation** uses the native `subagent` tool with
-`background=true`: the parent keeps working while children run, and each child's
+**Async delegation** uses the native `subagent` tool:
+the parent keeps working while children run, and each child's
 completion is injected as a message in the parent session (read the full
 transcript with `session_read`). There is no separate queue or poller.
 
@@ -435,10 +435,10 @@ flowchart TB
     Plan -->|"Read"| Orchestrator
 
     Orchestrator -->|"subagent(agent=…)"| Junior
-    Orchestrator -->|"task(agent)"| Merovingian
-    Orchestrator -->|"task(agent)"| Trinity
-    Orchestrator -->|"task(agent)"| Operator
-    Orchestrator -->|"task(agent)"| Frontend
+    Orchestrator -->|"subagent(agent)"| Merovingian
+    Orchestrator -->|"subagent(agent)"| Trinity
+    Orchestrator -->|"subagent(agent)"| Operator
+    Orchestrator -->|"subagent(agent)"| Frontend
 
     Junior -->|"Results + Learnings"| Orchestrator
     Merovingian -->|"Advice"| Orchestrator
@@ -501,7 +501,7 @@ flowchart LR
     Verify -->|"More tasks"| Delegate
     Verify -->|"All done"| Report
 
-    Delegate -->|"background=false"| Workers["Workers"]
+    Delegate -->|"async fan-out"| Workers["Async children<br/>(completion messages)"]
     Workers -->|"Results + Learnings"| Verify
 ```
 
