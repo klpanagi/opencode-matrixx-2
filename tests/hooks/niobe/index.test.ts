@@ -232,6 +232,30 @@ describe("niobe hook", () => {
       cleanupMessageStorage(sessionID)
     })
 
+     test("should transform output for the native subagent tool (V2 rename)", async () => {
+       // given - no mission state, but caller is Niobe invoking the native tool
+       const sessionID = "session-subagent-tool-test"
+       setupMessageStorage(sessionID, "niobe")
+
+       const hook = createNiobeHook(createMockMatrixxContext())
+       const output = {
+         title: "Morpheus Task",
+         output: "Task completed successfully",
+         metadata: {},
+       }
+
+       // when
+       await hook["tool.execute.after"](
+         { tool: "subagent", sessionID },
+         output
+       )
+
+       // then - standalone verification reminder is appended for the native tool name
+       expect(output.output).toContain("subagent(agent=")
+
+       cleanupMessageStorage(sessionID)
+     })
+
      test("should transform output when caller is Niobe with mission state", async () => {
        // given - Niobe caller with mission state
        const sessionID = "session-transform-test"

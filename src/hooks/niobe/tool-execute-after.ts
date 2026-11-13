@@ -1,6 +1,7 @@
 import { appendSessionId, getPlanProgress, readMissionState } from "../../features/mission-state"
 import { collectGitDiffStats } from "../../shared/git-worktree/collect-git-diff-stats"
 import { formatFileChanges } from "../../shared/git-worktree/format-file-changes"
+import { isTaskTool } from "../../shared/io/shell-tool-name"
 import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { isCallerOrchestrator } from "../../shared/session/session-utils"
@@ -49,7 +50,8 @@ export function createToolExecuteAfterHandler(input: {
       return
     }
 
-    if (toolInput.tool !== "task") {
+    // `task` is the V1 alias of the native `subagent` tool
+    if (!isTaskTool(toolInput.tool)) {
       return
     }
 

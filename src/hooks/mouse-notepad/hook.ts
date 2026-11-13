@@ -1,3 +1,4 @@
+import { isTaskTool } from "../../shared/io/shell-tool-name"
 import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { isCallerOrchestrator } from "../../shared/session/session-utils"
@@ -10,8 +11,8 @@ export function createMouseNotepadHook(ctx: NativePluginContext) {
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown>; message?: string }
     ): Promise<void> => {
-      // 1. Check if tool is task
-      if (input.tool !== "task") {
+      // 1. Check if tool is a delegation tool (`task` is the V1 alias of `subagent`)
+      if (!isTaskTool(input.tool)) {
         return
       }
 
