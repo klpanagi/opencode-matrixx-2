@@ -14,6 +14,8 @@ import {
 } from "./mcp.transform"
 import { isCommandAvailable, type McpCreationFailure } from "./mcp-validator"
 
+export type { Context7HealthInput } from "./context7-health"
+export { buildContext7HealthNotice, CONTEXT7_API_KEY_ENV } from "./context7-health"
 export type {
   McpTransformDomain,
   McpTransformEditor,
@@ -21,7 +23,17 @@ export type {
 } from "./mcp.transform"
 export { type BuiltinMcpEntry, buildBuiltinMcpEntries, registerMcpTransform, toV2McpEntry } from "./mcp.transform"
 export { buildMcpStartupNotice, getMcpStartupNotice, MCP_UVX_INSTALL_FIX, MCP_UVX_WARM_FIX } from "./mcp-startup-notice"
+export { getMcpStartupWarnings, setMcpStartupWarnings } from "./mcp-startup-state"
 export type { McpCreationFailure } from "./mcp-validator"
+export { isCommandAvailable } from "./mcp-validator"
+export type { BuiltinMcpToolNamesInput } from "./tool-names"
+export {
+  BUILTIN_MCP_TOOL_NAMES,
+  CONTEXT7_QUERY_DOCS,
+  CONTEXT7_RESOLVE_LIBRARY_ID,
+  DOCUMENT_READER_CONVERT_TO_MARKDOWN,
+  getBuiltinMcpToolNames,
+} from "./tool-names"
 export { type McpName, McpNameSchema } from "./types"
 
 export interface CreateBuiltinMcpsOptions {

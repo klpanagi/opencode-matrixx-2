@@ -30,7 +30,7 @@ mcps/
 
 ### document_reader Tool
 
-**Tool name**: `document_reader__convert_to_markdown`
+**Tool name**: `document_reader_convert_to_markdown`
 **Input**: `uri: string` — must be a `file:`, `https:`, `http:`, or `data:` URI
 **Output**: Markdown string of document content
 **Skill**: Load `document-reader` skill for usage instructions

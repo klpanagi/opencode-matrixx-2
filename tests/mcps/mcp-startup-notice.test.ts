@@ -51,7 +51,7 @@ describe("buildMcpStartupNotice", () => {
     const notice = buildMcpStartupNotice(failures) ?? ""
 
     //#then
-    expect(notice).toContain("document_reader__convert_to_markdown")
+    expect(notice).toContain("document_reader_convert_to_markdown")
   })
 })
 

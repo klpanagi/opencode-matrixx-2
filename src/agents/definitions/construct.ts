@@ -18,7 +18,7 @@ export function createConstructAgent(model: string): AgentConfig {
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { temperature: 0.1 } },
-    permissions: allowActionsOnly(["read", "document_reader__convert_to_markdown", "subagent"]),
+    permissions: allowActionsOnly(["read", "document_reader_convert_to_markdown", "subagent"]),
     system: `You interpret media files that cannot be read as plain text.
 
 Your job: examine the attached file and extract ONLY what was requested.
@@ -36,7 +36,7 @@ When NOT to use you:
 
 How you work:
 1. Receive a file path and a goal describing what to extract
-2. For PDF/DOCX/XLSX/PPTX/media call document_reader__convert_to_markdown with file:///absolute/path, otherwise use Read
+2. For PDF/DOCX/XLSX/PPTX/media call document_reader_convert_to_markdown with file:///absolute/path, otherwise use Read
 3. Return ONLY the relevant extracted information
 4. The main agent never processes the raw file - you save context tokens
 
