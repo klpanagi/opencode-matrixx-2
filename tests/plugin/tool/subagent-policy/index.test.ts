@@ -97,4 +97,63 @@ describe("applySubagentPolicy orchestration", () => {
       }),
     ).toThrow("ghost-skill")
   })
+
+  test("strips background affordances before execution and logs each key", () => {
+    //#given
+    const logged: Array<{ message: string; data?: unknown }> = []
+    const input = inputFor("subagent")
+    const output = {
+      args: {
+        agent: "mouse-transmission",
+        description: "d",
+        prompt: "do it",
+        sessionID: "ses_child",
+        model: "provider/model",
+        background: true,
+        run_in_background: false,
+        load_skills: ["tdd-enforcer"],
+        complexity: 1,
+      } as Record<string, unknown>,
+    }
+
+    //#when
+    applySubagentPolicy(input, output, {
+      skillResolver: (skills: string[]) => ({
+        content: `resolved:${skills.join(",")}`,
+        error: null,
+      }),
+      log: (message: string, data?: unknown) => logged.push({ message, data }),
+    })
+
+    //#then
+    expect(output.args).not.toHaveProperty("background")
+    expect(output.args).not.toHaveProperty("run_in_background")
+    expect(output.args).not.toHaveProperty("load_skills")
+    expect(output.args).not.toHaveProperty("complexity")
+    expect(output.args).toEqual({
+      agent: "mouse-transmission",
+      description: "d",
+      prompt: "resolved:tdd-enforcer\n\ndo it",
+      sessionID: "ses_child",
+      model: "provider/model",
+    })
+    expect(logged.map((entry) => entry.data)).toEqual([{ key: "background" }, { key: "run_in_background" }])
+    expect(logged.every((entry) => entry.message === "[subagent-policy] stripped background affordance")).toBe(true)
+  })
+
+  test("non-subagent call keeps background keys untouched", () => {
+    //#given
+    const logged: string[] = []
+    const input = inputFor("bash")
+    const output = {
+      args: { command: "ls", background: true, run_in_background: true } as Record<string, unknown>,
+    }
+
+    //#when
+    applySubagentPolicy(input, output, { log: (message: string) => logged.push(message) })
+
+    //#then
+    expect(output.args).toEqual({ command: "ls", background: true, run_in_background: true })
+    expect(logged).toEqual([])
+  })
 })
