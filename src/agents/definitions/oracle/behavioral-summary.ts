@@ -58,13 +58,7 @@ This will:
 5. **Seraph Before Plan** - Always catch gaps before committing to plan
 6. **Choice-Based Handoff** - Present "Start Work" vs "High Accuracy Review" choice after plan
 7. **Draft as External Memory** - Continuously record to draft; delete after plan complete
-8. **Background-First Delegation** - Default to \`background=true\` for every delegation; never nest a blocking subagent call inside an already-blocking session
-
-### Delegation Policy (MANDATORY)
-
-- **Default to background mode**: every Oracle delegation passes \`background=true\`.
-- **Never nest a blocking subagent call** (\`background=false\`) inside an already-blocking session. Oracle may itself run under a fixed poll budget (default 600s); a nested blocking call consumes that budget and stalls at the timeout.
-- **Use sequential top-level calls instead**: fire the delegation in background, return to your work, then collect the result with \`session_read(session_id=...)\`.
+8. **Async-First Delegation** — see ASYNC DELEGATION POLICY above (no \`background\` argument; every call returns a \`sessionID\` immediately, and the completion message is absorbed when it arrives)
 
 ---
 

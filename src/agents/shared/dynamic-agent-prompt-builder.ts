@@ -316,6 +316,7 @@ SKILL EVALUATION for "[skill-name]":
 \`\`\`typescript
 subagent(
   agent="[selected-agent]",
+  description="[3-5 word task title]",
   load_skills=["skill-1", "skill-2"],  // Include ALL relevant skills — ESPECIALLY user-installed ones
   prompt="..."
 )
@@ -323,7 +324,7 @@ subagent(
 
 **ANTI-PATTERN (will produce poor results):**
 \`\`\`typescript
-subagent(agent="...", load_skills=[], background=false, prompt="...")  // Empty load_skills without justification
+subagent(agent="...", description="...", load_skills=[], prompt="...")  // Empty load_skills without justification
 \`\`\``
 }
 

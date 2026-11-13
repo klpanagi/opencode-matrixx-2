@@ -101,11 +101,12 @@ Use \`subagent(agent="mouse-source", ...)\` to spawn a language expert. Always i
 4. Example DSL input → expected target-language output pairs
 5. Idiomatic requirements (naming conventions, patterns, error handling)
 
+Fire one wave; do not fire a second wave until every completion in this wave is absorbed.
+
 \`\`\`
 subagent(
   agent="mouse-source",
   load_skills=[],
-  background=false,
   description="Generate Python code from [DSL] AST",
   prompt="[CONTEXT + GRAMMAR + AST + STRATEGY + EXAMPLES]"
 )
@@ -116,12 +117,12 @@ subagent(
 When generating code for multiple target languages from the same DSL, fire delegations **in parallel**:
 
 \`\`\`
-subagent(agent="mouse-source", background=true, description="Generate Python backend from StateMachine DSL", prompt="...")
-subagent(agent="mouse-source", background=true, description="Generate TypeScript backend from StateMachine DSL", prompt="...")
-subagent(agent="mouse-source", background=true, description="Generate Rust backend from StateMachine DSL", prompt="...")
+subagent(agent="mouse-source", description="Generate Python backend from StateMachine DSL", prompt="...")
+subagent(agent="mouse-source", description="Generate TypeScript backend from StateMachine DSL", prompt="...")
+subagent(agent="mouse-source", description="Generate Rust backend from StateMachine DSL", prompt="...")
 \`\`\`
 
-Then collect results and verify cross-target consistency.
+Absorb each completion message; session_read(session_id=...) once per child, then verify cross-target consistency.
 
 <tool_usage_rules>
 - Explore existing code patterns before implementing
