@@ -19,7 +19,7 @@ The 6 agents cover complementary concerns - together they form a comprehensive r
 | 1 | Goal Verifier | Oracle | Did we build what was asked? | MAIN |
 | 2 | QA Executor | mouse-the-one | Does it actually work? | MAIN |
 | 3 | Code Reviewer | Oracle | Is the code well-written? | MAIN |
-| 4 | Security Auditor | Oracle | Is it secure? | SUB |
+| 4 | Security Auditor | Sentinel | Is it secure? | SUB |
 | 5 | Context Miner | mouse-the-one | Did we miss any context? | MAIN |
 | 6 | AI Slop Detector | mouse-the-one | Remove AI-generated code smells | SUP |
 
@@ -36,7 +36,7 @@ Before launching agents, collect these inputs. Extract from conversation history
 - **BACKGROUND**: Why this work was needed. Business context, user stories, related systems, prior decisions that informed the approach.
 - **CHANGED_FILES**: Auto-collect via \`git diff --name-only HEAD~1\` or against the appropriate base (branch point, specific commit).
 - **DIFF**: Auto-collect via \`git diff HEAD~1\` or against the appropriate base.
-- **FILE_CONTENTS**: Read the full content of each changed file (not just the diff). Oracle agents cannot read files - they need full context in the prompt.
+- **FILE_CONTENTS**: Read the full content of each changed file (not just the diff). Reviewers can read files, but full context in the prompt saves round-trips and keeps the review independent.
 - **RUN_COMMAND**: How to start/run the application. Check \`package.json\` scripts, \`Makefile\`, \`docker-compose.yml\`, or ask the user.
 
 </required_inputs>
@@ -80,9 +80,9 @@ For multi-task plans, run a lightweight per-task gate BEFORE dependents start �
 
 ## Phase 1: Launch 6 Agents
 
-Launch ALL 6 in a single turn. No sequential launches. No waiting between them. Then absorb all six — each resolves via its completion message; \`session_read(session_id=...)\` each into the ledger. Barrier = 6 launched == 6 absorbed; only then write the verdict.
+Launch ALL 6 in a single turn. No sequential launches. No waiting between them. Then absorb all six — each resolves via its completion message; \`session_read(session_id=...)\` each into the review record. Barrier = 6 launched == 6 absorbed; only then write the verdict.
 
-**Oracle agents receive everything in the prompt** (they cannot read files or run commands). Include DIFF + FILE_CONTENTS + all context directly in the prompt text.
+**Give every reviewer full context in the prompt.** Reviewers can read files and run read-only commands, but including DIFF + FILE_CONTENTS + all context directly in the prompt saves tool round-trips and keeps the review independent.
 
 **mouse-the-one agents are autonomous** - they can read files, run commands, and use tools. Give them goals and pointers, not raw content dumps.
 
@@ -252,12 +252,12 @@ OUTPUT FORMAT:
 
 ---
 
-### Agent 4: Security Review (Oracle) - SUB
+### Agent 4: Security Review (Sentinel) - SUB
 
 \`\`\`
 subagent(
-  agent="oracle",
-  load_skills=[],
+  agent="sentinel",
+  load_skills=["security-core", "security-api", "security-sast"],
   description="Security-focused review of implementation changes",
   prompt="""
 <review_type>SECURITY REVIEW (supplementary)</review_type>
@@ -274,7 +274,7 @@ subagent(
 {DIFF}
 </diff>
 
-Security engineer. Review exclusively for security vulnerabilities. Ignore code style unless it directly creates a security risk.
+You are the security auditor. Review exclusively for security vulnerabilities. Ignore code style unless it directly creates a security risk. Use the provided context first; read additional files only when needed to confirm a finding.
 
 SECURITY CHECKLIST:
 1. Input Validation: User inputs sanitized? SQL injection, XSS, command injection, SSRF?

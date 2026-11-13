@@ -109,16 +109,16 @@ After making changes, you can test your local build in OpenCode:
 ```
 matrixx/
 ├── src/
-│   ├── agents/        # AI agents (Morpheus, Merovingian, Operator, Trinity, etc.)
-│   ├── hooks/         # ~52 lifecycle hooks
-│   ├── tools/         # LSP (11), AST-Grep, Grep, Glob, etc.
-│   ├── mcp/           # MCP server integrations (context7, document_reader)
-│   ├── features/      # Claude Code compatibility layers
+│   ├── agents/        # Definitions, registry, shared agent infra
+│   ├── hooks/         # 59 lifecycle hooks + retained-deprecated no-ops
+│   ├── tools/         # LSP, AST-Grep, Grep, Glob, task, plan, etc.
+│   ├── mcps/          # MCP server integrations (context7, document_reader)
+│   ├── features/      # Commands, task storage, mission/plan state
 │   ├── config/        # Zod schemas and TypeScript types
-│   ├── auth/          # Google Antigravity OAuth
+│   ├── plugin/        # V2 composition root (setup-domains, handlers, tool)
 │   ├── shared/        # Common utilities
-│   └── index.ts       # Main plugin entry (MatrixxPlugin)
-├── script/            # Build utilities (build-schema.ts, publish.ts)
+│   └── index.ts       # V2 plugin entry ({ id, setup })
+├── script/            # Build and CI utilities
 ├── assets/            # JSON schema
 └── dist/              # Build output (ESM + .d.ts)
 ```
@@ -150,7 +150,7 @@ bun run build:schema
 | Directory Naming | kebab-case (`ast-grep/`, `keyword-detector/`) |
 | File Operations | Never use bash commands (mkdir/touch/rm) for file creation in code |
 | Tool Structure | Each tool: `index.ts`, `types.ts`, `constants.ts`, `tools.ts`, `utils.ts` |
-| Hook Pattern | `createXXXHook(input: PluginInput)` function naming |
+| Hook Pattern | `createXXXHook(...)` factory returning domain handlers |
 | Exports | Barrel pattern (`export * from "./module"` in index.ts) |
 
 **Anti-Patterns (Do Not Do)**:
@@ -165,44 +165,24 @@ bun run build:schema
 
 ### Adding a New Agent
 
-1. Create a new `.ts` file in `src/agents/`
-2. Define the agent configuration following existing patterns
-3. Add to `builtinAgents` in `src/agents/index.ts`
-4. Update `src/agents/types.ts` if needed
-5. Run `bun run build:schema` to update the JSON schema
+1. Create `src/agents/definitions/my-agent.ts` (or `my-agent/` for a multi-file agent) exporting the factory and metadata; re-export it from `src/agents/definitions/index.ts`
+2. Add it to `agentSources` and the metadata map in `src/agents/registry/index.ts`
+3. Re-export from `src/agents/index.ts`; add the name to `AgentName` in `src/agents/shared/types.ts`
+4. Add the name to `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts`
+5. Add the entry to `AgentOverridesSchema` in `src/config/schema/agent-overrides.ts`
+6. Add tool restrictions in `src/shared/tool/agent-tool-restrictions.ts`, model requirements in `src/shared/model/model-requirements.ts`, and the display name in `src/shared/agent/agent-display-names.ts`
+7. Run `bun run build:schema` to update the JSON schema
 
-```typescript
-// src/agents/my-agent.ts
-import type { AgentConfig } from "./types";
-
-export const myAgent: AgentConfig = {
-  name: "my-agent",
-  model: "anthropic/claude-sonnet-4-6",
-  description: "Description of what this agent does",
-  prompt: `Your agent's system prompt here`,
-  temperature: 0.1,
-  // ... other config
-};
-```
+See `src/agents/AGENTS.md` for the full checklist and factory patterns.
 
 ### Adding a New Hook
 
-1. Create a new directory in `src/hooks/` (kebab-case)
-2. Implement `createXXXHook()` function returning event handlers
-3. Export from `src/hooks/index.ts`
+1. Create a new directory in `src/hooks/` (kebab-case) with the hook factory
+2. Add the hook name to `HookNameSchema` in `src/config/schema/hooks.ts`
+3. Register it in the matching factory under `src/plugin/hooks/` (`create-session-hooks.ts`, `create-tool-guard-hooks.ts`, `create-transform-hooks.ts`, `create-continuation-hooks.ts`, or `create-skill-hooks.ts`)
+4. Export the factory from `src/hooks/index.ts` if it is new
 
-```typescript
-// src/hooks/my-hook/index.ts
-import type { PluginInput } from "@opencode-ai/plugin";
-
-export function createMyHook(input: PluginInput) {
-  return {
-    onSessionStart: async () => {
-      // Hook logic here
-    },
-  };
-}
-```
+V2 hooks are domain handlers registered on the native context; there is no `onSessionStart` callback. See an existing factory such as `src/hooks/think-mode/`.
 
 ### Adding a New Tool
 
@@ -212,7 +192,7 @@ export function createMyHook(input: PluginInput) {
    - `constants.ts` - Constants and tool descriptions
    - `tools.ts` - Tool implementations
    - `utils.ts` - Helper functions
-2. Add to `builtinTools` in `src/tools/index.ts`
+2. Register it in `src/plugin/tool/tool-catalog.ts` (conditional policy in `src/plugin/tool/tool-policy.ts`)
 
 ### Adding a New MCP Server
 
@@ -227,8 +207,7 @@ export function createMyHook(input: PluginInput) {
 2. **Make changes** following the conventions above
 3. **Build and test** locally:
    ```bash
-   bun run typecheck  # Ensure no type errors
-   bun run build      # Ensure build succeeds
+   bun run test       # full CI: typecheck + lint + isolated tests + build
    ```
 4. **Test in OpenCode** using the local build method described above
 5. **Commit** with clear, descriptive messages:
@@ -240,8 +219,7 @@ export function createMyHook(input: PluginInput) {
 ### PR Checklist
 
 - [ ] Code follows project conventions
-- [ ] `bun run typecheck` passes
-- [ ] `bun run build` succeeds
+- [ ] `bun run test` passes (typecheck + lint + tests + build)
 - [ ] Tested locally with OpenCode
 - [ ] Updated documentation if needed (README, AGENTS.md)
 - [ ] No version changes in `package.json`

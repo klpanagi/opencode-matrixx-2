@@ -80,7 +80,7 @@ Absorb the completion message before BUILD.
 
 ## PHASE 2: BUILD (TDD)
 
-Worktree-first (native): create an isolated worktree via \`worktree_create({ name: "<feature>" })\` and use the returned absolute \`directory\` (never assume \`../<feature>\` layout). Then \`session_move({ directory })\` into it (record a move-back owner for success AND failure). Run all BUILD + VERIFY work inside the worktree; never contaminate the main worktree. CLI fallback (\`git worktree add\`) only when native tools are unavailable — never mix native and CLI in one run (single-path rule).
+Worktree-first: create an isolated worktree via \`worktree_create({ name: "<feature>" })\`, \`session_move({ directory })\` into it, and run BUILD + VERIFY there. See WORKTREE-FIRST below for the full native-XOR-CLI rule.
 
 For each file in dependency order:
 
@@ -104,16 +104,10 @@ subagent(
 Run verification suite:
 
 \`\`\`bash
-bun run lint && bun run typecheck && bun run test && bun run build
+bun run test   # = script/run-ci.sh: install + lint + typecheck + isolated tests + build
 \`\`\`
 
-Report evidence:
-\`\`\`
-✅ bun run lint — 0 issues
-✅ bun run typecheck — no errors
-✅ bun run test — N passed, 0 failed
-✅ bun run build — success
-\`\`\`
+Report evidence (these are the checks \`bun run test\` already runs):
 
 If ANY fails → fix → re-run ALL.
 
@@ -124,12 +118,12 @@ If ANY fails → fix → re-run ALL.
 
 ## PHASE 4: REVIEW
 
-Launch all 6 reviewers in ONE turn (their prompts live in the \`review-work\` skill, Phase 1). Then absorb all six — each resolves via its completion message; \`session_read(session_id=...)\` each into the ledger. Barrier = 6 launched == 6 absorbed; only then write the verdict.
+Launch all 6 reviewers in ONE turn (their prompts live in the \`review-work\` skill, Phase 1). Then absorb all six — each resolves via its completion message; \`session_read(session_id=...)\` each into the review record. Barrier = 6 launched == 6 absorbed; only then write the verdict.
 
 \`\`\`
 subagent(agent="oracle", ...)        # 1 Goal Verifier
 subagent(agent="oracle", ...)        # 3 Code Reviewer
-subagent(agent="oracle", ...)        # 4 Security Auditor
+subagent(agent="sentinel", ...)   # 4 Security Auditor (security-core, security-api, security-sast)
 subagent(agent="mouse-the-one", ...) # 2 QA Executor
 subagent(agent="mouse-the-one", ...) # 5 Context Miner
 subagent(agent="mouse-the-one", ...) # 6 AI Slop Detector
@@ -226,53 +220,26 @@ Task 2 interface contract:
 - [ ] Every task lists Produces (outputs + consumer task)
 - [ ] No task Produces what no downstream task Consumes
 
----
-
-## PROGRESS LEDGER
-
-Maintain a live progress ledger at \`.matrixx/evidence/{plan}/progress.md\` for every medium+ task. The ledger hooks into the BUILD and SHIP phases — it records phase completions, evidence links, and decisions. It adds no new pipeline phases.
-
-- The ledger path inherits gitignore from the \`.matrixx/\` entry in \`.gitignore\` — ledger content is gitignored and never leaks into VCS.
-- Ledger writes go through plan_*/task_* tools only (plan_update for plan checkboxes, task_update/task_create for task state). Never use bash heredoc or shell-redirect writes for ledger files.
-- Raw bash mutation of \`.matrixx/plans/*.md\` and \`.matrixx/tasks/T-*.json\` is blocked by task-edit-guard — generic Write/Edit to plans is blocked the same way, so the ledger stays tool-written.
-
-Ledger entry shape:
-
-\`\`\`
-## {phase} — {date}
-- Status: done | in-progress | blocked
-- Evidence: {test / lint / typecheck output}
-- Decisions: {rulings recorded}
-- Next: {consumer task}
-\`\`\`
-
-**Exit criteria:**
-- [ ] Ledger created at .matrixx/evidence/{plan}/progress.md before BUILD ends
-- [ ] Every phase completion appended via plan_*/task_* tools
-- [ ] No shell-redirect writes to the ledger file
-
----
-
 ## RULINGS NOT STALLS
 
-When blocked, record a ruling in the ledger and proceed — never stall silently. Each stop condition below names the ruling to record and the proceed action:
+When blocked, record a ruling in the task/plan notes and proceed — never stall silently. Each stop condition below names the ruling to record and the proceed action:
 
 - Stop condition 1: ambiguous requirement with two plausible readings.
-  - Ruling to record: chosen reading + why, logged in the ledger.
+  - Ruling to record: chosen reading + why, recorded in the task notes.
   - Proceed: implement the chosen reading; flag the alternative in REVIEW.
 - Stop condition 2: missing upstream input from a task that is not yet complete.
-  - Ruling to record: assumed input shape + source task, logged in the ledger.
+  - Ruling to record: assumed input shape + source task, recorded in the task notes.
   - Proceed: build against the assumption; reconcile when the upstream task lands.
 - Stop condition 3: tool or environment failure blocking verification (flaky infra, unavailable service).
-  - Ruling to record: failure signature + skipped check, logged in the ledger.
+  - Ruling to record: failure signature + skipped check, recorded in the task notes.
   - Proceed: continue with remaining checks; re-run the skipped check in VERIFY.
 - Stop condition 4: conflicting guidance between plan text and skill prose.
-  - Ruling to record: which source won + why, logged in the ledger.
+  - Ruling to record: which source won + why, recorded in the task notes.
   - Proceed: follow the winning source; note the conflict in the SHIP summary.
 
 **Exit criteria:**
 - [ ] Every stall risk matched to one of the 4 stop conditions
-- [ ] Ruling to record logged in the ledger before proceeding
+- [ ] Ruling to record noted before proceeding
 - [ ] Proceed action executed — never a silent stall
 
 ---

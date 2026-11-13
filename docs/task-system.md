@@ -2,7 +2,6 @@
 
 > **Scope:** Persistent, file-backed task management for Matrixx agent orchestration.
 > **Audience:** Engineers evolving the task system: storage, tools, hooks, scheduling, and agent integration.
-> **Version:** 1.4.0, verified against source. Canonical config lives in `tasks.*` (`src/config/schema/tasks.ts`); the file-backed task system is **unconditional** and `morpheus.tasks.*` remains a lower-precedence legacy fallback for storage keys (see §3). The legacy todo system is gone: see `docs/legacy-todo-migration.md` for the retired hooks, the config keys that are now accepted no-ops, and why nothing reads session todo state any longer.
 
 Every normative claim below traces to the source path cited beside it. Where behavior belongs to another doc, this spec cross-links instead of duplicating: hook internals → `docs/hooks.md`, orchestration and wave planning flow → `docs/orchestration.md`, command reference → `docs/command-reference.md`.
 
@@ -77,7 +76,7 @@ Canonical source: `TasksConfigSchema` in `src/config/schema/tasks.ts`. Resolutio
 
 ### 3.1 No Master Gate: The System Is Unconditional
 
-There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered. The enforcer wiring is gone. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/config/task-system-gating.ts`). See `docs/legacy-todo-migration.md` for which keys those are.
+There is no enable/disable switch. `resolveTasksConfig()` always resolves `enabled: TASK_SYSTEM_DEFAULT` (`true`); the 5 task tools are always registered. The enforcer wiring is gone. The three config keys that used to toggle the system are still **parsed** so old config files keep loading, but they are **ignored** and produce a single one-time deprecation log plus toast per session (`collectLegacyKeyWarnings` in `src/shared/config/task-system-gating.ts`).
 
 ```jsonc
 // matrixx.jsonc — no `enabled` field
@@ -662,7 +661,7 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 ### 11.2 Compatibility Notes
 
 - **Claude Code alignment:** field names (`subject`, `blockedBy`, `blocks`) follow Claude Code's Task tool shape. Matrixx's `TaskObject` is a superset (adds `activeForm`, `repoURL`, `parentID`, atomic storage, additive deps, metadata merge, `task_cleanup`).
-- **No master switch:** `tasks.enabled` no longer gates anything. The file-backed store is the only substrate. See §3.1 and `docs/legacy-todo-migration.md`.
+- **No master switch:** `tasks.enabled` no longer gates anything. The file-backed store is the only substrate. See §3.1.
 - **No `morpheus.tasks.enabled`:** the legacy `MorpheusTasksConfigSchema` has no `enabled` field, and it no longer needs one. Do not add `enabled` under `morpheus.tasks`.
 - **Removed `todo-sync.ts` dual-write:** bulk Task→Todo mirroring (`syncAllTasksToTodos` / `syncTaskTodoUpdate`, formerly `src/tools/task/todo-sync.ts`) was removed when the enforcers decoupled. Do not reintroduce dual-write without revisiting that rationale.
 
@@ -756,7 +755,7 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 | `75fedac` default `task_system=true` + canonical gating | `isTaskSystemEnabled` + `_migrations` marker | Zero-config for fresh clones |
 | `8509b84` to `82f9f38` `/task-list` and `/cleanup-tasks` search-mode fixes | Ignore global `search-mode` | Commands must not leak into global search |
 | task config consolidation (2.6.x) | Canonical `tasks.*` section; `morpheus.tasks.*` and `task.pollTimeoutMs` become fallbacks via `resolveTasksConfig()` | One home for task config; keeps old files parsing |
-| legacy todo system removed (v2.7) | The 4 legacy todo hooks, the dual `useTaskSystem` prompt fork, and the master gate are gone; `tasks.*` is unconditional | One substrate, no split-brain todos. History and retained no-ops: `docs/legacy-todo-migration.md` |
+| legacy todo system removed (v2.7) | The 4 legacy todo hooks, the dual `useTaskSystem` prompt fork, and the master gate are gone; `tasks.*` is unconditional | One substrate, no split-brain todos. |
 
 **Known tech debt:**
 
@@ -764,4 +763,4 @@ Used by: `create-continuation-hooks`, `tool-catalog`. Never read `config.tasks` 
 
 ---
 
-*End of Task System Engineering Specification. For hook internals see `docs/hooks.md`; for orchestration see `docs/orchestration.md`; for commands see `docs/command-reference.md`; for config reference see `docs/configurations.md`; for the removed legacy todo system see `docs/legacy-todo-migration.md`.*
+*End of Task System Engineering Specification. For hook internals see `docs/hooks.md`; for orchestration see `docs/orchestration.md`; for commands see `docs/command-reference.md`; for config reference see `docs/configurations.md`;*

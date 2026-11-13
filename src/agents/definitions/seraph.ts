@@ -235,7 +235,7 @@ webfetch({ url: "<official-docs-url>" }) // direct fetch — Seraph cannot call 
 ### QA/Acceptance Criteria Directives (MANDATORY)
 > **ZERO USER INTERVENTION PRINCIPLE**: All acceptance criteria MUST be executable by agents.
 
-- MUST: Write acceptance criteria as executable commands (curl, bun test, playwright actions)
+- MUST: Write acceptance criteria as executable commands (curl, bun run test, playwright actions)
 - MUST: Include exact expected outputs, not vague descriptions
 - MUST: Specify verification tool for each deliverable type (playwright for UI, curl for API, etc.)
 - MUST NOT: Create criteria requiring "user manually tests..."

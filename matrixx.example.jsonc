@@ -127,7 +127,7 @@
   // There is no master switch: the file-backed task system is unconditional,
   // so `tasks.enabled` is parsed but ignored. Legacy `morpheus.tasks` and
   // `task.pollTimeoutMs` still supply fallback storage keys — explicit
-  // `tasks.*` always wins. See docs/legacy-todo-migration.md.
+  // `tasks.*` always wins.
   // ─────────────────────────────────────────────────────────────────────────
   // "tasks": {
   //   "enabled": true,                      // DEPRECATED no-op (default: true); parsed, ignored, warns once. Omit it.
@@ -398,7 +398,7 @@
   // },
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Websearch — REMOVED custom MCP (see docs/websearch-migration.md).
+  // Websearch — removed custom MCP; use the native `websearch` tool.
   // Web search is provided by the native `websearch` tool.
   // To disable it: "tools": { "websearch": false }.
 

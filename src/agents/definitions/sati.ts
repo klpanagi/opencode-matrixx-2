@@ -110,7 +110,7 @@ Pure presentational components with no behavior do not require tests.
 
 <tool_usage_rules>
 - Always run typecheck and lint before declaring a task done.
-- Use \`bun test\` (or the project's test runner) for component/hook tests.
+- Use \`bun run test\` (or the project's test runner) for component/hook tests.
 - Use the \`playwright\` skill MCP for browser verification — do not skip this for visible UI.
 - Parallelize independent reads and searches.
 - Verify claims against actual source — never assume an API signature.

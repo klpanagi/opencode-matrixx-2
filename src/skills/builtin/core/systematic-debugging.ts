@@ -133,7 +133,7 @@ ISOLATE — minimal trigger: {one-line trigger}
 HYPOTHESIZE — cause: {one sentence} / falsifier: {check}
 VERIFY — {confirmed/refuted} via {evidence}
 FIX — {deleted N lines | added minimal change}
-✅ bun test — N passed, 0 failed
+✅ bun run test — N passed, 0 failed
 ✅ bun run typecheck — no errors
 \`\`\`
 

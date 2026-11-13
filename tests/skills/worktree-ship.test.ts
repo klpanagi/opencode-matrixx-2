@@ -70,17 +70,15 @@ describe("software-dev worktree-first BUILD + SHIP hardening (Item 6)", () => {
     const template = softwareDevSkill.template
 
     //#when section order compared
-    //#then WORKTREE-FIRST precedes ANTI-PATTERNS, distinct from LEDGER/RULINGS
+    //#then WORKTREE-FIRST precedes ANTI-PATTERNS and is distinct from RULINGS
     const worktreeIdx = template.indexOf("## WORKTREE-FIRST")
     const antiIdx = template.indexOf("## ANTI-PATTERNS")
-    const ledgerIdx = template.indexOf("## PROGRESS LEDGER")
     const rulingsIdx = template.indexOf("## RULINGS NOT STALLS")
     expect(worktreeIdx).toBeGreaterThanOrEqual(0)
     expect(antiIdx).toBeGreaterThan(worktreeIdx)
-    expect(ledgerIdx).toBeGreaterThanOrEqual(0)
-    expect(rulingsIdx).toBeGreaterThan(ledgerIdx)
-    expect(worktreeIdx).not.toBe(ledgerIdx)
+    expect(rulingsIdx).toBeGreaterThanOrEqual(0)
     expect(worktreeIdx).not.toBe(rulingsIdx)
+    expect(template).not.toContain("## PROGRESS LEDGER")
   })
 })
 

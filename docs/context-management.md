@@ -1,10 +1,9 @@
 # Context Management in Matrixx
 
 > **Audience:** operators tuning context behavior and engineers working on the context stack.
-> **Version:** 1.4.0. Canonical page for all context topics; other docs summarize and link here.
-> **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys), `research/cost-performance.md` (background analysis).
+> **See also:** `hooks.md` (truncator, monitor, compaction hooks), `configurations.md` (`context_mode.*`, `tasks.*`, truncation keys).
 
-Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. For background and cost analysis see [cost-performance proposals](research/cost-performance.md) P6 (RTK), P7 (context-mode), and P16 (Headroom).
+Matrixx orchestrates five complementary layers for context management, L0 Native plus L1 RTK plus L2 context-mode plus L3 DCP plus L4 Headroom, with zero overlap and less than 10ms Matrixx bridge overhead. Each layer owns a distinct slice of the context lifecycle, from bash output to tool sandboxing to pruning to network proxy compression. Together they prevent out-of-memory failures, keep per-turn context lean, and let agents work longer without losing coherence. The layers are L1 RTK, L2 context-mode, and L4 Headroom.
 
 ## Table of Contents
 
@@ -195,16 +194,13 @@ ctx stats
 ```
 
 > **MCP form (verified working):** context-mode is configured as a local MCP server in `opencode.jsonc` (`"mcp": { "servers": { "context-mode": { "type": "local", "command": ["context-mode"] } } }`) and shows as `context-mode · Connected` under MCP in the OpenCode TUI. Upstream also documents a `"plugin": ["context-mode"]` in-process form — either delivery works with matrixx (enforcer + routing block match on the `ctx_*` tool names regardless of transport); do not enable both forms at once.
->
 > `ctx_batch` label propagation: each command entry is `{label, command}` and the label becomes the FTS5 chunk title — use short descriptive labels so `ctx_search` ranks hits correctly (see `propagateBatchLabels` in `src/features/context-injection/routing/routing-block.ts`).
->
 
 #### MCP registration & working directory (cwd)
 
 Register the context-mode MCP server **per-project** (project `.opencode/opencode.json` `mcp` entry) so each project gets a server with the right cwd, or pin `cwd` explicitly. Do NOT rely on a single process-global registration (user `~/.config/opencode/opencode.jsonc`) without a `cwd` pin.
 
 Root cause: context-mode's opencode adapter (`node_modules/context-mode/build/adapters/opencode/plugin.js`) derives its project dir as `ctx?.directory ?? process.cwd()`. Registered as a process-global MCP server, there is no plugin ctx, so the project dir falls back to the MCP server process's spawn cwd — a different project (observed: `subscription_monitor`). Hence `ctx_execute` runs with the wrong cwd in every other project. Matrixx does not patch the external package; `matrixx doctor` warns (`context-mode-cwd` check) when the registration lacks an explicit `cwd`.
->
 > Session-memory hygiene: entries whose text starts with a `SYNTHETIC_MESSAGE_PREFIXES` value (`<task-notification>`, `<system-reminder>`, `<context_guidance>`, `<tool-result>`) are filtered on memory write (`appendMemoryEntry`, hook staging) and recall (`recall`/`isSyntheticCandidate`) paths only — routing and enforcement are unaffected.
 
 #### Configuration
@@ -694,7 +690,6 @@ Notes:
 ## 7. See Also
 
 - README sections: [RTK Integration](https://github.com/klpanagi/opencode-matrixx#rtk-integration--token-compression) and [Headroom Integration](https://github.com/klpanagi/opencode-matrixx#headroom-integration--network-proxy-compression) — 5-subsection templates this document mirrors
-- [cost-performance proposals](research/cost-performance.md) — P6 RTK, P7 context-mode, P16 Headroom, plus the 5-layer matrix and cumulative estimates
 - [configurations](configurations.md) — full `matrixx.jsonc` reference, agent overrides, hook disabling, JSONC support
 - [features](features.md) — complete hook table including Truncation and Context Management and Recovery rows
 - Specs: [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom), [mksglu/context-mode](https://github.com/mksglu/context-mode), [rtk-ai/rtk](https://github.com/rtk-ai/rtk), [@tarquinen/opencode-dcp](https://www.npmjs.com/package/@tarquinen/opencode-dcp)

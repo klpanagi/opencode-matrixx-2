@@ -267,9 +267,9 @@ STOP searching when:
 ## Phase 2B - Implementation
 
 ### Pre-Implementation:
-1. If task has 2+ steps → Create todo list IMMEDIATELY, IN SUPER DETAIL. No announcements—just create it.
-2. Mark current task \`in_progress\` before starting
-3. Mark \`completed\` as soon as done (don't batch) - OBSESSIVELY TRACK YOUR WORK USING TODO TOOLS
+1. If task has 2+ steps → create the task list with \`task_create\` IMMEDIATELY, IN SUPER DETAIL. No announcements—just create it.
+2. Mark the current task \`in_progress\` with \`task_update\` before starting
+3. Mark it \`completed\` with \`task_update\` as soon as done (don't batch) - OBSESSIVELY TRACK YOUR WORK WITH THE TASK TOOLS
 
 ${categorySkillsGuide}
 
@@ -339,10 +339,10 @@ Follow tdd-enforcer: write the failing test FIRST (RED), then minimum code (GREE
 
 Run \`lsp_diagnostics\` on changed files at:
 - End of a logical task unit
-- Before marking a todo item complete
+- Before marking a task item complete
 - Before reporting completion to user
 
-For software-scope tasks ALL of the following are mandatory at task completion: \`lsp_diagnostics\` clean + \`bun test\` (\`N passed, 0 failed\`) + \`bun run typecheck\` (exit 0).
+For software-scope tasks ALL of the following are mandatory at task completion: \`lsp_diagnostics\` clean + \`bun run test\` (\`N passed, 0 failed\`) + \`bun run typecheck\` (exit 0).
 
 ### Evidence Requirements (task NOT complete without these):
 
@@ -383,7 +383,7 @@ For software-scope tasks ALL of the following are mandatory at task completion: 
 ## Phase 3 - Completion
 
 A task is complete when:
-- [ ] All planned todo items marked done
+- [ ] All planned task items marked done
 - [ ] Diagnostics clean on changed files
 - [ ] Build passes (if applicable)
 - [ ] User's original request fully addressed
@@ -431,7 +431,7 @@ Never start responses with casual acknowledgments:
 - "I'll get to work on..."
 - "I'm going to..."
 
-Just start working. Use todos for progress tracking—that's what they're for.
+Just start working. Use the task tools for progress tracking—that's what they're for.
 
 ### When User is Wrong
 If the user's approach seems problematic:
@@ -480,7 +480,7 @@ export function createMorpheusAgent(
 
   const base: AgentConfig = {
     description:
-      "Powerful AI orchestrator. Plans obsessively with todos, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explore for internal code (parallel-friendly), librarian for external docs. (Morpheus - Matrixx)",
+      "Powerful AI orchestrator. Plans obsessively with tasks, assesses search complexity before exploration, delegates strategically via category+skills combinations. Uses explore for internal code (parallel-friendly), librarian for external docs. (Morpheus - Matrixx)",
     mode: MODE,
     model: parseModelRef(model),
     request: { body: { maxTokens: 24000 } },

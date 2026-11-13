@@ -1,6 +1,6 @@
 # Matrixx Orchestration
 
-**Version:** 1.4.0 · **Audience:** users running multi-step work and engineers extending the workflow.
+**Audience:** users running multi-step work and engineers extending the workflow.
 **Canonical entry point for understanding orchestration.**
 If you read one orchestration doc, read this one.
 **See also:** `agents.md` (the roster), `task-system.md` (execution state), `command-reference.md` (`/start-work`, `/matrix-loop`), `category-skill-guide.md` (categories × skills).
@@ -94,7 +94,7 @@ plan" when ready; Oracle asks questions until then.
 
 ### Seraph: the gap analyzer (mandatory)
 
-Before Oracle writes the plan, Seraph (`src/agents/seraph.ts`) catches what
+Before Oracle writes the plan, Seraph (`src/agents/definitions/seraph.ts`) catches what
 Oracle missed: hidden intent, ambiguities, over-engineering, missing
 acceptance criteria, unaddressed edge cases. The plan author makes
 connections that never reach the page. Seraph forces that implicit
@@ -102,7 +102,7 @@ knowledge out into the open.
 
 ### Smith: the reviewer (high-accuracy mode)
 
-When you ask for high accuracy, Smith (`src/agents/smith.ts`) validates the
+When you ask for high accuracy, Smith (`src/agents/definitions/smith.ts`) validates the
 plan against four criteria: clarity (where to find implementation details),
 verification (concrete, measurable acceptance criteria), context (enough to
 proceed without guessing about business logic), and big picture (purpose and
@@ -187,9 +187,7 @@ Wave 2 tasks declare `blockedBy: [Wave 1 ids]` and become runnable when
 are project-scoped by default and survive `/clear` and restarts, unlike
 ephemeral session todos.
 
-While incomplete tasks remain, agents keep working them through `task_list` and `task_update`. The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. BackgroundManager.handleEvent now delivers a native-wake session.prompt to the parent session on all 4 terminal events (session.idle, session.error, session.execution.succeeded/failed), reusing buildCompletionNotification ([BACKGROUND TASK ...] / [ALL BACKGROUND TASKS COMPLETE]). Full spec:
-[`docs/task-system.md`](./task-system.md), removal notes in
-[`docs/legacy-todo-migration.md`](./legacy-todo-migration.md).
+While incomplete tasks remain, agents keep working them through `task_list` and `task_update`. The task-continuation-enforcer was removed. The automatic TODO re-prompt on parent idle is gone. Its shared helpers live on at src/features/task-session-scope/staleness.ts and todo.ts. Subagent results are delivered to the parent as completion messages. The orchestrator absorbs each child's completion with `session_read`, and no separate background-manager notification layer exists. Full spec: [`docs/task-system.md`](./task-system.md).
 
 ### Wisdom accumulation
 
@@ -244,7 +242,7 @@ change, and should be handled as a follow-up.
 
 ### Mouse: the task executor
 
-Mouse (`src/agents/mouse/`) is the workhorse that writes code. It receives
+Mouse (`src/agents/definitions/mouse/`) is the workhorse that writes code. It receives
 detailed prompts (the 7-section format: TASK, EXPECTED OUTCOME, REQUIRED
 SKILLS, REQUIRED TOOLS, MUST DO, MUST NOT DO, CONTEXT plus wisdom), tracks
 its own todos obsessively, and must pass `lsp_diagnostics` before marking

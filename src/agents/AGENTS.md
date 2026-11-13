@@ -58,20 +58,20 @@ agents/
 
 | Agent | Model | Temp | Fallback Chain | Cost |
 |-------|-------|------|----------------|------|
-| Morpheus | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Keymaker | gpt-5.3-codex | 0.1 | gpt-5.2 (requires openai/github-copilot/venice/opencode) | EXPENSIVE |
-| Seraph | <provider>/<model> | 0.3 | <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Oracle | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Niobe | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Cipher | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Sentinel | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Merovingian | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Smith | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Construct | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Sati | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> | EXPENSIVE |
-| Mouse | <provider>/<model> | 0.1 | (user-configurable via tier) | EXPENSIVE |
-| Trinity | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> | CHEAP |
-| Operator | <provider>/<model> | 0.1 | <provider>/<model> → <provider>/<model> → <provider>/<model> | CHEAP |
+| Morpheus | claude-opus-4-6 (max) | 0.1 | claude-opus-4-6 → claude-sonnet-4-6 | EXPENSIVE |
+| Keymaker | claude-opus-4-6 (max) | 0.1 | claude-opus-4-6 → claude-sonnet-4-6 | EXPENSIVE |
+| Seraph | claude-opus-4-6 (max) | 0.3 | claude-opus-4-6 → claude-sonnet-4-6 | EXPENSIVE |
+| Oracle | claude-opus-4-6 (max) | 0.1 | claude-opus-4-6 → claude-sonnet-4-6 | EXPENSIVE |
+| Niobe | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-haiku-4-5 | EXPENSIVE |
+| Cipher | claude-opus-4-6 (max) | 0.1 | claude-opus-4-6 → claude-sonnet-4-6 | EXPENSIVE |
+| Sentinel | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-opus-4-6 | EXPENSIVE |
+| Merovingian | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-opus-4-6 | EXPENSIVE |
+| Smith | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-opus-4-6 | EXPENSIVE |
+| Construct | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-opus-4-6 | EXPENSIVE |
+| Sati | claude-sonnet-4-6 | 0.1 | claude-sonnet-4-6 → claude-opus-4-6 | EXPENSIVE |
+| Mouse | per category tier (see `DEFAULT_CATEGORY_MODEL_REQUIREMENTS`) | 0.1 | per category | EXPENSIVE |
+| Trinity | claude-haiku-4-5 | 0.1 | claude-haiku-4-5 → claude-sonnet-4-6 | CHEAP |
+| Operator | claude-haiku-4-5 | 0.1 | claude-haiku-4-5 → claude-sonnet-4-6 | CHEAP |
 
 ## TOOL RESTRICTIONS
 

@@ -1,6 +1,6 @@
 # Installation
 
-> **Audience:** new users (humans and LLM agents). **Version:** 1.2.1.
+> **Audience:** new users (humans and LLM agents).
 > **See also:** `overview.md` (what you get), `../cli-guide.md` (`doctor`, `install --no-tui`), `../configurations.md` (post-install tuning).
 
 ## Prerequisites
@@ -8,7 +8,7 @@
 | Requirement | Version | Install |
 |-------------|---------|---------|
 | **Bun** | 1.4.4 | https://bun.sh — `curl -fsSL https://bun.sh/install | bash` |
-| **OpenCode** | ≥ 1.0.150 | https://opencode.ai/docs — `curl -fsSL https://opencode.ai/install | bash` |
+| **OpenCode** | v2 (≥ 1.0.150) | https://opencode.ai/docs — `curl -fsSL https://opencode.ai/install | bash` |
 | **Node.js** | ≥ 18 | https://nodejs.org |
 | **Git** | any | — |
 

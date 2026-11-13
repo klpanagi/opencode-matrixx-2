@@ -50,7 +50,7 @@ Mandatory RED-GREEN-REFACTOR cycle:
 - REFACTOR: clean up; tests stay green throughout.
 
 Every test uses //#given (setup), //#when (action), //#then (assert) markers.
-Verify with \`bun test\` (0 failures) before reporting done.
+Verify with \`bun run test\` (0 failures) before reporting done.
 </TDD_Test_First>`
 
 /**

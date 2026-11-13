@@ -2,14 +2,14 @@
 
 # Matrixx
 
-[![npm](https://img.shields.io/npm/v/opencode-matrixx.svg)](https://www.npmjs.com/package/opencode-matrixx)
+[![npm](https://img.shields.io/npm/v/opencode-matrixx-v2.svg)](https://www.npmjs.com/package/opencode-matrixx-v2)
 [![License: SUL-1.0](https://img.shields.io/badge/license-SUL--1.0-blue.svg)](https://github.com/klpanagi/opencode-matrixx-2/blob/dev/LICENSE.md)
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
 **13 core agents + 8 category workers. 59 hook names. 30 tool dirs. 70 skills. 23 commands. One plugin.**
 
-> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. Current release: `1.4.0`.
+> **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. See [package.json](package.json) for the current version.
 
 [Quick Start](#quick-start) · [Why Matrixx?](#why-matrixx) · [How It Works](#how-it-works) · [Features](#features) · [Comparison](#how-matrixx-compares) · [Docs](docs/README.md)
 
@@ -38,7 +38,7 @@ Morpheus                    → Plans the implementation
 |----------------------------------|-------------------|
 | One model does everything averagely | **13 specialists** — orchestration, planning, implementation, security, frontend, DSL, research, search |
 | Agent forgets what it was doing after `/clear` | **Persistent tasks** — file-backed `.matrixx/tasks`, survives compaction and restarts |
-| Slow sequential tool calls | **Parallel background agents** — 5+ running simultaneously, optional tmux visibility |
+| Slow sequential tool calls | **Parallel subagents** — 5+ running simultaneously, optional tmux visibility |
 | AI code looks like AI code | **Quality gates** — comment checking, TDD/BDD pipeline, 6-agent review |
 | Context window fills up fast | **5-layer context stack** — native recovery + RTK + context-mode + DCP + Headroom |
 | Fragile refactoring | **Deterministic tools** — LSP (goto-def, rename, diagnostics) + AST-Grep (structural search & replace) |
@@ -52,7 +52,7 @@ Morpheus                    → Plans the implementation
 
 Matrixx is a plugin for OpenCode. Install it, and OpenCode gains a 3-tier runtime:
 
-1. **Orchestrator (Morpheus)** — sees your request, builds a task list, and delegates. Fires background agents in parallel instead of doing everything inline.
+1. **Orchestrator (Morpheus)** — sees your request, builds a task list, and delegates. Fires subagents in parallel instead of doing everything inline.
 2. **Specialists** — plan (Oracle), implement (Keymaker/Mouse), audit (Sentinel), design UI (Sati), research docs and OSS (Operator), search code (Trinity), design languages (Cipher), validate plans (Smith, Seraph, Merovingian).
 3. **Substrate** — file-backed tasks, lifecycle hooks, skills, and context compression keep work moving across sessions.
 
@@ -76,14 +76,14 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 
 | Area | What you get | Details |
 |------|--------------|---------|
-| **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel background execution | [Agents](docs/agents.md) |
+| **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel subagent execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
-| **Lifecycle Hooks (65-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
-| **Skills (70)** | DSL engineering (11), security (9), frontend (7), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
+| **Lifecycle Hooks (59-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
+| **Skills (70)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
 | **Software Dev Pipeline** | 6-phase PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP with 5 team roles, adaptive to task size | [Quality](docs/quality.md) |
 | **Context Management (L0–L4)** | Native recovery + RTK (60–90% bash savings) + context-mode sandbox + DCP pruning + Headroom proxy (60–95% JSON) | [Context](docs/context-management.md) |
 | **Security** | Secret-leak guard (gitleaks), env-file write guard, read-only Sentinel auditor with CWE-rated findings | [Hooks](docs/hooks.md) · [Agents](docs/agents.md) |
-| **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, Exa web search, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
+| **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, native `websearch`, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
 | **Configurability** | Every agent, model, temperature, and hook tunable via `matrixx.jsonc` with JSON schema + Config Studio UI | [Configuration](docs/configurations.md) |
 
 Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **70 skills** (`BuiltinSkillNameSchema`), **59 hook names** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 11 retained-deprecated no-op literals and 1 alias are included), **23 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **30 tool directories**, and **19 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
@@ -117,7 +117,7 @@ Matrixx now ships an **opt-in session memory** (native port of [opencode-lcm](ht
 
 ## Quick Start
 
-**Prerequisites:** Bun 1.4.4 · OpenCode ≥ 1.0.150
+**Prerequisites:** Bun 1.4.4 · OpenCode v2 (≥ 1.0.150)
 
 ```bash
 bunx opencode-matrixx-v2 install
@@ -166,7 +166,7 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 
 | Tool | Approach | Where Matrixx differs |
 |------|----------|-----------------------|
-| **Vanilla OpenCode** | Single powerful agent + tools | Matrixx adds the team layer: specialists, persistent tasks, 65 lifecycle hooks, skills, and context compression. Same base, orchestrated. |
+| **Vanilla OpenCode** | Single powerful agent + tools | Matrixx adds the team layer: specialists, persistent tasks, 59 lifecycle hooks, skills, and context compression. Same base, orchestrated. |
 | **Claude Code** | Polished single-vendor agent (Anthropic models) | Matrixx is provider-agnostic and multi-model by design — mix Claude, OpenAI, Gemini, local models per role instead of one vendor. More setup, more control. |
 | **Cursor / Windsurf** | IDE-integrated agent with proprietary models | Matrixx lives in the terminal (OpenCode TUI), is fully open and configurable, and exposes its orchestration as code. No IDE lock-in, no black-box model routing. |
 | **Cline / Roo Code** | IDE-based autonomous agents, mode switching | Similar autonomy ethos; Matrixx goes further on parallelism (background swarms), persistent cross-session tasks, and deterministic refactoring tools (LSP/AST-Grep). |

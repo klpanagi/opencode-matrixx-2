@@ -16,10 +16,10 @@ src/
 ├── cli/                              # CLI installer, doctor (27 files, no per-area AGENTS.md)
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Commands, task storage, mission/plan state (19 dirs) — see features/AGENTS.md
-├── hooks/                            # Leaf hook domains (HookNameSchema 60 enum + 10 no-op literals + 1 alias) — see hooks/AGENTS.md
+├── hooks/                            # Leaf hook domains (HookNameSchema 59 enum + 11 no-op literals + 1 alias) — see hooks/AGENTS.md
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
-├── shared/                           # Cross-cutting utilities (128 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
+├── shared/                           # Cross-cutting utilities (129 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
 ├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
 └── tools/                            # tool dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guard stubs, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```

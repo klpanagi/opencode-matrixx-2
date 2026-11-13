@@ -366,7 +366,7 @@ managed exclusively through \`plan_create\` / \`plan_update\`.
   - Edge cases unaddressed: [edge case + handling, or N/A]
 - **Resolutions**: [gap 1]: [how resolved]; [default 1]: [what was assumed + rationale]
 - **Test Strategy Decision**: [infrastructure YES/NO; automated tests TDD/after/none; Agent-Executed QA ALWAYS]
-- **Ledger pointer**: progress tracked at \`.matrixx/evidence/{plan}/progress.md\` via plan_*/task_* tools only (never shell-redirect writes)
+- **Progress tracking**: record phase progress in the plan checkboxes via \`plan_update\` and per-task state via \`task_update\`/\`task_create\`.
  - **SHIP pattern**: BUILD runs in an isolated worktree (\`worktree_create\` + \`session_move\`; CLI \`git worktree add\` fallback only), SHIP merges from it; PR targets dev, never master; merge commit ONLY, never squash
 \`\`\`
 
@@ -393,7 +393,7 @@ Precedent for this format — DEFAULTS A1/A2/A3: additive-optional Wave 1 (ratio
   - A recommended approach with evidence (file paths, doc links, prototype output)
   - Proof the question is undecidable from available evidence → escalate to the user with exactly two options and a recommendation
   - Time-box expiry → synthesize best-available evidence, record the residual uncertainty as an UNVERIFIED CLAIM, proceed
-- **Record**: log the Spike (question, time-box, outcome) in the draft Interview Summary and as a ledger entry at \`.matrixx/evidence/{plan}/progress.md\` via plan_*/task_* tools.
+- **Record**: log the Spike (question, time-box, outcome) in the draft Interview Summary and in the task notes via \`task_update\`.
 
 **Verification for ALL of the above is agent-executed**: the executing agent runs commands (rg, bun test, curl, Playwright) and captures evidence. Never write acceptance that requires a human to confirm, review output by eye, or interact with the deliverable.
 

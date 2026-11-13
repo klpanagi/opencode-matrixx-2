@@ -46,11 +46,11 @@ Before GREEN:
   IF NO → Fix the test. Do not proceed.
 
 Before REFACTOR:
-  "Does bun test pass with 0 failures?"
+  "Does bun run test pass with 0 failures?"
   IF NO → Fix the implementation. Do not proceed.
 
 Before marking task DONE:
-  "Does bun test pass with 0 failures?"
+  "Does bun run test pass with 0 failures?"
   "Have I written tests for EVERY change I made?"
   IF EITHER IS NO → STOP. Fix it. Do not report done.
 \`\`\`
@@ -99,7 +99,7 @@ test("creates task with required subject field", async () => {
 import { describe, test, expect, beforeEach, afterEach } from "bun:test"
 
 // Import the unit under test
-import { createMyThing } from "./my-thing"
+import { createMyThing } from "../../../src/foo/my-thing"
 
 describe("createMyThing", () => {
   let thing: ReturnType<typeof createMyThing>
@@ -203,7 +203,7 @@ test("hook injects env var when git command detected", async () => {
 ### Refactoring
 1. Confirm existing test coverage before touching anything
 2. If coverage is thin → **write tests first**, then refactor (RED-GREEN-REFACTOR still applies)
-3. Run \`bun test\` after EACH refactoring step — not just at the end
+3. Run \`bun run test\` after EACH refactoring step — not just at the end
 4. Refactoring is complete only when: same behavior, tests pass, code is cleaner
 
 ---
@@ -244,13 +244,13 @@ afterEach(() => {
 Every implementation task requires this evidence before reporting done:
 
 \`\`\`
-bun test                   → Must show: X tests passed, 0 failed
+bun run test              → Must show: X tests passed, 0 failed
 bun run typecheck          → Must show: exit code 0, no errors
 \`\`\`
 
 **How to report:**
 \`\`\`
-✅ bun test — 42 tests passed, 0 failed (3.2s)
+✅ bun run test — 42 tests passed, 0 failed (3.2s)
 ✅ bun run typecheck — no errors
 \`\`\`
 
@@ -273,7 +273,7 @@ If ANY verification fails:
 | Write empty test body | Provides false confidence | Write real assertions |
 | Only mock everything | Tests prove the mock works, not the code | Use real deps where feasible |
 | Only happy-path tests | Errors happen in production | Add error/edge case tests |
-| Run \`bun test\` once at the very end | Bugs compound | Run after each GREEN step |
+| Run \`bun run test\` once at the very end | Bugs compound | Run after each GREEN step |
 | "Tests are for later" | Later never comes | Test-first, always |
 | Separate test commit from impl commit | Breaks bisect, breaks CI | Same commit always |
 </critical_warning>
@@ -299,7 +299,7 @@ Before marking any task complete, verify each item:
 
 **For every commit:**
 - [ ] Test file included in same commit as implementation file
-- [ ] \`bun test\` passes with 0 failures
+- [ ] \`bun run test\` passes with 0 failures
 - [ ] \`bun run typecheck\` passes with 0 errors
 
 ---
@@ -310,7 +310,7 @@ Before marking any task complete, verify each item:
 NEVER write implementation code without a preceding failing test
 NEVER delete or skip a failing test — fix the code instead
 NEVER commit implementation without the corresponding test file
-NEVER report a task done without running bun test to confirm 0 failures
+NEVER report a task done without running bun run test to confirm 0 failures
 NEVER use @ts-ignore or as any to suppress type errors in test files
 NEVER write tests AFTER implementation — write them BEFORE
 \`\`\`

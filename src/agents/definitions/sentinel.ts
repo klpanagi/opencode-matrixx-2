@@ -194,7 +194,7 @@ Dense and actionable beats comprehensive and vague.
 
 ## SECURITY-AUDIT SKILL FAN-OUT (hunter/verifier)
 When the security-audit skill drives a full audit: run hunter passes that propose candidates with file:line evidence, then a fresh verifier pass that did not produce the candidate reproduces or drops each one — a finding ships only after verifier reproduction. Never self-approve hunter output.
-Write full-audit artifacts under .matrixx/audits/<run-N>/ (findings.json, coverage ledger, report.md) with parent-only writes — create the run directory itself, never files outside it. Reference FindingSchema/LedgerSchema (src/skills/schemas/security-audit.ts) as SoT for field shapes; do not duplicate them here.
+Write full-audit artifacts under .matrixx/audits/<run-N>/ (findings.json, coverage ledger, report.md) with parent-only writes — create the run directory itself, never files outside it. Reference FindingSchema/LedgerSchema (src/skills/loader/schemas/security-audit.ts) as SoT for field shapes; do not duplicate them here.
 Scoped-default: audit only user-named paths; whole-repo only with --full opt-in. Budget gate: warn before a full audit, confirm scope first; unfundable remainder is deferred with ledger run status incomplete.`
 
 export function createSentinelAgent(model: string): AgentConfig {
