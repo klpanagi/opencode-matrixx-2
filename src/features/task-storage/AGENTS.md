@@ -6,7 +6,7 @@ Claude Code compatible task schema and storage. Core task management with file-b
 
 ## STORAGE SCOPE
 
-Hybrid layout selected by `morpheus.tasks.scope` (default `project`) and resolved via `getTaskDir(config, directory?)`.
+The task system itself is unconditional (no feature gate; `tasks.enabled` is ignored). What is configurable is only the storage SCOPE: `morpheus.tasks.scope` (default `project`) and `storage_path`, resolved via `getTaskDir(config, directory?)`.
 
 | scope | Path | Example |
 |-------|------|---------|

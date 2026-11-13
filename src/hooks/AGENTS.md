@@ -29,7 +29,7 @@ hooks/
 ├── oracle-md-only/           # Planner read-only mode
 ├── quality-gate/                 # Post-task quality verification
 ├── matrix-loop/                   # Self-referential dev loop
-├── rules-injector/               # Conditional .morpheus/rules injection
+├── rules-injector/               # Conditional .matrixx/rules injection
 ├── session-notification.ts       # OS idle notifications
 ├── session-recovery/             # Auto-recovers from crashes
 ├── mouse-notepad/      # Junior notepad directive
@@ -49,10 +49,10 @@ hooks/
 
 | Event | Hook Method | Can Block | Count |
 |-------|-------------|-----------|-------|
-| UserPromptSubmit | `chat.message` | Yes | 4 |
+| UserPromptSubmit | `chat.message` | Yes | 7 |
 | ChatParams | `chat.params` | No | 2 |
-| PreToolUse | `tool.execute.before` | Yes | 14 |
-| PostToolUse | `tool.execute.after` | No | 18 |
+| PreToolUse | `tool.execute.before` | Yes | 20 |
+| PostToolUse | `tool.execute.after` | No | 20 |
 | SessionEvent | `event` | No | 17 |
 | MessagesTransform | `experimental.chat.messages.transform` | No | 1 |
 | Compaction | `onSummarize` | No | 1 |
@@ -65,13 +65,13 @@ hooks/
 | context-mode-enforcer | tool.execute.before | Conditional, only under `enforce`: `grep`/`glob` and `webfetch` blocked when `hasWorkingSubstitute()` is true (use `ctx_search` / `ctx_index then ctx_search`); fetch-shaped `bash` blocked only when `bash` is also in `blockedTools`; `read` is warn-only and never throws. Non-enforce mode only attaches `output.message`, and a per-session throttle (`guidance-throttle.ts`) shows each guidance once per session |
 | keyword-detector | chat.message | Keyword injection fails |
 | non-interactive-env | tool.execute.before | Interactive command in non-TTY |
-| oracle-md-only | tool.execute.before | Write outside .morpheus/*.md |
+| oracle-md-only | tool.execute.before | Write outside .matrixx/*.md |
 | task-edit-guard | tool.execute.before | Raw bash mutation of `.matrixx/plans/*.md` or `.matrixx/tasks/T-*.json` — use `plan_*` or `task_*` tools; generic Write/Edit to plans BLOCKED with plan_* hint |
 | write-existing-file-guard | tool.execute.before | Write to existing file |
 
 ## EXECUTION ORDER
 
-**UserPromptSubmit**: keywordDetector → autoSlashCommand → startWork
+**UserPromptSubmit**: inputSecretGuard → stopContinuationGuard → keywordDetector → autoSlashCommand → startWork → designIntentPreserver → runtimeFallback
 **PreToolUse**: nonInteractiveEnv → commentChecker → directoryAgentsInjector → rulesInjector → oracleMdOnly → contextModeEnforcer (fail-fast wave, after oracleMdOnly) → mouseNotepad → writeExistingFileGuard → niobeHook
 **PostToolUse**: toolOutputTruncator → contextWindowMonitor → commentChecker → directoryAgentsInjector → rulesInjector → emptyTaskResponseDetector → agentUsageReminder → interactiveBashSession → editErrorRecovery → niobeHook → taskResumeInfo
 

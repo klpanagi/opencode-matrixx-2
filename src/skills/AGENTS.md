@@ -49,7 +49,7 @@ skills/
 | `skills/builtin/market-data/` | 10 | 10 + `index.ts` | Market-data pipeline skills |
 | `skills/builtin/security/` | 10 | 10 + `index.ts` | Security review/audit skills |
 | `skills/builtin/zeromq/` | 7 | 7 + `index.ts` | ZeroMQ messaging skills |
-| **Total** | **70** | **69 + 7 `index.ts`** | |
+| **Total** | **70** | **75 non-index + 10 `index.ts` (85 `.ts` in `builtin/`; 93 `.ts` in `skills/` incl. `loader/`)** | |
 
 Each category dir has an `index.ts` that re-exports its skill objects (e.g. `export { bddBackendSkill, BDD_BACKEND_SKILL_NAME } from "./bdd-backend"`). The root `skills/index.ts` re-exports everything for type-level access only — runtime template loading goes through `createBuiltinSkills()`, never through direct imports.
 

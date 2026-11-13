@@ -18,6 +18,8 @@ mcps/
 ├── mcp-startup-state.ts  # Startup notice state
 ├── mcp.transform.ts      # MCP entry assembly
 ├── mcp-validator.ts      # MCP config validation
+├── context7-health.ts  # Context7 missing-API-key health notice
+├── tool-names.ts       # Canonical builtin MCP tool names (single source of truth)
 └── types.ts           # McpNameSchema
 ```
 

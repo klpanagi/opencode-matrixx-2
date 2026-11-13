@@ -12,14 +12,14 @@ src/
 ├── tool-entry.ts                     # Side-effect-free bench/sandbox entry (not the plugin entry)
 ├── plugin-config.ts                  # Config loading orchestration (user + project merge)
 ├── plugin-state.ts                   # Model cache state (context limits)
-├── agents/                           # 13 core agents + 8 mouse-* workers (53 files) — see agents/AGENTS.md
+├── agents/                           # 13 core agents + 8 mouse-* workers (52 files) — see agents/AGENTS.md
 ├── cli/                              # CLI installer, doctor (27 files, no per-area AGENTS.md)
 ├── config/                           # Zod schema — see config/AGENTS.md
 ├── features/                         # Commands, task storage, mission/plan state (19 dirs) — see features/AGENTS.md
 ├── hooks/                            # Leaf hook domains (HookNameSchema 59 enum + 11 no-op literals + 1 alias) — see hooks/AGENTS.md
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
-├── shared/                           # Cross-cutting utilities (129 files, 12 scopes + 5 legacy) — see shared/AGENTS.md
+├── shared/                           # Cross-cutting utilities (128 files, 12 scopes + 4 legacy subdirs + migration/) — see shared/AGENTS.md
 ├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
 └── tools/                            # tool dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guard stubs, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```
