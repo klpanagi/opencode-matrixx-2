@@ -14,9 +14,7 @@ export const qualityGateSkill: BuiltinSkill = {
 
 Every code change (write, edit, refactor) MUST be verified before marking complete.
 
-**Formatting is applied by OpenCode's native formatter pipeline; the quality-gate hook itself runs no checks.** Lint warnings still appear in tool output when present. Address them.
-
-But the hook only covers linting. YOU must run the full verification suite.
+**The quality-gate hook is advisory: it performs no checks and blocks nothing.** Formatting is applied by OpenCode's native formatter pipeline. YOU must run the full verification suite below.
 
 ---
 
@@ -39,7 +37,7 @@ Must exit 0 with no errors. Never suppress with \`as any\` or \`@ts-ignore\`.
 
 ### 3. Tests
 \`\`\`bash
-bun test              # All tests must pass
+bun run test          # All tests must pass
 \`\`\`
 If you changed behavior, write/update tests FIRST (see tdd-enforcer skill).
 
@@ -57,7 +55,7 @@ Report verification results as:
 \`\`\`
 ✅ bun run lint — 0 issues
 ✅ bun run typecheck — no errors
-✅ bun test — 42 passed, 0 failed (3.2s)
+✅ bun run test — 42 passed, 0 failed (3.2s)
 ✅ bun run build — success
 \`\`\`
 
@@ -71,10 +69,10 @@ If ANY step fails:
 
 ## HOOK BEHAVIOR
 
-The quality-gate hook is a pure non-blocking check (D2):
+The quality-gate hook is advisory only:
+- It runs no checks and never halts tool execution
 - Formatting is owned by OpenCode's native formatter pipeline — no double-format
-- Verification policy (not a running task): bun run lint / typecheck / test / build
-- Never halts tool execution; never starts child processes or timers
+- Verification is performed by YOU, using the checklist above
 
 Run \`bun run lint:fix\` to auto-fix, or address issues manually.
 Fix these inline when possible. For bulk fixes, run \`bun run lint:fix\`.
@@ -93,8 +91,8 @@ Never verify a subset and claim the whole change is green.
 
 ### Step 2: RUN - execute the full check suite
 
-Run all four checks in one pass, in checklist order:
-bun run lint && bun run typecheck && bun test && bun run build
+Run the full CI suite in one pass:
+bun run test   # = script/run-ci.sh: install + lint + typecheck + isolated tests + build
 Do not stop at the first green - run everything before judging.
 
 ### Step 3: READ - read the output, do not skim it
@@ -114,7 +112,7 @@ Report evidence using the exact phrases from the EVIDENCE FORMAT section
 
 ✅ bun run lint — 0 issues
 ✅ bun run typecheck — no errors
-✅ bun test — N passed, 0 failed
+✅ bun run test — N passed, 0 failed
 ✅ bun run build — success
 
 If ANY step fails: STOP. Do not report done. Fix the failure, then re-run

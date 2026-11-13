@@ -9,15 +9,14 @@ describe("Oracle interview Seraph handoff artifact (Item 8)", () => {
   test("handoff artifact template present with lossless fields", () => {
     //#given the Oracle interview-mode prompt
     //#when scanned for the handoff artifact
-    //#then goal, decisions, gaps, resolutions, and ledger pointer all present
+    //#then goal, decisions, gaps, resolutions, and progress mechanism all present
     expect(ORACLE_INTERVIEW_MODE).toMatch(/Seraph Handoff/i)
     expect(ORACLE_INTERVIEW_MODE).toMatch(/\*\*Goal\*\*|^- Goal:/im)
     expect(ORACLE_INTERVIEW_MODE).toMatch(/Key Discussions/)
     expect(ORACLE_INTERVIEW_MODE).toMatch(/Gaps caught/i)
     expect(ORACLE_INTERVIEW_MODE).toMatch(/Resolutions/)
-    expect(ORACLE_INTERVIEW_MODE).toMatch(
-      /\.matrixx\/evidence\/\{plan\}\/progress\.md/,
-    )
+    expect(ORACLE_INTERVIEW_MODE).toMatch(/plan_update/)
+    expect(ORACLE_INTERVIEW_MODE).toMatch(/task_update/)
   })
 
   test("artifact fields mirror Seraph gap categories", () => {

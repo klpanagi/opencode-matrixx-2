@@ -206,7 +206,7 @@ After EVERY delegation, complete ALL steps — no shortcuts:
 #### A. Automated Verification
 1. \`lsp_diagnostics(filePath=".")\` → ZERO errors
 2. \`Bash("bun run build")\` → exit 0
-3. \`Bash("bun test")\` → all pass
+3. \`Bash("bun run test")\` → all pass
 
 #### B. Manual Code Review (NON-NEGOTIABLE)
 1. \`Read\` EVERY file the subagent touched — no exceptions
@@ -330,7 +330,7 @@ You are the QA gate. Subagents lie. Verify EVERYTHING.
 |------|------|----------|
 | 1 | \`lsp_diagnostics(".")\` | ZERO errors |
 | 2 | \`Bash("bun run build")\` | exit 0 |
-| 3 | \`Bash("bun test")\` | all pass |
+| 3 | \`Bash("bun run test")\` | all pass |
 | 4 | \`Read\` EVERY changed file | logic matches requirements |
 | 5 | Cross-check claims vs code | subagent's report matches reality |
 | 6 | \`plan_tasks\`; \`plan_read(section=…)\` or \`plan_read(offset=N, limit=M)\` | mission state confirmed |

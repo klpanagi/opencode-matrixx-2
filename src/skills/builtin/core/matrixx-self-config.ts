@@ -44,7 +44,7 @@ These are the most commonly edited configuration keys in \`matrixx.jsonc\`:
 
 | Key | Purpose | Example |
 |-----|---------|---------|
-| \`profile\` | Set model lineup for all agents | \`"balanced"\` |
+| \`active_preset\` | Select a named model preset for all agents | \`"balanced"\` |
 | \`agents.{name}.model\` | Override a specific agent's model | \`"claude-opus-4-6"\` |
 | \`agents.{name}.request.body.temperature\` | Adjust agent creativity | \`0.1\` |
 | \`agents.{name}.system_append\` | Add persistent instructions | \`"Always write tests"\` |
@@ -52,10 +52,10 @@ These are the most commonly edited configuration keys in \`matrixx.jsonc\`:
 | \`agents.{name}.disabled\` | Disable a specific agent | \`true\` |
 | \`disabled_hooks\` | Disable specific hooks | \`["comment-checker"]\` |
 | \`disabled_skills\` | Disable specific skills | \`["dsl-core"]\` |
-| \`disabled_mcps\` | Disable specific MCPs | \`["websearch"]\` |
+| \`disabled_mcps\` | Disable specific MCPs | \`["context7"]\` |
 | \`disabled_agents\` | Disable entire agents | \`["cipher"]\` |
 | \`disabled_commands\` | Disable commands | \`["refactor"]\` |
-| \`disabled_tools\` | Disable tools | \`["ast-grep-replace"]\` |
+| \`disabled_tools\` | Disable tools | \`["ast_grep_replace"]\` |
 | \`skills\` | Skill-level config | \`{ "git-master": { ... } }\` |
 | \`matrix_loop.enabled\` | Enable matrix loop | \`true\` |
 | \`tmux.enabled\` | Enable tmux sessions | \`true\` |

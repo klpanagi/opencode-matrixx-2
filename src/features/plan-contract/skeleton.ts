@@ -17,10 +17,10 @@ const TASK_TRAILER = `  **Commit**: YES | NO (groups with N)
   - Files: \`path/to/file\`
   - Pre-commit: \`test command\``
 
-/** Pointer to the externalized QA scenario guidance (docs/plan-qa-scenarios.md). */
+/** Pointer to the externalized QA scenario guidance (docs/quality.md). */
 const QA_SCENARIO_REFERENCE = `### Agent-Executed QA Scenarios (MANDATORY — ALL tasks)
 
-> Full scenario format, per-deliverable verification tools, and evidence rules: docs/plan-qa-scenarios.md.
+> Full scenario format, per-deliverable verification tools, and evidence rules: docs/quality.md ("Agent-Executed QA Scenarios").
 > Every task still needs Agent-Executed QA Scenarios (happy path AND at least one negative failure case) with exact tool, steps, preconditions, real selectors/data, failure indicators, and evidence paths.`
 
 const TLDR_BODY = `> **Quick Summary**: [1-2 sentences capturing the core objective and approach]
