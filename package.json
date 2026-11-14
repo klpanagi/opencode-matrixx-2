@@ -42,7 +42,9 @@
     "lint:fix": "biome check --write src/",
     "ci": "bash script/run-ci.sh",
     "test": "bash script/run-ci.sh",
-    "matrixx": "bun run bin/matrixx.ts"
+    "matrixx": "bun run bin/matrixx.ts",
+    "skill:export": "bun script/skill-eval.ts export",
+    "skill:eval": "bun script/skill-eval.ts eval"
   },
   "keywords": [
     "opencode",
