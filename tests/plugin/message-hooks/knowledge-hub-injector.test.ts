@@ -4,11 +4,12 @@ import { tmpdir } from "node:os"
 import * as path from "node:path"
 import { ContextCollector } from "../../../src/features/context-injection/injector"
 import type { LoadedHub } from "../../../src/features/knowledge-hub/loader"
-import type { MatrixxContext } from "../../../src/plugin/tool/context"
+import type { MatrixxContext, V2Event } from "../../../src/plugin/tool/context"
 import {
   _resetKnowledgeHubInjectorForTesting,
   applyKnowledgeHubInjector,
   clearKnowledgeHubSession,
+  handleKnowledgeHubEvent,
   registerKnowledgeHubInjector,
   type FlatMessageHookEvent,
 } from "../../../src/plugin/message-hooks/knowledge-hub-injector"
@@ -193,6 +194,65 @@ describe("knowledgeHubInjector flat port", () => {
     clearKnowledgeHubSession("ses-1", collector)
     await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
     //#then the router registers again
+    expect(collector.hasPending("ses-1")).toBe(true)
+    expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER)
+  })
+
+  test("clearKnowledgeHubSession() with no argument clears every cached session", async () => {
+    //#given two sessions with consumed registrations off one shared collector
+    const root = makeHub({ "_index.md": INDEX_MARKER })
+    const { collector, deps } = hookDeps(root)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-2"), makeCtx(), deps)
+    collector.consume("ses-1")
+    collector.consume("ses-2")
+    //#when clearing every cached session at once
+    clearKnowledgeHubSession(undefined, collector)
+    //#then both collector entries are empty
+    expect(collector.hasPending("ses-1")).toBe(false)
+    expect(collector.hasPending("ses-2")).toBe(false)
+    //#when injecting session one again
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    //#then the router block is emitted again
+    expect(collector.hasPending("ses-1")).toBe(true)
+    expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER)
+  })
+
+  test("session.compacted clears only the target session and re-emits for it", async () => {
+    //#given two sessions with consumed registrations off one shared collector
+    const root = makeHub({ "_index.md": INDEX_MARKER })
+    const { collector, deps } = hookDeps(root)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-2"), makeCtx(), deps)
+    collector.consume("ses-1")
+    collector.consume("ses-2")
+    //#when a session.compacted event arrives for ses-1
+    handleKnowledgeHubEvent({
+      type: "session.compacted",
+      data: { sessionID: "ses-1" },
+    } as unknown as V2Event)
+    //#then a fresh injection for ses-1 re-emits the router block
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    expect(collector.hasPending("ses-1")).toBe(true)
+    expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER)
+    //#then ses-2 stays cached and does not re-emit
+    await applyKnowledgeHubInjector(flatUserEvent("ses-2"), makeCtx(), deps)
+    expect(collector.hasPending("ses-2")).toBe(false)
+  })
+
+  test("session.deleted clears the target session", async () => {
+    //#given a session with a consumed registration
+    const root = makeHub({ "_index.md": INDEX_MARKER })
+    const { collector, deps } = hookDeps(root)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    collector.consume("ses-1")
+    //#when a session.deleted event arrives for ses-1
+    handleKnowledgeHubEvent({
+      type: "session.deleted",
+      data: { info: { id: "ses-1" } },
+    } as unknown as V2Event)
+    //#then a fresh injection re-emits the router block
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
     expect(collector.hasPending("ses-1")).toBe(true)
     expect(collector.consume("ses-1").merged).toContain(INDEX_MARKER)
   })

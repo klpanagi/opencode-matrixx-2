@@ -11,6 +11,7 @@ import { resetMessageCursor } from "../../shared"
 import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import { lspManager } from "../../tools"
+import { handleKnowledgeHubEvent } from "../message-hooks/knowledge-hub-injector"
 import type { DomainHooks, DomainManagers } from "../setup-domains"
 import type { MatrixxContext, V2Event } from "./context"
 import { DEDUPLICATE_WINDOW_MS } from "./event-dispatch"
@@ -38,6 +39,7 @@ export function createEventHandler(args: {
     await Promise.resolve(hooks.contextWindowMonitor?.event?.(event))
     await Promise.resolve(hooks.directoryAgentsInjector?.event?.(event))
     await Promise.resolve(hooks.rulesInjector?.event?.(event))
+    handleKnowledgeHubEvent(event)
     await Promise.resolve(hooks.knowledgeHubInjector?.event?.(event))
     await Promise.resolve(hooks.thinkMode?.event?.(event))
     await Promise.resolve(hooks.contextWindowLimitRecovery?.event?.(event))

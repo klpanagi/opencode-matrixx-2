@@ -7,7 +7,7 @@ import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncato
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { log } from "../../shared/runtime/logger"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"
-import type { MatrixxContext, V2Registration } from "../tool/context"
+import type { MatrixxContext, V2Event, V2Registration } from "../tool/context"
 
 const INDEX_MAX_TOKENS = 6000
 
@@ -28,13 +28,37 @@ export interface KnowledgeHubInjectorDeps {
 const sessionCaches = new Map<string, Set<string>>()
 
 export function _resetKnowledgeHubInjectorForTesting(): void {
-  sessionCaches.clear()
+  clearKnowledgeHubSession()
 }
 
-export function clearKnowledgeHubSession(sessionID: string, collector?: ContextCollector): void {
-  sessionCaches.delete(sessionID)
+export function clearKnowledgeHubSession(sessionID?: string, collector?: ContextCollector): void {
   const target = collector ?? contextCollector
+  if (sessionID === undefined) {
+    for (const cached of sessionCaches.keys()) {
+      target.clear(cached)
+      sessionCaches.delete(cached)
+    }
+    return
+  }
+  sessionCaches.delete(sessionID)
   target.clear(sessionID)
+}
+
+export function handleKnowledgeHubEvent(event: V2Event, _deps: KnowledgeHubInjectorDeps = {}): void {
+  const props = event.data as Record<string, unknown> | undefined
+  if (event.type === "session.deleted") {
+    const sessionInfo = props?.info as { id?: string } | undefined
+    if (sessionInfo?.id) {
+      clearKnowledgeHubSession(sessionInfo.id)
+    }
+  }
+  if (event.type === "session.compacted") {
+    const sessionID = (props?.sessionID ??
+      (props?.info as { id?: string } | undefined)?.id) as string | undefined
+    if (sessionID) {
+      clearKnowledgeHubSession(sessionID)
+    }
+  }
 }
 
 function readQuiet(filePath: string): string | null {
