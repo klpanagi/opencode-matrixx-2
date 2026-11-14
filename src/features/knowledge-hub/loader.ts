@@ -19,10 +19,6 @@ export interface LoadedHub {
   exclude: string[]
 }
 
-// Canonical path expansion for Task 5 to reuse (see TODO in
-// src/hooks/knowledge-hub-injector/hook.ts). Leading `~` maps to
-// os.homedir(); `$VAR` and `${VAR}` expand from process.env with a
-// missing variable expanding to an empty string.
 export function expandHubPath(rawPath: string, projectDir?: string): string {
   let expanded = rawPath
   if (expanded === "~") {

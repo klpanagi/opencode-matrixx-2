@@ -124,7 +124,6 @@ describe("hook registration order golden", () => {
       "input-secret-guard",
       "keyword-detector",
       "domain-keyword-detector",
-      "knowledge-hub-injector",
       "env-context-injector",
       "thinking-block-validator",
       "tool-pair-validator",

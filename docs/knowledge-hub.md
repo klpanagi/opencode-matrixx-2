@@ -136,7 +136,7 @@ denying. Never bypass the guard without asking the user first.
 ### Verification
 
 ```bash
-bun test tests/hooks/knowledge-hub-guard/ tests/hooks/knowledge-hub-injector/
+bun test tests/hooks/knowledge-hub-guard/
 rg knowledge-hub-injector src/plugin/message-hooks/
 ```
 
