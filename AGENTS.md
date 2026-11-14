@@ -274,4 +274,4 @@ Never `bun publish` or bump `package.json` version locally.
 - Local dev state: `.matrixx/` (handoff, notepads, tasks, plans) — gitignored
 - Flaky: `matrix-loop` (timeout), `session-state` (parallel pollution)
 - Sati skills: `frontend-react-nextjs`, `frontend-svelte-sveltekit`, `frontend-a11y`, `frontend-perf`, `frontend-testing`, `frontend-state-data`, `frontend-build-tooling`, `playwright` (8 skills, per `src/agents/definitions/sati.ts`)
-- Knowledge hubs: `docs/knowledge-hub.md` — external KB routing (router index, pinned files, read-only guard)
+- Knowledge hubs: `docs/knowledge-hub.md` — external KB routing (router index, pinned files, best-effort write guard)
