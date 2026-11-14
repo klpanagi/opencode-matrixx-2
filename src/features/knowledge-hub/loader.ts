@@ -19,6 +19,13 @@ export interface LoadedHub {
   exclude: string[]
 }
 
+export function expandEnvVars(rawPath: string): string {
+  return rawPath.replace(/\$(\w+)|\$\{([^}]+)\}/g, (_, name: string, braced: string) => {
+    const key = name ?? braced
+    return process.env[key] ?? ""
+  })
+}
+
 export function expandHubPath(rawPath: string, projectDir?: string): string {
   let expanded = rawPath
   if (expanded === "~") {
@@ -26,10 +33,7 @@ export function expandHubPath(rawPath: string, projectDir?: string): string {
   } else if (expanded.startsWith("~/")) {
     expanded = path.join(os.homedir(), expanded.slice(2))
   }
-  expanded = expanded.replace(/\$(\w+)|\$\{([^}]+)\}/g, (_, name: string, braced: string) => {
-    const key = name ?? braced
-    return process.env[key] ?? ""
-  })
+  expanded = expandEnvVars(expanded)
   if (path.isAbsolute(expanded)) {
     return path.normalize(expanded)
   }

@@ -6,38 +6,24 @@ import type { MatrixxContext } from "../../plugin/tool/context"
 import { isShellTool } from "../../shared/io/shell-tool-name"
 import { log } from "../../shared/runtime/logger"
 import { isHubWriteApproved } from "./approvals"
+import { analyzeBash } from "./bash-analysis"
 
 const HOOK_NAME = "knowledge-hub-guard"
 
-const WRITE_TOOLS = ["write", "edit", "multiedit"]
+const WRITE_TOOLS = ["write", "edit", "multiedit", "ast_grep_replace", "lsp_rename"]
+const AST_GREP_REPLACE_TOOL = "ast_grep_replace"
+const LSP_RENAME_TOOL = "lsp_rename"
+const MAX_MATCHER_CACHE = 256
 
-const DESTRUCTIVE_BASH_RE = /(^|[\s;&|])(rm|rmdir|mv|unlink|shred|tee)\b|sed\s+[^\s;|]*-i|>>?/
-const DELETION_BASH_RE = /(^|[\s;&|])(rm|rmdir|mv|unlink|shred)\b/
-const PATH_LIKE_RE = /[/.~]/
-const FLAG_RE = /^-/
-const VERBS = new Set([
-  "sudo",
-  "rm",
-  "rmdir",
-  "mv",
-  "unlink",
-  "shred",
-  "tee",
-  "sed",
-  "echo",
-  "truncate",
-  "cp",
-  "mkdir",
-  "chmod",
-  "chown",
-  "touch",
-  "printf",
-  "cat",
-])
+const hubMatchers = new Map<string, (value: string) => boolean>()
+
+export function clearHubMatcherCacheForTesting(): void {
+  hubMatchers.clear()
+}
 
 export interface KnowledgeHubGuardOptions {
   hubs?: LoadedHub[]
-  getHubs?: () => LoadedHub[]
+  loadHubs?: () => LoadedHub[]
 }
 
 function resolveTarget(target: string, projectDir: string): string {
@@ -58,38 +44,81 @@ function insideRoot(root: string, candidate: string): boolean {
   return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))
 }
 
+function matcherFor(root: string, pattern: string): (value: string) => boolean {
+  const key = `${root}\u0000${pattern}`
+  const cached = hubMatchers.get(key)
+  if (cached !== undefined) {
+    return cached
+  }
+  const matcher = picomatch(pattern, { dot: true, bash: true })
+  if (hubMatchers.size >= MAX_MATCHER_CACHE) {
+    hubMatchers.clear()
+  }
+  hubMatchers.set(key, matcher)
+  return matcher
+}
+
 function isExcluded(hub: LoadedHub, absPath: string): boolean {
   const rel = path.relative(hub.root, absPath)
   const base = path.basename(absPath)
   return hub.exclude.some((pattern) => {
-    const match = picomatch(pattern, { dot: true, bash: true })
-    return match(rel) || match(absPath) || match(base)
+    const match = matcherFor(hub.root, pattern)
+    if (match(rel) || match(absPath)) {
+      return true
+    }
+    return !pattern.includes("/") && match(base)
   })
+}
+
+function resolveToolTargets(tool: string, args: Record<string, unknown> | undefined, projectDir: string): string[] {
+  if (!args) {
+    return []
+  }
+  const raw: string[] = []
+  if (tool === AST_GREP_REPLACE_TOOL) {
+    const paths = args.paths
+    if (typeof paths === "string" && paths.length > 0) {
+      raw.push(paths)
+    } else if (Array.isArray(paths)) {
+      for (const entry of paths) {
+        if (typeof entry === "string" && entry.length > 0) {
+          raw.push(entry)
+        }
+      }
+    }
+    if (raw.length === 0) {
+      return [path.normalize(projectDir)]
+    }
+  } else if (tool === LSP_RENAME_TOOL) {
+    if (typeof args.filePath === "string" && args.filePath.length > 0) {
+      raw.push(args.filePath)
+    }
+  } else {
+    const filePath = args.filePath ?? args.path ?? args.file ?? args.file_path
+    if (typeof filePath === "string" && filePath.length > 0) {
+      raw.push(filePath)
+    }
+    if (typeof args.rename === "string" && args.rename.length > 0) {
+      raw.push(args.rename)
+    }
+  }
+  return raw.map((target) => resolveTarget(target, projectDir))
 }
 
 export function createKnowledgeHubGuardHook(ctx: MatrixxContext, options: KnowledgeHubGuardOptions = {}) {
   const projectDir = ctx.directory
-  let cached: LoadedHub[] | null = null
-  let warnedOnce = false
 
   const resolveHubs = (): LoadedHub[] => {
-    if (cached !== null) {
-      return cached
-    }
     try {
-      cached = options.getHubs?.() ?? options.hubs ?? []
+      return options.loadHubs?.() ?? options.hubs ?? []
     } catch {
-      if (!warnedOnce) {
-        warnedOnce = true
-        log(`[${HOOK_NAME}] hub config unavailable, allowing writes (fail-open)`, {})
-      }
-      cached = []
+      log(`[${HOOK_NAME}] hub config unavailable, allowing writes (fail-open)`, {})
+      return []
     }
-    return cached
   }
 
-  const findBlockingHub = (absPath: string): LoadedHub | null => {
-    for (const hub of resolveHubs()) {
+  const findBlockingHub = (hubs: LoadedHub[], absPath: string): LoadedHub | null => {
+    for (const hub of hubs) {
       if (!insideRoot(hub.root, absPath)) {
         continue
       }
@@ -114,40 +143,22 @@ export function createKnowledgeHubGuardHook(ctx: MatrixxContext, options: Knowle
     )
   }
 
-  const checkBash = (command: string, tool: string, sessionID: string): void => {
-    if (!DESTRUCTIVE_BASH_RE.test(command)) {
-      return
-    }
-    const isDeletion = DELETION_BASH_RE.test(command)
-    const tokens = command
-      .split(/\s+/)
-      .map((token) => token.replace(/^['"(`$]+|['";,)&|`]+$/g, ""))
-      .filter((token) => token.length > 0)
-    for (const token of tokens) {
-      if (token === ">" || token === ">>" || FLAG_RE.test(token) || VERBS.has(token)) {
-        continue
-      }
-      if (!isDeletion && !PATH_LIKE_RE.test(token)) {
-        continue
-      }
-      const abs = resolveTarget(token, projectDir)
-      const hub = findBlockingHub(abs)
-      if (hub) {
-        deny(hub, abs, tool, sessionID)
-      }
-    }
-  }
-
   return {
     "tool.execute.before": async (
       input: { tool: string; sessionID: string; callID: string },
       output: { args: Record<string, unknown> },
     ): Promise<void> => {
       const tool = input.tool?.toLowerCase()
+      const hubs = resolveHubs()
       if (isShellTool(tool)) {
         const command = output.args?.command as string | undefined
         if (typeof command === "string" && command.length > 0) {
-          checkBash(command, input.tool, input.sessionID)
+          for (const target of analyzeBash(command, projectDir, projectDir)) {
+            const hub = findBlockingHub(hubs, target)
+            if (hub) {
+              deny(hub, target, input.tool, input.sessionID)
+            }
+          }
         }
         return
       }
@@ -155,14 +166,11 @@ export function createKnowledgeHubGuardHook(ctx: MatrixxContext, options: Knowle
         return
       }
       const args = output.args as unknown as Record<string, unknown>
-      const filePath = (args?.filePath ?? args?.path ?? args?.file ?? args?.file_path) as string | undefined
-      if (typeof filePath !== "string" || filePath.length === 0) {
-        return
-      }
-      const abs = resolveTarget(filePath, projectDir)
-      const hub = findBlockingHub(abs)
-      if (hub) {
-        deny(hub, abs, input.tool, input.sessionID)
+      for (const target of resolveToolTargets(tool, args, projectDir)) {
+        const hub = findBlockingHub(hubs, target)
+        if (hub) {
+          deny(hub, target, input.tool, input.sessionID)
+        }
       }
     },
   }

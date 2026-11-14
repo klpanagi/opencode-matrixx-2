@@ -8,7 +8,7 @@ const SEARCH_TOOLS = ["websearch", "webfetch"]
 
 export interface KnowledgeHubSearchNudgeOptions {
   hubs?: LoadedHub[]
-  getHubs?: () => LoadedHub[]
+  loadHubs?: () => LoadedHub[]
 }
 
 function buildNudge(hubs: LoadedHub[]): string {
@@ -22,7 +22,7 @@ export function createKnowledgeHubSearchNudgeHook(ctx: MatrixxContext, options: 
 
   const resolveHubs = (): LoadedHub[] => {
     try {
-      return options.getHubs?.() ?? options.hubs ?? []
+      return options.loadHubs?.() ?? options.hubs ?? []
     } catch {
       if (!warnedOnce) {
         warnedOnce = true
