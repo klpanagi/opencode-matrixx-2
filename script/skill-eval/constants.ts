@@ -1,0 +1,14 @@
+export const EXPECTED_SKILL_COUNT = 70
+export const PASS_THRESHOLD = 70
+export const EVALUATOR_NAME = "skillevaluator"
+export const QUALITY_REPORT_FILE = "skillevaluator-quality.json"
+export const CATALOG_SUMMARY_FILE = "catalog-summary.json"
+export const REPORT_PREFIX = "skillevaluator-output-"
+export const SKILLS_DIRNAME = "skills"
+export const QUALITY_DIRNAME = "quality"
+export const CATALOG_DIRNAME = "catalog"
+export const REPORTS_DIRNAME = "reports"
+export const EXIT_OK = 0
+export const EXIT_FAILURE = 1
+export const EXIT_USAGE = 2
+export const EXIT_INCOMPLETE = 3
