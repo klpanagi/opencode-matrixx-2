@@ -34,9 +34,10 @@ describe("createKnowledgeHubSearchNudgeHook", () => {
       { tool: "websearch", sessionID: "ses-1", callID: "c1" },
       output,
     );
-    //#then output.message names the hub and the @hub/path convention
+    //#then output.message names the hub and the absolute-root directive
     expect(output.message).toContain('"kb"');
-    expect(output.message).toContain("@hub/path");
+    expect(output.message).toContain("absolute");
+    expect(output.message).not.toContain("@hub/");
     expect(output.message?.length ?? 0).toBeLessThan(300);
   });
 
@@ -127,5 +128,20 @@ describe("createKnowledgeHubSearchNudgeHook", () => {
     );
     //#then it resolves without throwing and stays silent
     expect(output.message).toBeUndefined();
+  });
+
+  test("prepends the shared router directive without the @hub/ convention", async () => {
+    //#given a hub
+    const hook = createKnowledgeHubSearchNudgeHook(makeCtx(), { hubs: [makeHub("kb")] });
+    const output = nudgeArgs();
+    //#when the hook runs before websearch
+    await hook["tool.execute.before"](
+      { tool: "websearch", sessionID: "ses-1", callID: "c1" },
+      output,
+    );
+    //#then the directive leads and names absolute paths only
+    expect(output.message?.startsWith("Consult these hubs")).toBe(true);
+    expect(output.message).toContain("absolute");
+    expect(output.message).not.toContain("@hub/");
   });
 });

@@ -112,7 +112,8 @@ reasoning step — no `read` call required. The per-session dedupe cache is
 cleared on compaction and session delete, so the router re-injects after
 compaction. Empty `knowledge` config fails open (nothing registered). The
 payload starts with a one-line directive: consult hubs before
-websearch/webfetch, resolve files via `@hub/path` on demand, never bulk-read.
+websearch/webfetch, resolve files by absolute path under each hub root on
+demand, never bulk-read.
 
 ### Guard behavior
 
@@ -145,8 +146,9 @@ rg knowledge-hub-injector src/plugin/message-hooks/
 
 `knowledge-hub-search-nudge` (`tool.execute.before`) warns — never blocks —
 whenever an agent reaches for `websearch`/`webfetch`: it sets
-`output.message` naming the registered hub(s) with the `@hub/path`
-resolution convention on one line (<300 chars, no secrets). Silent when no
-hubs are configured (fail-open) or for unrelated tools. The transform
+`output.message` naming the registered hub(s) with the shared
+absolute-root resolution directive on one line (<300 chars, no
+secrets). Silent when no hubs are configured (fail-open) or for
+unrelated tools. The transform
 delivery already puts the router in context; this nudge is the backstop for
 agents that habitually reach for web first.

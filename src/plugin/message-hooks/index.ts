@@ -89,7 +89,7 @@ export const MESSAGE_HOOK_TABLE: readonly MessageHookRow[] = [
 
 /**
  * Fail-closed shape gate for the mapping table (Task 25 negative controls):
- * - exactly 8 rows,
+ * - exactly 7 rows,
  * - no row with an empty `targetHooks` (a hook registered nowhere runs nowhere),
  * - `toolPairValidator` includes `generate` (auxiliary requests bypass `context`).
  */

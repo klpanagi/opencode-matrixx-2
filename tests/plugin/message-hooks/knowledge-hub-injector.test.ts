@@ -91,7 +91,7 @@ describe("knowledgeHubInjector flat port", () => {
     expect(pending.hasContent).toBe(true)
     expect(pending.merged).toContain(INDEX_MARKER)
     expect(pending.merged).toContain("websearch")
-    expect(pending.merged).toContain("@hub/path")
+    expect(pending.merged).toContain("absolute")
     expect(pending.merged).toContain('<knowledge-hub name="kb"')
     expect(pending.merged).toContain(`root="${root}"`)
     expect(pending.merged).toContain(`index="${path.join(root, "_index.md")}"`)
@@ -303,5 +303,48 @@ describe("knowledgeHubInjector flat port", () => {
     //#when invoking the registered callback with an empty event
     await seen[0].cb({} as never)
     //#then it does not throw (Task 26 empty-input contract)
+  })
+
+  test("aggregate budget stops after the cap and appends exactly one marker", async () => {
+    //#given three hubs whose indexes individually fit but jointly exceed the aggregate cap
+    const filler = "x".repeat(17_000)
+    const roots = [
+      makeHub({ "_index.md": `HUB-A-${filler}` }),
+      makeHub({ "_index.md": `HUB-B-${filler}` }),
+      makeHub({ "_index.md": `HUB-C-${filler}` }),
+    ]
+    const hubs: LoadedHub[] = roots.map((root, i) => ({ ...loadedHub(root), name: `kb${i}` }))
+    const captured: string[] = []
+    const collector = {
+      register: (_sessionID: string, options: { content: string }) => {
+        captured.push(options.content)
+      },
+      clear: () => {},
+    } as unknown as ContextCollector
+    //#when applying the flat port
+    await applyKnowledgeHubInjector(flatUserEvent("ses-agg"), makeCtx(), { collector, getHubs: () => hubs })
+    //#then earlier blocks survive, the overflowing block is omitted, and one marker is emitted
+    expect(captured).toHaveLength(1)
+    expect(captured[0]).toContain("HUB-A-")
+    expect(captured[0]).toContain("HUB-B-")
+    expect(captured[0]).not.toContain("HUB-C-")
+    expect(captured[0].match(/aggregate cap reached/g)).toHaveLength(1)
+  })
+
+  test("a failed first read does not poison the dedupe key", async () => {
+    //#given a hub whose index file does not exist yet
+    const root = mkdtempSync(path.join(tmpdir(), "kb-hub-"))
+    tmpRoots.push(root)
+    const collector = new ContextCollector()
+    const deps = { collector, getHubs: () => [loadedHub(root)] }
+    await applyKnowledgeHubInjector(flatUserEvent("ses-read"), makeCtx(), deps)
+    //#then the failed read registers nothing
+    expect(collector.hasPending("ses-read")).toBe(false)
+    //#when the index becomes readable
+    writeFileSync(path.join(root, "_index.md"), INDEX_MARKER)
+    await applyKnowledgeHubInjector(flatUserEvent("ses-read"), makeCtx(), deps)
+    //#then the block still injects for the same key
+    expect(collector.hasPending("ses-read")).toBe(true)
+    expect(collector.consume("ses-read").merged).toContain(INDEX_MARKER)
   })
 })
