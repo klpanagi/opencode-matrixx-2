@@ -26,6 +26,16 @@ export function expandEnvVars(rawPath: string): string {
   })
 }
 
+export function hasUnsetEnvVar(rawPath: string): boolean {
+  for (const match of rawPath.matchAll(/\$(\w+)|\$\{([^}]+)\}/g)) {
+    const key = match[1] ?? match[2]
+    if (process.env[key] === undefined) {
+      return true
+    }
+  }
+  return false
+}
+
 export function expandHubPath(rawPath: string, projectDir?: string): string {
   let expanded = rawPath
   if (expanded === "~") {
@@ -54,6 +64,10 @@ function mergeExcludes(userExclude: string[] | undefined): string[] {
 }
 
 function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
+  if (hasUnsetEnvVar(hub.path)) {
+    log("[knowledge-hub] hub path references unset variable, skipping", { name: hub.name })
+    return null
+  }
   const root = expandHubPath(hub.path, projectDir)
   if (!existsSync(root)) {
     log("[knowledge-hub] hub path missing, skipping", { name: hub.name, root })
@@ -69,7 +83,7 @@ function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
     root,
     indexPath,
     indexPresent,
-    pinnedFiles: [],
+    pinnedFiles: hub.pinnedFiles ?? [],
     scope: hub.scope ?? "global",
     mode: hub.mode ?? "router-only",
     exclude: mergeExcludes(hub.exclude),

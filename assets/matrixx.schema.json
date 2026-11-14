@@ -4385,6 +4385,13 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "pinnedFiles": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -4393,7 +4400,8 @@
               "index",
               "scope",
               "mode",
-              "exclude"
+              "exclude",
+              "pinnedFiles"
             ],
             "additionalProperties": false
           }

@@ -100,7 +100,8 @@ Declare hubs in `matrixx.jsonc` (project `.opencode/matrixx.jsonc` or user
 | `index` | no | `_index.md` | Router file delivered via messages-transform, truncated to ~6000 tokens |
 | `scope` | no | `global` | `global` (shared KB) or `project` (repo-local) |
 | `mode` | no | `router-only` | `router-only` injects the index only; `pinned` additionally injects configured pinned files |
-| `exclude` | no | `[]` | Extra picomatch patterns merged over `DEFAULT_KNOWLEDGE_EXCLUDES`; matched paths stay writable |
+| `exclude` | no | `[]` | Extra picomatch patterns merged over `DEFAULT_KNOWLEDGE_EXCLUDES` (`*.docx`, `*.pptx`, `*.zip`, `node_modules/**`); matched paths stay writable |
+| `pinnedFiles` | no | `[]` | Hub-relative files injected when `mode` is `pinned` |
 
 ### Delivery
 

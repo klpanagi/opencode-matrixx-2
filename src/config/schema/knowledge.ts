@@ -1,14 +1,10 @@
 import { z } from "zod"
 
 export const DEFAULT_KNOWLEDGE_EXCLUDES: string[] = [
-  ".*",
-  "*.env",
   "*.docx",
   "*.pptx",
   "*.zip",
   "node_modules/**",
-  ".publisync_env",
-  ".alz_mongo_env",
 ]
 
 export const KnowledgeHubSchema = z.object({
@@ -18,6 +14,7 @@ export const KnowledgeHubSchema = z.object({
   scope: z.enum(["global", "project"]).default("global"),
   mode: z.enum(["router-only", "pinned"]).default("router-only"),
   exclude: z.array(z.string()).default([]),
+  pinnedFiles: z.array(z.string()).default([]),
 })
 
 export const KnowledgeConfigSchema = z.object({
