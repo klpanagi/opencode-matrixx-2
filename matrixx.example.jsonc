@@ -389,6 +389,25 @@
   "tdd_enforcer": {
     "enabled": true
   },
+  // ─────────────────────────────────────────────────────────────────────────
+  // Knowledge hubs — external docs routed into context (see docs/knowledge-hub.md)
+  // Hub paths expand ~, $VAR and ${VAR}; a hub whose path references an unset
+  // variable is skipped. Default excludes merged into every hub: *.docx,
+  // *.pptx, *.zip, node_modules/**.
+  // ─────────────────────────────────────────────────────────────────────────
+  // "knowledge": {
+  //   "hubs": [
+  //     {
+  //       "name": "kb",
+  //       "path": "<your-knowledge-dir>",   // e.g. ~/docs/kb or $KH_DIR
+  //       "index": "_index.md",             // (default: _index.md)
+  //       "scope": "global",                // "global" (default) | "project"
+  //       "mode": "router-only",            // "router-only" (default) | "pinned"
+  //       "exclude": [],                    // extra picomatch patterns, merged over defaults
+  //       "pinnedFiles": []                 // hub-relative files injected when mode is "pinned"
+  //     }
+  //   ]
+  // },
 
   // ─────────────────────────────────────────────────────────────────────────
   // Browser automation — provider for `playwright` skill

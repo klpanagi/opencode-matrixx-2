@@ -89,7 +89,7 @@ export const MESSAGE_HOOK_TABLE: readonly MessageHookRow[] = [
 
 /**
  * Fail-closed shape gate for the mapping table (Task 25 negative controls):
- * - exactly 8 rows,
+ * - exactly 7 rows,
  * - no row with an empty `targetHooks` (a hook registered nowhere runs nowhere),
  * - `toolPairValidator` includes `generate` (auxiliary requests bypass `context`).
  */
@@ -136,7 +136,9 @@ export async function registerMessageHooks(
   validateMessageHookTable(MESSAGE_HOOK_TABLE)
   const registrations: V2Registration[] = []
   registrations.push(...(await registerDomainKeywordDetector(ctx)))
-  registrations.push(...(await registerKnowledgeHubInjector(ctx, deps.knowledgeHub ?? {})))
+  if (deps.knowledgeHub) {
+    registrations.push(...(await registerKnowledgeHubInjector(ctx, deps.knowledgeHub)))
+  }
   registrations.push(...(await registerContextInjectorMessagesTransform(ctx, deps.contextInjector ?? {})))
   registrations.push(...(await registerEnvContextInjector(ctx)))
   registrations.push(...(await registerThinkingBlockValidator(ctx)))

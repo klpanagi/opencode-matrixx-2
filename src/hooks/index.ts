@@ -23,7 +23,6 @@ export { createInteractiveBashSessionHook } from "./interactive-bash-session/hoo
 export { createJsonErrorRecoveryHook } from "./json-error-recovery"
 export { createKeywordDetectorHook } from "./keyword-detector/hook";
 export { createKnowledgeHubGuardHook } from "./knowledge-hub-guard/hook";
-export { createKnowledgeHubInjectorHook } from "./knowledge-hub-injector/hook";
 export { createKnowledgeHubSearchNudgeHook } from "./knowledge-hub-search-nudge/hook";
 export { createMatrixLoopHook, type MatrixLoopHook } from "./matrix-loop/matrix-loop-hook";
 export { createMouseNotepadHook } from "./mouse-notepad/hook";

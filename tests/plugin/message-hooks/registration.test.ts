@@ -88,15 +88,25 @@ describe("registerMessageHooks", () => {
     const { ctx, seen } = makeRecordingCtx();
     //#when registering the native message hooks
     const registrations = await registerMessageHooks(ctx);
-    //#then one registration per (row, kind) pair: 7x context, 2x compaction, 2x generate
+    //#then one registration per (row, kind) pair: 6x context (knowledge-hub gated), 2x compaction, 2x generate
     const kinds = seen.map((s) => s.kind).sort();
     expect(kinds).toEqual(
-      ["context", "context", "context", "context", "context", "context", "context",
+      ["context", "context", "context", "context", "context", "context",
         "compaction", "compaction",
         "generate", "generate"].sort(),
     );
-    expect(registrations).toHaveLength(11);
+    expect(registrations).toHaveLength(10);
     expect(registrations).toHaveLength(seen.length);
+  });
+
+  test("registers 11 when knowledge-hub deps are supplied", async () => {
+    //#given a recording session double and knowledge-hub deps
+    const { ctx, seen } = makeRecordingCtx();
+    //#when registering the native message hooks with deps
+    const registrations = await registerMessageHooks(ctx, { knowledgeHub: { getHubs: () => [] } });
+    //#then the gated knowledge-hub row adds its single context registration
+    expect(seen.filter((s) => s.kind === "context")).toHaveLength(7);
+    expect(registrations).toHaveLength(11);
   });
 
   test("registered callbacks are no-op placeholders that never throw", async () => {

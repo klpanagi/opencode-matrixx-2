@@ -24,7 +24,6 @@ export function inertHooks(overrides: Record<string, unknown> = {}): DomainHooks
     contextWindowMonitor: inertEventHook(),
     directoryAgentsInjector: inertEventHook(),
     rulesInjector: inertEventHook(),
-    knowledgeHubInjector: inertEventHook(),
     thinkMode: inertEventHook(),
     contextWindowLimitRecovery: inertEventHook(),
     agentUsageReminder: inertEventHook(),

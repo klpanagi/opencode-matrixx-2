@@ -1,19 +1,30 @@
 import { readFileSync } from "node:fs"
 import * as path from "node:path"
-import type { KnowledgeHub } from "../../config/schema/knowledge"
 import { type ContextCollector, contextCollector } from "../../features/context-injection/injector"
-import { expandHubPath } from "../../features/knowledge-hub/loader"
+import {
+  HUB_AGGREGATE_TOKEN_CAP,
+  HUB_INDEX_TOKEN_CAP,
+  ROUTER_DIRECTIVE,
+} from "../../features/knowledge-hub/constants"
+import type { LoadedHub } from "../../features/knowledge-hub/loader"
 import { getMainSessionID } from "../../features/session-state/state"
 import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
 import { log } from "../../shared/runtime/logger"
 import { roleOf, type SessionMessage } from "../../shared/session/session-message"
-import type { MatrixxContext, V2Registration } from "../tool/context"
+import type { MatrixxContext, V2Event, V2Registration } from "../tool/context"
 
-const INDEX_MAX_TOKENS = 6000
+const CHARS_PER_TOKEN_ESTIMATE = 4
+const AGGREGATE_TRUNCATION_MARKER = "[knowledge-hub: aggregate cap reached, remaining hub content omitted]"
 
-const ROUTER_DIRECTIVE =
-  "Consult these hubs before websearch/webfetch; open files via @hub/path on demand, never bulk-read."
+interface BlockBudget {
+  usedTokens: number
+  stopped: boolean
+}
+
+function estimateBlockTokens(block: string): number {
+  return Math.ceil(block.length / CHARS_PER_TOKEN_ESTIMATE)
+}
 
 export interface FlatMessageHookEvent {
   readonly sessionID: string
@@ -21,27 +32,45 @@ export interface FlatMessageHookEvent {
 }
 
 export interface KnowledgeHubInjectorDeps {
-  getHubs?: () => KnowledgeHub[]
+  getHubs?: () => LoadedHub[]
   collector?: ContextCollector
-  pinnedFiles?: string[]
   workspaceDir?: string
 }
 
 const sessionCaches = new Map<string, Set<string>>()
 
 export function _resetKnowledgeHubInjectorForTesting(): void {
-  sessionCaches.clear()
+  clearKnowledgeHubSession()
 }
 
-export function clearKnowledgeHubSession(sessionID: string, collector?: ContextCollector): void {
-  sessionCaches.delete(sessionID)
+export function clearKnowledgeHubSession(sessionID?: string, collector?: ContextCollector): void {
   const target = collector ?? contextCollector
+  if (sessionID === undefined) {
+    for (const cached of sessionCaches.keys()) {
+      target.clear(cached)
+      sessionCaches.delete(cached)
+    }
+    return
+  }
+  sessionCaches.delete(sessionID)
   target.clear(sessionID)
 }
 
-function resolveHubPaths(hub: KnowledgeHub, workspaceDir: string): { root: string; indexPath: string } {
-  const root = expandHubPath(hub.path, workspaceDir)
-  return { root, indexPath: path.join(root, hub.index ?? "_index.md") }
+export function handleKnowledgeHubEvent(event: V2Event, _deps: KnowledgeHubInjectorDeps = {}): void {
+  const props = event.data as Record<string, unknown> | undefined
+  if (event.type === "session.deleted") {
+    const sessionInfo = props?.info as { id?: string } | undefined
+    if (sessionInfo?.id) {
+      clearKnowledgeHubSession(sessionInfo.id)
+    }
+  }
+  if (event.type === "session.compacted") {
+    const sessionID = (props?.sessionID ??
+      (props?.info as { id?: string } | undefined)?.id) as string | undefined
+    if (sessionID) {
+      clearKnowledgeHubSession(sessionID)
+    }
+  }
 }
 
 function readQuiet(filePath: string): string | null {
@@ -55,17 +84,28 @@ function readQuiet(filePath: string): string | null {
 function collectBlocks(
   injected: Set<string>,
   blocks: string[],
-  hubs: KnowledgeHub[],
-  workspaceDir: string,
-  pinnedFiles: string[],
+  hubs: LoadedHub[],
   truncate: (content: string) => string,
+  budget: BlockBudget,
 ): void {
   for (const hub of hubs) {
-    const { root, indexPath } = resolveHubPaths(hub, workspaceDir)
-    appendOnce(injected, `${hub.name}:${indexPath}`, indexPath, blocks, `knowledge-hub name="${hub.name}"`, "knowledge-hub", truncate)
-    if (hub.mode === "pinned") {
-      for (const pinned of pinnedFiles) {
-        const pinnedPath = path.isAbsolute(pinned) ? pinned : path.join(root, pinned)
+    if (!hub.indexPresent) {
+      log("[knowledge-hub-injector] hub index absent, skipping", { name: hub.name, indexPath: hub.indexPath })
+      continue
+    }
+    appendOnce(
+      injected,
+      `${hub.name}:${hub.indexPath}`,
+      hub.indexPath,
+      blocks,
+      `knowledge-hub name="${hub.name}" root="${hub.root}" index="${hub.indexPath}"`,
+      "knowledge-hub",
+      truncate,
+      budget,
+    )
+    if (hub.mode === "pinned" && hub.pinnedFiles.length > 0) {
+      for (const pinned of hub.pinnedFiles) {
+        const pinnedPath = path.isAbsolute(pinned) ? pinned : path.join(hub.root, pinned)
         appendOnce(
           injected,
           `pinned:${pinnedPath}`,
@@ -74,6 +114,7 @@ function collectBlocks(
           `knowledge-hub-pin name="${hub.name}" file="${pinnedPath}"`,
           "knowledge-hub-pin",
           truncate,
+          budget,
         )
       }
     }
@@ -88,15 +129,24 @@ function appendOnce(
   openTag: string,
   closeTag: string,
   truncate: (content: string) => string,
+  budget: BlockBudget,
 ): void {
+  if (budget.stopped) return
   if (injected.has(key)) return
-  injected.add(key)
   const content = readQuiet(filePath)
   if (content === null) {
     log("[knowledge-hub-injector] missing file, skipping", { filePath })
     return
   }
-  blocks.push(`<${openTag}>\n${truncate(content)}\n</${closeTag}>`)
+  injected.add(key)
+  const block = `<${openTag}>\n${truncate(content)}\n</${closeTag}>`
+  const tokens = estimateBlockTokens(block)
+  if (budget.usedTokens + tokens > HUB_AGGREGATE_TOKEN_CAP) {
+    budget.stopped = true
+    return
+  }
+  budget.usedTokens += tokens
+  blocks.push(block)
 }
 
 export async function applyKnowledgeHubInjector(
@@ -126,9 +176,7 @@ export async function applyKnowledgeHubInjector(
   }
 
   const collector = deps.collector ?? contextCollector
-  const workspaceDir = deps.workspaceDir ?? ctx?.directory ?? process.cwd()
-  const pinnedFiles = deps.pinnedFiles ?? []
-  let hubs: KnowledgeHub[]
+  let hubs: LoadedHub[]
   try {
     hubs = deps.getHubs?.() ?? []
   } catch {
@@ -137,10 +185,14 @@ export async function applyKnowledgeHubInjector(
   }
 
   const truncator = createDynamicTruncator(ctx)
-  const truncate = (content: string): string => truncator.truncateSync(content, INDEX_MAX_TOKENS).result
+  const truncate = (content: string): string => truncator.truncateSync(content, HUB_INDEX_TOKEN_CAP).result
   const blocks: string[] = []
-  collectBlocks(injected, blocks, hubs, workspaceDir, pinnedFiles, truncate)
+  const budget: BlockBudget = { usedTokens: 0, stopped: false }
+  collectBlocks(injected, blocks, hubs, truncate, budget)
   if (blocks.length === 0) return
+  if (budget.stopped) {
+    blocks.push(AGGREGATE_TRUNCATION_MARKER)
+  }
 
   collector.register(sessionID, {
     id: "knowledge-hub-router",

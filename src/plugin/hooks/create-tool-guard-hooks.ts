@@ -1,5 +1,5 @@
 import type { HookName, MatrixxConfig } from "../../config"
-import { loadKnowledgeHubs } from "../../features/knowledge-hub/loader"
+import { getHubsCached } from "../../features/knowledge-hub/cache"
 import {
   createBashFileReadGuardHook,
   createCommentCheckerHooks,
@@ -169,14 +169,14 @@ export function createToolGuardHooks(args: {
   const knowledgeHubGuard = isHookEnabled("knowledge-hub-guard")
     ? safeHook("knowledge-hub-guard", () =>
         createKnowledgeHubGuardHook(ctx, {
-          getHubs: () => loadKnowledgeHubs(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
+          loadHubs: () => getHubsCached(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
         }))
     : null
 
   const knowledgeHubSearchNudge = isHookEnabled("knowledge-hub-search-nudge")
     ? safeHook("knowledge-hub-search-nudge", () =>
         createKnowledgeHubSearchNudgeHook(ctx, {
-          getHubs: () => loadKnowledgeHubs(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
+          loadHubs: () => getHubsCached(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
         }))
     : null
 

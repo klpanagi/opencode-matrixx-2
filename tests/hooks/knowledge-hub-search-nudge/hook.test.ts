@@ -12,6 +12,8 @@ function makeHub(name: string): LoadedHub {
     name,
     root: `/hubs/${name}`,
     indexPath: `/hubs/${name}/_index.md`,
+    indexPresent: true,
+    pinnedFiles: [],
     scope: "global",
     mode: "router-only",
     exclude: [],
@@ -32,9 +34,10 @@ describe("createKnowledgeHubSearchNudgeHook", () => {
       { tool: "websearch", sessionID: "ses-1", callID: "c1" },
       output,
     );
-    //#then output.message names the hub and the @hub/path convention
+    //#then output.message names the hub and the absolute-root directive
     expect(output.message).toContain('"kb"');
-    expect(output.message).toContain("@hub/path");
+    expect(output.message).toContain("absolute");
+    expect(output.message).not.toContain("@hub/");
     expect(output.message?.length ?? 0).toBeLessThan(300);
   });
 
@@ -84,10 +87,36 @@ describe("createKnowledgeHubSearchNudgeHook", () => {
     expect(output.message).toBeUndefined();
   });
 
+  test("calls the provided loader on every invocation", async () => {
+    //#given a loader whose answer changes between calls
+    let calls = 0;
+    const hook = createKnowledgeHubSearchNudgeHook(makeCtx(), {
+      loadHubs: () => {
+        calls += 1;
+        return calls === 1 ? [] : [makeHub("kb")];
+      },
+    });
+    const first = nudgeArgs();
+    const second = nudgeArgs();
+    //#when websearch runs twice
+    await hook["tool.execute.before"](
+      { tool: "websearch", sessionID: "ses-1", callID: "c1" },
+      first,
+    );
+    await hook["tool.execute.before"](
+      { tool: "websearch", sessionID: "ses-1", callID: "c2" },
+      second,
+    );
+    //#then the loader was consulted again (no forever cache)
+    expect(calls).toBe(2);
+    expect(first.message).toBeUndefined();
+    expect(second.message).toContain('"kb"');
+  });
+
   test("never throws when hub resolution fails", async () => {
     //#given a loader that throws
     const hook = createKnowledgeHubSearchNudgeHook(makeCtx(), {
-      getHubs: () => {
+      loadHubs: () => {
         throw new Error("no config");
       },
     });
@@ -99,5 +128,20 @@ describe("createKnowledgeHubSearchNudgeHook", () => {
     );
     //#then it resolves without throwing and stays silent
     expect(output.message).toBeUndefined();
+  });
+
+  test("prepends the shared router directive without the @hub/ convention", async () => {
+    //#given a hub
+    const hook = createKnowledgeHubSearchNudgeHook(makeCtx(), { hubs: [makeHub("kb")] });
+    const output = nudgeArgs();
+    //#when the hook runs before websearch
+    await hook["tool.execute.before"](
+      { tool: "websearch", sessionID: "ses-1", callID: "c1" },
+      output,
+    );
+    //#then the directive leads and names absolute paths only
+    expect(output.message?.startsWith("Consult these hubs")).toBe(true);
+    expect(output.message).toContain("absolute");
+    expect(output.message).not.toContain("@hub/");
   });
 });

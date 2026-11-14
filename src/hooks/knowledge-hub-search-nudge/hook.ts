@@ -1,3 +1,4 @@
+import { ROUTER_DIRECTIVE } from "../../features/knowledge-hub/constants"
 import type { LoadedHub } from "../../features/knowledge-hub/loader"
 import type { MatrixxContext } from "../../plugin/tool/context"
 import { log } from "../../shared/runtime/logger"
@@ -8,12 +9,12 @@ const SEARCH_TOOLS = ["websearch", "webfetch"]
 
 export interface KnowledgeHubSearchNudgeOptions {
   hubs?: LoadedHub[]
-  getHubs?: () => LoadedHub[]
+  loadHubs?: () => LoadedHub[]
 }
 
 function buildNudge(hubs: LoadedHub[]): string {
   const names = hubs.map((hub) => `"${hub.name}"`).join(", ")
-  return `Check knowledge hub(s) ${names} before searching the web; resolve files via @hub/path on demand, never bulk-read.`
+  return `${ROUTER_DIRECTIVE} Hubs: ${names}.`
 }
 
 export function createKnowledgeHubSearchNudgeHook(ctx: MatrixxContext, options: KnowledgeHubSearchNudgeOptions = {}) {
@@ -22,7 +23,7 @@ export function createKnowledgeHubSearchNudgeHook(ctx: MatrixxContext, options: 
 
   const resolveHubs = (): LoadedHub[] => {
     try {
-      return options.getHubs?.() ?? options.hubs ?? []
+      return options.loadHubs?.() ?? options.hubs ?? []
     } catch {
       if (!warnedOnce) {
         warnedOnce = true

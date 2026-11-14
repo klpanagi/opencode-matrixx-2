@@ -1521,7 +1521,8 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
   "agent_definitions": ["./my-agents/extra.ts"],  // paths to external agent definition files
   "matrixx_self_config": { "enabled": false, "proactive": false },  // opt-in self-config skill
   "knowledge": {  // external knowledge hubs (see Knowledge Hub doc)
-    "hubs": [{ "name": "kb", "path": "<your-knowledge-dir>", "index": "_index.md", "scope": "global", "mode": "router-only" }]
+    // default exclude list (merged under each hub's own exclude): *.docx, *.pptx, *.zip, node_modules/**
+    "hubs": [{ "name": "kb", "path": "<your-knowledge-dir>", "index": "_index.md", "scope": "global", "mode": "router-only", "exclude": [], "pinnedFiles": [] }]
   },
   "modelRequirements": {  // config-driven agent/category model requirements
     "agents": { "oracle": { "fallbackChain": [{ "providers": ["zai-coding-plan"], "model": "glm-4.7" }] } }
@@ -1542,7 +1543,7 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | `task` | `TaskConfigSchema` (`src/config/schema/task.ts`) | — | Legacy; only `pollTimeoutMs` (min `60000`). Use `tasks.pollTimeoutMs`. |
 | `agent_definitions` | `string[]` | — | `AgentDefinitionsConfigSchema` (`src/config/schema/agent-definitions.ts`). |
 | `matrixx_self_config` | `MatrixxSelfConfigSkillConfigSchema` (`src/config/schema/matrixx-self-config.ts`) | `enabled: false, proactive: false` | Opt-in. |
-| `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`). |
+| `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`), `pinnedFiles` (`[]`). Default excludes (merged under each hub's `exclude`): `*.docx`, `*.pptx`, `*.zip`, `node_modules/**`. Native injection runs on the `context` session hook and is gated by the `knowledge-hub-injector` entry in `disabled_hooks` plus at least one configured hub; hubs whose `path` references an unset env variable are skipped (one warning). |
 | `modelRequirements` | `ModelRequirementsSchema` (`src/config/schema/model-config.ts`) | — | `agents`/`categories` maps with `fallbackChain` (`providers[]` + `model`), `requiresModel`, `requiresAnyModel`, `requiresProvider`, `variant`. |
 | `complexityDowngrades` | `ComplexityDowngradesSchema` (`src/config/schema/model-config.ts`) | — | Nested maps to `<provider>/<model>` values. |
 | `tool_gating` | `ToolGatingConfigSchema` (`src/config/schema/tool-policy.ts`) | auto-detect | Defers rarely-needed LLM tools until auto-detect or opt-in (`bdd_tools`, `pdf_figures`, `look_at`, `preset_tools` default `false`, `session_cleanup` opt-in). |

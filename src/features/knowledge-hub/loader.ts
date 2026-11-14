@@ -12,15 +12,30 @@ export interface LoadedHub {
   name: string
   root: string
   indexPath: string
+  indexPresent: boolean
+  pinnedFiles: string[]
   scope: KnowledgeHub["scope"]
   mode: KnowledgeHub["mode"]
   exclude: string[]
 }
 
-// Canonical path expansion for Task 5 to reuse (see TODO in
-// src/hooks/knowledge-hub-injector/hook.ts). Leading `~` maps to
-// os.homedir(); `$VAR` and `${VAR}` expand from process.env with a
-// missing variable expanding to an empty string.
+export function expandEnvVars(rawPath: string): string {
+  return rawPath.replace(/\$(\w+)|\$\{([^}]+)\}/g, (_, name: string, braced: string) => {
+    const key = name ?? braced
+    return process.env[key] ?? ""
+  })
+}
+
+export function hasUnsetEnvVar(rawPath: string): boolean {
+  for (const match of rawPath.matchAll(/\$(\w+)|\$\{([^}]+)\}/g)) {
+    const key = match[1] ?? match[2]
+    if (process.env[key] === undefined) {
+      return true
+    }
+  }
+  return false
+}
+
 export function expandHubPath(rawPath: string, projectDir?: string): string {
   let expanded = rawPath
   if (expanded === "~") {
@@ -28,10 +43,7 @@ export function expandHubPath(rawPath: string, projectDir?: string): string {
   } else if (expanded.startsWith("~/")) {
     expanded = path.join(os.homedir(), expanded.slice(2))
   }
-  expanded = expanded.replace(/\$(\w+)|\$\{([^}]+)\}/g, (_, name: string, braced: string) => {
-    const key = name ?? braced
-    return process.env[key] ?? ""
-  })
+  expanded = expandEnvVars(expanded)
   if (path.isAbsolute(expanded)) {
     return path.normalize(expanded)
   }
@@ -52,20 +64,26 @@ function mergeExcludes(userExclude: string[] | undefined): string[] {
 }
 
 function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
+  if (hasUnsetEnvVar(hub.path)) {
+    log("[knowledge-hub] hub path references unset variable, skipping", { name: hub.name })
+    return null
+  }
   const root = expandHubPath(hub.path, projectDir)
   if (!existsSync(root)) {
     log("[knowledge-hub] hub path missing, skipping", { name: hub.name, root })
     return null
   }
   const indexPath = path.join(root, hub.index ?? "_index.md")
-  if (!existsSync(indexPath)) {
-    log("[knowledge-hub] hub index missing, skipping", { name: hub.name, indexPath })
-    return null
+  const indexPresent = existsSync(indexPath)
+  if (!indexPresent) {
+    log("[knowledge-hub] hub index missing, deferring injection", { name: hub.name, indexPath })
   }
   return {
     name: hub.name,
     root,
     indexPath,
+    indexPresent,
+    pinnedFiles: hub.pinnedFiles ?? [],
     scope: hub.scope ?? "global",
     mode: hub.mode ?? "router-only",
     exclude: mergeExcludes(hub.exclude),
@@ -73,7 +91,9 @@ function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
 }
 
 // Loads + validates hub entries. Warns via logger and skips missing
-// hubs or missing index files; never throws on missing paths.
+// hubs; a missing index is flagged (`indexPresent: false`) rather than
+// dropped, so an index that appears later still injects. Never throws
+// on missing paths.
 export function loadKnowledgeHubs(
   config: KnowledgeConfig | KnowledgeHub[],
   projectDir?: string

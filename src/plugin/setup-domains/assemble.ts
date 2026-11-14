@@ -1,6 +1,7 @@
 import { registerAgentTransform } from "../../agents/shared/agents.transform"
 import type { MatrixxConfig } from "../../config"
 import { registerCommandTransform } from "../../features/builtin-commands/commands.transform"
+import { buildKnowledgeHubDeps as buildHubDeps } from "../../features/knowledge-hub/deps"
 import { registerMcpTransform } from "../../mcps/mcp.transform"
 import { log } from "../../shared"
 import { emitToolInfo } from "../../shared/tool/define-tool"
@@ -254,6 +255,9 @@ async function registerDomainSessionHooks(input: RegisterDomainsInput & { bridge
         keywordTrigger: input.pluginConfig?.dcp?.watchdog?.keywordTrigger,
         hookEnabled: !(input.pluginConfig?.disabled_hooks ?? []).includes("compress-watchdog"),
       },
+      knowledgeHub: buildHubDeps(input.pluginConfig, ctx.directory, {
+        hookEnabled: !(input.pluginConfig?.disabled_hooks ?? []).includes("knowledge-hub-injector"),
+      }),
     }),
   )
   if (messageHookRegistrations) registrations.push(...messageHookRegistrations)
