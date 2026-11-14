@@ -12,6 +12,8 @@ export interface LoadedHub {
   name: string
   root: string
   indexPath: string
+  indexPresent: boolean
+  pinnedFiles: string[]
   scope: KnowledgeHub["scope"]
   mode: KnowledgeHub["mode"]
   exclude: string[]
@@ -58,14 +60,16 @@ function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
     return null
   }
   const indexPath = path.join(root, hub.index ?? "_index.md")
-  if (!existsSync(indexPath)) {
-    log("[knowledge-hub] hub index missing, skipping", { name: hub.name, indexPath })
-    return null
+  const indexPresent = existsSync(indexPath)
+  if (!indexPresent) {
+    log("[knowledge-hub] hub index missing, deferring injection", { name: hub.name, indexPath })
   }
   return {
     name: hub.name,
     root,
     indexPath,
+    indexPresent,
+    pinnedFiles: [],
     scope: hub.scope ?? "global",
     mode: hub.mode ?? "router-only",
     exclude: mergeExcludes(hub.exclude),
@@ -73,7 +77,9 @@ function loadOneHub(hub: KnowledgeHub, projectDir?: string): LoadedHub | null {
 }
 
 // Loads + validates hub entries. Warns via logger and skips missing
-// hubs or missing index files; never throws on missing paths.
+// hubs; a missing index is flagged (`indexPresent: false`) rather than
+// dropped, so an index that appears later still injects. Never throws
+// on missing paths.
 export function loadKnowledgeHubs(
   config: KnowledgeConfig | KnowledgeHub[],
   projectDir?: string

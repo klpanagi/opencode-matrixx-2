@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import * as path from "node:path"
 import { ContextCollector } from "../../../src/features/context-injection/injector"
+import type { LoadedHub } from "../../../src/features/knowledge-hub/loader"
 import type { MatrixxContext } from "../../../src/plugin/tool/context"
 import {
   _resetKnowledgeHubInjectorForTesting,
@@ -46,29 +47,38 @@ function flatUserEvent(sessionID: string): FlatMessageHookEvent {
   }
 }
 
-function hookDeps(root: string, extra: { mode?: "router-only" | "pinned"; pinnedFiles?: string[] } = {}) {
+function loadedHub(
+  root: string,
+  extra: { mode?: LoadedHub["mode"]; pinnedFiles?: string[]; indexPresent?: boolean } = {},
+): LoadedHub {
+  return {
+    name: "kb",
+    root,
+    indexPath: path.join(root, "_index.md"),
+    indexPresent: extra.indexPresent ?? true,
+    pinnedFiles: extra.pinnedFiles ?? [],
+    scope: "global",
+    mode: extra.mode ?? "router-only",
+    exclude: [],
+  }
+}
+
+function hookDeps(
+  root: string,
+  extra: { mode?: LoadedHub["mode"]; pinnedFiles?: string[]; indexPresent?: boolean } = {},
+) {
   const collector = new ContextCollector()
   return {
     collector,
     deps: {
-      getHubs: () => [
-        {
-          name: "kb",
-          path: root,
-          index: "_index.md",
-          scope: "global" as const,
-          mode: extra.mode ?? ("router-only" as const),
-          exclude: [],
-        },
-      ],
-      pinnedFiles: extra.pinnedFiles,
+      getHubs: () => [loadedHub(root, extra)],
       collector,
     },
   }
 }
 
 describe("knowledgeHubInjector flat port", () => {
-  test("first transform registers router with directive", async () => {
+  test("first transform registers router with directive, root and index", async () => {
     //#given a hub index on disk and a flat user message
     const root = makeHub({ "_index.md": `# Hub\n\n${INDEX_MARKER}\n`, "notes.md": CORPUS_MARKER })
     const { collector, deps } = hookDeps(root)
@@ -81,7 +91,9 @@ describe("knowledgeHubInjector flat port", () => {
     expect(pending.merged).toContain(INDEX_MARKER)
     expect(pending.merged).toContain("websearch")
     expect(pending.merged).toContain("@hub/path")
-    expect(pending.merged).toContain('<knowledge-hub name="kb">')
+    expect(pending.merged).toContain('<knowledge-hub name="kb"')
+    expect(pending.merged).toContain(`root="${root}"`)
+    expect(pending.merged).toContain(`index="${path.join(root, "_index.md")}"`)
   })
 
   test("second transform in same session does not re-register", async () => {
@@ -117,19 +129,45 @@ describe("knowledgeHubInjector flat port", () => {
     expect(collector.hasPending("ses-1")).toBe(false)
   })
 
-  test("skips missing index without throwing", async () => {
-    //#given a hub path that does not exist
-    const missing = path.join(tmpdir(), "kb-does-not-exist-12345")
-    const collector = new ContextCollector()
+  test("skips a hub whose index is absent even when the root exists", async () => {
+    //#given a hub LoadedHub flagged indexPresent: false
+    const root = makeHub({ "_index.md": INDEX_MARKER })
+    const { collector, deps } = hookDeps(root, { indexPresent: false })
     //#when applying the flat port
-    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), {
-      collector,
-      getHubs: () => [
-        { name: "ghost", path: missing, index: "_index.md", scope: "global", mode: "router-only", exclude: [] },
-      ],
-    })
-    //#then nothing is registered and nothing throws
+    await applyKnowledgeHubInjector(flatUserEvent("ses-1"), makeCtx(), deps)
+    //#then no router block is registered
     expect(collector.hasPending("ses-1")).toBe(false)
+  })
+
+  test("pins require mode pinned and a non-empty list (4-cell matrix)", async () => {
+    const root = makeHub({ "_index.md": INDEX_MARKER, "pinned.md": PINNED_MARKER })
+
+    //#given router-only mode with no pins
+    const routerEmpty = hookDeps(root, { mode: "router-only", pinnedFiles: [] })
+    await applyKnowledgeHubInjector(flatUserEvent("ses-router-empty"), makeCtx(), routerEmpty.deps)
+    //#then no pin block is emitted
+    expect(routerEmpty.collector.consume("ses-router-empty").merged).not.toContain("<knowledge-hub-pin")
+
+    //#given router-only mode with a global pin list
+    const routerPinned = hookDeps(root, { mode: "router-only", pinnedFiles: ["pinned.md"] })
+    await applyKnowledgeHubInjector(flatUserEvent("ses-router-pinned"), makeCtx(), routerPinned.deps)
+    //#then the pin list is ignored
+    expect(routerPinned.collector.consume("ses-router-pinned").merged).not.toContain("<knowledge-hub-pin")
+
+    //#given pinned mode with an empty list
+    const pinnedEmpty = hookDeps(root, { mode: "pinned", pinnedFiles: [] })
+    await applyKnowledgeHubInjector(flatUserEvent("ses-pinned-empty"), makeCtx(), pinnedEmpty.deps)
+    //#then no pin block is emitted
+    expect(pinnedEmpty.collector.consume("ses-pinned-empty").merged).not.toContain("<knowledge-hub-pin")
+
+    //#given pinned mode with a non-empty list
+    const pinnedLoaded = hookDeps(root, { mode: "pinned", pinnedFiles: ["pinned.md"] })
+    await applyKnowledgeHubInjector(flatUserEvent("ses-pinned-loaded"), makeCtx(), pinnedLoaded.deps)
+    //#then the pin file is injected alongside the index
+    const merged = pinnedLoaded.collector.consume("ses-pinned-loaded").merged
+    expect(merged).toContain(INDEX_MARKER)
+    expect(merged).toContain("<knowledge-hub-pin")
+    expect(merged).toContain(PINNED_MARKER)
   })
 
   test("pinned mode registers only explicitly listed files", async () => {

@@ -136,7 +136,9 @@ export async function registerMessageHooks(
   validateMessageHookTable(MESSAGE_HOOK_TABLE)
   const registrations: V2Registration[] = []
   registrations.push(...(await registerDomainKeywordDetector(ctx)))
-  registrations.push(...(await registerKnowledgeHubInjector(ctx, deps.knowledgeHub ?? {})))
+  if (deps.knowledgeHub) {
+    registrations.push(...(await registerKnowledgeHubInjector(ctx, deps.knowledgeHub)))
+  }
   registrations.push(...(await registerContextInjectorMessagesTransform(ctx, deps.contextInjector ?? {})))
   registrations.push(...(await registerEnvContextInjector(ctx)))
   registrations.push(...(await registerThinkingBlockValidator(ctx)))

@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs"
 import * as path from "node:path"
-import type { KnowledgeHub } from "../../config/schema/knowledge"
 import { type ContextCollector, contextCollector } from "../../features/context-injection/injector"
-import { expandHubPath } from "../../features/knowledge-hub/loader"
+import type { LoadedHub } from "../../features/knowledge-hub/loader"
 import { getMainSessionID } from "../../features/session-state/state"
 import { createDynamicTruncator } from "../../shared/compaction/dynamic-truncator"
 import { notifyInjection } from "../../shared/policy/injection-notifier"
@@ -21,9 +20,8 @@ export interface FlatMessageHookEvent {
 }
 
 export interface KnowledgeHubInjectorDeps {
-  getHubs?: () => KnowledgeHub[]
+  getHubs?: () => LoadedHub[]
   collector?: ContextCollector
-  pinnedFiles?: string[]
   workspaceDir?: string
 }
 
@@ -39,11 +37,6 @@ export function clearKnowledgeHubSession(sessionID: string, collector?: ContextC
   target.clear(sessionID)
 }
 
-function resolveHubPaths(hub: KnowledgeHub, workspaceDir: string): { root: string; indexPath: string } {
-  const root = expandHubPath(hub.path, workspaceDir)
-  return { root, indexPath: path.join(root, hub.index ?? "_index.md") }
-}
-
 function readQuiet(filePath: string): string | null {
   try {
     return readFileSync(filePath, "utf-8")
@@ -55,17 +48,26 @@ function readQuiet(filePath: string): string | null {
 function collectBlocks(
   injected: Set<string>,
   blocks: string[],
-  hubs: KnowledgeHub[],
-  workspaceDir: string,
-  pinnedFiles: string[],
+  hubs: LoadedHub[],
   truncate: (content: string) => string,
 ): void {
   for (const hub of hubs) {
-    const { root, indexPath } = resolveHubPaths(hub, workspaceDir)
-    appendOnce(injected, `${hub.name}:${indexPath}`, indexPath, blocks, `knowledge-hub name="${hub.name}"`, "knowledge-hub", truncate)
-    if (hub.mode === "pinned") {
-      for (const pinned of pinnedFiles) {
-        const pinnedPath = path.isAbsolute(pinned) ? pinned : path.join(root, pinned)
+    if (!hub.indexPresent) {
+      log("[knowledge-hub-injector] hub index absent, skipping", { name: hub.name, indexPath: hub.indexPath })
+      continue
+    }
+    appendOnce(
+      injected,
+      `${hub.name}:${hub.indexPath}`,
+      hub.indexPath,
+      blocks,
+      `knowledge-hub name="${hub.name}" root="${hub.root}" index="${hub.indexPath}"`,
+      "knowledge-hub",
+      truncate,
+    )
+    if (hub.mode === "pinned" && hub.pinnedFiles.length > 0) {
+      for (const pinned of hub.pinnedFiles) {
+        const pinnedPath = path.isAbsolute(pinned) ? pinned : path.join(hub.root, pinned)
         appendOnce(
           injected,
           `pinned:${pinnedPath}`,
@@ -126,9 +128,7 @@ export async function applyKnowledgeHubInjector(
   }
 
   const collector = deps.collector ?? contextCollector
-  const workspaceDir = deps.workspaceDir ?? ctx?.directory ?? process.cwd()
-  const pinnedFiles = deps.pinnedFiles ?? []
-  let hubs: KnowledgeHub[]
+  let hubs: LoadedHub[]
   try {
     hubs = deps.getHubs?.() ?? []
   } catch {
@@ -139,7 +139,7 @@ export async function applyKnowledgeHubInjector(
   const truncator = createDynamicTruncator(ctx)
   const truncate = (content: string): string => truncator.truncateSync(content, INDEX_MAX_TOKENS).result
   const blocks: string[] = []
-  collectBlocks(injected, blocks, hubs, workspaceDir, pinnedFiles, truncate)
+  collectBlocks(injected, blocks, hubs, truncate)
   if (blocks.length === 0) return
 
   collector.register(sessionID, {

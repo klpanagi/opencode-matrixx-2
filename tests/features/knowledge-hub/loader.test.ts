@@ -42,12 +42,19 @@ describe("loadKnowledgeHubs", () => {
     expect(loaded).toEqual([])
   })
 
-  it("skips a hub whose index file is missing without throwing", () => {
+  it("keeps a hub whose index file is missing, flagged indexPresent: false", () => {
+    //#given a hub root without its index file
     const root = mkdtempSync(join(tmpdir(), "kh-noindex-"))
+    //#when loading the hubs
     const loaded = loadKnowledgeHubs(
       { hubs: [{ name: "noindex", path: root, index: "_index.md", scope: "global", mode: "router-only", exclude: [] }] }
     )
-    expect(loaded).toEqual([])
+    //#then the hub survives with its index flagged absent, so a later-appearing index still injects
+    expect(loaded).toHaveLength(1)
+    expect(loaded[0].root).toBe(root)
+    expect(loaded[0].indexPath).toBe(join(root, "_index.md"))
+    expect(loaded[0].indexPresent).toBe(false)
+    expect(loaded[0].pinnedFiles).toEqual([])
   })
 
   it("loads a valid hub and merges excludes deduped", () => {
@@ -63,6 +70,8 @@ describe("loadKnowledgeHubs", () => {
     expect(loaded).toHaveLength(1)
     expect(loaded[0].root).toBe(root)
     expect(loaded[0].indexPath).toBe(join(root, "_index.md"))
+    expect(loaded[0].indexPresent).toBe(true)
+    expect(loaded[0].pinnedFiles).toEqual([])
     expect(loaded[0].exclude).toContain("custom/**")
     for (const entry of DEFAULT_KNOWLEDGE_EXCLUDES) {
       expect(loaded[0].exclude).toContain(entry)
