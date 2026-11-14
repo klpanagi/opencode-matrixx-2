@@ -71,7 +71,7 @@ export function isHubWriteApproved(sessionID: string, absPath: string): boolean 
       bySession.delete(approved)
       continue
     }
-    if (candidate === approved || candidate.startsWith(approved + path.sep)) {
+    if (candidate === approved) {
       allowed = true
     }
   }

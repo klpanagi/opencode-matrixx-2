@@ -2,6 +2,7 @@ import type {
   AvailableCategory,
 } from "../../agents/shared/dynamic-agent-prompt-builder"
 import type { MatrixxConfig } from "../../config"
+import { loadKnowledgeHubs } from "../../features/knowledge-hub/loader"
 import { resolvePlanCap } from "../../features/mission-state/constants"
 import { isTaskSystemEnabled } from "../../shared/config/task-system-gating"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
@@ -175,7 +176,13 @@ export function createToolCatalog(args: {
     ...createStalenessGapCheckerTool(ctx),
     ...createSessionManagerTools(ctx, pluginConfig),
     ...createHandoffTools(ctx),
-    ...(knowledgeHubConfirmEnabled ? { knowledge_hub_confirm: createKnowledgeHubConfirmTool(ctx) } : {}),
+    ...(knowledgeHubConfirmEnabled
+      ? {
+          knowledge_hub_confirm: createKnowledgeHubConfirmTool(ctx, {
+            getHubs: () => loadKnowledgeHubs(pluginConfig.knowledge ?? { hubs: [] }, ctx.directory),
+          }),
+        }
+      : {}),
     ...pdfFiguresRecord,
     ...presetRecord,
     ...sessionCleanupRecord,

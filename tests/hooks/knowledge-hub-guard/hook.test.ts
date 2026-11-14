@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import type { MatrixxContext } from "../../../src/plugin/tool/context";
@@ -427,17 +427,18 @@ describe("hub write approvals", () => {
     //#then it resolves without throwing
   });
 
-  test("parent-dir approval allows a child path", async () => {
-    //#given an approval recorded for the hub root
+  test("parent-dir approval does not allow a child path", async () => {
+    //#given an approval recorded for the hub root only
     const root = makeHubRoot();
     const hook = createKnowledgeHubGuardHook(makeCtx(tmpdir()), { hubs: [makeHub(root)] });
     approveHubWrite("ses-parent", root);
     //#when the guard runs before a write to a nested file
-    await hook["tool.execute.before"](
+    const blocked = hook["tool.execute.before"](
       { tool: "edit", sessionID: "ses-parent", callID: "c1" },
       writeArgs(path.join(root, "sub", "notes.md")),
     );
-    //#then it resolves without throwing
+    //#then the parent approval does not authorise the child path
+    await expect(blocked).rejects.toThrow('knowledge hub "kb"');
   });
 
   test("approval matches non-normalized equivalents", async () => {
@@ -540,11 +541,12 @@ describe("hub write approvals", () => {
   });
 
   test("confirm tool records approval end-to-end with guard", async () => {
-    //#given a guard blocking a hub file and the confirm tool
+    //#given a guard blocking an existing hub file and the confirm tool
     const root = makeHubRoot();
     const hook = createKnowledgeHubGuardHook(makeCtx(tmpdir()), { hubs: [makeHub(root)] });
     const target = path.join(root, "notes.md");
-    const confirm = createKnowledgeHubConfirmTool(makeCtx(tmpdir()));
+    writeFileSync(target, "# notes\n");
+    const confirm = createKnowledgeHubConfirmTool(makeCtx(tmpdir()), { getHubs: () => [makeHub(root)] });
     const context = { sessionID: "ses-e2e", directory: tmpdir() } as unknown as MatrixxToolContext;
     //#when the user-approved path is confirmed
     const receipt = await confirm.execute({ path: target }, context);
