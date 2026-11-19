@@ -343,7 +343,8 @@
           "cleanup-tasks",
           "task-list",
           "humanize",
-          "security-audit"
+          "security-audit",
+          "academic-humanize"
         ]
       }
     },

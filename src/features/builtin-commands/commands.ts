@@ -1,4 +1,5 @@
 import type { CommandDefinition } from "../command-loader"
+import { ACADEMIC_HUMANIZE_TEMPLATE } from "./templates/academic-humanize"
 import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
 import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
 import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
@@ -272,5 +273,18 @@ ${SECURITY_AUDIT_TEMPLATE}
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[--scope=file|module|project] [--target=<path>] [--full] [--budget=N]",
+  },
+  "academic-humanize": {
+    description:
+      "(builtin) Editing pass for AI-assisted academic prose and grant proposals — strips AI tells, ties claims to evidence, preserves numbers and citations",
+    template: `<command-instruction>
+${ACADEMIC_HUMANIZE_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint:
+      "[target] [voice-from: <path>] [venue: <venue>] [--mode=paper|proposal|auto] [--dry-run]",
   },
 }
