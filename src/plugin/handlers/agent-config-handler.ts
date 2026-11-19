@@ -8,6 +8,9 @@ import {
 import type { MatrixxConfig } from "../../config";
 import { log } from "../../shared";
 import { type ContextModeConfigInput, getContextModeForPrompts, resolveGrepGlobUsable, setContextModeForPrompts } from "../../shared/policy/context-mode-enforcement";
+import type { BuiltinSkill } from "../../skills";
+import { loadInstalledPacks } from "../../skills/packs/loader";
+import { resolvePacksRoot } from "../../skills/packs/store";
 import { reorderAgentsByPriority } from "./agent-priority-order";
 import { buildOracleAgentConfig } from "./oracle-agent-config-builder";
 import { buildPlanDemoteConfig } from "./plan-model-inheritance";
@@ -63,6 +66,28 @@ function hasConfiguredDefaultAgent(config: Record<string, unknown>): boolean {
   return typeof defaultAgent === "string" && defaultAgent.trim().length > 0;
 }
 
+/**
+ * Resolves installed skill-pack skills for agent prompts.
+ *
+ * Packs are optional and untrusted: a missing config block, an explicit
+ * `enabled: false`, or any filesystem failure yields no discovered skills so
+ * plugin initialization never breaks on pack errors.
+ */
+export function resolveDiscoveredPackSkills(pluginConfig: MatrixxConfig): BuiltinSkill[] {
+  const skillPacks = pluginConfig.skill_packs;
+  if (!skillPacks || skillPacks.enabled === false) return [];
+  try {
+    return loadInstalledPacks({
+      root: resolvePacksRoot({ root: skillPacks.root }),
+      disabledPacks: skillPacks.disabled_packs,
+      disabledSkills: skillPacks.disabled_skills,
+    });
+  } catch (error) {
+    log("[agent-config] skill pack discovery failed", { error: String(error) });
+    return [];
+  }
+}
+
 export async function applyAgentConfig(params: {
   config: Record<string, unknown>;
   pluginConfig: MatrixxConfig;
@@ -71,7 +96,7 @@ export async function applyAgentConfig(params: {
 }): Promise<Record<string, unknown>> {
   const migratedDisabledAgents = params.pluginConfig.disabled_agents;
 
-  const allDiscoveredSkills: never[] = [];
+  const allDiscoveredSkills: BuiltinSkill[] = resolveDiscoveredPackSkills(params.pluginConfig);
 
   const browserProvider =
     params.pluginConfig.browser_automation_engine?.provider ?? "playwright";

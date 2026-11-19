@@ -25,13 +25,13 @@ import { executeDoctor, runDoctor } from "../../../src/cli/doctor"
 import type { DoctorReport } from "../../../src/cli/doctor/types"
 
 describe("runDoctor", () => {
-  test("returns a report structure with 13 checks", async () => {
+  test("returns a report structure with 14 checks", async () => {
     const report = await runDoctor()
     expect(report).toHaveProperty("timestamp")
     expect(report).toHaveProperty("checks")
     expect(report).toHaveProperty("summary")
     expect(Array.isArray(report.checks)).toBe(true)
-    expect(report.checks.length).toBe(13)
+    expect(report.checks.length).toBe(14)
   })
 
   test("report has correct summary totals", async () => {

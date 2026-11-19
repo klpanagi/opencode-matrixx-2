@@ -10,6 +10,7 @@ import { optionalToolsCheck } from "./optional"
 import { pluginInstallationCheck } from "./plugin"
 import { rtkCheck } from "./rtk"
 import { runtimeDepsCheck } from "./runtime"
+import { skillPacksCheck } from "./skill-packs"
 import { tmuxCheck } from "./tmux"
 
 export const ALL_CHECKS: DoctorCheck[] = [
@@ -17,6 +18,7 @@ export const ALL_CHECKS: DoctorCheck[] = [
   configValidationCheck,
   authCheck,
   runtimeDepsCheck,
+  skillPacksCheck,
   optionalToolsCheck,
   mcpPrerequisitesCheck,
   headroomCheck,
@@ -47,4 +49,5 @@ export { optionalToolsCheck } from "./optional"
 export { pluginInstallationCheck } from "./plugin"
 export { rtkCheck } from "./rtk"
 export { runtimeDepsCheck } from "./runtime"
+export { skillPacksCheck } from "./skill-packs"
 export { tmuxCheck } from "./tmux"

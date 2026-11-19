@@ -6,6 +6,7 @@
  *   doctor    - Environment diagnostics and health checks
  *   install   - Interactive setup wizard (--no-tui for CI)
  *   setup     - Standalone setup wizard for deps + matrixx.jsonc generation
+ *   skill     - Manage external skill packs (add | remove | list)
  *   version   - Display version information
  *   help      - Display help information
  */
@@ -16,6 +17,7 @@ import { fileURLToPath } from "node:url"
 import { executeDoctor } from "./doctor"
 import { executeInstall } from "./install"
 import { executeSetup } from "./setup"
+import { runSkillCommand } from "./skill"
 
 function getVersion(): string {
   try {
@@ -48,19 +50,35 @@ Commands:
   doctor     Environment diagnostics and health checks
   install    Interactive setup wizard
   setup      Standalone setup wizard for deps + matrixx.jsonc generation
+  skill      Manage external skill packs (add | remove | list)
   version    Display version information
   help       Display this help message
 
 Options:
   --help, -h    Show help for any command
-  --json        (doctor) Output results as JSON
+  --json        (doctor) Output results as JSON; (skill) emit machine-readable output
   --category    (doctor) Check specific category only
   --no-tui      (install) Run in non-interactive mode (CI/CD)
   --local       (install) Use local repo file:// path (dev only)
   --verbose     (install) Display detailed logs
   --yes, -y     (setup) Non-interactive defaults (no prompts)
-  --dry-run     (setup) Preview changes without writing
+  --dry-run     (setup) Preview changes without writing; (skill add) verify without writing
   --skip-presets (setup) Skip model preset generation (headless/CI)
+  --all         (skill add) Install every catalog pack
+  --version     (skill add|remove) Pin a pack version
+  --force       (skill add|remove) Replace or remove regardless of state
+  --allow-network  (skill add) Consent to packs that use the network
+  --allow-api-keys (skill add) Consent to packs that require provider API keys
+  --root        (skill) Override the skill-pack install root
+
+Skill packs:
+  ui-ux-pro-max  Core design-intelligence search skill (Python)
+  design-system  Tokens, themes, and component scaffolds (Node)
+  brand          Brand identity and voice guidance (Node)
+  slides         Presentation deck guidance (reference only)
+  banner-design  Banner composition guidance (reference only)
+  ui-styling     CSS/Tailwind/font helpers (needs --allow-network)
+  design         API-backed design review (needs --allow-network --allow-api-keys)
 
 Doctor categories:
   installation   Plugin registration and OpenCode version
@@ -173,6 +191,14 @@ function parseArgs(argv: string[]): ParsedArgs {
 async function main(): Promise<void> {
   const args = parseArgs(process.argv)
 
+  if (args.command === "skill") {
+    const code = await runSkillCommand(process.argv.slice(3))
+    if (code !== 0) {
+      process.exit(code)
+    }
+    return
+  }
+
   if (!args.command || args.command === "help" || args.help) {
     printHelp()
     return
@@ -219,7 +245,7 @@ async function main(): Promise<void> {
   process.exit(1)
 }
 
-export { main }
+export { main, runSkillCommand }
 export default main
 
 if (import.meta.main) {

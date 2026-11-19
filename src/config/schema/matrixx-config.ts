@@ -30,6 +30,7 @@ import { PlansConfigSchema } from "./plans"
 import { RtkConfigSchema } from "./rtk"
 import { RuntimeFallbackConfigSchema } from "./runtime-fallback"
 import { SecurityConfigSchema } from "./security"
+import { SkillPacksConfigSchema } from "./skill-packs"
 import { SkillsConfigSchema } from "./skills"
 import { SoftwareDevEnforcementConfigSchema } from "./software-dev-enforcement"
 import { TaskConfigSchema } from "./task"
@@ -81,6 +82,8 @@ export const MatrixxConfigSchema = z.object({
   dcp: DcpConfigSchema.optional(),
   auto_update: z.boolean().optional(),
   skills: SkillsConfigSchema.optional(),
+  /** External skill packs (Python-backed skills under a separate root). Grouped block — kept apart from `skills` so pack policy never leaks into the built-in skill loader. */
+  skill_packs: SkillPacksConfigSchema.optional(),
   knowledge: KnowledgeConfigSchema.optional(),
   matrix_loop: MatrixLoopConfigSchema.optional(),
   background_task: BackgroundTaskConfigSchema.optional(),

@@ -5,9 +5,18 @@ import type { MatrixxConfig } from "../../config"
 import { loadKnowledgeHubs } from "../../features/knowledge-hub/loader"
 import { resolvePlanCap } from "../../features/mission-state/constants"
 import { isTaskSystemEnabled } from "../../shared/config/task-system-gating"
+import { log } from "../../shared/runtime/logger"
 import type { NativePluginContext } from "../../shared/session/session-context-source"
 import type { MatrixxToolDefinition } from "../../shared/tool/define-tool"
 import { filterDisabledTools } from "../../shared/tool/disabled-tools"
+import { type BuiltinSkill, createBuiltinSkills } from "../../skills"
+import {
+  CORE_PACK_ID,
+  type InstalledPackSkill,
+  loadInstalledPacks,
+  resolveCorePackRoot,
+  resolvePacksRoot,
+} from "../../skills/packs"
 import {
   builtinTools,
   createAssemblyTool,
@@ -50,11 +59,13 @@ import {
   createTaskGetTool,
   createTaskList,
   createTaskUpdateTool,
+  createUiuxTools,
   discoverCommandsSync,
   interactive_bash,
   REMOVED_TOOL_NAMES,
 } from "../../tools"
 import { createPlanTasksTool } from "../../tools/plan"
+import { resolvePythonBin, UIUX_MAX_STDOUT_BYTES, UIUX_TIMEOUT_MS } from "../../tools/uiux"
 import type { ToolsRecord } from "./context"
 import type { SkillContext } from "./skill-context"
 import {
@@ -65,6 +76,7 @@ import {
   shouldEnablePdfFigures,
   shouldEnablePresetTools,
   shouldEnableSessionCleanup,
+  shouldEnableUiUxTools,
 } from "./tool-policy"
 
 export type ToolCatalogResult = {
@@ -113,10 +125,77 @@ export function createToolCatalog(args: {
     ? { session_cleanup: createSessionCleanupTool(ctx) }
     : {}
 
-  const skillTool = createSkillTool({
-    skills: skillContext.builtinSkills,
-    disabledSkills: skillContext.disabledSkills,
-  })
+  const skillPacksConfig = pluginConfig.skill_packs
+
+  const uiuxToolsRecord: Record<string, MatrixxToolDefinition> = (() => {
+    let coreSkillRoot: string | undefined
+    try {
+      coreSkillRoot =
+        skillPacksConfig?.enabled === false
+          ? undefined
+          : resolveCorePackRoot(CORE_PACK_ID, skillPacksConfig?.root)
+    } catch (error) {
+      log("[matrixx] uiux tools unavailable: failed to resolve the core pack root", { error })
+      return {}
+    }
+    if (!shouldEnableUiUxTools(coreSkillRoot, toolGating?.uiux_tools)) return {}
+    if (!coreSkillRoot) {
+      log("[matrixx] uiux tools unavailable: ui-ux-pro-max is not installed")
+      return {}
+    }
+    try {
+      return {
+        ...createUiuxTools({
+          coreSkillRoot,
+          pythonBin: resolvePythonBin(skillPacksConfig) ?? "python3",
+          timeoutMs: skillPacksConfig?.timeout_ms ?? UIUX_TIMEOUT_MS,
+          maxStdoutBytes: skillPacksConfig?.max_stdout_bytes ?? UIUX_MAX_STDOUT_BYTES,
+        }),
+      }
+    } catch (error) {
+      log("[matrixx] uiux tools unavailable: failed to create the uiux tools", { error })
+      return {}
+    }
+  })()
+
+  const loadPackSkills = (): InstalledPackSkill[] => {
+    if (skillPacksConfig?.enabled === false) return []
+    try {
+      return loadInstalledPacks({
+        root: resolvePacksRoot({ root: skillPacksConfig?.root }),
+        disabledPacks: skillPacksConfig?.disabled_packs,
+        disabledSkills: skillPacksConfig?.disabled_skills,
+      })
+    } catch (error) {
+      log("skill packs: failed to load installed packs", { error })
+      return []
+    }
+  }
+
+  const packSkills = loadPackSkills()
+
+  const refreshSkills = (): BuiltinSkill[] => {
+    try {
+      return [
+        ...createBuiltinSkills({ disabledSkills: skillContext.disabledSkills }),
+        ...loadPackSkills(),
+      ]
+    } catch (error) {
+      log("skill packs: refresh fell back to builtin skills", { error })
+      return createBuiltinSkills({ disabledSkills: skillContext.disabledSkills })
+    }
+  }
+
+  const skillTool = packSkills.length > 0
+    ? createSkillTool({
+        skills: [...skillContext.builtinSkills, ...packSkills],
+        disabledSkills: skillContext.disabledSkills,
+        refresh: refreshSkills,
+      })
+    : createSkillTool({
+        skills: skillContext.builtinSkills,
+        disabledSkills: skillContext.disabledSkills,
+      })
 
   const commands = discoverCommandsSync(ctx.directory)
   const slashcommandTool = createSlashcommandTool({
@@ -186,6 +265,7 @@ export function createToolCatalog(args: {
     ...pdfFiguresRecord,
     ...presetRecord,
     ...sessionCleanupRecord,
+    ...uiuxToolsRecord,
     ...removedToolGuards,
     subagent_control: createSubagentControl(ctx),
     ...(lookAt ? { look_at: lookAt } : {}),

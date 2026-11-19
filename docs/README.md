@@ -23,6 +23,8 @@
 | `quality.md` | Users implementing features or enforcing tests | BDD pipeline (Part A) + TDD discipline (Part B): when to use which |
 | `knowledge-hub.md` | Users with an external corpus | Hub declaration, router-only discipline, read-only guard + confirm flow |
 | `task-notepad-writer.md` | Users + engineers running multi-step work | The automatic markdown notepad per task: two-bucket layout, worked examples, how to disable |
+| `skill-packs.md` | Users adding design-intelligence skills | Install/list/remove for the `ui-ux-pro-max` pack family: catalog and risk tiers, consent flags, security model, tools, troubleshooting |
+
 
 ## Configure & operate
 

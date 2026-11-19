@@ -4345,6 +4345,65 @@
         }
       ]
     },
+    "skill_packs": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "root": {
+          "type": "string"
+        },
+        "auto_install": {
+          "default": false,
+          "type": "boolean"
+        },
+        "pinned_versions": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "allow_network_packs": {
+          "type": "boolean"
+        },
+        "allow_api_key_packs": {
+          "type": "boolean"
+        },
+        "python_bin": {
+          "type": "string"
+        },
+        "disabled_packs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disabled_skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeout_ms": {
+          "default": 12000,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "max_stdout_bytes": {
+          "default": 12288,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
     "knowledge": {
       "type": "object",
       "properties": {
@@ -5055,6 +5114,9 @@
           "type": "boolean"
         },
         "session_cleanup": {
+          "type": "boolean"
+        },
+        "uiux_tools": {
           "type": "boolean"
         }
       },

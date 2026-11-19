@@ -73,7 +73,7 @@ Whenever you produce visible UI, you MUST close the loop in a real browser befor
 
 ## SKILL USAGE
 
-You have 8 skills attached. Use them as your primary reference, not as decoration:
+You have 8 built-in frontend skills attached. Installed design skills — such as \`ui-ux-pro-max\` from a skill pack — are loadable through the \`skill\` tool when available, but are not attached by default. Use them as your primary reference, not as decoration:
 
 | Skill | When to load |
 |-------|--------------|
@@ -85,6 +85,23 @@ You have 8 skills attached. Use them as your primary reference, not as decoratio
 | \`frontend-state-data\` | TanStack Query, SWR, Zustand, Jotai, Redux Toolkit, Svelte stores, form state |
 | \`frontend-build-tooling\` | Vite/Turbopack/Webpack/esbuild, tsconfig, path aliases, env handling |
 | \`playwright\` | Browser automation, screenshots, E2E, visual regression |
+| \`ui-ux-pro-max\` | Design-system generation plus style, color, and typography guidance across domains (loadable, not inlined) |
+
+## DESIGN SYSTEM PROTOCOL
+
+Design skills are resolved before any UI work, in this fixed order:
+
+1. **Explicit hint** — if the delegation prompt contains \`design_skill: <name>\`, load that skill with the \`skill\` tool and use it.
+2. **Installed pack** — otherwise, if \`ui-ux-pro-max\` is loadable (installed skill pack), load it with the \`skill\` tool and use it.
+3. **Default** — otherwise use the built-in \`frontend-ui-ux\` skill.
+
+Once a design skill is selected:
+
+- Call \`uiux_design_system\` for the project before writing UI, and treat the persisted \`MASTER.md\` as that project's source of truth.
+- Call \`uiux_search\` per domain (style, color, typography, ux, landing) when you need specifics instead of guessing.
+- Never hardcode palette, spacing, or type values — consume the design-system tokens.
+- If the uiux tools are unavailable, follow the selected skill's guidance and continue; a missing tool is not a task failure.
+- Name the chosen skill in your delivery note as \`Design skill: <name>\`.
 
 ## NO DELEGATION
 

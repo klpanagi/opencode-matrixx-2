@@ -1,11 +1,16 @@
 import { registerAgentTransform } from "../../agents/shared/agents.transform"
 import type { MatrixxConfig } from "../../config"
+import type { SkillPacksConfig } from "../../config/schema/skill-packs"
 import { registerCommandTransform } from "../../features/builtin-commands/commands.transform"
 import { buildKnowledgeHubDeps as buildHubDeps } from "../../features/knowledge-hub/deps"
 import { registerMcpTransform } from "../../mcps/mcp.transform"
 import { log } from "../../shared"
 import { emitToolInfo } from "../../shared/tool/define-tool"
+import type { RegisterSkillTransformResult, SkillTransformDomain } from "../../skills/loader/skills.transform"
 import { registerSkillTransform } from "../../skills/loader/skills.transform"
+import type { BuiltinSkill } from "../../skills/loader/types"
+import { loadInstalledPacks, resolvePacksRoot } from "../../skills/packs"
+import type { LoadInstalledPacksOptions } from "../../skills/packs/loader"
 import { registerMessageHooks } from "../message-hooks"
 import type {
   MatrixxContext,
@@ -325,6 +330,64 @@ async function registerDomainToolHooks(input: RegisterDomainsInput & { bridge: D
 }
 
 /**
+ * The slice of the plugin config the skill-pack replay reads.
+ *
+ * Structural rather than `MatrixxConfig` so the replay stays unit-testable
+ * without building a full config object, exactly like the other pure replays
+ * in this module.
+ */
+export interface ReplayPackSkillsConfig {
+  skill_packs?: SkillPacksConfig | undefined
+}
+
+/** Test seams for {@link replayPackSkills}. */
+export interface ReplayPackSkillsDeps {
+  /** Override the installed-pack reader (tests inject a fake). */
+  loadPacks?: (options: LoadInstalledPacksOptions) => BuiltinSkill[]
+  /** Override the replay seam (tests inject a fake). */
+  replay?: (
+    skill: SkillTransformDomain,
+    entries: BuiltinSkill[],
+  ) => Promise<RegisterSkillTransformResult>
+}
+
+/**
+ * Replays installed skill-pack skills onto `ctx.skill.transform` (R11).
+ *
+ * The builtin replay above only covers what the config handler drafts; packs
+ * live on disk under a separate root and are replayed here once. Disabled or
+ * absent `skill_packs` short-circuits before any filesystem read. Pack content
+ * is untrusted, so every failure is logged and swallowed: a broken pack must
+ * never abort plugin setup.
+ */
+export async function replayPackSkills(
+  ctx: { skill: SkillTransformDomain },
+  config: ReplayPackSkillsConfig | undefined,
+  deps: ReplayPackSkillsDeps = {},
+): Promise<V2Registration | undefined> {
+  const packs = config?.skill_packs
+  if (!packs || packs.enabled === false) return undefined
+
+  const loadPacks = deps.loadPacks ?? loadInstalledPacks
+  const replay = deps.replay ?? registerSkillTransform
+  try {
+    const entries = loadPacks({
+      root: resolvePacksRoot({ root: packs.root }),
+      disabledPacks: packs.disabled_packs,
+      disabledSkills: packs.disabled_skills,
+    })
+    if (entries.length === 0) return undefined
+    const result = await replay(ctx.skill, entries)
+    return result.registration as V2Registration
+  } catch (error) {
+    log("[matrixx] skill-pack replay failed", {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return undefined
+  }
+}
+
+/**
  * Fans the single `config` mutation out into V2 domain transforms.
  *
  * V1 handed the plugin one mutable config object; V2 removed that hook in favour
@@ -407,6 +470,10 @@ async function registerDomainConfigTransforms(input: RegisterDomainsInput & { br
     )
     if (result) registrations.push(result.registration as V2Registration)
   }
+  // R11: replay installed pack skills after the builtin draft. A pack failure
+  // is logged inside the helper and never aborts plugin setup.
+  const packRegistration = await replayPackSkills(ctx, input.pluginConfig)
+  if (packRegistration) registrations.push(packRegistration)
 
   return registrations
 }
