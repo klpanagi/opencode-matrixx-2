@@ -392,6 +392,45 @@ Define custom skills directly in your config:
 }
 ```
 
+## Skill Packs
+
+External skill packs install optional design-intelligence skills from the pinned `ui-ux-pro-max-cli` npm release into a separate store under the OpenCode config dir. They load through a dedicated loader, never mix with the built-in skills, and are the single documented runtime-`SKILL.md` carve-out. Full guide: [skill-packs.md](skill-packs.md).
+
+```jsonc
+{
+  "skill_packs": {
+    "enabled": true,
+    "root": "./packs",
+    "auto_install": false,
+    "pinned_versions": { "ui-ux-pro-max": "2.15.0" },
+    "allow_network_packs": false,
+    "allow_api_key_packs": false,
+    "python_bin": "/usr/bin/python3.12",
+    "disabled_packs": ["design"],
+    "disabled_skills": ["design/image-generation"],
+    "timeout_ms": 12000,
+    "max_stdout_bytes": 12288
+  }
+}
+```
+
+| Field | Default | Description |
+| ----- | ------- | ----------- |
+| `enabled` | `true` | `false` disables pack loading, agent discovery, and the uiux tools entirely. |
+| `root` | `<config dir>/matrixx/skill-packs` | Packs root (relative to the project or absolute). |
+| `auto_install` | `false` | Declared in `SkillPacksConfigSchema` (`src/config/schema/skill-packs.ts`); installation currently happens through the `matrixx skill add` command. |
+| `pinned_versions` | unset | Per-pack version pins; `matrixx doctor` compares installed versions against this map. `matrixx skill add` uses the catalog-pinned version unless `--version` is passed. |
+| `allow_network_packs` | unset | Read by the doctor to silence `requiresNetwork` warnings. Install-time consent comes from the `--allow-network` flag. |
+| `allow_api_key_packs` | unset | Read by the doctor to silence `requiresApiKeys` warnings. Install-time consent comes from the `--allow-api-keys` flag. |
+| `python_bin` | unset | Python interpreter for pack scripts. Unset resolves `python3` → `python` → (`py -3` on Windows). |
+| `disabled_packs` | `[]` | Pack ids whose skills are excluded entirely. Unknown ids warn once and are ignored. |
+| `disabled_skills` | `[]` | Skill identifiers (`pack/skill` or bare name) to skip. The top-level `disabled_skills` (built-in names) does not filter pack skills. |
+| `timeout_ms` | `12000` | Per-script subprocess timeout in milliseconds. |
+| `max_stdout_bytes` | `12288` | Cap on captured subprocess stdout in bytes. |
+
+Commands: `matrixx skill add | list | remove` (install root, consent flags, risk tiers, and troubleshooting in [skill-packs.md](skill-packs.md)).
+
+
 ## Browser Automation
 
 Choose between four browser automation providers:
@@ -1528,7 +1567,7 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
     "agents": { "oracle": { "fallbackChain": [{ "providers": ["zai-coding-plan"], "model": "glm-4.7" }] } }
   },
   "complexityDowngrades": { "bullet-time": { "hard": "opencode/ling-3.0-flash-free" } },  // per-category downgrade targets (<provider>/<model>)
-  "tool_gating": { "bdd_tools": true },  // startup-token tool auto-gating (bdd_tools, pdf_figures, look_at, preset_tools, session_cleanup; unset = auto-detect)
+  "tool_gating": { "bdd_tools": true },  // startup-token tool auto-gating (bdd_tools, pdf_figures, look_at, preset_tools, session_cleanup, uiux_tools; unset = auto-detect)
   "plans": { "max_plan_file_bytes": 143360 },  // plan file size cap (10KB-512KB) + smith_max_review_rounds (2-20, default 8)
   "morpheus": { "tasks": { "scope": "project" } },  // LEGACY (deprecated: use tasks.*) — same-named keys act as fallback
   "_migrations": ["model-v2"]  // migration history (prevents re-applying migrations)
@@ -1546,7 +1585,7 @@ Smaller or legacy top-level keys (`src/config/schema/matrixx-config.ts`):
 | `knowledge` | `KnowledgeConfigSchema` (`src/config/schema/knowledge.ts`) | `hubs: []` | Hub fields: `name`, `path` (required); `index` (`_index.md`), `scope` (`global`), `mode` (`router-only`), `exclude` (`[]`), `pinnedFiles` (`[]`). Default excludes (merged under each hub's `exclude`): `*.docx`, `*.pptx`, `*.zip`, `node_modules/**`. Native injection runs on the `context` session hook and is gated by the `knowledge-hub-injector` entry in `disabled_hooks` plus at least one configured hub; hubs whose `path` references an unset env variable are skipped (one warning). |
 | `modelRequirements` | `ModelRequirementsSchema` (`src/config/schema/model-config.ts`) | — | `agents`/`categories` maps with `fallbackChain` (`providers[]` + `model`), `requiresModel`, `requiresAnyModel`, `requiresProvider`, `variant`. |
 | `complexityDowngrades` | `ComplexityDowngradesSchema` (`src/config/schema/model-config.ts`) | — | Nested maps to `<provider>/<model>` values. |
-| `tool_gating` | `ToolGatingConfigSchema` (`src/config/schema/tool-policy.ts`) | auto-detect | Defers rarely-needed LLM tools until auto-detect or opt-in (`bdd_tools`, `pdf_figures`, `look_at`, `preset_tools` default `false`, `session_cleanup` opt-in). |
+| `tool_gating` | `ToolGatingConfigSchema` (`src/config/schema/tool-policy.ts`) | auto-detect | Defers rarely-needed LLM tools until auto-detect or opt-in (`bdd_tools`, `pdf_figures`, `look_at`, `preset_tools` default `false`, `session_cleanup` opt-in, `uiux_tools` auto: registers the pack tools when the core skill pack is installed). |
 | `plans` | `PlansConfigSchema` (`src/config/schema/plans.ts`) | `max_plan_file_bytes: 140KB, smith_max_review_rounds: 8` | Plan file size cap (min 10KB, max 512KB); Smith review-round ceiling for Oracle high-accuracy mode (2-20). |
 | `morpheus` | `MorpheusConfigSchema` (`src/config/schema/morpheus.ts`) | — | Legacy; only `tasks` (`storage_path`, `task_list_id`, `scope`, `stale_after_hours`, `session_scoped`). Use `tasks.*`. |
 | `_migrations` | `string[]` | — | Internal migration history. |

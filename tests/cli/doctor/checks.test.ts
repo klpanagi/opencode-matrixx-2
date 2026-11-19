@@ -94,8 +94,8 @@ import {
 } from "../../../src/shared/policy/context-mode-enforcement"
 
 describe("check registry", () => {
-  test("ALL_CHECKS has 13 entries", () => {
-    expect(ALL_CHECKS.length).toBe(13)
+  test("ALL_CHECKS has 14 entries", () => {
+    expect(ALL_CHECKS.length).toBe(14)
   })
 
   test("getCategories returns 6 unique categories including integrations", () => {

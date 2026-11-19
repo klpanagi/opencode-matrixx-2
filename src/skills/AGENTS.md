@@ -117,6 +117,10 @@ docs were removed as well: nothing loads `.md` at runtime (loader uses `builtin/
 `.ts` only) and the template already inlines the essential setup/scraping
 guidance. Do not re-add top-level `SKILL.md` copies or `references/` dirs.
 
+## SKILL.MD POLICY: INSTALLED PACKS ARE THE ONLY CARVE-OUT
+
+Built-in skills are code-only (`builtin/**/*.ts`); they never ship or generate `SKILL.md` assets in this repository. Installed skill packs are the SINGLE documented runtime-`SKILL.md` carve-out: their `SKILL.md` files are written under the pack store (`<config dir>/matrixx/skill-packs/<packId>/<version>/skills/<packId>/`) at install time by the pack installer and are never committed to this repository. Do not re-add top-level `SKILL.md` copies for built-ins (see SKILL.MD TRIAGE above). Pack loading is isolated in `src/skills/packs/` (`loader.ts`, `disable.ts`); user-facing docs live in `docs/skill-packs.md`.
+
 ## LAZY LOADING
 
 Since v2.0.0, all **non-browser** skills use lazy template resolution (see LOADER SEMANTICS §2 above).

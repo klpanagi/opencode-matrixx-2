@@ -36,6 +36,7 @@ tools/
 ├── staleness-gap-checker/ # Staleness gap check
 ├── subagent-control/  # Subagent cancel/wait control
 ├── removed-tools/     # Guard stubs for removed delegation tools (`task`, `background_*`)
+├── uiux/             # 3 ui-ux-pro-max pack tools: uiux_search, uiux_design_system, uiux_validate (gated: core pack installed)
 └── slashcommand/     # Slash command dispatch
 ```
 
@@ -67,6 +68,7 @@ tools/
 | `look_at` | System | Factory | Multimodal PDF/image analysis |
 | `skill` | Skill | Factory | Execute skill with MCP capabilities |
 | `slashcommand` | Command | Factory | Slash command dispatch |
+| `uiux_search` / `uiux_design_system` / `uiux_validate` | Skill pack | Factory | Wrap the installed `ui-ux-pro-max` pack scripts (gated: core pack installed and `tool_gating.uiux_tools` not false; see `docs/skill-packs.md`) |
 
 ## TASK TOOLS
 

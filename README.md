@@ -79,7 +79,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 | **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel subagent execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
 | **Lifecycle Hooks (59-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
-| **Skills (70)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) |
+| **Skills (70)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) · [Skill Packs](docs/skill-packs.md) |
 | **Software Dev Pipeline** | 6-phase PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP with 5 team roles, adaptive to task size | [Quality](docs/quality.md) |
 | **Context Management (L0–L4)** | Native recovery + RTK (60–90% bash savings) + context-mode sandbox + DCP pruning + Headroom proxy (60–95% JSON) | [Context](docs/context-management.md) |
 | **Security** | Secret-leak guard (gitleaks), env-file write guard, read-only Sentinel auditor with CWE-rated findings | [Hooks](docs/hooks.md) · [Agents](docs/agents.md) |
