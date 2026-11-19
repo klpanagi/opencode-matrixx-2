@@ -44,6 +44,7 @@ export { createSkillTool } from "./skill/tools"
 export { createSlashcommandTool, discoverCommandsSync } from "./slashcommand/tools"
 export { createStalenessGapCheckerTool } from "./staleness-gap-checker"
 export { createSubagentControl } from "./subagent-control/tools"
+export { createUiuxTools } from "./uiux/tools"
 export { lspManager }
 
 import type { MatrixxToolDefinition } from "../shared/tool/define-tool"

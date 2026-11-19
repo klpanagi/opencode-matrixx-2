@@ -12,6 +12,8 @@ export const ToolGatingConfigSchema = z.object({
   preset_tools: z.boolean().default(false),
   /** Session cleanup tool (session_cleanup). Destructive and rarely needed, so it is opt-in: undefined or false keeps it unregistered. Set true to expose it, then call it with apply=true. */
   session_cleanup: z.boolean().optional(),
+  /** ui-ux-pro-max skill-pack tools (uiux_search, uiux_design_system, uiux_validate). Undefined = auto: register iff the core pack is installed. True/false force the outcome. */
+  uiux_tools: z.boolean().optional(),
 })
 
 export type ToolGatingConfig = z.infer<typeof ToolGatingConfigSchema>

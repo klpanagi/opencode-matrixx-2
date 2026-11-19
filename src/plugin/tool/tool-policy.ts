@@ -134,6 +134,17 @@ export function shouldEnableSessionCleanup(enabled: boolean | undefined): boolea
   return enabled === true
 }
 
+/**
+ * uiux skill-pack tools: explicit override wins, otherwise register only
+ * when an installed `ui-ux-pro-max` core skill root was resolved.
+ */
+export function shouldEnableUiUxTools(
+  coreSkillRoot: string | undefined | null,
+  override?: boolean,
+): boolean {
+  return override ?? Boolean(coreSkillRoot)
+}
+
 export type ToolPermissionEffect = "allow" | "deny" | "ask"
 
 export interface ToolPermissionDecision {
