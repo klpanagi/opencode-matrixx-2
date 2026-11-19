@@ -962,7 +962,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 }
 ```
 
-Available commands (23 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
+Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `academic-humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
 ## Comment Checker
 
 Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.

@@ -100,7 +100,7 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 23 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 30 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 24 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 

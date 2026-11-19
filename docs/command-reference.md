@@ -1,10 +1,10 @@
 # Command Reference
 
-> All 23 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> All 24 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 23 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, and tool toggles.
+Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, academic editing, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 23 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (21 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -35,6 +35,7 @@ Matrixx provides 23 built-in slash commands covering orchestration, research, re
 | `/quality-assurance` | Bounded quality improvement loop | — | — |
 | `/humanize` | Quality-focused humanization pipeline | — | — |
 | `/security-audit` | Read-only scoped security audit with findings report | — | — |
+| `/academic-humanize` | Academic/grant-proposal editing pass (AI tells, claim↔evidence, numbers preserved) | — | — |
 
 ### Legend
 
@@ -503,7 +504,37 @@ Finding statuses: `confirmed`, `needs_validation`, `rejected`, `deferred`. Cover
 
 ---
 
-In addition to the 23 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+## 24. `/academic-humanize`
+
+Editing pass for AI-assisted academic writing and funding proposals: strips AI tells, keeps the
+neutral precise register scholarship expects, ties every claim to its evidence (and, for proposals, to
+feasibility), and matches the author's voice when a sample is supplied. Template:
+`src/features/builtin-commands/templates/academic-humanize.ts`, adapted from
+[academic-humanizer](https://github.com/AIScientists-Dev/academic-humanizer) v0.3.3 (MIT).
+
+```
+ /academic-humanize paper/main.tex voice-from: prior_paper.pdf venue: ICLR
+ /academic-humanize proposal/aims.md --mode=proposal --dry-run
+```
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `target` | git-changed `.tex`/`.md` | File, directory, glob, or quoted inline prose; omitted falls back to git-changed files, then asks |
+| `voice-from:` | — | Prior accepted paper/proposal used as the Layer 5 voice sample; never invented |
+| `venue:` | — | Target venue or funding agency (ICLR, NeurIPS, NSF, NIH, ...) driving register and Layer 6 |
+| `--mode` | `auto` | `paper` (Layers 1–5), `proposal` (Layers 1–6), or `auto` (infer, ask when ambiguous) |
+| `--dry-run` | `false` | Audit only: report findings and evidence status without editing |
+
+Guarantees: no number, equation, symbol, or citation is altered; no finding, dataset, funding, partner,
+or letter is invented; rewrites are approval-gated, never auto-applied. Not for detector evasion — the
+command carries a hard no-obfuscation boundary, and venue AI-use disclosure obligations remain with the
+author.
+
+Override with `disabled_commands: ["academic-humanize"]` in `matrixx.jsonc`.
+
+---
+
+In addition to the 24 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|

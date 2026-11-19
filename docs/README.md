@@ -19,7 +19,7 @@
 | `orchestration.md` | Users running multi-step work | The delegation workflow: planner to plan to mission to workers |
 | `agents.md` | Users choosing agents | The [agent roster](agents.md) (13 core + 8 `mouse-*` workers): what each does and when to use it |
 | `category-skill-guide.md` | Users composing work | The 8 task categories and [70 skills](category-skill-guide.md), and how they combine |
-| `command-reference.md` | Users | All 23 slash commands: usage, options, examples |
+| `command-reference.md` | Users | All 24 slash commands: usage, options, examples |
 | `quality.md` | Users implementing features or enforcing tests | BDD pipeline (Part A) + TDD discipline (Part B): when to use which |
 | `knowledge-hub.md` | Users with an external corpus | Hub declaration, router-only discipline, read-only guard + confirm flow |
 | `task-notepad-writer.md` | Users + engineers running multi-step work | The automatic markdown notepad per task: two-bucket layout, worked examples, how to disable |

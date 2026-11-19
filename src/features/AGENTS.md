@@ -8,7 +8,7 @@ Feature modules (builtin-commands, task-storage, bdd, assembly-state, handoff, c
 ```
 features/
 ├── agent-effort/               # Per-agent effort overrides
-├── builtin-commands/           # 23 commands, 21 templates
+├── builtin-commands/           # 24 commands, 22 templates
 ├── task-storage/               # Task system: schema + file-backed storage (project-scoped `getTaskDir()`, atomic `tmp+renameSync`) — 5 files — see task-storage/AGENTS.md
 ├── context-injection/          # System message injection (hook-bridge/, injector/, routing/)
 ├── assembly-state/             # Assembly voting state (enable/disable, reset)
