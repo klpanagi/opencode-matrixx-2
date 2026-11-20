@@ -4,6 +4,42 @@
 
 External design-intelligence skills for the `ui-ux-pro-max` pack family, installed from the pinned `ui-ux-pro-max-cli` npm distribution (currently `2.15.0`).
 
+## Prerequisites
+
+- **Bun 1.4.4+**. The CLI itself runs on Bun; `bunx` or `bun` must be on your PATH to invoke it.
+- **Python 3.8+ on PATH** for tool execution. The tool layer resolves an interpreter in this order: `skill_packs.python_bin` config, then `python3`, then `python`, then `py -3` on Windows. Nothing is auto-installed.
+- **One-time outbound network access** to the npm registry at install time, to fetch the pinned, SHA-512-verified tarball.
+- **Write access to the OpenCode config dir** (`OPENCODE_CONFIG_DIR`, defaulting to `~/.config/opencode`), where the pack store lives.
+- **An OpenCode restart after install**, so the new tools and skills register.
+
+`requiresPython` and `requiresNode` never block the install itself. They are checked only when pack tools execute, and by `matrixx doctor`.
+
+## Quick start
+
+1. Install the core pack plus the design-system pack:
+
+   ```bash
+   matrixx skill add ui-ux-pro-max design-system
+   ```
+
+2. Confirm the install:
+
+   ```bash
+   matrixx skill list
+   ```
+
+3. Restart OpenCode so the `uiux_*` tools and the `ui-ux-pro-max` skill register.
+
+4. Sanity check `uiux_validate` once the session is back up.
+
+5. First real use:
+
+   - `uiux_search` with a query and an optional `stack` argument.
+   - `uiux_design_system`, which writes `design-system/<project>/MASTER.md`.
+   - Or delegate UI work to Sati, which runs the design-system protocol.
+
+> **Note:** `skill add` ships with the CLI release that contains skill packs. If `matrixx skill` reports `Unknown command: skill`, the installed CLI predates that release. Use a newer release, or run a local build with `bun dist/cli.js skill ...`.
+
 ## What a skill pack is
 
 A pack is one installable unit of the upstream `ui-ux-pro-max-cli` tarball. Each pack ships a `SKILL.md` (guidance the skill tool serves to agents), reference data domains, and optionally executable scripts. Installed packs load through a dedicated loader (`src/skills/packs/loader.ts`) that is fully isolated from the built-in skill loader: a missing, corrupt, or malformed pack degrades to fewer skills, never to a startup failure.

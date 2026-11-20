@@ -139,6 +139,30 @@ Full setup, CI mode, troubleshooting, and uninstall: [Installation guide](docs/g
 
 ---
 
+## Skill Packs (optional)
+
+Optional design-intelligence skills from the `ui-ux-pro-max` pack family, installed on demand rather than bundled:
+
+```bash
+matrixx skill add ui-ux-pro-max design-system
+```
+
+`matrixx`, `opencode-matrixx`, and `opencode-matrixx-v2` are equivalent binaries; from a local checkout, run `bun dist/cli.js skill add ui-ux-pro-max design-system` instead.
+
+Requirements:
+
+- Bun 1.4.4 or newer (the CLI itself runs on Bun).
+- Python 3.8+ for the pack scripts (`search.py`, `validate_data.py`). Install succeeds without it, but the `uiux_*` tools need it at runtime.
+- One-time network access at install time (a pinned, SHA-512-verified npm tarball). Restart OpenCode afterwards so the new tools and skills register.
+
+The optional `ui-styling` pack needs `--allow-network`; the `design` pack needs `--allow-network --allow-api-keys`.
+
+Verify the install with `matrixx skill list` and `matrixx doctor`.
+
+[Full guide: docs/skill-packs.md](docs/skill-packs.md)
+
+---
+
 ## Honest Pros & Cons
 
 **Where Matrixx shines**
