@@ -7,8 +7,6 @@ tests/hooks/matrix-loop/index.test.ts
 tests/hooks/start-work/index.test.ts
 tests/hooks/auto-update-checker/hook/background-update-check.test.ts
 tests/hooks/auto-update-checker/hook.test.ts
-tests/hooks/comment-checker/cli.test.ts
-tests/hooks/comment-checker/hook.apply-patch.test.ts
 tests/hooks/directory-agents-injector/injector.test.ts
 tests/hooks/rules-injector/injector.test.ts
 tests/hooks/rules-injector/injector.cache.test.ts
@@ -40,3 +38,4 @@ tests/tools/task/task-create-batch.test.ts
 tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
+tests/tools/comment-scan/

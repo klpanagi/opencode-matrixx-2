@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-71 accepted hook names (59 enum + 11 retained no-op literals + 1 alias; 55 dirs + 9 loose hook `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
+71 accepted hook names (59 enum + 11 retained no-op literals + 1 alias; 54 dirs + 9 loose hook `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
 
 ## STRUCTURE (abridged — authoritative list: `ls src/hooks/`)
 ```
@@ -14,7 +14,7 @@ hooks/
 ├── auto-slash-command/           # Detects /command patterns
 ├── auto-update-checker/          # Plugin update check
 ├── category-skill-reminder/      # Category+skill delegation reminders
-├── comment-checker/              # Prevents AI slop comments
+├── comment-checker/              # AI-slop comment detection via in-process ast-grep (no binary)
 ├── compaction-context-injector/  # Injects context on compaction
 ├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/`
 ├── context-window-monitor.ts     # Reminds of headroom at 70%

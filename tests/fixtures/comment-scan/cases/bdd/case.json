@@ -1,0 +1,18 @@
+{
+  "case": "bdd",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/bdd/sample.ts",
+  "content": "// given a signed-in user\n// when they open settings\n// then the panel renders\nexport function renderSettings(): string {\n  return \"settings\"\n}\n",
+  "language": "typescript",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 6,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": false,
+  "parityReason": "OLD BINARY reports BDD comments; the new scan allow-lists BDD comments, so it reports zero",
+  "notes": [
+    "Evidence case for the BDD allow-list row (rubric priority 2)."
+  ]
+}

@@ -1004,7 +1004,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `plan-review`, `start-work`, `stop-continuation`, `humanize`, `academic-humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
 ## Comment Checker
 
-Configure comment-checker hook behavior. The comment checker warns when excessive comments are added to code.
+Configure the in-process AI-slop comment check. Detection runs inside the plugin with ast-grep (`sg`): nothing is downloaded at runtime or postinstall, and no external `comment-checker` binary is required. The hook warns after writes and edits when it sees comments that look like AI slop; the `comment_scan` tool exposes the same scan to agents.
 
 ```json
 {
@@ -1014,9 +1014,23 @@ Configure comment-checker hook behavior. The comment checker warns when excessiv
 }
 ```
 
-| Option        | Default | Description                                                                |
-| ------------- | ------- | -------------------------------------------------------------------------- |
-| `custom_prompt` | -       | Custom warning message to replace the default. Use `{{comments}}` placeholder. |
+| Option | Default | Description |
+| ------ | ------- | ----------- |
+| `custom_prompt` | - | Replaces the default warning body. `{{comments}}` is substituted with the detected-comments XML. |
+
+`disabled_hooks: ["comment-checker"]` still turns the hook off, and the config key itself is unchanged.
+
+Two scan tiers exist. The **AST tier** uses ast-grep node kinds per language. The **regex tier** scans line leaders for languages sg cannot parse (`sql`, `toml`, `hcl`, `dockerfile`, `proto`, `jsonc`, `svelte`, `elm`, `groovy`, `cue`, `ocaml`). The hook scans both tiers: AST where tree-sitter supports the language and the regex tier otherwise. The `comment_scan` tool and the `remove-ai-slops` skill use the same two-tier scan. If no usable `sg` is found, regex-tier scanning still works and the doctor reports a warning instead of failing.
+
+Set `COMMENT_CHECKER_DEBUG=1` to append the hook's own debug trace to `/tmp/comment-checker-debug.log`. File bodies are redacted to their lengths plus a short prefix, and the file is created with `0o600` permissions.
+
+Behaviour delta versus the 0.6.1 external binary:
+
+- **Old-binary defects corrected**: each comment is reported once (the 0.6.1 line-pass plus block-pass double-reported every comment), docstring findings are emitted in strict line order instead of comments-first, and agent-memo comments are listed once rather than twice.
+- **Deliberate policy**: `write` reports every comment in the submitted content (no pre-write diff is available), BDD `given`/`when`/`then` comments are allow-listed out, and machine directives such as `biome-ignore`, `nolint`, `@ts-nocheck`, and `istanbul ignore` are suppressed.
+- **Directive coverage**: the allow-list handles the eslint, prettier, `@ts-*`, noqa, `type: ignore`, pylint, ruff, mypy, pyre, flake8, pytype, clippy, and pyright families; bare `deny`/`allow`/`warn` stay real prose.
+- **`note:` nuance**: bare `note:` now matches, where 0.6.1 required a following word character.
+- **Normalisation and baseline gaps**: trailing newlines are trimmed from comment text; `jsonc` and `.mjs`/`.cjs` have no 0.6.1 baseline because the old binary skipped them (no parity claim).
 
 ## Notification
 

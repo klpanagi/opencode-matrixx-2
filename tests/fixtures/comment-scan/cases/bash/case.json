@@ -1,0 +1,17 @@
+{
+  "case": "bash",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/bash/sample.sh",
+  "content": "#!/usr/bin/env bash\nset -euo pipefail\n\n# Runs the smoke suite against the local build.\nmain() {\n  local target=\"${1:-.}\" # defaults to the repo root\n  echo \"running in $target\"\n}\n\nmain \"$@\"\n",
+  "language": "bash",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Shebang on line 1 is dropped by the binary's allow-list; no tabs in body."
+  ]
+}

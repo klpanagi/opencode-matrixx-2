@@ -29,7 +29,7 @@ relevant for parallelization decisions; **Secondary** lists everything else.
 | 4 | writeExistingFileGuard | `BLOCKING` | `READ_ONLY` (when file absent) | — | YES (line 46, `throw new Error("File already exists. Use edit tool instead.")`) | `existsSync(resolvedPath)` (line 28) | `src/hooks/write-existing-file-guard/hook.ts:10-48` |
 | 5 | qualityGate | `READ_ONLY` | — | — | NO | None in `before`; only writes to module-level `pendingCalls` Map (line 89-93); heavy Biome work happens in `tool.execute.after` (line 113) | `src/hooks/quality-gate/hook.ts:74-94` (before-handler) |
 | 7 | nonInteractiveEnv | `MUTATOR` | — | `output.message` (REPLACE, line 39); `output.args.command` (REPLACE, line 58) | NO | None (pure regex + `buildEnvPrefix`) | `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64` |
-| 8 | commentChecker | `READ_ONLY` | — | — | NO | None in `before`; only calls `registerPendingCall` (in-memory Map, line 74-83); heavy CLI work happens in `tool.execute.after` (line 177) | `src/hooks/comment-checker/hook.ts:38-84` (before-handler) |
+| 8 | commentChecker | `READ_ONLY` | — | — | NO | None in `before`; only calls `registerPendingCall` (in-memory Map, line 177-186); in-process `scanSources` + `formatReport` runs in `tool.execute.after` (line 231, 247) | `src/hooks/comment-checker/hook.ts:141-187` (before-handler) |
 | 9 | directoryAgentsInjector | `READ_ONLY` | — | — | NO | None — `tool.execute.before` is a NO-OP (`void input; void output;`, factory.ts:66-67); real work is in `tool.execute.after` | `src/hooks/directory-injector/factory.ts:62-68` |
 | 11 | rulesInjector | `READ_ONLY` | — | — | NO | None — `tool.execute.before` is a NO-OP (`void input; void output;`, hook.ts:59-60); real work is in `tool.execute.after` | `src/hooks/rules-injector/hook.ts:55-61` |
 | 13 | oracleMdOnly | `BLOCKING` | `MUTATOR` + `NETWORK` | `output.args.prompt` (line 30); `output.message` (CONCAT, line 72) | YES (line 56, `throw new Error("[…] Oracle can only write/edit .md files…")`) | `getAgentFromSession()` → SDK HTTP call (`findNearestMessageWithFieldsFromSDK`) or filesystem fallback (`readFileSync`/`readdirSync` in `features/context-injection/hook-bridge/injector.ts:147,154,166,198,204`) | `src/hooks/oracle-md-only/hook.ts:14-81` |
@@ -186,7 +186,7 @@ await hooks.niobeHook?.["tool.execute.before"]?.(input, output)
    hook that wants to inspect the raw command.
 3. **`qualityGate` and `commentChecker` are READ_ONLY in the before-handler**
    but their `tool.execute.after` handlers do the heavy work (Biome lint,
-   `@code-yeongyu/comment-checker` CLI). The before-handler only writes a
+   in-process `comment-scan`). The before-handler only writes a
    pending-call record to an in-memory Map. T1.1 should treat these as
    safe-to-parallel for the before-handler cost only.
 4. **`directoryAgentsInjector` / `rulesInjector`

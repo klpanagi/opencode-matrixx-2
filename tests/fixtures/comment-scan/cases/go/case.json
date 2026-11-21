@@ -1,0 +1,17 @@
+{
+  "case": "go",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/go/sample.go",
+  "content": "package sample\n\n// Client wraps the upstream HTTP client.\ntype Client struct {\n\tbaseURL string\n}\n\n/* DefaultTimeout is used when the caller does not override it. */\nconst defaultTimeout = 30\n\nfunc (c *Client) URL() string {\n\treturn c.baseURL // absolute, never empty\n}\n",
+  "language": "go",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 3,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Line comment, block comment and trailing comment; tab-indented body."
+  ]
+}

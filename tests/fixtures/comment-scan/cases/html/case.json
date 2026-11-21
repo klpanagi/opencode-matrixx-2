@@ -1,0 +1,17 @@
+{
+  "case": "html",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/html/sample.html",
+  "content": "<!doctype html>\n<html lang=\"en\">\n  <!-- Shell rendered before the client bundle boots. -->\n  <head>\n    <meta charset=\"utf-8\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n  </body>\n</html>\n",
+  "language": "html",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 1,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "One `<!-- -->` comment."
+  ]
+}

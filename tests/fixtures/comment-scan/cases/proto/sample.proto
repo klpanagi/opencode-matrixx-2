@@ -1,0 +1,9 @@
+// Wire format for the settings service.
+syntax = "proto3";
+
+package settings;
+
+message Setting {
+  string id = 1; // stable slug
+  string value = 2;
+}

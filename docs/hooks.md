@@ -33,7 +33,7 @@
 - Real-world cost sits in a few hooks, not in dispatch overhead: one
   subprocess (`secret-leak-guard` spawns `gitleaks`) and three SDK-HTTP hooks
   (`oracle-md-only`, `mouse-notepad`, `niobe`), plus sequential `after`
-  work (`quality-gate` Biome, `comment-checker` CLI).
+  work (`quality-gate` Biome, `comment-checker` in-process scan).
 - 1 registered hook has a factory but no call site in any current
   dispatcher (`document-reader-guard`, Section 2.4). It is constructed, appears in
   config, and costs nothing at runtime. `startup-toast` is a flag, not a factory.
@@ -153,7 +153,7 @@ toolOutputTruncator (always first)
 ```
 
 Each hook above appears once (`preemptive-compaction` is deleted). `qualityGate`/`commentChecker` are cheap in `before`
-(Map register) and expensive in `after` (Biome/CLI).
+(Map register) and expensive in `after` (Biome/`scanSources`).
 `directoryAgentsInjector`/`rulesInjector` are no-ops in `before` and do real
 work in `after`.
 
@@ -188,11 +188,11 @@ narrows which tool calls are affected.
 | `niobe` | Prepends the niobe reminder outermost on delegated tasks. Exists to keep workers inside mission scope. | `subagent` calls from the orchestrator (`isTaskTool` accepts `task` and `subagent`, `src/shared/io/shell-tool-name.ts:19-22`). | MUTATOR+NETWORK, medium |
 | `rtk-bash-rewriter` | Rewrites bash into RTK-compressed equivalents. Exists to cut token spend on bash output. | `bash` when `rtk.enabled` and the binary is present; otherwise silent passthrough. | MUTATOR, low/off |
 | `quality-gate` (before) | Registers the pending call in a `Map`. Exists to pair before/after so lint runs only on changed files. | Writes/edits to lintable files. | READ_ONLY, negligible |
-| `comment-checker` (before) | Registers the pending call. Exists for the same before/after pairing for the comment CLI. | Changed files. | READ_ONLY, negligible |
+| `comment-checker` (before) | Registers the pending call. Exists for the same before/after pairing for the comment scan. | Changed files. | READ_ONLY, negligible |
 | `directory-agents-injector` (before) | No-op (`void input; void output`). Exists as a placeholder — the real work runs in `after`. | Never (in `before`). | READ_ONLY, zero |
 | `rules-injector` (before) | No-op. Same split-phase design as above. | Never (in `before`). | READ_ONLY, zero |
 
-Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:38-84`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
+Evidence: `src/hooks/secret-leak-guard/hook.ts:20-60`, `src/hooks/env-file-write-guard/hook.ts:18-48`, `src/hooks/write-existing-file-guard/hook.ts:10-48`, `src/hooks/task-edit-guard/hook.ts` + `constants.ts`, `src/hooks/context-mode-enforcer/hook.ts`, `src/hooks/oracle-md-only/hook.ts:14-81`, `src/hooks/non-interactive-env/non-interactive-env-hook.ts:24-64`, `src/hooks/bash-file-read-guard.ts:21-44`, `src/hooks/mouse-notepad/hook.ts:10-43`, `src/hooks/niobe/tool-execute-before.ts:19-54`, `src/hooks/rtk-bash-rewriter/hook.ts`, `src/hooks/quality-gate/hook.ts:74-94`, `src/hooks/comment-checker/hook.ts:141-187`, `src/hooks/directory-injector/factory.ts:62-68`, `src/hooks/rules-injector/hook.ts:55-61`.
 
 The table covers 15 of the 20 hot-path hooks. The remaining five are dispatched in the same handler but documented elsewhere: `knowledge-hub-guard` and `knowledge-hub-search-nudge` (Section 2.3), `webfetch-redirect-guard` (Section 2.4), and `docs-lookup-guard` plus `software-dev-enforcement` (factories in `src/plugin/hooks/create-tool-guard-hooks.ts:153-176`; no dedicated row yet).
 
@@ -206,7 +206,7 @@ effective condition (many hooks are idle unless their condition holds).
 | `tool-output-truncator` | Truncates whitelisted tool outputs (50k tokens default, 10k for webfetch; opt-in all via `experimental`). Exists to stop huge outputs from blowing the context window. | After every whitelisted tool call; always runs first. |
 | `preemptive-compaction` (removed, deprecated no-op literal) | Hook deleted; the name still parses so old configs keep loading, but no code runs. Single compaction path now owns compaction. | Never fires. Listed in `disabled_hooks` only for backwards compatibility. |
 | `quality-gate` | Runs Biome lint on changed files. Exists to catch style and type errors immediately after edits. | After writes/edits registered in `before`. |
-| `comment-checker` | Runs the `@code-yeongyu/comment-checker` CLI on changed files. Exists for comment hygiene. | After changed files. |
+| `comment-checker` | Scans changed files in-process with ast-grep (`comment-scan`); no external binary. Exists for comment hygiene. | After changed files. |
 | `context-window-monitor` | Token accounting with a headroom reminder. Exists as the ~70% early warning before preemptive compaction. | After tool calls; read-only. |
 | `directory-agents-injector` | Injects `AGENTS.md` context. Exists so agents follow repo conventions. | After reads; auto-disabled on OpenCode versions with native AGENTS injection. |
 | `rules-injector` | Injects `.morpheus/rules` conditionally. Exists to put project rules in context. | After calls, when rule files match. |
@@ -368,7 +368,7 @@ Key points:
    (`getAgentFromSession` / `isCallerOrchestrator`) with filesystem fallback
    scans on the critical path, and `oracleMdOnly` runs twice.
 3. `after` is the longer tail: 18 sequential awaits plus Biome plus the
-   comment-checker CLI. `qualityGate` runs parallel for
+   in-process comment scan. `qualityGate` runs parallel for
    this reason.
 4. Even no-op hooks (`directoryAgentsInjector`, `rulesInjector` in `before`)
    cost one microtask hop each. Only `disabled_hooks` removes them.
@@ -414,8 +414,8 @@ No per-hook wall-clock instrumentation exists today. Notes for engineers:
    covers the refresh.
 2. Biggest wins, in order: skip `gitleaks` for read-only tools or debounce
    it; memoize `getAgentFromSession`/`isCallerOrchestrator` per session;
-   avoid the double `oracleMdOnly` invocation; parallelize or defer `after`
-   Biome/CLI work.
+   avoid the double `oracleMdOnly` invocation; parallelize or defer the `after`
+   Biome and in-process comment scan work.
 3. Resolve Section 2.4: wire the one remaining unwired hook
    (`document-reader-guard`, built in `src/plugin/hooks/create-tool-guard-hooks.ts:161-162`
    with no call site) into a dispatcher, or remove its factory and schema

@@ -1,0 +1,8 @@
+/* Base tokens for the settings panel. */
+:root {
+  --bg: #ffffff;
+}
+
+.panel {
+  color: var(--fg, #111111); /* inherited fallback */
+}

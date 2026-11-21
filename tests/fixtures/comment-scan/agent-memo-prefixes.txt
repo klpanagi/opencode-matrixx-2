@@ -1,0 +1,87 @@
+# Agent-memo prefixes used by the OLD comment-checker binary
+# (OLD_BINARY, sha256 prefix 44ef2b13, version 0.6.1) for its "AGENT MEMO COMMENT DETECTED" block.
+# Frozen copy consumed by src/shared/comment-scan/allow-list.ts.
+#
+# binary: $OLD_BINARY
+# binary-sha256: 44ef2b13b68bf795848f957a435302a6a1152f65cdd74dc568fd3cce63310c09
+#
+# extraction command (strings + grep, run against the installed binary):
+#   strings -n 3 $OLD_BINARY \
+#     | grep -oE '\(\?i\)\^\[\\s#/\*-\]\*[a-z][^\\]*' | sort -u
+# multi-branch regexes and the arrow shape were confirmed with:
+#   rg -a -o '\(\?i\)\^\[\\s#/*-\]\*[ -~]{0,60}' \
+#     $OLD_BINARY | sort -u
+#
+# The binary compiles 23 anchored English regexes plus one arrow-shape regex (24 total),
+# comment body after stripping leading [space # / * -] characters:
+#   (?i)^[\s#/*-]*added?\b
+#   (?i)^[\s#/*-]*removed?\b
+#   (?i)^[\s#/*-]*deleted?\b
+#   (?i)^[\s#/*-]*note:\s*\w
+#   (?i)^[\s#/*-]*replaced?\b
+#   (?i)^[\s#/*-]*here\s+we\b
+#   (?i)^[\s#/*-]*previously\b
+#   (?i)^[\s#/*-]*implemented?\b
+#   (?i)^[\s#/*-]*after\s+this\b
+#   (?i)^[\s#/*-]*before\s+this\b
+#   (?i)^[\s#/*-]*was\s+changed\b
+#   (?i)^[\s#/*-]*refactor(ed|ing)?\b
+#   (?i)^[\s#/*-]*moved?\s+(from|to)\b
+#   (?i)^[\s#/*-]*now\s+(we|this|it)\b
+#   (?i)^[\s#/*-]*[a-z]+\s*->\s*[a-z]+      (arrow shape - no literal prefix)
+#   (?i)^[\s#/*-]*changed?\s+(from|to)\b
+#   (?i)^[\s#/*-]*updated?\s+(from|to)?\b
+#   (?i)^[\s#/*-]*renamed?\s+(from|to)?\b
+#   (?i)^[\s#/*-]*switched?\s+(from|to)\b
+#   (?i)^[\s#/*-]*modified?\s+(from|to)?\b
+#   (?i)^[\s#/*-]*converted?\s+(from|to)\b
+#   (?i)^[\s#/*-]*migrated?\s+(from|to)?\b
+#   (?i)^[\s#/*-]*implementation\s+(of|note)\b
+#   (?i)^[\s#/*-]*this\s+(implements?|adds?|removes?|changes?|fixes?)\b
+#
+# The list below reduces those regexes to the shortest literal prefix that reproduces
+# the binary's behaviour under case-insensitive startsWith() matching:
+#   - an optional `d` is subsumed by the bare stem ("remove" covers "removed")
+#   - a required `(from|to)` needs one line per branch ("switched from", "switched to")
+#   - "implemented"/"added" need the `d` because the stem form ("implemente"/"adde")
+#     is not a word, and bare "add"/"implement" do NOT match the binary
+#   - `note:` requires a following word character ("note:" alone does not match)
+# Every line was confirmed by running the binary on a `# <prefix> x` comment body.
+#
+# Korean stems the same detector also uses (out of scope for the English set):
+#   리팩(터|토)링 | 이전(에는|엔) | 여기(서|에서)\s* | 기존(에는|엔|의) | 에서\s+\S+\s*(으로|로)\b
+#
+added
+remove
+delete
+note:
+replace
+here we
+previously
+implemented
+after this
+before this
+was changed
+refactor
+move from
+move to
+now we
+now this
+now it
+change from
+change to
+update
+rename
+switched from
+switched to
+modified
+converted from
+converted to
+migrate
+implementation of
+implementation note
+this implements
+this adds
+this removes
+this changes
+this fixes

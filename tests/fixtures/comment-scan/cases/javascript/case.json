@@ -1,0 +1,18 @@
+{
+  "case": "javascript",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/javascript/sample.js",
+  "content": "// Minimal event fan-out used by the settings watcher.\n\n/* Listeners are invoked synchronously. */\nexport function createBus() {\n  const listeners = [] // collected at subscribe time\n  return {\n    sub(fn) { listeners.push(fn) },\n    emit(value) { for (const fn of listeners) fn(value) },\n  }\n}\n",
+  "language": "javascript",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 6,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": false,
+  "parityReason": "OLD BINARY DOUBLE-REPORTS every JS/TS comment (6 <comment> entries for 3 comments); new scan dedupes to 3",
+  "notes": [
+    "Exercises line + block comments and a trailing comment."
+  ]
+}

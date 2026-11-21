@@ -1,0 +1,19 @@
+{
+  "case": "python",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/python/sample.py",
+  "content": "\"\"\"Utilities for formatting user-facing summaries.\"\"\"\n\nimport json\nfrom typing import Any\n\ndef summarize(record: dict[str, Any]) -> str:\n    # Inline note about the shape we expect from the upstream API.\n    name = record[\"name\"]\n    active = record[\"active\"]  # trailing note\n    if True:\n        \"\"\"Bare string expression, not a docstring.\"\"\"\n        active = not active\n    return f\"{name}: {active}\"\n\nclass Report:\n    \"\"\"Public report builder used by the CLI.\"\"\"\n\n    def render(self) -> str:\n        return json.dumps({\"ok\": True})\n",
+  "language": "python",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 4,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Module docstring, class docstring, leading and trailing line comments, one f-string.",
+    "The triple-quoted string inside `if True:` is a bare string expression: the binary does NOT report it.",
+    "Docstrings are emitted after line/block comments regardless of line order."
+  ]
+}

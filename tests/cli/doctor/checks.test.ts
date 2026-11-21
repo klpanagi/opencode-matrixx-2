@@ -23,6 +23,7 @@ function resetMocks(): void {
 
 beforeEach(() => {
   resetMocks()
+  _setCommentScanProbeForTesting(async () => "/test/sg")
   savedEnv = {}
   for (const key of Object.keys(process.env)) {
     if (ENV_PROVIDER_PATTERN.test(key)) {
@@ -64,6 +65,7 @@ afterEach(() => {
 })
 
 afterAll(() => {
+  _setCommentScanProbeForTesting(null)
   Bun.spawnSync = origSpawnSync
   // The per-test mock.module("node:fs") outlives mock.restore(): re-register a
   // transparent registry so later suites observe real fs.
@@ -83,7 +85,7 @@ import { pluginInstallationCheck } from "../../../src/cli/doctor/checks/plugin"
 import { configValidationCheck } from "../../../src/cli/doctor/checks/config"
 import { authCheck } from "../../../src/cli/doctor/checks/auth"
 import { runtimeDepsCheck } from "../../../src/cli/doctor/checks/runtime"
-import { optionalToolsCheck } from "../../../src/cli/doctor/checks/optional"
+import { _setCommentScanProbeForTesting, optionalToolsCheck } from "../../../src/cli/doctor/checks/optional"
 import { mcpPrerequisitesCheck } from "../../../src/cli/doctor/checks/mcp"
 import { ALL_CHECKS, getChecksByCategory, getCategories } from "../../../src/cli/doctor/checks"
 import { getOpenCodeConfigDir } from "../../../src/shared/config/opencode-config-dir"
@@ -94,8 +96,8 @@ import {
 } from "../../../src/shared/policy/context-mode-enforcement"
 
 describe("check registry", () => {
-  test("ALL_CHECKS has 14 entries", () => {
-    expect(ALL_CHECKS.length).toBe(14)
+  test("ALL_CHECKS has 15 entries", () => {
+    expect(ALL_CHECKS.length).toBe(15)
   })
 
   test("getCategories returns 6 unique categories including integrations", () => {

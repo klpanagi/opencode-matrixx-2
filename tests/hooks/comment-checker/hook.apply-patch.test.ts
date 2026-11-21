@@ -1,53 +1,39 @@
-import { afterAll, beforeEach, describe, expect, it, mock } from "bun:test"
+import { describe, expect, it } from "bun:test"
+import { createCommentCheckerHooks } from "../../../src/hooks/comment-checker/hook"
 
-const processApplyPatchEditsWithCli = mock(async () => {})
+const SESSION_ID = "ses_apply_patch_test"
 
-mock.module("../../../src/hooks/comment-checker/cli-runner", () => ({
-  initializeCommentCheckerCli: () => {},
-  getCommentCheckerCliPathPromise: () => Promise.resolve("/tmp/fake-comment-checker"),
-  isCliPathUsable: () => true,
-  processWithCli: async () => {},
-  processApplyPatchEditsWithCli,
-}))
-
-afterAll(() => {
-  mock.restore()
-})
-
-const { createCommentCheckerHooks } = await import("../../../src/hooks/comment-checker/hook")
+function resultOutput(text = "ok") {
+  return { title: "ok", output: text, metadata: undefined as unknown }
+}
 
 describe("comment-checker apply_patch integration", () => {
-  beforeEach(() => {
-    processApplyPatchEditsWithCli.mockClear()
-  })
-
-  it("runs comment checker using apply_patch metadata.files", async () => {
+  it("scans metadata.files with before/after pairs and skips deletes", async () => {
     // given
     const hooks = createCommentCheckerHooks()
-
-    const input = { tool: "apply_patch", sessionID: "ses_test", callID: "call_test" }
+    const input = { tool: "apply_patch", sessionID: SESSION_ID, callID: "call_apply_patch" }
     const output = {
       title: "ok",
-      output: "Success. Updated the following files:\nM src/a.ts",
+      output: "Success. Updated the following files:\nM src/a.sql",
       metadata: {
         files: [
           {
-            filePath: "/repo/src/a.ts",
-            before: "const a = 1\n",
-            after: "// comment\nconst a = 1\n",
+            filePath: "/repo/queries/a.sql",
+            before: "SELECT 1;\n",
+            after: "-- added in a\nSELECT 1;\n",
             type: "update",
           },
           {
-            filePath: "/repo/src/old.ts",
-            movePath: "/repo/src/new.ts",
-            before: "const b = 1\n",
-            after: "// moved comment\nconst b = 1\n",
+            filePath: "/repo/queries/old.sql",
+            movePath: "/repo/queries/new.sql",
+            before: "SELECT 2;\n",
+            after: "-- moved comment\nSELECT 2;\n",
             type: "move",
           },
           {
-            filePath: "/repo/src/delete.ts",
-            before: "// deleted\n",
-            after: "",
+            filePath: "/repo/queries/delete.sql",
+            before: "-- deleted comment\n",
+            after: "-- deleted comment\n",
             type: "delete",
           },
         ],
@@ -58,30 +44,48 @@ describe("comment-checker apply_patch integration", () => {
     await hooks["tool.execute.after"](input, output)
 
     // then
-    expect(processApplyPatchEditsWithCli).toHaveBeenCalledTimes(1)
-    expect(processApplyPatchEditsWithCli).toHaveBeenCalledWith(
-      "ses_test",
-      [
-        { filePath: "/repo/src/a.ts", before: "const a = 1\n", after: "// comment\nconst a = 1\n" },
-        { filePath: "/repo/src/new.ts", before: "const b = 1\n", after: "// moved comment\nconst b = 1\n" },
-      ],
-      expect.any(Object),
-      "/tmp/fake-comment-checker",
-      undefined,
-      expect.any(Function),
-    )
+    expect(output.output).toContain("added in a")
+    expect(output.output).toContain("moved comment")
+    expect(output.output).toContain('file="/repo/queries/new.sql"')
+    expect(output.output).not.toContain("deleted comment")
+    expect(output.output).not.toContain('file="/repo/queries/old.sql"')
   })
 
-  it("skips when apply_patch metadata.files is missing", async () => {
+  it("appends nothing when apply_patch metadata.files is missing", async () => {
     // given
     const hooks = createCommentCheckerHooks()
-    const input = { tool: "apply_patch", sessionID: "ses_test", callID: "call_test" }
-    const output = { title: "ok", output: "ok", metadata: {} }
+    const input = { tool: "apply_patch", sessionID: SESSION_ID, callID: "call_apply_patch_empty" }
+    const output = resultOutput()
+
+    // when
+    await hooks["tool.execute.after"](input, { ...output, metadata: {} })
+
+    // then
+    expect(output.output).toBe("ok")
+  })
+
+  it("appends nothing when the apply_patch output indicates a failure", async () => {
+    // given
+    const hooks = createCommentCheckerHooks()
+    const input = { tool: "apply_patch", sessionID: SESSION_ID, callID: "call_apply_patch_error" }
+    const output = {
+      title: "Error: patch failed to apply",
+      output: "Error: patch failed to apply",
+      metadata: {
+        files: [
+          {
+            filePath: "/repo/queries/a.sql",
+            before: "SELECT 1;\n",
+            after: "-- added in a\nSELECT 1;\n",
+          },
+        ],
+      },
+    }
 
     // when
     await hooks["tool.execute.after"](input, output)
 
     // then
-    expect(processApplyPatchEditsWithCli).toHaveBeenCalledTimes(0)
+    expect(output.output).toBe("Error: patch failed to apply")
   })
 })

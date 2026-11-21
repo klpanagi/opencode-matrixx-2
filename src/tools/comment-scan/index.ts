@@ -1,0 +1,1 @@
+export { createCommentScanTool } from "./tools"

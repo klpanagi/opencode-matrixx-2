@@ -1,6 +1,7 @@
-import { existsSync } from "node:fs"
-import { homedir } from "node:os"
-import { join } from "node:path"
+import { spawn } from "bun"
+import { findPackagedSgBinary, isUsableSgBinary, resolveSgBinary } from "../../../shared/comment-scan/sg-invoke"
+import { getAstGrepPath } from "../../../tools/ast-grep/cli-binary-path-resolution"
+import { getSgCliPath } from "../../../tools/ast-grep/constants"
 import type { CheckResult, DoctorCheck } from "../types"
 
 type OptionalTool = { name: string; check: () => { available: boolean; version?: string } }
@@ -12,24 +13,8 @@ function spawnVersion(cmd: string, args: string[]): { available: boolean; versio
   } catch { void 0; return { available: false } }
 }
 
-function cachedCommentChecker(): { available: boolean; version?: string } {
-  try {
-    const cacheDir = process.env.XDG_CACHE_HOME ? join(process.env.XDG_CACHE_HOME, "matrixx", "bin") : join(homedir(), ".cache", "matrixx", "bin")
-    const bin = process.platform === "win32" ? "comment-checker.exe" : "comment-checker"
-    const p = join(cacheDir, bin)
-    if (existsSync(p)) {
-      const r = Bun.spawnSync([p, "--version"], { stdout: "pipe", stderr: "pipe" })
-      if (r.exitCode === 0) return { available: true, version: r.stdout.toString().trim().split("\n")[0]?.trim() }
-      return { available: true }
-    }
-  } catch { void 0 }
-  return { available: false }
-}
-
 const BINARY_CHECKS: OptionalTool[] = [
-  { name: "ast-grep (sg)", check: () => spawnVersion("sg", ["--version"]) },
   { name: "Gitleaks", check: () => spawnVersion("gitleaks", ["--version"]) },
-  { name: "comment-checker", check: cachedCommentChecker },
   { name: "gh CLI", check: () => spawnVersion("gh", ["--version"]) },
   { name: "Docker", check: () => spawnVersion("docker", ["--version"]) },
 ]
@@ -60,5 +45,79 @@ export const optionalToolsCheck: DoctorCheck = {
     const detailLines = allResults.map((r) => (r.available ? `  ✓ ${r.name}${r.version ? ` (${r.version})` : ""}` : `  ✗ ${r.name} — not installed → fix: install ${r.name.split(" ")[0]}`))
     const missingList = missing.map((r) => r.name).join(", ")
     return { name: "optional-tools", status: "warn", message: `Available: ${available.length}, Missing: ${missing.length} (${missingList})`, detail: detailLines.join("\n") }
+  },
+}
+
+type SgResolver = () => Promise<string>
+type SgProbe = (path: string) => Promise<boolean>
+
+const defaultSgProbe: SgProbe = (path) => isUsableSgBinary(path, spawn)
+
+let sgResolver: SgResolver = resolveSgBinary
+let sgProbe: SgProbe = defaultSgProbe
+
+/** Test seam: inject the sg resolver and the candidate probe. Pass null to restore the real ones. */
+export function _setCommentScanProbeForTesting(resolve: SgResolver | null, probe: SgProbe | null = null): void {
+  sgResolver = resolve ?? resolveSgBinary
+  sgProbe = probe ?? defaultSgProbe
+}
+
+export interface CommentScanReadiness {
+  readonly available: boolean
+  readonly path?: string
+  readonly reason?: string
+}
+
+export async function probeCommentScan(
+  resolve: SgResolver = sgResolver,
+  probe: SgProbe = sgProbe,
+): Promise<CommentScanReadiness> {
+  try {
+    return { available: true, path: await resolve() }
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    const candidates = await describeSgCandidates(probe)
+    return { available: false, reason: candidates.length > 0 ? `${reason}; ${candidates.join("; ")}` : reason }
+  }
+}
+
+async function describeSgCandidates(probe: SgProbe): Promise<string[]> {
+  // Candidate order mirrors resolveSgBinary's resolution ladder; keep the lists in sync.
+  const candidates = [
+    { label: "packaged", path: findPackagedSgBinary() },
+    { label: "cached", path: getSgCliPath() },
+    { label: "resolved", path: await getAstGrepPath().catch(() => null) },
+  ]
+  const lines: string[] = []
+  for (const candidate of candidates) {
+    if (!candidate.path) {
+      lines.push(`${candidate.label} sg not found`)
+      continue
+    }
+    const usable = await probe(candidate.path)
+    lines.push(`${candidate.label} ${candidate.path} ${usable ? "usable" : "failed --version probe"}`)
+  }
+  return lines
+}
+
+export const commentScanCheck: DoctorCheck = {
+  name: "comment-scan",
+  category: "tools",
+  check: async (): Promise<CheckResult> => {
+    const readiness = await probeCommentScan()
+    if (readiness.available) {
+      return {
+        name: "comment-scan",
+        status: "pass",
+        message: `AST tier available via ${readiness.path}`,
+        detail: `sg: ${readiness.path}`,
+      }
+    }
+    return {
+      name: "comment-scan",
+      status: "warn",
+      message: `regex tier only — ${readiness.reason}`,
+      detail: "AST tier unavailable; regex-tier languages still scan in-process. Install @ast-grep/cli or remove a corrupt cached sg.",
+    }
   },
 }

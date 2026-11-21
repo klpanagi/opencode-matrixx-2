@@ -1,0 +1,17 @@
+{
+  "case": "dockerfile",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/dockerfile/Dockerfile",
+  "content": "# Runtime image for the settings service.\nFROM oven/bun:1.1-alpine\nWORKDIR /app\nCOPY . .\nCMD [\"bun\", \"run\", \"start\"] # overridden in dev\n",
+  "language": "dockerfile",
+  "tier": "regex",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Basename `Dockerfile` (no extension); binary reports both `#` comments."
+  ]
+}

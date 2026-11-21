@@ -2,17 +2,18 @@
 
 ## OVERVIEW
 
-~128 cross-cutting utilities across 12 scoped domains + 5 legacy subdirs. Import via scope barrel (e.g. `import { log } from "../../shared/runtime"`) or the root barrel.
+~141 cross-cutting utilities across 13 scoped domains + 5 legacy subdirs. Import via scope barrel (e.g. `import { log } from "../../shared/runtime"`) or the root barrel.
 
 ## STRUCTURE
 
-12 scoped domains + 5 legacy subdirs. Import via scope barrel (`../../shared/<scope>`) or the root barrel:
+13 scoped domains + 5 legacy subdirs. Import via scope barrel (`../../shared/<scope>`) or the root barrel:
 
 ```
 shared/
 ├── index.ts                      # Root barrel (explicit named re-exports)
 ├── command-executor.ts           # Loose legacy entry (see command-executor/ scope)
 ├── agent/                        # Agent variant, display names, labels (6 files)
+├── comment-scan/                 # In-process AI-slop comment detection: AST + regex tiers (13 files)
 ├── compaction/                   # Compaction log, model resolver, context limits (8 files)
 ├── config/                       # Data paths, deep-merge, opencode dirs, version (10 files)
 ├── io/                           # File utils, frontmatter, shell-env, zip, ports (9 files)
@@ -32,7 +33,7 @@ shared/
 ```
 
  scope rule: new cross-cutting code goes in the matching scoped dir
- (`agent/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`,
+ (`agent/`, `comment-scan/`, `compaction/`, `config/`, `io/`, `model/`, `opencode/`,
  `policy/`, `runtime/`, `session/`, `subagent/`, `text/`, `tool/`); the 4 legacy subdirs
  (`command-executor/`, `git-worktree/`, `software-dev-enforcement/`, `tmux/`, plus loose `command-executor.ts`) stay where they are for import stability. `migration/` is a normal single-file dir (`hook-names.ts`).
 

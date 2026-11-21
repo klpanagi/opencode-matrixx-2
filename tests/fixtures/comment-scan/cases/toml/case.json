@@ -1,0 +1,17 @@
+{
+  "case": "toml",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/toml/config.toml",
+  "content": "# Build profile used by the release job.\n[build]\ntarget = \"bun\"\nminify = true # keeps the bundle small\n",
+  "language": "toml",
+  "tier": "regex",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Binary DOES report toml `#` comments via tree-sitter-toml; kept as a regex-tier parity anchor."
+  ]
+}

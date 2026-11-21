@@ -1,0 +1,17 @@
+{
+  "case": "yaml",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/yaml/sample.yaml",
+  "content": "# Deployment defaults shared by every service.\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: demo\nspec:\n  replicas: 2 # scaled by the platform team\n",
+  "language": "yaml",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Leading and trailing `#` comments."
+  ]
+}
