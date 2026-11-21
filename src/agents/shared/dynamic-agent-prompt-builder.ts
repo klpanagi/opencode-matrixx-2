@@ -39,7 +39,7 @@ export function categorizeTools(toolNames: string[]): AvailableTool[] {
     let category: AvailableTool["category"] = "other"
     if (name.startsWith("lsp_")) {
       category = "lsp"
-    } else if (name.startsWith("ast_grep")) {
+    } else if (name.startsWith("ast_grep") || name === "comment_scan") {
       category = "ast"
     } else if (name.startsWith("ctx_") || name.startsWith("headroom_") || name === "n" || name === "n_file") {
       category = "sandbox"

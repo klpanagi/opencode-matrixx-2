@@ -391,7 +391,7 @@ subagent(
 Review the changed files for AI-generated code smells. Load and follow the \`remove-ai-slops\` skill.
 
 Run the scan across all 7 categories:
-1. Verbose Comments — comments that restate the obvious
+1. Verbose Comments — comments that restate the obvious (use \`comment_scan\` for comment detection; \`$COMMENT\` patterns silently match nothing)
 2. Redundant Error Handling — catch-and-rethrow, empty catches, redundant null checks
 3. Over-Engineered Patterns — unnecessary abstractions, single-use interfaces
 4. Generic AI Phrasing — "It's worth noting...", "Let's step through..."

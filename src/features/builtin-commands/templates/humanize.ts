@@ -95,8 +95,8 @@ For prose files (.md, .txt) and quoted strings, flag:
 
 ### Category 1: Verbose Comments (LOW)
 
-Comments restating the obvious; empty JSDoc. Detection: ast_grep_search
-(\`// $COMMENT\` where $COMMENT matches obvious patterns), grep for known AI
+Comments restating the obvious; empty JSDoc. Detection: call the \`comment_scan\`
+tool with the in-scope paths (\`tier: "both"\`), grep for known AI
 comment phrases. Flag: \`// Loop through each item\`, \`// Initialize variable\`,
 \`// Return result\`, block comments repeating the function signature.
 

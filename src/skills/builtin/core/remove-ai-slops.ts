@@ -14,6 +14,7 @@ export const removeAiSlopsSkill: BuiltinSkill = {
     "edit",
     "grep",
     "glob",
+    "comment_scan",
     "ast_grep_search",
     "ast_grep_replace",
     "lsp_diagnostics",
@@ -52,10 +53,11 @@ Run all 7 category detectors. For each category, output findings grouped by file
 - Block comments that just repeat what the function signature says
 
 **Detection:**
-- Use \`ast_grep_search\` with patterns like:
-  - \`// $COMMENT\` where $COMMENT matches obvious patterns
-  - Function-level JSDoc that adds no info beyond the signature
-- Use \`grep\` with regex for known AI comment phrases
+- Call the \`comment_scan\` tool with the in-scope paths (\`paths\`, \`tier: "both"\`).
+  It reports comment and docstring findings with file:line — do not hand-roll
+  \`$COMMENT\` ast-grep patterns, which silently match nothing.
+  \`tier: "regex"\` covers languages without tree-sitter (sg) support.
+- Keep \`grep -i\` for Category 4 only (generic AI phrasing).
 
 **Severity**: LOW (cosmetic, but clutters code)
 

@@ -38,3 +38,4 @@ tests/tools/task/task-create-batch.test.ts
 tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
+tests/tools/comment-scan/
