@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-71 accepted hook names (59 enum + 11 retained no-op literals + 1 alias; 55 dirs + 9 loose hook `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
+71 accepted hook names (59 enum + 11 retained no-op literals + 1 alias; 54 dirs + 9 loose hook `.ts` on disk) intercepting/modifying agent behavior across 7 event types. Five factories in `src/plugin/hooks/`: session, tool-guard, transform, continuation, skill.
 
 ## STRUCTURE (abridged — authoritative list: `ls src/hooks/`)
 ```

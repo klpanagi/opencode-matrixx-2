@@ -100,7 +100,7 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 32 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 24 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1130 TS source files, ~575 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 32 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 24 built-in commands, 70 built-in skills (75 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1170 TS source files, ~626 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 
@@ -180,7 +180,7 @@ Local-dev install: `bun run build`, then add `"plugin": ["file:///abs/path/to/ma
 
 | Task | Location | Notes |
 |------|----------|-------|
-| New agent | `src/agents/definitions/<name>.ts` | Add to `agentSources` in `src/agents/registry/index.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
+| New agent | `src/agents/definitions/<name>.ts` (core agents; the 8 `mouse-*` workers live in `src/agents/definitions/mouse-subagents.ts`) | Add to `agentSources` in `src/agents/registry/index.ts`; update `BuiltinAgentNameSchema` in `src/config/schema/agent-names.ts` |
 | New hook | `src/hooks/<name>/` | Add to `HookNameSchema` in `src/config/schema/hooks.ts`; register in `src/plugin/hooks/create-{session,tool-guard,transform,continuation,skill}-hooks.ts` |
 | New tool | `src/tools/<name>/` | Register in `src/plugin/tool/tool-catalog.ts` (conditional policy in `tool-policy.ts`; needs `index, types, constants, tools` structure) |
 | New MCP | `src/mcps/` | Add to `createBuiltinMcps()` in `src/mcps/index.ts` |
