@@ -30,7 +30,7 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 | `/task-list` | List active tasks (`task_list`) | — | — |
 | `/cleanup-tasks` | Clean completed tasks (`task_cleanup`) | — | — |
 | `/bdd-pipeline` | Full BDD pipeline (contract→tests→frontend→backend) | — | — |
-| `/plan-review` | Post-execution plan completion review | — | — |
+| `/completion-review` | Post-execution plan completion review | — | — |
 | `/quality-audit` | Read-only deterministic quality audit | — | — |
 | `/quality-assurance` | Bounded quality improvement loop | — | — |
 | `/humanize` | Quality-focused humanization pipeline | — | — |
@@ -433,12 +433,12 @@ Runs the contract, tests, frontend, and backend stages in order. **Related:** [Q
 
 ---
 
-## 19. `/plan-review`
+## 19. `/completion-review`
 
-Post-execution completion review of a finished plan (explicit only). Template: `src/features/builtin-commands/templates/plan-review.ts`.
+Post-execution completion review of a finished plan (explicit only). Template: `src/features/builtin-commands/templates/completion-review.ts`.
 
 ```
- /plan-review my-plan-name
+ /completion-review my-plan-name
 ```
 
 | Argument | Description |

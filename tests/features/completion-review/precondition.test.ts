@@ -2,7 +2,7 @@
 /**
  * Task 1 — BLOCKING PRECONDITION GATE for `plan-completion-review.md`.
  *
- * Plan B (`/plan-review`) scores a completed plan on 8 rubric dimensions; three
+ * Plan B (`/completion-review`) scores a completed plan on 8 rubric dimensions; three
  * of them read plan H3 sections. This file proves that surface is real, as a
  * PASSING TEST rather than a claim. A failing precondition is a STOP.
  *

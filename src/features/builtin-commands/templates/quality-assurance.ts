@@ -32,7 +32,7 @@ Run these steps in this exact order per iteration:
    from the baseline report ONLY. No new scope, no new dimensions, no fresh
    exploration beyond the baseline evidence. Read-only step.
 3. **Smith gate.** Pass the oracle delta-plan through the smith gate per the
-   plan-review doctrine BEFORE any edits: admission check first, then approval.
+   pre-execution review doctrine BEFORE any edits: admission check first, then approval.
    Blocked plans stop the iteration with no edits. Read-only step.
 4. **TDD implement.** TDD RED-GREEN-REFACTOR semantics ALWAYS, per tdd-enforcer:
    RED (write a failing test first), GREEN (minimum code to pass), REFACTOR
@@ -51,7 +51,7 @@ Run these steps in this exact order per iteration:
 - Iteration cap reached: iterations == --max-iterations (default 3).
 
 When any stop condition fires, stop immediately. No post-review step follows:
-the merovingian agent is invoked ONLY by the explicit \`/plan-review\` command,
+the merovingian agent is invoked ONLY by the explicit \`/completion-review\` command,
 never automatically and never as part of this loop.
 
 ## Report Contract (same as audit)
