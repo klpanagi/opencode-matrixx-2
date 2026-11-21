@@ -14,7 +14,7 @@ hooks/
 ├── auto-slash-command/           # Detects /command patterns
 ├── auto-update-checker/          # Plugin update check
 ├── category-skill-reminder/      # Category+skill delegation reminders
-├── comment-checker/              # Prevents AI slop comments
+├── comment-checker/              # AI-slop comment detection via in-process ast-grep (no binary)
 ├── compaction-context-injector/  # Injects context on compaction
 ├── context-mode-enforcer/        # Routes raw file/network work to the context-mode sandbox; companion system-transform lives in `src/features/context-injection/routing/`
 ├── context-window-monitor.ts     # Reminds of headroom at 70%

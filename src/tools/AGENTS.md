@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-30 tool dirs (LSP ×6, AST-grep ×2, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×6 `create/read/update/list/delete/tasks` for `.matrixx/plans/*.md`, removed-tools (deleted-tool guard stubs), handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
+32 tool dirs (LSP ×6, AST-grep ×2, comment-scan, grep/glob/github-search, session-manager ×4, task ×5 `create/list/get/update/cleanup`, plan ×6 `create/read/update/list/delete/tasks` for `.matrixx/plans/*.md`, removed-tools (deleted-tool guard stubs), handoff, hashline-edit, interactive-bash, look-at, skill, slashcommand, assembly, knowledge-hub-confirm, preset, bdd-* ×4, pdf-extract-figures, dashboard-flux-validator, market-symbol-validator, notepad ×4, session-cleanup, silent-failure-scanner, staleness-gap-checker). Two patterns: Direct `MatrixxToolDefinition` (static) and Factory Function (context-dependent). Conditional registration via `src/plugin/tool/tool-policy.ts` — bdd/pdf-figures/look_at/session-cleanup/knowledge-hub-confirm/preset only load when relevant (see `tool-policy.ts`).
 
 ## STRUCTURE
 ```
@@ -11,6 +11,7 @@ tools/
 ├── plan/             # 6 plan tools: create, read, update, list, delete, tasks for `.matrixx/plans/*.md` (kebab-case, hashline IDs, atomicWrite, unconditional registry; plan_tasks reads T-*.json tasks)
 ├── lsp/              # 6 LSP tools: goto_definition, find_references, symbols, diagnostics, prepare_rename, rename
 ├── ast-grep/         # 2 tools: search, replace (25 languages)
+├── comment-scan/     # comment_scan: AST + regex comment/docstring scan
 ├── grep/             # Custom grep (60s timeout, 10MB limit)
 ├── glob/             # File search (60s timeout, 100 file limit)
 ├── session-manager/  # 4 tools: list, read, search, info
@@ -58,6 +59,7 @@ tools/
 | `lsp_rename` | LSP | Direct | Rename symbol across workspace |
 | `ast_grep_search` | Search | Factory | AST-aware code search (25 languages) |
 | `ast_grep_replace` | Search | Factory | AST-aware code replacement |
+| `comment_scan` | Search | Factory | AST + regex comment/docstring noise scan (`scanPaths`, advisory findings) |
 | `grep` | Search | Factory | Regex content search with safety limits |
 | `glob` | Search | Factory | File pattern matching |
 | `session_list` | Session | Factory | List all sessions |

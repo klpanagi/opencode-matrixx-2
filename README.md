@@ -7,7 +7,7 @@
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
-**13 core agents + 8 category workers. 59 hook names. 30 tool dirs. 70 skills. 24 commands. One plugin.**
+**13 core agents + 8 category workers. 59 hook names. 32 tool dirs. 70 skills. 24 commands. One plugin.**
 
 > **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. See [package.json](package.json) for the current version.
 
@@ -39,7 +39,7 @@ Morpheus                    → Plans the implementation
 | One model does everything averagely | **13 specialists** — orchestration, planning, implementation, security, frontend, DSL, research, search |
 | Agent forgets what it was doing after `/clear` | **Persistent tasks** — file-backed `.matrixx/tasks`, survives compaction and restarts |
 | Slow sequential tool calls | **Parallel subagents** — 5+ running simultaneously, optional tmux visibility |
-| AI code looks like AI code | **Quality gates** — comment checking, TDD/BDD pipeline, 6-agent review |
+| AI code looks like AI code | **Quality gates** — in-process comment scan (no binary), TDD/BDD pipeline, 6-agent review |
 | Context window fills up fast | **5-layer context stack** — native recovery + RTK + context-mode + DCP + Headroom |
 | Fragile refactoring | **Deterministic tools** — LSP (goto-def, rename, diagnostics) + AST-Grep (structural search & replace) |
 | Secrets leak into commits | **Security by default** — secret scanning + env-file guards + read-only auditor |
@@ -77,7 +77,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 | Area | What you get | Details |
 |------|--------------|---------|
 | **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel subagent execution | [Agents](docs/agents.md) |
-| **Developer Tools** | LSP, AST-Grep search & replace, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
+| **Developer Tools** | LSP, AST-Grep search & replace, comment scan, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
 | **Lifecycle Hooks (59-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
 | **Skills (70)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) · [Skill Packs](docs/skill-packs.md) |
 | **Software Dev Pipeline** | 6-phase PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP with 5 team roles, adaptive to task size | [Quality](docs/quality.md) |
@@ -86,7 +86,7 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 | **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, native `websearch`, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
 | **Configurability** | Every agent, model, temperature, and hook tunable via `matrixx.jsonc` with JSON schema + Config Studio UI | [Configuration](docs/configurations.md) |
 
-Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **70 skills** (`BuiltinSkillNameSchema`), **59 hook names** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 11 retained-deprecated no-op literals and 1 alias are included), **24 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **30 tool directories**, and **19 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
+Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **70 skills** (`BuiltinSkillNameSchema`), **59 hook names** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 11 retained-deprecated no-op literals and 1 alias are included), **24 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **32 tool directories**, and **19 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
 
 ### Session memory (new, EXPERIMENTAL)
 
