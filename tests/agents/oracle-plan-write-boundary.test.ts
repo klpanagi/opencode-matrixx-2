@@ -139,7 +139,7 @@ describe("plan access rule (ORACLE_PERMISSION enforcement half)", () => {
     const prompt = ORACLE_SYSTEM_PROMPT
 
     //#when searched for the review policy
-    const hits = prompt.match(/Plan review is explicit: run .*?\/plan-review.*?only when the user asks for it\. Never auto-trigger a plan review/g) ?? []
+    const hits = prompt.match(/Completion review is explicit: run .*?\/completion-review.*?only when the user asks for it\. Never auto-trigger a completion review/g) ?? []
 
     //#then Oracle is told review is user-invoked, never self-triggered
     expect(hits).toHaveLength(1)

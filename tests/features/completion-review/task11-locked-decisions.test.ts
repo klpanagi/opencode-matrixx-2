@@ -34,7 +34,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { tmpdir } from "node:os"
-import { join, relative, resolve } from "node:path"
+import { dirname, join, relative, resolve, sep } from "node:path"
 
 import { MAX_PLAN_FILE_BYTES } from "../../../src/features/mission-state/constants"
 import * as planConstants from "../../../src/tools/plan/constants"
@@ -220,7 +220,7 @@ describe("locked decision #3 — the reviewer is reachable only by explicit comm
     expect(offenders).toEqual([])
   })
 
-  test("the sole importer is the /plan-review command template", () => {
+  test("the sole importer is the /completion-review command template", () => {
     //#given the src/ module graph
     //#when every external importer of the feature is collected
     const FEATURE = join(SRC, "features/completion-review")
@@ -229,12 +229,13 @@ describe("locked decision #3 — the reviewer is reachable only by explicit comm
       if (file.startsWith(FEATURE)) continue
       const source = readFileSync(file, "utf-8")
       for (const match of source.matchAll(/from\s+"(\.[^"]*)"/g)) {
-        if ((match[1] ?? "").includes("completion-review")) importers.add(relative(SRC, file))
+        const target = resolve(dirname(file), match[1] ?? "")
+        if (target.startsWith(FEATURE + sep)) importers.add(relative(SRC, file))
       }
     }
 
     //#then exactly one file imports it, and it is the command template
-    expect([...importers].sort()).toEqual(["features/builtin-commands/templates/plan-review.ts"])
+    expect([...importers].sort()).toEqual(["features/builtin-commands/templates/completion-review.ts"])
   })
 })
 

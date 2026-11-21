@@ -1,6 +1,6 @@
 import { GATE_HEURISTIC_WARNING, UNAVAILABLE_EVIDENCE_GAP } from "../../completion-review/admission-gate"
 
-export const PLAN_REVIEW_TEMPLATE = `You are running a post-execution completion review of a finished plan.
+export const COMPLETION_REVIEW_TEMPLATE = `You are running a post-execution completion review of a finished plan.
 
 ## Triggering — LOCKED
 

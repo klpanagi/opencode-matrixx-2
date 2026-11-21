@@ -15,7 +15,7 @@ export const BuiltinCommandNameSchema = z.enum([
   "assembly",
   "redpill",
   "bdd-pipeline",
-  "plan-review",
+  "completion-review",
   "quality-audit",
   "quality-assurance",
   "pickup",

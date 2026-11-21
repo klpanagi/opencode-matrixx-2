@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 /**
- * Task 11 — the END-TO-END proof of `/plan-review`.
+ * Task 11 — the END-TO-END proof of `/completion-review`.
  *
  * A unit test proves `writeReviewReport` returns a string. This proves the thing
  * the user actually asked for: running the review against a COMPLETED plan
@@ -66,7 +66,7 @@ function md5File(path: string): string {
 
 beforeAll(() => {
   //#given a throwaway project containing a COMPLETED plan
-  projectDir = mkdtempSync(join(tmpdir(), "plan-review-e2e-"))
+  projectDir = mkdtempSync(join(tmpdir(), "completion-review-e2e-"))
   planAbsPath = join(projectDir, PLAN_FILE)
   mkdirSync(join(projectDir, ".matrixx", "plans"), { recursive: true })
   writeFileSync(planAbsPath, PLAN_TEXT, "utf-8")
@@ -77,7 +77,7 @@ afterAll(() => {
   rmSync(projectDir, { recursive: true, force: true })
 })
 
-describe("end-to-end /plan-review against a completed plan", () => {
+describe("end-to-end /completion-review against a completed plan", () => {
   test("a review writes a report, a sidecar, and changes no plan byte", () => {
     //#given the reviews directory the command template asks the bash tool to create
     mkdirSync(join(projectDir, ".matrixx", "reviews"), { recursive: true })

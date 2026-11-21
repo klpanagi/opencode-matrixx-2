@@ -1,5 +1,5 @@
 /**
- * Task 2 — the deterministic data-gathering layer for `/plan-review`.
+ * Task 2 — the deterministic data-gathering layer for `/completion-review`.
  *
  * A PURE function over its sources: no model in the loop, no network, no
  * mutation, no clock, no randomness. It reports FACTS and their provenance;
@@ -28,7 +28,7 @@
  *    reviewable plan.
  *
  * 5. No hook, idle handler, or event handler may call this. It is a library
- *    invoked by `/plan-review` only.
+ *    invoked by `/completion-review` only.
  */
 import { readdirSync, readFileSync } from "node:fs"
 import { basename, join } from "node:path"
