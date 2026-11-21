@@ -6,6 +6,7 @@ import {
   getSgCliPath,
 } from "../../tools/ast-grep/constants"
 import { collectProcessOutputWithTimeout } from "../../tools/ast-grep/process-output-timeout"
+import { sgSpawnEnv } from "../../tools/ast-grep/spawn-env"
 import { DEFAULT_SG_TIMEOUT_MS, MAX_FILE_BYTES } from "./constants"
 import type { InlineRuleSet } from "./types"
 
@@ -143,6 +144,7 @@ async function invokeSg(
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
+    env: sgSpawnEnv(command),
   })
 
   try {
@@ -274,6 +276,7 @@ async function probeSgBinary(path: string, spawnFn: typeof import("bun").spawn):
       stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
+      env: sgSpawnEnv(path),
     })
     const output = await collectProcessOutputWithTimeout(child, VERSION_PROBE_TIMEOUT_MS)
     return output.exitCode === 0 && output.stdout.includes("ast-grep")

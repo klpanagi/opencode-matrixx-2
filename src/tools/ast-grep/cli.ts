@@ -8,6 +8,7 @@ import {
 import { ensureAstGrepBinary } from "./downloader"
 import { collectProcessOutputWithTimeout } from "./process-output-timeout"
 import { createSgResultFromStdout } from "./sg-compact-json-output"
+import { sgSpawnEnv } from "./spawn-env"
 import type { CliLanguage, SgResult } from "./types"
 
 export {
@@ -82,6 +83,7 @@ export async function runSg(options: RunOptions): Promise<SgResult> {
 	const proc = spawn([cliPath, ...args], {
 		stdout: "pipe",
 		stderr: "pipe",
+		env: sgSpawnEnv(cliPath),
 	})
 
 	let stdout: string
@@ -158,6 +160,7 @@ export async function runSg(options: RunOptions): Promise<SgResult> {
     const writeProc = spawn([cliPath, ...writeArgs], {
       stdout: "pipe",
       stderr: "pipe",
+      env: sgSpawnEnv(cliPath),
     })
 
     try {
