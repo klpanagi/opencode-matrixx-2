@@ -1,0 +1,19 @@
+{
+  "case": "jsonc",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/jsonc/config.jsonc",
+  "content": "// Editor defaults for the workspace.\n{\n  \"editor.formatOnSave\": true, /* enforced by CI as well */\n  \"files.exclude\": {}\n}\n",
+  "language": "jsonc",
+  "tier": "regex",
+  "expectedExitCode": 0,
+  "expectedFindings": 0,
+  "hasXml": false,
+  "xmlStartLine": null,
+  "agentMemoBlock": false,
+  "parity": false,
+  "parityReason": "OLD BINARY skips jsonc entirely: exit 0 with `[check-comments] Skipping: Non-code file` and no XML",
+  "notes": [
+    "Regex-tier file: `//` and `/* */` leaders must be found by regex-scan, not the old binary.",
+    "The 41-byte baseline IS the raw stderr the binary printed; there is no rubric and no XML for this case."
+  ]
+}

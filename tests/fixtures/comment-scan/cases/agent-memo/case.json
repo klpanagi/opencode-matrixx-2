@@ -1,0 +1,19 @@
+{
+  "case": "agent-memo",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/agent-memo/sample.ts",
+  "content": "// added the retry budget helper\nexport function retryBudget(): number {\n  return 3\n}\n",
+  "language": "typescript",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 67,
+  "agentMemoBlock": true,
+  "parity": false,
+  "parityReason": "OLD BINARY prepends a 30-line AGENT MEMO block and replaces rubric line 1; the new renderer keeps agent-memo out of formatReport",
+  "notes": [
+    "Evidence case for the agent-memo heuristic, NOT a parity case.",
+    "Block shape: 30 memo lines, `---`, blank line, then rubric lines 3-35, header, XML."
+  ]
+}

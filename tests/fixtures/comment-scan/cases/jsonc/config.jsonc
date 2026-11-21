@@ -1,0 +1,5 @@
+// Editor defaults for the workspace.
+{
+  "editor.formatOnSave": true, /* enforced by CI as well */
+  "files.exclude": {}
+}

@@ -1,0 +1,17 @@
+{
+  "case": "css",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/css/sample.css",
+  "content": "/* Base tokens for the settings panel. */\n:root {\n  --bg: #ffffff;\n}\n\n.panel {\n  color: var(--fg, #111111); /* inherited fallback */\n}\n",
+  "language": "css",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Leading and trailing `/* */` comments."
+  ]
+}

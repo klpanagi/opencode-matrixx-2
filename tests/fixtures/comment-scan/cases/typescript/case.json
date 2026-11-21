@@ -1,0 +1,18 @@
+{
+  "case": "typescript",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/typescript/sample.ts",
+  "content": "// Path helpers for the settings loader.\n\nexport type LoaderOptions = {\n  root: string\n}\n\n/* Fallback used when the environment variable is absent. */\nexport function resolveRoot(options: LoaderOptions): string {\n  const root = options.root || \"/tmp\" // temporary default\n  return root\n}\n",
+  "language": "typescript",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 6,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": false,
+  "parityReason": "OLD BINARY DOUBLE-REPORTS every JS/TS comment (6 <comment> entries for 3 comments); new scan dedupes to 3",
+  "notes": [
+    "Exercises line + block comments and a trailing comment."
+  ]
+}

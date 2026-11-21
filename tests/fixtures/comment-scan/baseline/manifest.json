@@ -1,0 +1,237 @@
+{
+  "binary": {
+    "identifier": "OLD_BINARY (44ef2b13)",
+    "path": "$OLD_BINARY",
+    "version": "0.6.1",
+    "sha256": "44ef2b13b68bf795848f957a435302a6a1152f65cdd74dc568fd3cce63310c09",
+    "capturedWith": "OLD BINARY (pre-consolidation); never the new renderer"
+  },
+  "captureCommand": {
+    "write": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/<case>/case.json | $OLD_BINARY 2> baseline/<case>.expected.txt",
+    "edit": "jq -c '{tool_input:{file_path:.filePath,old_string:.oldString,new_string:.newString}}' cases/<case>/case.json | $OLD_BINARY 2> baseline/<case>.expected.txt"
+  },
+  "stdinShapeNote": "The binary reads a Claude-Code hook payload on stdin: {\"tool_input\":{\"file_path\",\"content\"}} for writes and {\"tool_input\":{\"file_path\",\"old_string\",\"new_string\"}} for edits. It ignores argv (a `check` argv is accepted but unused) and exits 2 with the message on stderr when comments are found, 0 otherwise. A flat `{filePath, content}` payload is rejected with `[check-comments] Skipping: No file path provided`.",
+  "cases": {
+    "python": {
+      "exitCode": 2,
+      "bytes": 2606,
+      "sha256": "a3ce160bc64e7b6727d7f5ecdb6e379b0760de3bccad821fd4a124bf874ef472",
+      "hasXml": true,
+      "expectedFindings": 4,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/python/case.json | $OLD_BINARY 2> baseline/python.expected.txt",
+      "baseline": "baseline/python.expected.txt"
+    },
+    "typescript": {
+      "exitCode": 2,
+      "bytes": 2749,
+      "sha256": "a742181dff243e6602fb3c06b4dc24b15afde51d50d8c0b5dad2f328dfceb247",
+      "hasXml": true,
+      "expectedFindings": 6,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/typescript/case.json | $OLD_BINARY 2> baseline/typescript.expected.txt",
+      "baseline": "baseline/typescript.expected.txt"
+    },
+    "javascript": {
+      "exitCode": 2,
+      "bytes": 2761,
+      "sha256": "1f137dd7b6bcc1cd58600535e67ae6db18ce84f362480a7518c3f24c273e550d",
+      "hasXml": true,
+      "expectedFindings": 6,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/javascript/case.json | $OLD_BINARY 2> baseline/javascript.expected.txt",
+      "baseline": "baseline/javascript.expected.txt"
+    },
+    "java": {
+      "exitCode": 2,
+      "bytes": 2586,
+      "sha256": "8d02723865dc2ffa44c253baa30dc47e315ac0dee3b3842064f7f70949d91743",
+      "hasXml": true,
+      "expectedFindings": 4,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/java/case.json | $OLD_BINARY 2> baseline/java.expected.txt",
+      "baseline": "baseline/java.expected.txt"
+    },
+    "kotlin": {
+      "exitCode": 2,
+      "bytes": 2499,
+      "sha256": "b8822ece012a3d8c0a320c93c52fdf47163180632d13ab06c0d9690515e8ae2b",
+      "hasXml": true,
+      "expectedFindings": 3,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/kotlin/case.json | $OLD_BINARY 2> baseline/kotlin.expected.txt",
+      "baseline": "baseline/kotlin.expected.txt"
+    },
+    "rust": {
+      "exitCode": 2,
+      "bytes": 2575,
+      "sha256": "a3d2a29c3b22ed5294b6c48edaf9ac48141b282ecff91ceba227eeec557f7445",
+      "hasXml": true,
+      "expectedFindings": 4,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/rust/case.json | $OLD_BINARY 2> baseline/rust.expected.txt",
+      "baseline": "baseline/rust.expected.txt"
+    },
+    "go": {
+      "exitCode": 2,
+      "bytes": 2522,
+      "sha256": "57a841cee9b39c90080e4bcd06ee3b5a2c5c090ab6db0931636eee55764af5bc",
+      "hasXml": true,
+      "expectedFindings": 3,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/go/case.json | $OLD_BINARY 2> baseline/go.expected.txt",
+      "baseline": "baseline/go.expected.txt"
+    },
+    "bash": {
+      "exitCode": 2,
+      "bytes": 2429,
+      "sha256": "7649f3d28899c9c1747e224da6a4d3dd4526421ba3d7b8b94f8b706abf31ebb5",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/bash/case.json | $OLD_BINARY 2> baseline/bash.expected.txt",
+      "baseline": "baseline/bash.expected.txt"
+    },
+    "yaml": {
+      "exitCode": 2,
+      "bytes": 2432,
+      "sha256": "20f84e676d132e95a29690000f9769652cea8691497dd41accb490829e6ed429",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/yaml/case.json | $OLD_BINARY 2> baseline/yaml.expected.txt",
+      "baseline": "baseline/yaml.expected.txt"
+    },
+    "css": {
+      "exitCode": 2,
+      "bytes": 2420,
+      "sha256": "f7fbaea9201f3a3f36dd2639a2351a82f251e9a5edf1b0434dfacb8d7651f064",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/css/case.json | $OLD_BINARY 2> baseline/css.expected.txt",
+      "baseline": "baseline/css.expected.txt"
+    },
+    "html": {
+      "exitCode": 2,
+      "bytes": 2375,
+      "sha256": "7fa82a1e61712f2683cb10d4553a88103c1f0ecd582d38e8b14bc6e75772f1e0",
+      "hasXml": true,
+      "expectedFindings": 1,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/html/case.json | $OLD_BINARY 2> baseline/html.expected.txt",
+      "baseline": "baseline/html.expected.txt"
+    },
+    "jsonc": {
+      "exitCode": 0,
+      "bytes": 41,
+      "sha256": "de59b7571fe556ab519bef4193beb09b208d3cc7ed8d5705fb24803a003c5f6f",
+      "hasXml": false,
+      "expectedFindings": 0,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/jsonc/case.json | $OLD_BINARY 2> baseline/jsonc.expected.txt",
+      "baseline": "baseline/jsonc.expected.txt"
+    },
+    "sql": {
+      "exitCode": 2,
+      "bytes": 2408,
+      "sha256": "d0462649fcb41a8cf74d558b57be3e65d04fc352e4d2e38a0f22855582ff0ebe",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/sql/case.json | $OLD_BINARY 2> baseline/sql.expected.txt",
+      "baseline": "baseline/sql.expected.txt"
+    },
+    "toml": {
+      "exitCode": 2,
+      "bytes": 2421,
+      "sha256": "4b92c11ec7d58d78dccad13dc0f2ca14d3456dcf35547143ecebc98a02672080",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/toml/case.json | $OLD_BINARY 2> baseline/toml.expected.txt",
+      "baseline": "baseline/toml.expected.txt"
+    },
+    "dockerfile": {
+      "exitCode": 2,
+      "bytes": 2422,
+      "sha256": "b6f47f137f252119cf2e8efb788c8883cf03082f1f2db64460470e32b02ab776",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/dockerfile/case.json | $OLD_BINARY 2> baseline/dockerfile.expected.txt",
+      "baseline": "baseline/dockerfile.expected.txt"
+    },
+    "proto": {
+      "exitCode": 2,
+      "bytes": 2413,
+      "sha256": "d477cc82da6487e40a426cd8fb19004677045fe1ff44856881f343da227cb9cf",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/proto/case.json | $OLD_BINARY 2> baseline/proto.expected.txt",
+      "baseline": "baseline/proto.expected.txt"
+    },
+    "typescript-edit": {
+      "exitCode": 2,
+      "bytes": 2588,
+      "sha256": "0c5241f01903ca097e4703c3ae24543e39fd63b677cf2e0cfa6ac087b7255dd0",
+      "hasXml": true,
+      "expectedFindings": 4,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,old_string:.oldString,new_string:.newString}}' cases/typescript-edit/case.json | $OLD_BINARY 2> baseline/typescript-edit.expected.txt",
+      "baseline": "baseline/typescript-edit.expected.txt"
+    },
+    "agent-memo": {
+      "exitCode": 2,
+      "bytes": 3700,
+      "sha256": "49a26434765188ce230869c4141bc1859ce45bd52022adac7ca549af2cb22aa2",
+      "hasXml": true,
+      "expectedFindings": 2,
+      "agentMemo": true,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/agent-memo/case.json | $OLD_BINARY 2> baseline/agent-memo.expected.txt",
+      "baseline": "baseline/agent-memo.expected.txt"
+    },
+    "bdd": {
+      "exitCode": 2,
+      "bytes": 2654,
+      "sha256": "dc02537b12b277db08bf58e4254ce7bf76009a08a5841e828255339130f1a105",
+      "hasXml": true,
+      "expectedFindings": 6,
+      "agentMemo": false,
+      "skipped": null,
+      "captureCommand": "jq -c '{tool_input:{file_path:.filePath,content:.content}}' cases/bdd/case.json | $OLD_BINARY 2> baseline/bdd.expected.txt",
+      "baseline": "baseline/bdd.expected.txt"
+    }
+  },
+  "rubric": {
+    "source": "baseline/python.expected.txt",
+    "lines": 34,
+    "sha256": "7c66e96d41039ca6519fd56471dbb9219a8d2622d670b3074bc1648d8feb1570",
+    "boundary": {
+      "line34": "REMINDER: These rules apply to ALL your future code, not just this specific edit. Always be deliberate and cautious when writing comments - only add them when absolutely necessary.",
+      "line35": "",
+      "line36": "Detected comments/docstrings:",
+      "line37": "<comments file=\"...\">"
+    },
+    "identicalAcrossCases": true
+  }
+}

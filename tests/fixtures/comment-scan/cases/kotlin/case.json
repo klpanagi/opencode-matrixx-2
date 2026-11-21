@@ -1,0 +1,18 @@
+{
+  "case": "kotlin",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/kotlin/sample.kt",
+  "content": "package demo\n\n// Small registry of feature flags.\nobject Flags {\n    /* Enabled by default for local runs. */\n    val local = true\n\n    fun describe(): String {\n        return \"local=$local\" // shown in the startup banner\n    }\n}\n",
+  "language": "kotlin",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 3,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "sg 0.40.5 probe: Kotlin rejects `kind: comment` and `kind: block_comment`;",
+    "block comments use `kind: multiline_comment` (matched line 3), line comments `kind: line_comment`."
+  ]
+}

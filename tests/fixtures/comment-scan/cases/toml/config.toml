@@ -1,0 +1,4 @@
+# Build profile used by the release job.
+[build]
+target = "bun"
+minify = true # keeps the bundle small

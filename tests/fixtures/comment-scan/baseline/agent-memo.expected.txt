@@ -1,0 +1,70 @@
+🚨 AGENT MEMO COMMENT DETECTED - CODE SMELL ALERT 🚨
+
+⚠️  AGENT MEMO COMMENTS DETECTED - THIS IS A CODE SMELL  ⚠️
+
+You left "memo-style" comments that describe WHAT you changed or HOW you implemented something.
+These are typically signs of an AI agent leaving notes for itself or the user.
+
+Examples of agent memo patterns detected:
+  - "Changed from X to Y", "Modified to...", "Updated from..."
+  - "Added new...", "Removed...", "Refactored..."
+  - "This implements...", "Here we...", "Now this..."
+  - "Note:", "Implementation of..."
+  - Korean: "여기서 변경됨", "구현함", "추가함", "수정됨"
+
+WHY THIS IS BAD:
+  1. Code should be self-documenting - if you need to explain what changed, the code isn't clear enough
+  2. These comments become outdated instantly and mislead future readers
+  3. Git history already tracks what changed - comments duplicate this poorly
+  4. It's a sign of rushing without proper refactoring
+
+ACTION REQUIRED:
+  -> REMOVE these memo comments immediately
+  -> If the code needs explanation, refactor it to be clearer instead
+  -> Use meaningful variable/function names that explain intent
+  -> Let git commit messages document the "what" and "why"
+
+Detected agent memo comments:
+  - Line 1: // added the retry budget helper
+  - Line 1: // added the retry budget helper
+
+---
+
+Your recent changes contain comments or docstrings, which triggered this hook.
+You need to take immediate action. You must follow the conditions below.
+(Listed in priority order - you must always act according to this priority order)
+
+CRITICAL WARNING: This hook message MUST NEVER be ignored, even if you receive it multiple times.
+You MUST provide corresponding explanation or action for EACH occurrence of this message.
+Ignoring this message or failing to respond appropriately is strictly prohibited.
+
+PRIORITY-BASED ACTION GUIDELINES:
+
+1. This is a comment/docstring that already existed before
+	-> Explain to the user that this is an existing comment/docstring and proceed (justify it)
+
+2. This is a newly written comment: but it's in given, when, then format
+	-> Tell the user it's a BDD comment and proceed (justify it)
+	-> Note: This applies to comments only, not docstrings
+
+3. This is a newly written comment/docstring: but it's a necessary comment/docstring
+	-> Tell the user why this comment/docstring is absolutely necessary and proceed (justify it)
+	-> Examples of necessary comments: complex algorithms, security-related, performance optimization, regex, mathematical formulas
+	-> Examples of necessary docstrings: public API documentation, complex module/class interfaces
+	-> IMPORTANT: Most docstrings are unnecessary if the code is self-explanatory. Only keep truly essential ones.
+
+4. This is a newly written comment/docstring: but it's an unnecessary comment/docstring
+	-> Apologize to the user and remove the comment/docstring.
+	-> Make the code itself clearer so it can be understood without comments/docstrings.
+	-> For verbose docstrings: refactor code to be self-documenting instead of adding lengthy explanations.
+
+MANDATORY REQUIREMENT: You must acknowledge this hook message and take one of the above actions.
+Review in the above priority order and take the corresponding action EVERY TIME this appears.
+
+REMINDER: These rules apply to ALL your future code, not just this specific edit. Always be deliberate and cautious when writing comments - only add them when absolutely necessary.
+
+Detected comments/docstrings:
+<comments file="tests/fixtures/comment-scan/cases/agent-memo/sample.ts">
+	<comment line-number="1">// added the retry budget helper</comment>
+	<comment line-number="1">// added the retry budget helper</comment>
+</comments>

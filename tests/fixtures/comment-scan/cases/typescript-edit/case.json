@@ -1,0 +1,21 @@
+{
+  "case": "typescript-edit",
+  "tool": "edit",
+  "filePath": "tests/fixtures/comment-scan/cases/typescript-edit/sample.ts",
+  "oldString": "export function resolveRoot(root: string): string {\n  return root || \"/tmp\"\n}\n",
+  "newString": "// Falls back to a temp directory when the root is empty.\nexport function resolveRoot(root: string): string {\n  const value = root || \"/tmp\" // safest default\n  return value\n}\n",
+  "language": "typescript",
+  "tier": "ast",
+  "expectedExitCode": 2,
+  "expectedFindings": 4,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": false,
+  "parityReason": "OLD BINARY DOUBLE-REPORTS both edit-added comments (4 <comment> entries for 2 comments); new scan dedupes",
+  "notes": [
+    "Edit shape: oldString has no comments, newString adds two.",
+    "sample.ts holds newString (post-edit state); oldString lives only in case.json.",
+    "When `content` is present the binary ignores old_string/new_string, so edit cases must omit `content`."
+  ]
+}

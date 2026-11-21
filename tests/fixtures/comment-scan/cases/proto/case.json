@@ -1,0 +1,17 @@
+{
+  "case": "proto",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/proto/sample.proto",
+  "content": "// Wire format for the settings service.\nsyntax = \"proto3\";\n\npackage settings;\n\nmessage Setting {\n  string id = 1; // stable slug\n  string value = 2;\n}\n",
+  "language": "proto",
+  "tier": "regex",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Regex-tier file: `//` and no block comment in this corpus."
+  ]
+}

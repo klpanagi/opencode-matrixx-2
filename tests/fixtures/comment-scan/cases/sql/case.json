@@ -1,0 +1,18 @@
+{
+  "case": "sql",
+  "tool": "write",
+  "filePath": "tests/fixtures/comment-scan/cases/sql/schema.sql",
+  "content": "-- Tables backing the settings service.\nCREATE TABLE settings (\n  id TEXT PRIMARY KEY, -- stable slug\n  value TEXT NOT NULL\n);\n",
+  "language": "sql",
+  "tier": "regex",
+  "expectedExitCode": 2,
+  "expectedFindings": 2,
+  "hasXml": true,
+  "xmlStartLine": 37,
+  "agentMemoBlock": false,
+  "parity": true,
+  "notes": [
+    "Regex-tier in the new design, but the OLD BINARY does parse sql via tree-sitter and reports `--` lines.",
+    "Kept as a regex-tier parity anchor for `--` leaders."
+  ]
+}

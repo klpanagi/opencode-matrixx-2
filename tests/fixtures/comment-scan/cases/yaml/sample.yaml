@@ -1,0 +1,7 @@
+# Deployment defaults shared by every service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo
+spec:
+  replicas: 2 # scaled by the platform team
