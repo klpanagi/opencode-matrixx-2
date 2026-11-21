@@ -11,12 +11,14 @@ import {
   getCachedBinaryPath as getCachedBinaryPathShared,
 } from "../../shared/io/binary-downloader"
 import { log } from "../../shared/runtime/logger"
+import { getChecksumSidecarPath, verifyCachedBinary, writeCachedChecksum } from "./cache-integrity"
+import { verifyArchiveChecksum } from "./checksum"
 
 const REPO = "ast-grep/ast-grep"
 
-// IMPORTANT: Update this when bumping @ast-grep/cli in package.json
-// This is only used as fallback when @ast-grep/cli package.json cannot be read
-const DEFAULT_VERSION = "0.40.0"
+// IMPORTANT: Keep this in sync with the installed @ast-grep/cli version.
+// Only used as fallback when @ast-grep/cli/package.json cannot be read.
+export const DEFAULT_VERSION = "0.40.5"
 
 function getAstGrepVersion(): string {
   try {
@@ -33,7 +35,7 @@ interface PlatformInfo {
   os: string
 }
 
-const PLATFORM_MAP: Record<string, PlatformInfo> = {
+export const PLATFORM_MAP: Record<string, PlatformInfo> = {
   "darwin-arm64": { arch: "aarch64", os: "apple-darwin" },
   "darwin-x64": { arch: "x86_64", os: "apple-darwin" },
   "linux-arm64": { arch: "aarch64", os: "unknown-linux-gnu" },
@@ -63,7 +65,7 @@ export function getCachedBinaryPath(): string | null {
   return getCachedBinaryPathShared(getCacheDir(), getBinaryName())
 }
 
- async function downloadAstGrep(version: string = DEFAULT_VERSION): Promise<string | null> {
+async function downloadAstGrep(version: string = DEFAULT_VERSION): Promise<string | null> {
   const platformKey = `${process.platform}-${process.arch}`
   const platformInfo = PLATFORM_MAP[platformKey]
 
@@ -76,28 +78,31 @@ export function getCachedBinaryPath(): string | null {
   const binaryName = getBinaryName()
   const binaryPath = join(cacheDir, binaryName)
 
-  if (existsSync(binaryPath)) {
+  if (existsSync(binaryPath) && verifyCachedBinary(binaryPath)) {
     return binaryPath
   }
 
   const { arch, os } = platformInfo
   const assetName = `app-${arch}-${os}.zip`
   const downloadUrl = `https://github.com/${REPO}/releases/download/${version}/${assetName}`
+  const archivePath = join(cacheDir, assetName)
 
   log(`[matrixx] Downloading ast-grep binary...`)
 
   try {
-    const archivePath = join(cacheDir, assetName)
     ensureCacheDir(cacheDir)
     await downloadArchive(downloadUrl, archivePath)
+    await verifyArchiveChecksum(archivePath, version, assetName)
     await extractZipArchive(archivePath, cacheDir)
     cleanupArchive(archivePath)
     ensureExecutable(binaryPath)
+    writeCachedChecksum(binaryPath)
 
     log(`[matrixx] ast-grep binary ready.`)
 
     return binaryPath
   } catch (err) {
+    removeInstalledBinary(archivePath, binaryPath)
     log(
       `[matrixx] Failed to download ast-grep: ${err instanceof Error ? err.message : err}`
     )
@@ -105,9 +110,19 @@ export function getCachedBinaryPath(): string | null {
   }
 }
 
+function removeInstalledBinary(archivePath: string, binaryPath: string): void {
+  for (const filePath of [archivePath, binaryPath, getChecksumSidecarPath(binaryPath)]) {
+    try {
+      cleanupArchive(filePath)
+    } catch {
+      log(`[matrixx] Could not remove ${filePath} after a failed download`)
+    }
+  }
+}
+
 export async function ensureAstGrepBinary(): Promise<string | null> {
   const cachedPath = getCachedBinaryPath()
-  if (cachedPath) {
+  if (cachedPath && verifyCachedBinary(cachedPath)) {
     return cachedPath
   }
 
