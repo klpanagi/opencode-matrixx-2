@@ -6,7 +6,7 @@ import { dcpCheck } from "./dcp"
 import { dockerCheck } from "./docker"
 import { headroomCheck } from "./headroom"
 import { mcpPrerequisitesCheck } from "./mcp"
-import { optionalToolsCheck } from "./optional"
+import { commentScanCheck, optionalToolsCheck } from "./optional"
 import { pluginInstallationCheck } from "./plugin"
 import { rtkCheck } from "./rtk"
 import { runtimeDepsCheck } from "./runtime"
@@ -20,6 +20,7 @@ export const ALL_CHECKS: DoctorCheck[] = [
   runtimeDepsCheck,
   skillPacksCheck,
   optionalToolsCheck,
+  commentScanCheck,
   mcpPrerequisitesCheck,
   headroomCheck,
   rtkCheck,
@@ -45,7 +46,7 @@ export { dcpCheck } from "./dcp"
 export { dockerCheck } from "./docker"
 export { headroomCheck } from "./headroom"
 export { mcpPrerequisitesCheck } from "./mcp"
-export { optionalToolsCheck } from "./optional"
+export { commentScanCheck, optionalToolsCheck } from "./optional"
 export { pluginInstallationCheck } from "./plugin"
 export { rtkCheck } from "./rtk"
 export { runtimeDepsCheck } from "./runtime"

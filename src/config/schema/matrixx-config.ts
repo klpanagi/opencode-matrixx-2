@@ -76,6 +76,7 @@ export const MatrixxConfigSchema = z.object({
   /** @deprecated Prefer matrixx.agents.jsonc (agents_file); inline entries override file entries per name (field-level deep merge). */
   categories: CategoriesConfigSchema.optional(),
   morpheus_agent: MorpheusAgentConfigSchema.optional(),
+  /** In-process AI-slop comment scan (ast-grep); `custom_prompt` is the only tunable. */
   comment_checker: CommentCheckerConfigSchema.optional(),
   experimental: ExperimentalConfigSchema.optional(),
   /** Dynamic Context Pruning (DCP) profile switcher configuration */

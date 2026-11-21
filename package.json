@@ -78,7 +78,6 @@
   "dependencies": {
     "@ast-grep/cli": "^0.40.0",
     "@clack/prompts": "^1.7.0",
-    "@code-yeongyu/comment-checker": "^0.6.1",
     "@cucumber/gherkin": "^34.0.0",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "context-mode": "2.1.*",
@@ -110,8 +109,7 @@
     "typescript": "^5.7.3"
   },
   "trustedDependencies": [
-    "@ast-grep/cli",
-    "@code-yeongyu/comment-checker"
+    "@ast-grep/cli"
   ],
   "publishConfig": {
     "access": "public",

@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const CommentCheckerConfigSchema = z.object({
-  /** Custom prompt to replace the default warning message. Use {{comments}} placeholder for detected comments XML. */
+  /** Custom prompt that replaces the default in-process comment-scan warning. Use {{comments}} for the detected-comments XML. Scanning runs in-process via ast-grep; no external binary is needed. */
   custom_prompt: z.string().optional(),
 })
 

@@ -6,6 +6,7 @@ let mockResults: Array<{ exitCode: number; stdout: string; stderr: string }> = [
 
 beforeEach(() => {
   mockResults = []
+  _setCommentScanProbeForTesting(async () => "/test/sg")
   Bun.spawnSync = mock((_cmd: string[], _opts?: unknown) => {
     const result = mockResults.shift() ?? { exitCode: 1, stdout: "", stderr: "" }
     return {
@@ -17,21 +18,23 @@ beforeEach(() => {
 })
 
 afterAll(() => {
+  _setCommentScanProbeForTesting(null)
   Bun.spawnSync = origSpawnSync
   mock.restore()
 })
 
 import { executeDoctor, runDoctor } from "../../../src/cli/doctor"
+import { _setCommentScanProbeForTesting } from "../../../src/cli/doctor/checks/optional"
 import type { DoctorReport } from "../../../src/cli/doctor/types"
 
 describe("runDoctor", () => {
-  test("returns a report structure with 14 checks", async () => {
+  test("returns a report structure with 15 checks", async () => {
     const report = await runDoctor()
     expect(report).toHaveProperty("timestamp")
     expect(report).toHaveProperty("checks")
     expect(report).toHaveProperty("summary")
     expect(Array.isArray(report.checks)).toBe(true)
-    expect(report.checks.length).toBe(14)
+    expect(report.checks.length).toBe(15)
   })
 
   test("report has correct summary totals", async () => {
