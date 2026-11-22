@@ -339,7 +339,7 @@ Full reference with arguments and intercepts:
 (24 built-ins covering orchestration, research, refactoring, handoffs,
 tasks, BDD, and toggles — see `src/features/builtin-commands/types.ts`
 `BuiltinCommandName`: init-deep, matrix-loop, rp-loop, cancel-loop, refactor,
-plan-review, start-work, stop-continuation, humanize, handoff, pickup,
+completion-review, start-work, stop-continuation, humanize, handoff, pickup,
 remove-deadcode, preset, end-redpill, research, assembly, redpill,
 bdd-pipeline, cleanup-tasks, task-list, quality-audit,
 quality-assurance, security-audit, academic-humanize).

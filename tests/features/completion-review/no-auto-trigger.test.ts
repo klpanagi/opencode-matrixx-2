@@ -1,12 +1,12 @@
 /// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
-import { join, relative, resolve } from "node:path"
+import { dirname, join, relative, resolve, sep } from "node:path"
 
 const REPO_ROOT = resolve(import.meta.dir, "../../..")
 const SRC = join(REPO_ROOT, "src")
 const FEATURE = join(SRC, "features/completion-review")
-const SOLE_IMPORTER = "features/builtin-commands/templates/plan-review.ts"
+const SOLE_IMPORTER = "features/builtin-commands/templates/completion-review.ts"
 
 /** Directories an automatic trigger could plausibly hide in. Zero hits required. */
 const AUTOMATION_DIRS = ["hooks", "plugin/handlers", "plugin"]
@@ -51,7 +51,7 @@ function importersOutsideFeature(): string[] {
   for (const file of walk(SRC)) {
     if (file.startsWith(FEATURE)) continue
     for (const specifier of importsOf(file)) {
-      if (!specifier.includes("completion-review")) continue
+      if (!resolve(dirname(file), specifier).startsWith(FEATURE + sep)) continue
       importers.add(relative(SRC, file))
     }
   }
@@ -102,7 +102,7 @@ describe("locked decision #3 — the review is unreachable from automation", () 
     for (const dir of AUTOMATION_DIRS) {
       for (const file of walk(join(SRC, dir))) {
         const source = readFileSync(file, "utf-8")
-        if (/plan-review|planReview|completion-review/.test(source)) {
+        if (/completion-review|completionReview/.test(source)) {
           hits.push(relative(SRC, file))
         }
       }

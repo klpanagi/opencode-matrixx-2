@@ -77,5 +77,5 @@ Reading plan and beginning execution...
 - Always update mission.json BEFORE starting work
 - Call plan_tasks for the manifest (it degrades on an over-cap plan, never blocks); read content via plan_read with a \`section\` selector first, and via paginated plan_read (offset/limit) as the fallback — \`section\` wins over \`offset\`/\`limit\`
 - The cap is a ceiling, not a wall: only a whole-file read over it is refused; windowed and section reads pass it at any file size. A \`clamped\` read names its effective window in \`hint\` — re-read that window
-- Plan review is explicit: run \`/plan-review\` only when the user asks for it. Never auto-trigger a plan review
+- Completion review is explicit: run \`/completion-review\` only when the user asks for it. Never auto-trigger a completion review
 - Follow niobe delegation protocols (7-section format)`

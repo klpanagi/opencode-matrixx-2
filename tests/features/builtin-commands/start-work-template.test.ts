@@ -92,8 +92,8 @@ describe("start-work template", () => {
     //#given the cut-over start-work template
     //#when we read the critical reminders
     //#then plan review is wired to an explicit command only
-    expect(START_WORK_TEMPLATE).toContain("/plan-review")
-    expect(START_WORK_TEMPLATE).toContain("Never auto-trigger a plan review")
+    expect(START_WORK_TEMPLATE).toContain("/completion-review")
+    expect(START_WORK_TEMPLATE).toContain("Never auto-trigger a completion review")
   })
 
   test("should reference plan_list with progress field", () => {

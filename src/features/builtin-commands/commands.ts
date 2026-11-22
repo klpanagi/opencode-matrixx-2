@@ -3,13 +3,13 @@ import { ACADEMIC_HUMANIZE_TEMPLATE } from "./templates/academic-humanize"
 import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
 import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
 import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
+import { COMPLETION_REVIEW_TEMPLATE } from "./templates/completion-review"
 import { END_REDPILL_TEMPLATE } from "./templates/end-redpill"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
 import { HUMANIZE_TEMPLATE } from "./templates/humanize"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
 import { CANCEL_LOOP_TEMPLATE, MATRIX_LOOP_TEMPLATE } from "./templates/matrix-loop"
 import { PICKUP_TEMPLATE } from "./templates/pickup"
-import { PLAN_REVIEW_TEMPLATE } from "./templates/plan-review"
 import { PRESET_TEMPLATE } from "./templates/preset"
 import { QUALITY_ASSURANCE_TEMPLATE } from "./templates/quality-assurance"
 import { QUALITY_AUDIT_TEMPLATE } from "./templates/quality-audit"
@@ -71,10 +71,10 @@ ${REFACTOR_TEMPLATE}
 </command-instruction>`,
     argumentHint: "<refactoring-target> [--scope=<file|module|project>] [--strategy=<safe|aggressive>]",
   },
-  "plan-review": {
+  "completion-review": {
     description: "(builtin) Post-execution completion review of a finished plan (explicit only)",
     template: `<command-instruction>
-${PLAN_REVIEW_TEMPLATE}
+${COMPLETION_REVIEW_TEMPLATE}
 </command-instruction>
 
 <user-request>

@@ -1,5 +1,5 @@
 /**
- * Task 10 — the `/plan-review` ADMISSION GATE, as a pure function over T2's
+ * Task 10 — the `/completion-review` ADMISSION GATE, as a pure function over T2's
  * gathered facts.
  *
  * WHY THE GATE IS A CONJUNCTION AND NOT `isComplete`: `isComplete` derives
