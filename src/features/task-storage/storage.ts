@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto"
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs"
 import { basename, dirname, isAbsolute, join } from "node:path"
 import type { z } from "zod"
 import type { MatrixxConfig } from "../../config/schema"
 import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { log } from "../../shared/runtime/logger"
+import { atomicWriteDetailed } from "../mission-state/atomic-write"
 import { TypedReadError } from "./read-errors"
 
 export function getProjectTaskDir(directory: string): string {
@@ -63,6 +64,61 @@ export class StorageCorruptError extends Error {
   }
 }
 
+const MAX_REMEMBERED_CORRUPT_PATHS = 20
+
+export interface CorruptReadStats {
+  count: number
+  paths: string[]
+}
+
+const corruptReadStats: CorruptReadStats = { count: 0, paths: [] }
+
+let pendingAggregateCount = 0
+const pendingAggregatePaths: string[] = []
+let aggregateScheduled = false
+let aggregateEpoch = 0
+
+function flushCorruptReadAggregate(epoch: number): void {
+  if (epoch !== aggregateEpoch) return
+  aggregateScheduled = false
+  const count = pendingAggregateCount
+  pendingAggregateCount = 0
+  const paths = pendingAggregatePaths.splice(0, pendingAggregatePaths.length)
+  if (count === 0) return
+  log("[task-storage] corrupt task reads skipped", { count, paths, total: getCorruptReadStats().count })
+}
+
+function rememberCorruptRead(filePath: string): void {
+  corruptReadStats.count += 1
+  if (!corruptReadStats.paths.includes(filePath)) {
+    corruptReadStats.paths.push(filePath)
+    if (corruptReadStats.paths.length > MAX_REMEMBERED_CORRUPT_PATHS) {
+      corruptReadStats.paths.shift()
+    }
+  }
+  pendingAggregateCount += 1
+  if (!pendingAggregatePaths.includes(filePath)) pendingAggregatePaths.push(filePath)
+  if (aggregateScheduled) return
+  aggregateScheduled = true
+  // A list-style pass reads every task file in one synchronous loop; deferring
+  // to a microtask collapses that whole pass into a single warning line.
+  const epoch = aggregateEpoch
+  queueMicrotask(() => flushCorruptReadAggregate(epoch))
+}
+
+export function getCorruptReadStats(): CorruptReadStats {
+  return { count: corruptReadStats.count, paths: [...corruptReadStats.paths] }
+}
+
+export function _resetCorruptReadStatsForTesting(): void {
+  corruptReadStats.count = 0
+  corruptReadStats.paths.length = 0
+  pendingAggregateCount = 0
+  pendingAggregatePaths.length = 0
+  aggregateScheduled = false
+  aggregateEpoch += 1
+}
+
 export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | null {
   try {
     if (!existsSync(filePath)) {
@@ -76,12 +132,14 @@ export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | nul
       parsed = JSON.parse(content)
     } catch (error) {
       log(`[task-storage] readJsonSafe parse failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
+      rememberCorruptRead(filePath)
       return null
     }
     const result = schema.safeParse(parsed)
 
     if (!result.success) {
       log(`[task-storage] readJsonSafe schema mismatch`, { path: filePath, byteSize })
+      rememberCorruptRead(filePath)
       return null
     }
 
@@ -94,6 +152,7 @@ export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | nul
       byteSize = 0
     }
     log(`[task-storage] readJsonSafe read failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
+    rememberCorruptRead(filePath)
     return null
   }
 }
@@ -111,23 +170,10 @@ export function readJsonStrict<T>(filePath: string, schema: z.ZodType<T>): T {
 }
 
 export function writeJsonAtomic(filePath: string, data: unknown): void {
-  const dir = dirname(filePath)
-  ensureDir(dir)
-
-  const tempPath = `${filePath}.tmp.${process.pid}.${randomUUID()}`
-
-  try {
-    writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf-8")
-    renameSync(tempPath, filePath)
-  } catch (error) {
-    try {
-      if (existsSync(tempPath)) {
-        unlinkSync(tempPath)
-      }
-    } catch {
-      // Ignore cleanup errors
-    }
-    throw error
+  ensureDir(dirname(filePath))
+  const result = atomicWriteDetailed(filePath, JSON.stringify(data, null, 2))
+  if (!result.ok) {
+    throw new Error(result.reason)
   }
 }
 
