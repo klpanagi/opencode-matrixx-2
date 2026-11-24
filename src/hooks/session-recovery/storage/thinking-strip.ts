@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
-import { deletePart, isSqliteBackend, log } from "../../../shared"
+import { deletePart, isSqliteBackend } from "../../../shared"
+import { log } from "../../../shared/runtime/logger"
 import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
 import { fetchSessionMessages } from "../../../shared/session/session-context-source"
 import { contentOf, idOf } from "../../../shared/session/session-message"
@@ -20,15 +21,20 @@ export function stripThinkingParts(messageID: string): boolean {
   let anyRemoved = false
   for (const file of readdirSync(partDir)) {
     if (!file.endsWith(".json")) continue
+    const filePath = join(partDir, file)
     try {
-      const filePath = join(partDir, file)
       const content = readFileSync(filePath, "utf-8")
       const part = JSON.parse(content) as StoredPart
       if (THINKING_TYPES.has(part.type)) {
         unlinkSync(filePath)
         anyRemoved = true
       }
-    } catch {
+    } catch (error) {
+      log("[session-recovery] unreadable part file skipped while stripping thinking", {
+        path: filePath,
+        reason: error instanceof Error ? error.message : String(error),
+        level: "warn",
+      })
     }
   }
 

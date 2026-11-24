@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { isSqliteBackend } from "../../../shared"
 import { getMessageDir } from "../../../shared/opencode/opencode-message-dir"
+import { log } from "../../../shared/runtime/logger"
 import { isRecord } from "../../../shared/runtime/record-type-guard"
 import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
 import { fetchSessionMessages } from "../../../shared/session/session-context-source"
@@ -40,10 +41,16 @@ export function readMessages(sessionID: string): StoredMessageMeta[] {
   const messages: StoredMessageMeta[] = []
   for (const file of readdirSync(messageDir)) {
     if (!file.endsWith(".json")) continue
+    const filePath = join(messageDir, file)
     try {
-      const content = readFileSync(join(messageDir, file), "utf-8")
+      const content = readFileSync(filePath, "utf-8")
       messages.push(JSON.parse(content))
-    } catch {
+    } catch (error) {
+      log("[session-recovery] unreadable message file skipped", {
+        path: filePath,
+        reason: error instanceof Error ? error.message : String(error),
+        level: "warn",
+      })
     }
   }
 
@@ -72,7 +79,12 @@ export async function readMessagesFromSDK(
       if (aTime !== bTime) return aTime - bTime
       return a.id.localeCompare(b.id)
     })
-  } catch {
+  } catch (error) {
+    log("[session-recovery] SDK message read failed", {
+      sessionID,
+      reason: error instanceof Error ? error.message : String(error),
+      level: "warn",
+    })
     return []
   }
 }
