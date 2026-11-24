@@ -185,16 +185,21 @@ async function handleCreate(
           tasks.push({ id: one.id, subject: one.subject, deduplicated: true })
         }
       }
+      for (const task of created) {
+        if (lock.ownerId) {
+          const refreshed = refreshLock(taskDir, lock.ownerId)
+          if (!refreshed.ok) {
+            log(`[task-create] lock refresh failed`, { taskDir, error: refreshed.error.message })
+          }
+        }
+        try {
+          await maybeSyncTaskToPlans({ directory, task, config })
+        } catch (error) {
+          log(`[task-create] Plan sync failed, task kept`, { id: task.id, error: String(error) })
+        }
+      }
     } finally {
       lock.release();
-    }
-
-    for (const task of created) {
-      try {
-        await maybeSyncTaskToPlans({ directory, task, config })
-      } catch (error) {
-        log(`[task-create] Plan sync failed, task kept`, { id: task.id, error: String(error) })
-      }
     }
 
     return JSON.stringify({ tasks, errors });

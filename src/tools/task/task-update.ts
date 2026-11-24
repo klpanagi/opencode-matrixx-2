@@ -141,23 +141,23 @@ async function handleUpdate(
 
       const validatedTask = TaskObjectSchema.parse(task);
       writeJsonAtomic(taskPath, validatedTask);
+      updated = validatedTask;
       if (lock.ownerId) {
         const refreshed = refreshLock(taskDir, lock.ownerId);
         if (!refreshed.ok) {
           log(`[task-update] lock refresh failed`, { taskDir, error: refreshed.error.message });
         }
       }
-      updated = validatedTask;
+      try {
+        await maybeSyncTaskToPlans({ directory, task: validatedTask, config });
+      } catch (error) {
+        log(`[task-update] Plan sync failed, task update kept`, { id: taskId, error: String(error) });
+      }
     } finally {
       lock.release();
     }
 
     if (updated !== null) {
-      try {
-        await maybeSyncTaskToPlans({ directory, task: updated, config });
-      } catch (error) {
-        log(`[task-update] Plan sync failed, task update kept`, { id: taskId, error: String(error) });
-      }
       return JSON.stringify({ task: updated });
     }
     return JSON.stringify({ error: "internal_error" });
