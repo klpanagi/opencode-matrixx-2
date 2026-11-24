@@ -1,3 +1,5 @@
+import { chmodSync, statSync } from "node:fs"
+import { atomicWrite } from "../../features/mission-state/atomic-write"
 import { resolveToolCallID, storeToolMetadata } from "../../features/tool-metadata-store"
 import type { MatrixxToolContext } from "../../shared/tool/define-tool"
 import { countLineDiffs, generateUnifiedDiff } from "./diff-utils"
@@ -24,6 +26,18 @@ type ToolContextWithMetadata = ToolContextWithCallID & {
   metadata?: (value: unknown) => void
 }
 
+/**
+ * tmp+rename write that keeps the target's mode. `atomicWrite` owns the rename,
+ * so the mode is re-applied to the target immediately after it lands; a new file
+ * has no prior mode and takes the umask default.
+ */
+function writeAtomically(filePath: string, content: string): void {
+  const existingMode = statSync(filePath, { throwIfNoEntry: false })?.mode
+  if (!atomicWrite(filePath, content)) {
+    throw new Error(`Failed to write ${filePath}`)
+  }
+  if (existingMode !== undefined) chmodSync(filePath, existingMode)
+}
 
 function canCreateFromMissingFile(edits: HashlineEdit[]): boolean {
   if (edits.length === 0) return false
@@ -121,10 +135,10 @@ export async function executeHashlineEditTool(args: HashlineEditArgs, context: M
 
     const writeContent = restoreFileText(canonicalNewContent, oldEnvelope)
 
-    await Bun.write(filePath, writeContent)
+    writeAtomically(filePath, writeContent)
 
     if (rename && rename !== filePath) {
-      await Bun.write(rename, writeContent)
+      writeAtomically(rename, writeContent)
       await Bun.file(filePath).delete()
     }
 

@@ -1,10 +1,10 @@
 import { MAX_PLAN_FILE_BYTES, measurePlanBytes } from "../../features/mission-state/constants"
-import { atomicWrite } from "../../features/mission-state/plan-storage"
 import { PLAN_ERROR_CODES, planSizeExceededFields, planTrimRequiredFields } from "./error-codes"
 
 /**
  * The plan write path's cap guard — the ONLY place a write is measured against
- * the cap and the ONLY place a write is rolled back.
+ * the cap. It performs no write of its own: a refusal leaves the applied bytes
+ * in place and the caller owns the single rollback.
  *
  * `grep -rn "MAX_PLAN_FILE_BYTES" src/tools/plan/plan-update.ts` shows the hashline
  * path and the section-scoped path both arrive here as the same `appliedContent`:
@@ -43,12 +43,13 @@ export function resetPlanWriteGuardForTesting(): void {
 export type PostApplyHook = () => void
 
 /**
- * Measure `appliedContent` with the single byte ruler, and roll back to
- * `originalContent` when it is over the cap.
+ * Measure `appliedContent` with the single byte ruler and report a refusal
+ * when it is over the cap.
  *
- * The rollback goes through the same tmp+rename `atomicWrite` as the apply, so a
- * crash mid-restore cannot truncate the plan: the target is never written in
- * place, only ever replaced by rename.
+ * This function never writes. It used to restore `originalContent` here, but it
+ * runs in the same window where the caller is about to persist its own bytes:
+ * rewriting identical content could clobber a concurrent good write. The caller
+ * restores the pre-edit bytes on a refusal instead.
  */
 export function enforcePlanCap(resolved: string, originalContent: string, appliedContent: string, cap: number = MAX_PLAN_FILE_BYTES): PlanCapVerdict {
   const bytes = measurePlanBytes(appliedContent)
@@ -63,7 +64,6 @@ export function enforcePlanCap(resolved: string, originalContent: string, applie
   }
   const count = (consecutiveSizeRefusals.get(resolved) ?? 0) + 1
   consecutiveSizeRefusals.set(resolved, count)
-  atomicWrite(resolved, originalContent)
   if (count > TRIM_REQUIRED_AFTER_CONSECUTIVE_REFUSALS) {
     const payload = JSON.stringify({
       error: PLAN_ERROR_CODES.trimRequired,

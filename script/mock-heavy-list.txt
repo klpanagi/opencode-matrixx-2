@@ -1,6 +1,7 @@
 tests/plugin/handlers/
 tests/hooks/compaction-context-injector/
 tests/tools/session-manager/storage.test.ts
+tests/tools/session-manager/storage.corrupt.test.ts
 tests/hooks/oracle-md-only/index.test.ts
 tests/hooks/niobe/index.test.ts
 tests/hooks/matrix-loop/index.test.ts
@@ -43,3 +44,5 @@ tests/features/assembly-state/manager.test.ts
 tests/cli/skill-pack/installer.test.ts
 tests/plugin/tool/tool-execute-after.isolation.test.ts
 tests/shared/tmux/tmux-utils/
+tests/tools/plan/plan-update.atomic.test.ts
+tests/tools/plan/plan-write-guard.test.ts

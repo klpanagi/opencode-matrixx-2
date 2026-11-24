@@ -16,10 +16,10 @@ import { log } from "../../shared/runtime/logger"
 import { parsePlanFrontMatter } from "../plan-contract/front-matter"
 import { getTaskDir, listTaskFiles, readJsonSafe } from "../task-storage/storage"
 import { TaskSchema } from "../task-storage/types"
+import { atomicWriteDetailed } from "./atomic-write"
 import { formatCompletionWarning, resolvePlanCompletion } from "./completion"
 import { DEFAULT_STALE_AFTER_HOURS, ORACLE_PLANS_DIR, PLANS_ARCHIVE_DIR_NAME } from "./constants"
 import {
-  atomicWrite,
   checkboxOverlap,
   isVerificationStyle,
   readPlanFile,
@@ -33,7 +33,7 @@ export interface ReconcileResult {
   content: string; checked: string[]; lowConfidence: string[]; flaggedVerification: string[]; changed: boolean
 }
 
-export interface ReconcileFileResult extends ReconcileResult { wrote: boolean }
+export interface ReconcileFileResult extends ReconcileResult { wrote: boolean; writeError?: string }
 
 const UNCHECKED_BOX_RE = /^\s*[-*]\s*\[ \]\s*(.*)$/gm
 const HOUR_MS = 3_600_000
@@ -74,7 +74,17 @@ export function reconcilePlanFile(planPath: string, todos: ReconcileTodo[]): Rec
     return { content: "", checked: [], lowConfidence: [], flaggedVerification: [], changed: false, wrote: false }
   }
   const result = reconcilePlanContent(content, todos)
-  const wrote = result.changed && atomicWrite(planPath, result.content)
+  let wrote = false
+  let writeError: string | undefined
+  if (result.changed) {
+    const persisted = atomicWriteDetailed(planPath, result.content)
+    if (persisted.ok) {
+      wrote = true
+    } else {
+      writeError = persisted.reason
+      log("[mission-state] Plan reconcile write failed", { plan: planPath, reason: persisted.reason, level: "error" })
+    }
+  }
   // Overlay (read-only): verdict + warn-only log on the reconciled content.
   // Buckets/counts above are untouched; a mismatch is logged, never auto-flipped.
   const reconciledFrontMatter = parsePlanFrontMatter(result.content)
@@ -84,7 +94,7 @@ export function reconcilePlanFile(planPath: string, todos: ReconcileTodo[]): Rec
       log("[mission-state] Completion mismatch (warn-only; counts unchanged)", { plan: planPath, warning: completionWarning })
     }
   }
-  return { ...result, wrote }
+  return { ...result, wrote, ...(writeError === undefined ? {} : { writeError }) }
 }
 
 /** Invocation point for start-work: reconcile only when plans compete (>1). */
