@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import {
   existsSync,
   mkdirSync,
@@ -10,6 +11,7 @@ import {
 } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { warn } from "../../shared/runtime/logger"
 import { PACK_CATALOG, PACK_CATALOG_BY_ID } from "../../skills/packs/catalog"
 import {
   CORE_PACK_ID,
@@ -51,8 +53,9 @@ import { extractTarball } from "./tar"
  * 3. Download the tarball and verify its SHA-512 against the pin *before*
  *    extraction, so a tampered archive never reaches the filesystem.
  * 4. Extract and render into `<root>/.staging-<packId>-<pid>`.
- * 5. Rename the staging directory onto `<root>/<packId>/<version>` and write
- *    `lock.json` atomically.
+ * 5. Move an existing install aside, rename the staging directory onto
+ *    `<root>/<packId>/<version>`, write `lock.json` atomically, then drop the
+ *    backup. A crash mid-swap restores the previous install.
  *
  * Any failure removes the staging directory and the downloaded tarball, so a
  * botched install never leaves a half-populated pack behind.
@@ -370,10 +373,29 @@ export async function installPack(options: InstallPackOptions): Promise<InstallP
 
       const lock = buildLock(pack, version, expectedIntegrity, packument.tarball, staging)
 
-      if (existsSync(finalDir)) rmSync(finalDir, { recursive: true, force: true })
+      // Old, rename, rm: an existing install is moved aside instead of deleted,
+      // so a crash between the two renames can still restore it. A leftover
+      // backup is safe; a missing install is not.
+      const backupDir = existsSync(finalDir) ? `${finalDir}.backup-${randomUUID()}` : null
+      if (backupDir !== null) renameSync(finalDir, backupDir)
       mkdirSync(join(root, pack.id), { recursive: true })
-      renameSync(staging, finalDir)
+      try {
+        renameSync(staging, finalDir)
+      } catch (error) {
+        if (backupDir !== null) renameSync(backupDir, finalDir)
+        throw error
+      }
       writeLockAtomic(finalDir, lock)
+      if (backupDir !== null) {
+        try {
+          rmSync(backupDir, { recursive: true, force: true })
+        } catch (error) {
+          warn("skill-pack: could not remove install backup", {
+            backupDir,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
 
       return {
         packId: pack.id,
