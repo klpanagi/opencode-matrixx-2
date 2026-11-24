@@ -22,7 +22,7 @@ export async function spawnVoters(
   const timeoutMs = options?.timeoutMs ?? VOTER_TIMEOUT_MS
   const pollIntervalMs = options?.pollIntervalMs ?? POLL_INTERVAL_MS
 
-  const spawns = await Promise.all(
+  const settledSpawns = await Promise.allSettled(
     providers.map((provider, index) =>
       spawnNativeSubagent(client, {
         agent: "mouse",
@@ -49,8 +49,16 @@ Output your analysis in this format:
       }),
     ),
   )
+  const spawns = settledSpawns.map((outcome, index) =>
+    outcome.status === "fulfilled"
+      ? outcome.value
+      : {
+          ok: false as const,
+          error: `Failed to spawn voter ${index + 1}: ${outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason)}`,
+        },
+  )
 
-  return Promise.all(
+  const settledVoters = await Promise.allSettled(
     spawns.map(async (spawn, index) => {
       const provider = providers[index]
       if (!spawn.ok) {
@@ -98,4 +106,16 @@ Output your analysis in this format:
       }
     }),
   )
+
+  return settledVoters.map((outcome, index) => {
+    if (outcome.status === "fulfilled") return outcome.value
+    const provider = providers[index]
+    return {
+      voterIndex: index,
+      modelLabel: `${provider.providerID}:${provider.modelID}`,
+      reasoning: "",
+      status: "error" as const,
+      error: `Voter ${index + 1} failed: ${outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason)}`,
+    }
+  })
 }

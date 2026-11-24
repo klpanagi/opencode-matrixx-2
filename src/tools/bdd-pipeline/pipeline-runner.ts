@@ -141,11 +141,19 @@ export async function runBddPipeline(
     }
   }
 
-  const stages = await Promise.all(
-    (["tests", "frontend", "backend"] as const).map((stage) =>
+  const stageNames = ["tests", "frontend", "backend"] as const
+  const settledStages = await Promise.allSettled(
+    stageNames.map((stage) =>
       deps.spawnSubagent(stage, STAGE_PROMPTS[stage], enriched.contract as never, ctx),
     ),
   )
+  // A rejected stage must not discard the stages that already reported:
+  // map every settled result (including a rejection) into the stage shape.
+  const stages: BddPipelineStageResult[] = settledStages.map((outcome, index) => {
+    if (outcome.status === "fulfilled") return outcome.value
+    const reason = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason)
+    return emptyStage(stageNames[index], reason)
+  })
   const stageResults: Record<BddPipelineStageName, BddPipelineStageResult> = {
     tests: stages[0],
     frontend: stages[1],
