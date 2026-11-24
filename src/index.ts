@@ -28,6 +28,7 @@ async function setup(ctx: MatrixxContext): Promise<Cleanup> {
 
   return async (): Promise<void> => {
     await bridge.dispose()
+    await import("./plugin/tool/event").then((module) => module.resetAllSessionState())
     log("[matrixx] disposed")
   }
 }

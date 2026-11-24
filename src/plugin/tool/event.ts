@@ -1,10 +1,14 @@
 import type { MatrixxConfig } from "../../config"
 import { invalidateSdkMessageCache } from "../../features/context-injection/hook-bridge"
 import {
+  clearMainSession,
   clearSessionAgent,
   getMainSessionID,
   isMainSessionCandidate,
+  registerSubagentSession,
+  resetSessionStateForDispose,
   setMainSession,
+  unregisterSubagentSession,
   updateSessionAgent,
 } from "../../features/session-state/state"
 import { resetMessageCursor } from "../../shared"
@@ -21,6 +25,16 @@ import { normalizeSessionStatusToIdle } from "./session-status-normalizer"
 type FirstMessageVariantGate = {
   markSessionCreated: (sessionInfo: { id?: string; title?: string; parentID?: string } | undefined) => void
   clear: (sessionID: string) => void
+}
+
+// Bumped by resetAllSessionState(); each live handler discards its idle-dedupe
+// memory when it observes a new generation, so a disposed plugin keeps none.
+let idleDedupGeneration = 0
+
+/** Clear session identity state and idle-dedupe memory on plugin dispose. */
+export function resetAllSessionState(): void {
+  resetSessionStateForDispose()
+  idleDedupGeneration += 1
 }
 
 export function createEventHandler(args: {
@@ -57,14 +71,25 @@ export function createEventHandler(args: {
   const recentSyntheticIdles = new Map<string, number>()
   const recentRealIdles = new Map<string, number>()
   let dedupDroppedTotal = 0
+  let observedIdleDedupGeneration = idleDedupGeneration
 
-  return async (event: V2Event): Promise<void> => {
+  const pruneIdleDedupe = (): void => {
     pruneRecentSyntheticIdles({
       recentSyntheticIdles,
       recentRealIdles,
       now: Date.now(),
       dedupWindowMs: DEDUPLICATE_WINDOW_MS,
     })
+  }
+
+  return async (event: V2Event): Promise<void> => {
+    if (observedIdleDedupGeneration !== idleDedupGeneration) {
+      recentSyntheticIdles.clear()
+      recentRealIdles.clear()
+      dedupDroppedTotal = 0
+      observedIdleDedupGeneration = idleDedupGeneration
+    }
+    pruneIdleDedupe()
 
     if (event.type === "session.idle") {
       const idleData = event.data as Record<string, unknown> | undefined
@@ -86,6 +111,7 @@ export function createEventHandler(args: {
           })
           return
         }
+        pruneIdleDedupe()
         recentRealIdles.set(sessionID, Date.now())
         log("[plugin:event] session.idle dedup kept: dispatching real idle", {
           sessionID,
@@ -112,6 +138,7 @@ export function createEventHandler(args: {
         })
         return
       }
+      pruneIdleDedupe()
       recentSyntheticIdles.set(sessionID, Date.now())
       await dispatchToHooks(syntheticIdle)
     }
@@ -127,17 +154,20 @@ export function createEventHandler(args: {
         setMainSession(sessionInfo?.id)
       }
 
+      if (sessionInfo?.id && sessionInfo.parentID) {
+        registerSubagentSession(sessionInfo.id, sessionInfo.parentID)
+      }
+
       firstMessageVariantGate.markSessionCreated(sessionInfo)
       // D5: native session APIs own subagent display; no tmux mirror.
     }
 
     if (event.type === "session.deleted") {
       const sessionInfo = props?.info as { id?: string } | undefined
-      if (sessionInfo?.id === getMainSessionID()) {
-        setMainSession(undefined)
-      }
 
       if (sessionInfo?.id) {
+        unregisterSubagentSession(sessionInfo.id)
+        clearMainSession(sessionInfo.id)
         clearSessionAgent(sessionInfo.id)
         resetMessageCursor(sessionInfo.id)
         invalidateSdkMessageCache(sessionInfo.id)

@@ -41,15 +41,35 @@ export function getSubagentSessionIDs(parentSessionID: string): string[] {
   return ids
 }
 
-
+// Primary plus the live top-level set. Insertion order is first-seen order, so
+// re-election after a delete is deterministic (oldest survivor) and never
+// driven by recency or title.
+const topLevelSessionIDs = new Set<string>()
 let _mainSessionID: string | undefined
 
-export function setMainSession(id: string | undefined) {
-  _mainSessionID = id
+export function setMainSession(id: string | undefined): void {
+  if (id === undefined) {
+    topLevelSessionIDs.clear()
+    _mainSessionID = undefined
+    return
+  }
+  topLevelSessionIDs.add(id)
+  if (_mainSessionID === undefined) _mainSessionID = id
 }
 
 export function getMainSessionID(): string | undefined {
   return _mainSessionID
+}
+
+export function clearMainSession(id: string): void {
+  topLevelSessionIDs.delete(id)
+  if (_mainSessionID !== id) return
+  const [oldestSurvivor] = topLevelSessionIDs
+  _mainSessionID = oldestSurvivor
+}
+
+export function resolveMainSessionFor(sessionID?: string): string | undefined {
+  return sessionID ?? _mainSessionID
 }
 
 /**
@@ -78,11 +98,20 @@ export function isMainSessionCandidate(
 const sessionAgentMap = new Map<string, string>()
 const sessionModelMap = new Map<string, string>()
 
-/** @internal For testing only */
-export function _resetForTesting(): void {
+/**
+ * Clear process-global session identity state on plugin dispose. Idempotent:
+ * the dispose path may run more than once (tests reset repeatedly).
+ */
+export function resetSessionStateForDispose(): void {
+  topLevelSessionIDs.clear()
   _mainSessionID = undefined
   subagentSessions.clear()
   clearSubagentParents()
+}
+
+/** @internal For testing only */
+export function _resetForTesting(): void {
+  resetSessionStateForDispose()
   sessionAgentMap.clear()
   sessionModelMap.clear()
 }
