@@ -37,6 +37,239 @@ export function resetAllSessionState(): void {
   idleDedupGeneration += 1
 }
 
+type EventHookHandler = (event: V2Event) => Promise<void> | void
+
+type EventHookDefinition = {
+  readonly name: string
+  readonly classification: "read-only" | "ordered"
+  /**
+   * Types the hook reacts to inside its own `event` handler, or `"all"` when
+   * the handler runs a per-event state bootstrap before its type switch.
+   */
+  readonly eventTypes: readonly string[] | "all"
+  readonly resolve: () => EventHookHandler | null | undefined
+}
+
+type IndexedEventHook = {
+  readonly name: string
+  readonly eventTypes: readonly string[] | "all"
+  readonly invoke: EventHookHandler
+}
+
+type EventHookBucket = {
+  readonly readOnly: readonly IndexedEventHook[]
+  readonly ordered: readonly IndexedEventHook[]
+}
+
+const knowledgeHubEventHandler: EventHookHandler = (event) => {
+  handleKnowledgeHubEvent(event)
+}
+
+function logRejectedObserver(hook: string | undefined, event: V2Event, error: unknown): void {
+  log("[plugin:event] read-only hook rejected", { hook, type: event.type, error })
+}
+
+/** Observers never reject: a read-only failure is logged, never allowed to
+ * abort its siblings or the mutating chain. */
+async function invokeObserver(hook: IndexedEventHook, event: V2Event): Promise<void> {
+  try {
+    await hook.invoke(event)
+  } catch (error) {
+    logRejectedObserver(hook.name, event, error)
+  }
+}
+
+/**
+ * Every hook `dispatchToHooks` runs, listed in the pre-index source order.
+ * Classification follows `hook-mutation-classification.md`: `read-only`
+ * hooks only touch hook-private in-memory state, so their relative order is
+ * free; `ordered` hooks write shared state, dispatch prompts, or emit files
+ * and must keep their original order relative to each other.
+ */
+function eventHookDefinitions(hooks: DomainHooks): readonly EventHookDefinition[] {
+  return [
+    {
+      name: "autoUpdateChecker",
+      classification: "read-only",
+      eventTypes: ["session.created"],
+      resolve: () => hooks.autoUpdateChecker?.event,
+    },
+    {
+      name: "sessionNotification",
+      classification: "read-only",
+      eventTypes: [
+        "session.created",
+        "session.idle",
+        "message.updated",
+        "tool.execute.before",
+        "tool.execute.after",
+        "session.deleted",
+      ],
+      resolve: () => hooks.sessionNotification,
+    },
+    {
+      name: "nudgeLoopBreaker",
+      classification: "ordered",
+      eventTypes: "all",
+      resolve: () => hooks.nudgeLoopBreaker?.event,
+    },
+    {
+      name: "contextWindowMonitor",
+      classification: "read-only",
+      eventTypes: ["session.deleted", "message.updated"],
+      resolve: () => hooks.contextWindowMonitor?.event,
+    },
+    {
+      name: "directoryAgentsInjector",
+      classification: "read-only",
+      eventTypes: ["session.deleted", "session.compacted"],
+      resolve: () => hooks.directoryAgentsInjector?.event,
+    },
+    {
+      name: "rulesInjector",
+      classification: "read-only",
+      eventTypes: ["session.deleted", "session.compacted"],
+      resolve: () => hooks.rulesInjector?.event,
+    },
+    {
+      name: "knowledgeHub",
+      classification: "ordered",
+      eventTypes: ["session.deleted", "session.compacted"],
+      resolve: () => knowledgeHubEventHandler,
+    },
+    {
+      name: "thinkMode",
+      classification: "read-only",
+      eventTypes: ["session.deleted"],
+      resolve: () => hooks.thinkMode?.event,
+    },
+    {
+      name: "contextWindowLimitRecovery",
+      classification: "ordered",
+      eventTypes: ["session.deleted", "session.error", "message.updated", "session.idle"],
+      resolve: () => hooks.contextWindowLimitRecovery?.event,
+    },
+    {
+      name: "agentUsageReminder",
+      classification: "read-only",
+      eventTypes: ["session.deleted", "session.compacted"],
+      resolve: () => hooks.agentUsageReminder?.event,
+    },
+    {
+      name: "categorySkillReminder",
+      classification: "read-only",
+      eventTypes: ["session.deleted", "session.compacted"],
+      resolve: () => hooks.categorySkillReminder?.event,
+    },
+    {
+      name: "interactiveBashSession",
+      classification: "ordered",
+      eventTypes: ["session.deleted"],
+      resolve: () => hooks.interactiveBashSession?.event,
+    },
+    {
+      name: "matrixLoop",
+      classification: "ordered",
+      eventTypes: ["session.idle", "session.deleted", "session.error"],
+      resolve: () => hooks.matrixLoop?.event,
+    },
+    {
+      name: "stopContinuationGuard",
+      classification: "read-only",
+      eventTypes: ["session.deleted"],
+      resolve: () => hooks.stopContinuationGuard?.event,
+    },
+    {
+      name: "niobeHook",
+      classification: "ordered",
+      eventTypes: [
+        "session.error",
+        "session.idle",
+        "message.updated",
+        "message.part.updated",
+        "tool.execute.before",
+        "tool.execute.after",
+        "session.deleted",
+        "session.compacted",
+      ],
+      resolve: () => hooks.niobeHook?.handler,
+    },
+    {
+      name: "planPersister",
+      classification: "ordered",
+      eventTypes: ["session.idle", "session.compacted"],
+      resolve: () => hooks.planPersister?.event,
+    },
+    {
+      name: "runtimeFallback",
+      classification: "ordered",
+      eventTypes: [
+        "session.created",
+        "session.deleted",
+        "session.stop",
+        "message.updated",
+        "session.idle",
+        "session.status",
+        "session.error",
+      ],
+      resolve: () => hooks.runtimeFallback?.event,
+    },
+    {
+      name: "sessionMemory",
+      classification: "ordered",
+      eventTypes: ["session.idle", "session.compacted"],
+      resolve: () => hooks.sessionMemory?.event,
+    },
+  ]
+}
+
+/** Compile the event-type -> applicable-hook index once, at registration. */
+function createEventHookIndex(hooks: DomainHooks): { forType: (type: string) => EventHookBucket } {
+  const definitions = eventHookDefinitions(hooks)
+  const all: { readOnly: IndexedEventHook[]; ordered: IndexedEventHook[] } = {
+    readOnly: [],
+    ordered: [],
+  }
+  const absent = new Set<string>()
+
+  for (const definition of definitions) {
+    const handler = definition.resolve()
+    if (!handler) {
+      absent.add(definition.name)
+      continue
+    }
+    const hook: IndexedEventHook = {
+      name: definition.name,
+      eventTypes: definition.eventTypes,
+      invoke: handler,
+    }
+    if (definition.classification === "read-only") all.readOnly.push(hook)
+    else all.ordered.push(hook)
+  }
+
+  const knownTypes = new Set<string>()
+  for (const definition of definitions) {
+    if (absent.has(definition.name)) continue
+    if (definition.eventTypes === "all") continue
+    for (const type of definition.eventTypes) knownTypes.add(type)
+  }
+
+  const appliesTo = (hook: IndexedEventHook, type: string): boolean =>
+    hook.eventTypes === "all" || hook.eventTypes.includes(type)
+
+  const buckets = new Map<string, EventHookBucket>()
+  for (const type of knownTypes) {
+    buckets.set(type, {
+      readOnly: all.readOnly.filter((hook) => appliesTo(hook, type)),
+      ordered: all.ordered.filter((hook) => appliesTo(hook, type)),
+    })
+  }
+
+  return {
+    forType: (type) => buckets.get(type) ?? all,
+  }
+}
+
 export function createEventHandler(args: {
   ctx: MatrixxContext & NativePluginContext
   pluginConfig: MatrixxConfig
@@ -46,25 +279,34 @@ export function createEventHandler(args: {
 }): (event: V2Event) => Promise<void> {
   const { ctx, firstMessageVariantGate, hooks } = args
 
+  const eventHookIndex = createEventHookIndex(hooks)
+  let cachedType: string | undefined
+  let cachedBucket = eventHookIndex.forType("")
+
+  // Event streams arrive in bursts of one type (message.updated, session.idle),
+  // so the last bucket is cached and skips the map lookup entirely.
+  const bucketFor = (type: string): EventHookBucket => {
+    if (type !== cachedType) {
+      cachedType = type
+      cachedBucket = eventHookIndex.forType(type)
+    }
+    return cachedBucket
+  }
+
   const dispatchToHooks = async (event: V2Event): Promise<void> => {
-    await Promise.resolve(hooks.autoUpdateChecker?.event?.(event))
-    await Promise.resolve(hooks.sessionNotification?.(event))
-    await Promise.resolve(hooks.nudgeLoopBreaker?.event?.(event))
-    await Promise.resolve(hooks.contextWindowMonitor?.event?.(event))
-    await Promise.resolve(hooks.directoryAgentsInjector?.event?.(event))
-    await Promise.resolve(hooks.rulesInjector?.event?.(event))
-    handleKnowledgeHubEvent(event)
-    await Promise.resolve(hooks.thinkMode?.event?.(event))
-    await Promise.resolve(hooks.contextWindowLimitRecovery?.event?.(event))
-    await Promise.resolve(hooks.agentUsageReminder?.event?.(event))
-    await Promise.resolve(hooks.categorySkillReminder?.event?.(event))
-    await Promise.resolve(hooks.interactiveBashSession?.event?.(event))
-    await Promise.resolve(hooks.matrixLoop?.event?.(event))
-    await Promise.resolve(hooks.stopContinuationGuard?.event?.(event))
-    await Promise.resolve(hooks.niobeHook?.handler?.(event))
-    await Promise.resolve(hooks.planPersister?.event?.(event))
-    await Promise.resolve(hooks.runtimeFallback?.event?.(event))
-    await Promise.resolve(hooks.sessionMemory?.event?.(event))
+    const bucket = bucketFor(event.type)
+
+    const observers = bucket.readOnly
+    if (observers.length <= 1) {
+      const observer = observers[0]
+      if (observer) await invokeObserver(observer, event)
+    } else {
+      await Promise.all(observers.map((hook) => invokeObserver(hook, event)))
+    }
+
+    for (const hook of bucket.ordered) {
+      await hook.invoke(event)
+    }
   }
 
 

@@ -9,6 +9,7 @@ import {
   resolveAgentVariant,
   resolveVariantForModel,
 } from "../../shared/agent/agent-variant"
+import { log } from "../../shared/runtime/logger"
 import { notify } from "../../shared/runtime/notify"
 import type { DomainHooks } from "../setup-domains"
 import type { MatrixxContext } from "./context"
@@ -18,6 +19,11 @@ type FirstMessageVariantGate = {
   markApplied: (sessionID: string) => void
 }
 
+type ChatMessageInput = {
+  sessionID: string
+  agent?: string
+  model?: { providerID: string; modelID: string }
+}
 type ChatMessagePart = { type: string; text?: string; [key: string]: unknown }
 type ChatMessageHandlerOutput = { message: Record<string, unknown>; parts: ChatMessagePart[] }
 type StartWorkHookOutput = { parts: Array<{ type: string; text?: string }> }
@@ -34,21 +40,30 @@ function isStartWorkHookOutput(value: unknown): value is StartWorkHookOutput {
   })
 }
 
+// Observer names in wave order, used to attribute a rejected allSettled
+// outcome to the hook that produced it.
+const OBSERVER_NAMES = ["stopContinuationGuard", "runtimeFallback"] as const
+
 export function createChatMessageHandler(args: {
   ctx: MatrixxContext
   pluginConfig: MatrixxConfig
   firstMessageVariantGate: FirstMessageVariantGate
   hooks: DomainHooks
-}): (
-  input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
-  output: ChatMessageHandlerOutput
-) => Promise<void> {
+}): (input: ChatMessageInput, output: ChatMessageHandlerOutput) => Promise<void> {
   const { pluginConfig, firstMessageVariantGate, hooks } = args
 
-  return async (
-    input: { sessionID: string; agent?: string; model?: { providerID: string; modelID: string } },
-    output: ChatMessageHandlerOutput
-  ): Promise<void> => {
+  // Resolve the chat.message hook references once at handler creation so the
+  // per-message path calls them directly instead of re-walking the optional
+  // chains on every user message.
+  const inputSecretGuardHook = hooks.inputSecretGuard?.["chat.message"]
+  const stopContinuationGuardHook = hooks.stopContinuationGuard?.["chat.message"]
+  const keywordDetectorHook = hooks.keywordDetector?.["chat.message"]
+  const autoSlashCommandHook = hooks.autoSlashCommand?.["chat.message"]
+  const startWorkHook = hooks.startWork?.["chat.message"]
+  const designIntentPreserverHook = hooks.designIntentPreserver?.["chat.message"]
+  const runtimeFallbackHook = hooks.runtimeFallback?.["chat.message"]
+
+  return async (input: ChatMessageInput, output: ChatMessageHandlerOutput): Promise<void> => {
     if (input.agent) {
       setSessionAgent(input.sessionID, input.agent)
     }
@@ -81,15 +96,54 @@ export function createChatMessageHandler(args: {
       }
     }
 
-    await hooks.inputSecretGuard?.["chat.message"]?.(input, output)
-    await hooks.stopContinuationGuard?.["chat.message"]?.(input)
-    await hooks.keywordDetector?.["chat.message"]?.(input, output)
-    await hooks.autoSlashCommand?.["chat.message"]?.(input, output)
-    if (hooks.startWork && isStartWorkHookOutput(output)) {
-      await hooks.startWork["chat.message"]?.(input, output)
+    // Hook classification (see `src/plugin/hook-mutation-classification.md`).
+    //
+    // Prompt/state mutators — strictly sequential, in this order. Each one
+    // reads `output.parts` and folds content into the same text part, so
+    // running them concurrently would stomp the earlier mutation:
+    //   inputSecretGuard      prepends a secret-guard directive
+    //   keywordDetector       prepends keyword blocks, sets message.variant
+    //   autoSlashCommand      replaces the text part with a command template
+    //   startWork             appends start-work context, switches the agent
+    //   designIntentPreserver prepends the design-intent guardrail
+    //
+    // Read-only observers — disjoint state, safe to overlap with each other
+    // and with the mutators. They never touch `output.parts`, and no
+    // subsequent hook reads what they write:
+    //   stopContinuationGuard only clears this session's stopped marker
+    //   runtimeFallback       only writes message.model and its fallback map
+    const observers = Promise.allSettled([
+      stopContinuationGuardHook?.(input),
+      runtimeFallbackHook?.(input, output),
+    ])
+
+    try {
+      if (inputSecretGuardHook) await inputSecretGuardHook(input, output)
+      if (keywordDetectorHook) await keywordDetectorHook(input, output)
+      if (autoSlashCommandHook) await autoSlashCommandHook(input, output)
+      if (startWorkHook && isStartWorkHookOutput(output)) {
+        await startWorkHook(input, output)
+      }
+      if (designIntentPreserverHook) await designIntentPreserverHook(input, output)
+    } finally {
+      // Observers are isolated by allSettled; joining in the finally
+      // guarantees they have settled before the handler returns even when a
+      // prompt mutator throws.
+      const outcomes = await observers
+      for (let index = 0; index < outcomes.length; index++) {
+        const outcome = outcomes[index]
+        if (outcome.status === "rejected") {
+          log("[chat.message] read-only observer failed; continuing", {
+            hook: OBSERVER_NAMES[index],
+            sessionID: input.sessionID,
+            error:
+              outcome.reason instanceof Error
+                ? outcome.reason.message
+                : String(outcome.reason),
+          })
+        }
+      }
     }
-    await hooks.designIntentPreserver?.["chat.message"]?.(input, output)
-    await hooks.runtimeFallback?.["chat.message"]?.(input, output)
 
     if (!hasConnectedProvidersCache()) {
       notify("warn", "Provider Cache Missing: Model filtering disabled. RESTART OpenCode to enable full functionality.")
