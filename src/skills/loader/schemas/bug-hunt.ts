@@ -15,30 +15,53 @@ export const RUN_ID_PATTERN = /^run-[1-9]\d*$/
 export const REPRODUCERS_DIR_NAME = "reproducers"
 
 const WINDOWS_ABSOLUTE_PATH = /^[A-Za-z]:[\\/]/
+const UNC_PATH = /^\\\\/
 
 const PERCENT_ENCODED_SEPARATOR = /%2f|%5c/i
+
+/** Every path field is later composed into a shell command, so the charset is deliberately narrow. */
+export const SAFE_PATH_CHARS = /^[A-Za-z0-9._/@+-]+$/
 
 function hasTraversalSegment(value: string): boolean {
   return value.split(/[\\/]+/).includes("..")
 }
 
-function isConfinedProjectPath(value: string): boolean {
-  if (value.includes("\u0000") || PERCENT_ENCODED_SEPARATOR.test(value)) {
-    return false
-  }
-  return !isAbsolute(value) && !WINDOWS_ABSOLUTE_PATH.test(value) && !hasTraversalSegment(normalize(value))
+function hasOptionPrefix(value: string): boolean {
+  return value.startsWith("-") || value.startsWith("@")
 }
 
-/** Reproducer paths must stay under `<run dir>/reproducers/`. */
-function isConfinedReproducer(value: string): boolean {
+export function isConfinedProjectPath(value: string): boolean {
+  if (
+    value.includes("\u0000") ||
+    PERCENT_ENCODED_SEPARATOR.test(value) ||
+    !SAFE_PATH_CHARS.test(value)
+  ) {
+    return false
+  }
+  return (
+    !isAbsolute(value) &&
+    !WINDOWS_ABSOLUTE_PATH.test(value) &&
+    !UNC_PATH.test(value) &&
+    !hasTraversalSegment(value) &&
+    !hasTraversalSegment(normalize(value)) &&
+    !hasOptionPrefix(value)
+  )
+}
+
+/** Run-relative paths must stay under `<run dir>/<topDir>/`. */
+export function isConfinedRunRelative(value: string, topDir: string): boolean {
   if (!isConfinedProjectPath(value)) {
     return false
   }
   const segments = normalize(value).split(/[\\/]+/)
-  return segments.length > 1 && segments[0] === REPRODUCERS_DIR_NAME && segments[segments.length - 1] !== ""
+  return segments.length > 1 && segments[0] === topDir && segments[segments.length - 1] !== ""
 }
 
-const EvidenceTierSchema = z.enum(["E0", "E1", "E2", "E3"])
+function isConfinedReproducer(value: string): boolean {
+  return isConfinedRunRelative(value, REPRODUCERS_DIR_NAME)
+}
+
+export const EvidenceTierSchema = z.enum(["E0", "E1", "E2", "E3"])
 
 const BugClassSchema = z.enum([
   "function",
@@ -60,7 +83,7 @@ const StageSchema = z.enum(["S0", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"
 
 const ClassFilterSchema = z.union([BugClassSchema, z.literal("all"), z.string().regex(/^cwe-\d+$/i)])
 
-const SEVERITY_RANK: Record<z.infer<typeof SeveritySchema>, number> = {
+export const SEVERITY_RANK: Record<z.infer<typeof SeveritySchema>, number> = {
   informational: 0,
   low: 1,
   medium: 2,

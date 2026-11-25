@@ -94,23 +94,32 @@ function deepestExistingAncestor(path: string): string {
 }
 
 /**
- * Refuse to write through a symlinked `.matrixx`, `bugs`, or target dir, and
- * refuse any resolved target outside the project root.
+ * Refuse to write through a symlink at ANY path segment from the project root
+ * down to `dir`, and refuse any resolved target outside the project root.
  */
-function assertWritableDir(projectRoot: string, dir: string): void {
-  for (const component of [join(projectRoot, ".matrixx"), getBugsDir(projectRoot), dir]) {
-    if (isSymlink(component)) {
-      throw new Error(`refusing to write through symlink: ${component}`)
+export function assertWritableDir(projectRoot: string, dir: string): void {
+  const root = resolve(projectRoot)
+  const target = resolve(dir)
+  if (target === root || target.startsWith(`${root}${sep}`)) {
+    let current = root
+    for (const segment of target.slice(root.length).split(sep)) {
+      if (segment.length === 0) {
+        continue
+      }
+      current = join(current, segment)
+      if (isSymlink(current)) {
+        throw new Error(`refusing to write through symlink: ${current}`)
+      }
     }
   }
-  const realRoot = existsSync(projectRoot) ? realpathSync(projectRoot) : resolve(projectRoot)
+  const realRoot = existsSync(projectRoot) ? realpathSync(projectRoot) : root
   const resolved = realpathSync(deepestExistingAncestor(dir))
   if (resolved !== realRoot && !resolved.startsWith(`${realRoot}${sep}`)) {
     throw new Error(`refusing to write outside the project: ${resolved}`)
   }
 }
 
-function assertWritableRunDir(projectRoot: string, runId: string): string {
+export function assertWritableRunDir(projectRoot: string, runId: string): string {
   const runDir = getBugRunDir(projectRoot, runId)
   assertWritableDir(projectRoot, runDir)
   return runDir
