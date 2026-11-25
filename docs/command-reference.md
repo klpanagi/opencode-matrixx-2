@@ -1,10 +1,10 @@
 # Command Reference
 
-> All 25 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> All 26 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 25 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, defect hunting, academic editing, and tool toggles.
+Matrixx provides 26 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, defect hunting, patch candidates, academic editing, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 25 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (23 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 26 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (24 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -37,6 +37,7 @@ Matrixx provides 25 built-in slash commands covering orchestration, research, re
 | `/security-audit` | Read-only scoped security audit with findings report | — | — |
 | `/academic-humanize` | Academic/grant-proposal editing pass (AI tells, claim↔evidence, numbers preserved) | — | — |
 | `/bug-hunt` | Read-only evidence-graded defect hunt (EGDD, E0-E3 tiers) | — | — |
+| `/bug-fix` | Plausible-patch pipeline over a bug-hunt run (gates G1-G5, draft PR, never auto-merge) | — | — |
 
 ### Legend
 
@@ -568,7 +569,47 @@ Artifacts: `.matrixx/bugs/<run-N>/` holds `run-metadata.json`, `coverage-ledger.
 
 ---
 
-In addition to the 25 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+## 26. `/bug-fix`
+
+Write-capable plausible-patch pipeline (v1). Consumes an existing `/bug-hunt` run and attempts
+candidate patches for eligible findings inside a separate git worktree; every artifact is a claim
+awaiting human review, and nothing merges. Requires `--allow-exec`: the command executes
+reproducers, and without the flag it exits `2` with nothing written.
+Template: `src/features/builtin-commands/templates/bug-fix.ts`. Full method, gates, safety model,
+and citations: [bug-fix.md](bug-fix.md).
+```
+ /bug-fix run-7 --allow-exec --min-severity=medium
+```
+| Option | Default | Description |
+|--------|---------|-------------|
+| `<run-N>` | — | Existing bug-hunt run id (`run-[1-9][0-9]*`); the run dir must exist with `run-metadata.json`, else exit `2` |
+| `--fix-budget` | `5` | Max fixes attempted in this invocation |
+| `--max-attempts` | `3` | Patch attempts per fix (1-5) |
+| `--min-severity` | `medium` | Findings below this ladder rank are skipped, not recorded |
+| `--mutation` | off | Enables G5 mutation testing (StrykerJS) on the touched files; tool absent => `blocked` + one install hint |
+| `--allow-exec` | required | Hard gate; absent => `error: --allow-exec is required (this command executes reproducers)`, exit `2`, nothing written |
+| `--verify` | off | Re-runs independent verification on existing plausible records in the run; no new patch, commit, or draft PR; a record that fails becomes `rejected` and its draft PR is closed |
+Eligibility: E2/E3 findings only; E0/E1 are refused with a reason (abandoned record), and any
+finding with a `cross_ref` is excluded and left to `/security-audit`.
+Pipeline: F0 intake, F0b eligibility, F1 reproducer trust (3/3 fail with identical signatures on
+a pristine checkout), F2 localize, F3 patch (<= 3 files, <= 60 changed lines, one logical change),
+F4 gates, F5 independent verification in a clean checkout, F6 record written last.
+Gates: G1 test integrity (pre-existing `tests/**` byte-identical; exactly one new regression test
+allowed), G2 reproducer flip (3x fail on base, 3x pass patched), G3 full suite, G4 coverage proves
+the changed lines execute, G5 mutation (optional).
+Status vocabulary: `plausible`, `rejected`, `abandoned`, `unreproducible`. A plausible patch is not
+a correct patch; nothing merges.
+Exit codes: `0` nothing plausible (or a clean `--verify`), `1` plausible awaiting human review
+(draft PRs opened), `2` invalid usage (nothing written), `3` all attempts rejected, circuit
+breaker, or a `--verify` downgrade. Precedence `2` > `1` > `3` > `0`.
+Delivery: branch `fix/bug-hunt-<run-N>`, one commit per plausible patch, DRAFT PR via
+`gh pr create --draft --base dev`; a human merges, the command never does.
+Artifacts: `.matrixx/bugs/<run-N>/fixes/` holds `fix-<encoded-fingerprint>.json`, `patches/`, and
+`evidence/`; `.matrixx/` is gitignored.
+
+---
+
+In addition to the 26 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|
