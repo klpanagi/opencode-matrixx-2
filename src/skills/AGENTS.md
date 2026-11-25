@@ -2,11 +2,11 @@
 
 ## OVERVIEW
 
-70 specialized skills loaded by default (75 files; `playwright.ts` exports two) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
+71 specialized skills loaded by default (76 modules; `playwright.ts` exports two) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
 
 | Scope | Count | Source |
 |------|-------|--------|
-| **Built-in (this dir)** | 70 (75 files) | `src/skills/builtin/<category>/*.ts` |
+| **Built-in (this dir)** | 71 (76 modules) | `src/skills/builtin/<category>/*.ts` |
 | Opencode-project (`.opencode/skills/`) | varies | per-project |
 | Opencode-user (`~/.config/opencode/skills/`) | varies | per-user |
 | Claude Code compat (`.claude/skills/`) | varies | per-project |
@@ -22,13 +22,13 @@ skills/
 │   ├── lazy-skill-helper.ts      # createLazyTemplateSkill (lazy template getter)
 │   ├── skills.transform.ts       # registerSkillTransform: pure replay onto ctx.skill.transform
 │   ├── types.ts                  # BuiltinSkill interface
-│   ├── schemas/                  # Zod schemas (security-audit, audits-store)
+│   ├── schemas/                  # Zod schemas (security-audit, audits-store, bug-hunt, bug-hunt-store)
 │   └── index.ts                  # Loader barrel (explicit named re-exports)
-├── builtin/                      # 70 skills across 7 category dirs (export Skill objects)
+├── builtin/                      # 71 skills across 7 category dirs (export Skill objects)
 │   ├── bdd/                      # 4 skills (bdd-backend, bdd-contract, bdd-frontend, bdd-tests)
-│   ├── core/                     # 20 skills, 28 files (playwright.ts exports 2: playwright + agent-browser)
+│   ├── core/                     # 21 skills, 29 files (playwright.ts exports 2: playwright + agent-browser)
 │   │                             # git-master, docker-master, dev-browser, tdd-enforcer, quality-gate,
-│   │                             # software-dev, review-work, matrixx-self-config, rp-research, ...
+│   │                             # software-dev, review-work, matrixx-self-config, rp-research, bug-hunting, ...
 │   ├── dsl/                      # 11 skills (dsl-core, dsl-grammar, dsl-codegen, dsl-metamodel, ...)
 │   ├── frontend/                 # 8 skills (frontend-ui-ux, frontend-a11y, frontend-perf, ...)
 │   ├── market-data/              # 10 skills (ccxt-rest, ccxt-pro-websockets, market-data-bus, ...)
@@ -43,13 +43,13 @@ skills/
 | Category dir | Skills | Files | Notes |
 |--------------|--------|-------|-------|
 | `skills/builtin/bdd/` | 4 | 4 + `index.ts` | BDD workflow skills |
-| `skills/builtin/core/` | 20 | 17 top-level + `docker-master/` + `git-master/` multi-file skills + `index.ts` | Cross-cutting skills; `playwright.ts` exports both `playwrightSkill` and `agentBrowserSkill` |
+| `skills/builtin/core/` | 21 | 18 top-level + `docker-master/` + `git-master/` multi-file skills + `index.ts` | Cross-cutting skills; `playwright.ts` exports both `playwrightSkill` and `agentBrowserSkill` |
 | `skills/builtin/dsl/` | 11 | 11 + `index.ts` | DSL design/implementation skills |
 | `skills/builtin/frontend/` | 8 | 8 + `index.ts` | Frontend framework/pattern skills |
 | `skills/builtin/market-data/` | 10 | 10 + `index.ts` | Market-data pipeline skills |
 | `skills/builtin/security/` | 10 | 10 + `index.ts` | Security review/audit skills |
 | `skills/builtin/zeromq/` | 7 | 7 + `index.ts` | ZeroMQ messaging skills |
-| **Total** | **70** | **75 non-index + 10 `index.ts` (85 `.ts` in `builtin/`; 93 `.ts` in `skills/` incl. `loader/`)** | |
+| **Total** | **71** | **76 non-index + 10 `index.ts` (86 `.ts` in `builtin/`; 104 `.ts` in `skills/` incl. `loader/`)** | |
 
 Each category dir has an `index.ts` that re-exports its skill objects (e.g. `export { bddBackendSkill, BDD_BACKEND_SKILL_NAME } from "./bdd-backend"`). The root `skills/index.ts` re-exports everything for type-level access only — runtime template loading goes through `createBuiltinSkills()`, never through direct imports.
 

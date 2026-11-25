@@ -20,7 +20,7 @@ src/
 ├── mcps/                             # Built-in MCPs (2: context7, document-reader) — see mcps/AGENTS.md
 ├── plugin/                           # V2 composition root (setup-domains, handlers/, tool/) — see plugin/AGENTS.md
 ├── shared/                           # Cross-cutting utilities (128 files, 12 scopes + 4 legacy subdirs + migration/) — see shared/AGENTS.md
-├── skills/                           # 70 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
+├── skills/                           # 71 built-in skills (builtin/ + loader/) — see skills/AGENTS.md
 └── tools/                            # tool dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guard stubs, etc.; conditional via plugin/tool/tool-policy.ts) — see tools/AGENTS.md
 ```
 

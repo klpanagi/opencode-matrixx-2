@@ -9,7 +9,7 @@ Zod schema definitions for plugin configuration. Schema component files composin
 config/
 ├── schema/                    # ~40 schema component files
 │   ├── matrixx-config.ts         # Root schema composition
-│   ├── agent-names.ts         # BuiltinAgentNameSchema (21 names: 13 core + 8 mouse-*), BuiltinSkillNameSchema (70 skills)
+│   ├── agent-names.ts         # BuiltinAgentNameSchema (21 names: 13 core + 8 mouse-*), BuiltinSkillNameSchema (71 skills)
 │   ├── agent-overrides.ts     # AgentOverrideConfigSchema (model, variant, temp, thinking...)
 │   ├── agent-definitions.ts
 │   ├── assembly.ts
@@ -17,7 +17,7 @@ config/
 │   ├── background-task.ts     # BackgroundTaskConfigSchema
 │   ├── browser-automation.ts  # BrowserAutomationConfigSchema
 │   ├── categories.ts          # 8 categories: construct, source, rabbit-hole, glitch, bullet-time, blue-pill, the-one, transmission
-│   ├── commands.ts            # BuiltinCommandNameSchema (24 commands)
+│   ├── commands.ts            # BuiltinCommandNameSchema (25 commands)
 │   ├── comment-checker.ts     # CommentCheckerConfigSchema
 │   ├── context-mode.ts
 │   ├── dcp.ts

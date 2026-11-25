@@ -1,10 +1,10 @@
 # Command Reference
 
-> All 24 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
+> All 25 commands below are registered in `src/features/builtin-commands/commands.ts` (`BUILTIN_COMMAND_DEFINITIONS`) with names validated by `BuiltinCommandName` in `src/features/builtin-commands/types.ts`.
 
-Matrixx provides 24 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, academic editing, and tool toggles.
+Matrixx provides 25 built-in slash commands covering orchestration, research, refactoring, handoffs, task management, BDD, quality, security, defect hunting, academic editing, and tool toggles.
 
-> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 24 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (22 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
+> **Count reconciliation:** `BuiltinCommandName` in `src/features/builtin-commands/types.ts` lists 25 names, all registered in `BUILTIN_COMMAND_DEFINITIONS` in `src/features/builtin-commands/commands.ts`. Templates live in `src/features/builtin-commands/templates/` (23 files). `cancel-loop` and `rp-loop` have no standalone template file (aliases): `rp-loop` reuses `MATRIX_LOOP_TEMPLATE` and `cancel-loop` uses `CANCEL_LOOP_TEMPLATE`, both exported from `templates/matrix-loop.ts` — verify in `commands.ts` registration.
 
 ---
 
@@ -36,6 +36,7 @@ Matrixx provides 24 built-in slash commands covering orchestration, research, re
 | `/humanize` | Quality-focused humanization pipeline | — | — |
 | `/security-audit` | Read-only scoped security audit with findings report | — | — |
 | `/academic-humanize` | Academic/grant-proposal editing pass (AI tells, claim↔evidence, numbers preserved) | — | — |
+| `/bug-hunt` | Read-only evidence-graded defect hunt (EGDD, E0-E3 tiers) | — | — |
 
 ### Legend
 
@@ -534,7 +535,40 @@ Override with `disabled_commands: ["academic-humanize"]` in `matrixx.jsonc`.
 
 ---
 
-In addition to the 24 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
+## 25. `/bug-hunt`
+
+Read-only evidence-graded defect hunt (EGDD, v1 advisory-only). Finds defects in a bounded
+target and reports each with an E0-E3 evidence tier; it never patches code and never gates CI.
+Template: `src/features/builtin-commands/templates/bug-hunt.ts`. Full method and citations:
+[bug-hunt.md](bug-hunt.md).
+
+```
+ /bug-hunt --scope=module --target=src/parser --depth=static --budget=20
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--scope` | `file`, and only when `--target` names a file | `file`, `module`, or `project`; no file target is invalid usage |
+| `--target` | — | Path scoping the hunt (required for `file`/`module`); must resolve inside the project root |
+| `--class` | `all` | ODC defect type (`function`, `interface`, `checking`, `assignment`, `timing`, `build-package`, `documentation`, `algorithms`, `other`), `cwe-N`, or `all` |
+| `--depth` | `static` | `static` (S0-S3, S6-S9), `dynamic` (adds S5), or `deep` (adds S4 bounded verification) |
+| `--budget` | `20` | Max fully-evidenced findings; excess recorded as `deferred` and the ledger becomes `incomplete` |
+| `--verify` | — | `run-N` to re-verify a prior run through the S9 fresh-verifier pass |
+
+Evidence tiers: E3 proven, E2 reproduced (minimized reproducer required), E1 witnessed
+(severity capped at medium), E0 candidate (`needs_validation`, no severity). Severity is
+optional at E1-E3 and forbidden at E0.
+
+Exit codes: `0` clean, `1` findings, `2` invalid usage (nothing written). Advisory only;
+never gates CI. Invalid `--scope`, `--depth`, or `--class`, an out-of-root target, or an
+unresolved `--verify` run id exits `2`.
+
+Artifacts: `.matrixx/bugs/<run-N>/` holds `run-metadata.json`, `coverage-ledger.json`,
+`findings.json`, and `reproducers/`; `.matrixx/` is gitignored.
+
+---
+
+In addition to the 25 built-in commands above, Matrixx loads custom commands from these locations (in priority order):
 
 | Priority | Location |
 |:---:|----------|

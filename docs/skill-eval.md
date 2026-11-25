@@ -39,8 +39,8 @@ recommended CI gate. `--deep` uses
 `schema,version,security,pii,license,code-integrity,unicode,quality,lint` and may download scanner
 runtimes on first use.
 
-### Measured `--deep` reality (70-skill catalog)
-`--deep` currently yields **22/70 pass, 48 fail**. Every one of the 48 failures is
+### Measured `--deep` reality (71-skill catalog)
+`--deep` yields **22/70 pass, 48 fail** (measured on the snapshot taken before `bug-hunting` was added). Every one of the 48 failures is
 `overall_status: "incomplete"` with `incomplete_scans: ["skillspector"]` and zero critical/high
 findings; the full run reports 0 critical and 0 high across the catalog. A raw sampling run exits 1, but
 the shipped script reports **exit 3 (inconclusive)** because every failure carries `incomplete_scans`. SkillSpector keeps a
