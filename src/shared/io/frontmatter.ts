@@ -7,9 +7,17 @@ interface FrontmatterResult<T = Record<string, unknown>> {
   parseError: boolean
 }
 
+/** Refuse absurdly large inputs before the YAML parser sees them. */
+export const MAX_FRONTMATTER_BYTES = 1_048_576
+
 export function parseFrontmatter<T = Record<string, unknown>>(
   content: string
 ): FrontmatterResult<T> {
+
+  if (Buffer.byteLength(content, "utf8") > MAX_FRONTMATTER_BYTES) {
+    return { data: {} as T, body: "", hadFrontmatter: false, parseError: true }
+  }
+
   const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n?---\r?\n([\s\S]*)$/
   const match = content.match(frontmatterRegex)
 

@@ -1480,6 +1480,76 @@ To opt out per hook:
 
 Redacted preview example: `openai-api-key: sk-proj…XXXX`, `aws-access-key: AKIA…XXXX`, `private-key-generic: -----BEGIN PRIVATE KEY----- …[REDACTED]`. Logs: `{sessionID, findingCount, redactedPreview, elapsedMs}` — no raw secret.
 
+### Security hardening
+
+Hardens the supply-chain surfaces a cloned repository can reach: project-scope command expansion, `@file` inclusion, the `document-reader` MCP, auto-update installation and log handling. All new knobs are additive with secure defaults — trusted scopes (`builtin`, user-global `opencode`, `skill`, `plugin`) behave exactly as before.
+
+```jsonc
+{
+  "security": {
+    "command_expansion": {
+      "project_scope_execution": false,
+      "project_scope_file_refs": false,
+      "allowlist": []
+    },
+    "file_reference": {
+      "max_bytes": 262144,
+      "max_total_bytes": 1048576
+    },
+    "logging": {
+      "max_bytes": 1048576,
+      "max_files": 3,
+      "redact": true
+    },
+    "document_reader": {
+      "enabled": false
+    },
+    "auto_update": {
+      "auto_install": false,
+      "require_integrity": true
+    }
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `command_expansion.project_scope_execution` | `boolean` | `false` | Allow `!cmd` shell expansion inside `opencode-project`/`project`-scope commands. |
+| `command_expansion.project_scope_file_refs` | `boolean` | `false` | Allow `@file` inclusion inside project-scope commands. |
+| `command_expansion.allowlist` | `string[]` | `[]` | Exact command names exempt from the project-scope block. Only takes effect together with the flags above. |
+| `file_reference.max_bytes` | `number` | `262144` | Max size per `@file` inclusion (256 KiB). |
+| `file_reference.max_total_bytes` | `number` | `1048576` | Max combined size of all inclusions per command (1 MiB). |
+| `logging.max_bytes` | `number` | `1048576` | Log file rotation threshold. |
+| `logging.max_files` | `number` | `3` | Rotated log files kept. |
+| `logging.redact` | `boolean` | `true` | Redact secret-shaped strings in log output. Log files are written `0600`. |
+| `document_reader.enabled` | `boolean` | `false` | Enable the `document-reader` MCP (requires `uvx`). When enabled, only `file:` URIs inside the workspace are accepted — non-`file:` schemes and private/link-local/loopback addresses are rejected. |
+| `auto_update.auto_install` | `boolean` | `false` | Auto-install available updates (default is notify-only). Installs the exact version with `--ignore-scripts`. |
+| `auto_update.require_integrity` | `boolean` | `true` | Require registry integrity metadata before installing; install fails closed without it. |
+
+Allowlist example — re-enable expansion for a single trusted project command:
+
+```jsonc
+{
+  "security": {
+    "command_expansion": {
+      "project_scope_execution": true,
+      "project_scope_file_refs": true,
+      "allowlist": ["my-trusted-command"]
+    }
+  }
+}
+```
+
+Default behaviour flips to review:
+
+* **Project-scope command expansion off.** Shell `!cmd` expansion and `@file` inclusion are disabled for `opencode-project`/`project`-scope commands by default — a cloned repo can no longer execute commands or exfiltrate files by shipping `.opencode/command/*.md`. **Migration:** existing project commands that relied on `!cmd`/`@file` must opt in via the flags + `allowlist` above.
+* **`document_reader` MCP off.** Enable with `security.document_reader.enabled: true` (requires `uvx` on `PATH`); workspace-restricted when enabled.
+* **Auto-update notify-only.** Updates are announced, not installed; opt in with `auto_install: true` (integrity-checked, `--ignore-scripts`).
+
+Also hardened: ast-grep binary downloads fail closed when no checksum is available, and command frontmatter parsing is capped at 1 MiB.
+
+> Schema: `src/config/schema/security.ts`.
+
 
 ## Matrix Loop
 

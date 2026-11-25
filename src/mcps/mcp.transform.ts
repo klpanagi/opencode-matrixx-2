@@ -5,6 +5,8 @@
  * The builder performs no filesystem access, no process spawn and no network —
  * environment capability (`uvxAvailable`) is resolved by the caller at the edge
  * and passed in as data, so repeated runs over the same input replay identically.
+ * The `security.document_reader` config slice is likewise passed in as data —
+ * this module never imports the config loader (no import cycle).
  */
 
 import { buildContext7Entry } from "./context7"
@@ -33,11 +35,15 @@ export interface BuildBuiltinMcpEntriesInput {
   uvxAvailable: boolean
   /** Resolved by the caller from `process.env.CONTEXT7_API_KEY` at the edge; never read here. */
   context7ApiKey?: string
+  /** `security.document_reader` config slice, passed as data by the caller; never imported here. */
+  documentReader?: { enabled?: boolean }
 }
 
 export interface BuildBuiltinMcpEntriesResult {
   entries: Record<string, BuiltinMcpEntry>
   failures: McpCreationFailure[]
+  /** One-line user-facing notices (e.g. an MCP omitted because it is off by default). */
+  notices: string[]
 }
 
 const DISABLED_LOCAL_STUB: BuiltinMcpEntry = {
@@ -46,6 +52,9 @@ const DISABLED_LOCAL_STUB: BuiltinMcpEntry = {
   enabled: false,
 }
 
+export const DOCUMENT_READER_DISABLED_NOTICE =
+  "document_reader disabled by default; enable via security.document_reader.enabled"
+
 /** Pure: builtin MCP entries + non-fatal failures for a given input. */
 export function buildBuiltinMcpEntries(
   input: BuildBuiltinMcpEntriesInput,
@@ -53,25 +62,30 @@ export function buildBuiltinMcpEntries(
   const disabledMcps = input.disabledMcps ?? []
   const entries: Record<string, BuiltinMcpEntry> = {}
   const failures: McpCreationFailure[] = []
+  const notices: string[] = []
 
   if (!disabledMcps.includes("context7")) {
     entries.context7 = buildContext7Entry({ context7ApiKey: input.context7ApiKey || undefined })
   }
 
   if (!disabledMcps.includes("document_reader")) {
-    if (input.uvxAvailable) {
-      entries.document_reader = document_reader
+    if (input.documentReader?.enabled === true) {
+      if (input.uvxAvailable) {
+        entries.document_reader = { ...document_reader, enabled: true }
+      } else {
+        failures.push({
+          name: "document_reader",
+          error:
+            "uvx (uv package manager) not found in PATH. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh",
+        })
+        entries.document_reader = DISABLED_LOCAL_STUB
+      }
     } else {
-      failures.push({
-        name: "document_reader",
-        error:
-          "uvx (uv package manager) not found in PATH. Install with: curl -LsSf https://astral.sh/uv/install.sh | sh",
-      })
-      entries.document_reader = DISABLED_LOCAL_STUB
+      notices.push(DOCUMENT_READER_DISABLED_NOTICE)
     }
   }
 
-  return { entries, failures }
+  return { entries, failures, notices }
 }
 
 export type V2McpEntry = {

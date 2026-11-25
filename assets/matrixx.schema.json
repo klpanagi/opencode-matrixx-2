@@ -5288,8 +5288,113 @@
             "warnlist_mode"
           ],
           "additionalProperties": false
+        },
+        "command_expansion": {
+          "type": "object",
+          "properties": {
+            "project_scope_execution": {
+              "default": false,
+              "type": "boolean"
+            },
+            "project_scope_file_refs": {
+              "default": false,
+              "type": "boolean"
+            },
+            "allowlist": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "project_scope_execution",
+            "project_scope_file_refs",
+            "allowlist"
+          ],
+          "additionalProperties": false
+        },
+        "file_reference": {
+          "type": "object",
+          "properties": {
+            "max_bytes": {
+              "default": 262144,
+              "type": "number"
+            },
+            "max_total_bytes": {
+              "default": 1048576,
+              "type": "number"
+            }
+          },
+          "required": [
+            "max_bytes",
+            "max_total_bytes"
+          ],
+          "additionalProperties": false
+        },
+        "logging": {
+          "type": "object",
+          "properties": {
+            "max_bytes": {
+              "default": 1048576,
+              "type": "number"
+            },
+            "max_files": {
+              "default": 3,
+              "type": "number"
+            },
+            "redact": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "max_bytes",
+            "max_files",
+            "redact"
+          ],
+          "additionalProperties": false
+        },
+        "document_reader": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "additionalProperties": false
+        },
+        "auto_update": {
+          "type": "object",
+          "properties": {
+            "auto_install": {
+              "default": false,
+              "type": "boolean"
+            },
+            "require_integrity": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "auto_install",
+            "require_integrity"
+          ],
+          "additionalProperties": false
         }
       },
+      "required": [
+        "command_expansion",
+        "file_reference",
+        "logging",
+        "document_reader",
+        "auto_update"
+      ],
       "additionalProperties": false
     },
     "runtime_fallback": {

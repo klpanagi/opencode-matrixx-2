@@ -8,13 +8,11 @@ import { log } from "../../shared";
 import type { PluginComponents } from "./plugin-components-loader";
 
 type McpEntry = Record<string, unknown>;
-
 function captureUserDisabledMcps(
   userMcp: Record<string, unknown> | undefined
 ): Set<string> {
   const disabled = new Set<string>();
   if (!userMcp) return disabled;
-
   for (const [name, value] of Object.entries(userMcp)) {
     if (
       value &&
@@ -25,10 +23,8 @@ function captureUserDisabledMcps(
       disabled.add(name);
     }
   }
-
   return disabled;
 }
-
 export async function applyMcpConfig(params: {
   config: Record<string, unknown>;
   pluginConfig: MatrixxConfig;
@@ -37,50 +33,42 @@ export async function applyMcpConfig(params: {
   const disabledMcps = params.pluginConfig.disabled_mcps ?? [];
   const userMcp = params.config.mcp as Record<string, unknown> | undefined;
   const userDisabledMcps = captureUserDisabledMcps(userMcp);
-
   // Capability resolved once at the edge; the builder itself never spawns.
   const context7ApiKey = process.env.CONTEXT7_API_KEY || undefined;
-  const { entries: builtinMcps, failures } = buildBuiltinMcpEntries({
+  const { entries: builtinMcps, failures, notices } = buildBuiltinMcpEntries({
     disabledMcps,
     uvxAvailable: isCommandAvailable("uvx"),
     context7ApiKey,
+    documentReader: params.pluginConfig.security?.document_reader,
   });
-
   const merged = {
     ...builtinMcps,
     ...(userMcp ?? {}),
     ...params.pluginComponents.mcpServers,
   } as Record<string, McpEntry>;
-
   for (const name of userDisabledMcps) {
     if (merged[name]) {
       merged[name] = { ...merged[name], enabled: false };
     }
   }
-
   const disabledSet = new Set(disabledMcps);
   for (const name of disabledSet) {
     delete merged[name];
   }
-
   const context7HealthNotice = buildContext7HealthNotice({
     disabledMcps,
     context7ApiKey,
   });
-  const warnings = context7HealthNotice ? [context7HealthNotice] : [];
-
+  const warnings = [...notices, ...(context7HealthNotice ? [context7HealthNotice] : [])];
   setMcpStartupFailures(failures);
   setMcpStartupWarnings(warnings);
-
   if (failures.length > 0) {
     const summary = failures
       .map((f) => `${f.name}: ${f.error}`)
       .join("; ");
     log(`[mcp-config] MCP startup issues detected: ${summary}`, failures);
   }
-
   const notice = buildMcpStartupNotice(failures, warnings);
   if (notice) log(notice);
-
   params.config.mcp = merged;
 }

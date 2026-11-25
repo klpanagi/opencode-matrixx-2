@@ -21,7 +21,13 @@ export type {
   McpTransformEditor,
   RegisterMcpTransformResult,
 } from "./mcp.transform"
-export { type BuiltinMcpEntry, buildBuiltinMcpEntries, registerMcpTransform, toV2McpEntry } from "./mcp.transform"
+export {
+  type BuiltinMcpEntry,
+  buildBuiltinMcpEntries,
+  DOCUMENT_READER_DISABLED_NOTICE,
+  registerMcpTransform,
+  toV2McpEntry,
+} from "./mcp.transform"
 export { buildMcpStartupNotice, getMcpStartupNotice, MCP_UVX_INSTALL_FIX, MCP_UVX_WARM_FIX } from "./mcp-startup-notice"
 export { getMcpStartupWarnings, setMcpStartupWarnings } from "./mcp-startup-state"
 export type { McpCreationFailure } from "./mcp-validator"
@@ -45,21 +51,23 @@ export interface CreateBuiltinMcpsOptions {
 export interface CreateBuiltinMcpsResult {
   mcps: Record<string, BuiltinMcpEntry>
   failures: McpCreationFailure[]
+  /** One-line notices (e.g. document_reader omitted because it is off by default). */
+  notices: string[]
 }
 
 export function createBuiltinMcps(
   disabledMcps: string[] = [],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _config?: MatrixxConfig,
+  config?: MatrixxConfig,
   options: CreateBuiltinMcpsOptions = {},
 ): CreateBuiltinMcpsResult {
   const commandAvailable = options.isCommandAvailable ?? isCommandAvailable
   const context7ApiKey = options.context7ApiKey ?? process.env.CONTEXT7_API_KEY ?? undefined
-  const { entries, failures }: BuildBuiltinMcpEntriesResult = buildBuiltinMcpEntries({
+  const { entries, failures, notices }: BuildBuiltinMcpEntriesResult = buildBuiltinMcpEntries({
     disabledMcps,
     uvxAvailable: commandAvailable("uvx"),
     context7ApiKey: context7ApiKey || undefined,
+    documentReader: config?.security?.document_reader,
   })
 
-  return { mcps: entries, failures }
+  return { mcps: entries, failures, notices }
 }

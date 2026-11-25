@@ -28,8 +28,10 @@ export function verifyCachedBinary(binaryPath: string): boolean {
       invalidateCachedBinary(binaryPath)
       return false
     }
-    warn(`Could not read checksum sidecar for ${binaryPath}; proceeding unverified`)
-    return true
+    // Sidecar exists but is unreadable (EACCES/EIO…): fail closed — an
+    // unverified binary is treated exactly like a missing sidecar.
+    warn(`Could not read checksum sidecar for ${binaryPath}; treating the cache as unverified`)
+    return false
   }
 
   let actual: string

@@ -2,8 +2,9 @@
  * Integrity verification for ast-grep release archives.
  *
  * Digests for known releases are pinned below (sourced from the GitHub release
- * API `digest` field). Unknown versions fall back to the release API; when no
- * digest can be resolved the archive is used unverified and a warning is logged.
+ * API `digest` field). Unknown versions fall back to the release API. When no
+ * digest can be resolved the archive is deleted and verification fails closed
+ * with {@link ArchiveIntegrityError}; an unverified archive is never used.
  */
 import { createHash, timingSafeEqual } from "node:crypto"
 import { existsSync, readFileSync, unlinkSync } from "node:fs"
@@ -29,6 +30,17 @@ export const PINNED_ASSET_SHA256: Readonly<Record<string, string>> = {
     "50a596ef5231883ddae69f1960d27312bb2fe81254d67ef50e1794fc9820e863",
   "0.40.5/app-x86_64-unknown-linux-gnu.zip":
     "9715cb5933a4d7fe9e4d8c2be870a9a82840c3f2ec4a57bdff7f15d0912cc676",
+}
+
+/**
+ * Raised when an archive has no resolvable expected digest or its digest does
+ * not match. The archive is deleted before this is thrown.
+ */
+export class ArchiveIntegrityError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ArchiveIntegrityError"
+  }
 }
 
 interface GitHubReleaseAsset {
@@ -80,8 +92,10 @@ export async function verifyArchiveChecksum(
 ): Promise<void> {
   const expected = await resolveExpectedSha256(version, assetName)
   if (!expected) {
-    log(`[matrixx] No checksum available for ${assetName}; proceeding unverified`)
-    return
+    if (existsSync(archivePath)) unlinkSync(archivePath)
+    throw new ArchiveIntegrityError(
+      `No checksum available for ${assetName}; refusing to use unverified archive`
+    )
   }
 
   const actual = computeSha256(archivePath)
@@ -91,7 +105,7 @@ export async function verifyArchiveChecksum(
   }
 
   if (existsSync(archivePath)) unlinkSync(archivePath)
-  throw new Error(
+  throw new ArchiveIntegrityError(
     `ast-grep archive checksum mismatch for ${assetName}: expected ${expected}, got ${actual}`
   )
 }

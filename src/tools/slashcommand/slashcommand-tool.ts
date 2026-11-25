@@ -110,7 +110,7 @@ export function createSlashcommandTool(options: SlashcommandToolOptions = {}): M
       )
 
       if (exactMatch) {
-        return await formatLoadedCommand(exactMatch, args.user_message)
+        return await formatLoadedCommand(exactMatch, args.user_message, { security: options.security })
       }
 
       const partialMatches = allItems.filter((command) =>

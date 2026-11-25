@@ -43,6 +43,7 @@ tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
 tests/tools/comment-scan/
+tests/shared/frontmatter.test.ts
 tests/features/assembly-state/manager.test.ts
 tests/cli/skill-pack/installer.test.ts
 tests/plugin/tool/tool-execute-after.isolation.test.ts

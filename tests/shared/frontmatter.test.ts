@@ -1,5 +1,23 @@
-import { describe, expect, test } from "bun:test"
-import { parseFrontmatter } from "../../src/shared/io/frontmatter"
+import { describe, expect, mock, test } from "bun:test"
+
+// Seam: spy on js-yaml's load via mock.module. frontmatter.ts is dynamically
+// imported AFTER the mock is registered so its `import yaml from "js-yaml"`
+// binding resolves to the spy (which delegates to the real implementation).
+import * as actualJsYaml from "js-yaml"
+
+let yamlLoadCalls = 0
+mock.module("js-yaml", () => ({
+  default: {
+    ...actualJsYaml.default,
+    JSON_SCHEMA: actualJsYaml.JSON_SCHEMA,
+    load(text: string, opts?: Parameters<typeof actualJsYaml.load>[1]) {
+      yamlLoadCalls++
+      return actualJsYaml.load(text, opts)
+    },
+  },
+}))
+
+const { MAX_FRONTMATTER_BYTES, parseFrontmatter } = await import("../../src/shared/io/frontmatter")
 
 describe("parseFrontmatter", () => {
   // #region backward compatibility
@@ -259,4 +277,51 @@ Content`
     expect(result.data.handoffs[0].agent).toBe("test.agent")
   })
   // #endregion
+})
+
+
+describe("parseFrontmatter size cap", () => {
+  test("returns parseError result without loading YAML when input exceeds MAX_FRONTMATTER_BYTES", () => {
+    // given
+    yamlLoadCalls = 0
+    const oversized = "---\nkey: value\n---\n" + "x".repeat(MAX_FRONTMATTER_BYTES + 10)
+
+    // when
+    const result = parseFrontmatter(oversized)
+
+    // then
+    expect(result).toEqual({ data: {}, body: "", hadFrontmatter: false, parseError: true })
+    expect(yamlLoadCalls).toBe(0)
+  })
+
+  test("returns fast on a 2 MiB pathological document", () => {
+    // given
+    yamlLoadCalls = 0
+    const pathological = "---\nbig: " + "a".repeat(2 * 1024 * 1024) + "\n---\nbody"
+    const start = performance.now()
+
+    // when
+    const result = parseFrontmatter(pathological)
+    const elapsedMs = performance.now() - start
+
+    // then
+    expect(result).toEqual({ data: {}, body: "", hadFrontmatter: false, parseError: true })
+    expect(yamlLoadCalls).toBe(0)
+    expect(elapsedMs).toBeLessThan(250)
+  })
+
+  test("still parses small frontmatter through the yaml seam", () => {
+    // given
+    yamlLoadCalls = 0
+    const small = "---\ntitle: hello\n---\nbody text"
+
+    // when
+    const result = parseFrontmatter(small)
+
+    // then
+    expect(result.data).toEqual({ title: "hello" })
+    expect(result.hadFrontmatter).toBe(true)
+    expect(result.parseError).toBe(false)
+    expect(yamlLoadCalls).toBe(1)
+  })
 })

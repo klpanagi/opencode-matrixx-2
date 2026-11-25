@@ -1,10 +1,22 @@
 import { dirname } from "node:path"
-import { resolveCommandsInText, resolveFileReferencesInText } from "../../shared"
+import {
+  buildExpansionSecurity,
+  type CommandExpansionSecurity,
+  log,
+  resolveCommandsInText,
+  resolveFileReferencesInText,
+} from "../../shared"
 import type { CommandInfo } from "./types"
+
+export interface FormatLoadedCommandOptions {
+  security?: CommandExpansionSecurity
+  execFn?: (command: string) => Promise<string>
+}
 
 export async function formatLoadedCommand(
   command: CommandInfo,
-  userMessage?: string
+  userMessage?: string,
+  options?: FormatLoadedCommandOptions
 ): Promise<string> {
   const sections: string[] = []
 
@@ -44,8 +56,19 @@ export async function formatLoadedCommand(
   }
 
   const commandDir = command.path ? dirname(command.path) : process.cwd()
-  const withFileReferences = await resolveFileReferencesInText(content, commandDir)
-  const resolvedContent = await resolveCommandsInText(withFileReferences)
+  const { policy, allowFileRefs } = buildExpansionSecurity(command.scope, command.name, options?.security)
+  const withFileReferences = await resolveFileReferencesInText(content, {
+    cwd: commandDir,
+    allowFileRefs,
+    maxBytes: options?.security?.file_reference?.max_bytes,
+    maxTotalBytes: options?.security?.file_reference?.max_total_bytes,
+  })
+  const resolvedContent = await resolveCommandsInText(withFileReferences, {
+    policy,
+    execFn: options?.execFn,
+    onBlocked: () =>
+      log("[command-expansion] Blocked shell expansion", { command: command.name, scope: command.scope }),
+  })
 
   let finalContent = resolvedContent.trim()
   const args = userMessage ?? ""

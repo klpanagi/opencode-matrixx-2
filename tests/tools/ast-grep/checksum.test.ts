@@ -1,12 +1,13 @@
 /// <reference types="bun-types" />
 
 import { afterEach, beforeEach, describe, expect, it } from "bun:test"
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import {
+  ArchiveIntegrityError,
   PINNED_ASSET_SHA256,
   compareSha256Hex,
   computeSha256,
@@ -20,19 +21,10 @@ const FIXTURE_SHA256 = "16ce851ef26c9b1fe26493e744b1937cd20904939588b52006a5d76b
 const LINUX_X64_ASSET = "app-x86_64-unknown-linux-gnu.zip"
 const PINNED_VERSION = "0.40.5"
 const UNPINNED_VERSION = "0.41.0"
-const LOG_FILE = join(tmpdir(), "matrixx.log")
 const originalFetch = globalThis.fetch
 
 let tempDir: string
 let archivePath: string
-
-function readLog(): string {
-  try {
-    return readFileSync(LOG_FILE, "utf8")
-  } catch {
-    return ""
-  }
-}
 
 function stubFetch(handler: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>): void {
   globalThis.fetch = handler as unknown as typeof globalThis.fetch
@@ -231,6 +223,7 @@ describe("verifyArchiveChecksum", () => {
     const verification = verifyArchiveChecksum(archivePath, PINNED_VERSION, LINUX_X64_ASSET)
 
     //#then
+    await expect(verification).rejects.toBeInstanceOf(ArchiveIntegrityError)
     await expect(verification).rejects.toThrow(
       `ast-grep archive checksum mismatch for ${LINUX_X64_ASSET}: expected ${expected}, got ${actual}`
     )
@@ -249,23 +242,22 @@ describe("verifyArchiveChecksum", () => {
     expect(existsSync(archivePath)).toBe(true)
   })
 
-  it("#when no checksum is available #then warns and proceeds unverified", async () => {
+  it("#when no checksum is available #then deletes the archive and throws ArchiveIntegrityError", async () => {
     //#given
     stubFetch(async () => new Response("not found", { status: 404 }))
-    const before = readLog()
 
     //#when
     const verification = verifyArchiveChecksum(archivePath, UNPINNED_VERSION, LINUX_X64_ASSET)
 
     //#then
-    await expect(verification).resolves.toBeUndefined()
-    expect(existsSync(archivePath)).toBe(true)
-    expect(readLog().slice(before.length)).toContain(
-      `No checksum available for ${LINUX_X64_ASSET}; proceeding unverified`
+    await expect(verification).rejects.toBeInstanceOf(ArchiveIntegrityError)
+    await expect(verification).rejects.toThrow(
+      `No checksum available for ${LINUX_X64_ASSET}; refusing to use unverified archive`
     )
+    expect(existsSync(archivePath)).toBe(false)
   })
 
-  it("#when the API returns a malformed digest #then proceeds without a false pass or throw", async () => {
+  it("#when the API returns a malformed digest #then fails closed instead of passing or throwing a mismatch", async () => {
     //#given
     stubFetch(async () => releaseResponse("sha256:not-a-real-digest"))
 
@@ -273,8 +265,8 @@ describe("verifyArchiveChecksum", () => {
     const verification = verifyArchiveChecksum(archivePath, UNPINNED_VERSION, LINUX_X64_ASSET)
 
     //#then
-    await expect(verification).resolves.toBeUndefined()
-    expect(existsSync(archivePath)).toBe(true)
+    await expect(verification).rejects.toBeInstanceOf(ArchiveIntegrityError)
+    expect(existsSync(archivePath)).toBe(false)
   })
 })
 

@@ -3,11 +3,29 @@ import type { Hooks } from "../../plugin/tool/legacy-hooks"
 
 import { log } from "../../shared"
 import { isShellTool } from "../../shared/io/shell-tool-name"
-import { BASH_BLOCK_MESSAGE, BINARY_EXTENSIONS, BLOCKED_PATTERNS, HOOK_NAME, READ_BLOCK_MESSAGE } from "./constants"
+import {
+  BASH_BLOCK_MESSAGE,
+  BINARY_EXTENSIONS,
+  BLOCKED_PATTERNS,
+  DOCUMENT_READER_TOOL_PATTERN,
+  HOOK_NAME,
+  READ_BLOCK_MESSAGE,
+} from "./constants"
+import { evaluateDocumentReaderUri } from "./uri-guard"
+
+const URI_ARG_KEYS = ["uri", "path", "filePath", "source"] as const
 
 function getFilePath(args: Record<string, unknown>): string | undefined {
   const raw = args?.filePath ?? args?.path ?? args?.file
   return typeof raw === "string" ? raw : undefined
+}
+
+function getUriArg(args: Record<string, unknown>): string | undefined {
+  for (const key of URI_ARG_KEYS) {
+    const raw = args?.[key]
+    if (typeof raw === "string" && raw.length > 0) return raw
+  }
+  return undefined
 }
 
 function isBinaryDocument(filePath: string): boolean {
@@ -22,6 +40,24 @@ export function createDocumentReaderGuardHook(ctx: MatrixxContext): Hooks {
       output: { args: Record<string, unknown>; message?: string },
     ): Promise<void> => {
       const tool = input.tool?.toLowerCase()
+
+      if (tool !== undefined && DOCUMENT_READER_TOOL_PATTERN.test(tool)) {
+        const uri = getUriArg(output.args as unknown as Record<string, unknown>)
+        if (uri) {
+          const workspaceRoot = ctx.worktree || ctx.directory
+          const blockMessage = evaluateDocumentReaderUri(uri, workspaceRoot)
+          if (blockMessage) {
+            log(`[${HOOK_NAME}] BLOCKED document_reader URI`, {
+              sessionID: input.sessionID,
+              tool: input.tool,
+              uri: uri.slice(0, 200),
+            })
+            throw new Error(blockMessage)
+          }
+        }
+        return
+      }
+
       if (tool !== "read" && !isShellTool(tool)) return
 
       if (tool === "read") {

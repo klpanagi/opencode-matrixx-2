@@ -13,6 +13,7 @@ beforeEach(() => {
   buildBuiltinMcpEntriesSpy = spyOn(mcpModule, "buildBuiltinMcpEntries").mockReturnValue({
     entries: {},
     failures: [],
+    notices: [],
   })
   logSpy = spyOn(shared, "log").mockImplementation(() => {})
 })
@@ -65,6 +66,7 @@ describe("applyMcpConfig", () => {
     buildBuiltinMcpEntriesSpy.mockReturnValue({
       entries: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
       failures: [],
+      notices: [],
     })
 
     const config: Record<string, unknown> = { mcp: {} }
@@ -137,6 +139,7 @@ describe("applyMcpConfig", () => {
     buildBuiltinMcpEntriesSpy.mockReturnValue({
       entries: { context7: { type: "remote", url: "https://mcp.context7.com/mcp", enabled: true } },
       failures: [{ name: "document_reader", error: "uvx not found" }],
+      notices: [],
     })
 
     const config: Record<string, unknown> = { mcp: {} }
