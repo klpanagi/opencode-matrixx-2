@@ -46,10 +46,10 @@ describe("injectHookMessage agent handling (issue #94)", () => {
     cleanup()
   })
 
-  it("omits agent field when no agent is known", () => {
+  it("omits agent field when no agent is known", async () => {
     //#given no agent on the original message and no fallback
     //#when injecting
-    const ok = injectHookMessage(SESSION_ID, "hook content here", {})
+    const ok = await injectHookMessage(SESSION_ID, "hook content here", {})
 
     //#then injection succeeds but the persisted message carries no agent
     expect(ok).toBe(true)
@@ -58,10 +58,10 @@ describe("injectHookMessage agent handling (issue #94)", () => {
     expect(metas[0]).not.toHaveProperty("agent")
   })
 
-  it("never persists agent 'general'", () => {
+  it("never persists agent 'general'", async () => {
     //#given an explicit general agent
     //#when injecting
-    const ok = injectHookMessage(SESSION_ID, "hook content here", { agent: "general" })
+    const ok = await injectHookMessage(SESSION_ID, "hook content here", { agent: "general" })
 
     //#then the persisted message omits the agent field
     expect(ok).toBe(true)
@@ -70,10 +70,10 @@ describe("injectHookMessage agent handling (issue #94)", () => {
     expect(metas[0]).not.toHaveProperty("agent")
   })
 
-  it("preserves a real agent", () => {
+  it("preserves a real agent", async () => {
     //#given a real agent on the original message
     //#when injecting
-    const ok = injectHookMessage(SESSION_ID, "hook content here", { agent: "morpheus" })
+    const ok = await injectHookMessage(SESSION_ID, "hook content here", { agent: "morpheus" })
 
     //#then the agent is persisted
     expect(ok).toBe(true)

@@ -35,6 +35,8 @@ const WIN32_LAUNCHER = "py"
 const PROBE_TIMEOUT_MS = 3000
 const PYTHON_VERSION_PATTERN = /Python\s+(\d+(?:\.\d+){1,3}[^\s]*)/
 
+export const MAX_PYTHON_PROBE_CACHE = 1000
+
 const probeCache = new Map<string, PythonProbeResult>()
 
 function defaultWhich(bin: string): string | undefined {
@@ -130,9 +132,18 @@ export function probePython(
   }
 
   const cached = probeCache.get(bin)
-  if (cached) return cached
+  if (cached) {
+    // Bump insertion order: an active probe must not be the oldest entry.
+    probeCache.delete(bin)
+    probeCache.set(bin, cached)
+    return cached
+  }
 
   const result = runProbe(bin, deps.spawnFn ?? defaultSpawn)
+  if (probeCache.size >= MAX_PYTHON_PROBE_CACHE) {
+    const oldest = probeCache.keys().next().value
+    if (oldest !== undefined) probeCache.delete(oldest)
+  }
   probeCache.set(bin, result)
   return result
 }

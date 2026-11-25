@@ -1,6 +1,7 @@
 /// <reference types="bun-types" />
 import { beforeEach, describe, expect, test } from "bun:test"
 import {
+  MAX_PYTHON_PROBE_CACHE,
   probePython,
   pythonEnv,
   resetPythonProbeCache,
@@ -272,5 +273,35 @@ describe("probePython", () => {
 
     //#then the probe runs a second time
     expect(calls.length).toBe(2)
+  })
+})
+
+describe("probePython cache bound", () => {
+  test("caps at MAX_PYTHON_PROBE_CACHE and evicts oldest-first when probing 5000 binaries", () => {
+    //#given a fresh cache and a counting spawn seam
+    resetPythonProbeCache()
+    const { spawnFn, calls } = spawnReturning("Python 3.11.14\n")
+    const callsFor = (bin: string) => calls.filter((argv) => argv[0] === bin).length
+
+    //#when the oldest binary is probed and then 5000 binaries fill the cache
+    probePython("/bin/py-0", { spawnFn })
+    for (let i = 1; i < 5000; i++) {
+      probePython(`/bin/py-${i}`, { spawnFn })
+    }
+
+    //#then the entries inside the last MAX window stay memoised
+    const boundaryBin = `/bin/py-${5000 - MAX_PYTHON_PROBE_CACHE}`
+    probePython(boundaryBin, { spawnFn })
+    probePython(boundaryBin, { spawnFn })
+    expect(callsFor(boundaryBin)).toBe(1)
+
+    const recentBin = "/bin/py-4999"
+    probePython(recentBin, { spawnFn })
+    probePython(recentBin, { spawnFn })
+    expect(callsFor(recentBin)).toBe(1)
+
+    //#and the oldest entry was evicted and is re-probed
+    probePython("/bin/py-0", { spawnFn })
+    expect(callsFor("/bin/py-0")).toBe(2)
   })
 })

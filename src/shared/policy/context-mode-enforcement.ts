@@ -65,12 +65,25 @@ export function resolveGrepGlobUsable(toolNames: readonly string[], contextMode?
   return !willBlockGrepGlob(cfg)
 }
 
+type ContextModeDisciplineInfo = { path: string | null; version: string | null }
+
 let _disciplinePathOverride: string | null | undefined
 let _contextModeForPrompts: ContextModeConfigInput | undefined
 let _ctxToolsOverride: boolean | null = null
+/**
+ * Process-stable memo for the discipline resolution. The resolved path and
+ * version cannot change while the process runs, so the discovery walk and the
+ * version read are paid once. The testing seams below clear it whenever the
+ * resolved input changes.
+ */
+let _disciplineInfoMemo: ContextModeDisciplineInfo | null = null
+/** Per-input memo for the package-root walk (same process-stable reasoning). */
+const _disciplineRootMemo = new Map<string, string | null>()
 
 export function _setDisciplinePathForTesting(p: string | null | undefined): void {
   _disciplinePathOverride = p
+  _disciplineInfoMemo = null
+  _disciplineRootMemo.clear()
 }
 
 export function _setCtxToolsForTesting(present: boolean | null): void {
@@ -89,6 +102,8 @@ export function _resetContextModeEnforcementForTesting(): void {
   _disciplinePathOverride = undefined
   _contextModeForPrompts = undefined
   _ctxToolsOverride = null
+  _disciplineInfoMemo = null
+  _disciplineRootMemo.clear()
 }
 
 export function willBlockGrepGlob(contextMode: ContextModeConfigInput | undefined): boolean {
@@ -109,8 +124,17 @@ const contextModeRequire = createRequire(import.meta.url)
  * directory containing a package.json with `"name": "context-mode"` is
  * found. Returns that directory, or null when no matching root exists.
  * Pure and unit-testable - every filesystem failure returns null (fail-open).
+ * Memoized per input path: a resolved package root cannot change at runtime.
  */
 export function deriveContextModeRootFromFile(resolvedFilePath: string): string | null {
+  const cached = _disciplineRootMemo.get(resolvedFilePath)
+  if (cached !== undefined) return cached
+  const root = walkToContextModeRoot(resolvedFilePath)
+  _disciplineRootMemo.set(resolvedFilePath, root)
+  return root
+}
+
+function walkToContextModeRoot(resolvedFilePath: string): string | null {
   try {
     let dir = dirname(resolvedFilePath)
     while (true) {
@@ -170,6 +194,15 @@ function resolveDisciplineCandidate(): { path: string; root: string | null } | n
 }
 
 export function resolveContextModeDisciplineInfo(): { path: string | null; version: string | null } {
+  if (_disciplineInfoMemo !== null) {
+    return { path: _disciplineInfoMemo.path, version: _disciplineInfoMemo.version }
+  }
+  const info = computeContextModeDisciplineInfo()
+  _disciplineInfoMemo = info
+  return { path: info.path, version: info.version }
+}
+
+function computeContextModeDisciplineInfo(): ContextModeDisciplineInfo {
   if (_disciplinePathOverride !== undefined) {
     if (_disciplinePathOverride === null) return { path: null, version: null }
     return {
