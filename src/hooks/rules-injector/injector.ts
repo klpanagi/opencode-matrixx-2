@@ -1,7 +1,13 @@
-import { readFileSync, statSync, watch } from "node:fs";
+import { readFileSync, watch } from "node:fs";
 import { relative, resolve } from "node:path";
+import { log } from "../../shared/runtime/logger";
 import type { SessionInjectedRulesCache } from "./cache";
-import { findProjectRoot, findRuleFiles } from "./finder";
+import {
+  clearRuleDiscoveryCache,
+  findProjectRoot,
+  findRuleFiles,
+  invalidateRuleDiscoveryCacheForPath,
+} from "./finder";
 import {
   createContentHash,
   isDuplicateByContentHash,
@@ -33,22 +39,20 @@ type DynamicTruncator = {
 };
 
 interface ParsedRuleEntry {
-  mtimeMs: number;
-  size: number;
   metadata: RuleMetadata;
   body: string;
 }
 
 /**
- * Cache key: `${realPath}\0${cwd}\0${mtimeMs}`.
+ * Cache key: `${realPath}\0${cwd}`.
  * - `realPath`: file identity (handles symlinks)
- * - `cwd`: scopes the cache per calling site (different sessions get independent entries)
- * - `mtimeMs`: auto-invalidates on file edit (mtime change = different key = cache miss)
+ * - `cwd`: scopes the cache per workspace
  *
- * statSync is called on every call to compute the mtime portion of the key. The
- * fs.watch watcher below provides eager invalidation as an optimization, so the
- * next call after an external edit doesn't have to discover the change via
- * statSync + cache miss.
+ * A hit is served without any filesystem call. Invalidation is watcher-driven
+ * (`setupRuleWatcher`): the debounced watcher callback evicts the entry, so the
+ * next read re-parses. This replaces the previous mtime/size `statSync` on
+ * every hit, which dominated the hot edit loop while the watcher already owned
+ * the invalidation signal.
  */
 const parsedRuleCache = new Map<string, ParsedRuleEntry>();
 
@@ -56,8 +60,8 @@ const RULE_WATCHER_DEBOUNCE_MS = 1000;
 const ruleWatchers = new Map<string, ReturnType<typeof watch>>();
 const ruleWatcherDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
-function makeRuleCacheKey(realPath: string, cwd: string, mtimeMs: number): string {
-  return `${realPath}\0${cwd}\0${mtimeMs}`;
+function makeRuleCacheKey(realPath: string, cwd: string): string {
+  return `${realPath}\0${cwd}`;
 }
 
 function invalidateRuleCacheForPath(realPath: string): void {
@@ -67,6 +71,7 @@ function invalidateRuleCacheForPath(realPath: string): void {
       parsedRuleCache.delete(key);
     }
   }
+  invalidateRuleDiscoveryCacheForPath(realPath);
 }
 
 function setupRuleWatcher(realPath: string): void {
@@ -89,7 +94,8 @@ function setupRuleWatcher(realPath: string): void {
     });
     ruleWatchers.set(realPath, watcher);
   } catch {
-    // fs.watch unavailable (e.g., WSL, restricted fs) — mtime-based invalidation still works
+    // fs.watch unavailable (e.g., WSL, restricted fs): entries stay cached
+    // until `_resetRuleCacheForTesting` or process restart; no stat fallback.
   }
 }
 
@@ -98,33 +104,20 @@ function getCachedParsedRule(
   realPath: string,
   cwd: string
 ): { metadata: RuleMetadata; body: string } {
-  try {
-    const stat = statSync(filePath);
-    const key = makeRuleCacheKey(realPath, cwd, stat.mtimeMs);
-    const cached = parsedRuleCache.get(key);
+  const key = makeRuleCacheKey(realPath, cwd);
+  const cached = parsedRuleCache.get(key);
+  if (cached) return cached;
 
-    if (cached && cached.size === stat.size) {
-      return { metadata: cached.metadata, body: cached.body };
-    }
-
-    const rawContent = readFileSync(filePath, "utf-8");
-    const { metadata, body } = parseRuleFrontmatter(rawContent);
-    parsedRuleCache.set(key, {
-      mtimeMs: stat.mtimeMs,
-      size: stat.size,
-      metadata,
-      body,
-    });
-    setupRuleWatcher(realPath);
-    return { metadata, body };
-  } catch {
-    const rawContent = readFileSync(filePath, "utf-8");
-    return parseRuleFrontmatter(rawContent);
-  }
+  const rawContent = readFileSync(filePath, "utf-8");
+  const { metadata, body } = parseRuleFrontmatter(rawContent);
+  parsedRuleCache.set(key, { metadata, body });
+  setupRuleWatcher(realPath);
+  return { metadata, body };
 }
 
 export function _resetRuleCacheForTesting(): void {
   parsedRuleCache.clear();
+  clearRuleDiscoveryCache();
   for (const watcher of ruleWatchers.values()) {
     try {
       watcher.close();
@@ -212,7 +205,12 @@ export function createRuleInjectionProcessor(deps: {
         cache.realPaths.add(candidate.realPath);
         cache.contentHashes.add(contentHash);
         dirty = true;
-      } catch {}
+      } catch (error) {
+        log("rules-injector: failed to process rule candidate", {
+          path: candidate.path,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
 
     if (toInject.length === 0) return;
