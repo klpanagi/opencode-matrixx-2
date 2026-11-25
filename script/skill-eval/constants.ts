@@ -1,4 +1,4 @@
-export const EXPECTED_SKILL_COUNT = 71
+export const EXPECTED_SKILL_COUNT = 72
 export const PASS_THRESHOLD = 70
 export const EVALUATOR_NAME = "skillevaluator"
 export const QUALITY_REPORT_FILE = "skillevaluator-quality.json"

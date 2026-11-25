@@ -196,6 +196,7 @@
           "resilience-failure-hunting",
           "silent-failure-detection",
           "systematic-debugging",
+          "bug-fixing",
           "bug-hunting",
           "data-quality-observability"
         ]
@@ -345,7 +346,9 @@
           "task-list",
           "humanize",
           "security-audit",
-          "academic-humanize"
+          "academic-humanize",
+          "bug-hunt",
+          "bug-fix"
         ]
       }
     },

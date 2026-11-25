@@ -47,7 +47,7 @@ describe("createBuiltinSkills lazy module loading", () => {
     const hydrated = skills.map((skill) => ({ name: skill.name, template: skill.template }))
 
     //#then each skill resolves a non-empty template and names stay unique
-    expect(hydrated.length).toBe(69)
+    expect(hydrated.length).toBe(70)
     for (const { name, template } of hydrated) {
       expect(typeof name).toBe("string")
       expect(template.length).toBeGreaterThan(0)
@@ -86,6 +86,6 @@ describe("createBuiltinSkills lazy module loading", () => {
 
     //#then it is filtered out after lazy construction
     expect(skills.map((s) => s.name)).not.toContain("git-master")
-    expect(skills).toHaveLength(68)
+    expect(skills).toHaveLength(69)
   })
 })

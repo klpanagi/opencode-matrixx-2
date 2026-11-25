@@ -79,6 +79,7 @@ const skillFactories: Record<string, () => BuiltinSkill> = {
   "resilience-failure-hunting": () => require("../builtin/core/resilience-failure-hunting").resilienceFailureHuntingSkill,
   "silent-failure-detection": () => require("../builtin/core/silent-failure-detection").silentFailureDetectionSkill,
   "systematic-debugging": () => require("../builtin/core/systematic-debugging").systematicDebuggingSkill,
+  "bug-fixing": () => require("../builtin/core/bug-fixing").bugFixingSkill,
   "bug-hunting": () => require("../builtin/core/bug-hunting").bugHuntingSkill,
   "data-quality-observability": () => require("../builtin/market-data/data-quality-observability").dataQualityObservabilitySkill,
 }
