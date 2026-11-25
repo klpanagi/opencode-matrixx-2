@@ -140,6 +140,7 @@ export async function setupDomains(ctx: MatrixxContext): Promise<{
 
   const skill = createSkillHooks({
     ctx: pctx,
+    pluginConfig,
     isHookEnabled,
     safeHookEnabled,
     builtinSkills: toolsResult.builtinSkills,

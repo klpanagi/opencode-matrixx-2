@@ -1,4 +1,4 @@
-import { log } from "../../shared"
+import { type CommandExpansionSecurity, log } from "../../shared"
 import type { BuiltinSkill } from "../../skills"
 import {
   AUTO_SLASH_COMMAND_TAG_CLOSE,
@@ -22,11 +22,13 @@ const sessionProcessedCommandExecutions = new Set<string>()
 
 export interface AutoSlashCommandHookOptions {
   skills?: BuiltinSkill[]
+  security?: CommandExpansionSecurity
 }
 
 export function createAutoSlashCommandHook(options?: AutoSlashCommandHookOptions) {
   const executorOptions: ExecutorOptions = {
     skills: options?.skills,
+    security: options?.security,
   }
 
   return {

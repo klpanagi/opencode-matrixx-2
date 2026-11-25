@@ -3,7 +3,10 @@ import { basename, dirname, join } from "node:path"
 import { buildBuiltinCommandEntries } from "../../features/builtin-commands/commands.transform"
 import type { CommandFrontmatter } from "../../features/command-loader/types"
 import {
+  buildExpansionSecurity,
+  type CommandExpansionSecurity,
   getOpenCodeConfigDir,
+  log,
   parseFrontmatter,
   resolveCommandsInText,
   resolveFileReferencesInText,
@@ -95,6 +98,9 @@ function skillToCommandInfo(skill: BuiltinSkill): CommandInfo {
 
 export interface ExecutorOptions {
   skills?: BuiltinSkill[]
+  commands?: CommandInfo[]
+  execFn?: (command: string) => Promise<string>
+  security?: CommandExpansionSecurity
 }
 
 /**
@@ -110,6 +116,9 @@ export function isHookOwnedCommand(cmd: { scope: string; content?: string }): bo
 }
 
 async function discoverAllCommands(options?: ExecutorOptions): Promise<CommandInfo[]> {
+  if (options?.commands) {
+    return options.commands
+  }
   const configDir = getOpenCodeConfigDir({ binary: "opencode" })
   const opencodeGlobalDir = join(configDir, "command")
   const opencodeProjectDir = join(process.cwd(), ".opencode", "command")
@@ -148,7 +157,7 @@ async function findCommand(commandName: string, options?: ExecutorOptions): Prom
   ) ?? null
 }
 
-async function formatCommandTemplate(cmd: CommandInfo, args: string): Promise<string> {
+async function formatCommandTemplate(cmd: CommandInfo, args: string, options?: ExecutorOptions): Promise<string> {
   const sections: string[] = []
 
   sections.push(`# /${cmd.name} Command\n`)
@@ -176,8 +185,18 @@ async function formatCommandTemplate(cmd: CommandInfo, args: string): Promise<st
   const content = cmd.content || ""
 
   const commandDir = cmd.path ? dirname(cmd.path) : process.cwd()
-  const withFileRefs = await resolveFileReferencesInText(content, commandDir)
-  const resolvedContent = await resolveCommandsInText(withFileRefs)
+  const { policy, allowFileRefs } = buildExpansionSecurity(cmd.scope, cmd.name, options?.security)
+  const withFileRefs = await resolveFileReferencesInText(content, {
+    cwd: commandDir,
+    allowFileRefs,
+    maxBytes: options?.security?.file_reference?.max_bytes,
+    maxTotalBytes: options?.security?.file_reference?.max_total_bytes,
+  })
+  const resolvedContent = await resolveCommandsInText(withFileRefs, {
+    policy,
+    execFn: options?.execFn,
+    onBlocked: () => log("[command-expansion] Blocked shell expansion", { command: cmd.name, scope: cmd.scope }),
+  })
   sections.push(resolvedContent.trim())
 
   if (args) {
@@ -206,7 +225,7 @@ export async function executeSlashCommand(parsed: ParsedSlashCommand, options?: 
   }
 
   try {
-    const template = await formatCommandTemplate(command, parsed.args)
+    const template = await formatCommandTemplate(command, parsed.args, options)
     return {
       success: true,
       replacementText: template,

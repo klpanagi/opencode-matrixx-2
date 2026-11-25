@@ -1,3 +1,4 @@
+import type { CommandExpansionSecurity } from "../../shared"
 import type { BuiltinSkill } from "../../skills"
 
   export interface LazyContentLoader {
@@ -48,4 +49,5 @@ export interface SlashcommandToolOptions {
   skills?: BuiltinSkill[]
   /** Host command client for discovering plugin-registered commands */
   client?: PluginCommandClient
+  security?: CommandExpansionSecurity
 }

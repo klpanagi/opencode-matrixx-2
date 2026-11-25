@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, spyOn } from "bun:test"
+import { afterAll, beforeEach, describe, expect, it, spyOn } from "bun:test"
 // Import real shared module to avoid mock leaking to other test files
 import * as shared from "../../../src/shared"
 import type {
@@ -10,6 +10,12 @@ import type {
 
 // Spy on log instead of mocking the entire module
 const logMock = spyOn(shared, "log").mockImplementation(() => {})
+
+// Restore the process-wide log spy so other test files in the same Bun process
+// (e.g. the CI catch-all `find … | xargs bun test`) see the real logger again.
+afterAll(() => {
+  logMock.mockRestore()
+})
 
 
 
