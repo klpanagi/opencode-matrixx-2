@@ -1,14 +1,16 @@
 /// <reference types="bun-types" />
 //#given the fixture cases, their frozen baselines, and the temp-file security contract from plan §4.6
 //#when scanAstSources scans AST-tier sources
-//#then findings match the baseline comments, the temp dir is private and removed, and caps/dedupe hold
-import { describe, expect, test } from "bun:test"
+//#then findings match the baseline comments, the temp dir is private, process-lifetime, and removed at dispose, and caps/dedupe hold
+import { afterAll, describe, expect, test } from "bun:test"
 import { existsSync, readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { basename, dirname, join, resolve, sep } from "node:path"
 
 import {
+  disposeCommentScanTempDir,
   getSignalHandlerInstallCount,
+  getTempDirCreationCount,
   scanAstSources,
 } from "../../../src/shared/comment-scan/ast-scan"
 import {
@@ -22,6 +24,11 @@ import type { CommentFinding, ScanResult, ScanSource } from "../../../src/shared
 type SpawnFn = typeof import("bun").spawn
 
 const OPTIONS = { timeoutMs: DEFAULT_SG_TIMEOUT_MS, maxFindings: DEFAULT_MAX_FINDINGS }
+
+afterAll(() => {
+  disposeCommentScanTempDir()
+})
+
 const FIXTURE_ROOT = join(import.meta.dir, "..", "..", "fixtures", "comment-scan")
 const PACKAGE_MARKER = join(
   import.meta.dir,
@@ -200,7 +207,10 @@ describe("scanAstSources temp-file contract", () => {
     expect(result.findings).toHaveLength(2)
     const first = tempFiles[0]
     expect(first).toBeDefined()
-    expect(existsSync(dirname(first ?? ""))).toBe(false)
+    const sharedDir = dirname(first ?? "")
+    expect(existsSync(sharedDir)).toBe(true)
+    disposeCommentScanTempDir()
+    expect(existsSync(sharedDir)).toBe(false)
   })
 
   test("keeps traversal-ish paths inside the temp dir and reports the original label", async () => {
@@ -220,9 +230,11 @@ describe("scanAstSources temp-file contract", () => {
     expect(tempFile).not.toBe("")
     expect(resolve(dirname(tempFile)).startsWith(resolve(tmpdir()) + sep)).toBe(true)
     expect(basename(dirname(tempFile)).startsWith("matrixx-comment-scan-")).toBe(true)
-    expect(basename(tempFile)).toBe("src-0-passwd.ts")
+    expect(basename(tempFile)).toMatch(/^src-\d+-0-passwd\.ts$/)
     expect(basename(tempFile)).not.toContain("..")
     expect(result.findings[0]?.file).toBe("../../etc/passwd.ts")
+    expect(existsSync(tempFile)).toBe(true)
+    disposeCommentScanTempDir()
     expect(existsSync(tempFile)).toBe(false)
   })
 
@@ -603,6 +615,72 @@ describe("scanAstSources adaptive bisection", () => {
     expect(result.errors).toHaveLength(1)
     expect(result.errors?.[0]).toContain("1 sg invocations")
     expect(result.errors?.[0]).toContain("NOT scanned")
+  })
+})
+
+describe("scanAstSources process-lifetime temp dir", () => {
+  test("creates one mkdtemp for N scans and reuses the same directory", async () => {
+    disposeCommentScanTempDir()
+    const dirs: string[] = []
+    const spawn = fakeScan((files) => {
+      const first = files[0]
+      if (first !== undefined) dirs.push(dirname(first))
+      return completedProcess("", "", 0)
+    })
+    const creationsBefore = getTempDirCreationCount()
+
+    for (let i = 0; i < 5; i++) {
+      await scanAstSources([source(`scan-${i}.ts`, `// ${i}\n`)], OPTIONS, spawn)
+    }
+
+    expect(getTempDirCreationCount() - creationsBefore).toBe(1)
+    expect(new Set(dirs).size).toBe(1)
+  })
+
+  test("dispose removes the shared dir and the next scan recreates it", async () => {
+    disposeCommentScanTempDir()
+    const dirs: string[] = []
+    const spawn = fakeScan((files) => {
+      const first = files[0]
+      if (first !== undefined) dirs.push(dirname(first))
+      return completedProcess("", "", 0)
+    })
+
+    await scanAstSources([source("first.ts", "// first\n")], OPTIONS, spawn)
+    const firstDir = dirs[0] ?? ""
+    expect(existsSync(firstDir)).toBe(true)
+
+    disposeCommentScanTempDir()
+    expect(existsSync(firstDir)).toBe(false)
+
+    await scanAstSources([source("second.ts", "// second\n")], OPTIONS, spawn)
+    const secondDir = dirs[1] ?? ""
+    expect(secondDir).not.toBe(firstDir)
+    expect(existsSync(secondDir)).toBe(true)
+  })
+
+  test("the same file name does not collide across scans", async () => {
+    disposeCommentScanTempDir()
+    const scannedNames: string[][] = []
+    const spawn = fakeScan((files) => {
+      scannedNames.push(files.map((file) => basename(file)))
+      return completedProcess(
+        files
+          .map((file) =>
+            matchLine({ file, text: "// shared", line: 0, ruleId: "comment:typescript" }),
+          )
+          .join("\n"),
+        "",
+        0,
+      )
+    })
+
+    const first = await scanAstSources([source("same.ts", "// same\n")], OPTIONS, spawn)
+    const second = await scanAstSources([source("same.ts", "// same\n")], OPTIONS, spawn)
+
+    expect(first.findings).toHaveLength(1)
+    expect(second.findings).toHaveLength(1)
+    expect(scannedNames[0]?.[0]).not.toBe(scannedNames[1]?.[0])
   })
 })
 

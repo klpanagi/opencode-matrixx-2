@@ -7,14 +7,14 @@ describe("event consumer: session-status-normalizer", () => {
     _resetForTesting()
   })
 
-  it("session.status idle reaches every consumer as a synthetic session.idle", async () => {
+  it("session.status idle reaches an observing consumer as a synthetic session.idle", async () => {
     // given a recording consumer
     const received: EventInput[] = []
 
     // when an idle session status is delivered
     const result = await deliverThroughDispatch({
       event: { type: "session.status", data: { sessionID: "ses_idle_fixture", status: { type: "idle" } } },
-      hooks: { rulesInjector: recordingEventHook(received) },
+      hooks: { runtimeFallback: recordingEventHook(received) },
     })
 
     // then the original status and the synthesized idle both arrive in order
@@ -30,7 +30,7 @@ describe("event consumer: session-status-normalizer", () => {
     // when a busy session status is delivered
     await deliverThroughDispatch({
       event: { type: "session.status", data: { sessionID: "ses_idle_fixture", status: { type: "busy" } } },
-      hooks: { rulesInjector: recordingEventHook(received) },
+      hooks: { runtimeFallback: recordingEventHook(received) },
     })
 
     // then only the original event arrives

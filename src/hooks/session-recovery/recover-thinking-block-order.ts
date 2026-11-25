@@ -43,7 +43,7 @@ export async function recoverThinkingBlockOrder(
 
   let anySuccess = false
   for (const messageID of orphanMessages) {
-    if (prependThinkingPart(sessionID, messageID)) {
+    if (await prependThinkingPart(sessionID, messageID)) {
       anySuccess = true
     }
   }

@@ -22,7 +22,7 @@ async function fixFile(sessionID: string, messageIndex?: number): Promise<{ fixe
   if (messageIndex !== undefined) {
     const target = findEmptyMessageByIndex(sessionID, messageIndex)
     if (target) {
-      if (replaceEmptyTextParts(target, PLACEHOLDER_TEXT) || injectTextPart(sessionID, target, PLACEHOLDER_TEXT)) {
+      if ((await replaceEmptyTextParts(target, PLACEHOLDER_TEXT)) || (await injectTextPart(sessionID, target, PLACEHOLDER_TEXT))) {
         fixed = true
         ids.push(target)
       }
@@ -30,7 +30,7 @@ async function fixFile(sessionID: string, messageIndex?: number): Promise<{ fixe
   }
   if (!fixed) {
     for (const mid of findEmptyMessages(sessionID)) {
-      if (replaceEmptyTextParts(mid, PLACEHOLDER_TEXT) || injectTextPart(sessionID, mid, PLACEHOLDER_TEXT)) {
+      if ((await replaceEmptyTextParts(mid, PLACEHOLDER_TEXT)) || (await injectTextPart(sessionID, mid, PLACEHOLDER_TEXT))) {
         fixed = true
         ids.push(mid)
       }

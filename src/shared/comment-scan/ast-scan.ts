@@ -108,89 +108,85 @@ export async function scanAstSources(
     return { findings: [], errors }
   }
 
-  sweepStaleTempDirs()
-  const tempDir = createTempDir()
-  const releaseTempDir = registerTempDirCleanup(tempDir)
+  const tempDir = ensureTempDir()
+  const scanToken = scanSequence
+  scanSequence += 1
 
-  try {
-    const files = materializeSources(tempDir, scannable)
-    const rules = buildInlineRules(files.map((file) => file.language))
-    const findings: CommentFinding[] = []
-    let timedOut = false
+  const files = materializeSources(tempDir, scannable, scanToken)
+  const rules = buildInlineRules(files.map((file) => file.language))
+  const findings: CommentFinding[] = []
+  let timedOut = false
 
-    const invocationBudget = options.maxInvocations ?? MAX_SCAN_FILES
-    let invocations = 0
-    let budgetExhausted = false
+  const invocationBudget = options.maxInvocations ?? MAX_SCAN_FILES
+  let invocations = 0
+  let budgetExhausted = false
 
-    const scanChunk = async (chunk: readonly MaterializedFile[]): Promise<void> => {
-      if (budgetExhausted || chunk.length === 0) return
-      if (invocations >= invocationBudget) {
-        budgetExhausted = true
-        errors.push(
-          `Scan stopped after ${invocationBudget} sg invocations; remaining findings were NOT scanned`,
-        )
-        return
-      }
-      const result = await runSgScan(
-        {
-          rules,
-          files: chunk.map((file) => file.path),
-          cwd: tempDir,
-          timeoutMs: options.timeoutMs,
-          onSpawn: () => {
-            if (invocations >= invocationBudget) return false
-            invocations += 1
-            return true
-          },
-        },
-        spawnFn,
+  const scanChunk = async (chunk: readonly MaterializedFile[]): Promise<void> => {
+    if (budgetExhausted || chunk.length === 0) return
+    if (invocations >= invocationBudget) {
+      budgetExhausted = true
+      errors.push(
+        `Scan stopped after ${invocationBudget} sg invocations; remaining findings were NOT scanned`,
       )
+      return
+    }
+    const result = await runSgScan(
+      {
+        rules,
+        files: chunk.map((file) => file.path),
+        cwd: tempDir,
+        timeoutMs: options.timeoutMs,
+        onSpawn: () => {
+          if (invocations >= invocationBudget) return false
+          invocations += 1
+          return true
+        },
+      },
+      spawnFn,
+    )
 
-      if (result.timedOut) {
-        timedOut = true
-        errors.push(`sg timed out after ${options.timeoutMs}ms`)
-        return
-      }
-
-      if (isRuleParseError(result.stderr)) {
-        errors.push(result.stderr.trim())
-        return
-      }
-
-      if (result.truncated && chunk.length > 1) {
-        const middle = Math.ceil(chunk.length / 2)
-        await scanChunk(chunk.slice(0, middle))
-        await scanChunk(chunk.slice(middle))
-        return
-      }
-
-      if (result.stderr.trim() !== "") {
-        errors.push(result.stderr.trim())
-      }
-
-      if (result.truncated) {
-        const file = chunk[0]
-        if (file) {
-          errors.push(
-            `sg output truncated for ${file.filePaths.join(", ")}; findings are incomplete`,
-          )
-        }
-      }
-
-      findings.push(...mapMatches(chunk, result.matches, rules.ruleMeta, errors))
+    if (result.timedOut) {
+      timedOut = true
+      errors.push(`sg timed out after ${options.timeoutMs}ms`)
+      return
     }
 
-    for (const chunk of chunkFiles(files)) {
-      await scanChunk(chunk)
+    if (isRuleParseError(result.stderr)) {
+      errors.push(result.stderr.trim())
+      return
     }
 
-    return {
-      findings: sortFindings(findings, sources).slice(0, options.maxFindings),
-      ...(errors.length > 0 ? { errors } : {}),
-      ...(timedOut ? { skipped: "timeout" as const } : {}),
+    if (result.truncated && chunk.length > 1) {
+      const middle = Math.ceil(chunk.length / 2)
+      await scanChunk(chunk.slice(0, middle))
+      await scanChunk(chunk.slice(middle))
+      return
     }
-  } finally {
-    releaseTempDir()
+
+    if (result.stderr.trim() !== "") {
+      errors.push(result.stderr.trim())
+    }
+
+    if (result.truncated) {
+      const file = chunk[0]
+      if (file) {
+        errors.push(
+          `sg output truncated for ${file.filePaths.join(", ")}; findings are incomplete`,
+        )
+      }
+    }
+
+    findings.push(...mapMatches(chunk, result.matches, rules.ruleMeta, errors))
+  }
+
+  for (const chunk of chunkFiles(files)) {
+    await scanChunk(chunk)
+  }
+
+  return {
+    findings: sortFindings(findings, sources).slice(0, options.maxFindings),
+    ...(errors.length > 0 ? { errors } : {}),
+    ...(timedOut ? { skipped: "timeout" as const } : {}),
   }
 }
 
@@ -213,6 +209,7 @@ function selectScannableSources(
 function materializeSources(
   tempDir: string,
   sources: readonly ResolvedSource[],
+  scanToken: number,
 ): readonly MaterializedFile[] {
   const groups = new Map<string, SourceGroup>()
   for (const source of sources) {
@@ -235,7 +232,7 @@ function materializeSources(
   const files: MaterializedFile[] = []
   let index = 0
   for (const group of groups.values()) {
-    const target = join(tempDir, tempFileName(index, group.filePath, group.language))
+    const target = join(tempDir, tempFileName(scanToken, index, group.filePath, group.language))
     assertInsideTempDir(tempDir, target)
     writeFileSync(target, group.text, { mode: TEMP_FILE_MODE, flag: "wx" })
     files.push({
@@ -249,8 +246,13 @@ function materializeSources(
   return files
 }
 
-function tempFileName(index: number, filePath: string, language: AstLanguage): string {
-  return `src-${index}-${sanitizeStem(filePath)}${AST_FILE_EXTENSIONS[language]}`
+function tempFileName(
+  scanToken: number,
+  index: number,
+  filePath: string,
+  language: AstLanguage,
+): string {
+  return `src-${scanToken}-${index}-${sanitizeStem(filePath)}${AST_FILE_EXTENSIONS[language]}`
 }
 
 function sanitizeStem(filePath: string): string {
@@ -270,18 +272,40 @@ function assertInsideTempDir(tempDir: string, target: string): void {
   }
 }
 
-function createTempDir(): string {
+function ensureTempDir(): string {
+  if (processTempDir !== null) return processTempDir
+
+  installSignalCleanupHandler()
+  sweepStaleTempDirs()
+
   const dir = mkdtempSync(join(tmpdir(), TEMP_DIR_PREFIX))
   chmodSync(dir, TEMP_DIR_MODE)
+  processTempDir = dir
+  liveTempDirs.add(dir)
+  tempDirCreations += 1
   return dir
 }
 
 const liveTempDirs = new Set<string>()
+let processTempDir: string | null = null
+let tempDirCreations = 0
+let scanSequence = 0
 let signalHandlerInstalls = 0
 let signalHandlerInstalled = false
 
 export function getSignalHandlerInstallCount(): number {
   return signalHandlerInstalls
+}
+
+export function getTempDirCreationCount(): number {
+  return tempDirCreations
+}
+
+export function disposeCommentScanTempDir(): void {
+  if (processTempDir === null) return
+  removeTempDir(processTempDir)
+  liveTempDirs.delete(processTempDir)
+  processTempDir = null
 }
 
 function removeTempDir(tempDir: string): void {
@@ -295,6 +319,7 @@ function removeTempDir(tempDir: string): void {
 function cleanupLiveTempDirs(): void {
   for (const tempDir of liveTempDirs) removeTempDir(tempDir)
   liveTempDirs.clear()
+  processTempDir = null
 }
 
 function installSignalCleanupHandler(): void {
@@ -312,16 +337,6 @@ function installSignalCleanupHandler(): void {
   process.once("SIGINT", handler)
   process.once("SIGTERM", handler)
   process.once("exit", cleanupLiveTempDirs)
-}
-
-function registerTempDirCleanup(tempDir: string): () => void {
-  installSignalCleanupHandler()
-  liveTempDirs.add(tempDir)
-
-  return () => {
-    liveTempDirs.delete(tempDir)
-    removeTempDir(tempDir)
-  }
 }
 
 function sweepStaleTempDirs(now = Date.now()): void {

@@ -1,18 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
+import * as fs from "node:fs";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findProjectRoot, findRuleFiles } from "../../../src/hooks/rules-injector/finder";
+import {
+  clearRuleDiscoveryCache,
+  findProjectRoot,
+  findRuleFiles,
+} from "../../../src/hooks/rules-injector/finder";
 
 describe("findRuleFiles", () => {
   const TEST_DIR = join(tmpdir(), `rules-injector-test-${Date.now()}`);
 
   beforeEach(() => {
+    clearRuleDiscoveryCache();
     mkdirSync(TEST_DIR, { recursive: true });
     mkdirSync(join(TEST_DIR, ".git"), { recursive: true });
   });
 
   afterEach(() => {
+    clearRuleDiscoveryCache();
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true });
     }
@@ -280,6 +287,65 @@ describe("findRuleFiles", () => {
         c.path.includes("copilot-instructions.md")
       );
       expect(copilotFiles.length).toBe(1);
+    });
+  });
+
+  describe("discovery cache", () => {
+    it("serves repeated discovery from cache without filesystem calls", () => {
+      // given a project with a rule file
+      const rulesDir = join(TEST_DIR, ".matrixx", "rules");
+      mkdirSync(rulesDir, { recursive: true });
+      writeFileSync(join(rulesDir, "cached.md"), "rule");
+      const currentFile = join(TEST_DIR, "index.ts");
+      writeFileSync(currentFile, "code");
+
+      const first = findRuleFiles(TEST_DIR, currentFile);
+      expect(first.length).toBeGreaterThan(0);
+
+      // when asking again for the same project root and file
+      const existsSpy = spyOn(fs, "existsSync");
+      const statSpy = spyOn(fs, "statSync");
+      const readdirSpy = spyOn(fs, "readdirSync");
+      const realpathSpy = spyOn(fs, "realpathSync");
+      try {
+        const second = findRuleFiles(TEST_DIR, currentFile);
+
+        // then the cached result is returned with zero filesystem calls
+        expect(second).toEqual(first);
+        expect(existsSpy.mock.calls.length).toBe(0);
+        expect(statSpy.mock.calls.length).toBe(0);
+        expect(readdirSpy.mock.calls.length).toBe(0);
+        expect(realpathSpy.mock.calls.length).toBe(0);
+      } finally {
+        existsSpy.mockRestore();
+        statSpy.mockRestore();
+        readdirSpy.mockRestore();
+        realpathSpy.mockRestore();
+      }
+    });
+
+    it("re-discovers after the cache is cleared", () => {
+      // given a project with one rule file
+      const rulesDir = join(TEST_DIR, ".matrixx", "rules");
+      mkdirSync(rulesDir, { recursive: true });
+      writeFileSync(join(rulesDir, "one.md"), "one");
+      const currentFile = join(TEST_DIR, "index.ts");
+      writeFileSync(currentFile, "code");
+
+      const before = findRuleFiles(TEST_DIR, currentFile).length;
+
+      // when a new rule file appears while the cache is warm
+      writeFileSync(join(rulesDir, "two.md"), "two");
+      const staleCount = findRuleFiles(TEST_DIR, currentFile).length;
+
+      // then the warm cache still reports the pre-change set (documented limitation:
+      // only the watcher signal or an explicit clear invalidates discovery)
+      expect(staleCount).toBe(before);
+
+      // and clearing the cache picks up the new file
+      clearRuleDiscoveryCache();
+      const refreshed = findRuleFiles(TEST_DIR, currentFile).length;
+      expect(refreshed).toBe(before + 1);
     });
   });
 

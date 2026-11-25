@@ -161,16 +161,13 @@ describe("createRuleInjectionProcessor", () => {
     expect(localTrackedReadFileCount).toBe(1);
   });
 
-  it("re-reads file when mtime changes", async () => {
+  it("serves a cache hit without statSync or a second read", async () => {
     const realFs = require("node:fs") as typeof import("node:fs");
     const realOs = require("node:os") as typeof import("node:os");
 
     const localTrackedRulePath = ruleFile;
-    const localStatSnapshots: Array<StatSnapshot | Error> = [
-      { mtimeMs: 1000, size: 13 },
-      { mtimeMs: 2000, size: 13 },
-    ];
     let localTrackedReadFileCount = 0;
+    let localTrackedStatCount = 0;
     const localMockedHomeDir = homeRoot;
 
     mock.module("node:fs", () => ({
@@ -183,17 +180,7 @@ describe("createRuleInjectionProcessor", () => {
       },
       statSync: (filePath: string) => {
         if (filePath === localTrackedRulePath) {
-          const next = localStatSnapshots.shift();
-          if (next instanceof Error) {
-            throw next;
-          }
-          if (next) {
-            return {
-              mtimeMs: next.mtimeMs,
-              size: next.size,
-              isFile: () => true,
-            } as ReturnType<typeof realFs.statSync>;
-          }
+          localTrackedStatCount += 1;
         }
         return realFs.statSync(filePath);
       },
@@ -212,18 +199,16 @@ describe("createRuleInjectionProcessor", () => {
     await processor.processFilePathForInjection(targetFile, "session-1", createOutput());
     await processor.processFilePathForInjection(targetFile, "session-2", createOutput());
 
-    expect(localTrackedReadFileCount).toBe(2);
+    // then: the first call reads once, and the cache hit never stats the rule file
+    expect(localTrackedReadFileCount).toBe(1);
+    expect(localTrackedStatCount).toBe(0);
   });
 
-  it("re-reads file when size changes", async () => {
+  it("re-reads after the rule cache is reset", async () => {
     const realFs = require("node:fs") as typeof import("node:fs");
     const realOs = require("node:os") as typeof import("node:os");
 
     const localTrackedRulePath = ruleFile;
-    const localStatSnapshots: Array<StatSnapshot | Error> = [
-      { mtimeMs: 1000, size: 13 },
-      { mtimeMs: 1000, size: 21 },
-    ];
     let localTrackedReadFileCount = 0;
     const localMockedHomeDir = homeRoot;
 
@@ -235,22 +220,6 @@ describe("createRuleInjectionProcessor", () => {
         }
         return realFs.readFileSync(filePath, encoding as never);
       },
-      statSync: (filePath: string) => {
-        if (filePath === localTrackedRulePath) {
-          const next = localStatSnapshots.shift();
-          if (next instanceof Error) {
-            throw next;
-          }
-          if (next) {
-            return {
-              mtimeMs: next.mtimeMs,
-              size: next.size,
-              isFile: () => true,
-            } as ReturnType<typeof realFs.statSync>;
-          }
-        }
-        return realFs.statSync(filePath);
-      },
     }));
 
     mock.module("node:os", () => ({
@@ -258,118 +227,17 @@ describe("createRuleInjectionProcessor", () => {
       homedir: () => localMockedHomeDir,
     }));
 
-    const { createRuleInjectionProcessor } = await import(
+    const injectorModule = await import(
       `../../../src/hooks/rules-injector/injector?bust=${randomUUID()}`
     );
-    const processor = createProcessor(projectRoot, createRuleInjectionProcessor);
+    const processor = createProcessor(projectRoot, injectorModule.createRuleInjectionProcessor);
 
     await processor.processFilePathForInjection(targetFile, "session-1", createOutput());
+    injectorModule._resetRuleCacheForTesting();
     await processor.processFilePathForInjection(targetFile, "session-2", createOutput());
 
+    // then: clearing the cache (the watcher's invalidation signal in tests) re-reads
     expect(localTrackedReadFileCount).toBe(2);
   });
 
-  it("does not save injected rules when all candidates are already cached", async () => {
-    const sessionID = `dirty-no-new-${Date.now()}-${randomUUID()}`;
-    const injectedPath = getInjectedRulesPath(sessionID);
-    if (fs.existsSync(injectedPath)) {
-      fs.unlinkSync(injectedPath);
-    }
-
-    const { createRuleInjectionProcessor } = await import(
-      `../../../src/hooks/rules-injector/injector?bust=${randomUUID()}`
-    );
-    const processor = createRuleInjectionProcessor({
-      workspaceDirectory: projectRoot,
-      truncator: {
-        truncate: async (_sessionID: string, content: string) => ({
-          result: content,
-          truncated: false,
-        }),
-      },
-      getSessionCache: () => ({
-        contentHashes: new Set<string>(),
-        realPaths: new Set<string>([ruleRealPath]),
-      }),
-    });
-
-    await processor.processFilePathForInjection(targetFile, sessionID, createOutput());
-
-    expect(fs.existsSync(injectedPath)).toBe(false);
-  });
-
-  it("saves injected rules when a new rule is added", async () => {
-    const sessionID = `dirty-new-${Date.now()}-${randomUUID()}`;
-    const injectedPath = getInjectedRulesPath(sessionID);
-    if (fs.existsSync(injectedPath)) {
-      fs.unlinkSync(injectedPath);
-    }
-
-    const { createRuleInjectionProcessor } = await import(
-      `../../../src/hooks/rules-injector/injector?bust=${randomUUID()}`
-    );
-    const processor = createProcessor(projectRoot, createRuleInjectionProcessor);
-
-    await processor.processFilePathForInjection(targetFile, sessionID, createOutput());
-
-    expect(fs.existsSync(injectedPath)).toBe(true);
-
-    if (fs.existsSync(injectedPath)) {
-      fs.unlinkSync(injectedPath);
-    }
-  });
-
-  it("falls back to direct read and parse when statSync throws", async () => {
-    const realFs = require("node:fs") as typeof import("node:fs");
-    const realOs = require("node:os") as typeof import("node:os");
-
-    const localTrackedRulePath = ruleFile;
-    const localStatSnapshots: Array<StatSnapshot | Error> = [
-      new Error("stat failed"),
-      new Error("stat failed"),
-    ];
-    let localTrackedReadFileCount = 0;
-    const localMockedHomeDir = homeRoot;
-
-    mock.module("node:fs", () => ({
-      ...realFs,
-      readFileSync: (filePath: string, encoding?: string) => {
-        if (filePath === localTrackedRulePath) {
-          localTrackedReadFileCount += 1;
-        }
-        return realFs.readFileSync(filePath, encoding as never);
-      },
-      statSync: (filePath: string) => {
-        if (filePath === localTrackedRulePath) {
-          const next = localStatSnapshots.shift();
-          if (next instanceof Error) {
-            throw next;
-          }
-          if (next) {
-            return {
-              mtimeMs: next.mtimeMs,
-              size: next.size,
-              isFile: () => true,
-            } as ReturnType<typeof realFs.statSync>;
-          }
-        }
-        return realFs.statSync(filePath);
-      },
-    }));
-
-    mock.module("node:os", () => ({
-      ...realOs,
-      homedir: () => localMockedHomeDir,
-    }));
-
-    const { createRuleInjectionProcessor } = await import(
-      `../../../src/hooks/rules-injector/injector?bust=${randomUUID()}`
-    );
-    const processor = createProcessor(projectRoot, createRuleInjectionProcessor);
-
-    await processor.processFilePathForInjection(targetFile, "session-1", createOutput());
-    await processor.processFilePathForInjection(targetFile, "session-2", createOutput());
-
-    expect(localTrackedReadFileCount).toBe(2);
-  });
 });

@@ -31,7 +31,7 @@ function buildHandler(onIdle: (event: V2Event) => void | Promise<void>) {
       },
     } as unknown as DomainManagers,
     hooks: {
-      autoUpdateChecker: { event: onIdle },
+      nudgeLoopBreaker: { event: onIdle },
       backgroundNotificationHook: { event: async () => {} },
       sessionNotification: async () => {},
       contextWindowMonitor: { event: async () => {} },

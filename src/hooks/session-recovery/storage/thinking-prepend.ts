@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync } from "node:fs"
+import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { isSqliteBackend, log, patchPart } from "../../../shared"
 import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
@@ -35,7 +36,7 @@ function findLastThinkingContent(sessionID: string, beforeMessageID: string): st
   return ""
 }
 
-export function prependThinkingPart(sessionID: string, messageID: string): boolean {
+export async function prependThinkingPart(sessionID: string, messageID: string): Promise<boolean> {
   if (isSqliteBackend()) {
     log("[session-recovery] Disabled on SQLite backend: prependThinkingPart (use async variant)")
     return false
@@ -60,7 +61,10 @@ export function prependThinkingPart(sessionID: string, messageID: string): boole
   }
 
   try {
-    writeFileSync(join(partDir, `${partId}.json`), JSON.stringify(part, null, 2))
+    // Compact async JSON write: drop 2-space indentation (~1.3x fewer bytes
+    // on message/part metadata) and keep the event loop free. See PR #1837
+    // (migrate hooks off sync JSON I/O).
+    await writeFile(join(partDir, `${partId}.json`), JSON.stringify(part))
     return true
   } catch {
     return false

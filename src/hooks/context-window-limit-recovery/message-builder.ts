@@ -55,7 +55,7 @@ export async function sanitizeEmptyMessagesBeforeSummarize(sessionID: string, cl
   if (ids.length === 0) return 0
   let fixed = 0
   for (const mid of ids) {
-    if (replaceEmptyTextParts(mid, PLACEHOLDER_TEXT) || injectTextPart(sessionID, mid, PLACEHOLDER_TEXT)) fixed++
+    if ((await replaceEmptyTextParts(mid, PLACEHOLDER_TEXT)) || (await injectTextPart(sessionID, mid, PLACEHOLDER_TEXT))) fixed++
   }
   if (fixed > 0) log("[auto-compact] pre-summarize sanitization fixed empty messages", { sessionID, fixedCount: fixed, totalEmpty: ids.length })
   return fixed

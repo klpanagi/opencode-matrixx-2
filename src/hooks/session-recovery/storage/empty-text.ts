@@ -1,4 +1,5 @@
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { isSqliteBackend, log, patchPart } from "../../../shared"
 import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
@@ -10,7 +11,7 @@ import { readMessages } from "./messages-reader"
 import { readParts } from "./parts-reader"
 
 
-export function replaceEmptyTextParts(messageID: string, replacementText: string): boolean {
+export async function replaceEmptyTextParts(messageID: string, replacementText: string): Promise<boolean> {
   if (isSqliteBackend()) {
     log("[session-recovery] Disabled on SQLite backend: replaceEmptyTextParts (use async variant)")
     return false
@@ -32,7 +33,10 @@ export function replaceEmptyTextParts(messageID: string, replacementText: string
         if (!textPart.text?.trim()) {
           textPart.text = replacementText
           textPart.synthetic = true
-          writeFileSync(filePath, JSON.stringify(textPart, null, 2))
+          // Compact async JSON write: drop 2-space indentation (~1.3x fewer
+          // bytes on message/part metadata) and keep the event loop free. See
+          // PR #1837 (migrate hooks off sync JSON I/O).
+          await writeFile(filePath, JSON.stringify(textPart))
           anyReplaced = true
         }
       }

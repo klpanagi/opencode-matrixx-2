@@ -3,12 +3,12 @@ import { deliverThroughDispatch, recordingEventHook, recordingHandlerHook, type 
 
 
 describe("event consumer: directory-agents-injector", () => {
-  it("session.created reaches the directory agents injector with the session info", async () => {
+  it("session.deleted reaches the directory agents injector with the session info", async () => {
     // given a recording stand-in for the directory-agents-injector consumer
     const received: EventInput[] = []
-    // when one session.created is delivered through the current dispatch path
+    // when one session.deleted is delivered through the current dispatch path
     const result = await deliverThroughDispatch({
-      event: { type: "session.created", data: { info: { id: "ses_new", title: "Fixture" } } },
+      event: { type: "session.deleted", data: { info: { id: "ses_new" } } },
       hooks: {
       directoryAgentsInjector: recordingEventHook(received),
       },
@@ -16,7 +16,7 @@ describe("event consumer: directory-agents-injector", () => {
     // then dispatch delivered it and this consumer saw the payload
     expect(result.delivered).toBe(1)
     expect(received.length).toBe(1)
-    expect(received[0].type).toBe("session.created")
+    expect(received[0].type).toBe("session.deleted")
     const info = received[0].data?.info as { id?: string }
     expect(info.id).toBe("ses_new")
   })

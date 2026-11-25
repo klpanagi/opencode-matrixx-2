@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs"
+import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { isSqliteBackend } from "../../../shared/config/opencode-storage-detection"
 import { log } from "../../../shared/runtime/logger"
@@ -306,11 +307,11 @@ function getOrCreateMessageDir(sessionID: string): string {
  * @param originalMessage - Context from the original message
  * @returns true if injection succeeded, false otherwise
  */
-export function injectHookMessage(
+export async function injectHookMessage(
   sessionID: string,
   hookContent: string,
   originalMessage: OriginalMessageContext
-): boolean {
+): Promise<boolean> {
   if (!hookContent || hookContent.trim().length === 0) {
     log("[hook-message-injector] Attempted to inject empty hook content, skipping injection", {
       sessionID,
@@ -394,13 +395,16 @@ export function injectHookMessage(
   }
 
   try {
-    writeFileSync(join(messageDir, `${messageID}.json`), JSON.stringify(messageMeta, null, 2))
+    // Compact async JSON writes: drop 2-space indentation (~1.3x fewer bytes
+    // on message/part metadata) and keep the event loop free. See PR #1837
+    // (migrate hooks off sync JSON I/O).
+    await writeFile(join(messageDir, `${messageID}.json`), JSON.stringify(messageMeta))
 
     const partDir = join(PART_STORAGE, messageID)
     if (!existsSync(partDir)) {
       mkdirSync(partDir, { recursive: true })
     }
-    writeFileSync(join(partDir, `${partID}.json`), JSON.stringify(textPart, null, 2))
+    await writeFile(join(partDir, `${partID}.json`), JSON.stringify(textPart))
 
     return true
   } catch {

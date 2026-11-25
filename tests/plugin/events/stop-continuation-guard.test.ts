@@ -3,12 +3,12 @@ import { deliverThroughDispatch, recordingEventHook, recordingHandlerHook, type 
 
 
 describe("event consumer: stop-continuation-guard", () => {
-  it("session.idle reaches the stop continuation guard", async () => {
+  it("session.deleted reaches the stop continuation guard", async () => {
     // given a recording stand-in for the stop-continuation-guard consumer
     const received: EventInput[] = []
-    // when one session.idle is delivered through the current dispatch path
+    // when one session.deleted is delivered through the current dispatch path
     const result = await deliverThroughDispatch({
-      event: { type: "session.idle", data: { sessionID: "ses_fixture" } },
+      event: { type: "session.deleted", data: { info: { id: "ses_fixture" } } },
       hooks: {
       stopContinuationGuard: recordingEventHook(received),
       },
@@ -16,7 +16,7 @@ describe("event consumer: stop-continuation-guard", () => {
     // then dispatch delivered it and this consumer saw the payload
     expect(result.delivered).toBe(1)
     expect(received.length).toBe(1)
-    expect(received[0].type).toBe("session.idle")
-    expect(received[0].data?.sessionID).toBe("ses_fixture")
+    expect(received[0].type).toBe("session.deleted")
+    expect((received[0].data?.info as { id?: string }).id).toBe("ses_fixture")
   })
 })

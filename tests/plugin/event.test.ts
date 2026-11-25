@@ -32,7 +32,7 @@ type EventInput = V2Event
 				},
 			} as unknown as DomainManagers,
 			hooks: {
-				autoUpdateChecker: { event: mockDispatchToHooks },
+				nudgeLoopBreaker: { event: mockDispatchToHooks },
 			backgroundNotificationHook: { event: async () => {} },
 			sessionNotification: async () => {},
 			contextWindowMonitor: { event: async () => {} },
@@ -101,7 +101,7 @@ type EventInput = V2Event
 				},
 			} as unknown as DomainManagers,
 			hooks: {
-				autoUpdateChecker: { event: mockDispatchToHooks },
+				nudgeLoopBreaker: { event: mockDispatchToHooks },
 				backgroundNotificationHook: { event: async () => {} },
 				sessionNotification: async () => {},
 				contextWindowMonitor: { event: async () => {} },
@@ -238,7 +238,7 @@ type EventInput = V2Event
 				},
 			} as unknown as DomainManagers,
 			hooks: {
-				autoUpdateChecker: {
+				nudgeLoopBreaker: {
 					event: async (input: EventInput) => {
 						dispatchCalls.push(input)
 					},
@@ -288,7 +288,7 @@ type EventInput = V2Event
 				},
 			} as unknown as DomainManagers,
 			hooks: {
-				autoUpdateChecker: {
+				nudgeLoopBreaker: {
 					event: async (input: EventInput) => {
 						if (input.type === "session.idle") {
 							dispatchCalls.push(input)
