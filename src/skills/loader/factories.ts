@@ -1,155 +1,85 @@
 import type { BrowserAutomationProvider } from "../../config/schema"
-import { bddBackendSkill } from "../builtin/bdd/bdd-backend"
-import { bddContractSkill } from "../builtin/bdd/bdd-contract"
-import { bddFrontendSkill } from "../builtin/bdd/bdd-frontend"
-import { bddTestsSkill } from "../builtin/bdd/bdd-tests"
-import { devBrowserSkill } from "../builtin/core/dev-browser"
-import { dockerMasterSkill } from "../builtin/core/docker-master"
-import { documentReaderSkill } from "../builtin/core/document-reader"
-import { gitMasterSkill } from "../builtin/core/git-master"
-import { matrixxSelfConfigSkill } from "../builtin/core/matrixx-self-config"
-import { agentBrowserSkill, playwrightSkill } from "../builtin/core/playwright"
-import { playwrightCliSkill } from "../builtin/core/playwright-cli"
-import { pythonAsyncioSkill } from "../builtin/core/python-asyncio"
-import { qualityGateSkill } from "../builtin/core/quality-gate"
-import { removeAiSlopsSkill } from "../builtin/core/remove-ai-slops"
-import { resilienceErrorTaxonomySkill } from "../builtin/core/resilience-error-taxonomy"
-import { resilienceFailureHuntingSkill } from "../builtin/core/resilience-failure-hunting"
-import { reviewWorkSkill } from "../builtin/core/review-work"
-import { rpResearchSkill } from "../builtin/core/rp-research"
-import { silentFailureDetectionSkill } from "../builtin/core/silent-failure-detection"
-import { softwareDevSkill } from "../builtin/core/software-dev"
-import { systematicDebuggingSkill } from "../builtin/core/systematic-debugging"
-import { tddEnforcerSkill } from "../builtin/core/tdd-enforcer"
-import { telegramBotSkill } from "../builtin/core/telegram-bot"
-import { dslCodegenSkill } from "../builtin/dsl/dsl-codegen"
-import { dslCompositionSkill } from "../builtin/dsl/dsl-composition"
-import { dslCoreSkill } from "../builtin/dsl/dsl-core"
-import { dslGrammarSkill } from "../builtin/dsl/dsl-grammar"
-import { dslMetamodelSkill } from "../builtin/dsl/dsl-metamodel"
-import { dslModelTransformationSkill } from "../builtin/dsl/dsl-model-transformation"
-import { dslPyecoreAdvancedSkill } from "../builtin/dsl/dsl-pyecore-advanced"
-import { dslTestingSkill } from "../builtin/dsl/dsl-testing"
-import { dslTextxEcosystemSkill } from "../builtin/dsl/dsl-textx-ecosystem"
-import { dslToolingSkill } from "../builtin/dsl/dsl-tooling"
-import { dslValidationSkill } from "../builtin/dsl/dsl-validation"
-import { frontendA11ySkill } from "../builtin/frontend/frontend-a11y"
-import { frontendBuildToolingSkill } from "../builtin/frontend/frontend-build-tooling"
-import { frontendPerfSkill } from "../builtin/frontend/frontend-perf"
-import { reactNextjsPatternsSkill } from "../builtin/frontend/frontend-react-nextjs"
-import { frontendStateDataSkill } from "../builtin/frontend/frontend-state-data"
-import { svelteSveltekitPatternsSkill } from "../builtin/frontend/frontend-svelte-sveltekit"
-import { frontendTestingSkill } from "../builtin/frontend/frontend-testing"
-import { frontendUiUxSkill } from "../builtin/frontend/frontend-ui-ux"
-import { ccxtProWebsocketsSkill } from "../builtin/market-data/ccxt-pro-websockets"
-import { ccxtRestSkill } from "../builtin/market-data/ccxt-rest"
-import { cryptoMarketStructureSkill } from "../builtin/market-data/crypto-market-structure"
-import { dataQualityObservabilitySkill } from "../builtin/market-data/data-quality-observability"
-import { grafanaDashboardsSkill } from "../builtin/market-data/grafana-dashboards"
-import { influxdbTimeseriesSkill } from "../builtin/market-data/influxdb-timeseries"
-import { marketDataArchitectureSkill } from "../builtin/market-data/market-data-architecture"
-import { marketDataBusSkill } from "../builtin/market-data/market-data-bus"
-import { marketDataRobustnessReviewSkill } from "../builtin/market-data/market-data-robustness-review"
-import { timeSeriesFundamentalsSkill } from "../builtin/market-data/time-series-fundamentals"
-import { securityApiSkill } from "../builtin/security/security-api"
-import { securityAuditSkill } from "../builtin/security/security-audit"
-import { securityCoreSkill } from "../builtin/security/security-core"
-import { securityCryptoSkill } from "../builtin/security/security-crypto"
-import { securityDastSkill } from "../builtin/security/security-dast"
-import { securityDependenciesSkill } from "../builtin/security/security-dependencies"
-import { securityInfraSkill } from "../builtin/security/security-infra"
-import { securityReviewSkill } from "../builtin/security/security-review"
-import { securitySastSkill } from "../builtin/security/security-sast"
-import { securitySecretsSkill } from "../builtin/security/security-secrets"
-import { zeromqAdvancedReqrepSkill } from "../builtin/zeromq/zeromq-advanced-reqrep"
-import { zeromqArchitectureSkill } from "../builtin/zeromq/zeromq-architecture"
-import { zeromqCoreSkill } from "../builtin/zeromq/zeromq-core"
-import { zeromqFrameworksSkill } from "../builtin/zeromq/zeromq-frameworks"
-import { zeromqPubsubSkill } from "../builtin/zeromq/zeromq-pubsub"
-import { zeromqReliabilitySkill } from "../builtin/zeromq/zeromq-reliability"
-import { zeromqSocketsPatternsSkill } from "../builtin/zeromq/zeromq-sockets-patterns"
 import { createLazyTemplateSkill } from "./lazy-skill-helper"
 import type { BuiltinSkill } from "./types"
 
 const BROWSER_SKILL_NAMES = new Set(["playwright", "agent-browser", "playwright-cli"])
 
 /**
- * Static skill table: content dirs are data only, there is no require() seam.
- * Each entry is a factory returning the already-imported skill object;
- * template text still resolves through the lazy getter in
- * `createLazyTemplateSkill`, so construction stays allocation-only.
+ * Per-name skill loaders. `bun build --splitting` turns each `require()`
+ * into its own chunk, so importing this module stays allocation-only; the
+ * ~740 KB skill tree is evaluated on first template access, not at init.
  */
 const skillFactories: Record<string, () => BuiltinSkill> = {
-  "playwright": () => playwrightSkill,
-  "agent-browser": () => agentBrowserSkill,
-  "playwright-cli": () => playwrightCliSkill,
-  "frontend-ui-ux": () => frontendUiUxSkill,
-  "docker-master": () => dockerMasterSkill,
-  "git-master": () => gitMasterSkill,
-  "dev-browser": () => devBrowserSkill,
-  "dsl-core": () => dslCoreSkill,
-  "dsl-grammar": () => dslGrammarSkill,
-  "dsl-codegen": () => dslCodegenSkill,
-  "dsl-metamodel": () => dslMetamodelSkill,
-  "dsl-tooling": () => dslToolingSkill,
-  "dsl-textx-ecosystem": () => dslTextxEcosystemSkill,
-  "dsl-pyecore-advanced": () => dslPyecoreAdvancedSkill,
-  "dsl-model-transformation": () => dslModelTransformationSkill,
-  "dsl-testing": () => dslTestingSkill,
-  "dsl-validation": () => dslValidationSkill,
-  "dsl-composition": () => dslCompositionSkill,
-  "frontend-a11y": () => frontendA11ySkill,
-  "bdd-backend": () => bddBackendSkill,
-  "bdd-contract": () => bddContractSkill,
-  "bdd-frontend": () => bddFrontendSkill,
-  "bdd-tests": () => bddTestsSkill,
-  "frontend-build-tooling": () => frontendBuildToolingSkill,
-  "frontend-perf": () => frontendPerfSkill,
-  "frontend-state-data": () => frontendStateDataSkill,
-  "frontend-testing": () => frontendTestingSkill,
-  "react-nextjs-patterns": () => reactNextjsPatternsSkill,
-  "svelte-sveltekit-patterns": () => svelteSveltekitPatternsSkill,
-  "document-reader": () => documentReaderSkill,
-  "security-core": () => securityCoreSkill,
-  "security-secrets": () => securitySecretsSkill,
-  "security-sast": () => securitySastSkill,
-  "security-dast": () => securityDastSkill,
-  "security-dependencies": () => securityDependenciesSkill,
-  "security-api": () => securityApiSkill,
-  "security-audit": () => securityAuditSkill,
-  "security-crypto": () => securityCryptoSkill,
-  "security-infra": () => securityInfraSkill,
-  "security-review": () => securityReviewSkill,
-  "tdd-enforcer": () => tddEnforcerSkill,
-  "review-work": () => reviewWorkSkill,
-  "quality-gate": () => qualityGateSkill,
-  "software-dev": () => softwareDevSkill,
-  "matrixx-self-config": () => matrixxSelfConfigSkill,
-  "rp-research": () => rpResearchSkill,
-  "remove-ai-slops": () => removeAiSlopsSkill,
-  "zeromq-core": () => zeromqCoreSkill,
-  "zeromq-sockets-patterns": () => zeromqSocketsPatternsSkill,
-  "zeromq-advanced-reqrep": () => zeromqAdvancedReqrepSkill,
-  "zeromq-reliability": () => zeromqReliabilitySkill,
-  "zeromq-pubsub": () => zeromqPubsubSkill,
-  "zeromq-architecture": () => zeromqArchitectureSkill,
-  "zeromq-frameworks": () => zeromqFrameworksSkill,
-  "python-asyncio": () => pythonAsyncioSkill,
-  "ccxt-rest": () => ccxtRestSkill,
-  "ccxt-pro-websockets": () => ccxtProWebsocketsSkill,
-  "market-data-bus": () => marketDataBusSkill,
-  "market-data-architecture": () => marketDataArchitectureSkill,
-  "market-data-robustness-review": () => marketDataRobustnessReviewSkill,
-  "crypto-market-structure": () => cryptoMarketStructureSkill,
-  "time-series-fundamentals": () => timeSeriesFundamentalsSkill,
-  "influxdb-timeseries": () => influxdbTimeseriesSkill,
-  "grafana-dashboards": () => grafanaDashboardsSkill,
-  "telegram-bot": () => telegramBotSkill,
-  "resilience-error-taxonomy": () => resilienceErrorTaxonomySkill,
-  "resilience-failure-hunting": () => resilienceFailureHuntingSkill,
-  "silent-failure-detection": () => silentFailureDetectionSkill,
-  "systematic-debugging": () => systematicDebuggingSkill,
-  "data-quality-observability": () => dataQualityObservabilitySkill,
+  "playwright": () => require("../builtin/core/playwright").playwrightSkill,
+  "agent-browser": () => require("../builtin/core/playwright").agentBrowserSkill,
+  "playwright-cli": () => require("../builtin/core/playwright-cli").playwrightCliSkill,
+  "frontend-ui-ux": () => require("../builtin/frontend/frontend-ui-ux").frontendUiUxSkill,
+  "docker-master": () => require("../builtin/core/docker-master").dockerMasterSkill,
+  "git-master": () => require("../builtin/core/git-master").gitMasterSkill,
+  "dev-browser": () => require("../builtin/core/dev-browser").devBrowserSkill,
+  "dsl-core": () => require("../builtin/dsl/dsl-core").dslCoreSkill,
+  "dsl-grammar": () => require("../builtin/dsl/dsl-grammar").dslGrammarSkill,
+  "dsl-codegen": () => require("../builtin/dsl/dsl-codegen").dslCodegenSkill,
+  "dsl-metamodel": () => require("../builtin/dsl/dsl-metamodel").dslMetamodelSkill,
+  "dsl-tooling": () => require("../builtin/dsl/dsl-tooling").dslToolingSkill,
+  "dsl-textx-ecosystem": () => require("../builtin/dsl/dsl-textx-ecosystem").dslTextxEcosystemSkill,
+  "dsl-pyecore-advanced": () => require("../builtin/dsl/dsl-pyecore-advanced").dslPyecoreAdvancedSkill,
+  "dsl-model-transformation": () => require("../builtin/dsl/dsl-model-transformation").dslModelTransformationSkill,
+  "dsl-testing": () => require("../builtin/dsl/dsl-testing").dslTestingSkill,
+  "dsl-validation": () => require("../builtin/dsl/dsl-validation").dslValidationSkill,
+  "dsl-composition": () => require("../builtin/dsl/dsl-composition").dslCompositionSkill,
+  "frontend-a11y": () => require("../builtin/frontend/frontend-a11y").frontendA11ySkill,
+  "bdd-backend": () => require("../builtin/bdd/bdd-backend").bddBackendSkill,
+  "bdd-contract": () => require("../builtin/bdd/bdd-contract").bddContractSkill,
+  "bdd-frontend": () => require("../builtin/bdd/bdd-frontend").bddFrontendSkill,
+  "bdd-tests": () => require("../builtin/bdd/bdd-tests").bddTestsSkill,
+  "frontend-build-tooling": () => require("../builtin/frontend/frontend-build-tooling").frontendBuildToolingSkill,
+  "frontend-perf": () => require("../builtin/frontend/frontend-perf").frontendPerfSkill,
+  "frontend-state-data": () => require("../builtin/frontend/frontend-state-data").frontendStateDataSkill,
+  "frontend-testing": () => require("../builtin/frontend/frontend-testing").frontendTestingSkill,
+  "react-nextjs-patterns": () => require("../builtin/frontend/frontend-react-nextjs").reactNextjsPatternsSkill,
+  "svelte-sveltekit-patterns": () => require("../builtin/frontend/frontend-svelte-sveltekit").svelteSveltekitPatternsSkill,
+  "document-reader": () => require("../builtin/core/document-reader").documentReaderSkill,
+  "security-core": () => require("../builtin/security/security-core").securityCoreSkill,
+  "security-secrets": () => require("../builtin/security/security-secrets").securitySecretsSkill,
+  "security-sast": () => require("../builtin/security/security-sast").securitySastSkill,
+  "security-dast": () => require("../builtin/security/security-dast").securityDastSkill,
+  "security-dependencies": () => require("../builtin/security/security-dependencies").securityDependenciesSkill,
+  "security-api": () => require("../builtin/security/security-api").securityApiSkill,
+  "security-audit": () => require("../builtin/security/security-audit").securityAuditSkill,
+  "security-crypto": () => require("../builtin/security/security-crypto").securityCryptoSkill,
+  "security-infra": () => require("../builtin/security/security-infra").securityInfraSkill,
+  "security-review": () => require("../builtin/security/security-review").securityReviewSkill,
+  "tdd-enforcer": () => require("../builtin/core/tdd-enforcer").tddEnforcerSkill,
+  "review-work": () => require("../builtin/core/review-work").reviewWorkSkill,
+  "quality-gate": () => require("../builtin/core/quality-gate").qualityGateSkill,
+  "software-dev": () => require("../builtin/core/software-dev").softwareDevSkill,
+  "matrixx-self-config": () => require("../builtin/core/matrixx-self-config").matrixxSelfConfigSkill,
+  "rp-research": () => require("../builtin/core/rp-research").rpResearchSkill,
+  "remove-ai-slops": () => require("../builtin/core/remove-ai-slops").removeAiSlopsSkill,
+  "zeromq-core": () => require("../builtin/zeromq/zeromq-core").zeromqCoreSkill,
+  "zeromq-sockets-patterns": () => require("../builtin/zeromq/zeromq-sockets-patterns").zeromqSocketsPatternsSkill,
+  "zeromq-advanced-reqrep": () => require("../builtin/zeromq/zeromq-advanced-reqrep").zeromqAdvancedReqrepSkill,
+  "zeromq-reliability": () => require("../builtin/zeromq/zeromq-reliability").zeromqReliabilitySkill,
+  "zeromq-pubsub": () => require("../builtin/zeromq/zeromq-pubsub").zeromqPubsubSkill,
+  "zeromq-architecture": () => require("../builtin/zeromq/zeromq-architecture").zeromqArchitectureSkill,
+  "zeromq-frameworks": () => require("../builtin/zeromq/zeromq-frameworks").zeromqFrameworksSkill,
+  "python-asyncio": () => require("../builtin/core/python-asyncio").pythonAsyncioSkill,
+  "ccxt-rest": () => require("../builtin/market-data/ccxt-rest").ccxtRestSkill,
+  "ccxt-pro-websockets": () => require("../builtin/market-data/ccxt-pro-websockets").ccxtProWebsocketsSkill,
+  "market-data-bus": () => require("../builtin/market-data/market-data-bus").marketDataBusSkill,
+  "market-data-architecture": () => require("../builtin/market-data/market-data-architecture").marketDataArchitectureSkill,
+  "market-data-robustness-review": () => require("../builtin/market-data/market-data-robustness-review").marketDataRobustnessReviewSkill,
+  "crypto-market-structure": () => require("../builtin/market-data/crypto-market-structure").cryptoMarketStructureSkill,
+  "time-series-fundamentals": () => require("../builtin/market-data/time-series-fundamentals").timeSeriesFundamentalsSkill,
+  "influxdb-timeseries": () => require("../builtin/market-data/influxdb-timeseries").influxdbTimeseriesSkill,
+  "grafana-dashboards": () => require("../builtin/market-data/grafana-dashboards").grafanaDashboardsSkill,
+  "telegram-bot": () => require("../builtin/core/telegram-bot").telegramBotSkill,
+  "resilience-error-taxonomy": () => require("../builtin/core/resilience-error-taxonomy").resilienceErrorTaxonomySkill,
+  "resilience-failure-hunting": () => require("../builtin/core/resilience-failure-hunting").resilienceFailureHuntingSkill,
+  "silent-failure-detection": () => require("../builtin/core/silent-failure-detection").silentFailureDetectionSkill,
+  "systematic-debugging": () => require("../builtin/core/systematic-debugging").systematicDebuggingSkill,
+  "data-quality-observability": () => require("../builtin/market-data/data-quality-observability").dataQualityObservabilitySkill,
 }
 
 export interface CreateBuiltinSkillsOptions {
