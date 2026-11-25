@@ -1001,7 +1001,7 @@ Disable specific built-in commands via `disabled_commands` in `~/.config/opencod
 }
 ```
 
-Available commands (24 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `completion-review`, `start-work`, `stop-continuation`, `humanize`, `academic-humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit` (+ `redpill`/`rp` keyword triggers)
+Available commands (25 — see `src/features/builtin-commands/commands.ts` and `BuiltinCommandName` in `src/features/builtin-commands/types.ts`): `init-deep`, `matrix-loop`, `rp-loop`, `cancel-loop`, `refactor`, `completion-review`, `start-work`, `stop-continuation`, `humanize`, `academic-humanize`, `handoff`, `pickup`, `remove-deadcode`, `preset`, `end-redpill`, `research`, `assembly`, `redpill`, `bdd-pipeline`, `cleanup-tasks`, `task-list`, `quality-audit`, `quality-assurance`, `security-audit`, `bug-hunt` (+ `redpill`/`rp` keyword triggers)
 ## Comment Checker
 
 Configure the in-process AI-slop comment check. Detection runs inside the plugin with ast-grep (`sg`): nothing is downloaded at runtime or postinstall, and no external `comment-checker` binary is required. The hook warns after writes and edits when it sees comments that look like AI slop; the `comment_scan` tool exposes the same scan to agents.

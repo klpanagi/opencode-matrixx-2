@@ -7,7 +7,7 @@
 [![OpenCode](https://img.shields.io/badge/built_for-OpenCode-black.svg)](https://opencode.ai/docs)
 
 **Multi-model agent orchestration for [OpenCode](https://github.com/sst/opencode).**<br/>
-**13 core agents + 8 category workers. 59 hook names. 32 tool dirs. 70 skills. 24 commands. One plugin.**
+**13 core agents + 8 category workers. 59 hook names. 32 tool dirs. 71 skills. 25 commands. One plugin.**
 
 > **OpenCode v2-only.** Matrixx v2 requires OpenCode v2. See [package.json](package.json) for the current version.
 
@@ -79,14 +79,14 @@ Full workflows: [Overview](docs/guide/overview.md) · [Orchestration](docs/orche
 | **Agent Orchestration** | 21 agent names (13 core + 8 `mouse-*` workers), category routing (`source`, `rabbit-hole`, …), session continuity, parallel subagent execution | [Agents](docs/agents.md) |
 | **Developer Tools** | LSP, AST-Grep search & replace, comment scan, tmux terminal, task tools, assembly (multi-model debate) | [Features](docs/features.md) |
 | **Lifecycle Hooks (59-enum)** | Context injection, think mode, task completion notifications, error recovery, quality gates, session recovery | [Hooks](docs/hooks.md) |
-| **Skills (70)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) · [Skill Packs](docs/skill-packs.md) |
+| **Skills (71)** | DSL engineering (11), security (10), frontend (8), BDD (4 + pipeline), git, browser, TDD, research, AI-slop removal | [Skills](docs/category-skill-guide.md) · [Skill Packs](docs/skill-packs.md) |
 | **Software Dev Pipeline** | 6-phase PLAN → BUILD → VERIFY → REVIEW → SECURE → SHIP with 5 team roles, adaptive to task size | [Quality](docs/quality.md) |
 | **Context Management (L0–L4)** | Native recovery + RTK (60–90% bash savings) + context-mode sandbox + DCP pruning + Headroom proxy (60–95% JSON) | [Context](docs/context-management.md) |
 | **Security** | Secret-leak guard (gitleaks), env-file write guard, read-only Sentinel auditor with CWE-rated findings | [Hooks](docs/hooks.md) · [Agents](docs/agents.md) |
 | **Knowledge & Research** | Saturation `/research` swarms, Context7 docs, native `websearch`, `github_search`, document reader, external knowledge hubs | [Features](docs/features.md) |
 | **Configurability** | Every agent, model, temperature, and hook tunable via `matrixx.jsonc` with JSON schema + Config Studio UI | [Configuration](docs/configurations.md) |
 
-Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **70 skills** (`BuiltinSkillNameSchema`), **59 hook names** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 11 retained-deprecated no-op literals and 1 alias are included), **24 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **32 tool directories**, and **19 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
+Counts are schema-official: **21 agent names** (`BuiltinAgentNameSchema`: 13 core + 8 `mouse-*` workers), **71 skills** (`BuiltinSkillNameSchema`), **59 hook names** (`HookNameEnum` in `src/config/schema/hooks.ts`; 71 names parse when the 11 retained-deprecated no-op literals and 1 alias are included), **25 commands** (`src/features/builtin-commands/commands.ts`), **2 MCPs** (`context7`, `document_reader`), **32 tool directories**, and **19 feature modules**. The roster lives in docs — this page links, never duplicates: [Agents](docs/agents.md) · [Hooks](docs/hooks.md) · [Skills](docs/category-skill-guide.md) · [Commands](docs/command-reference.md).
 
 ### Session memory (new, EXPERIMENTAL)
 
@@ -178,7 +178,7 @@ Verify the install with `matrixx skill list` and `matrixx doctor`.
 **Trade-offs to know**
 
 - **OpenCode-only.** Matrixx is a plugin, not a standalone agent or IDE. You adopt OpenCode to use it.
-- **Learning curve.** 13 core agents plus 8 category workers, 8 categories, 70 skills, 24 commands — `redpill` hides this well, but mastery takes time.
+- **Learning curve.** 13 core agents plus 8 category workers, 8 categories, 71 skills, 25 commands — `redpill` hides this well, but mastery takes time.
 - **Multiple providers help.** It runs on one provider, but the multi-model value shows with two or more connected (or the OpenCode free tier).
 - **Orchestration overhead.** Delegation costs extra tokens on trivial one-line tasks — use direct mode for those.
 - **Pinned toolchain.** Bun 1.4.4 and recent OpenCode are required; bleeding-edge OpenCode versions can break the plugin temporarily.

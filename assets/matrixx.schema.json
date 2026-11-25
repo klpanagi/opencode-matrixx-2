@@ -196,6 +196,7 @@
           "resilience-failure-hunting",
           "silent-failure-detection",
           "systematic-debugging",
+          "bug-hunting",
           "data-quality-observability"
         ]
       }

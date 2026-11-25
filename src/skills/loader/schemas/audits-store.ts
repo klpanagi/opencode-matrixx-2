@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
+import { randomBytes } from "node:crypto"
+import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { z } from "zod"
 import {
@@ -22,6 +23,9 @@ export const AUDITS_DIR_NAME = "audits"
 export const RUN_METADATA_FILE = "run-metadata.json"
 export const COVERAGE_LEDGER_FILE = "coverage-ledger.json"
 export const FINDINGS_FILE = "findings.json"
+
+/** Refuse to parse artifacts beyond this size; oversized files read as absent. */
+const MAX_ARTIFACT_BYTES = 10 * 1024 * 1024
 
 /** Run metadata: identifies one audit run and its budget gate outcome. */
 export const RunMetadataSchema = z
@@ -55,16 +59,17 @@ function ensureDir(dirPath: string): void {
 }
 
 /**
- * Atomically write one audit artifact: tmp file (pid suffix) + renameSync.
- * The target never exists in partial state; a mid-write crash leaves either
- * the old file or nothing, never a torn write. Throws on failure.
+ * Atomically write one audit artifact: unpredictable tmp file + renameSync.
+ * `wx` refuses a pre-planted symlink and `0o600` keeps artifacts private. The
+ * target never exists in partial state; a mid-write crash leaves either the old
+ * file or nothing, never a torn write. Throws on failure.
  */
 export function writeAuditFile(runDir: string, filename: string, data: unknown): void {
   const filePath = join(runDir, filename)
   ensureDir(dirname(filePath))
-  const tempPath = `${filePath}.tmp.${process.pid}.${Date.now()}`
+  const tempPath = `${filePath}.tmp.${process.pid}.${randomBytes(6).toString("hex")}`
   try {
-    writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf-8")
+    writeFileSync(tempPath, JSON.stringify(data, null, 2), { encoding: "utf-8", flag: "wx", mode: 0o600 })
     renameSync(tempPath, filePath)
   } catch (error) {
     try {
@@ -78,9 +83,11 @@ export function writeAuditFile(runDir: string, filename: string, data: unknown):
   }
 }
 
-function readValidated<T>(filePath: string, schema: z.ZodType<T>): T | null {
+/** Read + schema-validate one JSON artifact; null when absent, not a regular file, oversized, or invalid. */
+export function readValidatedFile<T>(filePath: string, schema: z.ZodType<T>): T | null {
   try {
-    if (!existsSync(filePath)) {
+    const stats = lstatSync(filePath, { throwIfNoEntry: false })
+    if (stats === undefined || !stats.isFile() || stats.size > MAX_ARTIFACT_BYTES) {
       return null
     }
     const parsed: unknown = JSON.parse(readFileSync(filePath, "utf-8"))
@@ -93,17 +100,17 @@ function readValidated<T>(filePath: string, schema: z.ZodType<T>): T | null {
 
 /** Read the coverage ledger for a run; null when absent or invalid. */
 export function readLedger(runDir: string): SecurityAuditLedger | null {
-  return readValidated(join(runDir, COVERAGE_LEDGER_FILE), LedgerSchema)
+  return readValidatedFile(join(runDir, COVERAGE_LEDGER_FILE), LedgerSchema)
 }
 
 /** Read findings for a run; null when absent or invalid. */
 export function readFindings(runDir: string): SecurityAuditFinding[] | null {
-  return readValidated(join(runDir, FINDINGS_FILE), FindingsSchema)
+  return readValidatedFile(join(runDir, FINDINGS_FILE), FindingsSchema)
 }
 
 /** Read run metadata; null when absent or invalid. */
 export function readRunMetadata(runDir: string): AuditRunMetadata | null {
-  return readValidated(join(runDir, RUN_METADATA_FILE), RunMetadataSchema)
+  return readValidatedFile(join(runDir, RUN_METADATA_FILE), RunMetadataSchema)
 }
 
 /**

@@ -126,7 +126,7 @@ Use agent-browser to navigate to example.com and extract the main heading
 
 ## Commands (summary)
 
-Slash-triggered workflows (24 built-in commands). Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
+Slash-triggered workflows (25 built-in commands). Full argument reference: [Command Reference](command-reference.md). Custom commands load from `.opencode/command/*.md` (project) and `~/.config/opencode/command/*.md` (user).
 
 Single-skill deep dives (`frontend-ui-ux`, `git-master`, `rp-research`, `remove-ai-slops`) live in [Category & Skill System Guide](category-skill-guide.md). Runtime toggles (`/redpill`, `/assembly`, `/end-redpill`, `/preset`, `/stop-continuation`, `/remove-deadcode`, `/task-list`, `/cleanup-tasks`, `/handoff`, `/pickup`, `/research`, loops, BDD commands) are documented canonically in [Command Reference](command-reference.md) and [Task System](task-system.md).
 

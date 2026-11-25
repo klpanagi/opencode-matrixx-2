@@ -2,6 +2,7 @@ import type { CommandDefinition } from "../command-loader"
 import { ACADEMIC_HUMANIZE_TEMPLATE } from "./templates/academic-humanize"
 import { ASSEMBLY_TEMPLATE } from "./templates/assembly"
 import { BDD_PIPELINE_TEMPLATE } from "./templates/bdd-pipeline"
+import { BUG_HUNT_TEMPLATE } from "./templates/bug-hunt"
 import { CLEANUP_TASKS_TEMPLATE } from "./templates/cleanup-tasks"
 import { COMPLETION_REVIEW_TEMPLATE } from "./templates/completion-review"
 import { END_REDPILL_TEMPLATE } from "./templates/end-redpill"
@@ -273,6 +274,17 @@ ${SECURITY_AUDIT_TEMPLATE}
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[--scope=file|module|project] [--target=<path>] [--full] [--budget=N]",
+  },
+  "bug-hunt": {
+    description: "(builtin) Run a read-only evidence-graded bug hunt with tiered findings report",
+    template: `<command-instruction>
+${BUG_HUNT_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[--scope=file|module|project] [--target=<path>] [--class=<odc-type|cwe-N|all>] [--depth=static|dynamic|deep] [--budget=N] [--verify=<run-N>]",
   },
   "academic-humanize": {
     description:

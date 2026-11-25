@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import {
@@ -11,8 +12,10 @@ import {
   readFindings,
   readLedger,
   readRunMetadata,
+  readValidatedFile,
   resumeRun,
   RUN_METADATA_FILE,
+  RunMetadataSchema,
   writeAuditFile,
   type AuditRunMetadata,
 } from "../../../src/skills/loader/schemas/audits-store"
@@ -148,5 +151,100 @@ describe("audits-store", () => {
     expect(readLedger(runDir)).toBeNull()
     expect(readFindings(runDir)).toBeNull()
     expect(readFileSync(join(runDir, FINDINGS_FILE), "utf-8")).toBe("{not json")
+  })
+
+  test("artifacts above the size cap read back as null", () => {
+    //#given a schema-valid findings file padded past the 10 MiB cap
+    const runDir = getRunDir(makeRoot(), "run-5")
+    const target = join(runDir, FINDINGS_FILE)
+    const capBytes = 10 * 1024 * 1024
+    const chunk = " ".repeat(1024 * 1024)
+    mkdirSync(runDir, { recursive: true })
+    writeFileSync(target, "[", "utf-8")
+    for (let written = 0; written < capBytes + chunk.length; written += chunk.length) {
+      appendFileSync(target, chunk, "utf-8")
+    }
+    appendFileSync(target, `${JSON.stringify(makeFinding())}]`, "utf-8")
+    //#when reading the oversized artifact
+    //#then it is treated as absent instead of being parsed
+    expect(statSync(target).size).toBeGreaterThan(capBytes)
+    expect(readFindings(runDir)).toBeNull()
+  })
+
+  test("small artifact round-trips through readValidatedFile", () => {
+    //#given a fresh run dir and run metadata
+    const runDir = getRunDir(makeRoot(), "run-6")
+    const meta: AuditRunMetadata = { run: "run-6", startedAt: "2026-11-25T00:00:00Z", funded: true, status: "complete" }
+    //#when written then read back through the validated reader
+    writeAuditFile(runDir, RUN_METADATA_FILE, meta)
+    //#then the parsed value matches what was written
+    expect(readValidatedFile(join(runDir, RUN_METADATA_FILE), RunMetadataSchema)).toEqual(meta)
+  })
+
+  test("symlink to a valid artifact reads as null, never follows the link", () => {
+    //#given a run dir whose artifact path is a symlink to a valid JSON file
+    const root = makeRoot()
+    const runDir = getRunDir(root, "run-10")
+    mkdirSync(runDir, { recursive: true })
+    const realFile = join(root, "real-metadata.json")
+    const meta: AuditRunMetadata = { run: "run-10", startedAt: "2026-11-25T00:00:00Z", funded: true, status: "complete" }
+    writeFileSync(realFile, JSON.stringify(meta), "utf-8")
+    const artifactPath = join(runDir, RUN_METADATA_FILE)
+    symlinkSync(realFile, artifactPath, "file")
+    //#when reading through the symlink
+    //#then the link is refused and the reader never throws
+    expect(() => readValidatedFile(artifactPath, RunMetadataSchema)).not.toThrow()
+    expect(readValidatedFile(artifactPath, RunMetadataSchema)).toBeNull()
+  })
+
+  test.skipIf(process.platform === "win32")("symlink to /dev/zero reads as null without hanging", () => {
+    //#given an artifact path that is a symlink to the zero device
+    const root = makeRoot()
+    const runDir = getRunDir(root, "run-11")
+    mkdirSync(runDir, { recursive: true })
+    const artifactPath = join(runDir, RUN_METADATA_FILE)
+    symlinkSync("/dev/zero", artifactPath, "file")
+    //#when reading with a wall-clock bound
+    const startedAt = Date.now()
+    const value = readValidatedFile(artifactPath, RunMetadataSchema)
+    const elapsed = Date.now() - startedAt
+    //#then the reader returns null immediately instead of streaming forever
+    expect(elapsed).toBeLessThan(1000)
+    expect(value).toBeNull()
+  })
+
+  test.skipIf(process.platform === "win32")("FIFO at the artifact path reads as null without hanging", () => {
+    //#given an artifact path that is a named pipe
+    const root = makeRoot()
+    const runDir = getRunDir(root, "run-12")
+    mkdirSync(runDir, { recursive: true })
+    const artifactPath = join(runDir, RUN_METADATA_FILE)
+    execFileSync("mkfifo", [artifactPath])
+    //#when reading with a wall-clock bound
+    const startedAt = Date.now()
+    const value = readValidatedFile(artifactPath, RunMetadataSchema)
+    const elapsed = Date.now() - startedAt
+    //#then the pipe is refused immediately instead of blocking on open
+    expect(elapsed).toBeLessThan(1000)
+    expect(value).toBeNull()
+  })
+
+  test("written artifacts are private (mode 0o600)", () => {
+    //#given a fresh run dir
+    const runDir = getRunDir(makeRoot(), "run-7")
+    //#when an artifact is written atomically
+    writeAuditFile(runDir, RUN_METADATA_FILE, { run: "run-7", startedAt: "2026-11-25T00:00:00Z", funded: true, status: "complete" })
+    //#then the file mode is owner-only read/write
+    expect(statSync(join(runDir, RUN_METADATA_FILE)).mode & 0o777).toBe(0o600)
+  })
+
+  test("successful write leaves no temp files behind", () => {
+    //#given a fresh run dir
+    const runDir = getRunDir(makeRoot(), "run-8")
+    //#when an artifact is written atomically
+    writeAuditFile(runDir, FINDINGS_FILE, [makeFinding()])
+    //#then only the final artifact remains, with no `*.tmp.*` residue
+    expect(readdirSync(runDir).filter((name) => name.includes(".tmp."))).toEqual([])
+    expect(existsSync(join(runDir, FINDINGS_FILE))).toBe(true)
   })
 })
