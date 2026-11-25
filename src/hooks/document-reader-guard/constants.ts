@@ -1,5 +1,7 @@
 export const HOOK_NAME = "document-reader-guard"
 
+export const DOCUMENT_READER_TOOL_PATTERN = /^document_reader([._-].*)?$/i
+
 export const BINARY_EXTENSIONS = [
   ".pdf",
   ".docx",
@@ -39,3 +41,34 @@ export const READ_BLOCK_MESSAGE =
 export const BASH_BLOCK_MESSAGE =
   "[document-reader-guard] BLOCKED: Do not read documents via bash CLIs (pdftotext, pdfinfo, pandoc, libreoffice, cat/head/tail, python fitz/pypdf/pdfminer/pdfplumber/docx/openpyxl, markitdown CLI). " +
   "Use document_reader_convert_to_markdown with file:///absolute/path instead — delegate to construct for summarization."
+
+export const URI_NON_FILE_BLOCK_MESSAGE =
+  "[document-reader-guard] BLOCKED: document_reader accepts only local file: URIs — http/https, data: and other schemes are blocked (SSRF guard). " +
+  "Fix: pass a local absolute path as file:///absolute/path/to/document."
+
+export function uriHostBlockMessage(host: string): string {
+  return (
+    `[document-reader-guard] BLOCKED: file: URI host "${host}" is a loopback, link-local (169.254.0.0/16 — cloud metadata service), private (10/8, 172.16/12, 192.168/16), ::1 or metadata.google.internal address — blocked (SSRF guard). ` +
+    "Fix: pass a local absolute path without a host as file:///absolute/path/to/document."
+  )
+}
+
+export function uriOutsideWorkspaceBlockMessage(filePath: string, root: string): string {
+  return (
+    `[document-reader-guard] BLOCKED: file: path "${filePath}" is outside the workspace root "${root}". ` +
+    "Fix: move the document inside the workspace and pass file:///absolute/path/to/document."
+  )
+}
+
+/**
+ * Message used when the path cannot be resolved on disk at all (broken
+ * symlink, missing file, EACCES/ELOOP…). The guard fails closed: without a
+ * real path, containment cannot be proved.
+ */
+export function uriUnresolvableBlockMessage(filePath: string, reason: string): string {
+  return (
+    `[document-reader-guard] BLOCKED: file: path "${filePath}" could not be resolved on disk (${reason}) — it may be a broken symlink or an unreadable path; blocked (symlink escape guard). ` +
+    "Fix: pass an existing regular file inside the workspace as file:///absolute/path/to/document."
+  )
+}
+

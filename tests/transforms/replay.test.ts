@@ -74,7 +74,7 @@ function snapshot(store: Map<string, unknown>): string {
 describe("mcp transform replay", () => {
   test("double registration over one editor is identical", async () => {
     //#given
-    const { entries } = buildBuiltinMcpEntries({ uvxAvailable: true })
+    const { entries } = buildBuiltinMcpEntries({ uvxAvailable: true, documentReader: { enabled: true } })
     const { editor, store } = createMapEditor()
     const domain = { transform: async (cb: (e: typeof editor) => void) => { cb(editor); return {} } }
 
@@ -90,7 +90,7 @@ describe("mcp transform replay", () => {
 
   test("fresh editors converge on the same set", async () => {
     //#given
-    const { entries } = buildBuiltinMcpEntries({ uvxAvailable: false })
+    const { entries } = buildBuiltinMcpEntries({ uvxAvailable: false, documentReader: { enabled: true } })
 
     //#when
     const a = createMapEditor()

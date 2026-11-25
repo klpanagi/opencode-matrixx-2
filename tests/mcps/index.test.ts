@@ -3,6 +3,12 @@ import { createBuiltinMcps } from "../../src/mcps/index"
 
 // NOTE: post remove-custom-websearch-mcp plan, only 2 built-ins remain:
 // context7 + document_reader. Config arg is ignored (legacy shim lives in plugin-config).
+// document_reader is off by default: tests below that expect it opt in via
+// security.document_reader.enabled (the factory receives the config as data).
+
+const ENABLED_DOCUMENT_READER_CONFIG = {
+  security: { document_reader: { enabled: true } },
+} as unknown as Parameters<typeof createBuiltinMcps>[1]
 
 describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () => {
   test("returns { mcps, failures } shape with 2 MCPs when healthy", () => {
@@ -10,23 +16,44 @@ describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () 
     const disabledMcps: string[] = []
 
     //#when
-    const result = createBuiltinMcps(disabledMcps, undefined, {
+    const result = createBuiltinMcps(disabledMcps, ENABLED_DOCUMENT_READER_CONFIG, {
       isCommandAvailable: () => true,
     })
 
     //#then
     expect(result).toHaveProperty("mcps")
     expect(result).toHaveProperty("failures")
+    expect(result).toHaveProperty("notices")
     expect(result.mcps).not.toHaveProperty("websearch")
     expect(result.mcps).toHaveProperty("context7")
     expect(result.mcps).toHaveProperty("document_reader")
     expect(Object.keys(result.mcps)).toHaveLength(2)
     expect(result.failures).toHaveLength(0)
+    expect(result.notices).toHaveLength(0)
+  })
+
+  test("default config ⇒ document_reader omitted with a one-line notice", () => {
+    //#given no security config — document-reader MCP is off by default
+    //#when
+    const result = createBuiltinMcps([], undefined, {
+      isCommandAvailable: () => true,
+    })
+
+    //#then
+    expect(result.mcps).not.toHaveProperty("document_reader")
+    expect(result.mcps).toHaveProperty("context7")
+    expect(result.failures).toHaveLength(0)
+    expect(result.notices).toHaveLength(1)
+    expect(result.notices[0]).toContain("document_reader disabled by default")
+    expect(result.notices[0]).toContain("security.document_reader.enabled")
   })
 
   test("legacy websearch config key is ignored, no failure recorded", () => {
     //#given - old config still carrying removed websearch key
-    const config = { websearch: { provider: "tavily" } } as unknown as Parameters<typeof createBuiltinMcps>[1]
+    const config = {
+      websearch: { provider: "tavily" },
+      security: { document_reader: { enabled: true } },
+    } as unknown as Parameters<typeof createBuiltinMcps>[1]
 
     //#when
     let result: ReturnType<typeof createBuiltinMcps>
@@ -48,7 +75,7 @@ describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () 
     const disabledMcps = ["context7"]
 
     //#when
-    const result = createBuiltinMcps(disabledMcps, undefined, {
+    const result = createBuiltinMcps(disabledMcps, ENABLED_DOCUMENT_READER_CONFIG, {
       isCommandAvailable: () => true,
     })
 
@@ -75,6 +102,7 @@ describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () 
     //#then
     expect(Object.keys(result2.mcps)).toHaveLength(0)
     expect(result2.failures).toHaveLength(0)
+    expect(result2.notices).toHaveLength(0)
     expect(result).toBeDefined()
   })
 
@@ -83,7 +111,7 @@ describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () 
     const disabledMcps = ["context7", "playwright", "custom", "websearch"]
 
     //#when
-    const result = createBuiltinMcps(disabledMcps, undefined, {
+    const result = createBuiltinMcps(disabledMcps, ENABLED_DOCUMENT_READER_CONFIG, {
       isCommandAvailable: () => true,
     })
 
@@ -98,7 +126,7 @@ describe("createBuiltinMcps — { mcps, failures } contract (no websearch)", () 
 describe("createBuiltinMcps — defensive creation", () => {
   test("uvx missing: document_reader becomes disabled stub, failure recorded, others intact", () => {
     //#given
-    const result = createBuiltinMcps([], undefined, {
+    const result = createBuiltinMcps([], ENABLED_DOCUMENT_READER_CONFIG, {
       isCommandAvailable: (cmd) => cmd !== "uvx",
     })
 
@@ -113,7 +141,7 @@ describe("createBuiltinMcps — defensive creation", () => {
 
   test("uvx present: document_reader stays enabled, no failure", () => {
     //#given
-    const result = createBuiltinMcps([], undefined, {
+    const result = createBuiltinMcps([], ENABLED_DOCUMENT_READER_CONFIG, {
       isCommandAvailable: () => true,
     })
 
