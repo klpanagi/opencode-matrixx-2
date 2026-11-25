@@ -50,3 +50,7 @@ tests/plugin/tool/tool-execute-after.isolation.test.ts
 tests/shared/tmux/tmux-utils/
 tests/tools/plan/plan-update.atomic.test.ts
 tests/tools/plan/plan-write-guard.test.ts
+tests/shared/policy/context-mode-enforcement.test.ts
+tests/hooks/session-recovery/storage/thinking-prepend.test.ts
+tests/hooks/session-recovery/storage/text-part-injector.test.ts
+tests/hooks/session-recovery/storage/empty-text.test.ts
