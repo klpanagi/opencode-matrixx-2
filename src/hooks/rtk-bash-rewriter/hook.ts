@@ -55,7 +55,7 @@ export function createRtkBashRewriterHook(_ctx: MatrixxContext, config: MatrixxC
         // Only mutate if rewrite produced a different command
         if (trimmed && trimmed !== command) {
           output.args.command = trimmed
-          log(`[rtk-bash-rewriter] Rewrote command: '${command}' → '${trimmed}'`)
+          log("[rtk-bash-rewriter] Command rewritten", { changed: true, length: command.length })
         }
       } catch (error) {
         // Silent passthrough on any error
