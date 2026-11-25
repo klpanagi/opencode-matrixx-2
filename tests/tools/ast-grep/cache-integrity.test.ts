@@ -107,7 +107,7 @@ describe("verifyCachedBinary", () => {
     expect(readLog().slice(before.length)).toContain(INTEGRITY_LOG)
   })
 
-  it.skipIf(!canSimulateEacces)("#when the sidecar cannot be read #then warns and proceeds unverified", () => {
+  it.skipIf(!canSimulateEacces)("#when the sidecar cannot be read #then treats the cache as unverified", () => {
     //#given
     const sidecarPath = getChecksumSidecarPath(binaryPath)
     writeFileSync(sidecarPath, `${computeSha256(binaryPath)}\n`)
@@ -118,7 +118,7 @@ describe("verifyCachedBinary", () => {
     const valid = verifyCachedBinary(binaryPath)
 
     //#then
-    expect(valid).toBe(true)
+    expect(valid).toBe(false)
     expect(existsSync(binaryPath)).toBe(true)
     expect(readLog().slice(before.length)).toContain("Could not read checksum sidecar")
   })
