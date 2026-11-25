@@ -13,7 +13,27 @@ import type { MatrixLoopOptions, MatrixLoopState } from "./types"
 
 type SessionRecovery = { isRecovering: (sessionID: string) => boolean; markRecovering: (sessionID: string) => void; clear: (sessionID: string) => void }
 type LoopStateController = { getState: () => MatrixLoopState | null; clear: () => boolean; incrementIteration: () => MatrixLoopState | null }
-type MatrixLoopEventHandlerOptions = { directory: string; apiTimeoutMs: number; getTranscriptPath: (sessionID: string) => string | undefined; checkSessionExists?: MatrixLoopOptions["checkSessionExists"]; sessionRecovery: SessionRecovery; loopState: LoopStateController; verification?: MatrixLoopOptions["verification"] }
+type MatrixLoopEventHandlerOptions = { directory: string; apiTimeoutMs: number; promptTimeoutMs?: number; getTranscriptPath: (sessionID: string) => string | undefined; checkSessionExists?: MatrixLoopOptions["checkSessionExists"]; sessionRecovery: SessionRecovery; loopState: LoopStateController; verification?: MatrixLoopOptions["verification"] }
+
+// The continuation prompt blocks on the assistant turn, so it needs its own bound
+// below the 120s default inside promptNativeWithModelSuggestionRetry.
+const DEFAULT_CONTINUATION_PROMPT_TIMEOUT_MS = 30_000
+
+async function injectPromptWithinBudget(
+	ctx: NativePluginContext,
+	options: MatrixLoopEventHandlerOptions,
+	input: { sessionID: string; prompt: string },
+): Promise<void> {
+	await withTimeout(
+		injectContinuationPrompt(ctx, {
+			sessionID: input.sessionID,
+			prompt: input.prompt,
+			directory: options.directory,
+			apiTimeoutMs: options.apiTimeoutMs,
+		}),
+		options.promptTimeoutMs ?? DEFAULT_CONTINUATION_PROMPT_TIMEOUT_MS,
+	)
+}
 
 export function isLoopStateStillValid(
   entry: MatrixLoopState | null,
@@ -45,11 +65,9 @@ async function handleVerificationFailure(
 	}
 	try {
 		const feedback = `Verification FAILED: ${reason ?? "Unknown reason"}. The completion was rejected — continue working.`
-		await injectContinuationPrompt(ctx, {
+		await injectPromptWithinBudget(ctx, options, {
 			sessionID,
 			prompt: `${feedback}\n\n${buildContinuationPrompt(newState ?? state)}`,
-			directory: options.directory,
-			apiTimeoutMs: options.apiTimeoutMs,
 		})
 	} catch (err) {
 		log(`[${HOOK_NAME}] Failed to inject verification feedback`, { sessionID, error: String(err) })
@@ -187,7 +205,7 @@ export function createMatrixLoopEventHandler(ctx: NativePluginContext, options: 
 				notify("info", `Matrix Loop: Iteration ${newState.iteration}/${newState.max_iterations}`)
 
 				try {
-					await injectContinuationPrompt(ctx, { sessionID, prompt: buildContinuationPrompt(newState), directory: options.directory, apiTimeoutMs: options.apiTimeoutMs })
+					await injectPromptWithinBudget(ctx, options, { sessionID, prompt: buildContinuationPrompt(newState) })
 				} catch (err) {
 					log(`[${HOOK_NAME}] Failed to inject continuation`, { sessionID, error: String(err) })
 				}

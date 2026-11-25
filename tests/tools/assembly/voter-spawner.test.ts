@@ -94,4 +94,49 @@ describe("spawnVoters", () => {
     expect(results[0].status).toBe("error")
     expect(results[0].error).toBe("Voter 1 was interrupted")
   })
+
+  test("one provider throwing during spawn does not abort the other voters", async () => {
+    //#given — the second provider's session creation blows up while spawning
+    const calls = { create: [] as Record<string, unknown>[] }
+    let created = 0
+    const client = {
+      session: {
+        create: async (body?: Record<string, unknown>) => {
+          calls.create.push(body ?? {})
+          created += 1
+          if (created === 2) {
+            return new Proxy(
+              {},
+              {
+                get(_target: unknown, property: string | symbol) {
+                  if (property === "then") return undefined
+                  throw new Error("provider exploded")
+                },
+              },
+            )
+          }
+          return { id: `child-${created - 1}` }
+        },
+        prompt: async () => ({}),
+        interrupt: async () => ({}),
+        context: async (args: { sessionID: string }) => ({
+          messages: args.sessionID === "child-0" ? voterTranscript("r1") : [],
+        }),
+      },
+    }
+
+    //#when
+    const results = await spawnVoters(client, "q?", PROVIDERS, "parent-1", {
+      timeoutMs: 40,
+      pollIntervalMs: 5,
+    })
+
+    //#then — the surviving voter's answer is kept and the failed voter carries its error
+    expect(results).toHaveLength(2)
+    expect(results[0].status).toBe("completed")
+    expect(results[0].reasoning).toContain("r1")
+    expect(results[1].status).toBe("error")
+    expect(results[1].error).toContain("provider exploded")
+    expect(calls.create).toHaveLength(2)
+  })
 })

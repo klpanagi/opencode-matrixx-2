@@ -97,10 +97,16 @@ describe("completion-verifier", () => {
 		expect(result.reason).toBe("Tests are not passing")
 	})
 
-	//#given a verification that times out
-	//#when verifyCompletion is called with short timeout
-	//#then it returns { verified: true } (don't block)
-	test("should return verified=true on timeout (don't block completion)", async () => {
+	//#given a verification that times out before the agent emits a verdict
+	//#when verifyCompletion is called with a short timeout
+	//#then it fails closed with reason "verification_timeout"
+	//
+	// Plan `.matrixx/plans/bugs-remediation.md` T11 (ruling R2, bug C4): this test
+	// used to assert `verified === true` on timeout ("don't block completion").
+	// That assertion encoded the fail-open bug: a false positive ends the loop on
+	// unverified work, while a false negative costs one extra iteration (bounded by
+	// max_iterations). The old assertion is intentionally inverted, not deleted.
+	test("should fail closed with verification_timeout when the poll times out", async () => {
 		const { ctx } = createMockCtx({
 			messagesResult: [],
 		})
@@ -115,13 +121,18 @@ describe("completion-verifier", () => {
 			pollIntervalMs: 10,
 		})
 
-		expect(result.verified).toBe(true)
+		expect(result.verified).toBe(false)
+		expect(result.reason).toBe("verification_timeout")
 	})
 
-	//#given a session creation failure
+	//#given a session creation failure that throws
 	//#when verifyCompletion is called
-	//#then it returns { verified: true } (don't block on infra errors)
-	test("should return verified=true when session creation fails", async () => {
+	//#then it fails closed with reason "verification_error"
+	//
+	// Plan `.matrixx/plans/bugs-remediation.md` T11 (bug C4): the exception path also
+	// fails closed, so an unverified completion is never accepted because the
+	// verifier itself broke.
+	test("should fail closed with verification_error when session creation fails", async () => {
 		const { ctx } = createMockCtx({
 			createError: new Error("Session creation failed"),
 		})
@@ -136,13 +147,19 @@ describe("completion-verifier", () => {
 			pollIntervalMs: 10,
 		})
 
-		expect(result.verified).toBe(true)
+		expect(result.verified).toBe(false)
+		expect(result.reason).toBe("verification_error")
 	})
 
-	//#given a verification with invalid/unparseable response
-	//#when verifyCompletion is called
-	//#then it returns { verified: true } (assume pass on parse errors)
-	test("should return verified=true when response has no verification tag", async () => {
+	//#given a verification whose response never carries a verdict tag
+	//#when verifyCompletion polls until the deadline
+	//#then it fails closed with reason "verification_timeout"
+	//
+	// Plan `.matrixx/plans/bugs-remediation.md` T11 (bug C4): a missing verdict is an
+	// unverified completion, so it must not end the loop. This test previously
+	// asserted `verified === true` through the same fail-open timeout branch as the
+	// timeout test above.
+	test("should fail closed when the response has no verification tag", async () => {
 		const { ctx } = createMockCtx({
 			messagesResult: [
 				{ type: "user", content: [{ type: "text", text: "Verify..." }] },
@@ -159,11 +176,12 @@ describe("completion-verifier", () => {
 			completionPromise: "DONE",
 			prompt: "Build a REST API",
 			iteration: 3,
-			timeoutMs: 1000,
+			timeoutMs: 50,
 			pollIntervalMs: 10,
 		})
 
-		expect(result.verified).toBe(true)
+		expect(result.verified).toBe(false)
+		expect(result.reason).toBe("verification_timeout")
 	})
 
 	//#given a valid verification call
@@ -206,8 +224,12 @@ describe("completion-verifier", () => {
 
 	//#given a session create returns error in result (not throw)
 	//#when verifyCompletion is called
-	//#then it returns { verified: true } (don't block)
-	test("should return verified=true when session create returns error result", async () => {
+	//#then it fails closed with reason "verification_error"
+	//
+	// Plan `.matrixx/plans/bugs-remediation.md` T11 (bug C4): a verifier session that
+	// was never created means verification did not run, so the completion stays
+	// unverified. This test previously asserted the fail-open `verified: true`.
+	test("should fail closed with verification_error when session create returns an error result", async () => {
 		const { ctx } = createMockCtx({
 			createResult: { error: "Something went wrong" },
 		})
@@ -222,6 +244,7 @@ describe("completion-verifier", () => {
 			pollIntervalMs: 10,
 		})
 
-		expect(result.verified).toBe(true)
+		expect(result.verified).toBe(false)
+		expect(result.reason).toBe("verification_error")
 	})
 })

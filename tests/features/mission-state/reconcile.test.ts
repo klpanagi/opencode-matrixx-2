@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test"
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
+import { createRequire } from "node:module"
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -17,6 +18,22 @@ import {
   shouldReconcileOnStartWork,
 } from "../../../src/features/mission-state/reconcile"
 import { findOraclePlans } from "../../../src/features/mission-state/storage"
+
+// Real fs handle: mock.module("node:fs") below replaces the module registry, so
+// delegating through a plain `import ... from "node:fs"` binding would recurse.
+const realFs = createRequire(import.meta.url)("node:fs") as typeof import("node:fs")
+let failNextRename = false
+
+mock.module("node:fs", () => ({
+  ...realFs,
+  renameSync: (from: string, to: string) => {
+    if (failNextRename) {
+      failNextRename = false
+      throw new Error("forced reconcile write failure")
+    }
+    realFs.renameSync(from, to)
+  },
+}))
 
 let projectDir = ""
 let plansDir = ""
@@ -257,5 +274,24 @@ describe("reconcileMissionState missing-state + orphan backfill", () => {
     expect(result.candidates).toContain(orphan)
     expect(result.moved).toEqual([])
     expect(result.wrote).toBe(false)
+  })
+})
+
+describe("reconcilePlanFile write failure", () => {
+  test("reports wrote:false plus a write error when persistence fails", () => {
+    //#given a plan whose checkbox will reconcile to a change
+    const planPath = writePlan("write-fail.md", "- [ ] Implement task alpha")
+    const todos = [{ content: "Implement task alpha", status: "completed" }]
+
+    //#when the atomic write is forced to fail
+    failNextRename = true
+    const result = reconcilePlanFile(planPath, todos)
+
+    //#then the change is reported but not persisted
+    expect(result.changed).toBe(true)
+    expect(result.wrote).toBe(false)
+    expect(result.writeError).toContain("forced reconcile write failure")
+    //#and the plan bytes are untouched
+    expect(readFileSync(planPath, "utf-8")).toBe("- [ ] Implement task alpha")
   })
 })

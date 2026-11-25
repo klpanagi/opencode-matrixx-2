@@ -1,6 +1,5 @@
-import { spawn } from "bun"
-
 import { log } from "../../shared/runtime/logger"
+import { TMUX_PROBE_TIMEOUT_MS } from "../../shared/tmux/constants"
 
 let tmuxPath: string | null = null
 let initPromise: Promise<string | null> | null = null
@@ -10,31 +9,74 @@ async function findTmuxPath(): Promise<string | null> {
   const cmd = isWindows ? "where" : "which"
 
   try {
-    const proc = spawn([cmd, "tmux"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    })
+    let path: string | null = null
+    {
+      const proc = Bun.spawn([cmd, "tmux"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      })
 
-    const exitCode = await proc.exited
-    if (exitCode !== 0) {
-      return null
+      let probeTimer: ReturnType<typeof setTimeout> | undefined
+      const probeTimeout = new Promise<never>((_, reject) => {
+        probeTimer = setTimeout(() => {
+          proc.kill()
+          reject(new Error("tmux path probe timed out"))
+        }, TMUX_PROBE_TIMEOUT_MS)
+      })
+
+      let exitCode: number
+      try {
+        exitCode = await Promise.race([proc.exited, probeTimeout])
+      } catch {
+        log(
+          `[interactive-bash] ${cmd} tmux probe timed out after ${TMUX_PROBE_TIMEOUT_MS}ms`,
+        )
+        return null
+      } finally {
+        clearTimeout(probeTimer)
+      }
+
+      if (exitCode !== 0) {
+        return null
+      }
+
+      const stdout = await new Response(proc.stdout).text()
+      path = stdout.trim().split("\n")[0] || null
     }
-
-    const stdout = await new Response(proc.stdout).text()
-    const path = stdout.trim().split("\n")[0]
 
     if (!path) {
       return null
     }
 
-    const verifyProc = spawn([path, "-V"], {
-      stdout: "pipe",
-      stderr: "pipe",
-    })
+    {
+      const proc = Bun.spawn([path, "-V"], {
+        stdout: "pipe",
+        stderr: "pipe",
+      })
 
-    const verifyExitCode = await verifyProc.exited
-    if (verifyExitCode !== 0) {
-      return null
+      let verifyTimer: ReturnType<typeof setTimeout> | undefined
+      const verifyTimeout = new Promise<never>((_, reject) => {
+        verifyTimer = setTimeout(() => {
+          proc.kill()
+          reject(new Error("tmux version probe timed out"))
+        }, TMUX_PROBE_TIMEOUT_MS)
+      })
+
+      let verifyExitCode: number
+      try {
+        verifyExitCode = await Promise.race([proc.exited, verifyTimeout])
+      } catch {
+        log(
+          `[interactive-bash] tmux -V probe timed out after ${TMUX_PROBE_TIMEOUT_MS}ms`,
+        )
+        return null
+      } finally {
+        clearTimeout(verifyTimer)
+      }
+
+      if (verifyExitCode !== 0) {
+        return null
+      }
     }
 
     return path
@@ -54,7 +96,10 @@ export async function getTmuxPath(): Promise<string | null> {
 
   initPromise = (async () => {
     const path = await findTmuxPath()
-    tmuxPath = path
+    if (path !== null) {
+      tmuxPath = path
+    }
+    initPromise = null
     return path
   })()
 
@@ -63,6 +108,11 @@ export async function getTmuxPath(): Promise<string | null> {
 
 export function getCachedTmuxPath(): string | null {
   return tmuxPath
+}
+
+export function resetTmuxPathCache(): void {
+  tmuxPath = null
+  initPromise = null
 }
 
 export function startBackgroundCheck(): void {

@@ -5,6 +5,8 @@ import {
   acquireLockWithRetry,
   getTaskDir,
   readJsonSafe,
+  refreshLock,
+  TaskLockUnavailableError,
   writeJsonAtomic,
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
@@ -90,7 +92,7 @@ async function handleUpdate(
     // INVARIANT (Task 5): never proceed on an unacquired lock — no fallthrough writes.
     if (!lock.acquired) {
       log(`[task-update] lock contention, write skipped`, { taskDir })
-      return JSON.stringify({ error: "task_lock_unavailable" })
+      throw new TaskLockUnavailableError(taskDir)
     }
 
     let updated: TaskObject | null = null
@@ -140,20 +142,29 @@ async function handleUpdate(
       const validatedTask = TaskObjectSchema.parse(task);
       writeJsonAtomic(taskPath, validatedTask);
       updated = validatedTask;
+      if (lock.ownerId) {
+        const refreshed = refreshLock(taskDir, lock.ownerId);
+        if (!refreshed.ok) {
+          log(`[task-update] lock refresh failed`, { taskDir, error: refreshed.error.message });
+        }
+      }
+      try {
+        await maybeSyncTaskToPlans({ directory, task: validatedTask, config });
+      } catch (error) {
+        log(`[task-update] Plan sync failed, task update kept`, { id: taskId, error: String(error) });
+      }
     } finally {
       lock.release();
     }
 
     if (updated !== null) {
-      try {
-        await maybeSyncTaskToPlans({ directory, task: updated, config });
-      } catch (error) {
-        log(`[task-update] Plan sync failed, task update kept`, { id: taskId, error: String(error) });
-      }
       return JSON.stringify({ task: updated });
     }
     return JSON.stringify({ error: "internal_error" });
   } catch (error) {
+    if (error instanceof TaskLockUnavailableError) {
+      throw error;
+    }
     if (error instanceof z.ZodError) {
       return JSON.stringify({
         error: "validation_error",

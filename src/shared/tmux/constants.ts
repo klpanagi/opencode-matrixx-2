@@ -1,6 +1,9 @@
 // Polling interval for background session status checks
 export const POLL_INTERVAL_BACKGROUND_MS = 2000
 
+// Upper bound for tmux probe spawns (`which tmux`, `tmux -V`, `display -p`)
+export const TMUX_PROBE_TIMEOUT_MS = 2_000
+
 // Maximum idle time before session considered stale
 export const SESSION_TIMEOUT_MS = 10 * 60 * 1000  // 10 minutes
 

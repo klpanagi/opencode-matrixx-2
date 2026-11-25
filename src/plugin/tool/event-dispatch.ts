@@ -4,6 +4,31 @@ import type { V2Event } from "./context"
 export const DISPATCH_BACKOFF_BASE_MS = 250
 export const DISPATCH_BACKOFF_MAX_MS = 30_000
 export const DEDUPLICATE_WINDOW_MS = 500
+export const DISPATCH_MAX_IN_FLIGHT_SESSIONS = 8
+
+const GLOBAL_SESSION_KEY = "__global__"
+
+function readString(source: unknown, key: string): string | undefined {
+  if (!source || typeof source !== "object") return undefined
+  const value = (source as Record<string, unknown>)[key]
+  return typeof value === "string" && value.length > 0 ? value : undefined
+}
+
+/** Session lane for an event: its session id when it carries one, otherwise one
+ * shared global lane so unrelated session-less events still stay ordered. */
+export function eventSessionKey(event: V2Event): string {
+  const data = event.data as Record<string, unknown> | undefined
+  const info = data?.info as Record<string, unknown> | undefined
+  const infoID = event.type.startsWith("session.") ? readString(info, "id") : undefined
+  return (
+    readString(data, "sessionID") ??
+    readString(info, "sessionID") ??
+    infoID ??
+    readString(event, "sessionID") ??
+    readString(event.properties as Record<string, unknown> | undefined, "sessionID") ??
+    GLOBAL_SESSION_KEY
+  )
+}
 
 export function dispatchBackoffMs(consecutiveFailures: number): number {
   return Math.min(DISPATCH_BACKOFF_BASE_MS * 2 ** (consecutiveFailures - 1), DISPATCH_BACKOFF_MAX_MS)
@@ -35,6 +60,7 @@ export type EventDispatcherDeps = {
   log?: (message: string, data?: unknown) => void
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>
   now?: () => number
+  maxInFlightSessions?: number
 }
 
 export type EventDispatcherStats = {
@@ -57,6 +83,65 @@ export function createEventDispatcher(deps: EventDispatcherDeps): EventDispatche
   let stopped = false
   const sleep = deps.sleep ?? defaultSleep
   const log = deps.log ?? defaultLog
+  const maxInFlightSessions = deps.maxInFlightSessions ?? DISPATCH_MAX_IN_FLIGHT_SESSIONS
+  const sessionChains = new Map<string, Promise<void>>()
+  const slotWaiters: Array<() => void> = []
+  let inFlightSessions = 0
+  let capWaitCount = 0
+
+  function acquireSlot(sessionKey: string): Promise<void> {
+    if (maxInFlightSessions <= 0 || inFlightSessions < maxInFlightSessions) {
+      inFlightSessions += 1
+      return Promise.resolve()
+    }
+    capWaitCount += 1
+    log("[matrixx] event dispatch concurrency cap reached", {
+      inFlightSessions,
+      maxInFlightSessions,
+      capWaits: capWaitCount,
+      session: sessionKey,
+    })
+    return new Promise<void>((resolve) => {
+      slotWaiters.push(resolve)
+    })
+  }
+
+  function releaseSlot(): void {
+    const next = slotWaiters.shift()
+    if (next) {
+      next()
+      return
+    }
+    inFlightSessions -= 1
+  }
+
+  async function runSessionEvent(sessionKey: string, event: V2Event): Promise<void> {
+    if (stopped) return
+    await acquireSlot(sessionKey)
+    try {
+      await dispatchMatrixxEvent(event)
+    } finally {
+      releaseSlot()
+    }
+  }
+
+  function enqueueEvent(event: V2Event): Promise<void> {
+    const sessionKey = eventSessionKey(event)
+    const previous = sessionChains.get(sessionKey) ?? Promise.resolve()
+    const current = previous.then(() => runSessionEvent(sessionKey, event))
+    sessionChains.set(sessionKey, current)
+    void current
+      .finally(() => {
+        if (sessionChains.get(sessionKey) === current) sessionChains.delete(sessionKey)
+      })
+      .catch((error) => {
+        log("[matrixx] event dispatch pump cleanup error", {
+          session: sessionKey,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+    return current
+  }
 
   async function dispatchMatrixxEvent(event: V2Event): Promise<void> {
     try {
@@ -65,6 +150,7 @@ export function createEventDispatcher(deps: EventDispatcherDeps): EventDispatche
     } catch (error) {
       log("[matrixx] event dispatch error", {
         type: event.type,
+        session: eventSessionKey(event),
         error: error instanceof Error ? error.message : String(error),
       })
     }
@@ -85,7 +171,7 @@ export function createEventDispatcher(deps: EventDispatcherDeps): EventDispatche
             try {
               for await (const event of subscribe({ signal })) {
                 if (stopped || signal.aborted) return
-                await dispatchMatrixxEvent(event)
+                enqueueEvent(event)
               }
               consecutiveFailures = 0
             } catch (error) {

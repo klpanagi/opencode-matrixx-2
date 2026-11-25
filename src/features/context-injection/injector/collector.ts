@@ -106,6 +106,20 @@ export class ContextCollector {
     }
   }
 
+  /**
+   * Non-destructive read of the session's pending context.
+   * Callers must peek, validate the target message can receive the content,
+   * and only then {@link consume} it.
+   */
+  peek(sessionID: string): PendingContext {
+    return this.getPending(sessionID)
+  }
+
+  /**
+   * Returns the pending context and clears it for the session.
+   * Callers must {@link peek} first and consume only after a successful injection,
+   * otherwise un-injectable turns would drop pending content.
+   */
   consume(sessionID: string): PendingContext {
     const pending = this.getPending(sessionID)
     this.clear(sessionID)
@@ -121,6 +135,11 @@ export class ContextCollector {
     return sessionMap !== undefined && sessionMap.size > 0
   }
 
+  /** Clears every session's pending context (dispose / test reset). */
+  reset(): void {
+    this.sessions.clear()
+  }
+
   private sortEntries(entries: ContextEntry[]): ContextEntry[] {
     return entries.sort((a, b) => {
       const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
@@ -131,3 +150,8 @@ export class ContextCollector {
 }
 
 export const contextCollector = new ContextCollector()
+
+/** Test seam and dispose reset — clears the shared singleton's pending context. */
+export function _resetContextCollectorForTesting(): void {
+  contextCollector.reset()
+}

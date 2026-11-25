@@ -1,6 +1,7 @@
 import type { ExperimentalConfig } from "../config/schema"
 import type { MatrixxContext } from "../plugin/tool/context"
 import { createDynamicTruncator } from "../shared/compaction/dynamic-truncator"
+import { warn } from "../shared/runtime/logger"
 
 const DEFAULT_MAX_TOKENS = 50_000 // ~200k chars
 const WEBFETCH_MAX_TOKENS = 10_000 // ~40k chars - web pages need aggressive truncation
@@ -49,6 +50,7 @@ export function createToolOutputTruncatorHook(ctx: MatrixxContext, options?: Too
     if (!truncateAll && !TRUNCATABLE_TOOLS.includes(input.tool)) return
     if (typeof output.output !== 'string') return
 
+    const originalOutput = output.output
     try {
       const targetMaxTokens = TOOL_SPECIFIC_MAX_TOKENS[input.tool] ?? DEFAULT_MAX_TOKENS
       const { result, truncated } = await truncator.truncate(
@@ -59,8 +61,15 @@ export function createToolOutputTruncatorHook(ctx: MatrixxContext, options?: Too
       if (truncated) {
         output.output = result
       }
-    } catch {
+    } catch (error) {
       // Graceful degradation - don't break tool execution
+      warn("[tool-output-truncator] Truncation failed; output left intact", {
+        tool: input.tool,
+        sessionID: input.sessionID,
+        callID: input.callID,
+        outputLength: originalOutput.length,
+        reason: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 

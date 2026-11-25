@@ -77,17 +77,31 @@ const rtkBashRewriterHook = hooks.rtkBashRewriter?.["tool.execute.before"]
     // for the full analysis. Waves execute strictly in order (1 -> 2 -> 3);
     // within a wave, hooks run concurrently.
     //
-    // Wave 1 (4 hooks): pure READ_ONLY — no mutation, no I/O, no throws.
-    //   Safe to parallelize via Promise.all. Either no-op in tool.execute.before
+    // Wave 1 (4 hooks): pure READ_ONLY — no mutation, no I/O, no shared state
+    //   with other hooks in the wave. Either no-op in tool.execute.before
     //   (directory*, rulesInjector) or only write to a private in-memory Map
-    //   keyed by callID (qualityGate, commentChecker). No shared state with
-    //   other hooks in the wave.
-    await Promise.all([
-      qualityGateHook?.(input, output),
-      commentCheckerHook?.(input, output),
-      directoryAgentsInjectorHook?.(input, output),
-      rulesInjectorHook?.(input, output),
-    ])
+    //   keyed by callID (qualityGate, commentChecker). Read-only does NOT mean
+    //   "never rejects": one hook's failure is logged and swallowed so it
+    //   cannot cancel its siblings or abort the tool call. Wave 2 below stays
+    //   fail-fast on purpose.
+    const wave1Hooks: Record<string, Promise<void> | undefined> = {
+      qualityGate: qualityGateHook?.(input, output),
+      commentChecker: commentCheckerHook?.(input, output),
+      directoryAgentsInjector: directoryAgentsInjectorHook?.(input, output),
+      rulesInjector: rulesInjectorHook?.(input, output),
+    }
+    const wave1Names = Object.keys(wave1Hooks)
+    const wave1Outcomes = await Promise.allSettled(Object.values(wave1Hooks))
+    for (const [index, outcome] of wave1Outcomes.entries()) {
+      if (outcome.status === "rejected") {
+        log("[tool.execute.before] wave-1 hook rejected", {
+          hook: wave1Names[index],
+          tool: input.tool,
+          callID: input.callID,
+          error: outcome.reason,
+        })
+      }
+    }
 
     // Wave 2 (9 hooks): fail-fast BLOCKING — each guard throws on a
     //   DIFFERENT condition for a DIFFERENT tool; no two guards fire on

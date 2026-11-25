@@ -81,7 +81,7 @@ export function createContextInjectorMessagesTransformHook(
         return
       }
 
-      const pending = collector.consume(sessionID)
+      const pending = collector.peek(sessionID)
       if (!pending.hasContent) {
         return
       }
@@ -97,6 +97,8 @@ export function createContextInjectorMessagesTransformHook(
         })
         return
       }
+
+      collector.consume(sessionID)
 
       // synthetic part pattern (minimal fields)
       const syntheticPart = {
