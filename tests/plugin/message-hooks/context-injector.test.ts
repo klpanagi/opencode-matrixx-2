@@ -139,4 +139,29 @@ describe("contextInjectorMessagesTransform flat port", () => {
     //#then the same event object carries the injected text
     expect((event.messages[0] as { text?: string }).text).toBe("Compacted context\n\n---\n\nHi")
   })
+
+  test("preserves pending context across an image-only turn, injecting on the next text turn", async () => {
+    //#given pending context and a first user turn with no text part (image-only)
+    const collector = new ContextCollector()
+    const sessionID = "ses_transform_image_only"
+    collector.register(sessionID, {
+      id: "ctx",
+      source: "keyword-detector",
+      content: "Surviving context",
+    })
+    const imageOnlyTurn = userEvent(sessionID, [
+      { type: "user", content: [{ type: "image" }] },
+    ])
+    //#when the hook runs on the image-only turn
+    await applyContextInjectorMessagesTransform(imageOnlyTurn, { collector })
+    //#then the pending content survives the un-injectable turn
+    expect(collector.hasPending(sessionID)).toBe(true)
+    expect(imageOnlyTurn.messages[0].text).toBeUndefined()
+    //#when a later normal text turn runs through the hook
+    const textTurn = userEvent(sessionID, [{ type: "user", text: "Follow-up" }])
+    await applyContextInjectorMessagesTransform(textTurn, { collector })
+    //#then the surviving context is injected and only then consumed
+    expect(textTurn.messages[0].text).toBe("Surviving context\n\n---\n\nFollow-up")
+    expect(collector.hasPending(sessionID)).toBe(false)
+  })
 })

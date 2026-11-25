@@ -30,16 +30,33 @@ describe("storage B5 retry contract (single source of truth)", () => {
     expect(base).toBe(15)
   })
 
-  test("acquireLockWithRetry defaults retries to MAX_RETRIES", async () => {
+  test("acquireLockWithRetry uses an eight-attempt budget by default", async () => {
     //#given
     const mod = await import("../../../src/features/task-storage/storage")
-    const fnSrc = mod.acquireLockWithRetry.toString()
+    const { writeFileSync } = await import("node:fs")
+    const { join: pjoin } = await import("node:path")
+    writeFileSync(
+      pjoin(TEST_DIR_ABS, ".lock"),
+      JSON.stringify({ id: "holder", ownerId: "holder", pid: process.pid, timestamp: Date.now() }),
+      "utf-8",
+    )
+    const delays: number[] = []
+    const origSetTimeout = globalThis.setTimeout
+    // @ts-expect-error - monkey-patch for delay capture
+    globalThis.setTimeout = ((fn: (...a: unknown[]) => void, ms?: number) => {
+      delays.push(ms ?? 0)
+      return origSetTimeout(fn, 0)
+    }) as typeof setTimeout
+    try {
+      //#when
+      const result = await mod.acquireLockWithRetry(TEST_DIR_ABS)
 
-    //#when
-    const usesConstant = fnSrc.includes("MAX_RETRIES")
-
-    //#then
-    expect(usesConstant).toBe(true)
+      //#then
+      expect(result.acquired).toBe(false)
+      expect(delays.length).toBe(7)
+    } finally {
+      globalThis.setTimeout = origSetTimeout
+    }
   })
 
   test("attempt count is exact: exhausts after MAX_RETRIES attempts", async () => {
@@ -70,13 +87,16 @@ describe("storage B5 retry contract (single source of truth)", () => {
     }
   })
 
-  test("backoff delays follow base * 2^attempt", async () => {
+  test("default backoff doubles from a jittered 10 ms base", async () => {
     //#given
     const mod = await import("../../../src/features/task-storage/storage")
-    const { MAX_RETRIES, RETRY_DELAY_MS } = mod as unknown as { MAX_RETRIES: number; RETRY_DELAY_MS: number }
     const { writeFileSync } = await import("node:fs")
     const { join: pjoin } = await import("node:path")
-    writeFileSync(pjoin(TEST_DIR_ABS, ".lock"), JSON.stringify({ id: "holder", timestamp: Date.now() }), "utf-8")
+    writeFileSync(
+      pjoin(TEST_DIR_ABS, ".lock"),
+      JSON.stringify({ id: "holder", ownerId: "holder", pid: process.pid, timestamp: Date.now() }),
+      "utf-8",
+    )
     const delays: number[] = []
     const origSetTimeout = globalThis.setTimeout
     // @ts-expect-error - monkey-patch for delay capture
@@ -86,12 +106,14 @@ describe("storage B5 retry contract (single source of truth)", () => {
     }) as typeof setTimeout
     try {
       //#when
-      await mod.acquireLockWithRetry(TEST_DIR_ABS, MAX_RETRIES)
+      await mod.acquireLockWithRetry(TEST_DIR_ABS)
 
       //#then
-      expect(delays.length).toBe(MAX_RETRIES - 1)
-      delays.forEach((d, i) => {
-        expect(d).toBe(RETRY_DELAY_MS * 2 ** i)
+      expect(delays.length).toBe(7)
+      delays.forEach((delay, attempt) => {
+        const base = 10 * 2 ** attempt
+        expect(delay).toBeGreaterThanOrEqual(base)
+        expect(delay).toBeLessThan(base + 10)
       })
     } finally {
       globalThis.setTimeout = origSetTimeout

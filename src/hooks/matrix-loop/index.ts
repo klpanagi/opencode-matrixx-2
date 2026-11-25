@@ -15,6 +15,7 @@ export {
   DEFAULT_VERIFICATION_MAX_RETRIES,
   DEFAULT_VERIFICATION_TIMEOUT_MS,
   HOOK_NAME,
+  MATRIX_LOOP_STATE_DIR,
 } from "./constants"
 export {
   buildContinuationPrompt,
@@ -38,7 +39,9 @@ export {
 export {
   clearState,
   incrementIteration,
+  incrementIterationSync,
   readState,
+  sessionStatePath,
   writeState,
 } from "./storage"
 export type {

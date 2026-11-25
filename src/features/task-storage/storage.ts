@@ -6,6 +6,7 @@ import type { MatrixxConfig } from "../../config/schema"
 import { getOpenCodeConfigDir } from "../../shared/config/opencode-config-dir"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { log } from "../../shared/runtime/logger"
+import { atomicWriteDetailed } from "../mission-state/atomic-write"
 import { TypedReadError } from "./read-errors"
 
 export function getProjectTaskDir(directory: string): string {
@@ -63,6 +64,61 @@ export class StorageCorruptError extends Error {
   }
 }
 
+const MAX_REMEMBERED_CORRUPT_PATHS = 20
+
+export interface CorruptReadStats {
+  count: number
+  paths: string[]
+}
+
+const corruptReadStats: CorruptReadStats = { count: 0, paths: [] }
+
+let pendingAggregateCount = 0
+const pendingAggregatePaths: string[] = []
+let aggregateScheduled = false
+let aggregateEpoch = 0
+
+function flushCorruptReadAggregate(epoch: number): void {
+  if (epoch !== aggregateEpoch) return
+  aggregateScheduled = false
+  const count = pendingAggregateCount
+  pendingAggregateCount = 0
+  const paths = pendingAggregatePaths.splice(0, pendingAggregatePaths.length)
+  if (count === 0) return
+  log("[task-storage] corrupt task reads skipped", { count, paths, total: getCorruptReadStats().count })
+}
+
+function rememberCorruptRead(filePath: string): void {
+  corruptReadStats.count += 1
+  if (!corruptReadStats.paths.includes(filePath)) {
+    corruptReadStats.paths.push(filePath)
+    if (corruptReadStats.paths.length > MAX_REMEMBERED_CORRUPT_PATHS) {
+      corruptReadStats.paths.shift()
+    }
+  }
+  pendingAggregateCount += 1
+  if (!pendingAggregatePaths.includes(filePath)) pendingAggregatePaths.push(filePath)
+  if (aggregateScheduled) return
+  aggregateScheduled = true
+  // A list-style pass reads every task file in one synchronous loop; deferring
+  // to a microtask collapses that whole pass into a single warning line.
+  const epoch = aggregateEpoch
+  queueMicrotask(() => flushCorruptReadAggregate(epoch))
+}
+
+export function getCorruptReadStats(): CorruptReadStats {
+  return { count: corruptReadStats.count, paths: [...corruptReadStats.paths] }
+}
+
+export function _resetCorruptReadStatsForTesting(): void {
+  corruptReadStats.count = 0
+  corruptReadStats.paths.length = 0
+  pendingAggregateCount = 0
+  pendingAggregatePaths.length = 0
+  aggregateScheduled = false
+  aggregateEpoch += 1
+}
+
 export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | null {
   try {
     if (!existsSync(filePath)) {
@@ -76,12 +132,14 @@ export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | nul
       parsed = JSON.parse(content)
     } catch (error) {
       log(`[task-storage] readJsonSafe parse failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
+      rememberCorruptRead(filePath)
       return null
     }
     const result = schema.safeParse(parsed)
 
     if (!result.success) {
       log(`[task-storage] readJsonSafe schema mismatch`, { path: filePath, byteSize })
+      rememberCorruptRead(filePath)
       return null
     }
 
@@ -94,6 +152,7 @@ export function readJsonSafe<T>(filePath: string, schema: z.ZodType<T>): T | nul
       byteSize = 0
     }
     log(`[task-storage] readJsonSafe read failure`, { path: filePath, byteSize, reason: error instanceof Error ? error.message : String(error) })
+    rememberCorruptRead(filePath)
     return null
   }
 }
@@ -111,40 +170,35 @@ export function readJsonStrict<T>(filePath: string, schema: z.ZodType<T>): T {
 }
 
 export function writeJsonAtomic(filePath: string, data: unknown): void {
-  const dir = dirname(filePath)
-  ensureDir(dir)
-
-  const tempPath = `${filePath}.tmp.${process.pid}.${randomUUID()}`
-
-  try {
-    writeFileSync(tempPath, JSON.stringify(data, null, 2), "utf-8")
-    renameSync(tempPath, filePath)
-  } catch (error) {
-    try {
-      if (existsSync(tempPath)) {
-        unlinkSync(tempPath)
-      }
-    } catch {
-      // Ignore cleanup errors
-    }
-    throw error
+  ensureDir(dirname(filePath))
+  const result = atomicWriteDetailed(filePath, JSON.stringify(data, null, 2))
+  if (!result.ok) {
+    throw new Error(result.reason)
   }
 }
 
 const STALE_LOCK_THRESHOLD_MS = 30000
 
+// Retained for the barrel's public API; the budget below is what the task
+// tools actually run with.
 export const MAX_RETRIES = 4
 export const RETRY_DELAY_MS = 15
 
+const LOCK_ACQUIRE_ATTEMPTS = 8
+const LOCK_BACKOFF_BASE_MS = 10
+const LOCK_BACKOFF_JITTER_MS = 10
+
 export async function acquireLockWithRetry(
   dirPath: string,
-  retries = MAX_RETRIES,
-): Promise<{ acquired: boolean; release: () => void }> {
+  retries = LOCK_ACQUIRE_ATTEMPTS,
+): Promise<LockHandle> {
   for (let attempt = 0; attempt < retries; attempt++) {
     const lock = acquireLock(dirPath)
     if (lock.acquired) return lock
     if (attempt < retries - 1) {
-      await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS * 2 ** attempt))
+      const delay =
+        LOCK_BACKOFF_BASE_MS * 2 ** attempt + Math.floor(Math.random() * LOCK_BACKOFF_JITTER_MS)
+      await new Promise<void>((resolve) => setTimeout(resolve, delay))
     }
   }
   return { acquired: false, release: () => {} }
@@ -234,8 +288,37 @@ export interface LockHandle {
 
 export type LockResult = { ok: true } | { ok: false; error: TypedReadError }
 
+/**
+ * Raised when the retry budget is spent while another process holds the lock.
+ * The task tools throw it so contention surfaces as a tool failure, never as a
+ * payload the model can mistake for a successful update.
+ */
+export class TaskLockUnavailableError extends Error {
+  readonly lockPath: string
+
+  constructor(dirPath: string) {
+    const lockPath = lockFilePath(dirPath)
+    super(`[task-storage] lock unavailable: ${lockPath}`)
+    this.name = "TaskLockUnavailableError"
+    this.lockPath = lockPath
+  }
+}
+
 function lockFilePath(dirPath: string): string {
   return join(dirPath, ".lock")
+}
+
+function unlinkLockFile(filePath: string): void {
+  unlinkSync(filePath)
+}
+
+function isErrno(error: unknown, code: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === code
+  )
 }
 
 function parseLockInfo(content: string): LockInfo | null {
@@ -266,8 +349,20 @@ export function readLockFile(dirPath: string): LockInfo | null {
   }
 }
 
+function isDeadPid(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return false
+  } catch (error) {
+    // ESRCH means no such process; EPERM means it exists but is not ours.
+    return isErrno(error, "ESRCH")
+  }
+}
+
 function isStaleInfo(info: LockInfo | null): boolean {
   if (info === null) return true
+  if (isDeadPid(info.pid)) return true
   return Date.now() - info.timestamp > STALE_LOCK_THRESHOLD_MS
 }
 
@@ -293,8 +388,9 @@ export function releaseLock(dirPath: string, ownerId: string): LockResult {
   }
   if (info === null) {
     try {
-      unlinkSync(lockPath)
-    } catch {
+      unlinkLockFile(lockPath)
+    } catch (error) {
+      log("[task-storage] corrupt lock eviction failed", { path: lockPath, error: String(error) })
     }
     return { ok: false, error: new TypedReadError("Corrupt", lockPath, 0, "unparseable lock evicted") }
   }
@@ -303,7 +399,7 @@ export function releaseLock(dirPath: string, ownerId: string): LockResult {
     return { ok: false, error: foreignLockError(lockPath, info) }
   }
   try {
-    unlinkSync(lockPath)
+    unlinkLockFile(lockPath)
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     return { ok: false, error: new TypedReadError("TransientIO", lockPath, 0, reason) }
@@ -340,6 +436,27 @@ export function refreshLock(dirPath: string, ownerId: string): LockResult {
   return { ok: true }
 }
 
+/**
+ * Claims a stale lock by renaming it to a uuid-suffixed path. Rename is atomic,
+ * so exactly one contender wins; a loser sees ENOENT and must re-race the
+ * acquire rather than delete a lock another process may now own.
+ */
+function claimStaleLock(lockPath: string): boolean {
+  const claimPath = `${lockPath}.stale.${randomUUID()}`
+  try {
+    renameSync(lockPath, claimPath)
+  } catch (error) {
+    if (isErrno(error, "ENOENT")) return false
+    throw error
+  }
+  try {
+    unlinkLockFile(claimPath)
+  } catch (error) {
+    log("[task-storage] stale lock claim cleanup failed", { path: claimPath, error: String(error) })
+  }
+  return true
+}
+
 export function acquireLock(dirPath: string): LockHandle {
   const lockPath = join(dirPath, ".lock")
   const lockId = randomUUID()
@@ -373,10 +490,10 @@ export function acquireLock(dirPath: string): LockHandle {
     if (isStaleInfo(current)) {
       const fresh = readLockFile(dirPath)
       if (isStaleInfo(fresh)) {
-        try {
-          unlinkSync(lockPath)
-        } catch {
-        }
+        // Atomic claim: only one contender wins the rename. The loser's ENOENT
+        // means someone else reclaimed first, so it re-races the acquire instead
+        // of deleting a lock it does not own.
+        claimStaleLock(lockPath)
         acquired = tryAcquire((fresh?.generation ?? -1) + 1)
       }
     }

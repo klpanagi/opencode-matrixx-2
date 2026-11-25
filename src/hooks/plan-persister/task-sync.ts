@@ -7,24 +7,31 @@
  * applyFilteredSync: syncCheckboxes (Task 3) -> recount via Task 2
  * constants -> atomicWrite + upsertMetadataComment. Every decision is logged.
  */
+import { createHash } from "node:crypto"
 import { existsSync, readdirSync } from "node:fs"
-import { join } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import type { MatrixxConfig } from "../../config/schema"
 import { collectPlanEffort } from "../../features/agent-effort/plan-rollup"
 import {
-  atomicWrite,
   checkboxOverlap,
   countPlanProgressFromContent,
   ensurePlanDir,
+  PLANS_DIR,
   readMissionState,
   readPlanFile,
   syncCheckboxesDetailed,
   upsertMetadataComment,
 } from "../../features/mission-state"
+import { atomicWriteDetailed } from "../../features/mission-state/atomic-write"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
 import type { MissionState, PlanMeta } from "../../features/mission-state/types"
 import { parsePlanFrontMatter } from "../../features/plan-contract"
-import { getTaskDir, readJsonSafe } from "../../features/task-storage/storage"
+import {
+  acquireLockWithRetry,
+  getTaskDir,
+  readJsonSafe,
+  TaskLockUnavailableError,
+} from "../../features/task-storage/storage"
 import { resolveTasksConfig } from "../../shared/config/task-system-gating"
 import { log } from "../../shared/runtime/logger"
 import { getGitHead } from "../../tools/handoff/git"
@@ -62,6 +69,62 @@ export interface FilteredSyncResult {
 
 function emptyResult(skippedReason: string): FilteredSyncResult {
   return { ok: false, skippedReason, total: 0, completed: 0, flaggedVerification: [] }
+}
+
+const planChains = new Map<string, Promise<void>>()
+
+/**
+ * Lock directory for a plan: `<state>/.matrixx/.locks/<sha256>` where `<state>`
+ * is the directory owning `.matrixx`. The digest covers the RESOLVED plan path,
+ * so two spellings of one plan share a lock and distinct plans never collide.
+ */
+export function planLockDir(planPath: string): string {
+  const resolved = resolve(planPath)
+  const plansDir = dirname(resolved)
+  const stateDir = basename(plansDir) === basename(PLANS_DIR) ? dirname(plansDir) : plansDir
+  const digest = createHash("sha256").update(resolved).digest("hex")
+  return join(stateDir, ".locks", digest)
+}
+
+async function runInProcessExclusive<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const previous = planChains.get(key) ?? Promise.resolve()
+  const run = previous.then(() => fn())
+  const tail = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  planChains.set(key, tail)
+  try {
+    return await run
+  } finally {
+    if (planChains.get(key) === tail) planChains.delete(key)
+  }
+}
+
+/**
+ * Serialize a short read-modify-write of one plan file.
+ *
+ * Two layers: a per-resolved-path promise chain makes same-process callers
+ * strictly FIFO, and a `.matrixx/.locks/<sha256>/.lock` file from the task-lock
+ * machinery serializes across processes. The chain tail always resolves, so a
+ * throwing body cannot poison later syncs. Hold the lock only across the read,
+ * apply and write step — never across subagent or network work.
+ */
+export async function withPlanLock<T>(planPath: string, fn: () => Promise<T> | T): Promise<T> {
+  const resolved = resolve(planPath)
+  return runInProcessExclusive(resolved, async () => {
+    const lockDir = planLockDir(resolved)
+    const lock = await acquireLockWithRetry(lockDir)
+    if (!lock.acquired) {
+      log(`[${HOOK_NAME}] Plan lock unavailable`, { plan: resolved, lockDir })
+      throw new TaskLockUnavailableError(lockDir)
+    }
+    try {
+      return await fn()
+    } finally {
+      lock.release()
+    }
+  })
 }
 
 function findFlippedBox(before: string, after: string, subject: string): MatchedBox | undefined {
@@ -124,26 +187,17 @@ export async function applyFilteredSync(input: FilteredSyncInput): Promise<Filte
     log(`[${HOOK_NAME}] Sync skipped: plan file missing`, { plan: planPath })
     return emptyResult("missing-plan-file")
   }
-  const content = readPlanFile(planPath)
-  if (content === null) {
+  const initial = readPlanFile(planPath)
+  if (initial === null) {
     log(`[${HOOK_NAME}] Sync skipped: plan unreadable`, { plan: planPath })
     return emptyResult("plan-file-unreadable")
   }
-  const { content: synced, flaggedVerification } = syncCheckboxesDetailed(content, todos)
-  const progress = countPlanProgressFromContent(synced)
   const gitHead = await getGitHead(directory)
-  const meta: PlanMeta = {
-    id: mission.plan_name,
-    updatedAt: new Date().toISOString(),
-    sessionId: actorSessionId,
-    todoTotal: progress.total,
-    todoCompleted: progress.completed,
-    gitHead: gitHead ?? undefined,
-  }
+  let effortActual: PlanMeta["effortActual"]
   try {
     const rollup = collectPlanEffort(collectLinkedEffortInputs(directory, mission, config))
     if (rollup.taskCount > 0) {
-      meta.effortActual = rollup
+      effortActual = rollup
     }
   } catch (error) {
     log(`[${HOOK_NAME}] Effort attribution skipped (fail-open)`, {
@@ -151,54 +205,88 @@ export async function applyFilteredSync(input: FilteredSyncInput): Promise<Filte
       reason: error instanceof Error ? error.message : String(error),
     })
   }
+  let attributable: ReturnType<typeof collectAttributableTasks> = []
   try {
-    const attributable = collectAttributableTasks(directory, mission, config)
-    const attribution = attributeTodoEffort({
-      checkboxTexts: collectCheckboxTexts(synced),
-      linkedTasks: attributable,
-    })
-    if (Object.keys(attribution.perTodoActual).length > 0) {
-      meta.perTodoActual = attribution.perTodoActual
-    }
-    if (attribution.unassigned.length > 0) {
-      log(`[${HOOK_NAME}] Effort unassigned to any TODO (fail-open)`, {
-        plan: planPath,
-        unassigned: attribution.unassigned.length,
-      })
-    }
+    attributable = collectAttributableTasks(directory, mission, config)
   } catch (error) {
     log(`[${HOOK_NAME}] Effort rollup skipped (fail-open)`, {
       plan: planPath,
       reason: error instanceof Error ? error.message : String(error),
     })
   }
-  ensurePlanDir(directory)
-  if (!atomicWrite(planPath, upsertMetadataComment(synced, meta))) {
-    log(`[${HOOK_NAME}] Sync failed: plan write failed`, { plan: planPath })
-    return { ...emptyResult("plan-write-failed"), flaggedVerification }
+  try {
+    return await withPlanLock(planPath, () => {
+      const content = readPlanFile(planPath)
+      if (content === null) {
+        log(`[${HOOK_NAME}] Sync skipped: plan unreadable under lock`, { plan: planPath })
+        return emptyResult("plan-file-unreadable")
+      }
+      const { content: synced, flaggedVerification } = syncCheckboxesDetailed(content, todos)
+      const progress = countPlanProgressFromContent(synced)
+      const meta: PlanMeta = {
+        id: mission.plan_name,
+        updatedAt: new Date().toISOString(),
+        sessionId: actorSessionId,
+        todoTotal: progress.total,
+        todoCompleted: progress.completed,
+        gitHead: gitHead ?? undefined,
+      }
+      if (effortActual !== undefined) {
+        meta.effortActual = effortActual
+      }
+      try {
+        const attribution = attributeTodoEffort({
+          checkboxTexts: collectCheckboxTexts(synced),
+          linkedTasks: attributable,
+        })
+        if (Object.keys(attribution.perTodoActual).length > 0) {
+          meta.perTodoActual = attribution.perTodoActual
+        }
+        if (attribution.unassigned.length > 0) {
+          log(`[${HOOK_NAME}] Effort unassigned to any TODO (fail-open)`, {
+            plan: planPath,
+            unassigned: attribution.unassigned.length,
+          })
+        }
+      } catch (error) {
+        log(`[${HOOK_NAME}] Effort rollup skipped (fail-open)`, {
+          plan: planPath,
+          reason: error instanceof Error ? error.message : String(error),
+        })
+      }
+      ensurePlanDir(directory)
+      const write = atomicWriteDetailed(planPath, upsertMetadataComment(synced, meta))
+      if (!write.ok) {
+        log(`[${HOOK_NAME}] Sync failed: plan write failed`, { plan: planPath, reason: write.reason })
+        return { ...emptyResult("plan-write-failed"), flaggedVerification }
+      }
+      const matched = matchSubject === undefined ? undefined : findFlippedBox(content, synced, matchSubject)
+      const syncedFrontMatter = parsePlanFrontMatter(synced)
+      const completionWarning =
+        syncedFrontMatter === null
+          ? null
+          : formatCompletionWarning(resolvePlanCompletion(synced, syncedFrontMatter))
+      if (completionWarning !== null) {
+        log(`[${HOOK_NAME}] Completion mismatch (warn-only; counts unchanged)`, { plan: planPath, warning: completionWarning })
+      }
+      log(`[${HOOK_NAME}] Plan synced`, {
+        plan: planPath,
+        total: progress.total,
+        completed: progress.completed,
+        flagged: flaggedVerification.length,
+        matched: matched?.line,
+        confidence: matched === undefined ? undefined : { shared: matched.shared, score: matched.score },
+      })
+      return { ok: true, total: progress.total, completed: progress.completed, flaggedVerification, matched }
+    })
+  } catch (error) {
+    log(`[${HOOK_NAME}] Sync failed: plan lock unavailable`, {
+      plan: planPath,
+      reason: error instanceof Error ? error.message : String(error),
+    })
+    return emptyResult("plan-write-failed")
   }
-  const matched = matchSubject === undefined ? undefined : findFlippedBox(content, synced, matchSubject)
-  // Overlay (read-only): verdict + warn-only log. Counts in `progress`/`meta` above
-  // are untouched; a mismatch is logged, never auto-flipped.
-  const syncedFrontMatter = parsePlanFrontMatter(synced)
-  const completionWarning =
-    syncedFrontMatter === null
-      ? null
-      : formatCompletionWarning(resolvePlanCompletion(synced, syncedFrontMatter))
-  if (completionWarning !== null) {
-    log(`[${HOOK_NAME}] Completion mismatch (warn-only; counts unchanged)`, { plan: planPath, warning: completionWarning })
-  }
-  log(`[${HOOK_NAME}] Plan synced`, {
-    plan: planPath,
-    total: progress.total,
-    completed: progress.completed,
-    flagged: flaggedVerification.length,
-    matched: matched?.line,
-    confidence: matched === undefined ? undefined : { shared: matched.shared, score: matched.score },
-  })
-  return { ok: true, total: progress.total, completed: progress.completed, flaggedVerification, matched }
 }
-
 export interface SyncTriggerInput {
   directory: string
   task: TaskObject

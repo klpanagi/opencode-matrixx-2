@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { z } from "zod"
+import { atomicWrite, atomicWriteDetailed } from "../../features/mission-state/atomic-write"
 import { formatCompletionWarning, resolvePlanCompletion } from "../../features/mission-state/completion"
-import { atomicWrite } from "../../features/mission-state/plan-storage"
 import {
   findAppendixStart,
   type PlanFrontMatter,
@@ -203,11 +203,20 @@ export function createPlanUpdateTool(ctx?: MatrixxContext, postApply?: PostApply
           // hashline and section-scoped modes both arrive here.
           const verdict = enforcePlanCap(resolved, originalContent, finalContent, cap)
           if (verdict.kind === "rolled-back") {
-            settled = true
+            // The guard performs no write of its own; leaving `settled` false
+            // makes the finally below the single rollback to the pre-edit bytes.
             return verdict.payload
           }
           if (finalContent !== postEditContent) {
-            atomicWrite(resolved, finalContent)
+            const persisted = atomicWriteDetailed(resolved, finalContent)
+            if (!persisted.ok) {
+              return JSON.stringify({
+                error: "write_failed",
+                message: `Failed to persist plan ${resolved}: ${persisted.reason}`,
+                filePath: resolved,
+                reason: persisted.reason,
+              })
+            }
           }
           const { warnings } = validatePlanContract(finalContent, cap)
           // Warn-only completion mismatch (Task 6): verdict from resolvePlanCompletion.

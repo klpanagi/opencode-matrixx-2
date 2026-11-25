@@ -49,7 +49,7 @@ export async function applyContextInjectorMessagesTransform(
     return
   }
 
-  const pending = collector.consume(sessionID)
+  const pending = collector.peek(sessionID)
   if (!pending.hasContent) {
     return
   }
@@ -61,6 +61,8 @@ export async function applyContextInjectorMessagesTransform(
     })
     return
   }
+
+  collector.consume(sessionID)
 
   lastUserMessage.text = `${pending.merged}\n\n---\n\n${lastUserMessage.text}`
 

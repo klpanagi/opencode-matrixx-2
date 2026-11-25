@@ -1,9 +1,12 @@
 tests/plugin/handlers/
 tests/hooks/compaction-context-injector/
 tests/tools/session-manager/storage.test.ts
+tests/tools/session-manager/storage.corrupt.test.ts
 tests/hooks/oracle-md-only/index.test.ts
 tests/hooks/niobe/index.test.ts
 tests/hooks/matrix-loop/index.test.ts
+tests/hooks/matrix-loop/matrix-loop-event-handler.test.ts
+tests/hooks/matrix-loop/completion-verifier.test.ts
 tests/hooks/start-work/index.test.ts
 tests/hooks/auto-update-checker/hook/background-update-check.test.ts
 tests/hooks/auto-update-checker/hook.test.ts
@@ -22,6 +25,7 @@ tests/plugin/tool-execute-before.test.ts
 tests/features/mission-state/
 tests/features/handoff/
 tests/features/task-storage/
+tests/features/session-state/
 tests/hooks/session-recovery/
 tests/hooks/auto-update-checker/checker/pinned-version-updater.test.ts
 tests/tools/pdf-extract-figures/tools.test.ts
@@ -39,3 +43,9 @@ tests/hooks/secret-leak-guard/hook.test.ts
 tests/hooks/niobe/tool-execute-before.test.ts
 tests/plugin/event-dedup-logging.test.ts
 tests/tools/comment-scan/
+tests/features/assembly-state/manager.test.ts
+tests/cli/skill-pack/installer.test.ts
+tests/plugin/tool/tool-execute-after.isolation.test.ts
+tests/shared/tmux/tmux-utils/
+tests/tools/plan/plan-update.atomic.test.ts
+tests/tools/plan/plan-write-guard.test.ts

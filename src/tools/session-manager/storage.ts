@@ -5,6 +5,7 @@ import type { MatrixxConfig } from "../../config/schema"
 import { readSessionTasks } from "../../features/task-session-scope"
 import { isSqliteBackend } from "../../shared/config/opencode-storage-detection"
 import { getMessageDir } from "../../shared/opencode/opencode-message-dir"
+import { log } from "../../shared/runtime/logger"
 import { unwrapList } from "../../shared/runtime/unwrap-list"
 import { fetchSessionMessages, type SessionContextCarrier } from "../../shared/session/session-context-source"
 import type { SessionDomainLike } from "../../shared/session/session-facade"
@@ -63,6 +64,10 @@ function directoriesEqual(a: string, b: string): boolean {
   return normalizeDirForCompare(a) === normalizeDirForCompare(b);
 }
 
+function reasonOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 export async function getMainSessions(options: GetMainSessionsOptions): Promise<SessionMetadata[]> {
   // Beta mode: use SDK
   if (isSqliteBackend() && sessionCarrier) {
@@ -75,7 +80,8 @@ export async function getMainSessions(options: GetMainSessionsOptions): Promise<
           .sort((a, b) => b.time.updated - a.time.updated);
       }
       return annotated.sort((a, b) => b.time.updated - a.time.updated);
-    } catch {
+    } catch (error) {
+      log("[session-manager] SDK session list failed", { reason: reasonOf(error), level: "warn" })
       return []
     }
   }
@@ -84,6 +90,7 @@ export async function getMainSessions(options: GetMainSessionsOptions): Promise<
   if (!existsSync(SESSION_STORAGE)) return []
 
   const sessions: SessionMetadata[] = []
+  let skipped = 0
 
   try {
     const projectDirs = await readdir(SESSION_STORAGE, { withFileTypes: true })
@@ -96,19 +103,28 @@ export async function getMainSessions(options: GetMainSessionsOptions): Promise<
       for (const file of sessionFiles) {
         if (!file.endsWith(".json")) continue
 
+        const filePath = join(projectPath, file)
+
         try {
-          const content = await readFile(join(projectPath, file), "utf-8")
+          const content = await readFile(filePath, "utf-8")
           const meta = JSON.parse(content) as SessionMetadata
 
           if (options.directory && !directoriesEqual(meta.directory, options.directory)) continue;
           sessions.push(meta.parentID ? { ...meta, isChild: true } : meta);
 
-        } catch {
+        } catch (error) {
+          skipped += 1
+          log("[session-manager] unreadable session file skipped", { path: filePath, reason: reasonOf(error), level: "warn" })
         }
       }
     }
-  } catch {
+  } catch (error) {
+    log("[session-manager] session storage read failed", { path: SESSION_STORAGE, reason: reasonOf(error), level: "error" })
     return []
+  }
+
+  if (skipped > 0) {
+    log("[session-manager] session read skipped unreadable files", { count: skipped, level: "warn" })
   }
 
   return sessions.sort((a, b) => b.time.updated - a.time.updated)
@@ -120,7 +136,8 @@ export async function getAllSessions(): Promise<string[]> {
     try {
       const sessions = unwrapList<SessionMetadata>(await sessionCarrier.session.list())
       return sessions.map((s) => s.id)
-    } catch {
+    } catch (error) {
+      log("[session-manager] SDK session list failed", { reason: reasonOf(error), level: "warn" })
       return []
     }
   }
@@ -144,7 +161,8 @@ export async function getAllSessions(): Promise<string[]> {
           }
         }
       }
-    } catch {
+    } catch (error) {
+      log("[session-manager] message directory scan failed", { path: dir, reason: reasonOf(error), level: "warn" })
       return
     }
   }
@@ -196,7 +214,8 @@ export async function readSessionMessages(sessionID: string): Promise<SessionMes
         if (aTime !== bTime) return aTime - bTime
         return a.id.localeCompare(b.id)
       })
-    } catch {
+    } catch (error) {
+      log("[session-manager] SDK message read failed", { sessionID, reason: reasonOf(error), level: "warn" })
       return []
     }
   }
@@ -206,12 +225,14 @@ export async function readSessionMessages(sessionID: string): Promise<SessionMes
   if (!messageDir || !existsSync(messageDir)) return []
 
   const messages: SessionMessage[] = []
+  let skipped = 0
   try {
     const files = await readdir(messageDir)
     for (const file of files) {
       if (!file.endsWith(".json")) continue
+      const filePath = join(messageDir, file)
       try {
-        const rawText = await readFile(join(messageDir, file), "utf-8")
+        const rawText = await readFile(filePath, "utf-8")
         const meta = JSON.parse(rawText)
 
         const content = await readParts(meta.id)
@@ -223,11 +244,18 @@ export async function readSessionMessages(sessionID: string): Promise<SessionMes
           time: meta.time,
           content,
         })
-      } catch {
+      } catch (error) {
+        skipped += 1
+        log("[session-manager] unreadable session message skipped", { path: filePath, reason: reasonOf(error), level: "warn" })
       }
     }
-  } catch {
+  } catch (error) {
+    log("[session-manager] session message directory read failed", { path: messageDir, reason: reasonOf(error), level: "error" })
     return []
+  }
+
+  if (skipped > 0) {
+    log("[session-manager] session message read skipped unreadable files", { count: skipped, level: "warn" })
   }
 
   return messages.sort((a, b) => {
@@ -243,18 +271,27 @@ async function readParts(messageID: string): Promise<Array<{ id: string; type: s
   if (!existsSync(partDir)) return []
 
   const parts: Array<{ id: string; type: string; [key: string]: unknown }> = []
+  let skipped = 0
   try {
     const files = await readdir(partDir)
     for (const file of files) {
       if (!file.endsWith(".json")) continue
+      const filePath = join(partDir, file)
       try {
-        const content = await readFile(join(partDir, file), "utf-8")
+        const content = await readFile(filePath, "utf-8")
         parts.push(JSON.parse(content))
-      } catch {
+      } catch (error) {
+        skipped += 1
+        log("[session-manager] unreadable session part skipped", { path: filePath, reason: reasonOf(error), level: "warn" })
       }
     }
-  } catch {
+  } catch (error) {
+    log("[session-manager] session part directory read failed", { path: partDir, reason: reasonOf(error), level: "error" })
     return []
+  }
+
+  if (skipped > 0) {
+    log("[session-manager] session part read skipped unreadable files", { count: skipped, level: "warn" })
   }
 
   return parts.sort((a, b) => a.id.localeCompare(b.id))
@@ -313,7 +350,8 @@ export async function readSessionTodos(sessionID: string): Promise<TodoItem[]> {
   try {
     const content = await readFile(transcriptFile, "utf-8")
     return content.trim().split("\n").filter(Boolean).length
-  } catch {
+  } catch (error) {
+    log("[session-manager] session transcript read failed", { path: transcriptFile, reason: reasonOf(error), level: "warn" })
     return 0
   }
 }

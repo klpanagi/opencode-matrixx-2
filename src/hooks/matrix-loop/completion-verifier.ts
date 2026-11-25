@@ -93,7 +93,7 @@ export async function verifyCompletion(
 
 		if (!created.id) {
 			log(`[${HOOK_NAME}] Verification session creation failed`)
-			return { verified: true }
+			return { verified: false, reason: "verification_error" }
 		}
 
 		verifySessionID = created.id
@@ -128,11 +128,13 @@ export async function verifyCompletion(
 			})
 		}
 
-		log(`[${HOOK_NAME}] Verification timed out, assuming pass`)
-		return { verified: true }
+		// Fail closed: a false negative costs one extra iteration (bounded by
+		// max_iterations), while a false positive ends the loop on unverified work.
+		log(`[${HOOK_NAME}] Verification timed out`)
+		return { verified: false, reason: "verification_timeout" }
 	} catch (err) {
 		log(`[${HOOK_NAME}] Verification error: ${String(err)}`)
-		return { verified: true }
+		return { verified: false, reason: "verification_error" }
 	} finally {
 		if (verifySessionID) {
 			const session = ctx.session as NativePluginContext["session"] & SessionWithRemove

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { isSqliteBackend } from "../../../shared"
+import { log } from "../../../shared/runtime/logger"
 import type { SessionContextCarrier } from "../../../shared/session/session-context-source"
 import { PART_STORAGE } from "../constants"
 import type { StoredPart } from "../types"
@@ -14,10 +15,16 @@ export function readParts(messageID: string): StoredPart[] {
   const parts: StoredPart[] = []
   for (const file of readdirSync(partDir)) {
     if (!file.endsWith(".json")) continue
+    const filePath = join(partDir, file)
     try {
-      const content = readFileSync(join(partDir, file), "utf-8")
+      const content = readFileSync(filePath, "utf-8")
       parts.push(JSON.parse(content))
-    } catch {
+    } catch (error) {
+      log("[session-recovery] unreadable part file skipped", {
+        path: filePath,
+        reason: error instanceof Error ? error.message : String(error),
+        level: "warn",
+      })
     }
   }
 

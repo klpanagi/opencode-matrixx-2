@@ -4,6 +4,8 @@ import {
   acquireLockWithRetry,
   getTaskDir,
   migrateLegacyTasksIfNeeded,
+  refreshLock,
+  TaskLockUnavailableError,
 } from "../../features/task-storage/storage";
 import { maybeSyncTaskToPlans } from "../../hooks/plan-persister/task-sync";
 import type { MatrixxContext } from "../../plugin/tool/context";
@@ -159,7 +161,7 @@ async function handleCreate(
     // INVARIANT (Task 5): never proceed on an unacquired lock — no fallthrough writes.
     if (!lock.acquired) {
       log(`[task-create] lock contention, write skipped`, { taskDir })
-      return JSON.stringify({ error: "task_lock_unavailable" })
+      throw new TaskLockUnavailableError(taskDir)
     }
 
     const inputs = parsed.mode === "batch" ? parsed.items : [parsed.input]
@@ -171,26 +173,40 @@ async function handleCreate(
       for (const input of inputs) {
         const one = createOneTask({ input, taskDir, directory, threadID: context.sessionID })
         if (one.outcome === "created") {
+          if (lock.ownerId) {
+            const refreshed = refreshLock(taskDir, lock.ownerId)
+            if (!refreshed.ok) {
+              log(`[task-create] lock refresh failed`, { taskDir, error: refreshed.error.message })
+            }
+          }
           created.push(one.task)
           tasks.push({ id: one.task.id, subject: one.task.subject })
         } else {
           tasks.push({ id: one.id, subject: one.subject, deduplicated: true })
         }
       }
+      for (const task of created) {
+        if (lock.ownerId) {
+          const refreshed = refreshLock(taskDir, lock.ownerId)
+          if (!refreshed.ok) {
+            log(`[task-create] lock refresh failed`, { taskDir, error: refreshed.error.message })
+          }
+        }
+        try {
+          await maybeSyncTaskToPlans({ directory, task, config })
+        } catch (error) {
+          log(`[task-create] Plan sync failed, task kept`, { id: task.id, error: String(error) })
+        }
+      }
     } finally {
       lock.release();
     }
 
-    for (const task of created) {
-      try {
-        await maybeSyncTaskToPlans({ directory, task, config })
-      } catch (error) {
-        log(`[task-create] Plan sync failed, task kept`, { id: task.id, error: String(error) })
-      }
-    }
-
     return JSON.stringify({ tasks, errors });
   } catch (error) {
+    if (error instanceof TaskLockUnavailableError) {
+      throw error;
+    }
     if (error instanceof z.ZodError) {
       return JSON.stringify({ error: "validation_error", message: error.message });
     }

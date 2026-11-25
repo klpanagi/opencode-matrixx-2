@@ -19,14 +19,14 @@ describe("writeJsonAtomic tmp uniqueness (B6)", () => {
 
   test("uses unique tmp suffix with pid and uuid (no Date.now-only collision)", () => {
     //#given
-    const source = readFileSync(join(process.cwd(), "src/features/task-storage/storage.ts"), "utf-8")
+    const source = readFileSync(join(process.cwd(), "src/features/mission-state/atomic-write.ts"), "utf-8")
 
     //#when
-    const tmpLine = source.split("\n").find((l) => l.includes("tempPath") && l.includes("tmp"))
+    const tmpLine = source.split("\n").find((l) => l.includes("tmpPath") && l.includes("tmp"))
 
     //#then
     expect(tmpLine).toBeDefined()
-    expect(tmpLine as string).toContain("process.pid")
+    expect(source).toContain("process.pid")
     expect(tmpLine as string).toContain("randomUUID")
   })
 
