@@ -30,7 +30,8 @@ describe("bug-fix template", () => {
     //#when we read the template
     //#then no gate outcome is claimed and the branch is reset to the base each fix
     expect(BUG_FIX_TEMPLATE).toContain("candidate patch for <fingerprint>")
-    expect(BUG_FIX_TEMPLATE).toContain("Reset the branch to that base before each fix")
+    expect(BUG_FIX_TEMPLATE).toContain("fix/bug-hunt-<run-N>-<fix-id>")
+    expect(BUG_FIX_TEMPLATE).not.toContain("Reset the branch")
     expect(BUG_FIX_TEMPLATE).not.toContain("plausible patch (gates G1-G4)")
   })
 

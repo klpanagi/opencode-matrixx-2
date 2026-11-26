@@ -602,7 +602,7 @@ a correct patch; nothing merges.
 Exit codes: `0` nothing plausible (or a clean `--verify`), `1` plausible awaiting human review
 (draft PRs opened), `2` invalid usage (nothing written), `3` all attempts rejected, circuit
 breaker, or a `--verify` downgrade. Precedence `2` > `1` > `3` > `0`.
-Delivery: branch `fix/bug-hunt-<run-N>`, one commit per plausible patch, DRAFT PR via
+Delivery: per-fix branch `fix/bug-hunt-<run-N>-<fix-id>`, one commit per plausible patch, DRAFT PR via
 `gh pr create --draft --base dev`; a human merges, the command never does.
 Artifacts: `.matrixx/bugs/<run-N>/fixes/` holds `fix-<encoded-fingerprint>.json`, `patches/`, and
 `evidence/`; `.matrixx/` is gitignored.

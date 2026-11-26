@@ -23,7 +23,13 @@ function isPlainPosixPath(value: string): boolean {
   if (value.includes("\\") || value.includes("\u0000") || !SAFE_PATH_CHARS.test(value)) {
     return false
   }
-  return posix.normalize(value) === value && value !== "." && !value.startsWith("./")
+  return (
+    posix.normalize(value) === value &&
+    value !== "." &&
+    !value.startsWith("./") &&
+    !value.startsWith("-") &&
+    !value.startsWith("@")
+  )
 }
 
 function isTestPath(value: string): boolean {

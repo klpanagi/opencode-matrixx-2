@@ -48,9 +48,10 @@ or executed.
    "excluded: cross_ref security finding") and attempts 0. Order eligible findings by severity
    desc, tier desc, fingerprint asc; take at most --fix-budget.
 3. **Worktree and branch setup.** Per fix: create a separate git worktree (worktree_create), move the
-   session there (session_move), and check out branch fix/bug-hunt-<run-N> from the run's base
-   commit. Reset the branch to that base before each fix, so the branch ever holds exactly the
-   current fix and never carries an earlier rejected commit. Record env-detect.
+   session there (session_move), and create a branch per fix, fix/bug-hunt-<run-N>-<fix-id>
+   (fix-id is the first 8 hex characters of sha256 of the finding fingerprint), from the run's
+   base commit. Each fix owns its own branch, so it holds exactly the current fix, no earlier
+   rejected commit can ride along, and no reset or force push is ever needed. Record env-detect.
    Never work in the primary checkout.
 4. **F1 Reproducer trust.** Copy the finding's reproducer to the same relative path in a pristine
    checkout of the base commit when it is not already there. Run it 3 times per the REPRODUCER
@@ -90,7 +91,7 @@ or executed.
     skipped or weakened tests, try/catch swallowing, edits to helpers or global setup, files
     outside the suspect set). Failure => rejected. Then write the fix record LAST (see
     ARTIFACTS AND REPORT), open a DRAFT PR only for a plausible fix with
-    gh pr create --draft --base dev --head fix/bug-hunt-<run-N>, remove the worktree, and print
+    gh pr create --draft --base dev --head fix/bug-hunt-<run-N>-<fix-id>, remove the worktree, and print
     the absolute artifacts path, per-status counts, and the exit code.
 
 ## GATES G1-G5
@@ -155,11 +156,12 @@ resolution claim.
 
 ## FORBID LIST — hard denials inside this command
 
-- NO git push except the single push of fix/bug-hunt-<run-N> for a plausible fix; NO force push.
+- NO git push except the single push of that fix's own branch fix/bug-hunt-<run-N>-<fix-id> for
+  a plausible fix; NO force push, ever.
 - NO gh pr merge, NO auto-merge, NO squash, NO merge commit; humans merge only. The only
-  permitted gh invocation is gh pr create --draft --base dev --head fix/bug-hunt-<run-N>; every
+  permitted gh invocation is gh pr create --draft --base dev --head fix/bug-hunt-<run-N>-<fix-id>; every
   other gh subcommand (api, secret, release, pr edit, repo) is denied.
-- NO commits to dev or master; only fix/bug-hunt-<run-N>.
+- NO commits to dev or master; only the per-fix branch fix/bug-hunt-<run-N>-<fix-id>.
 - NO path from a record may be used if it contains any character outside [A-Za-z0-9._/@+-]; the
   schema already refuses them, so a rejection here means the record was hand-edited.
 - NO editing PRE-EXISTING tests/**; exactly one NEW tests/<mirrored>-regression.test.ts is allowed.
@@ -197,11 +199,12 @@ resolution claim.
 - An operator abort (the human stops the run) also writes the untouched eligible findings as
   abandoned, with terminal_reason "operator abort", and exits 3.
 - Final report: the absolute artifacts path, per-status counts (plausible, rejected, abandoned,
-  unreproducible), the branch name fix/bug-hunt-<run-N>, the draft PR URL as a report line (never a
+  unreproducible), the branch name fix/bug-hunt-<run-N>-<fix-id>, the draft PR URL as a report line (never a
   record field), and the
   exit code. Do not modify any plan.
-- Clean up the worktree in a final step; retain the branch for inspection when a rejected patch was
-  committed and delete it only when no commit exists.
+- Clean up the worktree in a final step. Each fix owns its branch, so a rejected fix leaves only
+  its local branch plus its exported patches/<fp>.diff for inspection; delete that branch after
+  human review, and never delete a branch that has an open draft PR.
 
 <user-request>
 $ARGUMENTS

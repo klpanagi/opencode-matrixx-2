@@ -43,8 +43,9 @@ and take at most --fix-budget.
 | F6 Record and report | Write the fix record last, open a draft PR only for plausible, remove the worktree | Record written atomically; draft PR only for plausible |
 
 Never work in the primary checkout: create a separate git worktree, move the session there, and
-check out branch fix/bug-hunt-<run-N> from the run's base commit. Reset the branch to that base
-before each fix: the branch holds exactly the current fix and never an earlier rejected commit.
+create a branch per fix, fix/bug-hunt-<run-N>-<fix-id> (fix-id = first 8 hex of
+sha256(fingerprint)), from the run's base commit. Each fix owns its branch, so it holds exactly
+the current fix and never an earlier rejected commit.
 Commit with the neutral message "candidate patch for <fingerprint>" — no gate outcome, because F4
 has not run yet.
 
@@ -147,8 +148,8 @@ evidence/. diff_path and evidence_path are recorded relative to fixes/. The fix 
 all gate results exist, so an interrupted run cannot leave a half-written record; the schema
 checks shape, not whether the evidence exists. .matrixx is
 gitignored. For a plausible patch only, open a draft PR with gh pr create --draft --base dev
---head fix/bug-hunt-<run-N>. Never merge, never auto-merge, never squash, and never push any
-branch other than fix/bug-hunt-<run-N>.
+--head fix/bug-hunt-<run-N>-<fix-id>. Never merge, never auto-merge, never squash, and never
+push any branch other than the per-fix branch fix/bug-hunt-<run-N>-<fix-id>.
 
 ## WHAT THIS DOES NOT PROVE
 
