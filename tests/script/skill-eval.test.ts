@@ -597,7 +597,7 @@ describe("parseArgs", () => {
 })
 
 describe("collectBuiltinSkills", () => {
-  test("enumerates exactly 71 skills with unique kebab-case dirs and non-empty templates", async () => {
+  test("enumerates exactly 72 skills with unique kebab-case dirs and non-empty templates", async () => {
     //#given the repository root
     const root = new URL("../..", import.meta.url).pathname
 
@@ -605,7 +605,7 @@ describe("collectBuiltinSkills", () => {
     const skills = await collectBuiltinSkills(root)
 
     //#then the catalog is complete, unique and fully materialized
-    expect(skills.length).toBe(71)
+    expect(skills.length).toBe(72)
     const dirNames = skills.map((entry) => entry.dirName)
     expect(new Set(dirNames).size).toBe(dirNames.length)
     for (const entry of skills) {
@@ -855,7 +855,7 @@ describe("report normalization and legends", () => {
     //#given the catalog guard constant
     //#when compared to the repository
     //#then it matches the audited count
-    expect(EXPECTED_SKILL_COUNT).toBe(71)
+    expect(EXPECTED_SKILL_COUNT).toBe(72)
   })
 })
 

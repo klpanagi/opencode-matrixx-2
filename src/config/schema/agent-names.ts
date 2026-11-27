@@ -94,6 +94,7 @@ export const BuiltinSkillNameSchema = z.enum([
   "resilience-failure-hunting",
   "silent-failure-detection",
   "systematic-debugging",
+  "bug-fixing",
   "bug-hunting",
   "data-quality-observability",
 ])

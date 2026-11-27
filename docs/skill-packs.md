@@ -1,6 +1,6 @@
 # Skill Packs
 
-> Skill packs are optional, externally sourced skills. They are **not** part of the 71 built-in skills: they install into a separate store under the OpenCode config dir and are the single documented runtime-`SKILL.md` carve-out. Full config field reference: [configurations.md](configurations.md) § Skill Packs.
+> Skill packs are optional, externally sourced skills. They are **not** part of the 72 built-in skills: they install into a separate store under the OpenCode config dir and are the single documented runtime-`SKILL.md` carve-out. Full config field reference: [configurations.md](configurations.md) § Skill Packs.
 
 External design-intelligence skills for the `ui-ux-pro-max` pack family, installed from the pinned `ui-ux-pro-max-cli` npm distribution (currently `2.15.0`).
 

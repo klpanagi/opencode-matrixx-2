@@ -1,3 +1,4 @@
+export { BUG_FIXING_SKILL_NAME, bugFixingSkill } from "./bug-fixing"
 export { BUG_HUNTING_SKILL_NAME, bugHuntingSkill } from "./bug-hunting"
 export { devBrowserSkill } from "./dev-browser"
 export { dockerMasterSkill } from "./docker-master"

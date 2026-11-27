@@ -100,7 +100,7 @@ Matrixx is a **plugin for OpenCode**. You will frequently need to examine OpenCo
 
 ## OVERVIEW
 
-Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 32 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 25 built-in commands, 71 built-in skills (76 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1170 TS source files, ~626 test files.
+Matrixx is a multi-agent orchestration **plugin for OpenCode**. 21 agent names in `BuiltinAgentNameSchema` (13 core agents + 8 `mouse-*` workers) via 59 hook names + 11 retained-deprecated no-op literals + 1 alias (71 parseable), and 32 custom tool dirs (conditional registration via `src/plugin/tool/tool-policy.ts`, assembled in `tool-catalog.ts`). 26 built-in commands, 72 built-in skills (77 modules, no SKILL.md assets), 19 features, 2 MCPs. ~1170 TS source files, ~626 test files.
 
 > **v2-only note:** this document describes the OpenCode V2 plugin line only (`{ id, setup }` entrypoint). The last V1-API release line (`2.6.18`, targeting `@opencode-ai/plugin` v1.x) does not load in OpenCode V2. `@opencode-ai/plugin` is provided by the host OpenCode install and is not a dependency of this repository.
 
@@ -125,7 +125,7 @@ matrixx/
 │   ├── tools/    → 32 dirs (LSP, AST-grep, bdd-*, handoff, removed-tools guards, etc.; gated via plugin/tool/tool-policy.ts)
 │   ├── features/ → 19 dirs (builtin-commands, context-injection, task-storage, handoff, knowledge-hub, ...)
 │   ├── shared/   → scoped dirs (agent, config, io, model, policy, runtime, session, subagent, text, tmux, tool, ...) + AGENTS.md
-│   ├── skills/   → builtin/<category>/ (71 skills) + loader/ + AGENTS.md
+│   ├── skills/   → builtin/<category>/ (72 skills) + loader/ + AGENTS.md
 │   ├── mcps/     → context7 + document-reader (+ native `github_search` tool in `src/tools/`)
 │   ├── cli/      → install, doctor, setup
 │   ├── config/   → Zod schema

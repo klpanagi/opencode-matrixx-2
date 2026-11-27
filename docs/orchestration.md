@@ -279,7 +279,7 @@ subagent(agent="mouse-construct", load_skills=["frontend-ui-ux"], description="U
 subagent(agent="mouse-bullet-time", load_skills=["playwright"], description="Browser check", prompt="...")
 ```
 
-Skills prepend domain instructions to the worker prompt. All 71 built-in
+Skills prepend domain instructions to the worker prompt. All 72 built-in
 skills (`BuiltinSkillNameSchema` in `src/config/schema/agent-names.ts`;
 frontend, DSL, security, testing, and more) are domain-specific, so
 for pure prose and docs tasks `load_skills=[]` is intentional, not an
@@ -336,13 +336,13 @@ is reached. `/rp-loop` is the same loop with redpill mode active.
 
 Full reference with arguments and intercepts:
 [`docs/command-reference.md`](./command-reference.md)
-(25 built-ins covering orchestration, research, refactoring, handoffs,
+(26 built-ins covering orchestration, research, refactoring, handoffs,
 tasks, BDD, defect hunting, and toggles — see `src/features/builtin-commands/types.ts`
 `BuiltinCommandName`: init-deep, matrix-loop, rp-loop, cancel-loop, refactor,
 completion-review, start-work, stop-continuation, humanize, handoff, pickup,
 remove-deadcode, preset, end-redpill, research, assembly, redpill,
 bdd-pipeline, cleanup-tasks, task-list, quality-audit,
-quality-assurance, security-audit, bug-hunt, academic-humanize).
+quality-assurance, security-audit, bug-hunt, bug-fix, academic-humanize).
 
 ## Configuration
 

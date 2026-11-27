@@ -216,6 +216,7 @@ The table separates them so runs do not duplicate work or blur authority.
 | Neighbor | It owns | `/bug-hunt` does | Cross-reference |
 |----------|---------|------------------|-----------------|
 | `/security-audit` | Security vulnerability classes (CWE-style findings) | Delegates security-class findings entirely; reports only the cross-reference, never the finding itself | Yes, mandatory when a candidate is security-class |
+| `/bug-fix` | Candidate patches from a completed hunt run | Read-only sibling: `/bug-hunt` produces the graded findings, `/bug-fix` consumes a run id afterward; it never writes inside a hunt's ledger or reproducers | Yes: `/bug-fix <run-N>` consumes the run |
 | `/quality-audit` | Deterministic quality grading (structure, complexity, dead code) | Complementary: `/quality-audit` grades what is there, `/bug-hunt` falsifies what it claims | Optional |
 | `systematic-debugging` (skill) | A known, already-failing behavior | Different entry point: debugging starts from a failure, hunting starts from hypotheses | Optional |
 | `silent-failure-detection` (skill) | Swallowed errors and silent catch blocks | Uses `silent_failure_scan` in S2 and hands swallow findings to the skill's taxonomy | Yes, for silent-failure findings |

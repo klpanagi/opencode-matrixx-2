@@ -557,7 +557,7 @@ flowchart LR
 
 ```mermaid
 graph TD
-    subgraph SKILL_REGISTRY["Skill Registry (71 Built-in Skills)"]
+    subgraph SKILL_REGISTRY["Skill Registry (72 Built-in Skills)"]
         subgraph DSL_SKILLS["Cipher's DSL Skills (11)"]
             S1["dsl-core"]
             S2["dsl-grammar"]

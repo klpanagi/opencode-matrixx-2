@@ -2,11 +2,11 @@
 
 ## OVERVIEW
 
-71 specialized skills loaded by default (76 modules; `playwright.ts` exports two) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
+72 specialized skills loaded by default (77 modules; `playwright.ts` exports two) into every Matrixx session. Each skill bundles domain expertise, optional MCPs, and (sometimes) a custom model/agent assignment.
 
 | Scope | Count | Source |
 |------|-------|--------|
-| **Built-in (this dir)** | 71 (76 modules) | `src/skills/builtin/<category>/*.ts` |
+| **Built-in (this dir)** | 72 (77 modules) | `src/skills/builtin/<category>/*.ts` |
 | Opencode-project (`.opencode/skills/`) | varies | per-project |
 | Opencode-user (`~/.config/opencode/skills/`) | varies | per-user |
 | Claude Code compat (`.claude/skills/`) | varies | per-project |
@@ -22,13 +22,13 @@ skills/
 │   ├── lazy-skill-helper.ts      # createLazyTemplateSkill (lazy template getter)
 │   ├── skills.transform.ts       # registerSkillTransform: pure replay onto ctx.skill.transform
 │   ├── types.ts                  # BuiltinSkill interface
-│   ├── schemas/                  # Zod schemas (security-audit, audits-store, bug-hunt, bug-hunt-store)
+│   ├── schemas/                  # Zod schemas (security-audit, audits-store, bug-hunt, bug-hunt-store, bug-fix, bug-fix-store)
 │   └── index.ts                  # Loader barrel (explicit named re-exports)
-├── builtin/                      # 71 skills across 7 category dirs (export Skill objects)
+├── builtin/                      # 72 skills across 7 category dirs (export Skill objects)
 │   ├── bdd/                      # 4 skills (bdd-backend, bdd-contract, bdd-frontend, bdd-tests)
-│   ├── core/                     # 21 skills, 29 files (playwright.ts exports 2: playwright + agent-browser)
+│   ├── core/                     # 22 skills, 30 files (playwright.ts exports 2: playwright + agent-browser)
 │   │                             # git-master, docker-master, dev-browser, tdd-enforcer, quality-gate,
-│   │                             # software-dev, review-work, matrixx-self-config, rp-research, bug-hunting, ...
+│   │                             # software-dev, review-work, matrixx-self-config, rp-research, bug-hunting, bug-fixing, ...
 │   ├── dsl/                      # 11 skills (dsl-core, dsl-grammar, dsl-codegen, dsl-metamodel, ...)
 │   ├── frontend/                 # 8 skills (frontend-ui-ux, frontend-a11y, frontend-perf, ...)
 │   ├── market-data/              # 10 skills (ccxt-rest, ccxt-pro-websockets, market-data-bus, ...)
@@ -49,7 +49,7 @@ skills/
 | `skills/builtin/market-data/` | 10 | 10 + `index.ts` | Market-data pipeline skills |
 | `skills/builtin/security/` | 10 | 10 + `index.ts` | Security review/audit skills |
 | `skills/builtin/zeromq/` | 7 | 7 + `index.ts` | ZeroMQ messaging skills |
-| **Total** | **71** | **76 non-index + 10 `index.ts` (86 `.ts` in `builtin/`; 104 `.ts` in `skills/` incl. `loader/`)** | |
+| **Total** | **72** | **77 non-index + 10 `index.ts` (87 `.ts` in `builtin/`; 107 `.ts` in `skills/` incl. `loader/`)** | |
 
 Each category dir has an `index.ts` that re-exports its skill objects (e.g. `export { bddBackendSkill, BDD_BACKEND_SKILL_NAME } from "./bdd-backend"`). The root `skills/index.ts` re-exports everything for type-level access only — runtime template loading goes through `createBuiltinSkills()`, never through direct imports.
 

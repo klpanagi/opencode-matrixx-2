@@ -5,6 +5,7 @@ import { join } from "node:path"
 import {
   allocateRunId,
   assertRunId,
+  assertWritableDir,
   COVERAGE_LEDGER_FILE,
   FINDINGS_FILE,
   getBugRunDir,
@@ -317,5 +318,21 @@ describe("listBugRuns", () => {
     //#when - listing runs
     //#then - empty array, never throwing
     expect(listBugRuns(root)).toEqual([])
+  })
+})
+
+describe("assertWritableDir segment walk", () => {
+  test("refuses a symlinked run-dir segment when called with a nested dir", () => {
+    //#given - the run dir is a symlink pointing outside the project
+    const root = makeRoot()
+    const outside = makeRoot()
+    mkdirSync(getBugsDir(root), { recursive: true })
+    symlinkSync(outside, getBugRunDir(root, "run-1"), "dir")
+
+    //#when - guarding a nested dir under the symlinked run
+    //#then - the link is refused by the segment walk, not merely by containment
+    expect(() => assertWritableDir(root, join(getBugRunDir(root, "run-1"), "fixes"))).toThrow(
+      /refusing to write through symlink/,
+    )
   })
 })
